@@ -1,15 +1,42 @@
 {
   try {
-    dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-    dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
     int counter=0;
-    while (!socket.isClosed() && !disposing.get()) {
-      UMOMessageAdapter adapter=null;
-      try {
-        adapter=connector.getMessageAdapter(socket.getInputStream());
+    do {
+      if (isServerSide() && ++counter > 500) {
+        counter=0;
+        Thread.yield();
       }
- catch (      MuleRuntimeException e) {
-        logger.debug(e.getMessage());
+      if (disposing.get() || socket.isClosed()) {
+        logger.debug("Peer closed connection");
+        break;
+      }
+      dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+      dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+      UMOMessageAdapter adapter=null;
+      Properties headers=new Properties();
+      byte[] payload=parseRequest(dataIn,headers);
+      if (payload == null)       break;
+      adapter=connector.getMessageAdapter(new Object[]{payload,headers});
+      boolean http11=((String)adapter.getProperty(HttpConnector.HTTP_VERSION_PROPERTY)).equalsIgnoreCase(HttpConstants.HTTP11);
+      if (!http11) {
+        keepAlive=adapter.getProperty(HttpConstants.HEADER_KEEP_ALIVE) != null;
+      }
+ else {
+        String connection=(String)adapter.getProperty(HttpConstants.HEADER_CONNECTION);
+        if (connection != null && connection.equalsIgnoreCase("close")) {
+          keepAlive=false;
+        }
+ else {
+          keepAlive=true;
+        }
+      }
+      if (keepAlive) {
+        if (keepAliveMonitor != null) {
+          keepAliveMonitor.addExpirable(((HttpConnector)connector).getKeepAliveTimeout(),this);
+        }
+ else {
+          logger.info("Request has Keep alive set but the HttpConnector has keep alive disables");
+        }
       }
       if (adapter != null) {
         UMOMessage message=new MuleMessage(adapter);
@@ -25,14 +52,21 @@
         String responseText=(String)getResponseTransformer().transform(returnMessage.getPayload());
         dataOut.write(responseText.getBytes());
         dataOut.flush();
-        socket.close();
+        if (keepAliveMonitor != null) {
+          keepAliveMonitor.resetExpirable(this);
+        }
       }
     }
+ while (!socket.isClosed() && keepAlive);
   }
  catch (  Exception e) {
+    keepAlive=false;
     handleException("Failed to process tcp Request on: " + (socket != null ? socket.getInetAddress().toString() : "null"),e);
   }
  finally {
+    if (keepAliveMonitor != null) {
+      keepAliveMonitor.removeExpirable(this);
+    }
     dispose();
   }
 }

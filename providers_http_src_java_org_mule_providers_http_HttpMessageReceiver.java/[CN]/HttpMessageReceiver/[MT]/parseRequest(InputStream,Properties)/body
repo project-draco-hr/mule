@@ -1,0 +1,52 @@
+{
+  byte[] payload;
+  String line=null;
+  try {
+    line=HttpParser.readLine(is);
+  }
+ catch (  SocketException e) {
+    return null;
+  }
+  if (line == null) {
+    return null;
+  }
+  int space1=line.indexOf(" ");
+  int space2=line.indexOf(" ",space1 + 1);
+  if (space1 == -1 || space2 == -1) {
+    throw new IOException("Http message header line is malformed: " + line);
+  }
+  String method=line.substring(0,space1);
+  String request=line.substring(space1 + 1,space2);
+  String httpVersion=line.substring(space2 + 1);
+  p.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,method);
+  p.setProperty(HttpConnector.HTTP_REQUEST_PROPERTY,request);
+  p.setProperty(HttpConnector.HTTP_VERSION_PROPERTY,httpVersion);
+  Header[] headers=HttpParser.parseHeaders(is);
+  for (int i=0; i < headers.length; i++) {
+    p.setProperty(headers[i].getName(),headers[i].getValue());
+  }
+  if (method.equals(HttpConstants.METHOD_GET)) {
+    payload=request.getBytes();
+  }
+ else {
+    boolean contentLengthNotSet=p.getProperty(HttpConstants.HEADER_CONTENT_LENGTH,null) == null;
+    int contentLength=Integer.parseInt(p.getProperty(HttpConstants.HEADER_CONTENT_LENGTH,String.valueOf(1024 * 32)));
+    byte[] buffer=new byte[contentLength];
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    int len=0;
+    int bytesWritten=0;
+    while (bytesWritten != contentLength) {
+      len=is.read(buffer);
+      if (len != -1) {
+        baos.write(buffer,0,len);
+        bytesWritten+=len;
+        if (contentLengthNotSet) {
+          contentLength=bytesWritten;
+        }
+      }
+    }
+    payload=baos.toByteArray();
+    baos.close();
+  }
+  return payload;
+}
