@@ -32,35 +32,18 @@
       }
       httpMethod=postMethod;
     }
+    Map.Entry header;
     String headerName;
-    String value;
-    for (Iterator iterator=headers.iterator(); iterator.hasNext(); ) {
-      headerName=(String)iterator.next();
-      value=(String)context.getProperty(headerName);
-      if (value != null) {
-        httpMethod.addRequestHeader(headerName,value);
+    Map p=context.getProperties();
+    for (Iterator iterator=p.entrySet().iterator(); iterator.hasNext(); ) {
+      header=(Map.Entry)iterator.next();
+      headerName=header.getKey().toString();
+      if (!responseHeaders.contains(headerName) && header.getValue() instanceof String) {
+        if (headerName.startsWith(MuleProperties.PROPERTY_PREFIX)) {
+          headerName="X-" + headerName;
+        }
+        httpMethod.addRequestHeader(headerName,(String)header.getValue());
       }
-    }
-    Map customHeaders=(Map)context.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
-    if (customHeaders != null) {
-      Map.Entry entry;
-      for (Iterator iterator=customHeaders.entrySet().iterator(); iterator.hasNext(); ) {
-        entry=(Map.Entry)iterator.next();
-        httpMethod.addRequestHeader(entry.getKey().toString(),entry.getValue().toString());
-      }
-    }
-    UMOMessage m=context.getMessage();
-    String user=(String)m.getProperty(MuleProperties.MULE_USER_PROPERTY);
-    if (user != null) {
-      httpMethod.addRequestHeader("X-" + MuleProperties.MULE_USER_PROPERTY,user);
-    }
-    if (m.getCorrelationId() != null) {
-      httpMethod.addRequestHeader("X-" + MuleProperties.MULE_CORRELATION_ID_PROPERTY,m.getCorrelationId());
-      httpMethod.addRequestHeader("X-" + MuleProperties.MULE_CORRELATION_GROUP_SIZE_PROPERTY,String.valueOf(m.getCorrelationGroupSize()));
-      httpMethod.addRequestHeader("X-" + MuleProperties.MULE_CORRELATION_SEQUENCE_PROPERTY,String.valueOf(m.getCorrelationSequence()));
-    }
-    if (m.getReplyTo() != null) {
-      httpMethod.addRequestHeader("X-" + MuleProperties.MULE_REPLY_TO_PROPERTY,m.getReplyTo().toString());
     }
     return httpMethod;
   }
