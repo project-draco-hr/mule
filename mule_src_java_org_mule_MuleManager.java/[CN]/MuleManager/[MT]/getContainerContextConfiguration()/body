@@ -1,13 +1,17 @@
 {
-  StringWriter s=new StringWriter();
-  StreamResult result=new StreamResult(s);
-  TransformerFactory tFactory=TransformerFactory.newInstance();
-  try {
-    Transformer transformer=tFactory.newTransformer();
-    transformer.transform(new DOMSource(containerContextConfiguration),result);
+  StringReader result=null;
+  if (containerContextConfiguration != null) {
+    StringWriter s=new StringWriter();
+    StreamResult streamResult=new StreamResult(s);
+    TransformerFactory tFactory=TransformerFactory.newInstance();
+    try {
+      Transformer transformer=tFactory.newTransformer();
+      transformer.transform(new DOMSource(containerContextConfiguration),streamResult);
+    }
+ catch (    TransformerException e) {
+      throw new ConfigurationException("could not recover container configuration from fragment",e);
+    }
+    result=new StringReader(s.toString());
   }
- catch (  TransformerException e) {
-    throw new ConfigurationException("could not recover container configuration from fragment",e);
-  }
-  return new StringReader(s.toString());
+  return result;
 }
