@@ -1,0 +1,40 @@
+{
+  String containerName=null;
+  Object realKey=key;
+  if (key instanceof ContainerKeyPair) {
+    containerName=((ContainerKeyPair)key).getContaimerName();
+    realKey=((ContainerKeyPair)key).getKey();
+  }
+  Object component=null;
+  UMOContainerContext container;
+  if (containerName != null) {
+    container=(UMOContainerContext)containers.get(containerName);
+    if (container != null) {
+      return container.getComponent(realKey);
+    }
+ else {
+      throw new ObjectNotFoundException("Container: " + containerName);
+    }
+  }
+  for (Iterator iterator=containers.values().iterator(); iterator.hasNext(); ) {
+    container=(UMOContainerContext)iterator.next();
+    try {
+      component=container.getComponent(realKey);
+    }
+ catch (    ObjectNotFoundException e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Object: '" + realKey + "' not found in container: "+ container.getName());
+      }
+    }
+    if (component != null) {
+      if (logger.isInfoEnabled()) {
+        logger.info("Object: '" + realKey + "' found in container: "+ container.getName());
+      }
+      break;
+    }
+  }
+  if (component == null) {
+    component=defaultContainer.getComponent(realKey);
+  }
+  return component;
+}
