@@ -6,11 +6,24 @@
   ConvertUtils.register(new EndpointURIConverter(),UMOEndpointURI.class);
   digester=new Digester();
   digester.setEntityResolver(new MuleDtdResolver());
+  digester.setErrorHandler(new ErrorHandler(){
+    public void error(    SAXParseException exception) throws SAXException {
+      logger.error(exception.getMessage(),exception);
+    }
+    public void fatalError(    SAXParseException exception) throws SAXException {
+      logger.fatal(exception.getMessage(),exception);
+    }
+    public void warning(    SAXParseException exception) throws SAXException {
+      logger.warn(exception.getMessage(),exception);
+    }
+  }
+);
   String path="mule-configuration";
   addMuleConfigurationRules(digester,path);
   addContainerContextRules(digester,path);
   addTransformerRules(digester,path);
   addMuleEnvironmentPropertiesRules(digester,path);
+  addSecurityManagerRules(digester,path);
   addTransactionManagerRules(digester,path);
   addGlobalEndpointRules(digester,path);
   addEndpointIdentfierRules(digester,path);
