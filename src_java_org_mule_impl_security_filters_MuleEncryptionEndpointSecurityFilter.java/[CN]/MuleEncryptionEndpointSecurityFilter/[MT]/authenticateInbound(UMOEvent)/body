@@ -1,0 +1,30 @@
+{
+  String userHeader=(String)event.getProperty(MuleProperties.MULE_USER_PROPERTY);
+  if (userHeader == null) {
+    throw new UnauthorisedException(event.getSession().getSecurityContext(),getEndpoint(),this);
+  }
+  byte[] creds=null;
+  if (userHeader.startsWith("Plain ")) {
+    creds=userHeader.substring(6).getBytes();
+  }
+ else {
+    creds=strategy.decrypt(userHeader.getBytes());
+  }
+  MuleUserAuthenticationToken user=new MuleUserAuthenticationToken(new String(creds));
+  UMOAuthentication authResult;
+  UMOAuthentication umoAuthentication=new MuleAuthentication(user);
+  try {
+    authResult=getSecurityManager().authenticate(umoAuthentication);
+  }
+ catch (  UMOSecurityException e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Authentication request for user: " + user.getUsername() + " failed: "+ e.toString());
+    }
+    throw new UnauthorisedException("Authentication failed for " + user.getUsername() + ": "+ e.getMessage(),e);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Authentication success: " + authResult.toString());
+  }
+  UMOSecurityContext context=getSecurityManager().createSecurityContext(authResult);
+  event.getSession().setSecurityContext(context);
+}

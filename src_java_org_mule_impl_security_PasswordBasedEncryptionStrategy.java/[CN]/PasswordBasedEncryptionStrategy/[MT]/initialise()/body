@@ -1,0 +1,27 @@
+{
+  if (algorithm == null) {
+    throw new InitialisationException("PBE algorithm cannot be null");
+  }
+ else {
+    logger.debug("Using encryption algorithm: " + algorithm);
+  }
+  if (salt == null) {
+    salt=new byte[]{(byte)0xc7,(byte)0x73,(byte)0x21,(byte)0x8c,(byte)0x7e,(byte)0xc8,(byte)0xee,(byte)0x99};
+  }
+  if (password == null) {
+    throw new InitialisationException("PBE password cannot be null");
+  }
+  pbeParamSpec=new PBEParameterSpec(salt,iterationCount);
+  pbeKeySpec=new PBEKeySpec(password);
+  try {
+    keyFac=SecretKeyFactory.getInstance(getAlgorithm());
+    pbeKey=keyFac.generateSecret(pbeKeySpec);
+    encryptCipher=Cipher.getInstance(getAlgorithm());
+    encryptCipher.init(Cipher.ENCRYPT_MODE,pbeKey,pbeParamSpec);
+    decryptCipher=Cipher.getInstance(getAlgorithm());
+    decryptCipher.init(Cipher.DECRYPT_MODE,pbeKey,pbeParamSpec);
+  }
+ catch (  Exception e) {
+    throw new InitialisationException("Failed to create PBE encryption ciphers: " + e.getMessage(),e);
+  }
+}
