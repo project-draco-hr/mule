@@ -1,9 +1,9 @@
 {
   if (initialised.get()) {
-    throw new InitialisationException("Component: " + descriptor.getName() + " has already bean initialised");
+    throw new InitialisationException(new Message(Messages.OBJECT_X_ALREADY_INITIALSIED,"Component '" + descriptor.getName() + "'"),this);
   }
   descriptor.initialise();
-  this.exceptionStrategy=descriptor.getExceptionStrategy();
+  this.exceptionListener=descriptor.getExceptionListener();
   stats=new ComponentStatistics(getName(),descriptor.getPoolingProfile().getMaxActive(),descriptor.getThreadingProfile().getMaxThreadsActive());
   stats.setEnabled(((MuleManager)MuleManager.getInstance()).getStatistics().isEnabled());
   ((MuleManager)MuleManager.getInstance()).getStatistics().add(stats);
@@ -20,7 +20,7 @@
     throw e;
   }
 catch (  Throwable e) {
-    throw new InitialisationException("Failed to component queue: " + e.getMessage(),e);
+    throw new InitialisationException(new Message(Messages.X_FAILED_TO_INITIALISE,"Compoennt Queue"),e,this);
   }
   initialised.set(true);
   model.fireEvent(new ComponentEvent(descriptor,ComponentEvent.COMPONENT_INITIALISED));

@@ -25,7 +25,7 @@
         logger.debug("Authentication request for user: " + username + " failed: "+ e.toString());
       }
       setUnauthenticated(event);
-      throw new UnauthorisedException("Authentication failed for " + username + ": "+ e.getMessage(),e);
+      throw new UnauthorisedException(new Message(Messages.AUTH_FAILED_FOR_USER_X,username),e);
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Authentication success: " + authResult.toString());
@@ -35,10 +35,10 @@
   }
  else   if (header == null) {
     setUnauthenticated(event);
-    throw new UnauthorisedException(event.getSession().getSecurityContext(),getEndpoint(),this);
+    throw new UnauthorisedException(event.getMessage(),event.getSession().getSecurityContext(),getEndpoint(),this);
   }
  else {
     setUnauthenticated(event);
-    throw new UnsupportedAuthenticationSchemeException("Http Basic filter doesn't know how to handle header: " + header);
+    throw new UnsupportedAuthenticationSchemeException(new Message("acegi",1,header),event.getMessage());
   }
 }

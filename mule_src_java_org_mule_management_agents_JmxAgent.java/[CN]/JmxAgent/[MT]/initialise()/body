@@ -1,6 +1,6 @@
 {
   if (!locateServer && !createServer) {
-    throw new InitialisationException("At least one of createServer and locateServer property should be set to true");
+    throw new InitialisationException(new Message(Messages.JMX_CREATE_OR_LOCATE_SHOULD_BE_SET),this);
   }
   if (mBeanServer == null && locateServer) {
     List l=MBeanServerFactory.findMBeanServer(null);
@@ -12,7 +12,7 @@
     mBeanServer=MBeanServerFactory.createMBeanServer();
   }
   if (mBeanServer == null) {
-    throw new InitialisationException("Could not locate nor create the MBeanServer");
+    throw new InitialisationException(new Message(Messages.JMX_CANT_LOCATE_CREATE_SERVER),this);
   }
   if (connectorServerUrl != null) {
     try {
@@ -20,7 +20,7 @@
       connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,null,mBeanServer);
     }
  catch (    Exception e) {
-      throw new InitialisationException("Could not create jmx connector",e);
+      throw new InitialisationException(new Message(Messages.FAILED_TO_CREATE_X,"Jmx Connector"),e,this);
     }
   }
   MuleManager.getInstance().registerListener(new ModelEventListener(){
@@ -33,7 +33,7 @@
           registerComponentServices();
         }
  catch (        Exception e) {
-          throw new MuleRuntimeException("Could not register mbeans",e);
+          throw new MuleRuntimeException(new Message(Messages.X_FAILED_TO_INITIALISE,"MBeans"),e);
         }
       }
     }

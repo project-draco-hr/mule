@@ -1,7 +1,7 @@
 {
   UMOConnector connector;
   if (getServiceError() != null) {
-    throw new ConnectorServiceException(getServiceError());
+    throw new ConnectorServiceException(Message.createStaticMessage(getServiceError()));
   }
   try {
     if (getConnectorFactory() != null) {
@@ -13,7 +13,7 @@
         connector=(UMOConnector)ClassHelper.loadClass(getConnector(),ConnectorFactory.class).newInstance();
       }
  else {
-        throw new ConnectorServiceException("connector property not set for endpoint service factory: " + protocol);
+        throw new ConnectorServiceException(new Message(Messages.X_NOT_SET_IN_SERVICE_X,"Connector",getProtocol()));
       }
     }
   }
@@ -21,7 +21,7 @@
     throw e;
   }
 catch (  Exception e) {
-    throw new ConnectorServiceException("failed to create connector for protocol: " + protocol + ". Error was: "+ e.getMessage(),e);
+    throw new ConnectorServiceException(new Message(Messages.FAILED_TO_CREATE_X_WITH_X,"Connector",getConnector()),e);
   }
   if (connector.getName() == null) {
     connector.setName("_" + protocol + "Connector#"+ connector.hashCode());

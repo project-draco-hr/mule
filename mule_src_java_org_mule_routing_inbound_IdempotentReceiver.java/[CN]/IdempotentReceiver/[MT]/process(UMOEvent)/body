@@ -1,12 +1,18 @@
 {
   if (isMatch(event)) {
-    checkComponentName(event.getComponent().getDescriptor().getName());
     try {
-      storeId(event.getMessage().getUniqueId());
+      checkComponentName(event.getComponent().getDescriptor().getName());
+    }
+ catch (    IllegalArgumentException e) {
+      throw new RoutingException(event.getMessage(),event.getEndpoint());
+    }
+    String id=event.getMessage().getUniqueId();
+    try {
+      storeId(id);
       return new UMOEvent[]{event};
     }
- catch (    UniqueIdNotSupportedException e) {
-      throw new RoutingException(e.getMessage(),e);
+ catch (    IOException e) {
+      throw new RoutingException(new Message(Messages.FAILED_TO_WRITE_X_TO_STORE_X,id,idStore.getAbsolutePath()),event.getMessage(),event.getEndpoint(),e);
     }
   }
  else {

@@ -1,18 +1,24 @@
 {
   manager=MuleManager.getInstance();
-  try {
-    for (int i=0; i < configResources.length; i++) {
-      Reader configResource=configResources[i];
+  Reader configResource=null;
+  for (int i=0; i < configResources.length; i++) {
+    try {
+      configResource=configResources[i];
       digester.push(manager);
       manager=(UMOManager)digester.parse(configResource);
     }
+ catch (    Exception e) {
+      throw new ConfigurationException(new Message(Messages.FAILED_TO_PARSE_CONFIG_RESOURCE_X,configResource),e);
+    }
+  }
+  try {
     setContainerProperties();
     setTransformers();
     setGlobalEndpoints();
     manager.start();
   }
  catch (  Exception e) {
-    throw new ConfigurationException("Failed to parse configuration resource(s): " + e.getMessage(),e);
+    throw new ConfigurationException(new Message(Messages.X_FAILED_TO_INITIALISE,"MuleManager"),e);
   }
   return manager;
 }

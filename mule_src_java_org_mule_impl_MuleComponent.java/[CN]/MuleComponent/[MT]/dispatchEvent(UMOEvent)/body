@@ -5,7 +5,7 @@
       dispatcher.dispatch(event);
     }
  catch (    Exception e) {
-      throw new DispatchException(e.getMessage(),e);
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
     }
     return;
   }
@@ -29,8 +29,8 @@ synchronized (queue) {
     if (stats.isEnabled())     stats.incQueuedEvent();
   }
  catch (  InterruptedException e) {
-    FailedToQueueEventException e1=new FailedToQueueEventException("Interrupted while queue event for: " + getName(),e);
-    handleException(event,e1);
+    FailedToQueueEventException e1=new FailedToQueueEventException(new Message(Messages.INTERRUPTED_QUEUING_EVENT_FOR_X,getName()),event.getMessage(),this,e);
+    handleException(e1);
   }
   logger.trace("Event added to queue for: " + descriptor.getName());
 }

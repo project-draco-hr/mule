@@ -1,7 +1,7 @@
 {
   String uri=httpServletRequest.getPathInfo();
   if (uri == null) {
-    throw new NoEndpointException("Unable to get endpointUri from HttpServletRequest.  Uri is:" + httpServletRequest.getRequestURI());
+    throw new EndpointException(new Message("servlet",1,httpServletRequest.getRequestURI()));
   }
   if (uri.startsWith("/")) {
     uri=uri.substring(1);
@@ -10,7 +10,7 @@
   if (i == -1) {
     UMOSession session=MuleManager.getInstance().getModel().getComponentSession(uri);
     if (session == null) {
-      throw new NoEndpointException("No endpointUri could be found on Uri: " + uri + ". Format is /provider/endpointUri");
+      throw new EndpointException(new Message("servlet",2,uri));
     }
   }
   String endpointName=uri.substring(0,i);
@@ -22,7 +22,7 @@
   if (endpoint == null) {
     endpoint=MuleObjectHelper.getEndpointByProtocol(endpointName);
     if (endpoint == null) {
-      throw new EndpointNotFoundException("Endpoint not found: " + endpointName);
+      throw new EndpointNotFoundException(endpointName);
     }
   }
   if (endpointAddress != null) {

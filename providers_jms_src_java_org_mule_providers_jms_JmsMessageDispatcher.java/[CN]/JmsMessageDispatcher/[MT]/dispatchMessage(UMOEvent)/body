@@ -13,7 +13,7 @@
   Session session=connector.getSession(tx != null);
   boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
   if (tx != null && syncReceive) {
-    throw new IllegalTransactionStateException("Jms connector does not support synchronous receive in transacted mode");
+    throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
   }
   MessageConsumer replyToConsumer=null;
   UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
@@ -23,7 +23,7 @@
   Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
   Object message=event.getTransformedMessage();
   if (!(message instanceof Message)) {
-    throw new MuleException("Message is not a JMS message, it is of type: " + message.getClass().getName() + ". Check the transformer for this Connector: "+ connector.getName());
+    throw new DispatchException(new org.mule.config.i18n.Message(Messages.MESSAGE_NOT_X_IT_IS_TYPE_X_CHECK_TRANSFORMER_ON_X,"JMS message",message.getClass().getName(),connector.getName()),event.getMessage(),event.getEndpoint());
   }
   Message msg=(Message)message;
   if (event.getMessage().getCorrelationId() != null) {

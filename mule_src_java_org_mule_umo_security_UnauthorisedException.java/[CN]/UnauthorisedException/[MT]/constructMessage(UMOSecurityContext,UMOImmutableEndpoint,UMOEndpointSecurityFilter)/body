@@ -1,14 +1,11 @@
 {
-  StringBuffer buf=new StringBuffer();
+  Message m=null;
   if (context == null) {
-    buf.append("Registered authentication is set to ").append(filter.getClass().getName());
-    buf.append(" but there was no security context on the session.");
+    m=new Message(Messages.AUTH_SET_TO_X_BUT_NO_CONTEXT,filter.getClass().getName());
   }
  else {
-    buf.append("User authentication failed for: " + context.getAuthentication().getPrincipal());
+    m=new Message(Messages.AUTH_FAILED_FOR_USER_X,context.getAuthentication().getPrincipal());
   }
-  buf.append("Failed to ");
-  buf.append((endpoint.getType().equals(UMOEndpoint.ENDPOINT_TYPE_RECEIVER) ? "receive" : "dispatch"));
-  buf.append(" via endpoint ").append(endpoint.getEndpointURI());
-  return buf.toString();
+  m.setNextMessage(new Message(Messages.AUTH_DENIED_ON_ENDPOINT_X,endpoint.getEndpointURI()));
+  return m;
 }

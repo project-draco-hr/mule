@@ -1,18 +1,21 @@
 {
   Message messages[]=event.getMessages();
-  Object msg=null;
+  UMOMessage message=null;
   for (int i=0; i < messages.length; i++) {
     try {
       if (!messages[i].getFlags().contains(Flags.Flag.DELETED)) {
         MimeMessage mimeMessage=new MimeMessage((MimeMessage)messages[i]);
         storeMessage(mimeMessage);
-        UMOMessage message=new MuleMessage(connector.getMessageAdapter(mimeMessage));
+        message=new MuleMessage(connector.getMessageAdapter(mimeMessage));
         messages[i].setFlag(Flags.Flag.DELETED,true);
         routeMessage(message,endpoint.isSynchronous());
       }
     }
- catch (    Exception e) {
-      handleException(msg,e);
+ catch (    UMOException e) {
+      handleException(e);
+    }
+catch (    Exception e) {
+      handleException(new RoutingException(new org.mule.config.i18n.Message(Messages.ROUTING_ERROR),message,endpoint,e));
     }
   }
 }

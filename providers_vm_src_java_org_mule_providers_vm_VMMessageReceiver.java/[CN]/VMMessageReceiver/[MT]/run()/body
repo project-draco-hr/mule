@@ -13,7 +13,12 @@
       }
  catch (      Exception e) {
         logger.error("Failed to dispatch event from VM receiver: " + e.getMessage(),e);
-        connector.getExceptionStrategy().handleException("Failed to dispatch event from VM receiver: " + e.getMessage(),e);
+        if (e instanceof UMOException) {
+          connector.getExceptionListener().exceptionThrown(e);
+        }
+ else {
+          connector.getExceptionListener().exceptionThrown(new DispatchException(event.getMessage(),event.getEndpoint(),e));
+        }
       }
  finally {
         if (event != null) {

@@ -1,17 +1,20 @@
 {
-  logger.fatal(e,e);
-  List msgs=new ArrayList();
-  msgs.add("A Fatal error has occurred while the server was running-");
-  msgs.add(" ");
-  msgs.add(e.getMessage() + "[" + e.getClass().getName()+ "]");
-  Throwable cause=e.getCause();
-  while (cause != null) {
-    msgs.add("Caused by: " + cause.getMessage() + "["+ cause.getClass().getName()+ "]");
-    cause=cause.getCause();
+  Message msg=new Message(Messages.FATAL_ERROR_WHILE_RUNNING);
+  UMOException muleException=ExceptionHelper.getRootMuleException(e);
+  if (muleException != null) {
+    logger.fatal(muleException.getDetailedMessage());
   }
-  msgs.add("The error is fatal, the system must shutdown.");
-  msgs.add("The system was started at : " + new Date(MuleManager.getInstance().getStartDate()));
-  msgs.add("The system shutdown at : " + new Date().toString());
+ else {
+    logger.fatal(msg.toString() + " " + e.getMessage(),e);
+  }
+  List msgs=new ArrayList();
+  msgs.add(msg.getMessage());
+  Throwable root=ExceptionHelper.getRootException(e);
+  msgs.add(root.getMessage() + " (" + root.getClass().getName()+ ")");
+  msgs.add(" ");
+  msgs.add(new Message(Messages.FATAL_ERROR_SHUTDOWN));
+  msgs.add(new Message(Messages.SERVER_STARTED_AT_X,new Date(MuleManager.getInstance().getStartDate())));
+  msgs.add(new Message(Messages.SERVER_SHUTDOWN_AT_X,new Date().toString()));
   shutdownMessage=StringMessageHelper.getBoilerPlate(msgs,'*',80);
   logger.fatal(shutdownMessage);
   System.exit(0);

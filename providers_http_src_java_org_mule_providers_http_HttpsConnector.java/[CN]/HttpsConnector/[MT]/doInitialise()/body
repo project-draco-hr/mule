@@ -4,19 +4,25 @@
   if (getKeyPassword() == null)   throw new NullPointerException("The Key password cannot be null");
   if (getStorePassword() == null)   throw new NullPointerException("The KeyStore password cannot be null");
   if (getKeyManagerAlgorithm() == null)   throw new NullPointerException("The Key Manager Algorithm cannot be null");
+  KeyStore keystore=null;
   try {
     Security.addProvider(getProvider());
-    KeyStore keystore=KeyStore.getInstance(keystoreType);
+    keystore=KeyStore.getInstance(keystoreType);
     InputStream is=Utility.loadResource(getKeyStore(),getClass());
     if (is == null) {
-      throw new FileNotFoundException("Failed to load keystore from classpath or local file: " + getKeyStore());
+      throw new FileNotFoundException(new Message(Messages.CANT_LOAD_X_FROM_CLASSPATH_FILE,"Keystore: " + getKeyStore()).getMessage());
     }
     keystore.load(is,getKeyPassword().toCharArray());
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"KeyStore: " + getKeyStore()),e,this);
+  }
+  try {
     keyManagerFactory=KeyManagerFactory.getInstance(getKeyManagerAlgorithm());
     keyManagerFactory.init(keystore,getStorePassword().toCharArray());
   }
  catch (  Exception e) {
-    throw new InitialisationException("Failed to load the KeyStore and manager: " + e.getMessage(),e);
+    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Key Manager"),e,this);
   }
   super.doInitialise();
   if (protocolHandler != null) {
@@ -26,14 +32,14 @@
     try {
       String clientPath=Utility.getResourcePath(clientKeyStore,getClass());
       if (clientPath == null) {
-        throw new InitialisationException("Failed to find client key store: " + clientKeyStore);
+        throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"ClientKeyStore: " + clientKeyStore),this);
       }
       System.setProperty("javax.net.ssl.keyStore",clientPath);
       System.setProperty("javax.net.ssl.keyStorePassword",clientKeyStorePassword);
       logger.info("Set Client Key store: javax.net.ssl.keyStore=" + clientPath);
     }
  catch (    IOException e) {
-      throw new InitialisationException("Failed to locate Client keystore with: " + clientKeyStore + ". Error is: "+ e.getMessage(),e);
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"ClientKeyStore: " + clientKeyStore),this);
     }
   }
   if (trustStore != null) {

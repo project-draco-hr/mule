@@ -3,7 +3,7 @@
   try {
     Class[] interfaces=ServiceProxy.getInterfacesForComponent(component);
     if (interfaces.length == 0) {
-      throw new InitialisationException("No service interfaces could be found for component: " + component.getDescriptor().getName());
+      throw new InitialisationException(new Message("soap",2,component.getDescriptor().getName()),this);
     }
     VirtualService.enable();
     if (endpoint instanceof ImmutableMuleEndpoint && !((ImmutableMuleEndpoint)endpoint).isSynchronousExplicitlySet()) {
@@ -26,12 +26,12 @@
     desc.addInitialisationCallback(new GlueInitialisationCallback(vService,serviceName,new ServiceContext()));
   }
  catch (  ClassNotFoundException e) {
-    throw new InitialisationException("Failed to load component class: " + e.getMessage(),e);
+    throw new InitialisationException(new Message(Messages.CLASS_X_NOT_FOUND,e.getMessage()),e,this);
   }
 catch (  UMOException e) {
-    throw new InitialisationException("Failed to register component as a service: " + e.getMessage(),e);
+    throw new InitialisationException(new Message("soap",3,component.getDescriptor().getName()),e,this);
   }
 catch (  Exception e) {
-    throw new InitialisationException("Failed to start soap server: " + e.getMessage(),e);
+    throw new InitialisationException(new Message(Messages.FAILED_TO_START_X,"Soap Server"),e,this);
   }
 }
