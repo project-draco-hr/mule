@@ -6,6 +6,12 @@
       throw new InitialisationException("No service interfaces could be found for component: " + component.getDescriptor().getName());
     }
     VirtualService.enable();
+    if (endpoint instanceof ImmutableMuleEndpoint && !((ImmutableMuleEndpoint)endpoint).isSynchronousExplicitlySet()) {
+      if (!endpoint.isSynchronous()) {
+        logger.debug("overriding endpoint synchronicity and setting it to true. Web service requests are executed in a single thread");
+        endpoint.setSynchronous(true);
+      }
+    }
     VirtualService vService=new VirtualService(interfaces,ServiceProxy.createGlueServiceHandler(this,endpoint.isSynchronous()));
     if (createServer) {
       registerContextHeaders();
