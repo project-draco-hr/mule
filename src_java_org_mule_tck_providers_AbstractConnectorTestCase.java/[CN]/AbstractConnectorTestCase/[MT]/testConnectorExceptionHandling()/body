@@ -1,18 +1,18 @@
 {
   assertNotNull(connector);
-  Mock ehandlerMock=new Mock(UMOExceptionStrategy.class,"exceptionHandler");
-  ehandlerMock.expect("handleException",C.ANY_ARGS);
-  assertNotNull(connector.getExceptionStrategy());
-  connector.setExceptionStrategy((UMOExceptionStrategy)ehandlerMock.proxy());
-  connector.handleException("Dummy exception",new MuleException("Dummy"));
+  Mock ehandlerMock=new Mock(ExceptionListener.class,"exceptionHandler");
+  ehandlerMock.expect("exceptionThrown",C.isA(Exception.class));
+  assertNotNull(connector.getExceptionListener());
+  connector.setExceptionListener((ExceptionListener)ehandlerMock.proxy());
+  connector.handleException(new MuleException(Message.createStaticMessage("Dummy")));
   if (connector instanceof AbstractConnector) {
-    ehandlerMock.expect("handleException",C.ANY_ARGS);
-    ((AbstractConnector)connector).exceptionThrown(new MuleException("Dummy"));
+    ehandlerMock.expect("exceptionThrown",C.isA(Exception.class));
+    ((AbstractConnector)connector).exceptionThrown(new MuleException(Message.createStaticMessage("Dummy")));
   }
   ehandlerMock.verify();
-  connector.setExceptionStrategy(null);
+  connector.setExceptionListener(null);
   try {
-    connector.handleException("Dummy exception",new MuleException("Dummy"));
+    connector.handleException(new MuleException(Message.createStaticMessage("Dummy")));
     fail("Should have thrown exception as no strategy is set");
   }
  catch (  RuntimeException e) {

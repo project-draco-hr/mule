@@ -1,0 +1,26 @@
+{
+  this.componentName=event.getComponent().getDescriptor().getName();
+  idStore=new File(storePath + "/muleComponent_" + componentName+ ".store");
+  if (disablePersistence)   return;
+  try {
+    if (idStore.exists()) {
+      BufferedReader reader=null;
+      try {
+        reader=new BufferedReader(new FileReader(idStore));
+        String id;
+        while ((id=reader.readLine()) != null) {
+          messageIds.add(id);
+        }
+      }
+  finally {
+        if (reader != null)         reader.close();
+      }
+    }
+ else {
+      idStore=Utility.createFile(idStore.getAbsolutePath());
+    }
+  }
+ catch (  IOException e) {
+    throw new RoutingException(new Message(Messages.FAILED_TO_READ_FROM_STORE_X,idStore.getAbsolutePath()),event.getMessage(),event.getEndpoint(),e);
+  }
+}

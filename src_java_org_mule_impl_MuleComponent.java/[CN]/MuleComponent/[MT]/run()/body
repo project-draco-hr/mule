@@ -18,20 +18,23 @@
           proxy.setStatistics(getStatistics());
         }
  catch (        NoSuchElementException e) {
-          handleException(event,new ComponentException("Proxy pool timed out. " + e,this,e));
+          handleException(new ComponentException(new Message(Messages.PROXY_POOL_TIMED_OUT),event.getMessage(),this,e));
+        }
+catch (        UMOException e) {
+          handleException(e);
         }
 catch (        Exception e) {
-          handleException(event,new ComponentException("Failed to borrow object from pool: " + e.getMessage(),this,e));
+          handleException(new ComponentException(new Message(Messages.FAILED_TO_GET_POOLED_OBJECT),event.getMessage(),this,e));
         }
         if (proxy == null) {
-          handleException(event,new ComponentException("No proxy was found",this));
+          handleException(new ComponentException(new Message(Messages.FAILED_TO_GET_POOLED_OBJECT),event.getMessage(),this));
         }
         if (!proxy.isStarted()) {
           try {
             proxy.start();
           }
  catch (          UMOException e) {
-            handleException(event,e);
+            handleException(e);
           }
         }
         proxy.onEvent(event);
@@ -39,7 +42,7 @@ catch (        Exception e) {
           threadPool.execute(proxy);
         }
  catch (        InterruptedException e) {
-          handleException(event,e);
+          handleException(new ComponentException(new Message(Messages.EVENT_PROCIESSING_FAILED_FOR_X,descriptor.getName()),event.getMessage(),this,e));
         }
       }
     }

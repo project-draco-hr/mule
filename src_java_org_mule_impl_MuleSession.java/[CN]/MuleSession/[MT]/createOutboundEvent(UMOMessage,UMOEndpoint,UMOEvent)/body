@@ -1,10 +1,7 @@
 {
   logger.debug("Creating event with data: " + message.getPayload().getClass().getName() + ", for endpoint: "+ endpoint.toString());
   if (endpoint == null) {
-    throw new MuleException("When creating an event the proivder cannot be null");
-  }
-  if (message == null) {
-    throw new MuleException("When creating an event the data and/or the properties must be set");
+    throw new DispatchException(new Message(Messages.X_IS_NULL,"Outbound Endpoint"),message,endpoint);
   }
   if (endpoint.getTransformer() == null) {
     if (endpoint.getConnector() instanceof AbstractConnector) {
@@ -23,6 +20,6 @@
     return event;
   }
  catch (  Exception e) {
-    throw new MuleException("Failed to create event using endpoint: " + endpoint.getConnector().getClass().getName(),e);
+    throw new DispatchException(new Message(Messages.FAILED_TO_CREATE_X,"Event"),message,endpoint,e);
   }
 }

@@ -1,12 +1,16 @@
 {
-  if (xslFile == null)   throw new TransformerException("Failed to initialize XsltTransformer : xslFile property is not set ");
+  if (xslFile == null)   throw new InitialisationException(new Message(Messages.X_IS_NULL,"xslFile"),this);
   File file=new File(xslFile);
   StreamSource source;
   if (file.exists())   source=new StreamSource(file);
  else {
-    InputStream stream=getClass().getClassLoader().getResourceAsStream(xslFile);
-    if (stream != null)     source=new StreamSource(stream);
- else     throw new TransformerException("Failed to initialize XsltTransformer : xslFile (" + getXslFile() + ") cannot be found ");
+    try {
+      InputStream stream=Utility.loadResource(xslFile,getClass());
+      source=new StreamSource(stream);
+    }
+ catch (    IOException e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,xslFile),e,this);
+    }
   }
   return source;
 }
