@@ -1,13 +1,14 @@
 {
   List list=getRecipients(message);
   List results=new ArrayList();
-  try {
-    message.setCorrelationId(message.getUniqueId());
-    message.setCorrelationGroupSize(list.size());
-    logger.debug("set correlationId to: " + message.getCorrelationId());
-  }
- catch (  UniqueIdNotSupportedException e) {
-    throw new RoutingException("Cannot use recipientList router with transports that do not support a unique id",e,message);
+  if (enableCorrelation != ENABLE_CORREATION_NEVER) {
+    boolean correlationSet=message.getCorrelationId() != null;
+    if (correlationSet && (enableCorrelation == ENABLE_CORREATION_IF_NOT_SET)) {
+      logger.debug("CorrelationId is already set, not setting Correlation group size");
+    }
+ else {
+      message.setCorrelationGroupSize(list.size());
+    }
   }
   UMOMessage result=null;
   UMOEndpoint endpoint;

@@ -3,12 +3,14 @@
   if (endpoints == null || endpoints.size() == 0) {
     throw new RoutingException("No endpoints are set on this router, cannot route message");
   }
-  try {
-    message.setCorrelationId(message.getUniqueId());
-    message.setCorrelationGroupSize(endpoints.size());
-  }
- catch (  UniqueIdNotSupportedException e) {
-    throw new RoutingException("Cannot use multicasting router with transports that do not support a unique id",e,message);
+  if (enableCorrelation != ENABLE_CORREATION_NEVER) {
+    boolean correlationSet=message.getCorrelationId() != null;
+    if (correlationSet && (enableCorrelation == ENABLE_CORREATION_IF_NOT_SET)) {
+      logger.debug("CorrelationId is already set, not setting Correlation group size");
+    }
+ else {
+      message.setCorrelationGroupSize(endpoints.size());
+    }
   }
   try {
     UMOEndpoint endpoint;
@@ -16,7 +18,18 @@ synchronized (endpoints) {
       for (int i=0; i < endpoints.size(); i++) {
         endpoint=(UMOEndpoint)endpoints.get(i);
         if (synchronous) {
-          result=send(session,message,(UMOEndpoint)endpoint);
+          if (result == null) {
+            result=send(session,message,(UMOEndpoint)endpoint);
+          }
+ else {
+            String def=(String)endpoint.getProperties().get("default");
+            if (def != null) {
+              result=send(session,message,(UMOEndpoint)endpoint);
+            }
+ else {
+              send(session,message,(UMOEndpoint)endpoint);
+            }
+          }
         }
  else {
           dispatch(session,message,(UMOEndpoint)endpoint);
