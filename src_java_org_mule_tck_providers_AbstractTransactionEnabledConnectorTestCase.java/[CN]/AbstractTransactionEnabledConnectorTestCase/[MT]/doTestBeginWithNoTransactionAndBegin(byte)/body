@@ -1,0 +1,12 @@
+{
+  UMOEndpoint endpoint=getTestEndpoint("test",UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER);
+  Mock txFactory=getMockTransactionFactory();
+  Mock transaction=getMockTransaction();
+  endpoint.getTransactionConfig().setBeginAction(action);
+  endpoint.getTransactionConfig().setFactory((UMOTransactionFactory)txFactory.proxy());
+  txFactory.expectAndReturn("beginTransaction",C.IS_NOT_NULL,(UMOTransaction)transaction.proxy());
+  txFactory.expectAndReturn("isTransacted",true);
+  UMOTransaction trans=getTxConnector().beginTransaction(endpoint);
+  txFactory.verify();
+  assertNotNull(trans);
+}

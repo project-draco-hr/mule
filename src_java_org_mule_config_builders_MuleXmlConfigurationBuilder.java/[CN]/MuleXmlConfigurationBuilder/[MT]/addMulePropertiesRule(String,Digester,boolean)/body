@@ -1,0 +1,70 @@
+{
+  boolean envProps=false;
+  if (!path.endsWith("environment-properties")) {
+    path+="/properties";
+    envProps=true;
+  }
+  digester.addRule(path,new ObjectCreateRule(path,HashMap.class){
+    public void end(    String string,    String string1) throws Exception {
+      Map props=(Map)digester.peek();
+      if (props.containsKey(MuleConfiguration.USE_MANAGER_PROPERTIES)) {
+        props.putAll(MuleManager.getInstance().getProperties());
+        props.remove(MuleConfiguration.USE_MANAGER_PROPERTIES);
+      }
+      super.end(string,string1);
+      if (setAsBeanProperties) {
+        org.mule.util.BeanUtils.populateWithoutFail(digester.peek(),props,true);
+      }
+ else {
+        BeanUtils.setProperty(digester.peek(),string1,props);
+      }
+    }
+  }
+);
+  digester.addCallMethod(path + "/property","put",2);
+  digester.addCallParam(path + "/property",0,"name");
+  digester.addCallParam(path + "/property",1,"value");
+  addPropertyFactoryRule(digester,path + "/factory-property");
+  addSystemPropertyRule(digester,path + "/system-property");
+  addContainerPropertyRule(digester,path + "/container-property",setAsBeanProperties);
+  digester.addObjectCreate(path + "/map",HashMap.class);
+  digester.addCallMethod(path + "/map/property","put",2);
+  digester.addCallParam(path + "/map/property",0,"name");
+  digester.addCallParam(path + "/map/property",1,"value");
+  addPropertyFactoryRule(digester,path + "/map/factory-property");
+  addSystemPropertyRule(digester,path + "/map/system-property");
+  addContainerPropertyRule(digester,path + "/map/container-property",false);
+  digester.addRule(path + "/map",new CallMethodRule("put",2){
+    public void end(    String string,    String string1) throws Exception {
+      Map props=(Map)digester.peek();
+      if (props.containsKey(MuleConfiguration.USE_MANAGER_PROPERTIES)) {
+        props.putAll(MuleManager.getInstance().getProperties());
+        props.remove(MuleConfiguration.USE_MANAGER_PROPERTIES);
+      }
+      Object o=digester.peek(1);
+      digester.push(o);
+      super.end(string,string1);
+      o=digester.pop();
+    }
+  }
+);
+  digester.addCallParam(path + "/map",0,"name");
+  digester.addCallParam(path + "/map",1,true);
+  digester.addObjectCreate(path + "/list",ArrayList.class);
+  digester.addCallMethod(path + "/list/entry","add",1);
+  digester.addCallParam(path + "/list/entry",0,"value");
+  addPropertyFactoryRule(digester,path + "/list/factory-entry");
+  addSystemPropertyRule(digester,path + "/list/system-entry");
+  addContainerPropertyRule(digester,path + "/list/container-entry",false);
+  digester.addRule(path + "/list",new CallMethodRule("put",2){
+    public void end(    String string,    String string1) throws Exception {
+      Object o=digester.peek(1);
+      digester.push(o);
+      super.end(string,string1);
+      o=digester.pop();
+    }
+  }
+);
+  digester.addCallParam(path + "/list",0,"name");
+  digester.addCallParam(path + "/list",1,true);
+}

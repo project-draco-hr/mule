@@ -1,0 +1,18 @@
+{
+  if (stopped.get()) {
+    stopped.set(false);
+    try {
+      if (!poolInitialised.get()) {
+        initialisePool();
+      }
+      proxyPool.start();
+      worker=new Thread(this,descriptor.getName() + ".component");
+      worker.setPriority(Thread.NORM_PRIORITY);
+      worker.start();
+    }
+ catch (    Exception e) {
+      throw new ComponentException("Failed to start proxy pool",this,e);
+    }
+  }
+  model.fireEvent(new ComponentEvent(descriptor,ComponentEvent.COMPONENT_STARTED));
+}

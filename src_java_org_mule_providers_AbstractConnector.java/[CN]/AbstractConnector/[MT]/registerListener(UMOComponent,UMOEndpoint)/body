@@ -1,0 +1,17 @@
+{
+  if (endpoint == null || component == null)   throw new IllegalArgumentException("The endpoint and component cannot be null when registering a listener");
+  UMOEndpointURI endpointUri=endpoint.getEndpointURI();
+  if (endpointUri == null) {
+    throw new MuleException("Endpoint cannot be null when registering a listener");
+  }
+  logger.info("registering listener: " + component.getDescriptor().getName() + " on endpointUri: "+ endpointUri.toString());
+  UMOMessageReceiver receiver=(UMOMessageReceiver)receivers.get(getReceiverKey(component,endpoint));
+  if (receiver != null) {
+    throw new MuleException("There is already a listener registered on this connector on endpointUri: " + endpointUri);
+  }
+ else {
+    receiver=createReceiver(component,endpoint);
+    receivers.put(getReceiverKey(component,endpoint),receiver);
+  }
+  return receiver;
+}

@@ -1,0 +1,19 @@
+{
+  ObjectPool pool=createPool(getTestDescriptor("orange",Orange.class.getName()),BLOCK_WHEN_EXHAUSTED);
+  assertEquals(0,pool.getSize());
+  Object borrowed=pool.borrowObject();
+  borrowed=pool.borrowObject();
+  assertEquals(2,pool.getSize());
+  long starttime=System.currentTimeMillis();
+  long borrowerWait=500;
+  Borrower borrower=new Borrower(pool,borrowerWait);
+  borrower.start();
+  try {
+    Thread.sleep(200);
+  }
+ catch (  InterruptedException e) {
+  }
+  borrowed=pool.borrowObject();
+  long totalTime=System.currentTimeMillis() - starttime;
+  assertNotNull(borrowed);
+}

@@ -1,0 +1,23 @@
+{
+  if (configResources != null && !"".equals(configResources)) {
+    if (configResources.indexOf(",") > -1) {
+      throw new ConfigurationException("For this builder the config resources " + "should be null or a single name of the resuorces to look up");
+    }
+  }
+ else {
+    configResources=MULE_CONFIGURATION_RESOURCE;
+  }
+  try {
+    Enumeration e=Thread.currentThread().getContextClassLoader().getResources(configResources);
+    URL url;
+    while (e.hasMoreElements()) {
+      url=(URL)e.nextElement();
+      logger.info("Loading resource: " + url.toExternalForm());
+      digester.parse(url.openStream());
+    }
+  }
+ catch (  Exception e) {
+    throw new ConfigurationException("Failed ro loand configuration from the claspath: " + e.getMessage(),e);
+  }
+  return manager;
+}

@@ -1,0 +1,33 @@
+{
+  if (!initialised.get()) {
+    initialising.set(true);
+    fireSystemEvent(new ManagerEvent(this,ManagerEvent.MANAGER_INITIALISNG));
+    if (id == null) {
+      logger.warn("No unique id has be set on this manager");
+    }
+    try {
+      boolean disable=PropertiesHelper.getBooleanProperty(System.getProperties(),MuleProperties.DISABLE_SERVER_CONNECTIONS,false);
+      if (config.getServerUrl() == null || "".equals(config.getServerUrl().trim())) {
+        logger.info("Server endpointUri is null, not registering Mule Admin agent");
+        disable=true;
+      }
+      if (!disable) {
+        registerAgent(new MuleAdminAgent());
+      }
+      initialiseConnectors();
+      initialiseEndpoints();
+      initialiseAgents();
+      try {
+        model.initialise();
+      }
+ catch (      Exception e) {
+        throw new InitialisationException("Failed to initialise the model: " + e.getMessage(),e);
+      }
+    }
+  finally {
+      initialised.set(true);
+      initialising.set(false);
+      fireSystemEvent(new ManagerEvent(this,ManagerEvent.MANAGER_INITIALISED));
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  UMOConnector connector;
+  if (getServiceError() != null) {
+    throw new ConnectorServiceException(getServiceError());
+  }
+  try {
+    if (getConnectorFactory() != null) {
+      ObjectFactory factory=(ObjectFactory)ClassHelper.loadClass(getConnectorFactory(),ConnectorFactory.class).newInstance();
+      connector=(UMOConnector)factory.create();
+    }
+ else {
+      if (getConnector() != null) {
+        connector=(UMOConnector)ClassHelper.loadClass(getConnector(),ConnectorFactory.class).newInstance();
+      }
+ else {
+        throw new ConnectorServiceException("connector property not set for endpoint service factory: " + protocol);
+      }
+    }
+  }
+ catch (  ConnectorServiceException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new ConnectorServiceException("failed to create connector for protocol: " + protocol + ". Error was: "+ e.getMessage(),e);
+  }
+  if (connector.getName() == null) {
+    connector.setName("_" + protocol + "Connector#"+ connector.hashCode());
+  }
+  return connector;
+}

@@ -1,0 +1,24 @@
+{
+  StringTokenizer st=new StringTokenizer((String)list,delim);
+  UMOTransformer tempTrans=null;
+  UMOTransformer currentTrans=null;
+  UMOTransformer returnTrans=null;
+  UMOManager manager=MuleManager.getInstance();
+  String key;
+  while (st.hasMoreTokens()) {
+    key=st.nextToken().trim();
+    tempTrans=manager.lookupTransformer(key);
+    if (tempTrans == null) {
+      throw new MuleException("Transformer: " + key.toString() + " has not been registered with Mule");
+    }
+    if (currentTrans == null) {
+      currentTrans=tempTrans;
+      returnTrans=tempTrans;
+    }
+ else {
+      currentTrans.setTransformer(tempTrans);
+      currentTrans=tempTrans;
+    }
+  }
+  return returnTrans;
+}

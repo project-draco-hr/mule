@@ -1,0 +1,46 @@
+{
+  String scheme=uri.getSchemeMetaInfo();
+  UMOConnector connector=null;
+  try {
+    if (uri.getCreateConnector() == ALWAYS_CREATE_CONNECTOR) {
+      connector=createConnector(uri);
+      MuleManager.getInstance().registerConnector(connector);
+    }
+ else     if (uri.getCreateConnector() == NEVER_CREATE_CONNECTOR) {
+      connector=MuleObjectHelper.getConnectorByProtocol(scheme);
+    }
+ else     if (uri.getConnectorName() != null) {
+      connector=MuleManager.getInstance().lookupConnector(uri.getConnectorName());
+      if (connector == null) {
+        throw new ConnectorFactoryException("No connector found called: " + uri.getConnectorName());
+      }
+    }
+ else {
+      connector=MuleObjectHelper.getConnectorByProtocol(scheme);
+      if (connector == null) {
+        connector=createConnector(uri);
+        MuleManager.getInstance().registerConnector(connector);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new ConnectorFactoryException("Failed to get connector: " + e.getMessage(),e);
+  }
+  if (connector == null) {
+    throw new ConnectorFactoryException("Failed to find/create connector for protocol: " + scheme);
+  }
+  UMOEndpoint endpoint=new MuleEndpoint();
+  endpoint.setConnector(connector);
+  endpoint.setEndpointURI(uri);
+  String name=uri.getEndpointName();
+  if (name == null) {
+    name="_" + scheme + "Endpoint#"+ endpoint.hashCode();
+  }
+  endpoint.setName(name);
+  if (type != null) {
+    endpoint.setType(type);
+    UMOTransformer trans=getTransformer(uri,connector,UMOEndpoint.ENDPOINT_TYPE_RECEIVER.equals(type));
+    endpoint.setTransformer(trans);
+  }
+  return endpoint;
+}

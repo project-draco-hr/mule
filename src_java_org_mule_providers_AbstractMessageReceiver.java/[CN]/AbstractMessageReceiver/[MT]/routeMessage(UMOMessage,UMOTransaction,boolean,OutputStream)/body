@@ -1,0 +1,39 @@
+{
+  if (endpoint.getFilter() != null) {
+    if (!endpoint.getFilter().accept(message)) {
+      handleUnacceptedFilter(message);
+      return null;
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Received message from: " + endpoint.getEndpointURI().getAddress());
+    logger.debug("Payload is of type: " + message.getPayload().getClass().getName());
+    StringBuffer buf=new StringBuffer();
+    Map props=message.getProperties();
+    for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      buf.append("  ").append(entry.getKey()).append("=").append(entry.getValue()).append("\n");
+    }
+    logger.debug("Message properties: " + buf.toString());
+  }
+  UMOSession session=new MuleSession(component,trans);
+  ResponseOutputStream ros=null;
+  if (outputStream != null) {
+    if (outputStream instanceof ResponseOutputStream) {
+      ros=(ResponseOutputStream)outputStream;
+    }
+ else {
+      ros=new ResponseOutputStream(outputStream);
+    }
+  }
+  UMOEvent muleEvent=new MuleEvent(message,endpoint,session,synchronous,ros);
+  UMOMessage resultMessage=null;
+  if (UMOEndpoint.ENDPOINT_TYPE_RESPONSE.equals(endpoint.getType())) {
+    component.getDescriptor().getResponseRouter().route(muleEvent);
+    return null;
+  }
+ else {
+    resultMessage=component.getDescriptor().getInboundRouter().route(muleEvent);
+  }
+  return resultMessage;
+}

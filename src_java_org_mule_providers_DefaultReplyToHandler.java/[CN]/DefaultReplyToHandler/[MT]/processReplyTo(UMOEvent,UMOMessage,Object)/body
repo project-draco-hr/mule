@@ -1,0 +1,18 @@
+{
+  logger.info("sending reply to: " + returnMessage.getReplyTo());
+  String replytToEndpoint=replyTo.toString();
+  UMOEndpoint endpoint=getEndpoint(event,replytToEndpoint);
+  if (transformer != null) {
+    endpoint.setTransformer(transformer);
+  }
+  UMOEvent replyToEvent=new MuleEvent(returnMessage,endpoint,event.getSession(),false);
+  replyToEvent.removeProperty(MuleProperties.MULE_REPLY_TO_PROPERTY);
+  try {
+    endpoint.getConnector().getDispatcher(replyTo.toString()).dispatch(replyToEvent);
+    logger.info("reply to sent: " + endpoint);
+    ((MuleComponent)event.getComponent()).getStatistics().incSentReplyToEvent();
+  }
+ catch (  Exception e) {
+    throw new DispatchException("Failed to dispatch on replyTo: " + endpoint + ". "+ e.getMessage(),e);
+  }
+}

@@ -1,0 +1,30 @@
+{
+  if (descriptor == null) {
+    throw new MuleException("Mule UMO descriptor to register was null");
+  }
+  if (descriptor.getExceptionStrategy() == null) {
+    descriptor.setExceptionStrategy(exceptionStrategy);
+  }
+  UMOComponent component=(UMOComponent)components.get(descriptor.getName());
+  if (component == null) {
+    component=new MuleComponent((MuleDescriptor)descriptor);
+    descriptors.put(descriptor.getName(),descriptor);
+    components.put(descriptor.getName(),component);
+  }
+  logger.debug("Added Mule UMO: " + descriptor.getName());
+  if (initialised.get()) {
+    try {
+      logger.info("Initialising component: " + descriptor.getName());
+      component.initialise();
+    }
+ catch (    Exception e) {
+      throw new InitialisationException("Failed to start component: " + descriptor.getName() + ". Error is: "+ e.getMessage(),e);
+    }
+  }
+  if (started.get()) {
+    logger.info("Starting component: " + descriptor.getName());
+    registerListeners(component);
+    component.start();
+  }
+  return component;
+}

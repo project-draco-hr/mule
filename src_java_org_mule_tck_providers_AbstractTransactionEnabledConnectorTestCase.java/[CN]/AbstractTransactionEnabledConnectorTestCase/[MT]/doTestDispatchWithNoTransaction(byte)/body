@@ -1,0 +1,15 @@
+{
+  UMOConnector connector=getConnector();
+  UMOEndpoint endpoint=getTestEndpoint("test",UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint.getTransactionConfig().setCommitAction(action);
+  UMOEvent event=getTestEvent(getValidMessage(),endpoint);
+  connector.setDispatcherFactory(new UMOMessageDispatcherFactory(){
+    public UMOMessageDispatcher create(    UMOConnector connector){
+      return testDispatcher;
+    }
+  }
+);
+  connector.getDispatcher("dummy").dispatch(event);
+  assertEquals(event,((TestDispatcher)connector.getDispatcher("dummy")).getEvent());
+  ((TransactionEnabledConnector)connector).commitTransaction(event);
+}

@@ -1,0 +1,27 @@
+{
+  UMOMessage result=null;
+  if (routers.size() == 0) {
+    result=message;
+  }
+ else {
+    UMOResponseRouter router=null;
+    for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
+      router=(UMOResponseRouter)iterator.next();
+      result=router.getResponse(message);
+    }
+    if (result == null) {
+      if (getStatistics().isEnabled()) {
+        getStatistics().incrementNoRoutedMessage();
+      }
+    }
+  }
+  if (result != null && transformer != null) {
+    try {
+      result=new MuleMessage(transformer.transform(result.getPayload()),result.getProperties());
+    }
+ catch (    TransformerException e) {
+      throw new RoutingException("Failed to transform response message: " + e.getMessage(),e);
+    }
+  }
+  return result;
+}

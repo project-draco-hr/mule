@@ -1,0 +1,14 @@
+{
+  try {
+    UMOEndpoint endpoint=getTestEndpoint("test",UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER);
+    Mock transaction=getMockTransaction();
+    TransactionCoordination.getInstance().bindTransaction((UMOTransaction)transaction.proxy(),null);
+    endpoint.getTransactionConfig().setBeginAction(UMOTransactionConfig.ACTION_JOIN_IF_POSSIBLE);
+    UMOTransaction trans=getTxConnector().beginTransaction(endpoint);
+    transaction.verify();
+    assertEquals(transaction,trans);
+  }
+  finally {
+    TransactionCoordination.getInstance().unbindTransaction();
+  }
+}

@@ -1,0 +1,43 @@
+{
+  Properties properties=PropertiesHelper.getPropertiesFromQueryString(uri.getQuery());
+  String tempEndpointName=(String)properties.remove(PROPERTY_ENDPOINT_NAME);
+  if (tempEndpointName != null) {
+    this.endpointName=tempEndpointName;
+  }
+  String endpoint=(String)properties.remove(PROPERTY_ENDPOINT_URI);
+  if (endpoint != null) {
+    this.address=endpoint;
+  }
+  String cnnName=(String)properties.remove(PROPERTY_CONNECTOR_NAME);
+  if (cnnName != null) {
+    this.connectorName=cnnName;
+  }
+  String create=(String)properties.remove(PROPERTY_CREATE_CONNECTOR);
+  if (create != null) {
+    if ("0".equals(create)) {
+      this.createConnector=ConnectorFactory.GET_OR_CREATE_CONNECTOR;
+    }
+ else     if ("1".equals(create)) {
+      this.createConnector=ConnectorFactory.ALWAYS_CREATE_CONNECTOR;
+    }
+ else     if ("2".equals(create)) {
+      this.createConnector=ConnectorFactory.NEVER_CREATE_CONNECTOR;
+    }
+ else     if ("IF_NEEDED".equals(create)) {
+      this.createConnector=ConnectorFactory.GET_OR_CREATE_CONNECTOR;
+    }
+ else     if ("ALWAYS".equals(create)) {
+      this.createConnector=ConnectorFactory.ALWAYS_CREATE_CONNECTOR;
+    }
+ else     if ("NEVER".equals(create)) {
+      this.createConnector=ConnectorFactory.NEVER_CREATE_CONNECTOR;
+    }
+ else     if (connectorName == null) {
+      this.createConnector=ConnectorFactory.USE_CONNECTOR;
+      connectorName=create;
+    }
+  }
+  transformers=(String)properties.remove(PROPERTY_TRANSFORMERS);
+  if (transformers != null)   transformers=transformers.replaceAll(" ",",");
+  return properties;
+}

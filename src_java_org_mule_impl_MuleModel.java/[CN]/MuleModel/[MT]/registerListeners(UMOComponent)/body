@@ -1,0 +1,20 @@
+{
+  UMOEndpoint endpoint;
+  List endpoints=new ArrayList();
+  endpoints.addAll(component.getDescriptor().getInboundRouter().getEndpoints());
+  if (component.getDescriptor().getInboundEndpoint() != null) {
+    endpoints.add(component.getDescriptor().getInboundEndpoint());
+  }
+  if (component.getDescriptor().getResponseRouter() != null && component.getDescriptor().getResponseRouter().getEndpoints() != null) {
+    endpoints.addAll(component.getDescriptor().getResponseRouter().getEndpoints());
+  }
+  for (Iterator it=endpoints.iterator(); it.hasNext(); ) {
+    endpoint=(UMOEndpoint)it.next();
+    try {
+      endpoint.getConnector().registerListener(component,endpoint);
+    }
+ catch (    Exception e) {
+      throw new MuleException("Failed to register Component: " + component.getDescriptor().getName() + " as a listener on connector: "+ endpoint.getConnector().getName()+ ". Error is: "+ e,e);
+    }
+  }
+}

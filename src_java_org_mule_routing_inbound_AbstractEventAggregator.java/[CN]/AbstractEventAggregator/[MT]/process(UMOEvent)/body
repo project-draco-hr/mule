@@ -1,0 +1,17 @@
+{
+  SynchronizedBoolean doAggregate=new SynchronizedBoolean(false);
+  EventGroup eg=null;
+  if (isMatch(event)) {
+    eg=addEvent(event);
+    doAggregate.commit(false,shouldAggregate(eg));
+  }
+  if (doAggregate.get()) {
+synchronized (lock) {
+      UMOMessage returnMessage=aggregateEvents(eg);
+      removeGroup(eg.getGroupId());
+      UMOEvent returnEvent=new MuleEvent(returnMessage,event.getEndpoint(),event.getComponent(),event);
+      return new UMOEvent[]{returnEvent};
+    }
+  }
+  return null;
+}

@@ -1,0 +1,42 @@
+{
+  if (!locateServer && !createServer) {
+    throw new InitialisationException("At least one of createServer and locateServer property should be set to true");
+  }
+  if (mBeanServer == null && locateServer) {
+    List l=MBeanServerFactory.findMBeanServer(null);
+    if (l != null && l.size() > 0) {
+      mBeanServer=(MBeanServer)l.get(0);
+    }
+  }
+  if (mBeanServer == null && createServer) {
+    mBeanServer=MBeanServerFactory.createMBeanServer();
+  }
+  if (mBeanServer == null) {
+    throw new InitialisationException("Could not locate nor create the MBeanServer");
+  }
+  if (connectorServerUrl != null) {
+    try {
+      JMXServiceURL url=new JMXServiceURL(connectorServerUrl);
+      connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,null,mBeanServer);
+    }
+ catch (    Exception e) {
+      throw new InitialisationException("Could not create jmx connector",e);
+    }
+  }
+  MuleManager.getInstance().registerListener(new ModelEventListener(){
+    public void onEvent(    UMOServerEvent event){
+      if (event.getAction() == ModelEvent.MODEL_INITIALISED) {
+        try {
+          registerStatisticsService();
+          registerMuleService();
+          registerModelService();
+          registerComponentServices();
+        }
+ catch (        Exception e) {
+          throw new MuleRuntimeException("Could not register mbeans",e);
+        }
+      }
+    }
+  }
+);
+}

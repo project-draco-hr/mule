@@ -1,0 +1,26 @@
+{
+  UMOMessageDispatcher dispatcher=null;
+  if (endpoint == null || "".equals(endpoint))   endpoint="ANY";
+  if ("ANY".equals(endpoint)) {
+    dispatcher=(UMOMessageDispatcher)dispatchers.getFirstValue();
+    while (dispatcher != null && dispatcher.isDisposed()) {
+      dispatchers.values().remove(dispatcher);
+      dispatcher=(UMOMessageDispatcher)dispatchers.getFirstValue();
+    }
+  }
+ else {
+    if (dispatchers == null) {
+      throw new NullPointerException("Dispatchers are null for connector: " + name);
+    }
+    dispatcher=(UMOMessageDispatcher)dispatchers.get(endpoint);
+    if (dispatcher != null && dispatcher.isDisposed()) {
+      dispatchers.values().remove(dispatcher);
+      dispatcher=null;
+    }
+  }
+  if (dispatcher == null) {
+    dispatcher=createDispatcher();
+    dispatchers.put(endpoint,dispatcher);
+  }
+  return dispatcher;
+}

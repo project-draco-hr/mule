@@ -1,0 +1,27 @@
+{
+  ConnectorServiceDescriptor csd=(ConnectorServiceDescriptor)csdCache.get(new CSDKey(protocol,overrides));
+  if (csd == null) {
+    String location=SpiHelper.SERVICE_ROOT + PROVIDER_SERVICES_PATH;
+    InputStream is=SpiHelper.findServiceDescriptor(PROVIDER_SERVICES_PATH,protocol,ConnectorFactory.class);
+    try {
+      if (is != null) {
+        Properties props=new Properties();
+        props.load(is);
+        csd=new ConnectorServiceDescriptor(protocol,location,props);
+        csd.setOverrides(overrides);
+        if (csd.getServiceFinder() != null) {
+          ConnectorServiceFinder finder=csd.createServiceFinder();
+          csd=finder.findService(protocol);
+        }
+        csdCache.put(new CSDKey(csd.getProtocol(),overrides),csd);
+      }
+ else {
+        throw new ConnectorServiceNotFoundException("Failed to create endpoint from service location: " + location + "/"+ protocol);
+      }
+    }
+ catch (    IOException e) {
+      throw new ConnectorFactoryException("Failed to create endpoint from service location: " + location + "/"+ protocol+ ". error is: "+ e.getMessage(),e);
+    }
+  }
+  return csd;
+}

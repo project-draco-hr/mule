@@ -1,0 +1,22 @@
+{
+  Mock trans=new Mock(Transaction.class);
+  XaTransaction xatx=new XaTransaction((Transaction)trans.proxy());
+  Mock resource=new Mock(XAResource.class);
+  trans.expectAndReturn("enlistResource",C.eq((XAResource)resource.proxy()),true);
+  assertTrue(xatx.enlistResource((XAResource)resource.proxy()));
+  trans.expect("rollback");
+  xatx.begin();
+  assertTrue(xatx.isBegun());
+  xatx.setRollbackOnly();
+  assertTrue(xatx.isRollbackOnly());
+  try {
+    xatx.commit();
+    fail("Cant commit when rollback only is set");
+  }
+ catch (  UMOTransactionException e) {
+  }
+  xatx.rollback();
+  assertTrue(xatx.isRolledBack());
+  assertTrue(!xatx.isCommitted());
+  trans.verify();
+}

@@ -1,0 +1,36 @@
+{
+  try {
+    UMOEndpoint ep=MuleManager.getInstance().lookupEndpoint(endpointName);
+    if (ep == null) {
+      throw new InitialisationException("Failed to find Endpoint with name: " + endpointName);
+    }
+    if (address != null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Overloading endpoint uri for: " + endpointName + " from "+ ep.getEndpointURI().toString()+ " to "+ address);
+      }
+      ep.setEndpointURI(new MuleEndpointURI(address));
+    }
+    if (transformer != null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Overloading Transformer for: " + endpointName + " from "+ ep.getTransformer()+ " to "+ transformer);
+      }
+      UMOTransformer trans=MuleObjectHelper.getTransformer(transformer," ");
+      ep.setTransformer(trans);
+    }
+    if (filter != null)     ep.setFilter(filter);
+    if (properties != null)     ep.getProperties().putAll(properties);
+    if (transactionConfig != null)     ep.setTransactionConfig(transactionConfig);
+    ep.initialise();
+    Method m=object.getClass().getMethod(propertyName,new Class[]{UMOEndpoint.class});
+    if (m == null) {
+      throw new InitialisationException("Method not found: " + propertyName + " on "+ object.getClass().getName());
+    }
+    m.invoke(object,new Object[]{ep});
+  }
+ catch (  InitialisationException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new InitialisationException("Failed to set transformer on bean: " + object.getClass().getName() + "."+ propertyName+ "(...).  Error is: "+ e.getMessage(),e);
+  }
+}

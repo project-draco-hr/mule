@@ -1,0 +1,30 @@
+{
+  if (!initialised.get()) {
+    try {
+      initialise();
+    }
+ catch (    Exception e) {
+      throw new InitialisationException("Failed to initialise Model: " + e.getMessage(),e);
+    }
+  }
+  if (!started.get()) {
+    fireEvent(new ModelEvent(this,ModelEvent.MODEL_STARTING));
+    UMOComponent temp=null;
+    for (Iterator i=components.values().iterator(); i.hasNext(); ) {
+      temp=(UMOComponent)i.next();
+      try {
+        registerListeners(temp);
+        temp.start();
+      }
+ catch (      Exception e) {
+        throw new MuleException("Failed to start component: " + e.getMessage(),e);
+      }
+      logger.info("Component " + temp + " has been started successfully");
+    }
+    started.set(true);
+    fireEvent(new ModelEvent(this,ModelEvent.MODEL_STARTED));
+  }
+ else {
+    logger.debug("Model already started");
+  }
+}

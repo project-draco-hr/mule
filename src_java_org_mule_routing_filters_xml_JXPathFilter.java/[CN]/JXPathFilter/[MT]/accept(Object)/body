@@ -1,0 +1,34 @@
+{
+  if (obj == null)   return false;
+  if (expression == null) {
+    log.warn("Expression for JXPathFilter is not set");
+    return false;
+  }
+  if (value == null) {
+    log.debug("Value for JXPathFilter is not set : true by default");
+    value=Boolean.TRUE.toString();
+  }
+  boolean res=false;
+  try {
+    Object o=null;
+    if (obj instanceof String) {
+      Document doc=DocumentHelper.parseText((String)obj);
+      o=doc.valueOf(expression);
+    }
+ else {
+      JXPathContext context=JXPathContext.newContext(obj);
+      o=context.getValue(expression);
+    }
+    log.debug("JXPathFilter Expression result='" + o + "' -  Expected value='"+ value+ "'");
+    if (o != null)     res=value.equals(o.toString());
+ else {
+      res=false;
+      log.warn("JXPathFilter Expression result is null (" + expression + ")");
+    }
+  }
+ catch (  Exception e) {
+    log.warn("JXPathFilter cannot evaluate expression (" + expression + ") :"+ e.getMessage(),e);
+  }
+  log.debug("JXPathFilter accept object  : " + res);
+  return res;
+}

@@ -1,0 +1,36 @@
+{
+  String scheme=url.getSchemeMetaInfo();
+  UMOConnector connector=null;
+  ConnectorServiceDescriptor psd;
+  psd=getServiceDescriptor(scheme);
+  if (psd.getServiceError() != null) {
+    throw new ConnectorServiceException(psd.getServiceError());
+  }
+  try {
+    if (psd.getConnectorFactory() != null) {
+      ObjectFactory factory=(ObjectFactory)ClassHelper.loadClass(psd.getConnectorFactory(),ConnectorFactory.class).newInstance();
+      connector=(UMOConnector)factory.create();
+    }
+ else {
+      if (psd.getConnector() != null) {
+        connector=(UMOConnector)ClassHelper.loadClass(psd.getConnector(),ConnectorFactory.class).newInstance();
+        if (connector instanceof AbstractServiceEnabledConnector) {
+          ((AbstractServiceEnabledConnector)connector).initialiseFromUrl(url);
+        }
+      }
+ else {
+        throw new ConnectorFactoryException("connector property not set for endpoint service factory: " + scheme);
+      }
+    }
+  }
+ catch (  ConnectorFactoryException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new ConnectorFactoryException("failed to create endpoint with url: " + url + ". Error was: "+ e.getMessage(),e);
+  }
+  if (connector.getName() == null) {
+    connector.setName("_" + scheme + "Connector#"+ connector.hashCode());
+  }
+  return connector;
+}

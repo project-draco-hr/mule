@@ -1,0 +1,29 @@
+{
+  Object comp=null;
+  try {
+    comp=ctx.getComponent(containerRef);
+  }
+ catch (  ComponentNotFoundException e) {
+    if (required) {
+      throw e;
+    }
+ else {
+      logger.warn("Component reference not found: " + e.getMessage());
+      return;
+    }
+  }
+  try {
+    if (object instanceof Map) {
+      ((Map)object).put(propertyName,comp);
+    }
+ else     if (object instanceof List) {
+      ((List)object).add(comp);
+    }
+ else {
+      BeanUtils.setProperty(object,propertyName,comp);
+    }
+  }
+ catch (  Exception e) {
+    throw new ComponentResolverException("Failed to set property: " + propertyName + " on object: "+ object.getClass().getName()+ " with parameter type: "+ comp.getClass().getName());
+  }
+}

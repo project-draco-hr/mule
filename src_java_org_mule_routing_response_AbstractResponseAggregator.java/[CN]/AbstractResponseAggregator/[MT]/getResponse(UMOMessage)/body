@@ -1,0 +1,36 @@
+{
+  String messageId=null;
+  try {
+    messageId=message.getUniqueId();
+  }
+ catch (  UniqueIdNotSupportedException e) {
+    throw new RoutingException("Failed to receive response for message id: " + e.getMessage(),e);
+  }
+  Sync s=(Sync)locks.get(messageId);
+  if (s == null) {
+    s=new Latch();
+    locks.put(messageId,s);
+  }
+  boolean b=false;
+  try {
+    if (timeout >= 0) {
+      s.acquire();
+      b=true;
+    }
+ else {
+      b=s.attempt(timeout);
+    }
+  }
+ catch (  InterruptedException e) {
+    logger.error(e.getMessage(),e);
+  }
+  if (!b) {
+    throw new ResponseTimeoutException("Response timed out waiting for message response id: " + messageId);
+  }
+  UMOMessage result=(UMOMessage)responseEvents.get(messageId);
+  locks.remove(messageId);
+  if (result == null) {
+    throw new IllegalStateException("Response Message is null");
+  }
+  return result;
+}

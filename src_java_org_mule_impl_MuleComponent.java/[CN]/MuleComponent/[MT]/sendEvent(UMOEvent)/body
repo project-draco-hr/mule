@@ -1,0 +1,38 @@
+{
+  while (paused.get()) {
+    if (logger.isDebugEnabled())     logger.debug("Component: " + descriptor.getName() + " is paused. Blocking call until resume is called");
+    try {
+      Thread.sleep(1000);
+    }
+ catch (    InterruptedException e) {
+    }
+  }
+  if (stats.isEnabled())   stats.incReceivedEventSync();
+  logger.debug("Component: " + descriptor.getName() + " has received synchronous event on: "+ event.getEndpoint().getEndpointURI());
+  UMOMessage result=null;
+  MuleProxy proxy=null;
+  try {
+    proxy=(MuleProxy)proxyPool.borrowObject();
+    getStatistics().setComponentPoolSize(proxyPool.getSize());
+    proxy.setStatistics(getStatistics());
+    if (logger.isDebugEnabled()) {
+      logger.debug(this + " : got proxy for " + event.getId()+ " = "+ proxy);
+    }
+    result=(UMOMessage)proxy.onCall(event);
+    proxyPool.returnObject(proxy);
+  }
+ catch (  Exception e) {
+    try {
+      proxyPool.returnObject(proxy);
+    }
+ catch (    Exception ignore) {
+    }
+    if (e instanceof MuleException) {
+      throw (MuleException)e;
+    }
+ else {
+      throw new MuleException("Failed to send event through session: " + e,e);
+    }
+  }
+  return result;
+}

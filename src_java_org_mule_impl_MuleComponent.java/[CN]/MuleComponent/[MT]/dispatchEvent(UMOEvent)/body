@@ -1,0 +1,36 @@
+{
+  if (!event.getEndpoint().canReceive()) {
+    UMOMessageDispatcher dispatcher=event.getEndpoint().getConnector().getDispatcher(event.getEndpoint().getEndpointURI().getAddress());
+    try {
+      dispatcher.dispatch(event);
+    }
+ catch (    Exception e) {
+      throw new DispatchException(e.getMessage(),e);
+    }
+    return;
+  }
+  if (stats.isEnabled())   stats.incReceivedEventASync();
+  logger.debug("Component: " + descriptor.getName() + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
+  if (queue.size() >= qProfile.getMaxOutstandingMessages()) {
+    logger.trace("process maxQueueSize reached:" + qProfile.getMaxOutstandingMessages());
+    while (queue.size() >= qProfile.getMaxOutstandingMessages()) {
+synchronized (queue) {
+        try {
+          Thread.yield();
+          queue.wait(qProfile.getBlockWait());
+        }
+ catch (        Exception ie) {
+        }
+      }
+    }
+  }
+  try {
+    queue.put(event);
+    if (stats.isEnabled())     stats.incQueuedEvent();
+  }
+ catch (  InterruptedException e) {
+    FailedToQueueEventException e1=new FailedToQueueEventException("Interrupted while queue event for: " + getName(),e);
+    handleException(event,e1);
+  }
+  logger.trace("Event added to queue for: " + descriptor.getName());
+}

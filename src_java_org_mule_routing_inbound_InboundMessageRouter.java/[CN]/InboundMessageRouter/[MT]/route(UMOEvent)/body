@@ -1,0 +1,70 @@
+{
+  if (endpoints.size() > 0 && routers.size() == 0) {
+    addRouter(new InboundPassThroughRouter());
+  }
+  String componentName=event.getSession().getComponent().getDescriptor().getName();
+  UMOEvent[] eventsToRoute=null;
+  boolean noRoute=true;
+  boolean match=false;
+  UMOInboundRouter umoInboundRouter=null;
+  for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
+    umoInboundRouter=(UMOInboundRouter)iterator.next();
+    if (umoInboundRouter.isMatch(event)) {
+      match=true;
+      eventsToRoute=umoInboundRouter.process(event);
+      noRoute=(eventsToRoute == null);
+      if (!matchAll)       break;
+    }
+  }
+  if (noRoute) {
+    if (getStatistics().isEnabled()) {
+      getStatistics().incrementNoRoutedMessage();
+    }
+    if (!match) {
+      if (getCatchAllStrategy() != null) {
+        logger.debug("Message did not match any routers on: " + componentName + " invoking catch all strategy");
+        getStatistics().incrementCaughtMessage();
+        return getCatchAllStrategy().catchMessage(event.getMessage(),event.getSession(),event.isSynchronous());
+      }
+ else {
+        logger.warn("Message did not match any routers on: " + componentName + " and there is no catch all strategy configured on this router.  Disposing message.");
+        if (logger.isDebugEnabled()) {
+          try {
+            logger.warn("Message fragment is: " + event.getMessageAsString().substring(0,100) + "...");
+          }
+ catch (          UMOException e) {
+          }
+        }
+      }
+    }
+  }
+ else {
+    try {
+      if (event.isSynchronous()) {
+        UMOMessage messageResult=null;
+        for (int i=0; i < eventsToRoute.length; i++) {
+          messageResult=send(eventsToRoute[i]);
+          if (getStatistics().isEnabled()) {
+            getStatistics().incrementRoutedMessage(eventsToRoute[i].getEndpoint());
+          }
+        }
+        return messageResult;
+      }
+ else {
+synchronized (eventsToRoute) {
+          for (int i=0; i < eventsToRoute.length; i++) {
+            dispatch(eventsToRoute[i]);
+            if (getStatistics().isEnabled()) {
+              getStatistics().incrementRoutedMessage(eventsToRoute[i].getEndpoint());
+            }
+          }
+        }
+        return null;
+      }
+    }
+ catch (    UMOException e) {
+      throw new RoutingException("Failed to send/dispatch event: " + e.getMessage(),e);
+    }
+  }
+  return (eventsToRoute != null && eventsToRoute.length > 0 ? eventsToRoute[eventsToRoute.length - 1].getMessage() : null);
+}

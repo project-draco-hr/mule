@@ -1,0 +1,21 @@
+{
+  try {
+    String[] resources=Utility.split(configResources,",");
+    InputStream is;
+    manager=MuleManager.getInstance();
+    MuleManager.getConfiguration().setConfigResources(resources);
+    for (int i=0; i < resources.length; i++) {
+      digester.push(manager);
+      is=loadConfig(resources[i].trim());
+      manager=(UMOManager)digester.parse(is);
+    }
+    setContainerProperties();
+    setTransformers();
+    setGlobalEndpoints();
+    manager.start();
+    return manager;
+  }
+ catch (  Exception e) {
+    throw new ConfigurationException("Failed to parse configuration resource(s): " + e.getMessage(),e);
+  }
+}

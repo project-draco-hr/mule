@@ -1,0 +1,24 @@
+{
+  Object object;
+  UMOMessage result=null;
+  for (int i=0; i < payload.size(); i++) {
+    object=payload.get(i);
+    if (endpoint.getFilter() == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("There is not filter configured on: " + endpoint.getEndpointURI().toString() + ". Using endpoint");
+      }
+      result=new MuleMessage(object,properties);
+      payload.remove(i);
+      break;
+    }
+ else     if (endpoint.getFilter().accept(object)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Endpoint filter matched. Routing message over: " + endpoint.getEndpointURI().toString());
+      }
+      result=new MuleMessage(object,properties);
+      payload.remove(i);
+      break;
+    }
+  }
+  return result;
+}

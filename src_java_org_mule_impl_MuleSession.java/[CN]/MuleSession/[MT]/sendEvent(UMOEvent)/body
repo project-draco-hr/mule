@@ -1,0 +1,26 @@
+{
+  String timeout=(String)event.removeProperty(MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY);
+  if (timeout != null) {
+    event.setTimeout(Integer.parseInt(timeout));
+  }
+  if (event.getEndpoint().canSend()) {
+    try {
+      logger.debug("sending event: " + event);
+      UMOMessageDispatcher dispatcher=event.getEndpoint().getConnector().getDispatcher(event.getEndpoint().getEndpointURI().getAddress());
+      return dispatcher.send(event);
+    }
+ catch (    UMOException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new MuleException("Failed to send event through Connector dispatcher: " + e.getMessage(),e);
+    }
+  }
+ else   if (component != null) {
+    logger.debug("dispatching event to component: " + component.getDescriptor().getName() + " event is: "+ event);
+    return component.sendEvent(event);
+  }
+ else {
+    throw new MuleException("Cannot send event, endpoint is a receiver and there is no current compoenent");
+  }
+}

@@ -1,0 +1,40 @@
+{
+  String correlationId=null;
+  try {
+    correlationId=message.getUniqueId();
+  }
+ catch (  UniqueIdNotSupportedException e) {
+    throw new RoutingException("Cannot use multicasting router with transports that do not support a unique id",e,message);
+  }
+  initialise(message);
+  UMOEndpoint endpoint;
+  UMOMessage result=null;
+  List list=getEndpoints();
+  int i=1;
+  for (Iterator iterator=list.iterator(); iterator.hasNext(); ) {
+    endpoint=(UMOEndpoint)iterator.next();
+    message=getMessagePart(message,endpoint);
+    if (message == null) {
+      logger.warn("Message part is null for endpoint: " + endpoint.getEndpointURI().toString());
+    }
+    while (message != null) {
+      try {
+        message.setCorrelationId(correlationId);
+        message.setCorrelationSequence(i++);
+        message.setCorrelationGroupSize(list.size());
+        if (synchronous) {
+          result=send(session,message,endpoint);
+        }
+ else {
+          dispatch(session,message,endpoint);
+        }
+      }
+ catch (      UMOException e) {
+        throw new CouldNotRouteOutboundMessageException(e.getMessage(),e,message);
+      }
+      if (!multimatch)       break;
+      message=getMessagePart(message,endpoint);
+    }
+  }
+  return result;
+}

@@ -1,0 +1,18 @@
+{
+  originalPayload=invocation.getEvent().getTransformedMessage();
+  UMOMessage bMessage=before(invocation);
+  if (bMessage != null) {
+    RequestContext.rewriteEvent(bMessage);
+    invocation.setMessage(bMessage);
+    invocation.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
+  }
+  UMOMessage message=invocation.execute();
+  invocation.setMessage(message);
+  UMOMessage aMessage=after(invocation);
+  if (aMessage == null) {
+    return message;
+  }
+ else {
+    return aMessage;
+  }
+}
