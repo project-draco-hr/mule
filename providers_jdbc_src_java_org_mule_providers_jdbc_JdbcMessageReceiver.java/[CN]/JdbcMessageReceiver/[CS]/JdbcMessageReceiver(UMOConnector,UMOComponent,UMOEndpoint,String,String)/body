@@ -1,14 +1,9 @@
 {
   super(connector,component,endpoint,new Long(((JdbcConnector)connector).getPollingFrequency()));
+  this.receiveMessagesInTransaction=false;
   this.connector=(JdbcConnector)connector;
   this.readParams=new ArrayList();
-  this.readStmt=JdbcConnector.parseStatement(readStmt,this.readParams);
+  this.readStmt=JdbcUtils.parseStatement(readStmt,this.readParams);
   this.ackParams=new ArrayList();
-  this.ackStmt=JdbcConnector.parseStatement(ackStmt,this.ackParams);
-  if (this.connector.getDataSource() instanceof XADataSource) {
-    TransactionManager transactionManager=MuleManager.getInstance().getTransactionManager();
-    if (transactionManager == null) {
-      throw new InitialisationException("A transaction manager must be set on mule manager");
-    }
-  }
+  this.ackStmt=JdbcUtils.parseStatement(ackStmt,this.ackParams);
 }

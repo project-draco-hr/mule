@@ -5,26 +5,18 @@
   String ackStmt=stmts[1];
   List readParams=new ArrayList();
   List ackParams=new ArrayList();
-  readStmt=JdbcConnector.parseStatement(readStmt,readParams);
-  ackStmt=JdbcConnector.parseStatement(ackStmt,ackParams);
+  readStmt=JdbcUtils.parseStatement(readStmt,readParams);
+  ackStmt=JdbcUtils.parseStatement(ackStmt,ackParams);
   Connection con=null;
-  QueryRunner runner=new QueryRunner();
-  ResultSetHandler handler=new MapHandler();
   long t0=System.currentTimeMillis();
   try {
-    Object ds=this.connector.getDataSource();
-    if (ds instanceof XADataSource) {
-      con=((XADataSource)ds).getXAConnection().getConnection();
-    }
- else {
-      con=((DataSource)ds).getConnection();
-    }
+    con=this.connector.getConnection();
     if (timeout < 0) {
       timeout=Long.MAX_VALUE;
     }
     Object result=null;
     do {
-      result=runner.query(con,readStmt,JdbcConnector.getParams(endpointUri,readParams,null),handler);
+      result=new QueryRunner().query(con,readStmt,JdbcUtils.getParams(endpointUri,readParams,null),new MapHandler());
       if (result != null) {
         logger.debug("Received: " + result);
         break;
@@ -41,18 +33,18 @@
     }
  while (true);
     if (result != null && ackStmt != null) {
-      int nbRows=runner.update(con,ackStmt,JdbcConnector.getParams(endpointUri,ackParams,result));
+      int nbRows=new QueryRunner().update(con,ackStmt,JdbcUtils.getParams(endpointUri,ackParams,result));
       if (nbRows != 1) {
         logger.warn("Row count for ack should be 1 and not " + nbRows);
       }
     }
     UMOMessageAdapter msgAdapter=this.connector.getMessageAdapter(result);
     UMOMessage message=new MuleMessage(msgAdapter);
-    DbUtils.commitAndClose(con);
+    JdbcUtils.commitAndClose(con);
     return message;
   }
  catch (  Exception e) {
-    DbUtils.closeQuietly(con);
+    JdbcUtils.rollbackAndClose(con);
     throw e;
   }
 }

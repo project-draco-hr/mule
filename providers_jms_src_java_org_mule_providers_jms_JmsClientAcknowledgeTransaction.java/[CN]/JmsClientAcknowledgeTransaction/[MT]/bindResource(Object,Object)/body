@@ -1,0 +1,19 @@
+{
+  if (key instanceof Message) {
+    this.message=(Message)key;
+    return;
+  }
+  if (!(key instanceof Connection) || !(resource instanceof Session)) {
+    throw new IllegalTransactionStateException("Can only bind javax.sql.DataSource/java.sql.Connection resources");
+  }
+  Session session=(Session)resource;
+  try {
+    if (session.getTransacted()) {
+      throw new IllegalTransactionStateException("Jms session should not be transacted");
+    }
+  }
+ catch (  JMSException e) {
+    throw new IllegalTransactionStateException("Could not retrieve transacted state for session",e);
+  }
+  super.bindResource(key,resource);
+}

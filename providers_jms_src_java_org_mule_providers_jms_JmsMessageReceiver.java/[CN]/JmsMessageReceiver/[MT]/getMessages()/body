@@ -1,0 +1,30 @@
+{
+  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+  if (tx != null) {
+    tx.bindResource(connector.getConnection(),session);
+  }
+  Message message=consumer.receive(frequency);
+  if (message == null) {
+    if (tx != null) {
+      tx.setRollbackOnly();
+    }
+    return null;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Message received it is of type: " + message.getClass().getName());
+  }
+  String correlationId=message.getJMSCorrelationID();
+  logger.debug("Message CorrelationId is: " + correlationId);
+  logger.info("Jms Message Id is: " + message.getJMSMessageID());
+  if (message.getJMSRedelivered()) {
+    logger.info("Message with correlationId: " + correlationId + " is redelivered. handing off to Exception Handler");
+    handleMessageRedelivered(message,session);
+    return null;
+  }
+  if (tx instanceof JmsClientAcknowledgeTransaction) {
+    tx.bindResource(message,null);
+  }
+  UMOMessageAdapter adapter=connector.getMessageAdapter(message);
+  routeMessage(new MuleMessage(adapter));
+  return null;
+}

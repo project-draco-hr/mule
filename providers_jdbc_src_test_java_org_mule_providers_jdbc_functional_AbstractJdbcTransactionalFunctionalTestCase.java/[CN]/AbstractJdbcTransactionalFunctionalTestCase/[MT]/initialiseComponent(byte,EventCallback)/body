@@ -1,0 +1,20 @@
+{
+  UMODescriptor descriptor=new MuleDescriptor();
+  descriptor.setExceptionStrategy(new DefaultExceptionStrategy());
+  descriptor.setName("testComponent");
+  descriptor.setImplementation(JdbcFunctionalTestComponent.class.getName());
+  UMOEndpoint endpoint=new MuleEndpoint("testIn",getInDest(),connector,null,UMOEndpoint.ENDPOINT_TYPE_RECEIVER,null);
+  UMOTransactionFactory tf=getTransactionFactory();
+  UMOTransactionConfig txConfig=new MuleTransactionConfig();
+  txConfig.setFactory(tf);
+  txConfig.setBeginAction(txBeginAction);
+  UMOEndpoint outProvider=new MuleEndpoint("testOut",getOutDest(),connector,null,UMOEndpoint.ENDPOINT_TYPE_SENDER,null);
+  endpoint.setTransactionConfig(txConfig);
+  descriptor.setOutboundEndpoint(outProvider);
+  descriptor.setInboundEndpoint(endpoint);
+  HashMap props=new HashMap();
+  props.put("eventCallback",callback);
+  descriptor.setProperties(props);
+  UMOComponent component=MuleManager.getInstance().getModel().registerComponent(descriptor);
+  return component;
+}

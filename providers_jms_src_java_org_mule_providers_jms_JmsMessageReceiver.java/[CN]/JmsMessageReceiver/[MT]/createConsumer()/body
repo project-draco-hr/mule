@@ -1,0 +1,22 @@
+{
+  JmsSupport jmsSupport=this.connector.getJmsSupport();
+  if (session == null) {
+    session=(Session)this.connector.getSession(endpoint);
+  }
+  String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
+  boolean topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
+  Destination dest=jmsSupport.createDestination(session,endpoint.getEndpointURI().getAddress(),topic);
+  String selector=null;
+  if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {
+    selector=((JmsSelectorFilter)endpoint.getFilter()).getExpression();
+  }
+ else   if (endpoint.getProperties() != null) {
+    selector=(String)endpoint.getProperties().get(JmsConnector.JMS_SELECTOR_PROPERTY);
+  }
+  if (this.connector.isDurable()) {
+    consumer=jmsSupport.createConsumer(session,dest,selector,connector.isNoLocal(),connector.getDurableName());
+  }
+ else {
+    consumer=jmsSupport.createConsumer(session,dest,selector,connector.isNoLocal(),null);
+  }
+}

@@ -1,18 +1,10 @@
 {
   UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
-  XaTransaction xaTransaction=null;
-  if (tx instanceof XaTransaction) {
-    xaTransaction=(XaTransaction)tx;
-    session=connector.getSession(false);
-    xaTransaction.enlistResource(((XASession)session).getXAResource());
-  }
- else   if (tx instanceof JmsTransaction) {
-    session=(Session)tx.getResource();
-  }
- else   if (session == null) {
-    session=connector.getSession(false);
-  }
+  Session session=connector.getSession(tx instanceof XaTransaction);
   boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
+  if (tx != null && syncReceive) {
+    throw new IllegalTransactionStateException("Jms connector does not support synchronous receive in transacted mode");
+  }
   MessageConsumer replyToConsumer=null;
   UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
   boolean topic=false;
@@ -66,10 +58,6 @@
       if (deliveryModeString != null)       deliveryMode=Integer.parseInt(deliveryModeString);
       connector.getJmsSupport().send(producer,msg,deliveryMode,priority,ttl);
     }
-    if (xaTransaction != null) {
-      xaTransaction.delistResource(((XASession)session).getXAResource(),XAResource.TMSUCCESS);
-    }
-    connector.commitTransaction(event);
     if (replyToConsumer != null && event.isSynchronous()) {
       try {
         int timeout=event.getTimeout();

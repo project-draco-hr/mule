@@ -1,25 +1,14 @@
 {
   UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+  Session receiveSession=connector.getSession(tx instanceof XaTransaction);
   Destination dest=null;
   boolean topic=false;
   String resourceInfo=endpointUri.getResourceInfo();
   topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
-  if (tx != null) {
-    receiveSession=(Session)tx.getResource();
-    dest=connector.getJmsSupport().createDestination(receiveSession,endpointUri.getAddress(),topic);
-    consumer=connector.getJmsSupport().createConsumer(receiveSession,dest);
-  }
- else   if (receiveSession == null) {
-    receiveSession=connector.getSession(false);
-    dest=connector.getJmsSupport().createDestination(receiveSession,endpointUri.getAddress(),topic);
-    consumer=connector.getJmsSupport().createConsumer(receiveSession,dest);
-  }
   dest=connector.getJmsSupport().createDestination(receiveSession,endpointUri.getAddress(),topic);
+  consumer=connector.getJmsSupport().createConsumer(receiveSession,dest);
   Message message=null;
   try {
-    if (consumer == null) {
-      consumer=connector.getJmsSupport().createConsumer(receiveSession,dest);
-    }
     if (timeout == RECEIVE_NO_WAIT) {
       message=consumer.receiveNoWait();
     }

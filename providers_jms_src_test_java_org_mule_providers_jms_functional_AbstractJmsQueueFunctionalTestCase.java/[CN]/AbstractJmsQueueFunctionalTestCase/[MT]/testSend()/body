@@ -1,5 +1,6 @@
 {
   final CountDown countDown=new CountDown(2);
+  receiverIsUp=new CountDown(1);
   EventCallback callback=new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object Component){
       callbackCalled=true;
@@ -24,7 +25,9 @@
     }
   }
 );
-  afterInitialise();
+  logger.debug("Waiting for coutdown isReceiverUp");
+  assertTrue(receiverIsUp.attempt(LOCK_WAIT));
+  receiverIsUp=null;
   send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE,null);
   assertTrue(countDown.attempt(LOCK_WAIT));
   assertNotNull(currentMsg);

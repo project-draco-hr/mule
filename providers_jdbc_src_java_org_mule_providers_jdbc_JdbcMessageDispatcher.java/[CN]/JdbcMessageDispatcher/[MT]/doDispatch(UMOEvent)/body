@@ -14,54 +14,26 @@
     throw new IllegalArgumentException("Write statement should be an insert / update / delete sql statement");
   }
   List paramNames=new ArrayList();
-  writeStmt=JdbcConnector.parseStatement(writeStmt,paramNames);
-  Object[] paramValues=JdbcConnector.getParams(endpointURI,paramNames,event.getMessage());
+  writeStmt=JdbcUtils.parseStatement(writeStmt,paramNames);
+  Object[] paramValues=JdbcUtils.getParams(endpointURI,paramNames,event.getMessage());
+  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
   Connection con=null;
-  XAConnection xaCon=null;
-  UMOTransaction tx=null;
   try {
-    QueryRunner runner=new QueryRunner();
-    tx=TransactionCoordination.getInstance().getTransaction();
-    XaTransaction xaTransaction=null;
-    if (tx instanceof XaTransaction) {
-      xaCon=(XAConnection)connector.getSession(endpoint);
-      con=xaCon.getConnection();
-      xaTransaction=(XaTransaction)tx;
-      xaTransaction.enlistResource(xaCon.getXAResource());
-    }
- else     if (tx instanceof JdbcTransaction) {
-      con=(Connection)tx.getResource();
-    }
- else     if (tx == null) {
-      con=(Connection)connector.getSession(endpoint);
-    }
- else {
-      throw new IllegalStateException("Unknown transaction running: " + tx.getClass().getName());
-    }
-    int nbRows=runner.update(con,writeStmt,paramValues);
+    con=this.connector.getConnection();
+    int nbRows=new QueryRunner().update(con,writeStmt,paramValues);
     if (nbRows != 1) {
       logger.warn("Row count for write should be 1 and not " + nbRows);
     }
     if (tx == null) {
-      DbUtils.commitAndClose(con);
-    }
- else {
-      if (xaTransaction != null) {
-        xaTransaction.delistResource(xaCon.getXAResource(),XAResource.TMSUCCESS);
-      }
-      connector.commitTransaction(event);
+      JdbcUtils.commitAndClose(con);
     }
     logger.debug("Event dispatched succesfuly");
   }
  catch (  Exception e) {
     logger.debug("Error dispatching event: " + e.getMessage(),e);
-    if (tx != null) {
-      tx.rollback();
+    if (tx == null) {
+      JdbcUtils.rollbackAndClose(con);
     }
- else {
-      DbUtils.rollback(con);
-    }
-    DbUtils.close(con);
     throw e;
   }
 }

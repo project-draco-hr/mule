@@ -1,0 +1,22 @@
+{
+  try {
+    Thread.sleep(STARTUP_DELAY);
+    while (!connector.isDisposed() && !disposing.get()) {
+      if (connector.isStarted()) {
+        poll();
+      }
+      Thread.sleep(frequency);
+    }
+  }
+ catch (  Exception e) {
+    if (!disposing.get()) {
+      logger.error("An error occurred when polling",e);
+      try {
+        connector.stop();
+      }
+ catch (      Exception e2) {
+        logger.error("Failed to stop endpoint: " + e2.getMessage(),e2);
+      }
+    }
+  }
+}
