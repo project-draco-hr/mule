@@ -4,4 +4,17 @@
   setEndpoint(endpoint);
   endpointUri=endpoint.getEndpointURI();
   model=MuleManager.getInstance().getModel();
+  if (connector instanceof AbstractConnector) {
+    ThreadingProfile tp=((AbstractConnector)connector).getReceiverThreadingProfile();
+    if (serverSide) {
+      tp.setThreadPriority(Thread.NORM_PRIORITY + 2);
+    }
+    workManager=tp.createWorkManager(connector.getName() + ".receiver");
+    try {
+      workManager.start();
+    }
+ catch (    UMOException e) {
+      throw new InitialisationException(e,this);
+    }
+  }
 }
