@@ -1,5 +1,6 @@
 {
   LoanConsumer loanConsumer=null;
+  boolean synchronous=false;
   try {
     if (args.length > 0) {
       loanConsumer=new LoanConsumer(args[0]);
@@ -36,10 +37,12 @@
       int response=getSelection();
       if (response == 's') {
         System.out.println("Loading Synchronous Loan Broker");
+        synchronous=true;
         loanConsumer=new LoanConsumer("loan-broker-sync-config.xml");
       }
  else {
         System.out.println("Loading Asynchronous Loan Broker");
+        synchronous=false;
         loanConsumer=new LoanConsumer("loan-broker-async-config.xml");
       }
       while (response != 'q') {
@@ -49,11 +52,20 @@
         System.out.println("\nPlease make your selection: ");
         response=getSelection();
         if (response == '2') {
-          loanConsumer.requestRandom(100);
+          if (synchronous) {
+            List list=loanConsumer.requestSend(100,"vm://LoanBrokerRequests");
+            int i=1;
+            for (Iterator iterator=list.iterator(); iterator.hasNext(); i++) {
+              System.out.println("Request " + i + ": "+ iterator.next().toString());
+            }
+          }
+ else {
+            loanConsumer.requestDispatch(100,"vm://LoanBrokerRequests");
+          }
         }
  else         if (response == '1') {
           LoanRequest request=getRequestFromUser();
-          loanConsumer.request(request);
+          loanConsumer.request(request,synchronous);
         }
  else         if (response == 'q') {
           System.out.println("Exiting now");
