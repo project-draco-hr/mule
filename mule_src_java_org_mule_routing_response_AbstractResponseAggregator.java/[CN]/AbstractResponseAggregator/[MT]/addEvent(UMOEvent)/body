@@ -1,7 +1,10 @@
 {
-  String cId=event.getMessage().getCorrelationId();
-  if (cId == null)   cId=NO_CORRELATION_ID;
+  String cId=(String)correlationExtractor.getPropertry(MuleProperties.MULE_CORRELATION_ID_PROPERTY,event.getMessage());
+  if (cId == null) {
+    throw new RoutingException("There is no Correlation Id set on the current event: " + event);
+  }
   EventGroup eg=(EventGroup)eventGroups.get(cId);
+  logger.debug("\n\nAdding event to response aggregator group: " + cId);
   if (eg == null) {
     eg=new EventGroup(cId);
     eg.addEvent(event);

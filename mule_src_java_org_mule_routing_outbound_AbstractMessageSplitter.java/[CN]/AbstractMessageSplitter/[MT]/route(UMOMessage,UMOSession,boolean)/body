@@ -1,11 +1,5 @@
 {
-  String correlationId=null;
-  try {
-    correlationId=message.getUniqueId();
-  }
- catch (  UniqueIdNotSupportedException e) {
-    throw new RoutingException("Cannot use multicasting router with transports that do not support a unique id",e,message);
-  }
+  String correlationId=(String)propertyExtractor.getPropertry(MuleProperties.MULE_CORRELATION_ID_PROPERTY,message);
   initialise(message);
   UMOEndpoint endpoint;
   UMOMessage result=null;
@@ -19,9 +13,17 @@
     }
     while (message != null) {
       try {
-        message.setCorrelationId(correlationId);
-        message.setCorrelationSequence(i++);
-        message.setCorrelationGroupSize(list.size());
+        if (enableCorrelation != ENABLE_CORREATION_NEVER) {
+          boolean correlationSet=message.getCorrelationId() != null;
+          if (correlationSet && (enableCorrelation == ENABLE_CORREATION_IF_NOT_SET)) {
+            logger.debug("CorrelationId is already set, not setting Correlation group size");
+          }
+ else {
+            message.setCorrelationId(correlationId);
+            message.setCorrelationGroupSize(list.size());
+            message.setCorrelationSequence(i++);
+          }
+        }
         if (synchronous) {
           result=send(session,message,endpoint);
         }
