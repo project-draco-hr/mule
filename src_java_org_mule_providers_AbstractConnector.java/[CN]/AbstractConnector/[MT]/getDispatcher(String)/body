@@ -2,11 +2,17 @@
   checkDisposed();
   UMOMessageDispatcher dispatcher=null;
   if (endpoint == null || "".equals(endpoint))   endpoint="ANY";
-  if ("ANY".equals(endpoint)) {
-    dispatcher=(UMOMessageDispatcher)dispatchers.values().iterator().next();
-    while (dispatcher != null && dispatcher.isDisposed()) {
-      dispatchers.values().remove(dispatcher);
-      dispatcher=(UMOMessageDispatcher)dispatchers.values().iterator().next();
+  if ("ANY".equals(endpoint) && dispatchers.size() > 0) {
+    Map.Entry entry;
+    for (Iterator iterator=dispatchers.entrySet().iterator(); iterator.hasNext(); ) {
+      entry=(Map.Entry)iterator.next();
+      if (((UMOMessageDispatcher)entry.getValue()).isDisposed()) {
+        dispatchers.remove(entry.getKey());
+      }
+ else {
+        dispatcher=(UMOMessageDispatcher)entry.getValue();
+        break;
+      }
     }
   }
  else {
