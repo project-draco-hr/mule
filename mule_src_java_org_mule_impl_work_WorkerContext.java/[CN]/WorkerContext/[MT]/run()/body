@@ -1,0 +1,38 @@
+{
+  if (isTimedOut()) {
+    startLatch.release();
+    endLatch.release();
+    return;
+  }
+  workListener.workStarted(new WorkEvent(this,WorkEvent.WORK_STARTED,worker,null));
+  startLatch.release();
+  try {
+    if (executionContext == null || executionContext.getXid() == null) {
+      ExecutionContext context=new ExecutionContext();
+      try {
+        worker.run();
+      }
+  finally {
+        ExecutionContext returningContext=new ExecutionContext();
+        if (context != returningContext) {
+          throw new WorkCompletedException("Wrong TransactionContext on return from work done");
+        }
+      }
+    }
+ else {
+      try {
+        worker.run();
+      }
+  finally {
+      }
+    }
+    workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_COMPLETED,worker,null));
+  }
+ catch (  Throwable e) {
+    workException=(WorkException)(e instanceof WorkCompletedException ? e : new WorkCompletedException("Unknown error",WorkCompletedException.UNDEFINED).initCause(e));
+    workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_REJECTED,worker,workException));
+  }
+ finally {
+    endLatch.release();
+  }
+}

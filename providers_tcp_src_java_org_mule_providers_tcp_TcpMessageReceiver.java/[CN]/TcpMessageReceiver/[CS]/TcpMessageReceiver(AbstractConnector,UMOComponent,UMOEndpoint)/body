@@ -1,9 +1,11 @@
 {
   create(connector,component,endpoint);
-  connector.getReceiverThreadingProfile().setThreadFactory(getThreadFactory());
-  threadPool=connector.getReceiverThreadingProfile().createPool(connector.getName());
   URI uri=endpoint.getEndpointURI().getUri();
   connect(uri);
-  worker=new Thread(this,connector.getName() + ".receiver");
-  worker.start();
+  try {
+    getWorkManager().scheduleWork(this,WorkManager.INDEFINITE,null,null);
+  }
+ catch (  WorkException e) {
+    throw new InitialisationException(new Message(Messages.FAILED_TO_SCHEDULE_WORK),e,this);
+  }
 }

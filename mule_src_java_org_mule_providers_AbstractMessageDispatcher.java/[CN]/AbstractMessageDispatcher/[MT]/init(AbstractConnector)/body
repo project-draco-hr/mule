@@ -2,7 +2,15 @@
   this.connector=connector;
   if (connector instanceof AbstractConnector) {
     ThreadingProfile profile=((AbstractConnector)connector).getDispatcherThreadingProfile();
-    threadPool=profile.createPool(connector.getName());
     doThreading=profile.isDoThreading();
+    if (doThreading) {
+      workManager=profile.createWorkManager(connector.getName());
+      try {
+        workManager.start();
+      }
+ catch (      UMOException e) {
+        throw new MuleRuntimeException(new Message(Messages.FAILED_TO_START_X,"WorkManager"),e);
+      }
+    }
   }
 }
