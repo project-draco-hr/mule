@@ -1,0 +1,26 @@
+{
+  try {
+    endpointsCache.clear();
+    if (applicationContext.containsBean(EVENT_MULTICASTER_DESCRIPTOR_NAME)) {
+      descriptor=(UMODescriptor)applicationContext.getBean(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+    }
+    if (applicationContext.containsBean("muleManager")) {
+      return;
+    }
+    UMOManager manager=MuleManager.getInstance();
+    if (!manager.isStarted()) {
+      MuleManager.getConfiguration().setSynchronous(!asynchronous);
+      registerEndpointMappings();
+    }
+    SpringContainerContext containerContext=new SpringContainerContext();
+    containerContext.setApplicationContext(applicationContext);
+    manager.setContainerContext(containerContext);
+    registerConnectors();
+    registerTransformers();
+    registerMulticasterDescriptor();
+    if (!manager.isStarted())     manager.start();
+  }
+ catch (  UMOException e) {
+    throw new MuleRuntimeException("Failed to reinitialise Mule after the context was refreshed: " + e.getMessage(),e);
+  }
+}

@@ -1,0 +1,22 @@
+{
+  if (!connector.isQueueEvents()) {
+    throw new UnsupportedOperationException("Receive only supported on the VM Queue Connector");
+  }
+  BoundedPersistentQueue queue=connector.getQueue(endpointUri.getAddress());
+  if (queue == null) {
+    return null;
+  }
+ else {
+    UMOEvent event=null;
+    try {
+      event=(UMOEvent)queue.poll(timeout);
+    }
+ catch (    InterruptedException e) {
+      logger.error("failed to receive event from queue: " + endpointUri);
+    }
+    if (event != null) {
+      return event.getMessage();
+    }
+    return null;
+  }
+}

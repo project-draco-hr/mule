@@ -1,0 +1,48 @@
+{
+  logger.trace("MuleProxy: sync call for Mule UMO " + descriptor.getName());
+  UMOMessage returnMessage=null;
+  try {
+    if (event.getEndpoint().canReceive()) {
+      RequestContext.setEvent(event);
+      Object replyTo=event.getMessage().getReplyTo();
+      ReplyToHandler replyToHandler=((AbstractConnector)event.getEndpoint().getConnector()).getReplyToHandler();
+      InterceptorsInvoker invoker=new InterceptorsInvoker(interceptorList,descriptor,event.getMessage());
+      long startTime=0;
+      if (stat.isEnabled())       startTime=System.currentTimeMillis();
+      UMOMessage result=invoker.execute();
+      if (stat.isEnabled())       stat.addExecutionTime(System.currentTimeMillis() - startTime);
+      event=RequestContext.getEvent();
+      if (result != null && !event.isStopFurtherProcessing()) {
+        Map context=RequestContext.clearProperties();
+        if (context != null) {
+          result.addProperties(context);
+        }
+        returnMessage=descriptor.getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
+      }
+ else {
+        returnMessage=result;
+      }
+      if (result != null && replyTo != null) {
+        String requestor=(String)result.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
+        if (replyToHandler != null) {
+          if ((requestor != null && !requestor.equals(descriptor.getName())) || requestor == null) {
+            replyToHandler.processReplyTo(event,result,replyTo);
+          }
+        }
+      }
+    }
+ else {
+      returnMessage=event.getSession().sendEvent(event);
+      processReplyTo(returnMessage);
+    }
+    if (stat.isEnabled())     stat.incSentEventSync();
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    handleException(event,e);
+  }
+ finally {
+    ((MuleComponent)event.getComponent()).finaliseEvent(event);
+  }
+  return returnMessage;
+}

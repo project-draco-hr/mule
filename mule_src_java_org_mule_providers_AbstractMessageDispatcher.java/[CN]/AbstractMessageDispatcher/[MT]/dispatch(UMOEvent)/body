@@ -1,0 +1,25 @@
+{
+  try {
+    event.setSynchronous(false);
+    event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+    RequestContext.setEvent(event);
+    if (doThreading && !event.isSynchronous()) {
+      threadPool.execute(new Worker(event));
+    }
+ else {
+      try {
+        doDispatch(event);
+      }
+  finally {
+        if (disposeOnCompletion) {
+          dispose();
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    logger.info("Exception occurred while executing on this dispatcher. disposing before continuing");
+    dispose();
+    throw e;
+  }
+}

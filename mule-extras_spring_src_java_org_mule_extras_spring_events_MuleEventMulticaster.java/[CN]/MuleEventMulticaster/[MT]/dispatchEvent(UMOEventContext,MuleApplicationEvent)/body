@@ -1,0 +1,34 @@
+{
+  UMOEndpoint endpoint=null;
+  try {
+    endpoint=MuleEndpoint.getOrCreateEndpointForUri(applicationEvent.getEndpoint(),UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  }
+ catch (  UMOException e) {
+    throw new ApplicationEventException("Failed to get endpoint for endpointUri: " + applicationEvent.getEndpoint(),e);
+  }
+  if (endpoint != null) {
+    try {
+      if (applicationEvent.getEndpoint() != null) {
+        endpoint.setEndpointURI(applicationEvent.getEndpoint());
+      }
+      MuleMessage message=new MuleMessage(applicationEvent.getSource(),applicationEvent.getProperties());
+      if (currentEvent != null) {
+        currentEvent.setStopFurtherProcessing(true);
+        currentEvent.dispatchEvent(message,endpoint);
+      }
+ else {
+        if (endpoint.getTransformer() != null) {
+          message=new MuleMessage(endpoint.getTransformer().transform(applicationEvent.getSource()),applicationEvent.getProperties());
+        }
+        UMOMessageDispatcher dispatcher=endpoint.getConnector().getDispatcher(endpoint.getEndpointURI().getAddress());
+        dispatcher.dispatch(new MuleEvent(message,endpoint,null,false));
+      }
+    }
+ catch (    Exception e1) {
+      throw new ApplicationEventException("Failed to dispatch event: " + e1.getMessage(),e1);
+    }
+  }
+ else {
+    throw new ApplicationEventException("Failed endpoint using name: " + applicationEvent.getEndpoint());
+  }
+}

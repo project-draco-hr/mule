@@ -1,0 +1,20 @@
+{
+  fixProviderUrl(props);
+  String cnnFactoryName=props.getProperty(DEFAULT_JNDI_CONECTION_NAME_PROPERTY);
+  if (cnnFactoryName == null) {
+    throw new IOException("You must set the property " + DEFAULT_JNDI_CONECTION_NAME_PROPERTY + "in the JNDI property file");
+  }
+  Context ctx=new InitialContext(props);
+  QueueConnectionFactory qcf=(QueueConnectionFactory)ctx.lookup(cnnFactoryName);
+  QueueConnection cnn;
+  String username=(String)props.get("username");
+  if (username != null) {
+    String password=(String)props.get("password");
+    cnn=qcf.createQueueConnection(username,password);
+  }
+ else {
+    cnn=qcf.createQueueConnection();
+  }
+  cnn.start();
+  return cnn;
+}

@@ -1,0 +1,21 @@
+{
+  MultiTransformerSession mts=new MultiTransformerSession();
+  assertTrue(!mts.isInSession());
+  Object result=mts.transform(trans,TEST_DATA);
+  assertTrue(mts.isInSession());
+  assertEquals(TEST_DATA,new StringBuffer(result.toString()).reverse().toString());
+  result=mts.transform(trans,result);
+  assertEquals(TEST_DATA,result.toString());
+  assertEquals(3,mts.getStackSize());
+  assertEquals(TEST_DATA,mts.getFromStack(0));
+  assertEquals(new StringBuffer(TEST_DATA).reverse().toString(),mts.getFromStack(1));
+  assertEquals(TEST_DATA,mts.getFromStack(2));
+  result=mts.transform(trans,TEST_DATA);
+  assertEquals(4,mts.getStackSize());
+  assertEquals(result,mts.getData());
+  assertEquals(new StringBuffer(TEST_DATA).reverse().toString(),mts.getData());
+  mts.rollback();
+  assertEquals(0,mts.getStackSize());
+  assertEquals(TEST_DATA,mts.getData());
+  assertTrue(!mts.isInSession());
+}

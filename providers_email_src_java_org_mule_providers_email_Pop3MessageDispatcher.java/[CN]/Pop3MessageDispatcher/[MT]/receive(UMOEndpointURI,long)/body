@@ -1,0 +1,23 @@
+{
+  initialise(endpointUri.getAddress());
+  int count=inbox.getMessageCount();
+  if (count > 0) {
+    Message[] message=inbox.getMessages();
+    return new MuleMessage(connector.getMessageAdapter(message[0]));
+  }
+ else   if (count == -1) {
+    throw new MessagingException("Cannot monitor folder: " + inbox.getFullName() + " as folder is closed");
+  }
+ else {
+    Thread.sleep(timeout);
+    count=inbox.getMessageCount();
+    if (count > 0) {
+      Message message=inbox.getMessage(0);
+      message.setFlag(Flags.Flag.DELETED,true);
+      return new MuleMessage(connector.getMessageAdapter(message));
+    }
+ else {
+      return null;
+    }
+  }
+}

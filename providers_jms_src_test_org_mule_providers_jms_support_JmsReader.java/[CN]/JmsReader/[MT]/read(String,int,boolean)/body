@@ -1,0 +1,48 @@
+{
+  try {
+    this.noOfMessages=noOfMessages;
+    if (isQueue) {
+      Queue queue=((QueueSession)session).createQueue(destination);
+      consumer=((QueueSession)session).createReceiver(queue);
+    }
+ else {
+      Topic topic=((TopicSession)session).createTopic(destination);
+      consumer=((TopicSession)session).createSubscriber(topic);
+    }
+    cnn.start();
+    if (!block) {
+      ReceiverThread receiver=new ReceiverThread();
+      receiver.start();
+    }
+ else {
+      Message message=null;
+      while (noOfMessages > msgCount) {
+        try {
+          message=consumer.receive(1000);
+          if (message != null) {
+            logger.info("onMessage: Message recieved");
+            if (message instanceof TextMessage) {
+              logger.info("Message Content is: " + ((TextMessage)message).getText());
+            }
+ else {
+              logger.info("Message is: " + message.toString());
+            }
+            msgCount++;
+          }
+ else {
+            logger.debug("Receive timed out");
+          }
+        }
+ catch (        JMSException e) {
+          logger.error("failed: " + e,e);
+          System.exit(0);
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Initialisation failed: " + e,e);
+    close();
+    System.exit(0);
+  }
+}

@@ -1,0 +1,22 @@
+{
+  UMOModel model=MuleManager.getInstance().getModel();
+  UMODescriptor descriptor=model.getDescriptor(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+  if (descriptor != null) {
+    model.unregisterComponent(descriptor);
+  }
+  descriptor=new MuleDescriptor(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+  if (subscriptions == null) {
+    logger.info("No receive endpoints have been set, using default '*'");
+    descriptor.setInboundEndpoint(new MuleEndpoint("vm://*",true));
+  }
+ else {
+    UMOInboundMessageRouter messageRouter=descriptor.getInboundRouter();
+    for (int i=0; i < subscriptions.length; i++) {
+      String subscription=subscriptions[i];
+      UMOEndpointURI endpointUri=new MuleEndpointURI(subscription);
+      messageRouter.addEndpoint(MuleEndpoint.getOrCreateEndpointForUri(endpointUri,UMOEndpoint.ENDPOINT_TYPE_RECEIVER));
+    }
+  }
+  descriptor.setImplementation(AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME);
+  return descriptor;
+}

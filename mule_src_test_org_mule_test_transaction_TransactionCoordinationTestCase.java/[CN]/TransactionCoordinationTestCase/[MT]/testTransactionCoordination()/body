@@ -1,0 +1,31 @@
+{
+  assertNull(tc.getTransaction());
+  Mock trans=new Mock(UMOTransaction.class,"trans");
+  TransactionProxy tp=new TransactionProxy((UMOTransaction)trans.proxy(),null);
+  trans.expectAndReturn("getResource",new String("dummy resource"));
+  tc.bindTransaction(tp);
+  UMOTransaction tx=tc.getTransaction();
+  assertNotNull(tx);
+  tx=null;
+  tx=tc.getTransactionProxy();
+  assertNotNull(tx);
+  Object resource=tc.getTransactionSession();
+  assertNotNull(resource);
+  assertEquals(resource,"dummy resource");
+  tx=tc.unbindTransaction();
+  assertNotNull(tx);
+  assertNull(tc.getTransaction());
+  assertNull(tc.getTransactionProxy());
+  tc.bindTransaction((UMOTransaction)trans.proxy(),new ConstraintFilter());
+  tp=tc.getTransactionProxy();
+  assertNotNull(tp);
+  assertNotNull(tp.getConstraint());
+  try {
+    TransactionCoordination.setInstance(null);
+    fail("shouldn't be able to replace the tc if there are transactions in progress");
+  }
+ catch (  IllegalStateException e) {
+  }
+  tc.unbindTransaction();
+  TransactionCoordination.setInstance(null);
+}

@@ -1,0 +1,19 @@
+{
+  if (event.getEndpoint().canSend()) {
+    try {
+      logger.debug("dispatching event: " + event);
+      UMOMessageDispatcher dispatcher=event.getEndpoint().getConnector().getDispatcher(event.getEndpoint().getEndpointURI().getAddress());
+      dispatcher.dispatch(event);
+    }
+ catch (    Exception e) {
+      throw new MuleException("Failed to send event through Connector dispatcher: " + e.getMessage(),e);
+    }
+  }
+ else   if (component != null) {
+    logger.debug("dispatching event to component: " + component.getDescriptor().getName() + " event is: "+ event);
+    component.dispatchEvent(event);
+  }
+ else {
+    throw new MuleException("Cannot dispatch event, endpoint is a receiver and there is no current compoenent");
+  }
+}

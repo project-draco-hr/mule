@@ -1,0 +1,29 @@
+{
+  while (!disposing.get()) {
+    if (connector.isStarted() && !disposing.get()) {
+      Socket socket=null;
+      try {
+        socket=serverSocket.accept();
+        logger.trace("Server socket Accepted on: " + serverSocket.getLocalPort());
+      }
+ catch (      java.io.InterruptedIOException iie) {
+        logger.debug("Interupted IO doing serverSocket.accept: " + iie.getMessage());
+      }
+catch (      Exception e) {
+        if (!connector.isDisposed() && !disposing.get()) {
+          logger.warn("Accept failed on socket: " + e,e);
+          handleException(null,e);
+        }
+      }
+      if (socket != null) {
+        Runnable worker=createWorker(socket);
+        try {
+          threadPool.execute(worker);
+        }
+ catch (        InterruptedException e) {
+          logger.error("Tcp Server receiver interrupted: " + e.getMessage(),e);
+        }
+      }
+    }
+  }
+}

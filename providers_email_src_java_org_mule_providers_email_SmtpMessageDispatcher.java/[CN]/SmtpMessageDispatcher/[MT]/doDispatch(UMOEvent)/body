@@ -1,0 +1,55 @@
+{
+  UMOEndpoint endpoint=event.getEndpoint();
+  String endpointAddress=endpoint.getEndpointURI().getAddress();
+  Map props=event.getProperties();
+  String to=((String)PropertiesHelper.getProperty(props,"toAddresses",connector.getCcAddresses()));
+  String cc=((String)PropertiesHelper.getProperty(props,"ccAddresses",connector.getCcAddresses()));
+  String bcc=((String)PropertiesHelper.getProperty(props,"bccAddresses",connector.getBccAddresses()));
+  String from=((String)PropertiesHelper.getProperty(props,"fromAddress",connector.getFromAddress()));
+  String subject=((String)PropertiesHelper.getProperty(props,"subject",connector.getSubject()));
+  Message msg=null;
+  try {
+    if (event.getMessage().getPayload() instanceof String) {
+      msg=connector.createMessage(from,endpointAddress,cc,bcc,subject,(String)event.getMessage().getPayload(),session);
+    }
+ else {
+      msg=(Message)event.getTransformedMessage();
+      if (msg.getRecipients(Message.RecipientType.TO) == null) {
+        if (endpoint != null && !endpoint.equals("")) {
+          InternetAddress[] toAddrs=null;
+          toAddrs=InternetAddress.parse(endpointAddress,false);
+          msg.setRecipients(Message.RecipientType.TO,toAddrs);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Sending message to: " + endpoint);
+          }
+        }
+ else {
+          throw new MuleException("The to Address: " + endpoint + " is invalid");
+        }
+      }
+      if (msg.getFrom() == null) {
+        msg.setFrom(new InternetAddress(from));
+      }
+      InternetAddress[] ccAddrs=null;
+      if ((cc != null) && !cc.equals("")) {
+        ccAddrs=InternetAddress.parse(cc,false);
+        msg.setRecipients(Message.RecipientType.CC,ccAddrs);
+      }
+      InternetAddress[] bccAddrs=null;
+      if ((bcc != null) && !bcc.equals("")) {
+        bccAddrs=InternetAddress.parse(bcc,false);
+        msg.setRecipients(Message.RecipientType.BCC,bccAddrs);
+      }
+      if (msg.getSubject() == null || "".equals(msg.getSubject())) {
+        msg.setSubject(subject);
+      }
+    }
+    sendMailMessage(msg);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Sent message to: " + msg.getRecipients(Message.RecipientType.TO)[0].toString() + ", cc: "+ cc+ ", bcc: "+ bcc+ ", from: "+ from);
+    }
+  }
+ catch (  Exception e) {
+    connector.handleException("Failed to send email to " + endpoint + ", cc: "+ cc+ ", bcc: "+ bcc+ ", from: "+ from,e);
+  }
+}

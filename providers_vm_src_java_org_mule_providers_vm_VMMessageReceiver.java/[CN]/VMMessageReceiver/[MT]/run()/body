@@ -1,0 +1,25 @@
+{
+  while (!disposing.get()) {
+    if (connector.isStarted()) {
+      UMOEvent event=null;
+      try {
+        try {
+          event=(UMOEvent)queue.take();
+          UMOMessageAdapter adapter=connector.getMessageAdapter(new MuleMessage(event.getTransformedMessage(),event.getProperties()));
+          routeMessage(new MuleMessage(adapter),event.isSynchronous());
+        }
+ catch (        InterruptedException e) {
+        }
+      }
+ catch (      Exception e) {
+        logger.error("Failed to dispatch event from VM receiver: " + e.getMessage(),e);
+        connector.getExceptionStrategy().handleException("Failed to dispatch event from VM receiver: " + e.getMessage(),e);
+      }
+ finally {
+        if (event != null) {
+          queue.remove(event);
+        }
+      }
+    }
+  }
+}

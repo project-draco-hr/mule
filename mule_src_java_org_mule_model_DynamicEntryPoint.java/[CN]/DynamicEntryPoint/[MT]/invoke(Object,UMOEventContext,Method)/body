@@ -1,0 +1,52 @@
+{
+  Object payload=null;
+  if (method == null) {
+    if (component instanceof Callable) {
+      method=Callable.class.getMethods()[0];
+      payload=context;
+    }
+    if (method == null) {
+      method=getMethod(component,context);
+      if (method == null) {
+        payload=context.getTransformedMessage();
+        method=getMethod(component,payload);
+        if (method != null) {
+          RequestContext.rewriteEvent(new MuleMessage(payload,null));
+        }
+      }
+ else {
+        payload=context;
+      }
+    }
+  }
+  if (method != null) {
+    currentMethod=method;
+    if (payload == null) {
+      payload=context.getTransformedMessage();
+      RequestContext.rewriteEvent(new MuleMessage(payload,null));
+    }
+    return invokeCurrent(component,payload);
+  }
+  List methods=ClassHelper.getSatisfiableMethods(component.getClass(),ClassHelper.getClassTypes(context),true,true);
+  if (methods.size() == 1) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Dynamic Entrypoint using method: " + component.getClass().getName() + "."+ ((Method)methods.get(0)).getName()+ "("+ context.getClass().getName()+ ")");
+    }
+    addMethod(component,(Method)methods.get(0),context.getClass());
+    return invokeCurrent(component,context);
+  }
+ else {
+    methods=ClassHelper.getSatisfiableMethods(component.getClass(),ClassHelper.getClassTypes(payload),true,true);
+    if (methods.size() == 1) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Dynamic Entrypoint using method: " + component.getClass().getName() + "."+ ((Method)methods.get(0)).getName()+ "("+ context.getClass().getName()+ ")");
+      }
+      addMethod(component,(Method)methods.get(0),payload.getClass());
+      return invokeCurrent(component,payload);
+    }
+ else {
+      NoSatisfiableMethodsException e=new NoSatisfiableMethodsException(component.getClass());
+      throw new InvocationTargetException(e,"Failed to find entry point for component: " + component.getClass().getName() + " with argument: "+ payload.getClass().getName());
+    }
+  }
+}

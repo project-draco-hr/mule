@@ -1,0 +1,27 @@
+{
+  Destination replyToDestination=null;
+  try {
+    if (replyTo instanceof Destination) {
+      replyToDestination=(Destination)replyTo;
+    }
+    if (replyToDestination == null) {
+      super.processReplyTo(event,returnMessage,replyTo);
+      return;
+    }
+    Object payload=returnMessage.getPayload();
+    if (getTransformer() != null) {
+      payload=getTransformer().transform(payload);
+    }
+    Message replyToMessage=JmsMessageUtils.getMessageForObject(payload,session);
+    logger.info("Sending jms reply to: " + replyToDestination);
+    if (replyToProducer == null) {
+      replyToProducer=((JmsConnector)connector).getJmsSupport().createProducer(session,replyToDestination);
+    }
+    ((JmsConnector)connector).getJmsSupport().send(replyToProducer,replyToMessage,replyToDestination);
+    logger.info("Reply Message sent to: " + replyToDestination);
+    ((MuleComponent)event.getComponent()).getStatistics().incSentReplyToEvent();
+  }
+ catch (  Exception e) {
+    throw new DispatchException("Failed to create and dispatch response event from message: " + e.getMessage(),e);
+  }
+}

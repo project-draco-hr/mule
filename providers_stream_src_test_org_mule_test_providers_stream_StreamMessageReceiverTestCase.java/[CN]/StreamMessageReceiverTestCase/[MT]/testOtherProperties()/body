@@ -1,0 +1,15 @@
+{
+  StreamMessageReceiver receiver=(StreamMessageReceiver)getMessageReceiver();
+  UMOEndpoint endpoint=getTestEndpoint("test",UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER);
+  MuleDescriptor descriptor=getTestDescriptor("orange",Orange.class.getName());
+  UMOComponent component=getTestComponent(descriptor);
+  endpoint.getConnector().start();
+  Mock connector=new Mock(UMOConnector.class);
+  connector.expectAndReturn("getExceptionStrategy",new DefaultExceptionStrategy());
+  receiver.create((UMOConnector)connector.proxy(),component,endpoint);
+  receiver.setFrequency(1001);
+  receiver.setInputStream(System.in);
+  assertTrue(receiver.getFrequency() == 1001);
+  receiver.setFrequency(0);
+  assertTrue(receiver.getFrequency() == StreamMessageReceiver.DEFAULT_POLL_FREQUENCY);
+}

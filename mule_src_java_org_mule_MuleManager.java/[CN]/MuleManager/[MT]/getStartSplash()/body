@@ -1,0 +1,29 @@
+{
+  List message=new ArrayList();
+  Manifest mf=config.getManifest();
+  Map att=mf.getMainAttributes();
+  if (att.values().size() > 0) {
+    message.add(PropertiesHelper.getStringProperty(att,new Attributes.Name("Specification-Title"),"Not Set") + " version " + PropertiesHelper.getStringProperty(att,new Attributes.Name("Implementation-Version"),"Not Set"));
+    message.add(PropertiesHelper.getStringProperty(att,new Attributes.Name("Specification-Vendor"),"Not Set"));
+    message.add(PropertiesHelper.getStringProperty(att,new Attributes.Name("Implementation-Vendor"),"Not Set"));
+  }
+ else {
+    message.add("Mule Version Info not set");
+  }
+  message.add(" ");
+  message.add("Server started: " + new Date(getStartDate()).toString());
+  message.add("JDK: " + System.getProperty("java.version") + " ("+ System.getProperty("java.vm.info")+ ")");
+  message.add(" ");
+  if (agents.size() == 0) {
+    message.add("Agents Running: None");
+  }
+ else {
+    message.add("Agents Running:");
+    UMOAgent umoAgent;
+    for (Iterator iterator=agents.values().iterator(); iterator.hasNext(); ) {
+      umoAgent=(UMOAgent)iterator.next();
+      message.add("  " + umoAgent.getDescription());
+    }
+  }
+  return StringMessageHelper.getBoilerPlate(message,'*',70);
+}

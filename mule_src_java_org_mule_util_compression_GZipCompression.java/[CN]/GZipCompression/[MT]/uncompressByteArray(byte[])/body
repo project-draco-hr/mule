@@ -1,0 +1,18 @@
+{
+  logger.debug("Uncompressing message of size: " + bytes.length);
+  if (!isCompressed(bytes)) {
+    logger.warn("data is not of type GZIP compressed. The data may not have been compressed in the first place");
+    throw new CompressionException("Not in GZIP format");
+  }
+  ByteArrayInputStream bais=new ByteArrayInputStream(bytes);
+  GZIPInputStream gis=new GZIPInputStream(bais);
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  byte[] buf=new byte[2048];
+  int len;
+  while ((len=gis.read(buf)) != -1) {
+    baos.write(buf,0,len);
+  }
+  byte[] uncompressedByteArray=baos.toByteArray();
+  logger.debug("Uncompressing message to size: " + uncompressedByteArray.length);
+  return uncompressedByteArray;
+}

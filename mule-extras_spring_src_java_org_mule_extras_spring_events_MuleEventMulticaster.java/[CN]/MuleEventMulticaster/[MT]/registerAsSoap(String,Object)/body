@@ -1,0 +1,26 @@
+{
+  if (endpoint.startsWith("glue") || endpoint.startsWith("soap") || endpoint.startsWith("axis")) {
+    UMOEndpointURI ep=new MuleEndpointURI(endpoint);
+    QuickConfigurationBuilder builder=new QuickConfigurationBuilder();
+    String serviceName=null;
+    if (ep.getPath() != null) {
+      String path=ep.getPath();
+      if (path.endsWith("/"))       path=path.substring(0,path.length() - 1);
+      int i=path.lastIndexOf("/");
+      if (i > -1) {
+        serviceName=path.substring(i + 1);
+      }
+    }
+ else {
+      serviceName=descriptor.getName();
+    }
+    String newEndpoint=endpoint;
+    int i=newEndpoint.indexOf(serviceName);
+    newEndpoint=newEndpoint.substring(0,i - 1);
+    builder.registerComponentInstance(listener,serviceName,new MuleEndpointURI(newEndpoint));
+    return true;
+  }
+ else {
+    return false;
+  }
+}

@@ -1,0 +1,44 @@
+{
+  if (axisDescriptor == null) {
+    axisDescriptor=(MuleDescriptor)MuleManager.getInstance().getModel().getDescriptor(AXIS_SERVICE_COMPONENT_NAME);
+    if (axisDescriptor == null) {
+      axisDescriptor=new MuleDescriptor(AXIS_SERVICE_COMPONENT_NAME);
+      axisDescriptor.setImplementation(AxisServiceComponent.class.getName());
+    }
+ else {
+      MuleManager.getInstance().getModel().unregisterComponent(axisDescriptor);
+    }
+    if (axisDescriptor.getProperties().get("axisServer") == null) {
+      axisDescriptor.getProperties().put("axisServer",axisServer);
+    }
+    axisDescriptor.setContainerManaged(false);
+  }
+  String endpoint=receiver.getEndpointURI().getAddress();
+  boolean startsWith=false;
+  String scheme=ep.getScheme().toLowerCase();
+  if (scheme.equals("http") || scheme.equals("tcp")) {
+    endpoint=scheme + "://" + ep.getHost()+ ":"+ ep.getPort();
+    startsWith=true;
+    String sync="synchronous=" + synchronous.get();
+    if (endpoint.indexOf("?") > -1) {
+      endpoint+="&" + sync;
+    }
+ else {
+      endpoint+="?" + sync;
+    }
+  }
+  boolean registered=false;
+  for (Iterator iterator=axisDescriptor.getInboundRouter().getEndpoints().iterator(); iterator.hasNext(); ) {
+    UMOEndpoint umoEndpoint=(UMOEndpoint)iterator.next();
+    if ((startsWith && endpoint.startsWith(umoEndpoint.getEndpointURI().getAddress())) || (!startsWith && endpoint.startsWith(umoEndpoint.getEndpointURI().getAddress()))) {
+      registered=true;
+      break;
+    }
+  }
+  if (!registered) {
+    UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
+    serviceEndpoint.setName(ep.getScheme() + ":" + receiver.getComponent().getDescriptor().getName());
+    serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
+    axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
+  }
+}

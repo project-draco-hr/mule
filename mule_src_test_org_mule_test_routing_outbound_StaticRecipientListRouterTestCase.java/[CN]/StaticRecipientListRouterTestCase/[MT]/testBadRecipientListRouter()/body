@@ -1,0 +1,22 @@
+{
+  Mock session=getMockSession();
+  UMOEndpoint endpoint1=getTestEndpoint("Test1Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  OutboundMessageRouter outboundRouter=new OutboundMessageRouter();
+  List recipients=new ArrayList();
+  recipients.add("malformed-endpointUri-recipient1");
+  StaticRecipientList router=new StaticRecipientList();
+  router.setRecipients(recipients);
+  List endpoints=new ArrayList();
+  endpoints.add(endpoint1);
+  router.setEndpoints(endpoints);
+  assertEquals(1,router.getRecipients().size());
+  UMOMessage message=new MuleMessage("test event",null);
+  assertTrue(router.isMatch(message));
+  try {
+    router.route(message,(UMOSession)session.proxy(),false);
+    fail("Sohlud not allow malformed endpointUri");
+  }
+ catch (  RoutingException e) {
+  }
+  session.verify();
+}

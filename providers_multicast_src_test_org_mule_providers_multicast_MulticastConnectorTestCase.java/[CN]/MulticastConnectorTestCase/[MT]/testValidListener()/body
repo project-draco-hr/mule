@@ -1,0 +1,31 @@
+{
+  MulticastConnector connector=new MulticastConnector();
+  connector.initialise();
+  MuleDescriptor d=getTestDescriptor("orange",Orange.class.getName());
+  UMOComponent component=getTestComponent(d);
+  UMOEndpoint endpoint=getTestEndpoint("Test",UMOEndpoint.ENDPOINT_TYPE_RECEIVER);
+  endpoint.setEndpointURI(null);
+  endpoint.setConnector(connector);
+  try {
+    connector.registerListener(component,endpoint);
+    fail("cannot register with null endpointUri");
+  }
+ catch (  Exception e) {
+  }
+  endpoint.setEndpointURI(null);
+  try {
+    connector.registerListener(component,endpoint);
+    fail("cannot register with empty endpointUri");
+  }
+ catch (  Exception e) {
+  }
+  endpoint.setEndpointURI(new MuleEndpointURI("multicast://228.2.3.4:10100"));
+  connector.registerListener(component,endpoint);
+  try {
+    connector.registerListener(component,endpoint);
+    fail("cannot register on the same endpointUri");
+  }
+ catch (  Exception e) {
+  }
+  connector.dispose();
+}

@@ -1,0 +1,21 @@
+{
+  try {
+    File f=new File(script);
+    if (f.exists()) {
+      fileChanged(f);
+    }
+ else {
+      GroovyClassLoader loader=new GroovyClassLoader(Thread.currentThread().getContextClassLoader());
+      URL url=ClassHelper.getResource(script,getClass());
+      if (url == null) {
+        throw new InitialisationException("Could not find script: " + script);
+      }
+      Class groovyClass=loader.parseClass(new GroovyCodeSource(url));
+      component=(GroovyObject)groovyClass.newInstance();
+    }
+  }
+ catch (  Exception e) {
+    if (e instanceof InitialisationException)     throw (InitialisationException)e;
+    throw new InitialisationException("Failed to load groovy component: " + e.getMessage(),e);
+  }
+}

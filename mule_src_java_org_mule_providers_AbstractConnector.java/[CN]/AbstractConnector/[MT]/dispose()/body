@@ -1,0 +1,36 @@
+{
+  disposed.set(true);
+  if (logger.isInfoEnabled()) {
+    logger.info("Disposing Connector: " + getClass().getName());
+    logger.debug("Disposing Receivers");
+  }
+  if (receivers != null) {
+    Map.Entry entry;
+    for (Iterator iterator=receivers.entrySet().iterator(); iterator.hasNext(); ) {
+      entry=(Map.Entry)iterator.next();
+      try {
+        destroyReceiver(((UMOMessageReceiver)entry.getValue()),null);
+      }
+ catch (      Exception e) {
+        logger.error("Failed to destroy receiver: " + e.getMessage(),e);
+      }
+      receivers.remove(entry.getKey());
+    }
+    logger.debug("Receivers Disposed");
+  }
+  if (dispatchers != null) {
+    logger.debug("Disposing Dispatchers");
+    Object entry=null;
+    while (dispatchers.size() != 0) {
+      entry=dispatchers.remove(dispatchers.getFirstKey());
+      if (entry != null) {
+        ((UMOMessageDispatcher)entry).dispose();
+      }
+    }
+    logger.debug("Dispatchers Disposed");
+  }
+  disposeConnector();
+  if (logger.isInfoEnabled())   logger.info("Connector " + getClass().getName() + " has been disposed.");
+  receivers=null;
+  dispatchers=null;
+}

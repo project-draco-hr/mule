@@ -1,0 +1,23 @@
+{
+  MuleDescriptor descriptor=new MuleDescriptor();
+  descriptor.setImplementation(implementation);
+  descriptor.setName(name);
+  if (properties != null) {
+    descriptor.getProperties().putAll(properties);
+  }
+  UMOEndpoint inboundProvider=null;
+  UMOEndpoint outboundProvider=null;
+  if (inboundEndpointUri != null) {
+    inboundProvider=ConnectorFactory.createEndpoint(inboundEndpointUri,UMOEndpoint.ENDPOINT_TYPE_RECEIVER);
+  }
+  if (outboundEndpointUri != null) {
+    outboundProvider=ConnectorFactory.createEndpoint(outboundEndpointUri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  }
+  descriptor.setInboundEndpoint(inboundProvider);
+  descriptor.setOutboundEndpoint(outboundProvider);
+  ThreadingProfile tp=new ThreadingProfile(1,1,-1,ThreadingProfile.WHEN_EXHAUSTED_WAIT,null,null);
+  PoolingProfile pp=new PoolingProfile(1,1,-1,ObjectPool.WHEN_EXHAUSTED_BLOCK,PoolingProfile.POOL_INITIALISE_ONE_COMPONENT);
+  descriptor.setThreadingProfile(tp);
+  descriptor.setPoolingProfile(pp);
+  return manager.getModel().registerComponent(descriptor);
+}

@@ -1,0 +1,20 @@
+{
+  UMOConnector connector=getConnector();
+  UMOEndpoint endpoint=getTestEndpoint("test",UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint.getTransactionConfig().setCommitAction(UMOTransactionConfig.ACTION_ALWAYS_COMMIT);
+  UMOEvent event=getTestEvent(getValidMessage(),endpoint);
+  connector.setDispatcherFactory(new UMOMessageDispatcherFactory(){
+    public UMOMessageDispatcher create(    UMOConnector connector){
+      return testDispatcher;
+    }
+  }
+);
+  connector.getDispatcher("dummy").dispatch(event);
+  assertEquals(event,((TestDispatcher)connector.getDispatcher("dummy")).getEvent());
+  try {
+    ((TransactionEnabledConnector)connector).commitTransaction(event);
+    fail("There is no transaction active to commit");
+  }
+ catch (  UMOTransactionException e) {
+  }
+}

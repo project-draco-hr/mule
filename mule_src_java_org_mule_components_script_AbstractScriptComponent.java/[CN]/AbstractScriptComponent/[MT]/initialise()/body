@@ -1,0 +1,23 @@
+{
+  if (getScript() == null) {
+    String extension=getDefaultFileExtension();
+    if (!extension.startsWith(".")) {
+      extension="." + extension;
+    }
+    setScript(descriptor.getName() + extension);
+    logger.info("script name is not set, using default: " + descriptor.getName() + extension);
+  }
+  loadInterpreter(getScript());
+  if (autoReload) {
+    File f=new File(getScript());
+    if (f.exists()) {
+      monitor=new FileMonitor(reloadInterval);
+      monitor.addFile(f);
+      monitor.addListener(this);
+      logger.debug("Component script is reloadable");
+    }
+ else {
+      logger.warn("Cannot setup autoreload as the script fie is not on the local file system");
+    }
+  }
+}

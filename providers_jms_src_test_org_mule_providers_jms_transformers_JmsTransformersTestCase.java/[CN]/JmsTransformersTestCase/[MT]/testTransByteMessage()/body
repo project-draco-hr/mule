@@ -1,0 +1,19 @@
+{
+  RequestContext.setEvent(getTestEvent("test"));
+  logger.debug("testTransByteMessage()");
+  String text="This is a tests Byte Message";
+  AbstractJmsTransformer trans=new ObjectToJMSMessage();
+  trans.setReturnClass(BytesMessage.class);
+  Object result2=trans.transform(text.getBytes(),session);
+  logger.debug("transformed object is of type " + result2.getClass().getName());
+  assertTrue("Transformed object should be a Bytes message",result2 instanceof BytesMessage);
+  BytesMessage bMsg=(BytesMessage)result2;
+  AbstractJmsTransformer trans2=new JMSMessageToObject();
+  trans2.setReturnClass(byte[].class);
+  Object result=trans2.transform(bMsg,session);
+  logger.debug("transformed object is of type " + result.getClass().getName());
+  assertTrue("Transformed object should be a byte[]",result instanceof byte[]);
+  String res=new String((byte[])result);
+  logger.debug("result message is " + res);
+  assertTrue("source and result messages should be the same",text.equals(res));
+}

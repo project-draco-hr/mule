@@ -1,0 +1,20 @@
+{
+  UMOMessage retMessage=null;
+  UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  VMMessageReceiver receiver=connector.getReceiver(endpointUri);
+  if (receiver == null) {
+    if (connector.isQueueEvents()) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Writing to queue as there is no receiver on connector: " + connector.getName() + ", for endpointUri: "+ event.getEndpoint().getEndpointURI());
+      }
+      doDispatch(event);
+      return null;
+    }
+ else {
+      throw new NoReceiverForEndpointException("There is no receiver on connector: " + connector.getName() + ", for endpointUri: "+ event.getEndpoint().getEndpointURI());
+    }
+  }
+  retMessage=(UMOMessage)receiver.onCall(event);
+  logger.debug("sent event on endpointUri: " + event.getEndpoint().getEndpointURI());
+  return retMessage;
+}

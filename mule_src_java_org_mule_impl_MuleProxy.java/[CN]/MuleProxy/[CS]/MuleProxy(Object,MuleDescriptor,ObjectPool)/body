@@ -1,0 +1,33 @@
+{
+  this.descriptor=new ImmutableMuleDescriptor(descriptor);
+  this.proxyPool=proxyPool;
+  UMOModel model=MuleManager.getInstance().getModel();
+  UMOEntryPointResolver resolver=model.getEntryPointResolver();
+  umo=model.getLifecycleAdapterFactory().create(component,descriptor,resolver);
+  if (descriptor.getInterceptors().size() == 0) {
+    interceptorList=new CopyOnWriteArrayList();
+  }
+ else {
+    interceptorList=descriptor.getInterceptors();
+  }
+  Iterator iter=interceptorList.iterator();
+  Object temp;
+  while (iter.hasNext()) {
+    temp=iter.next();
+    if (temp instanceof LifecycleInterceptor) {
+      try {
+        ((LifecycleInterceptor)temp).initialise();
+      }
+ catch (      Exception e) {
+        throw new ModelException("Failed to initialise interceptor on component: " + e.getMessage(),e);
+      }
+    }
+  }
+  interceptorList.add(interceptorList.size(),umo);
+  try {
+    umo.initialise();
+  }
+ catch (  Exception e) {
+    throw new ModelException("Failed to initialise component: " + e.getMessage(),e);
+  }
+}

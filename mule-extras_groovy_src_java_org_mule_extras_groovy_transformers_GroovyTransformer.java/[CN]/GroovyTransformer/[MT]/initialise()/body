@@ -1,0 +1,26 @@
+{
+  try {
+    GroovyClassLoader loader=new GroovyClassLoader(getClass().getClassLoader());
+    if (script == null) {
+      script=getName() + ".groovy";
+    }
+    if (scriptLocation == null) {
+      scriptLocation=loader.getResource(script);
+    }
+    if (scriptLocation == null) {
+      File file=new File(script);
+      if (file.exists()) {
+        scriptLocation=file.toURL();
+      }
+ else {
+        throw new InitialisationException("Failed to load groovy script on classpath or fs: " + script);
+      }
+    }
+    logger.info("Loading Groovy transformer with script " + scriptLocation.toExternalForm());
+    Class groovyClass=loader.parseClass(new GroovyCodeSource(scriptLocation));
+    transformer=(GroovyObject)groovyClass.newInstance();
+  }
+ catch (  Exception e) {
+    throw new InitialisationException("Failed to create Groovy transformer: " + e.getMessage(),e);
+  }
+}

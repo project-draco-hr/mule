@@ -1,0 +1,21 @@
+{
+  JMSMessageToObject inTrans=new JMSMessageToObject();
+  ObjectToJMSMessage outTrans=new ObjectToJMSMessage();
+  UMOEndpoint endpoint=new MuleEndpoint("testIn",getInDest(),connector,inTrans,UMOEndpoint.ENDPOINT_TYPE_RECEIVER,null);
+  UMOTransactionConfig txConfig=new MuleTransactionConfig();
+  txConfig.setFactory(getTransactionFactory());
+  txConfig.setBeginAction(txBeginAction);
+  UMOEndpoint outProvider=new MuleEndpoint("testOut",getOutDest(),connector,outTrans,UMOEndpoint.ENDPOINT_TYPE_SENDER,null);
+  UMOTransactionConfig txConfig2=new MuleTransactionConfig();
+  txConfig2.setCommitAction(txCommitAction);
+  endpoint.setTransactionConfig(txConfig);
+  outProvider.setTransactionConfig(txConfig2);
+  descriptor.setOutboundEndpoint(outProvider);
+  descriptor.setInboundEndpoint(endpoint);
+  HashMap props=new HashMap();
+  props.put("eventCallback",callback);
+  descriptor.setProperties(props);
+  UMOComponent component=MuleManager.getInstance().getModel().registerComponent(descriptor);
+  MuleManager.getInstance().registerConnector(connector);
+  return component;
+}

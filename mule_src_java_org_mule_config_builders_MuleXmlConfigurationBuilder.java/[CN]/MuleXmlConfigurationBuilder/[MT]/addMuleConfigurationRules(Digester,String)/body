@@ -1,0 +1,44 @@
+{
+  digester.addSetProperties(path);
+  path+="/mule-environment-properties";
+  digester.addObjectCreate(path,MuleConfiguration.class);
+  addSetPropertiesRule(path,digester);
+  addPoolingProfileRules(digester,path);
+  addQueueProfileRules(digester,path);
+  digester.addObjectCreate(path + "/threading-profile",THREADING_PROFILE);
+  SetPropertiesRule threadingRule=new SetPropertiesRule();
+  threadingRule.addAlias("setPoolExhaustedAction","setPoolExhaustedActionString");
+  digester.addRule(path + "/threading-profile",threadingRule);
+  digester.addRule(path + "/threading-profile",new Rule(){
+    private String id;
+    public void begin(    String s,    String s1,    Attributes attributes) throws Exception {
+      id=attributes.getValue("id");
+    }
+    public void end(    String s,    String s1) throws Exception {
+      ThreadingProfile tp=(ThreadingProfile)digester.peek();
+      MuleConfiguration cfg=(MuleConfiguration)digester.peek(1);
+      if ("default".equals(id)) {
+        cfg.setDefaultThreadingProfile(tp);
+        cfg.setMessageDispatcherThreadingProfile(tp);
+        cfg.setMessageReceiverThreadingProfile(tp);
+        cfg.setComponentThreadingProfile(tp);
+      }
+ else       if ("messageReceiver".equals(id)) {
+        cfg.setMessageReceiverThreadingProfile(tp);
+      }
+ else       if ("messageDispatcher".equals(id)) {
+        cfg.setMessageDispatcherThreadingProfile(tp);
+      }
+ else       if ("component".equals(id)) {
+        cfg.setComponentThreadingProfile(tp);
+      }
+    }
+  }
+);
+  digester.addRule(path,new Rule(){
+    public void end(    String s,    String s1) throws Exception {
+      MuleManager.setConfiguration((MuleConfiguration)digester.peek());
+    }
+  }
+);
+}

@@ -1,0 +1,19 @@
+{
+  try {
+    UMOEvent event=RequestContext.getEvent();
+    event=new MuleEvent(message,event.getEndpoint(),session.getComponent(),event);
+    if (synchronous) {
+      statistics.incrementRoutedMessage(event.getEndpoint());
+      logger.info("Event being routed from catch all strategy for endpoint: " + RequestContext.getEvent().getEndpoint());
+      return session.getComponent().sendEvent(event);
+    }
+ else {
+      statistics.incrementRoutedMessage(event.getEndpoint());
+      session.getComponent().dispatchEvent(event);
+      return null;
+    }
+  }
+ catch (  UMOException e) {
+    throw new RoutingException(e.getMessage(),e);
+  }
+}

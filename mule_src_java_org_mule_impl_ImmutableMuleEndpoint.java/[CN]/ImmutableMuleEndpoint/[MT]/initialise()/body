@@ -1,0 +1,43 @@
+{
+  if (connector == null) {
+    if (endpointUri.getConnectorName() != null) {
+      connector=MuleManager.getInstance().lookupConnector(endpointUri.getConnectorName());
+      if (connector == null)       throw new IllegalArgumentException("Connector not found: " + endpointUri.getConnectorName());
+    }
+ else {
+      try {
+        connector=MuleObjectHelper.getOrCreateConnectorByProtocol(endpointUri);
+      }
+ catch (      UMOException e) {
+        throw new InitialisationException("Failed to create connector from Uri: " + e.getMessage(),e);
+      }
+    }
+    if (endpointUri.getEndpointName() != null && name == null) {
+      name=endpointUri.getEndpointName();
+    }
+  }
+  if (name == null) {
+    name="_" + endpointUri.getScheme() + "Endpoint#"+ hashCode();
+  }
+  if (endpointUri.getTransformers() != null) {
+    try {
+      transformer=MuleObjectHelper.getTransformer(endpointUri.getTransformers(),",");
+    }
+ catch (    MuleException e) {
+      throw new InitialisationException(e.getMessage(),e);
+    }
+  }
+  if (transformer == null) {
+    if (connector instanceof AbstractConnector) {
+      if (UMOEndpoint.ENDPOINT_TYPE_RECEIVER.equals(type)) {
+        transformer=((AbstractConnector)connector).getDefaultInboundTransformer();
+      }
+ else {
+        transformer=((AbstractConnector)connector).getDefaultOutboundTransformer();
+      }
+    }
+  }
+  if (transformer != null) {
+    transformer.setEndpoint(this);
+  }
+}

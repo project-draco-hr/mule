@@ -1,0 +1,24 @@
+{
+  this.message=message;
+  try {
+    MessageContext ctx=MessageContext.getCurrentContext();
+    if (ctx != null) {
+      MuleSoapHeaders header=new MuleSoapHeaders(ctx.getMessage().getSOAPPart().getEnvelope().getHeader());
+      if (header.getReplyTo() != null && !"".equals(header.getReplyTo())) {
+        setReplyTo(header.getReplyTo());
+      }
+      if (header.getCorrelationGroup() != null && !"".equals(header.getCorrelationGroup()) && !"-1".equals(header.getCorrelationGroup())) {
+        setCorrelationGroupSize(Integer.parseInt(header.getCorrelationGroup()));
+      }
+      if (header.getCorrelationSequence() != null && !"".equals(header.getCorrelationSequence()) && !"-1".equals(header.getCorrelationSequence())) {
+        setCorrelationSequence(Integer.parseInt(header.getCorrelationSequence()));
+      }
+      if (header.getCorrelationId() != null && !"".equals(header.getCorrelationId())) {
+        setCorrelationId(header.getCorrelationId());
+      }
+    }
+  }
+ catch (  SOAPException e) {
+    throw new MessageException("Failed to process Soap Header: " + e.getMessage(),e);
+  }
+}

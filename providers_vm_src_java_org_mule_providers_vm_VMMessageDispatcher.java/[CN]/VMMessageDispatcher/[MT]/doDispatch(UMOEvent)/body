@@ -1,0 +1,23 @@
+{
+  UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  if (endpointUri == null) {
+    throw new MuleException("Endpoint is null for endpoint: " + event.getEndpoint() + ". Event is: "+ event);
+  }
+  if (connector.isQueueEvents()) {
+    BoundedPersistentQueue queue=connector.getQueue(endpointUri.getAddress());
+    if (queue == null) {
+      logger.info("Creating vm Queue: " + endpointUri.getAddress());
+      queue=connector.createQueue(endpointUri.getAddress());
+    }
+    queue.put(event);
+  }
+ else {
+    VMMessageReceiver receiver=connector.getReceiver(event.getEndpoint().getEndpointURI());
+    if (receiver == null) {
+      logger.warn("No receiver for endpointUri: " + event.getEndpoint().getEndpointURI());
+      return;
+    }
+    receiver.onEvent(event);
+  }
+  logger.debug("dispatched Event on endpointUri: " + endpointUri);
+}

@@ -1,0 +1,51 @@
+{
+  try {
+    if (session == null || getEndpoint() != null) {
+      session=(Session)getEndpoint().getConnector().getDispatcher("transformerSession").getDelegateSession();
+    }
+    if (getDoCompression()) {
+      byte[] buffer=compressMessage(src);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Compressing message in transformation");
+      }
+      BytesMessage bMsg=session.createBytesMessage();
+      bMsg.clearBody();
+      bMsg.setBooleanProperty(JMS_PROPERTY_COMPRESSED,true);
+      for (int i=0; i < buffer.length; i++) {
+        bMsg.writeByte(buffer[i]);
+      }
+      return bMsg;
+    }
+ else {
+      Message msg=null;
+      if (src instanceof Message) {
+        msg=(Message)src;
+        msg.clearProperties();
+      }
+ else {
+        msg=JmsMessageUtils.getMessageForObject(src,session);
+      }
+      UMOEventContext ctx=RequestContext.getEventContext();
+      if (ctx == null) {
+        logger.warn("There is no current event context");
+        return msg;
+      }
+      Map props=ctx.getProperties();
+      props=PropertiesHelper.getPropertiesWithoutPrefix(props,"JMS");
+      Map.Entry entry;
+      String key;
+      for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
+        entry=(Map.Entry)iterator.next();
+        key=entry.getKey().toString();
+        if (MuleProperties.MULE_CORRELATION_ID_PROPERTY.equals(key)) {
+          msg.setJMSCorrelationID(entry.getValue().toString());
+        }
+        msg.setObjectProperty(key,entry.getValue());
+      }
+      return msg;
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException("Failed to transform message: " + e,e);
+  }
+}

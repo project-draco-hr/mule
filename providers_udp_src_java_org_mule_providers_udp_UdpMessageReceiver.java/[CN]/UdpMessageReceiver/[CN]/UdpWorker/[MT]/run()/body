@@ -1,0 +1,22 @@
+{
+  try {
+    UMOMessageAdapter adapter=connector.getMessageAdapter(packet);
+    UMOMessage returnMessage=routeMessage(new MuleMessage(adapter),connector.isSynchronous());
+    if (returnMessage != null) {
+      byte[] data=returnMessage.getPayloadAsBytes();
+      DatagramPacket result=new DatagramPacket(data,data.length,packet.getAddress(),packet.getPort());
+      socket.send(result);
+    }
+  }
+ catch (  Exception e) {
+    handleException("Failed to process Udp Request on: " + (socket != null ? socket.getInetAddress().toString() : "null"),e);
+  }
+ finally {
+    try {
+      socket.close();
+    }
+ catch (    Exception e) {
+      logger.error("Socket close failed with: " + e);
+    }
+  }
+}

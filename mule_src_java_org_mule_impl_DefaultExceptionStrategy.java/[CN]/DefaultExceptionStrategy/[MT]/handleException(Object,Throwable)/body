@@ -1,0 +1,17 @@
+{
+  logger.error("Caught exception in Exception Strategy: " + t.getMessage(),t);
+  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+  if (tx != null) {
+    handleTransaction(tx);
+  }
+ else {
+    logger.debug("There is no current transaction to roll back after exception");
+  }
+  try {
+    routeException(message,t);
+  }
+ catch (  UMOException e) {
+    logger.fatal("Failed to route Exception message, this may result in unexpected message loss. Endpoint is: " + (exceptionEndpoint == null ? null : exceptionEndpoint.getEndpointURI()));
+  }
+  return null;
+}

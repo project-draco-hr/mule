@@ -1,0 +1,19 @@
+{
+  initialise(endpointUri.getAddress());
+  int origTimeout=socket.getSoTimeout();
+  int newTimeout=Integer.parseInt(String.valueOf(timeout));
+  if (origTimeout != newTimeout) {
+    socket.setSoTimeout(Integer.parseInt(String.valueOf(timeout)));
+  }
+  try {
+    byte[] result=receive(socket,Integer.parseInt(String.valueOf(timeout)));
+    if (result == null)     return null;
+    UMOMessage message=new MuleMessage(connector.getMessageAdapter(new ByteArrayInputStream(result)));
+    return message;
+  }
+  finally {
+    if (origTimeout != newTimeout) {
+      socket.setSoTimeout(origTimeout);
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  if (returnMessage != null && returnMessage.getReplyTo() != null) {
+    logger.info("sending reply to: " + returnMessage.getReplyTo());
+    UMOEndpointURI endpointUri=new MuleEndpointURI(returnMessage.getReplyTo().toString());
+    UMOEndpoint endpoint=MuleEndpoint.getOrCreateEndpointForUri(endpointUri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+    UMOEvent replyToEvent=new MuleEvent(returnMessage,endpoint,event.getSession(),false);
+    replyToEvent.removeProperty(MuleProperties.MULE_REPLY_TO_PROPERTY);
+    onEvent(replyToEvent);
+    logger.info("reply to sent: " + returnMessage.getReplyTo());
+    if (stat.isEnabled())     stat.incSentReplyToEvent();
+  }
+}

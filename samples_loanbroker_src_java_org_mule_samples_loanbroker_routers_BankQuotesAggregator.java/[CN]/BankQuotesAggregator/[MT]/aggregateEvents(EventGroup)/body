@@ -1,0 +1,25 @@
+{
+  try {
+    LoanQuote lowestQuote=null;
+    LoanQuote quote=null;
+    UMOEvent event=null;
+    List list=events.getEvents();
+    for (Iterator iterator=list.iterator(); iterator.hasNext(); ) {
+      event=(UMOEvent)iterator.next();
+      quote=(LoanQuote)event.getTransformedMessage();
+      logger.info("Processing quote: " + quote);
+      if (lowestQuote == null) {
+        lowestQuote=quote;
+      }
+ else {
+        if (quote.getInterestRate() < lowestQuote.getInterestRate()) {
+          lowestQuote=quote;
+        }
+      }
+    }
+    return new MuleMessage(lowestQuote,event.getProperties());
+  }
+ catch (  TransformerException e) {
+    throw new RoutingException("Failed to get lowest quote",e,events);
+  }
+}

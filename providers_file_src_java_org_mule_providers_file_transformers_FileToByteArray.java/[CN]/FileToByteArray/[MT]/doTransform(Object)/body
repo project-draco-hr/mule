@@ -1,0 +1,31 @@
+{
+  File file=(File)src;
+  byte[] buf=new byte[8 * 1024];
+  if (file.length() == 0) {
+    logger.warn("File is empty: " + ((File)src).getAbsolutePath());
+    return new byte[]{};
+  }
+  FileInputStream fis=null;
+  ByteArrayOutputStream baos=null;
+  try {
+    fis=new FileInputStream((File)src);
+    baos=new ByteArrayOutputStream(new Long(((File)src).length()).intValue());
+    int len=0;
+    while ((len=fis.read(buf)) != -1) {
+      baos.write(buf,0,len);
+    }
+    return baos.toByteArray();
+  }
+ catch (  IOException e) {
+    throw new TransformerException(e.getMessage(),e);
+  }
+ finally {
+    try {
+      if (fis != null)       fis.close();
+      if (baos != null)       baos.close();
+    }
+ catch (    IOException e) {
+      logger.debug("Failed to close reader in transformer: " + e.getMessage());
+    }
+  }
+}

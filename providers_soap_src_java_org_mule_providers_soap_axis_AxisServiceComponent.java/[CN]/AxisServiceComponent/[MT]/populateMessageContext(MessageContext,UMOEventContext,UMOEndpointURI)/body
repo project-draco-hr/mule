@@ -1,0 +1,30 @@
+{
+  if (isDebug) {
+    logger.debug("MessageContext:" + msgContext);
+    logger.debug("HEADER_CONTENT_TYPE:" + context.getProperty("Content-Type"));
+    logger.debug("HEADER_CONTENT_LOCATION:" + context.getProperty("Content-Location"));
+    logger.debug("Constants.MC_HOME_DIR:" + String.valueOf(getHomeDir()));
+    logger.debug("Constants.MC_RELATIVE_PATH:" + endpointUri.getPath());
+    logger.debug("HTTPConstants.HEADER_AUTHORIZATION:" + context.getProperty("Authorization"));
+    logger.debug("Constants.MC_REMOTE_ADDR:" + endpointUri.getHost());
+  }
+  msgContext.setTransportName(transportName);
+  msgContext.setProperty("home.dir",getHomeDir());
+  msgContext.setProperty("path",endpointUri.getPath());
+  msgContext.setProperty(HTTPConstants.MC_HTTP_SERVLET,this);
+  msgContext.setProperty(HTTPConstants.MC_HTTP_SERVLETLOCATION,endpointUri.getPath());
+  String serviceName=getServiceName(context,endpointUri);
+  SOAPService service=msgContext.getAxisEngine().getConfig().getService(new QName(serviceName.substring(1)));
+  if (service.getOption(AxisConnector.SERVICE_PROPERTY_COMPONENT_NAME) != null) {
+    String servicePath=(String)service.getOption("servicePath");
+    if (!endpointUri.getPath().startsWith(servicePath + serviceName)) {
+      throw new AxisFault("Failed to find service: " + endpointUri.getPath());
+    }
+  }
+  msgContext.setProperty(HTTPConstants.MC_HTTP_SERVLETPATHINFO,serviceName);
+  msgContext.setProperty("serviceName",serviceName);
+  msgContext.setProperty("Authorization",context.getProperty("Authorization"));
+  msgContext.setProperty("remoteaddr",endpointUri.getHost());
+  ServletEndpointContextImpl sec=new ServletEndpointContextImpl();
+  msgContext.setProperty("servletEndpointContext",sec);
+}

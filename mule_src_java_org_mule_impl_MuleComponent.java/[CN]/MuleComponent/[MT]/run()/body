@@ -1,0 +1,47 @@
+{
+  MuleEvent event=null;
+  MuleProxy proxy=null;
+  while (!stopped.get() && !stopping.get()) {
+    if (!paused.get()) {
+      try {
+        event=(MuleEvent)queue.take();
+      }
+ catch (      InterruptedException e) {
+        break;
+      }
+      if (stats.isEnabled())       stats.decQueuedEvent();
+      if (event != null) {
+        logger.debug("Component: " + descriptor.getName() + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
+        try {
+          proxy=(MuleProxy)proxyPool.borrowObject();
+          getStatistics().setComponentPoolSize(proxyPool.getSize());
+          proxy.setStatistics(getStatistics());
+        }
+ catch (        NoSuchElementException e) {
+          handleException(event,new ComponentException("Proxy pool timed out. " + e,this,e));
+        }
+catch (        Exception e) {
+          handleException(event,new ComponentException("Failed to borrow object from pool: " + e.getMessage(),this,e));
+        }
+        if (proxy == null) {
+          handleException(event,new ComponentException("No proxy was found",this));
+        }
+        if (!proxy.isStarted()) {
+          try {
+            proxy.start();
+          }
+ catch (          UMOException e) {
+            handleException(event,e);
+          }
+        }
+        proxy.onEvent(event);
+        try {
+          threadPool.execute(proxy);
+        }
+ catch (        InterruptedException e) {
+          handleException(event,e);
+        }
+      }
+    }
+  }
+}

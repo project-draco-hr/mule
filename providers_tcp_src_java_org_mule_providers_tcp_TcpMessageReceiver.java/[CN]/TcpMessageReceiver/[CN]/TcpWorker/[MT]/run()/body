@@ -1,0 +1,26 @@
+{
+  try {
+    dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+    dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+    while (!disposing.get() || !closed.get()) {
+      if (socket.isClosed()) {
+        logger.info("Connection reset by peer");
+        break;
+      }
+      byte[] b=readStream(dataIn);
+      if (b == null)       break;
+      UMOMessageAdapter adapter=connector.getMessageAdapter(b);
+      OutputStream os=new ResponseOutputStream(socket.getOutputStream(),socket);
+      UMOMessage returnMessage=routeMessage(new MuleMessage(adapter),connector.isSynchronous(),os);
+      if (returnMessage != null) {
+        byte[] data=returnMessage.getPayloadAsBytes();
+        dataOut.write(data);
+        dataOut.flush();
+      }
+    }
+  }
+ catch (  Exception e) {
+    handleException("Failed to process tcp Request on: " + (socket != null ? socket.getInetAddress().toString() : "null"),e);
+    dispose();
+  }
+}

@@ -1,0 +1,22 @@
+{
+  if (!MuleManager.getConfiguration().isSynchronous()) {
+    logger.warn("The mule manager is running asynchronously, a null message payload will be returned");
+  }
+  UMOEndpointURI muleEndpoint=new MuleEndpointURI(url);
+  if (messageProperties == null)   messageProperties=new HashMap();
+  messageProperties.put(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,"true");
+  UMOMessage message=new MuleMessage(payload,messageProperties);
+  UMOEvent event=getEvent(message,muleEndpoint,true);
+  event.setTimeout(timeout);
+  UMOMessage result=null;
+  try {
+    result=event.getSession().sendEvent(event);
+  }
+ catch (  UMOException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new MuleClientException("Failed to dispatch client event: " + e.getMessage(),e);
+  }
+  return result;
+}

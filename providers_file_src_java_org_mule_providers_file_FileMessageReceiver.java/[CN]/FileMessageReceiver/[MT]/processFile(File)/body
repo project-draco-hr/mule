@@ -1,0 +1,47 @@
+{
+  File destinationFile=null;
+  String orginalFilename=file.getName();
+  if (moveDir != null) {
+    String fileName=file.getName();
+    if (moveToPattern != null) {
+      fileName=((FileConnector)connector).getFilenameParser().getFilename(null,moveToPattern);
+    }
+    destinationFile=new File(moveDir,fileName);
+  }
+  boolean resultOfFileMoveOperation=false;
+  try {
+    if (!(file.canRead() && file.exists() && file.isFile())) {
+      throw new MuleException("Error while reading file " + file.getName() + ". Either the file doesn't exist or it is not a file");
+    }
+ else {
+      if (destinationFile != null) {
+        resultOfFileMoveOperation=file.renameTo(destinationFile);
+        if (!resultOfFileMoveOperation) {
+          throw new MuleException("Failed to move " + file.getAbsolutePath() + " to "+ destinationFile.getAbsolutePath()+ ". File may already exist.");
+        }
+        file=destinationFile;
+      }
+      UMOMessageAdapter msgAdapter=connector.getMessageAdapter(file);
+      msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,orginalFilename);
+      if (((FileConnector)connector).isAutoDelete()) {
+        msgAdapter.getPayloadAsBytes();
+        if (destinationFile == null) {
+          resultOfFileMoveOperation=file.delete();
+          if (!resultOfFileMoveOperation) {
+            throw new MuleException("Failed to delete " + file.getAbsolutePath());
+          }
+        }
+      }
+      UMOMessage message=new MuleMessage(msgAdapter);
+      routeMessage(message,connector.isSynchronous());
+    }
+  }
+ catch (  Exception e) {
+    boolean resultOfRollbackFileMove=false;
+    if (resultOfFileMoveOperation) {
+      resultOfRollbackFileMove=rollbackFileMove(destinationFile,file.getAbsolutePath());
+    }
+    Exception ex=new MuleException("IO Exception" + e.toString() + " while processing "+ file.getName()+ " File was"+ (resultOfFileMoveOperation ? " " : " not ")+ " moved to done. Roll back of move "+ (resultOfRollbackFileMove ? "succeeded" : "failed"),e);
+    handleException("Failed to dispatch event",ex);
+  }
+}

@@ -1,0 +1,18 @@
+{
+  try {
+    StringBuffer message=new StringBuffer();
+    byte[] buf=new byte[getBufferSize()];
+    int len=inputStream.read(buf);
+    if (len == -1)     return;
+    message.append(new String(buf,0,len));
+    UMOMessage umoMessage=new MuleMessage(connector.getMessageAdapter(message.toString()));
+    routeMessage(umoMessage,connector.isSynchronous());
+    ((StreamConnector)endpoint.getConnector()).reinitialise();
+  }
+ catch (  IOException e) {
+    handleException("Failed to read messages from stream",e);
+  }
+catch (  Exception e) {
+    handleException("Failed to create or dispatch event from stream",e);
+  }
+}

@@ -1,0 +1,32 @@
+{
+  String uriIdentifier=MuleManager.getInstance().lookupEndpointIdentifier(uri,uri);
+  if (!uriIdentifier.equals(uri)) {
+    endpointName=uri;
+    uri=uriIdentifier;
+  }
+  uri=uri.replaceAll(" ","%20");
+  if (!validateUrl(uri)) {
+    throw new MalformedEndpointException("The endpointUri: " + uri + " is not a valid Mule uri endpointUri");
+  }
+  try {
+    schemeMetaInfo=retrieveSchemeMetaInfo(uri);
+    if (schemeMetaInfo != null) {
+      uri=uri.replaceFirst(schemeMetaInfo + ":","");
+    }
+    this.uri=new URI(uri);
+  }
+ catch (  URISyntaxException e) {
+    throw new MalformedEndpointException("Failed to parse Mule Url: " + uri + ". "+ e.getMessage(),e);
+  }
+  try {
+    EndpointBuilder builder=null;
+    String scheme=(schemeMetaInfo == null ? this.uri.getScheme() : schemeMetaInfo);
+    ConnectorServiceDescriptor csd=ConnectorFactory.getServiceDescriptor(scheme);
+    builder=csd.createEndpointBuilder();
+    UMOEndpointURI built=builder.build(this.uri);
+    initialise(built);
+  }
+ catch (  ConnectorFactoryException e) {
+    throw new MalformedEndpointException("Failed to create endpointUri from uri: " + e.getMessage(),e);
+  }
+}

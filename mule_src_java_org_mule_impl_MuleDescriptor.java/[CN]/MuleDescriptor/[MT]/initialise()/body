@@ -1,0 +1,65 @@
+{
+  MuleConfiguration config=MuleManager.getConfiguration();
+  if (threadingProfile == null)   threadingProfile=config.getComponentThreadingProfile();
+  if (poolingProfile == null)   poolingProfile=config.getPoolingProfile();
+  if (queueProfile == null)   queueProfile=config.getQueueProfile();
+  if (exceptionStrategy == null) {
+    exceptionStrategy=MuleManager.getInstance().getModel().getExceptionStrategy();
+  }
+  if (inboundEndpoint != null) {
+    if (inboundTransformer != null) {
+      inboundEndpoint.setTransformer(inboundTransformer);
+    }
+    ((MuleEndpoint)inboundEndpoint).initialise();
+    if (inboundTransformer == null) {
+      inboundTransformer=inboundEndpoint.getTransformer();
+    }
+  }
+  if (outboundEndpoint != null) {
+    if (outboundTransformer != null)     outboundEndpoint.setTransformer(outboundTransformer);
+    ((MuleEndpoint)outboundEndpoint).initialise();
+    if (outboundTransformer == null) {
+      outboundTransformer=outboundEndpoint.getTransformer();
+    }
+  }
+  if (exceptionStrategy.getEndpoint() != null) {
+    ((MuleEndpoint)exceptionStrategy.getEndpoint()).initialise();
+  }
+  MuleEndpoint endpoint;
+  if (inboundRouter == null) {
+    inboundRouter=new InboundMessageRouter();
+    inboundRouter.addRouter(new InboundPassThroughRouter());
+  }
+ else {
+    if (inboundRouter.getCatchAllStrategy() != null && inboundRouter.getCatchAllStrategy().getEndpoint() != null) {
+      ((MuleEndpoint)inboundRouter.getCatchAllStrategy().getEndpoint()).initialise();
+    }
+    for (Iterator iterator=inboundRouter.getEndpoints().iterator(); iterator.hasNext(); ) {
+      endpoint=(MuleEndpoint)iterator.next();
+      endpoint.initialise();
+    }
+  }
+  if (responseRouter != null) {
+    for (Iterator iterator=responseRouter.getEndpoints().iterator(); iterator.hasNext(); ) {
+      endpoint=(MuleEndpoint)iterator.next();
+      endpoint.initialise();
+    }
+  }
+  if (outboundRouter == null) {
+    outboundRouter=new OutboundMessageRouter();
+    outboundRouter.addRouter(new OutboundPassThroughRouter(this));
+  }
+ else {
+    if (outboundRouter.getCatchAllStrategy() != null && outboundRouter.getCatchAllStrategy().getEndpoint() != null) {
+      ((MuleEndpoint)outboundRouter.getCatchAllStrategy().getEndpoint()).initialise();
+    }
+    UMOOutboundRouter router=null;
+    for (Iterator iterator=outboundRouter.getRouters().iterator(); iterator.hasNext(); ) {
+      router=(UMOOutboundRouter)iterator.next();
+      for (Iterator iterator1=router.getEndpoints().iterator(); iterator1.hasNext(); ) {
+        endpoint=(MuleEndpoint)iterator1.next();
+        endpoint.initialise();
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  UMOMessage result=null;
+  if (endpoints == null || endpoints.size() == 0) {
+    throw new RoutingException("No endpoints are set on this router, cannot route message");
+  }
+  try {
+    message.setCorrelationId(message.getUniqueId());
+    message.setCorrelationGroupSize(endpoints.size());
+  }
+ catch (  UniqueIdNotSupportedException e) {
+    throw new RoutingException("Cannot use multicasting router with transports that do not support a unique id",e,message);
+  }
+  try {
+    UMOEndpoint endpoint;
+synchronized (endpoints) {
+      for (int i=0; i < endpoints.size(); i++) {
+        endpoint=(UMOEndpoint)endpoints.get(i);
+        if (synchronous) {
+          result=send(session,message,(UMOEndpoint)endpoint);
+        }
+ else {
+          dispatch(session,message,(UMOEndpoint)endpoint);
+        }
+      }
+    }
+  }
+ catch (  UMOException e) {
+    throw new CouldNotRouteOutboundMessageException(e.getMessage(),e,message);
+  }
+  return result;
+}

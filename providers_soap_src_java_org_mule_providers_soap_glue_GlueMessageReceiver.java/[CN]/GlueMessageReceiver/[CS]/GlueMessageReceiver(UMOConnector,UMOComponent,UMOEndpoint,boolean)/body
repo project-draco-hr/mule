@@ -1,0 +1,31 @@
+{
+  super.create(connector,component,endpoint);
+  try {
+    Class[] interfaces=ServiceProxy.getInterfacesForComponent(component);
+    if (interfaces.length == 0) {
+      throw new InitialisationException("No service interfaces could be found for component: " + component.getDescriptor().getName());
+    }
+    VirtualService.enable();
+    VirtualService vService=new VirtualService(interfaces,ServiceProxy.createGlueServiceHandler(this,connector.isSynchronous()));
+    if (createServer) {
+      registerContextHeaders();
+      HTTP.startup(getEndpointURI().getScheme() + "://" + getEndpointURI().getHost()+ ":"+ getEndpointURI().getPort());
+    }
+    MuleDescriptor desc=(MuleDescriptor)component.getDescriptor();
+    String serviceName=getEndpointURI().getPath();
+    if (!serviceName.endsWith("/")) {
+      serviceName+="/";
+    }
+    serviceName+=component.getDescriptor().getName();
+    desc.addInitialisationCallback(new GlueInitialisationCallback(vService,serviceName,new ServiceContext()));
+  }
+ catch (  ClassNotFoundException e) {
+    throw new InitialisationException("Failed to load component class: " + e.getMessage(),e);
+  }
+catch (  UMOException e) {
+    throw new InitialisationException("Failed to register component as a service: " + e.getMessage(),e);
+  }
+catch (  Exception e) {
+    throw new InitialisationException("Failed to start soap server: " + e.getMessage(),e);
+  }
+}

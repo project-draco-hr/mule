@@ -1,0 +1,29 @@
+{
+  if (message instanceof HttpServletRequest) {
+    try {
+      request=(HttpServletRequest)message;
+      String payloadParam=(String)request.getAttribute(PAYLOAD_PARAMETER_NAME);
+      if (payloadParam == null) {
+        payloadParam=DEFAULT_PAYLOAD_PARAMETER_NAME;
+      }
+      String payload=request.getParameter(payloadParam);
+      if (payload == null) {
+        if (isText(request.getContentType())) {
+          this.message=Utility.inputStreamToString(request.getInputStream(),4096);
+        }
+ else {
+          this.message=Utility.inputStreamToByteArray(request.getInputStream(),4096);
+        }
+      }
+ else {
+        this.message=payload;
+      }
+    }
+ catch (    IOException e) {
+      throw new MessageException("Failed to read HttpRequest payload. Request is: " + request.getRequestURL().toString(),e);
+    }
+  }
+ else {
+    throw new MessageTypeNotSupportedException(message,getClass());
+  }
+}

@@ -1,0 +1,36 @@
+{
+  String readDir=endpoint.getEndpointURI().getAddress();
+  File dir=null;
+  long polling=0;
+  if (readDir != null) {
+    dir=Utility.openDirectory(readDir);
+    if (!(dir.canRead())) {
+      throw new MuleException("endpointUri [File System directory] does not " + "exist or cannot be read: " + dir.getAbsolutePath());
+    }
+ else {
+      logger.debug("Listening on endpointUri: " + dir.getAbsolutePath());
+    }
+  }
+  File moveTo=moveToDirectory;
+  Map props=endpoint.getProperties();
+  if (props != null) {
+    String move=(String)props.get(PROPERTY_MOVE_TO_DIRECTORY);
+    if (move != null) {
+      moveTo=Utility.openDirectory(move);
+    }
+    String tempPolling=(String)props.get(PROPERTY_POLLING_FREQUENCY);
+    if (tempPolling != null) {
+      polling=Long.parseLong(tempPolling);
+    }
+  }
+  if (polling <= 0) {
+    polling=1000;
+  }
+  logger.debug("set polling frequency to: " + polling);
+  try {
+    return serviceDescriptor.createMessageReceiver(this,component,endpoint,new Object[]{dir,moveTo,moveToPattern,new Long(polling)});
+  }
+ catch (  Exception e) {
+    throw new InitialisationException("Failed to create receiver using spi interface: " + serviceDescriptor.getMessageReceiver() + ". Error is: "+ e.getMessage(),e);
+  }
+}

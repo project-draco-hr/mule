@@ -1,0 +1,29 @@
+{
+  EndpointList list=new EndpointList();
+  UMOEndpoint test1=getTestEndpoint("test1",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  UMOEndpoint test2=getTestEndpoint("test2",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  UMOEndpoint test3=getTestEndpoint("test3",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  list.add(test1);
+  list.add(test2);
+  assertEquals(list.getDefaultSendProvider().getName(),"test1");
+  list.setDefaultSendProvider(test3,false);
+  assertEquals(list.getDefaultSendProvider().getName(),"test3");
+  try {
+    list.setDefaultSendProvider(null);
+    fail("should throw exception, endpoint cannot be null");
+  }
+ catch (  MuleException e) {
+  }
+  UMOEndpoint test4=getTestEndpoint("test4",UMOEndpoint.ENDPOINT_TYPE_RECEIVER);
+  list.setDefaultSendProvider(test4);
+  assertEquals(4,list.getTotalSize());
+  assertEquals(list.getDefaultSendProvider().getName(),"test4");
+  UMOEndpoint test5=getTestEndpoint("test5",UMOEndpoint.ENDPOINT_TYPE_RECEIVER);
+  test5.setTransformer(new DefaultTransformer());
+  try {
+    list.setDefaultSendProvider(test5);
+  }
+ catch (  MuleException e) {
+    fail("should not throw exception, endpoint can now be sender or receiver when it has a transformer");
+  }
+}

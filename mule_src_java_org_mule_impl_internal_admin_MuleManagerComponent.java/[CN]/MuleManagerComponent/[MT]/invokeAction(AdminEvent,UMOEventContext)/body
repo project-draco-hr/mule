@@ -1,0 +1,27 @@
+{
+  String destComponent=null;
+  String endpoint=action.getEndpoint();
+  if (action.getEndpoint().startsWith("mule:")) {
+    destComponent=endpoint.substring(endpoint.lastIndexOf("/") + 1);
+  }
+ else {
+    destComponent=endpoint;
+  }
+  if (destComponent != null) {
+    UMOSession session=MuleManager.getInstance().getModel().getComponentSession(destComponent);
+    RequestContext.rewriteEvent(action.getMessage());
+    UMOEvent event=RequestContext.getEvent();
+    event.getEndpoint().setTransformer(null);
+    if (context.isSynchronous()) {
+      UMOMessage result=session.getComponent().sendEvent(event);
+      return xstream.toXML(result);
+    }
+ else {
+      session.getComponent().dispatchEvent(event);
+      return null;
+    }
+  }
+ else {
+    throw new MuleException("Event property " + MuleProperties.COMPONENT_NAME_PROPERTY + " not set, Mule can not foward request");
+  }
+}

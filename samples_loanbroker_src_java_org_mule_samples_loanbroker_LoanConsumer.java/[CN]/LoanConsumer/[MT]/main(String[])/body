@@ -1,0 +1,74 @@
+{
+  LoanConsumer loanConsumer=null;
+  try {
+    if (args.length > 0) {
+      loanConsumer=new LoanConsumer(args[0]);
+      int i=100;
+      if (args.length > 1) {
+        i=Integer.parseInt(args[1]);
+      }
+      boolean sync=false;
+      if (args.length > 2) {
+        sync=Boolean.valueOf(args[2]);
+      }
+      if (sync) {
+        long start=System.currentTimeMillis();
+        List results=loanConsumer.requestSend(i,"vm://LoanBrokerRequests");
+        System.out.println("Number or quotes received: " + results.size());
+        List output=new ArrayList();
+        int x=1;
+        for (Iterator iterator=results.iterator(); iterator.hasNext(); x++) {
+          LoanQuote quote=(LoanQuote)iterator.next();
+          output.add(x + ". " + quote.toString());
+        }
+        System.out.println(StringMessageHelper.getBoilerPlate(output,'*',80));
+        long cur=System.currentTimeMillis();
+        System.out.println(Utility.getFormattedDuration(cur - start));
+        System.out.println("Avg request: " + ((cur - start) / x));
+      }
+ else {
+        loanConsumer.requestDispatch(i,"vm://LoanBrokerRequests");
+      }
+    }
+ else {
+      System.out.println(StringMessageHelper.getBoilerPlate("Welcome to the Mule Loan broker example"));
+      System.out.println("\nWould you like to run the [s]ynchronous or [a]synchronous version?");
+      int response=getSelection();
+      if (response == 's') {
+        System.out.println("Loading Synchronous Loan Broker");
+        loanConsumer=new LoanConsumer("loan-broker-sync-config.xml");
+      }
+ else {
+        System.out.println("Loading Asynchronous Loan Broker");
+        loanConsumer=new LoanConsumer("loan-broker-async-config.xml");
+      }
+      while (response != 'q') {
+        System.out.println("\n[1] make a loan request");
+        System.out.println("[2] send 100 random requests");
+        System.out.println("[q] quit");
+        System.out.println("\nPlease make your selection: ");
+        response=getSelection();
+        if (response == '2') {
+          loanConsumer.requestRandom(100);
+        }
+ else         if (response == '1') {
+          LoanRequest request=getRequestFromUser();
+          loanConsumer.request(request);
+        }
+ else         if (response == 'q') {
+          System.out.println("Exiting now");
+          loanConsumer.close();
+          System.exit(0);
+        }
+ else {
+          System.out.println("That response is not recognised, try again:");
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    System.err.println(e.getMessage());
+    e.printStackTrace(System.err);
+    System.exit(1);
+  }
+}

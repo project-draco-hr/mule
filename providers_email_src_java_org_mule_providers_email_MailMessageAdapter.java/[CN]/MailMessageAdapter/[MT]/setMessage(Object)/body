@@ -1,0 +1,27 @@
+{
+  if (message instanceof Message) {
+    this.message=(Message)message;
+  }
+ else {
+    throw new MessageTypeNotSupportedException(message,MailMessageAdapter.class);
+  }
+  try {
+    Address[] addresses=null;
+    properties.put(PROPERTY_SUBJECT,this.message.getSubject());
+    addresses=this.message.getFrom();
+    if (addresses != null && addresses.length > 0) {
+      properties.put(PROPERTY_FROM_ADDRESS,addresses[0].toString());
+      properties.put(PROPERTY_FROM_ADDRESSES,addresses);
+    }
+    properties.put(PROPERTY_TO_ADDRESSES,this.message.getRecipients(Message.RecipientType.TO));
+    properties.put(PROPERTY_CC_ADDRESSES,this.message.getRecipients(Message.RecipientType.CC));
+    properties.put(PROPERTY_BCC_ADDRESSES,this.message.getRecipients(Message.RecipientType.BCC));
+    for (Enumeration e=this.message.getAllHeaders(); e.hasMoreElements(); ) {
+      Header h=(Header)e.nextElement();
+      properties.put(h.getName(),h.getValue());
+    }
+  }
+ catch (  MessagingException e) {
+    throw new MessageException("Failed to create message adapter for message: " + e,e);
+  }
+}

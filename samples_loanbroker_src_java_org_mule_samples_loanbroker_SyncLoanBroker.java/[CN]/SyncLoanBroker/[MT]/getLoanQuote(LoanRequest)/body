@@ -1,0 +1,20 @@
+{
+  logger.info("\nClient " + request.getCustomer().getName() + " with ssn= "+ request.getCustomer().getSsn()+ " requests a loan of amount= "+ request.getLoanAmount()+ " for "+ request.getLoanDuration()+ " months");
+  BankQuoteRequest bqr=new BankQuoteRequest();
+  bqr.setLoanRequest(request);
+  UMOEventContext context=RequestContext.getEventContext();
+  UMOMessage result=context.sendEvent(request.getCustomer());
+  bqr.getLoanRequest().setCreditProfile((CreditProfile)result.getPayload());
+  result=context.sendEvent(bqr);
+  Bank[] lenders=((BankQuoteRequest)result.getPayload()).getLenders();
+  List recipients=new ArrayList(lenders.length);
+  for (int i=0; i < lenders.length; i++) {
+    recipients.add(lenders[i].getEndpoint());
+  }
+  Map props=new HashMap();
+  props.put("recipients",recipients);
+  UMOMessage msg=new MuleMessage(bqr,props);
+  context.dispatchEvent(msg);
+  context.setStopFurtherProcessing(true);
+  return msg;
+}

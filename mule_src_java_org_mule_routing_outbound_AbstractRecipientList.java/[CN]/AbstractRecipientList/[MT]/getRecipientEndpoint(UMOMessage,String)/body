@@ -1,0 +1,17 @@
+{
+  UMOEndpointURI endpointUri=null;
+  UMOEndpoint endpoint=(UMOEndpoint)recipientCache.get(recipient);
+  if (endpoint != null)   return endpoint;
+  try {
+    endpointUri=new MuleEndpointURI(recipient);
+    endpoint=MuleEndpoint.getOrCreateEndpointForUri(endpointUri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  }
+ catch (  MalformedEndpointException e) {
+    throw new RoutingException("Could not route message as recipient endpointUri was malformed: " + recipient,e,message);
+  }
+catch (  UMOException e) {
+    throw new RoutingException("Could not route message as could not get endpoint for endpointUri: " + recipient,e,message);
+  }
+  recipientCache.put(recipient,endpoint);
+  return endpoint;
+}

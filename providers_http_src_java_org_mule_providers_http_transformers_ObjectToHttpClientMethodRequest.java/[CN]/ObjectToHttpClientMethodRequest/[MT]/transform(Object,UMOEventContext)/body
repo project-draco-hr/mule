@@ -1,0 +1,57 @@
+{
+  String endpoint=(String)context.getProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
+  if (endpoint == null) {
+    throw new TransformerException("Endpoint property is not set, this transformer should not be used before a dispatcher has been invoked");
+  }
+  String method=(String)context.getProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
+  try {
+    URI uri=new URI(endpoint);
+    HttpMethod httpMethod=null;
+    if (HttpConstants.METHOD_GET.equals(method)) {
+      httpMethod=new GetMethod(uri.toString());
+      String paramName=(String)context.getProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY);
+      String query=uri.getQuery();
+      if (query == null) {
+        query=paramName + "=" + paramName;
+      }
+ else {
+        query+="&" + paramName + "="+ paramName;
+      }
+      httpMethod.setQueryString(query);
+    }
+ else {
+      PostMethod postMethod=new PostMethod(uri.toString());
+      if (src instanceof String) {
+        postMethod.setRequestBody(src.toString());
+        postMethod.setRequestContentLength(src.toString().length());
+      }
+ else {
+        byte[] buffer=Utility.objectToByteArray(src);
+        postMethod.setRequestBody(new ByteArrayInputStream(buffer));
+        postMethod.setRequestContentLength(buffer.length);
+      }
+      httpMethod=postMethod;
+      String headerName;
+      String value;
+      for (Iterator iterator=headers.iterator(); iterator.hasNext(); ) {
+        headerName=(String)iterator.next();
+        value=(String)context.getProperty(headerName);
+        if (value != null) {
+          httpMethod.addRequestHeader(headerName,value);
+        }
+      }
+      Map customHeaders=(Map)context.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
+      if (customHeaders != null) {
+        Map.Entry entry;
+        for (Iterator iterator=customHeaders.entrySet().iterator(); iterator.hasNext(); ) {
+          entry=(Map.Entry)iterator.next();
+          httpMethod.addRequestHeader(entry.getKey().toString(),entry.getValue().toString());
+        }
+      }
+    }
+    return httpMethod;
+  }
+ catch (  Exception e) {
+    throw new TransformerException("Failed to create Http request: " + e.getMessage(),e);
+  }
+}

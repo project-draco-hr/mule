@@ -1,0 +1,27 @@
+{
+  if (initialised.get()) {
+    throw new InitialisationException("Component: " + descriptor.getName() + " has already bean initialised");
+  }
+  descriptor.initialise();
+  this.exceptionStrategy=descriptor.getExceptionStrategy();
+  stats=new ComponentStatistics(getName(),descriptor.getPoolingProfile().getMaxActive(),descriptor.getThreadingProfile().getMaxThreadsActive());
+  stats.setEnabled(((MuleManager)MuleManager.getInstance()).getStatistics().isEnabled());
+  ((MuleManager)MuleManager.getInstance()).getStatistics().add(stats);
+  stats.setOutboundRouterStat(getDescriptor().getOutboundRouter().getStatistics());
+  stats.setInboundRouterStat(getDescriptor().getInboundRouter().getStatistics());
+  ThreadingProfile tp=descriptor.getThreadingProfile();
+  threadPool=tp.createPool(descriptor.getName());
+  try {
+    queue=descriptor.getQueueProfile().createQueue(descriptor.getName());
+    queue.setDeleteOnTake(false);
+    qProfile=descriptor.getQueueProfile();
+  }
+ catch (  InitialisationException e) {
+    throw e;
+  }
+catch (  Throwable e) {
+    throw new InitialisationException("Failed to component queue: " + e.getMessage(),e);
+  }
+  initialised.set(true);
+  model.fireEvent(new ComponentEvent(descriptor,ComponentEvent.COMPONENT_INITIALISED));
+}

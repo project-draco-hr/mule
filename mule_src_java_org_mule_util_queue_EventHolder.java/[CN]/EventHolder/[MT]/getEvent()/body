@@ -1,0 +1,17 @@
+{
+  UMOSession session=MuleManager.getInstance().getModel().getComponentSession(componentName);
+  if (session == null) {
+    throw new InitialisationException("Failed to obtain session for component: " + componentName + " while reloading persistent queue");
+  }
+  UMOEndpoint endpoint=session.getComponent().getDescriptor().getInboundRouter().getEndpoint(endpointName);
+  if (endpoint == null) {
+    endpoint=MuleManager.getInstance().lookupEndpoint(endpointName);
+    if (endpoint == null) {
+      throw new InitialisationException("Failed to find endpoint: " + endpointName + " for component: "+ componentName+ " while reloading persistent queue");
+    }
+  }
+  UMOEvent event=new MuleEvent(message,endpoint,session,eventId,synchronous);
+  event.setStopFurtherProcessing(stopFurtherProcessing);
+  event.setTimeout(timeout);
+  return event;
+}

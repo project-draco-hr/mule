@@ -1,0 +1,23 @@
+{
+  if (beginTransaction) {
+    UMOTransactionConfig config=new MuleTransactionConfig();
+    if (factory != null) {
+      config.setFactory(factory);
+    }
+ else {
+      UMOEndpointURI ep=new MuleEndpointURI(endpoint.getEndpointURI());
+      ConnectorServiceDescriptor csd=ConnectorFactory.getServiceDescriptor(ep.getSchemeMetaInfo());
+      UMOTransactionFactory txf=csd.createTransactionFactory();
+      if (txf == null) {
+        logger.debug("Provider with protocol " + ep.getSchemeMetaInfo() + " doesn't have a transaction factory associated with it");
+        return;
+      }
+ else {
+        config.setFactory(txf);
+      }
+    }
+    config.setConstraint(new ManualConstraint());
+    config.setBeginAction(UMOTransactionConfig.ACTION_ALWAYS_BEGIN);
+    endpoint.setTransactionConfig(config);
+  }
+}

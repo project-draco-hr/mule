@@ -1,0 +1,28 @@
+{
+  Mock trans=getMockTransaction();
+  UMOEvent event=getTestEvent("Test");
+  trans.expect("begin");
+  trans.expect("commit");
+  trans.expectAndReturn("isBegun",true);
+  trans.expectAndReturn("isCommitted",false);
+  trans.expectAndReturn("isCommitted",true);
+  trans.expectAndReturn("isRollbackOnly",false);
+  trans.expectAndReturn("isRollbackOnly",false);
+  trans.expectAndReturn("isRollbackOnly",false);
+  TransactionProxy tp=new TransactionProxy((UMOTransaction)trans.proxy(),null);
+  tp.begin();
+  assertTrue(tp.isBegun());
+  assertTrue(!tp.isCommitted());
+  assertNull(tp.getConstraint());
+  assertTrue(tp.canCommit(event));
+  assertNotNull(tp.getTransaction());
+  try {
+    tp.commit();
+    fail("When using a proxy only commit(event) method can be called");
+  }
+ catch (  UMOTransactionException e) {
+  }
+  tp.commit(event);
+  assertTrue(tp.isCommitted());
+  trans.verify();
+}

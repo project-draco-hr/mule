@@ -1,0 +1,50 @@
+{
+  if (object instanceof Message) {
+    return (Message)object;
+  }
+ else   if (object instanceof String) {
+    TextMessage text=session.createTextMessage((String)object);
+    return text;
+  }
+ else   if (object instanceof Map) {
+    MapMessage map=session.createMapMessage();
+    Map.Entry entry=null;
+    Map temp=(Map)object;
+    for (Iterator i=temp.entrySet().iterator(); i.hasNext(); ) {
+      entry=(Map.Entry)i.next();
+      map.setObject(entry.getKey().toString(),entry.getValue());
+    }
+    return map;
+  }
+ else   if (object instanceof InputStream) {
+    StreamMessage stream=session.createStreamMessage();
+    InputStream temp=(InputStream)object;
+    byte[] buffer=new byte[1024 * 4];
+    int len=0;
+    try {
+      while ((len=temp.read(buffer)) != -1) {
+        stream.writeBytes(buffer,0,len);
+      }
+    }
+ catch (    IOException e) {
+      throw new JMSException("Failed to read input stream to create a stream message: " + e);
+    }
+    return stream;
+  }
+ else   if (object instanceof byte[]) {
+    BytesMessage bytes=session.createBytesMessage();
+    byte[] buf=(byte[])object;
+    for (int i=0; i < buf.length; i++) {
+      bytes.writeByte(buf[i]);
+    }
+    return bytes;
+  }
+ else   if (object instanceof Serializable) {
+    ObjectMessage oMsg=session.createObjectMessage();
+    oMsg.setObject((Serializable)object);
+    return oMsg;
+  }
+ else {
+    throw new JMSException("Source was not a supported type, data must be Serializable, String, byte[], Map or InputStream");
+  }
+}

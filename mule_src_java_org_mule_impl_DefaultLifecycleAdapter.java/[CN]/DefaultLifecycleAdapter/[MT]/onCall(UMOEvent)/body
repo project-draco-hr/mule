@@ -1,0 +1,32 @@
+{
+  Object result=null;
+  try {
+    Object methodOverride=event.removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
+    Method method=null;
+    if (methodOverride instanceof Method) {
+      method=(Method)methodOverride;
+    }
+ else     if (methodOverride != null) {
+      method=ClassHelper.getMethod(methodOverride.toString(),component.getClass());
+    }
+    result=entryPoint.invoke(component,RequestContext.getEventContext(),method);
+    if (result == null && entryPoint.isVoid()) {
+      return new MuleMessage(event.getTransformedMessage(),event.getProperties());
+    }
+ else     if (descriptor.getResponseRouter() != null) {
+      if (result == null) {
+        result=descriptor.getResponseRouter().getResponse(event.getMessage());
+      }
+ else {
+        result=descriptor.getResponseRouter().getResponse(new MuleMessage(result,event.getProperties()));
+      }
+      return result;
+    }
+ else {
+      return result;
+    }
+  }
+ catch (  Exception e) {
+    throw new MuleException("Failed to invoke event: " + e.getMessage(),e);
+  }
+}

@@ -1,0 +1,27 @@
+{
+  UMODescriptor descriptor=MuleManager.getInstance().getModel().getDescriptor("appleComponent");
+  assertNotNull(descriptor.getOutboundRouter());
+  UMOOutboundMessageRouter router=descriptor.getOutboundRouter();
+  assertNotNull(router.getCatchAllStrategy());
+  assertEquals(2,router.getRouters().size());
+  UMOOutboundRouter route1=(UMOOutboundRouter)router.getRouters().get(0);
+  assertTrue(route1 instanceof FilteringOutboundRouter);
+  UMOFilter filter=((FilteringOutboundRouter)route1).getFilter();
+  assertNotNull(filter);
+  assertTrue(filter instanceof PayloadTypeFilter);
+  assertEquals(String.class,((PayloadTypeFilter)filter).getExpectedType());
+  UMOOutboundRouter route2=(UMOOutboundRouter)router.getRouters().get(1);
+  assertTrue(route2 instanceof FilteringOutboundRouter);
+  UMOFilter filter2=((FilteringOutboundRouter)route2).getFilter();
+  assertNotNull(filter2);
+  assertTrue(filter2 instanceof AndFilter);
+  UMOFilter left=((AndFilter)filter2).getLeftFilter();
+  UMOFilter right=((AndFilter)filter2).getRightFilter();
+  assertNotNull(left);
+  assertTrue(left instanceof RegExFilter);
+  assertEquals("the quick brown (.*)",((RegExFilter)left).getPattern());
+  assertNotNull(right);
+  assertTrue(right instanceof RegExFilter);
+  assertEquals("(.*) brown (.*)",((RegExFilter)right).getPattern());
+  assertTrue(router.getCatchAllStrategy() instanceof TestCatchAllStrategy);
+}

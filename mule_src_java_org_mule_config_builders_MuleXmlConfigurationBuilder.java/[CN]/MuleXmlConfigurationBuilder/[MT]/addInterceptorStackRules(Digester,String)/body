@@ -1,0 +1,23 @@
+{
+  path+="/interceptor-stack";
+  digester.addRule(path + "/interceptor",new ObjectCreateRule(INTERCEPTOR_INTERFACE,"className"){
+    public void end(    String s,    String s1) throws Exception {
+    }
+  }
+);
+  digester.addRule(path,new Rule(){
+    public void begin(    String s,    String s1,    Attributes attributes) throws Exception {
+      digester.push(attributes.getValue("name"));
+    }
+    public void end(    String s,    String s1) throws Exception {
+      List list=new ArrayList();
+      Object obj=digester.peek();
+      while (obj instanceof UMOInterceptor) {
+        list.add(0,digester.pop());
+        obj=digester.peek();
+      }
+      manager.registerInterceptorStack(digester.pop().toString(),list);
+    }
+  }
+);
+}

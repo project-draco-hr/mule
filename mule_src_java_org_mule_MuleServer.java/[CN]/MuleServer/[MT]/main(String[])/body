@@ -1,0 +1,39 @@
+{
+  MuleServer server=new MuleServer();
+  List opts=Arrays.asList(args);
+  String config=null;
+  if (opts.size() > 0) {
+    config=getOption("-config",opts);
+    if (config != null) {
+      server.setConfigurationResources(config);
+    }
+  }
+ else {
+    URL configUrl=ClassHelper.getResource("mule-config.xml",MuleServer.class);
+    if (configUrl != null) {
+      config=configUrl.toExternalForm();
+      server.setConfigurationResources(config);
+    }
+  }
+  if (config == null) {
+    System.out.println("No config file was specified and no config by the name of mule-config.xml was found on the classpath");
+    System.out.println("Usage: MuleServer -config <mule-configuration> [-builder <config-builder>]");
+    System.out.println("   mule-configuration = a URL for the Mule Config XML to use, if not specified the config will be loaded from the class path");
+    System.out.println("   config-builder = a fully qualified class name of the builder to use to configure Mule");
+    System.exit(0);
+  }
+  String builder=getOption("-builder",opts);
+  if (builder != null) {
+    try {
+      configBuilder=(ConfigurationBuilder)ClassHelper.loadClass(builder,MuleServer.class).newInstance();
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+      System.out.println("Failed to load builder: " + builder);
+    }
+  }
+ else {
+    configBuilder=new MuleXmlConfigurationBuilder();
+  }
+  server.start(false);
+}

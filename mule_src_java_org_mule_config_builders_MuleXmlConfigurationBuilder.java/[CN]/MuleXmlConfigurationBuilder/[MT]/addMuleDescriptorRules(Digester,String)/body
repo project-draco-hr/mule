@@ -1,0 +1,55 @@
+{
+  path+="/mule-descriptor";
+  digester.addObjectCreate(path,DEFAULT_DESCRIPTOR,"className");
+  addSetPropertiesRule(path,digester);
+  addMessageRouterRules(digester,path,"inbound");
+  addMessageRouterRules(digester,path,"outbound");
+  addMessageRouterRules(digester,path,"response");
+  addThreadingProfileRules(digester,path,"component");
+  addPoolingProfileRules(digester,path);
+  addQueueProfileRules(digester,path);
+  digester.addRule(path + "/interceptor",new Rule(){
+    public void begin(    String string,    String string1,    Attributes attributes) throws Exception {
+      String value=attributes.getValue("className");
+      UMOManager man=(UMOManager)digester.getRoot();
+      List interceptorStack=man.lookupInterceptorStack(value);
+      MuleDescriptor temp=(MuleDescriptor)digester.peek();
+      if (interceptorStack != null) {
+        Iterator iter=interceptorStack.iterator();
+        while (iter.hasNext()) {
+          temp.addInterceptor((UMOInterceptor)iter.next());
+        }
+      }
+ else {
+        Class clazz=digester.getClassLoader().loadClass(value);
+        Object instance=clazz.newInstance();
+        temp.addInterceptor((UMOInterceptor)instance);
+        digester.push(instance);
+      }
+    }
+    public void end(    String s,    String s1) throws Exception {
+      if (digester.peek() instanceof UMOInterceptor) {
+        digester.pop();
+      }
+    }
+  }
+);
+  addMulePropertiesRule(path + "/interceptor",digester,true);
+  addExceptionStrategyRules(digester,path);
+  addSetPropertiesRule(path,digester);
+  addMulePropertiesRule(path,digester,false);
+  digester.addSetNext(path + "/properties","setProperties");
+  digester.addRule(path,new Rule(){
+    public void end(    String s,    String s1) throws Exception {
+      UMODescriptor descriptor=(UMODescriptor)digester.peek();
+      Object obj=digester.peek(1);
+      if (obj instanceof UMOManager) {
+        ((UMOManager)obj).getModel().registerComponent(descriptor);
+      }
+ else {
+        ((UMOModel)obj).registerComponent(descriptor);
+      }
+    }
+  }
+);
+}

@@ -1,0 +1,19 @@
+{
+  int i=0;
+  MulticastSocket s=new MulticastSocket(uri.getPort());
+  try {
+    s.joinGroup(inet);
+    s.setSoTimeout(2000);
+    for (i=0; i < 100; i++) {
+      DatagramPacket packet=new DatagramPacket(new byte[32],32,inet,uri.getPort());
+      s.receive(packet);
+      UdpMessageAdapter adapter=new UdpMessageAdapter(packet);
+      System.out.println("Received message: " + adapter.getPayloadAsString());
+    }
+    assertEquals(100,i);
+  }
+  finally {
+    s.leaveGroup(inet);
+    s.close();
+  }
+}

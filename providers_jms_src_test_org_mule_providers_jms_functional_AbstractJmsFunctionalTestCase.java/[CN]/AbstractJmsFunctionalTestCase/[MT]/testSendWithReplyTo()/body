@@ -1,0 +1,58 @@
+{
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object Component){
+      callbackCalled=true;
+      assertNull(context.getCurrentTransaction());
+    }
+  }
+;
+  initialiseComponent(callback);
+  MuleManager.getInstance().start();
+  Message msg=null;
+  MessageConsumer mc;
+  if (cnn instanceof TopicConnection) {
+    mc=JmsTestUtils.getTopicSubscriber((TopicConnection)cnn,getOutDest().getAddress());
+  }
+ else {
+    mc=JmsTestUtils.getQueueReceiver((QueueConnection)cnn,getOutDest().getAddress());
+  }
+  mc.setMessageListener(new MessageListener(){
+    public void onMessage(    Message message){
+      currentMsg=message;
+      lock.notifyAll();
+    }
+  }
+);
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE,"replyto");
+  afterInitialise();
+synchronized (lock) {
+    lock.wait(20000);
+  }
+  msg=currentMsg;
+  assertNotNull(msg);
+  assertTrue(msg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)msg).getText());
+  assertTrue(callbackCalled);
+  if (cnn instanceof TopicConnection) {
+    mc=JmsTestUtils.getTopicSubscriber((TopicConnection)cnn,"replyto");
+  }
+ else {
+    mc=JmsTestUtils.getQueueReceiver((QueueConnection)cnn,"replyto");
+  }
+  mc.setMessageListener(new MessageListener(){
+    public void onMessage(    Message message){
+      currentMsg=message;
+      lock.notifyAll();
+    }
+  }
+);
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE,"replyto");
+  afterInitialise();
+synchronized (lock) {
+    lock.wait(20000);
+  }
+  msg=currentMsg;
+  assertNotNull(msg);
+  assertTrue(msg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)msg).getText());
+}

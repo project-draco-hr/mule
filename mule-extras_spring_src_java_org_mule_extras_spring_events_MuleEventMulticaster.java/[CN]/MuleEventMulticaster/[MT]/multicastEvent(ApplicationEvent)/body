@@ -1,0 +1,45 @@
+{
+  MuleApplicationEvent muleEvent=null;
+  if (e instanceof ContextRefreshedEvent) {
+    if (MuleManager.isInstanciated() && !MuleManager.getInstance().isInitialised()) {
+      try {
+        registerMulticasterDescriptor();
+      }
+ catch (      UMOException ex) {
+        throw new MuleRuntimeException("Failed to reinitialise Mule after the context was refreshed: " + ex.getMessage(),ex);
+      }
+    }
+ else {
+      initMule();
+    }
+  }
+  if (e instanceof MuleApplicationEvent) {
+    muleEvent=(MuleApplicationEvent)e;
+    if (muleEvent.getMuleEventContext() == null) {
+      try {
+        dispatchEvent(muleEventContext,muleEvent);
+      }
+ catch (      ApplicationEventException e1) {
+        logger.error("failed to dispatch event: " + e.toString(),e1);
+      }
+      return;
+    }
+  }
+  ApplicationListener listener;
+  for (Iterator iterator=listeners.iterator(); iterator.hasNext(); ) {
+    listener=(ApplicationListener)iterator.next();
+    if (muleEvent != null) {
+      if (listener instanceof MuleSubscriptionEventListener) {
+        if (isSubscriptionMatch(muleEvent.getEndpoint().getAddress(),((MuleSubscriptionEventListener)listener).getSubscriptions())) {
+          listener.onApplicationEvent(muleEvent);
+        }
+      }
+ else       if (listener instanceof MuleEventListener) {
+        listener.onApplicationEvent(muleEvent);
+      }
+    }
+ else     if (!(listener instanceof MuleEventListener)) {
+      listener.onApplicationEvent(e);
+    }
+  }
+}

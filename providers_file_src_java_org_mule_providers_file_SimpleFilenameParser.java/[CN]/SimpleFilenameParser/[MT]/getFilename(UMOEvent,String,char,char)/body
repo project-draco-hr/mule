@@ -1,0 +1,43 @@
+{
+  String filename=pattern;
+  if (pattern == null) {
+    filename=System.currentTimeMillis() + ".dat";
+  }
+ else {
+    int index=pattern.indexOf("$" + left + "DATE"+ right);
+    if (index > -1) {
+      filename=filename.replaceAll("\\$\\" + left + "DATE\\"+ right,Utility.getTimeStamp(DEFAULT_DATE_FORMAT));
+    }
+    index=pattern.indexOf("$" + left + "DATE:");
+    if (index > -1) {
+      int curl=pattern.indexOf(right,index);
+      if (curl == -1) {
+        filename=filename.replaceAll("\\$\\" + left + "DATE:",Utility.getTimeStamp(DEFAULT_DATE_FORMAT));
+      }
+ else {
+        String dateformat=pattern.substring(index + 7,curl);
+        filename=filename.replaceAll("\\$\\" + left + "DATE:"+ dateformat+ "\\"+ right,Utility.getTimeStamp(dateformat));
+      }
+    }
+    index=pattern.indexOf("$" + left + "UUID"+ right);
+    if (index > -1) {
+      filename=filename.replaceAll("\\$\\" + left + "UUID\\"+ right,new UUID().getUUID());
+    }
+    index=pattern.indexOf("$" + left + "SYSTIME"+ right);
+    if (index > -1) {
+      filename=filename.replaceAll("\\$\\" + left + "SYSTIME\\"+ right,String.valueOf(System.currentTimeMillis()));
+    }
+    index=pattern.indexOf("$" + left + "COUNT"+ right);
+    if (index > -1) {
+      filename=filename.replaceAll("\\$\\" + left + "COUNT\\"+ right,String.valueOf(getCount()));
+    }
+    index=pattern.indexOf("$" + left + "ORIGINALNAME"+ right);
+    if (index > -1 && event != null) {
+      String name=(String)event.getProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME);
+      if (name != null) {
+        filename=filename.replaceAll("\\$\\" + left + "ORIGINALNAME\\"+ right,name);
+      }
+    }
+  }
+  return filename;
+}

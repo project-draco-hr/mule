@@ -1,0 +1,27 @@
+{
+  UMOTransformer trans=null;
+  if (url.getTransformers() != null) {
+    try {
+      trans=MuleObjectHelper.getTransformer(url.getTransformers(),",");
+    }
+ catch (    MuleException e) {
+      throw new ConnectorFactoryException("Failed to load transformers for endpoint: " + e.getMessage(),e);
+    }
+  }
+ else {
+    Properties overrides=new Properties();
+    if (cnn instanceof AbstractServiceEnabledConnector) {
+      Map so=((AbstractServiceEnabledConnector)cnn).getServiceOverrides();
+      if (so != null)       overrides.putAll(so);
+    }
+    String scheme=url.getSchemeMetaInfo();
+    ConnectorServiceDescriptor csd=getServiceDescriptor(scheme,overrides);
+    if (inbound) {
+      trans=csd.createInboundTransformer();
+    }
+ else {
+      trans=csd.createOutboundTransformer();
+    }
+  }
+  return trans;
+}

@@ -1,0 +1,22 @@
+{
+  UMOMessage result=null;
+  if (endpoints == null || endpoints.size() == 0) {
+    throw new RoutingException("No endpoints are set on this router, cannot route message");
+  }
+  try {
+    if (synchronous) {
+      result=message;
+      for (int i=0; i < endpoints.size(); i++) {
+        result=send(session,result,(UMOEndpoint)endpoints.get(i));
+      }
+    }
+ else {
+      logger.info("Invocation is asynchronous no result will be returned for any further inocations");
+      dispatch(session,message,(UMOEndpoint)endpoints.get(0));
+    }
+  }
+ catch (  UMOException e) {
+    throw new CouldNotRouteOutboundMessageException(e.getMessage(),e,message);
+  }
+  return result;
+}

@@ -1,0 +1,33 @@
+{
+  String uri=httpServletRequest.getPathInfo();
+  if (uri == null) {
+    throw new NoEndpointException("Unable to get endpointUri from HttpServletRequest.  Uri is:" + httpServletRequest.getRequestURI());
+  }
+  if (uri.startsWith("/")) {
+    uri=uri.substring(1);
+  }
+  int i=uri.indexOf("/");
+  if (i == -1) {
+    UMOSession session=MuleManager.getInstance().getModel().getComponentSession(uri);
+    if (session == null) {
+      throw new NoEndpointException("No endpointUri could be found on Uri: " + uri + ". Format is /provider/endpointUri");
+    }
+  }
+  String endpointName=uri.substring(0,i);
+  String endpointAddress=httpServletRequest.getParameter("endpoint");
+  if (endpointAddress == null && i < uri.length()) {
+    endpointAddress=uri.substring(i + 1);
+  }
+  UMOEndpoint endpoint=MuleManager.getInstance().lookupEndpoint(endpointName);
+  if (endpoint == null) {
+    endpoint=MuleObjectHelper.getEndpointByProtocol(endpointName);
+    if (endpoint == null) {
+      throw new EndpointNotFoundException("Endpoint not found: " + endpointName);
+    }
+  }
+  if (endpointAddress != null) {
+    endpointAddress=endpoint.getEndpointURI().getScheme() + "://" + endpointAddress;
+    endpoint.setEndpointURI(new MuleEndpointURI(endpointAddress));
+  }
+  return endpoint;
+}

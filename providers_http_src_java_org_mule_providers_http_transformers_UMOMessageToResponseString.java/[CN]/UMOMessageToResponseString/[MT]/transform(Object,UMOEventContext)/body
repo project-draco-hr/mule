@@ -1,0 +1,49 @@
+{
+  String status=(String)context.getProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_OK) + " OK");
+  String version=(String)context.getProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+  String date=format.format(new Date());
+  String response=src.toString();
+  StringBuffer httpMessage=new StringBuffer();
+  httpMessage.append(version).append(" ");
+  httpMessage.append(status).append(HttpConstants.CRLF);
+  httpMessage.append(HttpConstants.HEADER_DATE);
+  httpMessage.append(": ").append(date).append(HttpConstants.CRLF);
+  httpMessage.append(HttpConstants.HEADER_SERVER);
+  httpMessage.append(": ").append(server).append(HttpConstants.CRLF);
+  if (context.getProperty(HttpConstants.HEADER_EXPIRES) == null) {
+    httpMessage.append(HttpConstants.HEADER_EXPIRES);
+    httpMessage.append(": ").append(date).append(HttpConstants.CRLF);
+  }
+  httpMessage.append(HttpConstants.HEADER_CONTENT_TYPE);
+  String contentType=(String)context.getProperty(HttpConstants.HEADER_CONTENT_TYPE);
+  if (contentType == null) {
+    httpMessage.append(": ").append("text/xml").append(HttpConstants.CRLF);
+  }
+ else {
+    httpMessage.append(": ").append(contentType).append(HttpConstants.CRLF);
+  }
+  httpMessage.append(HttpConstants.HEADER_CONTENT_LENGTH);
+  httpMessage.append(": ").append(response.length()).append(HttpConstants.CRLF);
+  String headerName;
+  String value;
+  for (Iterator iterator=headers.iterator(); iterator.hasNext(); ) {
+    headerName=(String)iterator.next();
+    value=(String)context.getProperty(headerName);
+    if (value != null) {
+      httpMessage.append(headerName).append(": ").append(value);
+      httpMessage.append(HttpConstants.CRLF);
+    }
+  }
+  Map customHeaders=(Map)context.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
+  if (customHeaders != null) {
+    Map.Entry entry;
+    for (Iterator iterator=customHeaders.entrySet().iterator(); iterator.hasNext(); ) {
+      entry=(Map.Entry)iterator.next();
+      httpMessage.append(entry.getKey()).append(": ").append(entry.getValue());
+      httpMessage.append(HttpConstants.CRLF);
+    }
+  }
+  httpMessage.append(HttpConstants.CRLF);
+  httpMessage.append(response);
+  return httpMessage.toString();
+}

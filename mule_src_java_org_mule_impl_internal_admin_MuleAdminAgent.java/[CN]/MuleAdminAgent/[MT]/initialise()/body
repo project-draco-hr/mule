@@ -1,0 +1,28 @@
+{
+  serverEndpoint=MuleManager.getConfiguration().getServerUrl();
+  UMOManager manager=MuleManager.getInstance();
+  try {
+    if (manager.getModel().isComponentRegistered(MuleManagerComponent.MANAGER_COMPONENT_NAME)) {
+      logger.info("Mule manager component has been already initialsied, ignoring server url");
+    }
+ else {
+      if (manager.lookupConnector(DEFAULT_MANAGER_PROVIDER) != null) {
+        throw new InitialisationException("Server components are already initialised");
+      }
+      UMOEndpointURI endpointUri=new MuleEndpointURI(serverEndpoint);
+      UMOConnector connector=MuleObjectHelper.getOrCreateConnectorByProtocol(endpointUri);
+      if (manager.lookupConnector(connector.getName()) == null) {
+        connector.setName(DEFAULT_MANAGER_PROVIDER);
+        ((AbstractConnector)connector).setDisposeDispatcherOnCompletion(true);
+        connector.initialise();
+        manager.registerConnector(connector);
+      }
+      logger.info("Registering Admin listener on: " + serverEndpoint);
+      UMODescriptor descriptor=MuleManagerComponent.getDescriptor(connector,endpointUri);
+      manager.getModel().registerComponent(descriptor);
+    }
+  }
+ catch (  UMOException e) {
+    throw new InitialisationException(e.getMessage(),e);
+  }
+}
