@@ -1,10 +1,4 @@
 {
-  if (endpoint.getFilter() != null) {
-    if (!endpoint.getFilter().accept(message)) {
-      handleUnacceptedFilter(message);
-      return null;
-    }
-  }
   if (logger.isDebugEnabled()) {
     logger.debug("Received message from: " + endpoint.getEndpointURI().getAddress());
     logger.debug("Payload is of type: " + message.getPayload().getClass().getName());
@@ -16,7 +10,6 @@
     }
     logger.debug("Message properties: " + buf.toString());
   }
-  UMOSession session=new MuleSession(component,trans);
   ResponseOutputStream ros=null;
   if (outputStream != null) {
     if (outputStream instanceof ResponseOutputStream) {
@@ -26,7 +19,24 @@
       ros=new ResponseOutputStream(outputStream);
     }
   }
+  if (endpoint.getFilter() != null) {
+    if (!endpoint.getFilter().accept(message)) {
+      handleUnacceptedFilter(message);
+      return null;
+    }
+  }
+  UMOSession session=new MuleSession(component,trans);
   UMOEvent muleEvent=new MuleEvent(message,endpoint,session,synchronous,ros);
+  RequestContext.setEvent(muleEvent);
+  if (endpoint.getSecurityFilter() != null) {
+    try {
+      endpoint.getSecurityFilter().authenticate(muleEvent);
+    }
+ catch (    UMOSecurityException e) {
+      logger.warn("Request was made but was not authenticated: " + e.getMessage());
+      return new MuleMessage(e.getMessage(),muleEvent.getProperties());
+    }
+  }
   UMOMessage resultMessage=null;
   if (UMOEndpoint.ENDPOINT_TYPE_RESPONSE.equals(endpoint.getType())) {
     component.getDescriptor().getResponseRouter().route(muleEvent);
