@@ -5,7 +5,20 @@
     UMOOutboundRouter umoOutboundRouter=(UMOOutboundRouter)iterator.next();
     if (umoOutboundRouter.isMatch(message)) {
       matchfound=true;
-      result=umoOutboundRouter.route(message,session,synchronous);
+      final UMOOutboundRouter router=umoOutboundRouter;
+      TransactionTemplate tt=new TransactionTemplate(umoOutboundRouter.getTransactionConfig());
+      TransactionCallback cb=new TransactionCallback(){
+        public Object doInTransaction() throws Exception {
+          return router.route(message,session,synchronous);
+        }
+      }
+;
+      try {
+        result=(UMOMessage)tt.execute(cb);
+      }
+ catch (      Exception e) {
+        throw new RoutingException(e.getMessage(),e);
+      }
       if (!isMatchAll()) {
         return result;
       }
