@@ -1,26 +1,23 @@
 {
-  UMODescriptor descriptor=getTestDescriptor("testComponent",FunctionalTestComponent.class.getName());
+  UMODescriptor descriptor=getDescriptor("testComponent",FunctionalTestComponent.class.getName());
+  final CountDown countDown=new CountDown(2);
   EventCallback callback=new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object Component){
       callbackCalled=true;
       assertNull(context.getCurrentTransaction());
-synchronized (lock) {
-        lock.notify();
-      }
+      countDown.release();
     }
   }
 ;
   initialiseComponent(descriptor,UMOTransactionConfig.ACTION_NONE,UMOTransactionConfig.ACTION_NONE,callback);
+  addResultListener(getOutDest().getAddress(),countDown);
   MuleManager.getInstance().start();
-  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
   afterInitialise();
-synchronized (lock) {
-    lock.wait(5000);
-  }
-  Message msg=receive();
-  assertNotNull(msg);
-  assertTrue(msg instanceof TextMessage);
-  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)msg).getText());
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
+  assertTrue("Only " + countDown.currentCount() + " of "+ countDown.initialCount()+ " checkpoints hit",countDown.attempt(LOCK_WAIT));
+  assertNotNull(currentMsg);
+  assertTrue(currentMsg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)currentMsg).getText());
   assertTrue(callbackCalled);
   assertNull(currentTx);
 }

@@ -1,10 +1,9 @@
 {
-  if (cnn instanceof QueueConnection) {
-    JmsTestUtils.drainQueue((QueueConnection)cnn,DEFAULT_IN_QUEUE);
-    JmsTestUtils.drainQueue((QueueConnection)cnn,DEFAULT_OUT_QUEUE);
-  }
- else {
-    JmsTestUtils.drainTopic((TopicConnection)cnn,DEFAULT_IN_TOPIC);
-    JmsTestUtils.drainTopic((TopicConnection)cnn,DEFAULT_OUT_TOPIC);
+  if (!useTopics()) {
+    System.out.println("@@@@ Draining Queues @@@@");
+    JmsTestUtils.drainQueue((QueueConnection)cnn,getInDest().getAddress());
+    assertNull(receive(getInDest().getAddress(),10));
+    JmsTestUtils.drainQueue((QueueConnection)cnn,getOutDest().getAddress());
+    assertNull(receive(getOutDest().getAddress(),10));
   }
 }
