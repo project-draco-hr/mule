@@ -1,0 +1,13 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Invoking " + method);
+  }
+  Object result=method.invoke(session,args);
+  if (result instanceof MessageConsumer) {
+    result=Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{MessageConsumer.class},new ConsumerProducerInvocationHandler(result));
+  }
+ else   if (result instanceof MessageProducer) {
+    result=Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{MessageProducer.class},new ConsumerProducerInvocationHandler(result));
+  }
+  return result;
+}
