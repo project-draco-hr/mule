@@ -1,18 +1,34 @@
 {
+  final CountDown countDown=new CountDown(2);
   EventCallback callback=new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object Component){
       callbackCalled=true;
       assertNull(context.getCurrentTransaction());
+      countDown.release();
     }
   }
 ;
   initialiseComponent(callback);
   MuleManager.getInstance().start();
-  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE,null);
+  MessageConsumer mc;
+  if (useTopics()) {
+    mc=JmsTestUtils.getTopicSubscriber((TopicConnection)cnn,getOutDest().getAddress());
+  }
+ else {
+    mc=JmsTestUtils.getQueueReceiver((QueueConnection)cnn,getOutDest().getAddress());
+  }
+  mc.setMessageListener(new MessageListener(){
+    public void onMessage(    Message message){
+      currentMsg=message;
+      countDown.release();
+    }
+  }
+);
   afterInitialise();
-  Message msg=receive();
-  assertNotNull(msg);
-  assertTrue(msg instanceof TextMessage);
-  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)msg).getText());
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE,null);
+  assertTrue(countDown.attempt(LOCK_WAIT));
+  assertNotNull(currentMsg);
+  assertTrue(currentMsg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)currentMsg).getText());
   assertTrue(callbackCalled);
 }
