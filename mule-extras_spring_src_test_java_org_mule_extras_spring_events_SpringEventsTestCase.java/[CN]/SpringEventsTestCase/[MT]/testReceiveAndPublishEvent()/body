@@ -16,13 +16,18 @@
   EventCallback callback2=new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
       eventCount2++;
+synchronized (lock) {
+        lock.notifyAll();
+      }
     }
   }
 ;
   bean2.setEventCallback(callback2);
   MuleClient client=new MuleClient();
   client.send("vm://event.multicaster","Test Spring Event",null);
-  Thread.sleep(1000);
+synchronized (lock) {
+    lock.wait(3000);
+  }
   assertEquals(1,eventCount);
   assertEquals(1,eventCount2);
 }

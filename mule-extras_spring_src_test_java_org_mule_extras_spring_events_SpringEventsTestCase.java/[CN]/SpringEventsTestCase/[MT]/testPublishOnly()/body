@@ -5,11 +5,16 @@
   EventCallback callback=new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
       eventCount++;
+synchronized (lock) {
+        lock.notifyAll();
+      }
     }
   }
 ;
   bean2.setEventCallback(callback);
   context.publishEvent(event);
-  Thread.sleep(2000);
+synchronized (lock) {
+    lock.wait(3000);
+  }
   assertEquals(1,eventCount);
 }
