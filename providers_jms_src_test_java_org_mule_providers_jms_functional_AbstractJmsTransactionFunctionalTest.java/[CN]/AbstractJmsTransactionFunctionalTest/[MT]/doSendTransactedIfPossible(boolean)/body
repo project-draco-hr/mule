@@ -1,0 +1,41 @@
+{
+  UMODescriptor descriptor=getTestDescriptor("testComponent",FunctionalTestComponent.class.getName());
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object Component) throws Exception {
+      callbackCalled=true;
+      currentTx=context.getCurrentTransaction();
+      if (transactionAvailable) {
+        assertNotNull(currentTx);
+        assertTrue(currentTx.isBegun());
+      }
+ else {
+        assertNull(currentTx);
+      }
+synchronized (lock) {
+        lock.notify();
+      }
+    }
+  }
+;
+  initialiseComponent(descriptor,(transactionAvailable ? UMOTransactionConfig.ACTION_ALWAYS_BEGIN : UMOTransactionConfig.ACTION_NONE),UMOTransactionConfig.ACTION_COMMIT_IF_POSSIBLE,callback);
+  MuleManager.getInstance().start();
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
+  afterInitialise();
+synchronized (lock) {
+    lock.wait(5000);
+  }
+  Message msg=receive();
+  assertNotNull(msg);
+  assertTrue(msg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)msg).getText());
+  assertTrue(callbackCalled);
+  if (transactionAvailable) {
+    assertNotNull(currentTx);
+    assertTrue(currentTx.isBegun());
+    Thread.sleep(300);
+    assertTrue(currentTx.isCommitted());
+  }
+ else {
+    assertNull(currentTx);
+  }
+}

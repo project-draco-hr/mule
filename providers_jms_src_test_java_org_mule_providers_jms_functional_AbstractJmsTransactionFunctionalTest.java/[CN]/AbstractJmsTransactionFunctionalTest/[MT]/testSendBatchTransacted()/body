@@ -1,0 +1,42 @@
+{
+  UMODescriptor descriptor=getTestDescriptor("testComponent",FunctionalTestComponent.class.getName());
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object Component) throws Exception {
+      callbackCalled=true;
+      currentTx=context.getCurrentTransaction();
+      assertNotNull(currentTx);
+      assertTrue(currentTx.isBegun());
+      eventCount++;
+      if (eventCount == 2) {
+synchronized (lock) {
+          lock.notify();
+        }
+      }
+    }
+  }
+;
+  initialiseComponent(descriptor,UMOTransactionConfig.ACTION_ALWAYS_BEGIN,UMOTransactionConfig.ACTION_ALWAYS_COMMIT,callback);
+  BatchConstraint c=new BatchConstraint();
+  c.setBatchSize(2);
+  descriptor.getInboundEndpoint().getTransactionConfig().setConstraint(c);
+  MuleManager.getInstance().start();
+  send(DEFAULT_MESSAGE + "1",false,Session.AUTO_ACKNOWLEDGE);
+  send(DEFAULT_MESSAGE + "2",false,Session.AUTO_ACKNOWLEDGE);
+  afterInitialise();
+synchronized (lock) {
+    lock.wait(5000);
+  }
+  Message msg=receive();
+  assertNotNull(msg);
+  assertTrue(msg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + "1 Received",((TextMessage)msg).getText());
+  msg=receive();
+  assertNotNull(msg);
+  assertTrue(msg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + "2 Received",((TextMessage)msg).getText());
+  assertTrue(callbackCalled);
+  assertEquals(2,eventCount);
+  assertTrue(currentTx.isBegun());
+  Thread.sleep(300);
+  assertTrue(currentTx.isCommitted());
+}

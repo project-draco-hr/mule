@@ -1,0 +1,20 @@
+{
+  UMOEndpointURI uri=new MuleEndpointURI("file:///temp");
+  UMOEndpoint endpoint=MuleEndpoint.createEndpointFromUri(uri,UMOEndpoint.ENDPOINT_TYPE_RECEIVER);
+  assertNotNull(endpoint);
+  assertNotNull(endpoint.getConnector());
+  assertNull(((AbstractServiceEnabledConnector)endpoint.getConnector()).getServiceOverrides());
+  endpoint=new MuleEndpoint("file:///temp",true);
+  FileConnector c=(FileConnector)MuleManager.getInstance().lookupConnector("fileConnector2");
+  assertNotNull(c);
+  assertNotNull(c.getServiceOverrides());
+  endpoint.setConnector(c);
+  endpoint.initialise();
+  assertNotNull(((AbstractServiceEnabledConnector)endpoint.getConnector()).getServiceOverrides());
+  endpoint=new MuleEndpoint("file:///temp?connectorName=fileConnector3",true);
+  endpoint.initialise();
+  assertNull(((AbstractServiceEnabledConnector)endpoint.getConnector()).getServiceOverrides());
+  endpoint=new MuleEndpoint("file:///temp?connectorName=fileConnector2",true);
+  endpoint.initialise();
+  assertNotNull(((AbstractServiceEnabledConnector)endpoint.getConnector()).getServiceOverrides());
+}

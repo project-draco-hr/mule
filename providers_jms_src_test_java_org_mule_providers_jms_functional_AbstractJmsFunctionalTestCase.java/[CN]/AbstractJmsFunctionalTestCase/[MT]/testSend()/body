@@ -1,0 +1,18 @@
+{
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object Component){
+      callbackCalled=true;
+      assertNull(context.getCurrentTransaction());
+    }
+  }
+;
+  initialiseComponent(callback);
+  MuleManager.getInstance().start();
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE,null);
+  afterInitialise();
+  Message msg=receive();
+  assertNotNull(msg);
+  assertTrue(msg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)msg).getText());
+  assertTrue(callbackCalled);
+}
