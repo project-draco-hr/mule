@@ -1,10 +1,15 @@
 {
   if (connector == null) {
-    Properties jndi=JmsTestUtils.getJmsProperties();
     connector=new JmsConnector();
     connector.setName("TestConnector");
-    connector.setProviderProperties(new HashMap(jndi));
-    connector.setConnectionFactoryJndiName(jndi.getProperty("connectionFactoryJNDIName"));
+    connector.setSpecification("1.1");
+    Mock connectionFactory=new Mock(ConnectionFactory.class);
+    Mock connection=new Mock(Connection.class);
+    connectionFactory.expectAndReturn("createConnection",(Connection)connection.proxy());
+    connection.expect("close");
+    connection.expect("start");
+    connection.expect("stop");
+    connector.setConnectionFactory((ConnectionFactory)connectionFactory.proxy());
     connector.initialise();
   }
   return connector;
