@@ -1,0 +1,24 @@
+{
+  logger.info("in doDispatch()");
+  initialise(event.getEndpoint().getEndpointURI().getAddress());
+  try {
+    Message message=(Message)event.getTransformedMessage();
+    while (!xmppConnection.isConnected() && !initialized.get()) {
+      initialise(null);
+      Thread.sleep(150);
+    }
+    try {
+      xmppConnection.createChat(message.getTo()).sendMessage(message);
+    }
+ catch (    IllegalStateException isex) {
+      logger.fatal("************************************");
+      logger.fatal("BIG PROBLEMS: ",isex);
+      logger.fatal("************************************");
+      System.exit(0);
+    }
+  }
+ catch (  ClassCastException ccex) {
+    logger.error("something bad happened: ",ccex);
+    logger.error("object was a :" + event.getTransformedMessage().getClass().getName());
+  }
+}
