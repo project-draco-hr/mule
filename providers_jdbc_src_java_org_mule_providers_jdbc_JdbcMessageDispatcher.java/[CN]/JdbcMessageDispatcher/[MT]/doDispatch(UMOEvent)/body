@@ -1,0 +1,67 @@
+{
+  logger.debug("Dispatch event: " + event);
+  UMOEndpoint endpoint=event.getEndpoint();
+  UMOEndpointURI endpointURI=endpoint.getEndpointURI();
+  String writeStmt=endpointURI.getAddress();
+  String str;
+  if ((str=(String)this.connector.getQuery(endpoint,writeStmt)) != null) {
+    writeStmt=str;
+  }
+  if (writeStmt == null) {
+    throw new IllegalArgumentException("Write statement should not be null");
+  }
+  if (!"insert".equalsIgnoreCase(writeStmt.substring(0,6)) && !"update".equalsIgnoreCase(writeStmt.substring(0,6)) && !"delete".equalsIgnoreCase(writeStmt.substring(0,6))) {
+    throw new IllegalArgumentException("Write statement should be an insert / update / delete sql statement");
+  }
+  List paramNames=new ArrayList();
+  writeStmt=JdbcConnector.parseStatement(writeStmt,paramNames);
+  Object[] paramValues=JdbcConnector.getParams(endpointURI,paramNames,event.getMessage());
+  Connection con=null;
+  XAConnection xaCon=null;
+  UMOTransaction tx=null;
+  try {
+    QueryRunner runner=new QueryRunner();
+    tx=TransactionCoordination.getInstance().getTransaction();
+    XaTransaction xaTransaction=null;
+    if (tx instanceof XaTransaction) {
+      xaCon=(XAConnection)connector.getSession(endpoint);
+      con=xaCon.getConnection();
+      xaTransaction=(XaTransaction)tx;
+      xaTransaction.enlistResource(xaCon.getXAResource());
+    }
+ else     if (tx instanceof JdbcTransaction) {
+      con=(Connection)tx.getResource();
+    }
+ else     if (tx == null) {
+      con=(Connection)connector.getSession(endpoint);
+    }
+ else {
+      throw new IllegalStateException("Unknown transaction running: " + tx.getClass().getName());
+    }
+    int nbRows=runner.update(con,writeStmt,paramValues);
+    if (nbRows != 1) {
+      logger.warn("Row count for write should be 1 and not " + nbRows);
+    }
+    if (tx == null) {
+      DbUtils.commitAndClose(con);
+    }
+ else {
+      if (xaTransaction != null) {
+        xaTransaction.delistResource(xaCon.getXAResource(),XAResource.TMSUCCESS);
+      }
+      connector.commitTransaction(event);
+    }
+    logger.debug("Event dispatched succesfuly");
+  }
+ catch (  Exception e) {
+    logger.debug("Error dispatching event: " + e.getMessage(),e);
+    if (tx != null) {
+      tx.rollback();
+    }
+ else {
+      DbUtils.rollback(con);
+    }
+    DbUtils.close(con);
+    throw e;
+  }
+}
