@@ -2,21 +2,17 @@
   try {
     dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
     dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-    while (!disposing.get() || !closed.get()) {
-      if (socket.isClosed()) {
-        logger.info("Connection reset by peer");
-        break;
+    int counter=0;
+    while (!socket.isClosed() && !disposing.get()) {
+      if (isServerSide() && ++counter > 500) {
+        counter=0;
+        Thread.yield();
       }
       byte[] b=readStream(dataIn);
       if (b == null)       break;
-      UMOMessageAdapter adapter=connector.getMessageAdapter(b);
-      OutputStream os=new ResponseOutputStream(socket.getOutputStream(),socket);
-      UMOMessage returnMessage=routeMessage(new MuleMessage(adapter),connector.isSynchronous(),os);
-      if (returnMessage != null) {
-        byte[] data=returnMessage.getPayloadAsBytes();
-        dataOut.write(data);
-        dataOut.flush();
-      }
+      byte[] result=processData(b);
+      dataOut.write(result);
+      dataOut.flush();
     }
   }
  catch (  Exception e) {
