@@ -1,0 +1,17 @@
+{
+  Object impl=descriptor.getImplementation();
+  Object component=null;
+  String reference=impl.toString();
+  if (reference.startsWith(MuleDescriptor.IMPLEMENTATION_TYPE_LOCAL)) {
+    String refName=reference.substring(MuleDescriptor.IMPLEMENTATION_TYPE_LOCAL.length());
+    component=descriptor.getProperties().get(refName);
+    if (component == null) {
+      throw new InitialisationException(new Message(Messages.NO_LOCAL_IMPL_X_SET_ON_DESCRIPTOR_X,refName,descriptor.getName()),this);
+    }
+  }
+ else {
+    throw new InitialisationException(new Message(Messages.NO_LOCAL_IMPL_X_SET_ON_DESCRIPTOR_X,MuleDescriptor.IMPLEMENTATION_TYPE_LOCAL + "xxx",descriptor.getName()),this);
+  }
+  descriptor.fireInitialisationCallbacks(component);
+  return component;
+}

@@ -1,0 +1,31 @@
+{
+  if (activationSpec.getResourceAdapter() != this) {
+    throw new ResourceException("ActivationSpec not initialized with this ResourceAdapter instance");
+  }
+  if (activationSpec.getClass().equals(MuleActivationSpec.class)) {
+    try {
+      UMOEndpoint endpoint=ConnectorFactory.createEndpoint(((MuleActivationSpec)activationSpec).getEndpoint(),UMOEndpoint.ENDPOINT_TYPE_RECEIVER);
+      ((AbstractConnector)endpoint.getConnector()).getReceiverThreadingProfile().setWorkManagerFactory(new ThreadingProfile.WorkManagerFactory(){
+        public UMOWorkManager createWorkManager(        ThreadingProfile profile,        String name){
+          return new DelegateWorkManager(bootstrapContext.getWorkManager());
+        }
+      }
+);
+      MessageEndpoint messageEndpoint=null;
+      messageEndpoint=endpointFactory.createEndpoint(null);
+      String name="JcaComponent#" + messageEndpoint.hashCode();
+      MuleDescriptor descriptor=new MuleDescriptor(name);
+      descriptor.getInboundRouter().addEndpoint(endpoint);
+      descriptor.setImplementationInstance(messageEndpoint);
+      MuleManager.getInstance().getModel().registerComponent(descriptor);
+      MuleEndpointKey key=new MuleEndpointKey(endpointFactory,(MuleActivationSpec)activationSpec);
+      endpoints.put(key,descriptor);
+    }
+ catch (    Exception e) {
+      logger.error(e.getMessage(),e);
+    }
+  }
+ else {
+    throw new NotSupportedException("That type of ActicationSpec not supported: " + activationSpec.getClass());
+  }
+}
