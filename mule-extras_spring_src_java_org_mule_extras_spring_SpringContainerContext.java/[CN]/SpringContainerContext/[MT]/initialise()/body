@@ -1,0 +1,16 @@
+{
+  if (configFile == null)   return;
+  try {
+    if (ClassHelper.getResource(configFile,getClass()) == null) {
+      logger.warn("Spring config resource: " + configFile + " not found on class path, attempting to load it from local file");
+      setExternalBeanFactory(new FileSystemXmlApplicationContext(configFile));
+    }
+ else {
+      logger.info("Loading Spring config from classpath, resource is: " + configFile);
+      setExternalBeanFactory(new ClassPathXmlApplicationContext(configFile));
+    }
+  }
+ catch (  BeansException e) {
+    throw new InitialisationException(new ConfigurationException(new Message(Messages.FAILED_LOAD_X,"Application Context: " + configFile),e),this);
+  }
+}

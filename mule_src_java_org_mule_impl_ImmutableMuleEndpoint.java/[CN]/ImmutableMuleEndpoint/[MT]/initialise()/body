@@ -6,9 +6,20 @@
     }
  else {
       try {
-        connector=MuleObjectHelper.getOrCreateConnectorByProtocol(endpointUri);
+        if (createConnector == ConnectorFactory.ALWAYS_CREATE_CONNECTOR) {
+          connector=ConnectorFactory.createConnector(endpointUri);
+        }
+ else         if (createConnector == ConnectorFactory.NEVER_CREATE_CONNECTOR) {
+          connector=MuleObjectHelper.getConnectorByProtocol(endpointUri.getScheme());
+          if (connector == null) {
+            throw new InitialisationException(new Message(Messages.CONNECTOR_WITH_PROTOCOL_X_NOT_REGISTERED,endpointUri.getScheme()),this);
+          }
+        }
+ else {
+          connector=MuleObjectHelper.getOrCreateConnectorByProtocol(endpointUri);
+        }
       }
- catch (      UMOException e) {
+ catch (      ConnectorFactoryException e) {
         throw new InitialisationException(new Message(Messages.FAILED_TO_CREATE_CONNECTOR_FROM_URI_X,endpointUri),e,this);
       }
     }
