@@ -1,4 +1,16 @@
 {
-  Authentication auth=delegate.authenticate(((AcegiAuthenticationAdapter)authentication).getDelegate());
+  Authentication auth=null;
+  if (authentication instanceof AcegiAuthenticationAdapter) {
+    auth=((AcegiAuthenticationAdapter)authentication).getDelegate();
+  }
+ else {
+    auth=new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),authentication.getCredentials());
+  }
+  try {
+    auth=delegate.authenticate(auth);
+  }
+ catch (  AuthenticationException e) {
+    throw new UnauthorisedException(e.getMessage(),e);
+  }
   return new AcegiAuthenticationAdapter(auth);
 }

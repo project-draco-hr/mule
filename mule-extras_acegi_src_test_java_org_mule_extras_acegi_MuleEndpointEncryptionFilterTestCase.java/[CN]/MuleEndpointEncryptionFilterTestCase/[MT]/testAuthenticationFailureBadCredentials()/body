@@ -1,0 +1,13 @@
+{
+  MuleClient client=new MuleClient();
+  Map props=new HashMap();
+  UMOEncryptionStrategy strategy=MuleManager.getInstance().getSecurityManager().getEncryptionStrategy("PBE");
+  String user=new MuleUserAuthenticationToken("anonX","anonX".toCharArray()).getToken();
+  user=new String(strategy.encrypt(user.getBytes()));
+  props.put(MuleProperties.MULE_USER_PROPERTY,user);
+  UMOMessage m=client.send("http://localhost:4567/index.html","",props);
+  assertNotNull(m);
+  int status=m.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,-1);
+  assertEquals(HttpConstants.SC_UNAUTHORIZED,status);
+  System.out.println(m.getPayload());
+}

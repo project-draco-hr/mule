@@ -1,9 +1,11 @@
 {
-  UMOSecurityContextFactory factory=(UMOSecurityContextFactory)contextFactories.get(auth.getClass());
-  if (factory == null) {
-    throw new UnknownAuthenticationTypeException(auth);
+  Iterator iter=providers.values().iterator();
+  Class toTest=authentication.getClass();
+  while (iter.hasNext()) {
+    UMOSecurityProvider provider=(UMOSecurityProvider)iter.next();
+    if (provider.supports(toTest)) {
+      return provider.createSecurityContext(authentication);
+    }
   }
- else {
-    return factory.create(auth);
-  }
+  throw new UnknownAuthenticationTypeException(authentication);
 }
