@@ -22,8 +22,13 @@
   p.setProperty(HttpConnector.HTTP_REQUEST_PROPERTY,request);
   p.setProperty(HttpConnector.HTTP_VERSION_PROPERTY,httpVersion);
   Header[] headers=HttpParser.parseHeaders(is);
+  String name;
   for (int i=0; i < headers.length; i++) {
-    p.setProperty(headers[i].getName(),headers[i].getValue());
+    name=headers[i].getName();
+    if (name.startsWith("X-" + MuleProperties.PROPERTY_PREFIX)) {
+      name=name.substring(2);
+    }
+    p.setProperty(name,headers[i].getValue());
   }
   if (method.equals(HttpConstants.METHOD_GET)) {
     payload=request.getBytes();
