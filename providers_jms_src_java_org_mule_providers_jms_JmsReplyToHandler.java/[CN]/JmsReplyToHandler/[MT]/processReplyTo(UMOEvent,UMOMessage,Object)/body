@@ -21,18 +21,18 @@
     }
     String ttlString=(String)event.removeProperty("TimeToLive");
     String priorityString=(String)event.removeProperty("Priority");
-    String deliveryModeString=(String)event.removeProperty("DeliveryMode");
-    if (ttlString == null && priorityString == null && deliveryModeString == null) {
-      replyToProducer.send(replyToMessage);
+    String persistentDeliveryString=(String)event.removeProperty("PersistentDelivery");
+    if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
+      connector.getJmsSupport().send(replyToProducer,replyToMessage);
     }
  else {
       long ttl=Message.DEFAULT_TIME_TO_LIVE;
       int priority=Message.DEFAULT_PRIORITY;
-      int deliveryMode=Message.DEFAULT_DELIVERY_MODE;
+      boolean persistent=Message.DEFAULT_DELIVERY_MODE == DeliveryMode.PERSISTENT;
       if (ttlString != null)       ttl=Long.parseLong(ttlString);
       if (priorityString != null)       priority=Integer.parseInt(priorityString);
-      if (deliveryModeString != null)       deliveryMode=Integer.parseInt(deliveryModeString);
-      replyToProducer.send(replyToMessage,deliveryMode,priority,ttl);
+      if (persistentDeliveryString != null)       persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
+      connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl);
     }
     logger.info("Reply Message sent to: " + replyToDestination);
     ((MuleComponent)event.getComponent()).getStatistics().incSentReplyToEvent();
