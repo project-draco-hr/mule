@@ -1,0 +1,21 @@
+{
+  OrderManagerBean subscriptionBean=(OrderManagerBean)context.getBean("orderManager");
+  assertNotNull(subscriptionBean);
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
+      eventCount++;
+    }
+  }
+;
+  subscriptionBean.setEventCallback(callback);
+  MuleManager.getConfiguration().setSynchronous(true);
+  MuleClient client=new MuleClient();
+  Order order=new Order("Sausage and Mash");
+  client.send("jms://orders.queue",order,null);
+  Thread.sleep(1000);
+  assertTrue(eventCount == 1);
+  UMOMessage result=client.receive("jms://processed.queue",10000);
+  assertEquals(1,eventCount);
+  assertNotNull(result);
+  assertEquals("Order 'Sausage and Mash' Processed",((TextMessage)result.getPayload()).getText());
+}

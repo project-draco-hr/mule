@@ -1,0 +1,21 @@
+{
+  UMODescriptor descriptor=MuleManager.getInstance().getModel().getDescriptor("TestComponent4");
+  assertNotNull(descriptor);
+  UMOOutboundMessageRouter outboundRouter=descriptor.getOutboundRouter();
+  assertNotNull(outboundRouter);
+  assertEquals(1,outboundRouter.getRouters().size());
+  UMOOutboundRouter router=(UMOOutboundRouter)outboundRouter.getRouters().get(0);
+  assertEquals(2,router.getEndpoints().size());
+  UMOEndpoint endpoint=(UMOEndpoint)router.getEndpoints().get(0);
+  assertEquals("udp",endpoint.getConnector().getProtocol().toLowerCase());
+  assertEquals("udp://localhost:56731",endpoint.getEndpointURI().getAddress());
+  assertNotNull(endpoint.getTransformer());
+  assertTrue(endpoint.getTransformer() instanceof StringToByteArray);
+  assertEquals(UMOEndpoint.ENDPOINT_TYPE_SENDER,endpoint.getType());
+  endpoint=(UMOEndpoint)router.getEndpoints().get(1);
+  assertEquals("vm",endpoint.getConnector().getProtocol().toLowerCase());
+  assertEquals("yet.another.queue",endpoint.getEndpointURI().getAddress());
+  assertNotNull(endpoint.getTransformer());
+  assertTrue(endpoint.getTransformer() instanceof ObjectToXml);
+  assertEquals(UMOEndpoint.ENDPOINT_TYPE_SENDER,endpoint.getType());
+}
