@@ -1,7 +1,7 @@
 {
-  String userHeader=(String)event.getProperty(MuleProperties.MULE_USER_PROPERTY);
+  String userHeader=(String)getCredentialsAccessor().getCredentials(event);
   if (userHeader == null) {
-    throw new UnauthorisedException(event.getSession().getSecurityContext(),getEndpoint(),this);
+    throw new CredentialsNotSetException(event.getSession().getSecurityContext(),event.getEndpoint(),this);
   }
   byte[] creds=null;
   if (userHeader.startsWith("Plain ")) {
@@ -10,7 +10,7 @@
  else {
     creds=strategy.decrypt(userHeader.getBytes());
   }
-  MuleUserAuthenticationToken user=new MuleUserAuthenticationToken(new String(creds));
+  UMOCredentials user=new MuleCredentials(new String(creds));
   UMOAuthentication authResult;
   UMOAuthentication umoAuthentication=new MuleAuthentication(user);
   try {
