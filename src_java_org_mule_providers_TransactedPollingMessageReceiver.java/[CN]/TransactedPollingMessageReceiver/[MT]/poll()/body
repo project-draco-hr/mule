@@ -1,0 +1,41 @@
+{
+  TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig());
+  if (receiveMessagesInTransaction) {
+    TransactionCallback cb=new TransactionCallback(){
+      public Object doInTransaction() throws Exception {
+        List messages=getMessages();
+        if (messages != null && messages.size() > 0) {
+          for (Iterator it=messages.iterator(); it.hasNext(); ) {
+            Object message=it.next();
+            if (logger.isTraceEnabled()) {
+              logger.trace("Received Message: " + message);
+            }
+            processMessage(message);
+          }
+        }
+        return null;
+      }
+    }
+;
+    tt.execute(cb);
+  }
+ else {
+    List messages=getMessages();
+    if (messages != null) {
+      for (Iterator it=messages.iterator(); it.hasNext(); ) {
+        final Object message=it.next();
+        if (logger.isTraceEnabled()) {
+          logger.trace("Received Message: " + message);
+        }
+        TransactionCallback cb=new TransactionCallback(){
+          public Object doInTransaction() throws Exception {
+            processMessage(message);
+            return null;
+          }
+        }
+;
+        tt.execute(cb);
+      }
+    }
+  }
+}
