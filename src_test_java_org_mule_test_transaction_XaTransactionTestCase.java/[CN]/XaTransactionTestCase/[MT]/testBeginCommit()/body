@@ -1,17 +1,16 @@
 {
-  Mock trans=new Mock(Transaction.class);
-  XaTransaction xatx=new XaTransaction((Transaction)trans.proxy());
-  Mock resource=new Mock(XAResource.class);
-  trans.expect("commit");
-  trans.expectAndReturn("enlistResource",C.eq((XAResource)resource.proxy()),true);
-  trans.expectAndReturn("delistResource",C.args(C.eq((XAResource)resource.proxy()),C.eq(XAResource.TMSUCCESS)),true);
-  assertTrue(xatx.enlistResource((XAResource)resource.proxy()));
-  xatx.begin();
-  assertTrue(xatx.isBegun());
-  assertTrue(!xatx.isCommitted());
-  xatx.delistResource((XAResource)resource.proxy(),XAResource.TMSUCCESS);
-  xatx.commit();
-  assertTrue(xatx.isCommitted());
-  resource.verify();
-  trans.verify();
+  Mock mockTx=new Mock(Transaction.class);
+  mockTm.expect("begin");
+  mockTm.expectAndReturn("getTransaction",(Transaction)mockTx.proxy());
+  XaTransaction tx=new XaTransaction();
+  assertFalse(tx.isBegun());
+  assertEquals(UMOTransaction.STATUS_NO_TRANSACTION,tx.getStatus());
+  tx.begin();
+  mockTx.expectAndReturn("getStatus",UMOTransaction.STATUS_ACTIVE);
+  assertTrue(tx.isBegun());
+  mockTx.expectAndReturn("getStatus",UMOTransaction.STATUS_ACTIVE);
+  mockTx.expect("commit");
+  tx.commit();
+  mockTx.expectAndReturn("getStatus",UMOTransaction.STATUS_COMMITTED);
+  assertTrue(tx.isCommitted());
 }
