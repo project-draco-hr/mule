@@ -3,7 +3,8 @@
     event.setSynchronous(false);
     event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
     RequestContext.setEvent(event);
-    if (doThreading && !event.isSynchronous()) {
+    UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+    if (doThreading && !event.isSynchronous() && tx == null) {
       threadPool.execute(new Worker(event));
     }
  else {
