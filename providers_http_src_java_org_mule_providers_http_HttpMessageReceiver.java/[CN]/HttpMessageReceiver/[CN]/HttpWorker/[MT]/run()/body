@@ -51,8 +51,13 @@
           returnMessage=new MuleMessage("",null);
         }
         RequestContext.rewriteEvent(returnMessage);
-        String responseText=(String)getResponseTransformer().transform(returnMessage.getPayload());
-        dataOut.write(responseText.getBytes());
+        Object response=getResponseTransformer().transform(returnMessage.getPayload());
+        if (response instanceof String) {
+          dataOut.write(response.toString().getBytes());
+        }
+ else {
+          dataOut.write((byte[])response);
+        }
         dataOut.flush();
         if (keepAliveMonitor != null) {
           keepAliveMonitor.resetExpirable(this);
