@@ -1,0 +1,22 @@
+{
+  Object obj=objects.remove(id);
+  if (id != null) {
+    try {
+      byte[][] data=new byte[][]{DELETE,((UUID)id).asByteArray()};
+      Long mark1=new Long(journal.put(data,false));
+      Long mark2=(Long)marks.remove(id);
+synchronized (unusedMarks) {
+        unusedMarks.add(mark1);
+        if (mark2 != null) {
+          unusedMarks.add(mark2);
+        }
+      }
+      if (mark2 != null) {
+        pendingMarks.remove(mark2);
+      }
+    }
+ catch (    Exception e) {
+      throw (IOException)new IOException("Could not remove object").initCause(e);
+    }
+  }
+}

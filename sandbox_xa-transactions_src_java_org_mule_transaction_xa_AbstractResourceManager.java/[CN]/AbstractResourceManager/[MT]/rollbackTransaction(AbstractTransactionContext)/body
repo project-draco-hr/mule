@@ -1,0 +1,33 @@
+{
+  assureReady();
+synchronized (context) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Rolling back transaction " + context);
+    }
+    try {
+      context.status=Status.STATUS_ROLLING_BACK;
+      doRollback(context);
+      context.status=Status.STATUS_ROLLEDBACK;
+    }
+ catch (    Error e) {
+      setDirty(context,e);
+      throw e;
+    }
+catch (    RuntimeException e) {
+      setDirty(context,e);
+      throw e;
+    }
+catch (    ResourceManagerSystemException e) {
+      setDirty(context,e);
+      throw e;
+    }
+ finally {
+      globalTransactions.remove(context);
+      context.finalCleanUp();
+      context.notifyFinish();
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Rolled back transaction " + context);
+    }
+  }
+}

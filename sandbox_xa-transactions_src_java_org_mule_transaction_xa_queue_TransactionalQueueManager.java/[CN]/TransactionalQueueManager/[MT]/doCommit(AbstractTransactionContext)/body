@@ -1,0 +1,21 @@
+{
+  try {
+    QueueTransactionContext ctx=(QueueTransactionContext)context;
+    if (ctx.added != null) {
+      for (Iterator it=ctx.added.iterator(); it.hasNext(); ) {
+        Object object=it.next();
+        Object id=doStore(ctx.queueName,object);
+        ctx.queue.put(id);
+      }
+    }
+    if (ctx.removed != null) {
+      for (Iterator it=ctx.removed.iterator(); it.hasNext(); ) {
+        Object id=it.next();
+        doRemove(ctx.queueName,id);
+      }
+    }
+  }
+ catch (  IOException e) {
+    throw new ResourceManagerException("Could not persist object",e);
+  }
+}

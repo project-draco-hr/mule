@@ -1,0 +1,29 @@
+{
+  logger.info("================================");
+  logger.info("Running test: " + mgr.getPersistenceStrategy().getClass().getName());
+  logger.info("================================");
+  try {
+    mgr.start();
+    TransactionalQueue q=mgr.getQueue("queue1");
+    Random rnd=new Random();
+    long t0=System.currentTimeMillis();
+    for (int i=0; i < 10; i++) {
+      for (int j=0; j < 500; j++) {
+        byte[] o=new byte[2048];
+        rnd.nextBytes(o);
+        q.put(o);
+      }
+      while (q.size() > 0) {
+        q.take();
+      }
+    }
+    long t1=System.currentTimeMillis();
+    logger.info("Time: " + (t1 - t0) + " ms");
+    mgr.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    mgr.stop(AbstractResourceManager.SHUTDOWN_MODE_KILL);
+    throw e;
+  }
+}

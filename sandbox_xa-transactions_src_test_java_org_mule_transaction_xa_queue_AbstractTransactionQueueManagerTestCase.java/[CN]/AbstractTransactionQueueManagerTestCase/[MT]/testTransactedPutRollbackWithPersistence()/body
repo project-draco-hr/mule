@@ -1,0 +1,30 @@
+{
+  logger.info("================================");
+  logger.info("Running test: " + this.getName());
+  logger.info("================================");
+  if (isPersistent()) {
+    TransactionalQueueManager mgr=createQueueManager();
+    try {
+      mgr.start();
+      TransactionalQueue q=mgr.getQueue("queue1");
+      q.begin();
+      q.put("String1");
+      assertEquals(1,q.size());
+      q.rollback();
+      assertEquals(0,q.size());
+      q=mgr.getQueue("queue1");
+      assertEquals(0,q.size());
+      mgr.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
+      mgr=createQueueManager();
+      mgr.start();
+      q=mgr.getQueue("queue1");
+      assertEquals(0,q.size());
+    }
+  finally {
+      mgr.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
+    }
+  }
+ else {
+    logger.info("Ignoring test because queue manager is not persistent");
+  }
+}

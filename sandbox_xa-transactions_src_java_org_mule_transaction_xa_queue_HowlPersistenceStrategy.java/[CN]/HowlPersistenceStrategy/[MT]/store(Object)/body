@@ -1,0 +1,27 @@
+{
+  try {
+    byte[][] data;
+    UUID id=getId(obj);
+    if (obj instanceof byte[]) {
+      data=new byte[][]{STORE_BYTES,id.asByteArray(),(byte[])obj};
+    }
+ else     if (obj instanceof String) {
+      data=new byte[][]{STORE_STRING,id.asByteArray(),((String)obj).getBytes()};
+    }
+ else {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream();
+      ObjectOutputStream oos=new ObjectOutputStream(baos);
+      oos.writeObject(obj);
+      oos.close();
+      data=new byte[][]{STORE_OBJ,id.asByteArray(),baos.toByteArray()};
+    }
+    Long mark=new Long(journal.put(data,false));
+    objects.put(id,obj);
+    marks.put(id,mark);
+    pendingMarks.add(mark);
+    return id;
+  }
+ catch (  Exception e) {
+    throw (IOException)new IOException("Could not store object").initCause(e);
+  }
+}

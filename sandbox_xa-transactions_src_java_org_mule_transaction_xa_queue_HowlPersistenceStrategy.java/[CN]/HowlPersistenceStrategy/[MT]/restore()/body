@@ -1,0 +1,77 @@
+{
+  try {
+    final List ids=new ArrayList();
+    journal.replay(new ReplayListener(){
+      public void onRecord(      LogRecord record){
+        try {
+          if (record.length > 0) {
+            byte[][] fields=record.getFields();
+            UUID id=new UUID(fields[1]);
+            Object obj;
+switch (fields[0][0]) {
+case STORE_BYTES_BYTE:
+              obj=fields[2];
+            objects.put(id,obj);
+          marks.put(id,new Long(record.key));
+        pendingMarks.add(new Long(record.key));
+      ids.add(id);
+    logger.debug("Store entry: " + id);
+  break;
+case STORE_STRING_BYTE:
+obj=new String(fields[2]);
+objects.put(id,obj);
+marks.put(id,new Long(record.key));
+pendingMarks.add(new Long(record.key));
+ids.add(id);
+logger.debug("Store entry: " + id);
+break;
+case STORE_OBJ_BYTE:
+ByteArrayInputStream bais=new ByteArrayInputStream(fields[2]);
+ObjectInputStream ois=new ObjectInputStream(bais);
+obj=ois.readObject();
+objects.put(id,obj);
+marks.put(id,new Long(record.key));
+pendingMarks.add(new Long(record.key));
+ids.add(id);
+logger.debug("Store entry: " + id);
+break;
+case DELETE_BYTE:
+obj=objects.remove(id);
+Long mark=(Long)marks.remove(id);
+synchronized (unusedMarks) {
+unusedMarks.add(new Long(record.key));
+if (mark != null) {
+pendingMarks.remove(mark);
+unusedMarks.add(mark);
+}
+}
+ids.remove(id);
+logger.debug("Delete entry: " + id);
+break;
+default :
+throw new RuntimeException("Record should be a store or delete entry");
+}
+}
+}
+ catch (RuntimeException e) {
+throw e;
+}
+catch (Exception e) {
+throw new RuntimeException(e);
+}
+}
+public void onError(LogException exception){
+throw new RuntimeException(exception);
+}
+public LogRecord getLogRecord(){
+return new LogRecord(1024);
+}
+}
+);
+logger.debug("Restore retrieved " + ids.size() + " objects");
+return ids;
+}
+ catch (Exception e) {
+throw (IOException)new IOException("Could not restore").initCause(e);
+}
+}
