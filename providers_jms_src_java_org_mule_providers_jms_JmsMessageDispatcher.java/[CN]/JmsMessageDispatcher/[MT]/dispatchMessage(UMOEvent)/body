@@ -1,6 +1,13 @@
 {
   UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
-  Session session=connector.getSession(tx instanceof XaTransaction);
+  boolean transacted=false;
+  if (tx == null) {
+    transacted=event.getEndpoint().getTransactionConfig() != null;
+  }
+ else {
+    transacted=(tx instanceof XaTransaction);
+  }
+  Session session=connector.getSession(tx != null);
   boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
   if (tx != null && syncReceive) {
     throw new IllegalTransactionStateException("Jms connector does not support synchronous receive in transacted mode");
