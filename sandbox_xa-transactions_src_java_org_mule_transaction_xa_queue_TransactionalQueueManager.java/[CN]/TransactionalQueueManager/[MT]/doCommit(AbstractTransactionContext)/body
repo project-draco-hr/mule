@@ -2,16 +2,31 @@
   try {
     QueueTransactionContext ctx=(QueueTransactionContext)context;
     if (ctx.added != null) {
-      for (Iterator it=ctx.added.iterator(); it.hasNext(); ) {
-        Object object=it.next();
-        Object id=doStore(ctx.queueName,object);
-        ctx.queue.put(id);
+      for (Iterator it=ctx.added.entrySet().iterator(); it.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)it.next();
+        String queueName=(String)entry.getKey();
+        List queueAdded=(List)entry.getValue();
+        if (queueAdded != null && queueAdded.size() > 0) {
+          Queue queue=getQueue(queueName);
+          for (Iterator itAdded=queueAdded.iterator(); itAdded.hasNext(); ) {
+            Object object=itAdded.next();
+            Object id=doStore(queueName,object);
+            queue.put(id);
+          }
+        }
       }
     }
     if (ctx.removed != null) {
-      for (Iterator it=ctx.removed.iterator(); it.hasNext(); ) {
-        Object id=it.next();
-        doRemove(ctx.queueName,id);
+      for (Iterator it=ctx.removed.entrySet().iterator(); it.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)it.next();
+        String queueName=(String)entry.getKey();
+        List queueRemoved=(List)entry.getValue();
+        if (queueRemoved != null && queueRemoved.size() > 0) {
+          for (Iterator itRemoved=queueRemoved.iterator(); itRemoved.hasNext(); ) {
+            Object id=itRemoved.next();
+            doRemove(queueName,id);
+          }
+        }
       }
     }
   }

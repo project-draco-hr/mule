@@ -1,0 +1,24 @@
+{
+  readOnly=false;
+  if (added != null) {
+    List queueAdded=(List)added.get(queueName);
+    if (queueAdded != null) {
+      return queueAdded.remove(queueAdded.size() - 1);
+    }
+  }
+  Queue queue=TransactionalQueueManager.this.getQueue(queueName);
+  Object o=queue.take();
+  if (o != null) {
+    if (removed == null) {
+      removed=new HashMap();
+    }
+    List queueRemoved=(List)removed.get(queueName);
+    if (queueRemoved == null) {
+      queueRemoved=new ArrayList();
+      removed.put(queueName,queueRemoved);
+    }
+    queueRemoved.add(o);
+    o=doLoad(o);
+  }
+  return o;
+}

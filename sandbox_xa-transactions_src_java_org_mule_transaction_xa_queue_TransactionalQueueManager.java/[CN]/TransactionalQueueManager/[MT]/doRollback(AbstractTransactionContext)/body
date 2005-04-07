@@ -1,8 +1,17 @@
 {
   QueueTransactionContext ctx=(QueueTransactionContext)context;
   if (ctx.removed != null) {
-    for (Iterator it=ctx.removed.iterator(); it.hasNext(); ) {
-      ctx.queue.put(it.next());
+    for (Iterator it=ctx.removed.entrySet().iterator(); it.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)it.next();
+      String queueName=(String)entry.getKey();
+      List queueRemoved=(List)entry.getValue();
+      if (queueRemoved != null && queueRemoved.size() > 0) {
+        Queue queue=getQueue(queueName);
+        for (Iterator itRemoved=queueRemoved.iterator(); itRemoved.hasNext(); ) {
+          Object id=itRemoved.next();
+          queue.put(id);
+        }
+      }
     }
   }
 }

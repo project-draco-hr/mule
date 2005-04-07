@@ -6,18 +6,21 @@
     TransactionalQueueManager mgr=createQueueManager();
     try {
       mgr.start();
-      TransactionalQueue q=mgr.getQueue("queue1");
-      q.begin();
+      QueueSession s=mgr.getQueueSession();
+      Queue q=s.getQueue("queue1");
+      s.begin();
       q.put("String1");
       assertEquals(1,q.size());
-      q.rollback();
+      s.rollback();
       assertEquals(0,q.size());
-      q=mgr.getQueue("queue1");
+      s=mgr.getQueueSession();
+      q=s.getQueue("queue1");
       assertEquals(0,q.size());
       mgr.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
       mgr=createQueueManager();
       mgr.start();
-      q=mgr.getQueue("queue1");
+      s=mgr.getQueueSession();
+      q=s.getQueue("queue1");
       assertEquals(0,q.size());
     }
   finally {
