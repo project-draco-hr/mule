@@ -37,11 +37,15 @@
       return result;
     }
  catch (    Exception e) {
+      logger.info("Exception Caught in Transaction template.  Handing of to exception handler: " + exceptionListener);
+      exceptionListener.exceptionThrown(e);
       if (tx != null) {
-        logger.info("Exception caught: rollback transaction",e);
-        tx.rollback();
+        if (!tx.isCommitted()) {
+          logger.info("Exception caught: rollback transaction",e);
+          tx.rollback();
+        }
       }
-      throw e;
+      return null;
     }
 catch (    Error e) {
       if (tx != null) {
