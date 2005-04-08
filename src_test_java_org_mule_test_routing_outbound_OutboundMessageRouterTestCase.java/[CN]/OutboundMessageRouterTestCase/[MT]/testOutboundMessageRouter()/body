@@ -1,5 +1,6 @@
 {
   Mock session=getMockSession();
+  session.expectAndReturn("getComponent",getTestComponent(getTestDescriptor("test","blah")));
   OutboundMessageRouter messageRouter=new OutboundMessageRouter();
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   assertNotNull(messageRouter.getCatchAllStrategy());
@@ -32,6 +33,7 @@
   messageRouter.route(message,(UMOSession)session.proxy(),false);
   session.verify();
   message=new MuleMessage(new IllegalArgumentException(),null);
+  session.expectAndReturn("getComponent",getTestComponent(getTestDescriptor("test","blah")));
   session.expect("dispatchEvent",C.eq(message,endpoint2));
   messageRouter.route(message,(UMOSession)session.proxy(),false);
   session.verify();
@@ -42,6 +44,8 @@
   router3.setEndpoints(endpoints);
   messageRouter.addRouter(router3);
   message=new MuleMessage("testing multiple routing",null);
+  session.expectAndReturn("getComponent",getTestComponent(getTestDescriptor("test","blah")));
+  session.expectAndReturn("getComponent",getTestComponent(getTestDescriptor("test","blah")));
   session.expect("dispatchEvent",C.eq(message,endpoint1));
   session.expect("dispatchEvent",C.eq(message,endpoint2));
   messageRouter.setMatchAll(true);
