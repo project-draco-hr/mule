@@ -10,7 +10,13 @@
   stats.setOutboundRouterStat(getDescriptor().getOutboundRouter().getStatistics());
   stats.setInboundRouterStat(getDescriptor().getInboundRouter().getStatistics());
   ThreadingProfile tp=descriptor.getThreadingProfile();
-  threadPool=tp.createPool(descriptor.getName());
+  workManager=tp.createWorkManager(descriptor.getName());
+  try {
+    workManager.start();
+  }
+ catch (  UMOException e) {
+    throw new InitialisationException(e,this);
+  }
   try {
     queue=descriptor.getQueueProfile().createQueue(descriptor.getName());
     queue.setDeleteOnTake(false);
