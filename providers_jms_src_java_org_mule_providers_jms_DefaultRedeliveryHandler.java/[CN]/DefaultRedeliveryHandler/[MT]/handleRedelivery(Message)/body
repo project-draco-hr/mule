@@ -1,0 +1,15 @@
+{
+  if (connector.getMaxRedelivey() <= 0)   return;
+  String id=message.getJMSMessageID();
+  Integer i=(Integer)messages.remove(id);
+  if (i == null) {
+    messages.put(id,new Integer(1));
+    return;
+  }
+ else   if (i.intValue() == connector.getMaxRedelivey()) {
+    throw new MessageRedeliveredException(message);
+  }
+ else {
+    messages.put(id,new Integer(i.intValue() + 1));
+  }
+}

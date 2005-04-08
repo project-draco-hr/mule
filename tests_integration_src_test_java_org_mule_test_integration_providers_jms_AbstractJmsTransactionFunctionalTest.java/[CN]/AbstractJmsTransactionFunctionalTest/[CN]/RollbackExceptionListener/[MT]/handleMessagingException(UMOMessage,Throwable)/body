@@ -3,26 +3,19 @@
   if (t instanceof MessageRedeliveredException) {
     countDown.release();
     try {
-      TextMessage msg=(TextMessage)message;
+      Message msg=(Message)message.getPayload();
       assertNotNull(msg);
       assertTrue(msg.getJMSRedelivered());
       assertTrue(msg instanceof TextMessage);
+      super.handleMessagingException(message,t);
     }
  catch (    Exception e) {
       fail(e.getMessage());
-    }
- finally {
-      try {
-        System.out.println("@@@@ committing rolled back message from queue @@@@");
-        ((MessageRedeliveredException)t).getSession().commit();
-      }
- catch (      JMSException e) {
-        fail("Failed to commit rolled back message");
-      }
     }
   }
  else {
     t.printStackTrace();
     fail(t.getMessage());
   }
+  super.handleMessagingException(message,t);
 }

@@ -1,0 +1,34 @@
+{
+  final CountDown countDown=new CountDown(4);
+  UMODescriptor descriptor=getDescriptor("testComponent",FunctionalTestComponent.class.getName());
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object Component) throws Exception {
+      callbackCalled=true;
+      currentTx=context.getCurrentTransaction();
+      assertNotNull(currentTx);
+      assertTrue(currentTx.isBegun());
+      System.out.println("@@@@ Rolling back transaction @@@@");
+      currentTx.setRollbackOnly();
+      countDown.release();
+    }
+  }
+;
+  initialiseComponent(descriptor,UMOTransactionConfig.ACTION_ALWAYS_BEGIN,callback);
+  UMOManager manager=MuleManager.getInstance();
+  addResultListener(getDLDest().getAddress(),countDown);
+  JmsConnector umoCnn=(JmsConnector)manager.lookupConnector(CONNECTOR_NAME);
+  umoCnn.setMaxRedelivey(1);
+  umoCnn.setExceptionListener(new RollbackExceptionListener(countDown,getDLDest()));
+  manager.start();
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
+  afterInitialise();
+  countDown.attempt(LOCK_WAIT);
+  assertTrue("Only " + (countDown.initialCount() - countDown.currentCount()) + " of "+ countDown.initialCount()+ " checkpoints hit",countDown.attempt(0));
+  assertNotNull(currentMsg);
+  System.out.println(currentMsg);
+  String dest=currentMsg.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
+  assertNotNull(dest);
+  assertEquals(getDLDest().getUri().toString(),dest);
+  assertTrue(callbackCalled);
+  assertNull(receive(getInDest().getAddress(),2000));
+}
