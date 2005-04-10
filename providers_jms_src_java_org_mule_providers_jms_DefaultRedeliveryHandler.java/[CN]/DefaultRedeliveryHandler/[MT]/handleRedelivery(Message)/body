@@ -1,15 +1,19 @@
 {
-  if (connector.getMaxRedelivey() <= 0)   return;
+  if (connector.getMaxRedelivery() <= 0)   return;
   String id=message.getJMSMessageID();
   Integer i=(Integer)messages.remove(id);
   if (i == null) {
+    if (logger.isDebugEnabled())     logger.debug("Message with id: " + id + " has been redelivered for the fist time");
     messages.put(id,new Integer(1));
     return;
   }
- else   if (i.intValue() == connector.getMaxRedelivey()) {
-    throw new MessageRedeliveredException(message);
+ else   if (i.intValue() == connector.getMaxRedelivery()) {
+    if (logger.isDebugEnabled())     logger.debug("Message with id: " + id + " has been redelivered "+ (i.intValue() + 1)+ " times, which exceeds the maxRedelivery setting on the connector");
+    JmsMessageAdapter adapter=(JmsMessageAdapter)connector.getMessageAdapter(message);
+    throw new MessageRedeliveredException(adapter);
   }
  else {
     messages.put(id,new Integer(i.intValue() + 1));
+    if (logger.isDebugEnabled())     logger.debug("Message with id: " + id + " has been redelivered "+ i.intValue()+ " times");
   }
 }
