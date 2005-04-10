@@ -6,20 +6,19 @@
       UMOEventContext ctx=RequestContext.getEventContext();
       ExceptionMessage msg=null;
       if (failedEndpoint != null) {
-        msg=new ExceptionMessage(message,endpoint,t,ctx);
+        msg=new ExceptionMessage(getErrorMessagePayload(message),endpoint,t,ctx);
       }
  else {
-        msg=new ExceptionMessage(message,t,ctx);
+        msg=new ExceptionMessage(getErrorMessagePayload(message),t,ctx);
       }
-      ctx.dispatchEvent(msg,endpoint);
+      ctx.sendEvent(new MuleMessage(msg,null),endpoint);
       logger.debug("routed Exception message via " + endpoint);
-      UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
-      if (tx != null) {
-        tx.commit();
-      }
     }
  catch (    UMOException e) {
       logFatal(message,e);
     }
+  }
+ else {
+    markTransactionForRollback();
   }
 }

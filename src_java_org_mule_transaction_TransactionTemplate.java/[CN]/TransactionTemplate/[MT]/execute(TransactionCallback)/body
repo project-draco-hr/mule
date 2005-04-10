@@ -26,11 +26,11 @@
       Object result=callback.doInTransaction();
       if (tx != null) {
         if (tx.isRollbackOnly()) {
-          logger.info("Transaction is marked for rollback");
+          logger.debug("Transaction is marked for rollback");
           tx.rollback();
         }
  else {
-          logger.info("Committing transaction");
+          logger.debug("Committing transaction");
           tx.commit();
         }
       }
@@ -40,9 +40,12 @@
       logger.info("Exception Caught in Transaction template.  Handing of to exception handler: " + exceptionListener);
       exceptionListener.exceptionThrown(e);
       if (tx != null) {
-        if (!tx.isCommitted()) {
+        if (tx.isRollbackOnly()) {
           logger.info("Exception caught: rollback transaction",e);
           tx.rollback();
+        }
+ else {
+          tx.commit();
         }
       }
       return null;
