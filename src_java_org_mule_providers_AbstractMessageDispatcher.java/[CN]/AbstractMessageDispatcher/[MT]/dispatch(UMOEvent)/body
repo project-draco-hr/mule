@@ -1,5 +1,16 @@
 {
   try {
+    UMOEndpoint endpoint=event.getEndpoint();
+    if (endpoint.getSecurityFilter() != null) {
+      try {
+        endpoint.getSecurityFilter().authenticate(event);
+      }
+ catch (      org.mule.umo.security.SecurityException e) {
+        logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+        connector.handleException(e);
+        return;
+      }
+    }
     event.setSynchronous(false);
     event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
     RequestContext.setEvent(event);
@@ -8,19 +19,17 @@
       workManager.scheduleWork(new Worker(event));
     }
  else {
-      try {
-        doDispatch(event);
-      }
-  finally {
-        if (disposeOnCompletion) {
-          dispose();
-        }
-      }
+      doDispatch(event);
     }
   }
  catch (  Exception e) {
     logger.info("Exception occurred while executing on this dispatcher. disposing before continuing");
     dispose();
     throw e;
+  }
+ finally {
+    if (disposeOnCompletion) {
+      dispose();
+    }
   }
 }
