@@ -1,31 +1,16 @@
 {
   try {
-    logger.info("*************************************");
-    logger.info("*            JABBER LOGIN           *");
-    logger.info("*************************************");
     XmppConnector cnn=(XmppConnector)connector;
-    String serverName=cnn.getHostname();
-    String userName=cnn.getUsername();
-    String login=cnn.getPassword();
-    try {
-      xmppConnection=new XMPPConnection(serverName);
-      AccountManager accManager=new AccountManager(xmppConnection);
-      accManager.createAccount(userName,login);
+    xmppConnection=cnn.findOrCreateXmppConnection(endpoint.getEndpointURI());
+    if (endpoint.getFilter() != null) {
+      xmppConnection.addPacketListener(this,(PacketFilter)endpoint.getFilter());
     }
- catch (    XMPPException ex) {
-      logger.info("*** mule outbound account already exists ***");
+ else {
+      PacketFilter filter=new PacketTypeFilter(Message.class);
+      xmppConnection.addPacketListener(this,filter);
     }
-    logger.info("Logging in as: " + userName);
-    logger.info("pw is        : " + login);
-    logger.info("server       : " + serverName);
-    xmppConnection=new XMPPConnection(serverName);
-    xmppConnection.login(userName,login);
-    logger.info("JABBER LOGIN COMPLETE!");
-    PacketFilter filter=new PacketTypeFilter(Message.class);
-    PacketCollector myCollector=xmppConnection.createPacketCollector(filter);
-    xmppConnection.addPacketListener(this,filter);
   }
  catch (  XMPPException e) {
-    throw new InitialisationException(new org.mule.config.i18n.Message(Messages.FAILED_TO_CREATE_X,"Xmpp Connection"),e,this);
+    throw new InitialisationException(new org.mule.config.i18n.Message(Messages.FAILED_TO_CREATE_X,"XMPP Connection"),e,this);
   }
 }

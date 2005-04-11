@@ -1,0 +1,37 @@
+{
+  logger.info("Trying to find XMPP connection for uri: " + endpointURI);
+  XMPPConnection xmppConnection=null;
+  String username=endpointURI.getUsername();
+  String hostname=endpointURI.getHost();
+  String password=endpointURI.getPassword();
+  String resource=endpointURI.getPath();
+  if (null == resource) {
+    resource=DEFAULT_RESOURCE;
+  }
+ else {
+    resource=resource.substring(1);
+  }
+  xmppConnection=findOrCreateConnection(endpointURI);
+  logger.info("*************************************");
+  logger.info("*            JABBER LOGIN           *");
+  logger.info("*************************************");
+  if (!xmppConnection.isAuthenticated()) {
+    try {
+      AccountManager accManager=new AccountManager(xmppConnection);
+      accManager.createAccount(username,password);
+    }
+ catch (    XMPPException ex) {
+      logger.info("*** account (" + username + ") already exists ***");
+    }
+    logger.info("Logging in as: " + username);
+    logger.info("pw is        : " + password);
+    logger.info("server       : " + hostname);
+    logger.info("resource     : " + resource);
+    xmppConnection.login(username,password,resource);
+  }
+ else {
+    logger.info("Already authenticated on this connection, no need to log in again.");
+  }
+  logger.info("XMPP LOGIN COMPLETE!");
+  return xmppConnection;
+}
