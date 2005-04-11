@@ -1,4 +1,8 @@
 {
+  if (initialised.get()) {
+    logger.debug("Already initialised: " + toString());
+    return;
+  }
   if (connector == null) {
     if (endpointUri.getConnectorName() != null) {
       connector=MuleManager.getInstance().lookupConnector(endpointUri.getConnectorName());
@@ -6,17 +10,9 @@
     }
  else {
       try {
-        if (createConnector == ConnectorFactory.ALWAYS_CREATE_CONNECTOR) {
-          connector=ConnectorFactory.createConnector(endpointUri);
-        }
- else         if (createConnector == ConnectorFactory.NEVER_CREATE_CONNECTOR) {
-          connector=MuleObjectHelper.getConnectorByProtocol(endpointUri.getScheme());
-          if (connector == null) {
-            throw new InitialisationException(new Message(Messages.CONNECTOR_WITH_PROTOCOL_X_NOT_REGISTERED,endpointUri.getScheme()),this);
-          }
-        }
- else {
-          connector=MuleObjectHelper.getOrCreateConnectorByProtocol(endpointUri);
+        connector=ConnectorFactory.getOrCreateConnectorByProtocol(this);
+        if (connector == null) {
+          throw new InitialisationException(new Message(Messages.CONNECTOR_WITH_PROTOCOL_X_NOT_REGISTERED,endpointUri.getScheme()),this);
         }
       }
  catch (      ConnectorFactoryException e) {
@@ -30,6 +26,13 @@
   if (name == null) {
     name="_" + endpointUri.getScheme() + "Endpoint#"+ hashCode();
     endpointUri.setEndpointName(name);
+  }
+  String sync=endpointUri.getParams().getProperty("synchronous",null);
+  if (sync != null) {
+    synchronous=Boolean.valueOf(sync);
+  }
+  if (properties != null && endpointUri.getParams() != null) {
+    properties.putAll(endpointUri.getParams());
   }
   if (endpointUri.getTransformers() != null) {
     try {
@@ -56,11 +59,5 @@
     securityFilter.setEndpoint(this);
     securityFilter.initialise();
   }
-  String sync=endpointUri.getParams().getProperty("synchronous",null);
-  if (sync != null) {
-    synchronous=Boolean.valueOf(sync);
-  }
-  if (properties != null && endpointUri.getParams() != null) {
-    properties.putAll(endpointUri.getParams());
-  }
+  initialised.set(true);
 }
