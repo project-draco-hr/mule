@@ -1,5 +1,16 @@
 {
   try {
+    UMOEndpoint endpoint=event.getEndpoint();
+    if (endpoint.getSecurityFilter() != null) {
+      try {
+        endpoint.getSecurityFilter().authenticate(event);
+      }
+ catch (      org.mule.umo.security.SecurityException e) {
+        logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+        connector.handleException(e);
+        return event.getMessage();
+      }
+    }
     try {
       event.setSynchronous(true);
       event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
