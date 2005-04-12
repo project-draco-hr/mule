@@ -1,13 +1,21 @@
 {
   PGPAuthentication auth=(PGPAuthentication)authentication;
   String userId=(String)auth.getPrincipal();
-  if (userId == null)   throw new UnauthorisedException(new org.mule.config.i18n.Message(Messages.X_IS_NULL,"UserId"));
-  KeyBundle userKeyBundle=(KeyBundle)principalsKeyBundleMap.get(userId);
-  if (userKeyBundle == null)   throw new UnauthorisedException(new org.mule.config.i18n.Message("pgp",1,userId));
+  if (userId == null) {
+    throw new UnauthorisedException(new org.mule.config.i18n.Message(Messages.X_IS_NULL,"UserId"));
+  }
+  KeyBundle userKeyBundle=(KeyBundle)keyManager.getKeyBundle(userId);
+  if (userKeyBundle == null) {
+    throw new UnauthorisedException(new org.mule.config.i18n.Message("pgp",1,userId));
+  }
   Message msg=(Message)auth.getCredentials();
-  if (!(msg != null && msg instanceof SignedMessage))   throw new UnauthorisedException(new org.mule.config.i18n.Message("pgp",2));
+  if (!((msg != null) && msg instanceof SignedMessage)) {
+    throw new UnauthorisedException(new org.mule.config.i18n.Message("pgp",2));
+  }
   try {
-    if (!((SignedMessage)msg).verify(userKeyBundle))     throw new UnauthorisedException(new org.mule.config.i18n.Message("pgp",3));
+    if (!((SignedMessage)msg).verify(userKeyBundle)) {
+      throw new UnauthorisedException(new org.mule.config.i18n.Message("pgp",3));
+    }
   }
  catch (  MessageException e) {
     throw new UnauthorisedException(new org.mule.config.i18n.Message("pgp",4),e);
