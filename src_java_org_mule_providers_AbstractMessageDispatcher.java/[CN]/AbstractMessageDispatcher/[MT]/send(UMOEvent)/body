@@ -1,5 +1,8 @@
 {
   try {
+    event.setSynchronous(true);
+    event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+    RequestContext.setEvent(event);
     UMOEndpoint endpoint=event.getEndpoint();
     if (endpoint.getSecurityFilter() != null) {
       try {
@@ -11,10 +14,8 @@
         return event.getMessage();
       }
     }
+    event=RequestContext.getEvent();
     try {
-      event.setSynchronous(true);
-      event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
-      RequestContext.setEvent(event);
       UMOMessage result=doSend(event);
       return result;
     }
