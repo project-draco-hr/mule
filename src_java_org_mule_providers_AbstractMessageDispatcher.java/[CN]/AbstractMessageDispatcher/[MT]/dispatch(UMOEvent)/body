@@ -1,5 +1,8 @@
 {
   try {
+    event.setSynchronous(false);
+    event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+    RequestContext.setEvent(event);
     UMOEndpoint endpoint=event.getEndpoint();
     if (endpoint.getSecurityFilter() != null) {
       try {
@@ -11,9 +14,7 @@
         return;
       }
     }
-    event.setSynchronous(false);
-    event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
-    RequestContext.setEvent(event);
+    event=RequestContext.getEvent();
     UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
     if (doThreading && !event.isSynchronous() && tx == null) {
       workManager.scheduleWork(new Worker(event));
