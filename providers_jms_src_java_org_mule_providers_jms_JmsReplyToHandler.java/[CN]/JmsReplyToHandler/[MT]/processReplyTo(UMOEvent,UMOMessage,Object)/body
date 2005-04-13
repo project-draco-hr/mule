@@ -1,5 +1,7 @@
 {
   Destination replyToDestination=null;
+  MessageProducer replyToProducer=null;
+  Session session=null;
   try {
     if (replyTo instanceof Destination) {
       replyToDestination=(Destination)replyTo;
@@ -12,13 +14,12 @@
     if (getTransformer() != null) {
       payload=getTransformer().transform(payload);
     }
+    session=connector.getSession(false);
     Message replyToMessage=JmsMessageUtils.getMessageForObject(payload,session);
     if (logger.isDebugEnabled()) {
       logger.debug("Sending jms reply to: " + replyToDestination + "("+ replyToDestination.getClass().getName()+ ")");
     }
-    if (replyToProducer == null) {
-      replyToProducer=((JmsConnector)connector).getJmsSupport().createProducer(session,replyToDestination);
-    }
+    replyToProducer=((JmsConnector)connector).getJmsSupport().createProducer(session,replyToDestination);
     String ttlString=(String)event.removeProperty("TimeToLive");
     String priorityString=(String)event.removeProperty("Priority");
     String persistentDeliveryString=(String)event.removeProperty("PersistentDelivery");
@@ -41,6 +42,7 @@
     throw new DispatchException(new org.mule.config.i18n.Message("jms",8,replyToDestination),returnMessage,null);
   }
  finally {
-    dispose();
+    JmsUtils.closeQuietly(replyToProducer);
+    JmsUtils.closeQuietly(session);
   }
 }
