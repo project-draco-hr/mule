@@ -1,0 +1,90 @@
+{
+  Message msg=null;
+  try {
+    String data="This is a test message.\n" + "This is another line.\n";
+    LiteralMessageBuilder lmb=LiteralMessageBuilder.getInstance("OpenPGP");
+    lmb.init(data);
+    msg=lmb.build();
+  }
+ catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("Cannot find the OpenPGP LiteralMessageBuilder." + " This usually means that the Cryptix OpenPGP provider is not " + "installed correctly.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  MessageException me) {
+    System.err.println("Creating the literal message failed.");
+    me.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    SignedMessageBuilder smb=SignedMessageBuilder.getInstance("OpenPGP");
+    smb.init(msg);
+    smb.addSigner(clientPrivateKey,"TestingPassphrase".toCharArray());
+    msg=smb.build();
+  }
+ catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("Cannot find the OpenPGP SignedMessageBuilder. " + "This usually means that the Cryptix OpenPGP provider is not " + "installed correctly.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  UnrecoverableKeyException uke) {
+    System.err.println("Incorrect passphrase.");
+    uke.printStackTrace();
+    System.exit(-1);
+  }
+catch (  MessageException me) {
+    System.err.println("Generating the message failed.");
+    me.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    PGPArmouredMessage armoured;
+    armoured=new PGPArmouredMessage(msg);
+    FileOutputStream out=new FileOutputStream("signed.asc");
+    out.write(armoured.getEncoded());
+    out.close();
+  }
+ catch (  MessageException me) {
+    System.err.println("Writing the encrypted message failed.");
+    me.printStackTrace();
+    System.exit(-1);
+  }
+catch (  IOException ioe) {
+    System.err.println("Writing the encrypted message failed.");
+    ioe.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    EncryptedMessageBuilder emb=EncryptedMessageBuilder.getInstance("OpenPGP");
+    emb.init(msg);
+    emb.addRecipient(serverPublicKey);
+    msg=emb.build();
+  }
+ catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("Cannot find the OpenPGP " + "EncryptedMessageBuilder. " + "This usually means that the Cryptix OpenPGP provider is not "+ "installed correctly.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  MessageException me) {
+    System.err.println("Creating the encrypted message failed.");
+    me.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    PGPArmouredMessage armoured;
+    armoured=new PGPArmouredMessage(msg);
+    FileOutputStream out=new FileOutputStream("encrypted-signed.asc");
+    out.write(armoured.getEncoded());
+    out.close();
+  }
+ catch (  MessageException me) {
+    System.err.println("Writing the encrypted message failed.");
+    me.printStackTrace();
+    System.exit(-1);
+  }
+catch (  IOException ioe) {
+    System.err.println("Writing the encrypted message failed.");
+    ioe.printStackTrace();
+    System.exit(-1);
+  }
+}
