@@ -4,7 +4,10 @@
     if (event.getEndpoint().canReceive()) {
       RequestContext.setEvent(event);
       Object replyTo=event.getMessage().getReplyTo();
-      ReplyToHandler replyToHandler=((AbstractConnector)event.getEndpoint().getConnector()).getReplyToHandler();
+      ReplyToHandler replyToHandler=null;
+      if (replyTo != null) {
+        replyToHandler=((AbstractConnector)event.getEndpoint().getConnector()).getReplyToHandler();
+      }
       InterceptorsInvoker invoker=new InterceptorsInvoker(interceptorList,descriptor,event.getMessage());
       long startTime=0;
       if (stat.isEnabled()) {
@@ -18,12 +21,10 @@
       if (result != null && !event.isStopFurtherProcessing()) {
         descriptor.getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
       }
-      if (result != null && replyTo != null) {
+      if (result != null && replyToHandler != null) {
         String requestor=(String)result.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
-        if (replyToHandler != null) {
-          if ((requestor != null && !requestor.equals(descriptor.getName())) || requestor == null) {
-            replyToHandler.processReplyTo(event,result,replyTo);
-          }
+        if ((requestor != null && !requestor.equals(descriptor.getName())) || requestor == null) {
+          replyToHandler.processReplyTo(event,result,replyTo);
         }
       }
     }
