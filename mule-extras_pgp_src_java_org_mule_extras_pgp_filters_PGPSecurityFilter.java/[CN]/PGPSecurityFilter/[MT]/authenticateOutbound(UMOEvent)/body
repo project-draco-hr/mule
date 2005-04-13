@@ -1,15 +1,9 @@
 {
   logger.debug("authenticateOutbound:" + event.getId());
-  UMOMessage message=event.getMessage();
-  UMOAuthentication authentication=event.getSession().getSecurityContext().getAuthentication();
-  if ((authentication == null) || !(authentication instanceof PGPAuthentication) || (authentication.getDetails() == null)) {
-    if (isAuthenticate()) {
-      throw new UnauthorisedException(new org.mule.config.i18n.Message(Messages.AUTH_SET_TO_X_BUT_NO_CONTEXT,strategyName));
-    }
- else {
-      return;
-    }
+  if (!isAuthenticate()) {
+    return;
   }
+  UMOMessage message=event.getMessage();
   KeyBundle userKeyBundle=keyManager.getKeyBundle((String)getCredentialsAccessor().getCredentials(event));
   PGPCryptInfo cryptInfo=new PGPCryptInfo(userKeyBundle,signRequired);
   byte[] msg=null;
