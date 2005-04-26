@@ -1,0 +1,16 @@
+{
+  try {
+    UMOConnector c=ConnectorFactory.getConnectorByProtocol("axis");
+    UMODescriptor descriptor=new MuleDescriptor();
+    descriptor.setExceptionListener(new DefaultExceptionStrategy());
+    descriptor.setName("testComponentWithoutInterfaces");
+    descriptor.setImplementation(ComponentWithoutInterfaces.class.getName());
+    UMOEndpoint endpoint=new MuleEndpoint("testIn",new MuleEndpointURI("axis:http://localhost:38011/mule/test"),c,null,UMOEndpoint.ENDPOINT_TYPE_RECEIVER,0,null);
+    descriptor.setInboundEndpoint(endpoint);
+    UMOComponent component=MuleManager.getInstance().getModel().registerComponent(descriptor);
+    fail();
+  }
+ catch (  InitialisationException e) {
+    assertEquals(Messages.X_MUST_IMPLEMENT_AN_INTERFACE,e.getMessageCode());
+  }
+}
