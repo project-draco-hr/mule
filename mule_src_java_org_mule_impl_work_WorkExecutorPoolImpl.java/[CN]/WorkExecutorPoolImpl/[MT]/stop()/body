@@ -1,5 +1,13 @@
 {
   int maxSize=getMaximumPoolSize();
   pooledExecutor.shutdownAfterProcessingCurrentlyQueuedTasks();
+  try {
+    if (!pooledExecutor.awaitTerminationAfterShutdown(SHUTDOWN_TIMEOUT)) {
+      pooledExecutor.interruptAll();
+      pooledExecutor.awaitTerminationAfterShutdown();
+    }
+  }
+ catch (  InterruptedException e) {
+  }
   return new NullWorkExecutorPool(profile,name);
 }
