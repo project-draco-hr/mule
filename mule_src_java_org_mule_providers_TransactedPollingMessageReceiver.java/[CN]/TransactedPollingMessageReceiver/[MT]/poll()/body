@@ -21,21 +21,22 @@
   }
  else {
     List messages=getMessages();
-    if (messages != null) {
+    if (messages != null && messages.size() > 0) {
+      final CountDown countdown=new CountDown(messages.size());
       for (Iterator it=messages.iterator(); it.hasNext(); ) {
         final Object message=it.next();
         if (logger.isTraceEnabled()) {
           logger.trace("Received Message: " + message);
         }
-        TransactionCallback cb=new TransactionCallback(){
-          public Object doInTransaction() throws Exception {
-            processMessage(message);
-            return null;
-          }
+        try {
+          getWorkManager().scheduleWork(new MessageProcessorWorker(tt,countdown,message));
         }
-;
-        tt.execute(cb);
+ catch (        Exception e) {
+          countdown.release();
+          throw e;
+        }
       }
+      countdown.acquire();
     }
   }
 }
