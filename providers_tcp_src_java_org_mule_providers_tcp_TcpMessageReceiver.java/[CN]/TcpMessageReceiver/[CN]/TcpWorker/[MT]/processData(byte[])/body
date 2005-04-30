@@ -3,7 +3,18 @@
   OutputStream os=new ResponseOutputStream(socket.getOutputStream(),socket);
   UMOMessage returnMessage=routeMessage(new MuleMessage(adapter),endpoint.isSynchronous(),os);
   if (returnMessage != null) {
-    return returnMessage.getPayloadAsBytes();
+    if (responseTransformer != null) {
+      Object response=responseTransformer.transform(returnMessage.getPayload());
+      if (response instanceof byte[]) {
+        return (byte[])response;
+      }
+ else {
+        return response.toString().getBytes();
+      }
+    }
+ else {
+      return returnMessage.getPayloadAsBytes();
+    }
   }
  else {
     return null;

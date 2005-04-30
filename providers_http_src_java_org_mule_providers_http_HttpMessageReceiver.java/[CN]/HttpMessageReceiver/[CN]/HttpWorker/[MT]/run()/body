@@ -1,6 +1,8 @@
 {
   try {
     int counter=0;
+    dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+    dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
     do {
       if (isServerSide() && ++counter > 500) {
         counter=0;
@@ -10,13 +12,12 @@
         logger.debug("Peer closed connection");
         break;
       }
-      dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-      dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-      UMOMessageAdapter adapter=null;
       Properties headers=new Properties();
       byte[] payload=parseRequest(dataIn,headers);
-      if (payload == null)       break;
-      adapter=connector.getMessageAdapter(new Object[]{payload,headers});
+      if (payload == null) {
+        break;
+      }
+      UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{payload,headers});
       boolean http11=((String)adapter.getProperty(HttpConnector.HTTP_VERSION_PROPERTY)).equalsIgnoreCase(HttpConstants.HTTP11);
       if (!http11) {
         keepAlive=adapter.getProperty(HttpConstants.HEADER_KEEP_ALIVE) != null;
