@@ -1,0 +1,35 @@
+{
+  FTPClient client=null;
+  UMOEndpointURI uri=event.getEndpoint().getEndpointURI();
+  try {
+    String filename=(String)event.getProperty(FtpConnector.PROPERTY_FILENAME);
+    if (filename == null) {
+      String outPattern=(String)event.getProperty(FtpConnector.PROPERTY_OUTPUT_PATTERN);
+      if (outPattern == null) {
+        outPattern=connector.getOutputPattern();
+      }
+      filename=generateFilename(event,outPattern);
+    }
+    if (filename == null) {
+      throw new IOException("Filename is null");
+    }
+    byte[] buf;
+    Object data=event.getTransformedMessage();
+    if (data instanceof byte[]) {
+      buf=(byte[])data;
+    }
+ else {
+      buf=data.toString().getBytes();
+    }
+    client=(FTPClient)connector.getFtp(uri);
+    if (!client.changeWorkingDirectory(uri.getPath())) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    if (!client.storeFile(filename,new ByteArrayInputStream(buf))) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+  }
+  finally {
+    connector.releaseFtp(uri,client);
+  }
+}

@@ -1,0 +1,30 @@
+{
+  FTPClient client=null;
+  UMOEndpointURI uri=endpoint.getEndpointURI();
+  try {
+    client=(FTPClient)connector.getFtp(uri);
+    if (!client.changeWorkingDirectory(uri.getPath())) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    FTPFile[] files=client.listFiles();
+    if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    UMOFilter filter=endpoint.getFilter();
+    if (files == null || files.length > 0) {
+      return files;
+    }
+    ArrayList v=new ArrayList();
+    for (int i=0; i < files.length; i++) {
+      if (files[i].isFile()) {
+        if (filter == null || filter.accept(files[i].getName())) {
+          v.add(files);
+        }
+      }
+    }
+    return (FTPFile[])v.toArray(new FTPFile[v.size()]);
+  }
+  finally {
+    connector.releaseFtp(uri,client);
+  }
+}
