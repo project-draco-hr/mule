@@ -4,14 +4,13 @@
     if (ctx.added != null) {
       for (Iterator it=ctx.added.entrySet().iterator(); it.hasNext(); ) {
         Map.Entry entry=(Map.Entry)it.next();
-        String queueName=(String)entry.getKey();
+        QueueInfo queue=(QueueInfo)entry.getKey();
         List queueAdded=(List)entry.getValue();
         if (queueAdded != null && queueAdded.size() > 0) {
-          Queue queue=getQueue(queueName);
           for (Iterator itAdded=queueAdded.iterator(); itAdded.hasNext(); ) {
             Object object=itAdded.next();
-            Object id=doStore(queueName,object);
-            queue.put(id);
+            Object id=doStore(queue,object);
+            queue.putNow(id);
           }
         }
       }
@@ -19,18 +18,18 @@
     if (ctx.removed != null) {
       for (Iterator it=ctx.removed.entrySet().iterator(); it.hasNext(); ) {
         Map.Entry entry=(Map.Entry)it.next();
-        String queueName=(String)entry.getKey();
+        QueueInfo queue=(QueueInfo)entry.getKey();
         List queueRemoved=(List)entry.getValue();
         if (queueRemoved != null && queueRemoved.size() > 0) {
           for (Iterator itRemoved=queueRemoved.iterator(); itRemoved.hasNext(); ) {
             Object id=itRemoved.next();
-            doRemove(queueName,id);
+            doRemove(queue,id);
           }
         }
       }
     }
   }
- catch (  IOException e) {
-    throw new ResourceManagerException("Could not persist object",e);
+ catch (  Exception e) {
+    throw new ResourceManagerException("Could not commit transaction",e);
   }
 }

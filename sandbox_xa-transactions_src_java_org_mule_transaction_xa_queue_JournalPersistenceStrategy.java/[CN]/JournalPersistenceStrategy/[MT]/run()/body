@@ -1,0 +1,41 @@
+{
+  long lastTime=0;
+  try {
+    while (!Thread.interrupted()) {
+      Thread.sleep(1000);
+      if (unusedMarks.isEmpty()) {
+        continue;
+      }
+synchronized (markLock) {
+        SortedSet marks;
+        if (pendingMarks.isEmpty()) {
+          marks=unusedMarks;
+        }
+ else {
+          RecordLocation pendingMark=(RecordLocation)pendingMarks.first();
+          marks=unusedMarks.headSet(pendingMark);
+        }
+        if (!marks.isEmpty()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Marking to " + marks.last());
+          }
+          try {
+            journal.setMark((RecordLocation)marks.last(),false);
+            marks.clear();
+          }
+ catch (          InterruptedIOException e) {
+            throw (InterruptedException)new InterruptedException().initCause(e);
+          }
+catch (          Exception e) {
+            logger.warn("Could not mark",e);
+          }
+        }
+ else {
+        }
+      }
+    }
+  }
+ catch (  InterruptedException e) {
+    logger.debug("Marker thread interrupted");
+  }
+}
