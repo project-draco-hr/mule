@@ -1,0 +1,25 @@
+{
+  Method method;
+  UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  String methodName=PropertiesHelper.getStringProperty(endpointUri.getParams(),RmiConnector.PARAM_SERVICE_METHOD,null);
+  if (methodName == null) {
+    methodName=(String)event.getEndpoint().getProperties().get(RmiConnector.PARAM_SERVICE_METHOD);
+    if (methodName == null) {
+      throw new DispatchException("RmiConnector.MSG_PARAM_SERVICE_METHOD_NOT_SET");
+    }
+  }
+  ArrayList methodArgumentTypes=(ArrayList)event.getEndpoint().getProperties().get(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES);
+  Class[] argTypes;
+  if (methodArgumentTypes == null) {
+    throw new DispatchException("RmiConnector.MSG_PROPERTY_SERVICE_METHOD_PARAM_TYPES_NOT_SET");
+  }
+ else {
+    connector.setMethodArgumentTypes(methodArgumentTypes);
+    argTypes=connector.getArgumentClasses();
+    if (argTypes == null) {
+      throw new DispatchException("RmiConnector.MSG_PROPERTY_SERVICE_METHOD_PARAM_TYPES_NOT_SET");
+    }
+  }
+  method=remoteObject.getClass().getMethod(methodName,argTypes);
+  return method;
+}
