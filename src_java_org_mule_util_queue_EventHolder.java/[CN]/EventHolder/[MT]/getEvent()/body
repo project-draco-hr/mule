@@ -5,7 +5,13 @@
   }
   UMOEndpoint endpoint=session.getComponent().getDescriptor().getInboundRouter().getEndpoint(endpointName);
   if (endpoint == null) {
-    endpoint=MuleManager.getInstance().lookupEndpoint(endpointName);
+    endpoint=session.getComponent().getDescriptor().getInboundEndpoint();
+    if (endpoint != null && !endpoint.getName().equals(endpointName)) {
+      endpoint=null;
+    }
+    if (endpoint == null) {
+      endpoint=MuleManager.getInstance().lookupEndpoint(endpointName);
+    }
     if (endpoint == null) {
       throw new InitialisationException(new Message(Messages.NO_ENDPOINT_X_FOR_COMPONENT_X,componentName),this);
     }
