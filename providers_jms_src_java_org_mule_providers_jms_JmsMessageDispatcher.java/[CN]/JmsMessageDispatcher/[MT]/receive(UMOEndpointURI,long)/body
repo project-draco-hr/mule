@@ -1,28 +1,37 @@
 {
-  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
-  Session receiveSession=connector.getSession(tx instanceof XaTransaction);
+  Session session=null;
   Destination dest=null;
-  boolean topic=false;
-  String resourceInfo=endpointUri.getResourceInfo();
-  topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
-  dest=connector.getJmsSupport().createDestination(receiveSession,endpointUri.getAddress(),topic);
-  consumer=connector.getJmsSupport().createConsumer(receiveSession,dest);
-  Message message=null;
+  MessageConsumer consumer=null;
   try {
-    if (timeout == RECEIVE_NO_WAIT) {
-      message=consumer.receiveNoWait();
-    }
- else     if (timeout == RECEIVE_WAIT_INDEFINITELY) {
-      message=consumer.receive();
-    }
+    boolean topic=false;
+    String resourceInfo=endpointUri.getResourceInfo();
+    topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
+    session=connector.getSession(false);
+    dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
+    consumer=connector.getJmsSupport().createConsumer(session,dest);
+    try {
+      Message message=null;
+      if (timeout == RECEIVE_NO_WAIT) {
+        message=consumer.receiveNoWait();
+      }
+ else       if (timeout == RECEIVE_WAIT_INDEFINITELY) {
+        message=consumer.receive();
+      }
  else {
-      message=consumer.receive(timeout);
+        message=consumer.receive(timeout);
+      }
+      if (message == null) {
+        return null;
+      }
+      return new MuleMessage(connector.getMessageAdapter(message));
     }
-    if (message == null)     return null;
-    return new MuleMessage(connector.getMessageAdapter(message));
+ catch (    Exception e) {
+      connector.handleException(e);
+      return null;
+    }
   }
- catch (  Exception e) {
-    connector.getExceptionListener().exceptionThrown(e);
-    return null;
+  finally {
+    JmsUtils.closeQuietly(consumer);
+    JmsUtils.closeQuietly(session);
   }
 }

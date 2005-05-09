@@ -2,82 +2,82 @@
   if (logger.isDebugEnabled()) {
     logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". Event id is: "+ event.getId());
   }
-  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
-  boolean transacted=false;
-  if (tx == null) {
-    transacted=event.getEndpoint().getTransactionConfig() != null;
-  }
- else {
-    transacted=(tx instanceof XaTransaction);
-  }
-  Session session=connector.getSession(tx != null);
-  boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
-  if (tx != null && syncReceive) {
-    throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
-  }
-  MessageConsumer replyToConsumer=null;
-  UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
-  boolean topic=false;
-  String resourceInfo=endpointUri.getResourceInfo();
-  topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
-  Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
-  Object message=event.getTransformedMessage();
-  if (!(message instanceof Message)) {
-    throw new DispatchException(new org.mule.config.i18n.Message(Messages.MESSAGE_NOT_X_IT_IS_TYPE_X_CHECK_TRANSFORMER_ON_X,"JMS message",message.getClass().getName(),connector.getName()),event.getMessage(),event.getEndpoint());
-  }
-  Message msg=(Message)message;
-  if (event.getMessage().getCorrelationId() != null) {
-    msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
-  }
-  Destination replyTo=null;
-  Object tempReplyTo=event.removeProperty("JMSReplyTo");
-  if (tempReplyTo != null) {
-    if (tempReplyTo instanceof Destination) {
-      replyTo=(Destination)tempReplyTo;
+  Session txSession=null;
+  Session session=null;
+  MessageProducer producer=null;
+  MessageConsumer consumer=null;
+  try {
+    session=connector.getSession(event.getEndpoint());
+    txSession=connector.getCurrentSession();
+    boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
+    if (txSession != null && syncReceive) {
+      throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
     }
- else {
-      boolean replyToTopic=false;
-      String reply=tempReplyTo.toString();
-      int i=reply.indexOf(":");
-      if (i > -1) {
-        String qtype=reply.substring(0,i);
-        replyToTopic="topic".equalsIgnoreCase(qtype);
-        reply=reply.substring(i + 1);
-      }
-      replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
-    }
-    msg.setJMSReplyTo(replyTo);
-  }
-  if (syncReceive && replyTo == null) {
-    replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
-    msg.setJMSReplyTo(replyTo);
-  }
-  if (replyTo != null) {
-    replyToConsumer=connector.getJmsSupport().createConsumer(session,replyTo);
-  }
-  if (producer == null) {
+    UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+    boolean topic=false;
+    String resourceInfo=endpointUri.getResourceInfo();
+    topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
+    Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
     producer=connector.getJmsSupport().createProducer(session,dest);
-  }
-  String ttlString=(String)event.removeProperty("TimeToLive");
-  String priorityString=(String)event.removeProperty("Priority");
-  String persistentDeliveryString=(String)event.removeProperty("PersistentDelivery");
-  if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
-    connector.getJmsSupport().send(producer,msg);
-  }
+    Object message=event.getTransformedMessage();
+    if (!(message instanceof Message)) {
+      throw new DispatchException(new org.mule.config.i18n.Message(Messages.MESSAGE_NOT_X_IT_IS_TYPE_X_CHECK_TRANSFORMER_ON_X,"JMS message",message.getClass().getName(),connector.getName()),event.getMessage(),event.getEndpoint());
+    }
+    Message msg=(Message)message;
+    if (event.getMessage().getCorrelationId() != null) {
+      msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
+    }
+    Destination replyTo=null;
+    Object tempReplyTo=event.removeProperty("JMSReplyTo");
+    if (tempReplyTo != null) {
+      if (tempReplyTo instanceof Destination) {
+        replyTo=(Destination)tempReplyTo;
+      }
  else {
-    long ttl=Message.DEFAULT_TIME_TO_LIVE;
-    int priority=Message.DEFAULT_PRIORITY;
-    boolean persistent=Message.DEFAULT_DELIVERY_MODE == DeliveryMode.PERSISTENT;
-    if (ttlString != null)     ttl=Long.parseLong(ttlString);
-    if (priorityString != null)     priority=Integer.parseInt(priorityString);
-    if (persistentDeliveryString != null)     persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
-    connector.getJmsSupport().send(producer,msg,persistent,priority,ttl);
-  }
-  if (replyToConsumer != null && event.isSynchronous()) {
-    try {
+        boolean replyToTopic=false;
+        String reply=tempReplyTo.toString();
+        int i=reply.indexOf(":");
+        if (i > -1) {
+          String qtype=reply.substring(0,i);
+          replyToTopic="topic".equalsIgnoreCase(qtype);
+          reply=reply.substring(i + 1);
+        }
+        replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
+      }
+      msg.setJMSReplyTo(replyTo);
+    }
+    if (syncReceive && replyTo == null) {
+      replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
+      msg.setJMSReplyTo(replyTo);
+    }
+    if (replyTo != null) {
+      consumer=connector.getJmsSupport().createConsumer(session,replyTo);
+    }
+    String ttlString=(String)event.removeProperty("TimeToLive");
+    String priorityString=(String)event.removeProperty("Priority");
+    String persistentDeliveryString=(String)event.removeProperty("PersistentDelivery");
+    if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
+      connector.getJmsSupport().send(producer,msg);
+    }
+ else {
+      long ttl=Message.DEFAULT_TIME_TO_LIVE;
+      int priority=Message.DEFAULT_PRIORITY;
+      boolean persistent=Message.DEFAULT_DELIVERY_MODE == DeliveryMode.PERSISTENT;
+      if (ttlString != null) {
+        ttl=Long.parseLong(ttlString);
+      }
+      if (priorityString != null) {
+        priority=Integer.parseInt(priorityString);
+      }
+      if (persistentDeliveryString != null) {
+        persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
+      }
+      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl);
+    }
+    if (consumer != null) {
       int timeout=event.getTimeout();
       logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
-      Message result=replyToConsumer.receive(timeout);
+      Message result=consumer.receive(timeout);
       if (result == null) {
         logger.debug("No message was returned via replyTo destination");
         return null;
@@ -87,9 +87,13 @@
         return new MuleMessage(resultObject,null);
       }
     }
+    return null;
+  }
   finally {
-      replyToConsumer.close();
+    if (session != null && session != txSession) {
+      JmsUtils.closeQuietly(consumer);
+      JmsUtils.closeQuietly(producer);
+      JmsUtils.closeQuietly(session);
     }
   }
-  return null;
 }

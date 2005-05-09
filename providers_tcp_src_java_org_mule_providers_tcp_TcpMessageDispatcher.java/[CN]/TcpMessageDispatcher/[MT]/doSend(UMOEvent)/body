@@ -1,23 +1,31 @@
 {
-  initialise(event.getEndpoint().getEndpointURI().getAddress());
-  Object payload=event.getTransformedMessage();
-  boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
-  write(socket,payload);
-  if (syncReceive) {
-    try {
-      byte[] result=receive(socket,event.getTimeout());
-      dataOut.close();
-      if (result == null)       return null;
-      UMOMessage message=new MuleMessage(connector.getMessageAdapter(result));
-      return message;
+  Socket socket=null;
+  try {
+    Object payload=event.getTransformedMessage();
+    socket=initSocket(event.getEndpoint().getEndpointURI().getAddress());
+    boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
+    write(socket,payload);
+    if (syncReceive) {
+      try {
+        byte[] result=receive(socket,event.getTimeout());
+        if (result == null) {
+          return null;
+        }
+        UMOMessage message=new MuleMessage(connector.getMessageAdapter(result));
+        return message;
+      }
+ catch (      SocketTimeoutException e) {
+        logger.info("Socket timed out normally while doing a synchronous receive on endpointUri: " + event.getEndpoint().getEndpointURI());
+        return null;
+      }
     }
- catch (    SocketTimeoutException e) {
-      logger.info("Socket timed out normally while doing a synchronous receive on endpointUri: " + event.getEndpoint().getEndpointURI());
-      return null;
+ else {
+      return event.getMessage();
     }
   }
- else {
-    dataOut.close();
-    return event.getMessage();
+  finally {
+    if (socket != null && !socket.isClosed()) {
+      socket.close();
+    }
   }
 }

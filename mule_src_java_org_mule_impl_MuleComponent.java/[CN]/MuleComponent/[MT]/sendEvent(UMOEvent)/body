@@ -1,11 +1,12 @@
 {
-  while (paused.get()) {
-    if (logger.isDebugEnabled())     logger.debug("Component: " + descriptor.getName() + " is paused. Blocking call until resume is called");
-    try {
-      Thread.sleep(1000);
-    }
- catch (    InterruptedException e) {
-    }
+  if (logger.isDebugEnabled() && paused.get()) {
+    logger.debug("Component: " + descriptor.getName() + " is paused. Blocking call until resume is called");
+  }
+  try {
+    paused.whenFalse(null);
+  }
+ catch (  InterruptedException e) {
+    throw new ComponentException(event.getMessage(),this,e);
   }
   if (stats.isEnabled())   stats.incReceivedEventSync();
   logger.debug("Component: " + descriptor.getName() + " has received synchronous event on: "+ event.getEndpoint().getEndpointURI());
@@ -19,20 +20,23 @@
       logger.debug(this + " : got proxy for " + event.getId()+ " = "+ proxy);
     }
     result=(UMOMessage)proxy.onCall(event);
-    proxyPool.returnObject(proxy);
   }
- catch (  Exception e) {
+ catch (  UMOException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new ComponentException(event.getMessage(),this,e);
+  }
+ finally {
     try {
-      proxyPool.returnObject(proxy);
+      if (proxy != null) {
+        proxyPool.returnObject(proxy);
+      }
     }
- catch (    Exception ignore) {
-    }
-    if (e instanceof UMOException) {
-      throw (MuleException)e;
-    }
- else {
+ catch (    Exception e) {
       throw new ComponentException(event.getMessage(),this,e);
     }
+    getStatistics().setComponentPoolSize(proxyPool.getSize());
   }
   return result;
 }

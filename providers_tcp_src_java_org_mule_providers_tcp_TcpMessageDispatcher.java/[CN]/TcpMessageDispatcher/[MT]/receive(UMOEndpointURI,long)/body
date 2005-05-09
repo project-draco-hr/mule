@@ -1,19 +1,23 @@
 {
-  initialise(endpointUri.getAddress());
-  int origTimeout=socket.getSoTimeout();
-  int newTimeout=Integer.parseInt(String.valueOf(timeout));
-  if (origTimeout != newTimeout) {
-    socket.setSoTimeout(Integer.parseInt(String.valueOf(timeout)));
-  }
+  Socket socket=null;
   try {
-    byte[] result=receive(socket,Integer.parseInt(String.valueOf(timeout)));
-    if (result == null)     return null;
-    UMOMessage message=new MuleMessage(connector.getMessageAdapter(new ByteArrayInputStream(result)));
-    return message;
+    socket=initSocket(endpointUri.getAddress());
+    try {
+      byte[] result=receive(socket,(int)timeout);
+      if (result == null) {
+        return null;
+      }
+      UMOMessage message=new MuleMessage(connector.getMessageAdapter(result));
+      return message;
+    }
+ catch (    SocketTimeoutException e) {
+      logger.info("Socket timed out normally while doing a synchronous receive on endpointUri: " + endpointUri);
+      return null;
+    }
   }
   finally {
-    if (origTimeout != newTimeout) {
-      socket.setSoTimeout(origTimeout);
+    if (socket != null && !socket.isClosed()) {
+      socket.close();
     }
   }
 }

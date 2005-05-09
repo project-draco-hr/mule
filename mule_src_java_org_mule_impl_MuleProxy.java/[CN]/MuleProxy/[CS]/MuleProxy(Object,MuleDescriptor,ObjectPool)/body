@@ -4,30 +4,18 @@
   UMOModel model=MuleManager.getInstance().getModel();
   UMOEntryPointResolver resolver=model.getEntryPointResolver();
   umo=model.getLifecycleAdapterFactory().create(component,descriptor,resolver);
-  if (descriptor.getInterceptors().size() == 0) {
-    interceptorList=new CopyOnWriteArrayList();
-  }
- else {
-    interceptorList=descriptor.getInterceptors();
-  }
-  Iterator iter=interceptorList.iterator();
-  Object temp;
-  while (iter.hasNext()) {
-    temp=iter.next();
-    if (temp instanceof LifecycleInterceptor) {
+  interceptorList=new ArrayList(descriptor.getInterceptors().size() + 1);
+  interceptorList.addAll(descriptor.getInterceptors());
+  interceptorList.add(umo);
+  for (Iterator iter=interceptorList.iterator(); iter.hasNext(); ) {
+    UMOInterceptor interceptor=(UMOInterceptor)iter.next();
+    if (interceptor instanceof Initialisable) {
       try {
-        ((LifecycleInterceptor)temp).initialise();
+        ((Initialisable)interceptor).initialise();
       }
  catch (      Exception e) {
-        throw new ModelException(new Message(Messages.FAILED_TO_INITIALISE_INTERCEPTORS_ON_X,descriptor.getName()),e);
+        throw new ModelException(new Message(Messages.X_FAILED_TO_INITIALISE,"Component '" + descriptor.getName() + "'"),e);
       }
     }
-  }
-  interceptorList.add(interceptorList.size(),umo);
-  try {
-    umo.initialise();
-  }
- catch (  Exception e) {
-    throw new ModelException(new Message(Messages.X_FAILED_TO_INITIALISE,"Component '" + descriptor.getName() + "'"),e);
   }
 }
