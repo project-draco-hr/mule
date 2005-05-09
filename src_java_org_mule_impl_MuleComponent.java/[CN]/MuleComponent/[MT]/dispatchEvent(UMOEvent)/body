@@ -10,23 +10,19 @@
     return;
   }
   if (stats.isEnabled())   stats.incReceivedEventASync();
-  logger.debug("Component: " + descriptor.getName() + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
-  if (queue.size() >= qProfile.getMaxOutstandingMessages()) {
-    logger.trace("process maxQueueSize reached:" + qProfile.getMaxOutstandingMessages());
-    while (queue.size() >= qProfile.getMaxOutstandingMessages()) {
-synchronized (queue) {
-        try {
-          Thread.yield();
-          queue.wait(qProfile.getBlockWait());
-        }
- catch (        Exception ie) {
-        }
-      }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Component: " + descriptor.getName() + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
+  }
+  if (logger.isTraceEnabled()) {
+    if (queue.size() >= qProfile.getMaxOutstandingMessages()) {
+      logger.trace("process maxQueueSize reached:" + qProfile.getMaxOutstandingMessages());
     }
   }
   try {
     queue.put(event);
-    if (stats.isEnabled())     stats.incQueuedEvent();
+    if (stats.isEnabled()) {
+      stats.incQueuedEvent();
+    }
   }
  catch (  InterruptedException e) {
     FailedToQueueEventException e1=new FailedToQueueEventException(new Message(Messages.INTERRUPTED_QUEUING_EVENT_FOR_X,getName()),event.getMessage(),this,e);

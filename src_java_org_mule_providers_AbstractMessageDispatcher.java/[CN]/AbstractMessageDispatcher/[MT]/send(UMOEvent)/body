@@ -1,33 +1,25 @@
 {
-  try {
-    event.setSynchronous(true);
-    event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
-    RequestContext.setEvent(event);
-    UMOEndpoint endpoint=event.getEndpoint();
-    if (endpoint.getSecurityFilter() != null) {
-      try {
-        endpoint.getSecurityFilter().authenticate(event);
-      }
- catch (      org.mule.umo.security.SecurityException e) {
-        logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
-        connector.handleException(e);
-        return event.getMessage();
-      }
-    }
-    event=RequestContext.getEvent();
+  event.setSynchronous(true);
+  event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+  RequestContext.setEvent(event);
+  UMOEndpoint endpoint=event.getEndpoint();
+  if (endpoint.getSecurityFilter() != null) {
     try {
-      UMOMessage result=doSend(event);
-      return result;
+      endpoint.getSecurityFilter().authenticate(event);
     }
- catch (    Exception e) {
-      logger.info("Exception occurred while executing on this dispatcher. disposing before continuing");
-      dispose();
-      throw e;
+ catch (    org.mule.umo.security.SecurityException e) {
+      logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+      connector.handleException(e);
+      return event.getMessage();
     }
   }
-  finally {
-    if (disposeOnCompletion) {
-      dispose();
-    }
+  event=RequestContext.getEvent();
+  try {
+    UMOMessage result=doSend(event);
+    return result;
+  }
+ catch (  Exception e) {
+    logger.info("Exception occurred while executing on this dispatcher. disposing before continuing");
+    throw e;
   }
 }
