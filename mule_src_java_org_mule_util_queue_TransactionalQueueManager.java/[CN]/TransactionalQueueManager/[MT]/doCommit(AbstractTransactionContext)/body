@@ -1,0 +1,39 @@
+{
+  QueueTransactionContext ctx=(QueueTransactionContext)context;
+  try {
+    if (ctx.added != null) {
+      for (Iterator it=ctx.added.entrySet().iterator(); it.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)it.next();
+        QueueInfo queue=(QueueInfo)entry.getKey();
+        List queueAdded=(List)entry.getValue();
+        if (queueAdded != null && queueAdded.size() > 0) {
+          for (Iterator itAdded=queueAdded.iterator(); itAdded.hasNext(); ) {
+            Object object=itAdded.next();
+            Object id=doStore(queue,object);
+            queue.putNow(id);
+          }
+        }
+      }
+    }
+    if (ctx.removed != null) {
+      for (Iterator it=ctx.removed.entrySet().iterator(); it.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)it.next();
+        QueueInfo queue=(QueueInfo)entry.getKey();
+        List queueRemoved=(List)entry.getValue();
+        if (queueRemoved != null && queueRemoved.size() > 0) {
+          for (Iterator itRemoved=queueRemoved.iterator(); itRemoved.hasNext(); ) {
+            Object id=itRemoved.next();
+            doRemove(queue,id);
+          }
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new ResourceManagerException(e);
+  }
+ finally {
+    ctx.added=null;
+    ctx.removed=null;
+  }
+}

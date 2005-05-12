@@ -1,0 +1,16 @@
+{
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  baos.write(DELETE_BYTE);
+  baos.write(((UUID)id).asByteArray());
+  Packet packet=new ByteArrayPacket(baos.toByteArray());
+  RecordLocation loc=journal.write(packet,false);
+synchronized (markLock) {
+    unusedMarks.add(loc);
+    loc=(RecordLocation)marks.remove(id);
+    if (loc != null) {
+      pendingMarks.remove(loc);
+      unusedMarks.add(loc);
+    }
+    markLock.notify();
+  }
+}

@@ -1,0 +1,17 @@
+{
+  UUID id=getId(obj);
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  ObjectOutputStream oos=new ObjectOutputStream(baos);
+  oos.writeByte(STORE_BYTE);
+  oos.writeUTF(queue);
+  oos.write(id.asByteArray());
+  oos.writeObject(obj);
+  oos.close();
+  Packet packet=new ByteArrayPacket(baos.toByteArray());
+  RecordLocation loc=journal.write(packet,false);
+synchronized (markLock) {
+    marks.put(id,loc);
+    pendingMarks.add(loc);
+  }
+  return id;
+}

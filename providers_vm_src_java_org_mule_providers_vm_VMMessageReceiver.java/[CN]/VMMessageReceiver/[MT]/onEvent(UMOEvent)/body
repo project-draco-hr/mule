@@ -1,19 +1,15 @@
 {
-  if (queue != null) {
+  if (connector.isQueueEvents()) {
+    QueueSession queueSession=connector.getQueueSession();
+    Queue queue=queueSession.getQueue(endpoint.getEndpointURI().getAddress());
     try {
-synchronized (queue) {
-        queue.put(event);
-      }
+      queue.put(event);
     }
  catch (    InterruptedException e) {
       throw new MuleException(new Message(Messages.INTERRUPTED_QUEUING_EVENT_FOR_X,this.endpoint.getEndpointURI()),e);
     }
   }
  else {
-    UMOMessageAdapter adapter=connector.getMessageAdapter(new MuleMessage(event.getTransformedMessage(),event.getProperties()));
-    UMOMessage message=new MuleMessage(adapter);
-synchronized (lock) {
-      routeMessage(message,event.isSynchronous());
-    }
+    routeMessage(new MuleMessage(event.getTransformedMessage(),event.getProperties()));
   }
 }

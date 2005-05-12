@@ -13,13 +13,9 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Component: " + descriptor.getName() + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
   }
-  if (logger.isTraceEnabled()) {
-    if (queue.size() >= qProfile.getMaxOutstandingMessages()) {
-      logger.trace("process maxQueueSize reached:" + qProfile.getMaxOutstandingMessages());
-    }
-  }
   try {
-    queue.put(event);
+    QueueSession session=MuleManager.getInstance().getQueueManager().getQueueSession();
+    session.getQueue(descriptor.getName() + ".component").put(event);
     if (stats.isEnabled()) {
       stats.incQueuedEvent();
     }
