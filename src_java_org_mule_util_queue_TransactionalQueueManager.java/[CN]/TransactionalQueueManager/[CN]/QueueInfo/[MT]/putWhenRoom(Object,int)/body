@@ -1,0 +1,19 @@
+{
+  if (Thread.interrupted()) {
+    throw new InterruptedException();
+  }
+synchronized (list) {
+    if (config.capacity > 0) {
+      if (config.capacity <= room) {
+        throw new IllegalStateException("Can not add more objects than the capacity in one time");
+      }
+      while (list.size() >= config.capacity - room) {
+        list.wait();
+      }
+    }
+    if (o != null) {
+      list.addLast(o);
+    }
+    list.notifyAll();
+  }
+}

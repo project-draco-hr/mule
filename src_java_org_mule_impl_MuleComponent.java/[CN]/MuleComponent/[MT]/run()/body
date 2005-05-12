@@ -1,10 +1,12 @@
 {
   MuleEvent event=null;
   MuleProxy proxy=null;
+  QueueSession queueSession=null;
   while (!stopped.get() && !stopping.get()) {
     try {
       paused.whenFalse(null);
-      event=(MuleEvent)queue.take();
+      queueSession=MuleManager.getInstance().getQueueManager().getQueueSession();
+      event=(MuleEvent)queueSession.getQueue(descriptor.getName() + ".component").take();
       if (stats.isEnabled())       stats.decQueuedEvent();
       if (logger.isDebugEnabled()) {
         logger.debug("Component: " + descriptor.getName() + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
@@ -13,10 +15,18 @@
       getStatistics().setComponentPoolSize(proxyPool.getSize());
       proxy.setStatistics(getStatistics());
       proxy.start();
-      proxy.onEvent(event);
+      proxy.onEvent(queueSession,event);
       workManager.scheduleWork(proxy,WorkManager.INDEFINITE,null,null);
     }
  catch (    Exception e) {
+      if (proxy != null) {
+        try {
+          proxyPool.returnObject(proxy);
+        }
+ catch (        Exception e2) {
+          logger.info("Failed to return proxy to pool",e2);
+        }
+      }
       if (e instanceof InterruptedException) {
         break;
       }
@@ -31,14 +41,6 @@
       }
  else {
         handleException(new ComponentException(new Message(Messages.FAILED_TO_GET_POOLED_OBJECT),event.getMessage(),this,e));
-      }
-      if (proxy != null) {
-        try {
-          proxyPool.returnObject(proxy);
-        }
- catch (        Exception e2) {
-          logger.info("Failed to return proxy to pool",e2);
-        }
       }
     }
   }

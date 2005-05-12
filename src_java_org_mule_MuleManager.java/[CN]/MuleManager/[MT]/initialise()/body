@@ -9,6 +9,17 @@
       if (securityManager != null) {
         securityManager.initialise();
       }
+      if (queueManager == null) {
+        try {
+          TransactionalQueueManager queueMgr=new TransactionalQueueManager();
+          QueuePersistenceStrategy ps=new CachingPersistenceStrategy(getConfiguration().getPersistenceStrategy());
+          queueMgr.setPersistenceStrategy(ps);
+          queueManager=queueMgr;
+        }
+ catch (        Exception e) {
+          throw new InitialisationException(new Message(Messages.INITIALISATION_FAILURE_X,"QueueManager"),e);
+        }
+      }
       boolean disable=PropertiesHelper.getBooleanProperty(System.getProperties(),MuleProperties.DISABLE_SERVER_CONNECTIONS,false);
       if (config.getServerUrl() == null || "".equals(config.getServerUrl().trim())) {
         logger.info("Server endpointUri is null, not registering Mule Admin agent");
