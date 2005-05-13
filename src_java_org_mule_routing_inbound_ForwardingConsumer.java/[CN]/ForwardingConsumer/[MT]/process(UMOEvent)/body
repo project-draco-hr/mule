@@ -1,26 +1,18 @@
 {
   if (super.process(event) != null) {
-    UMOEndpoint endpoint=event.getComponent().getDescriptor().getOutboundEndpoint();
     UMOOutboundMessageRouter router=event.getComponent().getDescriptor().getOutboundRouter();
-    if (endpoint == null && router == null) {
-      logger.debug("Descriptor has no outbound endpoint configured to forward to, continuing with normal processing");
+    event.setStopFurtherProcessing(true);
+    if (router == null) {
+      logger.debug("Descriptor has no outbound router configured to forward to, continuing with normal processing");
       return new UMOEvent[]{event};
     }
  else {
       try {
-        if (router != null) {
-          router.route(event.getMessage(),event.getSession(),event.isSynchronous());
-          return null;
-        }
- else {
-          UMOEvent[] results=new UMOEvent[1];
-          results[0]=event.getSession().createOutboundEvent(new MuleMessage(event.getTransformedMessage(),event.getProperties()),endpoint,event);
-          logger.info("Forwarding event directly to: " + endpoint.getEndpointURI());
-          return results;
-        }
+        UMOMessage msg=router.route(event.getMessage(),event.getSession(),event.isSynchronous());
+        return new UMOEvent[]{new MuleEvent(msg,event)};
       }
  catch (      UMOException e) {
-        throw new RoutingException(event.getMessage(),endpoint,e);
+        throw new RoutingException(event.getMessage(),event.getEndpoint(),e);
       }
     }
   }
