@@ -1,0 +1,26 @@
+{
+  if (localContext != null) {
+    return ((QueueTransactionContext)localContext).offer(queue,item,timeout);
+  }
+ else {
+    try {
+      Object id=doStore(queue,item);
+      try {
+        if (!queue.offer(id,0,timeout)) {
+          doRemove(queue,item);
+          return false;
+        }
+ else {
+          return true;
+        }
+      }
+ catch (      InterruptedException e) {
+        doRemove(queue,item);
+        throw e;
+      }
+    }
+ catch (    IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}
