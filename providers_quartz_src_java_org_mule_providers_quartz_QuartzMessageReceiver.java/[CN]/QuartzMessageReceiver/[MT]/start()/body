@@ -1,0 +1,40 @@
+{
+  try {
+    QuartzConnector connector=(QuartzConnector)this.connector;
+    Scheduler s=connector.getScheduler();
+    JobDetail jb=new JobDetail();
+    jb.setName(endpoint.getEndpointURI().toString());
+    jb.setGroup("mule");
+    jb.setJobClass(MuleJob.class);
+    JobDataMap map=new JobDataMap();
+    map.put(PROP_DISPATCHER,this);
+    jb.setJobDataMap(map);
+    Trigger trigger=null;
+    String cron=getStringProperty(QuartzConnector.PROPERTY_CRON);
+    String itv=getStringProperty(QuartzConnector.PROPERTY_INTERVAL);
+    if (cron != null) {
+      CronTrigger ctrigger=new CronTrigger();
+      ctrigger.setCronExpression(cron);
+      trigger=ctrigger;
+    }
+ else     if (itv != null) {
+      SimpleTrigger strigger=new SimpleTrigger();
+      strigger.setRepeatInterval(Long.parseLong(itv));
+      strigger.setRepeatCount(-1);
+      trigger=strigger;
+    }
+ else {
+      throw new IllegalArgumentException("One of cron or interval property must be set");
+    }
+    trigger.setStartTime(Calendar.getInstance().getTime());
+    trigger.setName(endpoint.getEndpointURI().toString());
+    trigger.setGroup("mule");
+    trigger.setJobName(endpoint.getEndpointURI().toString());
+    trigger.setJobGroup("mule");
+    s.scheduleJob(jb,trigger);
+    s.start();
+  }
+ catch (  Exception e) {
+    throw new EndpointException(new Message(Messages.FAILED_TO_START_X,"Quartz receiver"),e);
+  }
+}
