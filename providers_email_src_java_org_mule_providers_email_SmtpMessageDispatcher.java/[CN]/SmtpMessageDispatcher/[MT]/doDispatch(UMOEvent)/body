@@ -9,11 +9,12 @@
   String subject=PropertiesHelper.getStringProperty(props,"subject",connector.getSubject());
   Message msg=null;
   try {
-    if (event.getMessage().getPayload() instanceof String) {
-      msg=connector.createMessage(from,endpointAddress,cc,bcc,subject,(String)event.getMessage().getPayload(),session);
+    Object data=event.getTransformedMessage();
+    if (!(data instanceof Message)) {
+      msg=connector.createMessage(from,endpointAddress,cc,bcc,subject,data == null ? null : data.toString(),session);
     }
  else {
-      msg=(Message)event.getTransformedMessage();
+      msg=(Message)data;
       if (msg.getRecipients(Message.RecipientType.TO) == null) {
         if (endpoint != null && !endpoint.equals("")) {
           InternetAddress[] toAddrs=null;
