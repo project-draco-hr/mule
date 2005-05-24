@@ -1,5 +1,7 @@
 {
-  logger.debug("Trying to receive a message with a timeout of " + timeout);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Trying to receive a message with a timeout of " + timeout);
+  }
   String[] stmts=this.connector.getReadAndAckStatements(endpointUri,null);
   String readStmt=stmts[0];
   String ackStmt=stmts[1];
@@ -18,12 +20,16 @@
     do {
       result=new QueryRunner().query(con,readStmt,JdbcUtils.getParams(endpointUri,readParams,null),new MapHandler());
       if (result != null) {
-        logger.debug("Received: " + result);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Received: " + result);
+        }
         break;
       }
       long sleep=Math.min(this.connector.getPollingFrequency(),timeout - (System.currentTimeMillis() - t0));
       if (sleep > 0) {
-        logger.debug("No results, sleeping for " + sleep);
+        if (logger.isDebugEnabled()) {
+          logger.debug("No results, sleeping for " + sleep);
+        }
         Thread.sleep(sleep);
       }
  else {
