@@ -12,19 +12,28 @@
     throw se;
   }
   MessageContext msgContext=new MessageContext(engine);
-  if (isDebug)   logger.debug("Enter: doPost()");
-  if (tlog.isDebugEnabled())   t0=System.currentTimeMillis();
+  if (logger.isDebugEnabled()) {
+    logger.debug("Enter: doPost()");
+  }
+  if (tlog.isDebugEnabled()) {
+    t0=System.currentTimeMillis();
+  }
   Message responseMsg=null;
   String contentType=null;
   try {
     UMOEndpointURI endpointUri=getEndpoint(context);
     populateMessageContext(msgContext,context,endpointUri);
     if (securityProvider != null) {
-      if (isDebug)       logger.debug("securityProvider:" + securityProvider);
+      if (logger.isDebugEnabled()) {
+        logger.debug("securityProvider:" + securityProvider);
+      }
       msgContext.setProperty("securityProvider",securityProvider);
     }
-    Message requestMsg=new Message(context.getTransformedMessageAsString(),false,(String)context.getProperty(HTTPConstants.HEADER_CONTENT_TYPE),(String)context.getProperty(HTTPConstants.HEADER_CONTENT_LOCATION));
-    if (isDebug)     logger.debug("Request Message:" + requestMsg);
+    String request=context.getTransformedMessageAsString();
+    Message requestMsg=new Message(request,false,(String)context.getProperty(HTTPConstants.HEADER_CONTENT_TYPE),(String)context.getProperty(HTTPConstants.HEADER_CONTENT_LOCATION));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Request Message:" + requestMsg);
+    }
     msgContext.setRequestMessage(requestMsg);
     msgContext.setProperty("transport.url",endpointUri.toString());
     soapAction=getSoapAction(context);
@@ -32,11 +41,22 @@
       msgContext.setUseSOAPAction(true);
       msgContext.setSOAPActionURI(soapAction);
     }
-    if (tlog.isDebugEnabled())     t1=System.currentTimeMillis();
-    if (isDebug)     logger.debug("Invoking Axis Engine.");
+    if (tlog.isDebugEnabled()) {
+      t1=System.currentTimeMillis();
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Invoking Axis Engine.");
+    }
     engine.invoke(msgContext);
-    if (isDebug)     logger.debug("Return from Axis Engine.");
-    if (tlog.isDebugEnabled())     t2=System.currentTimeMillis();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Return from Axis Engine.");
+    }
+    if (tlog.isDebugEnabled()) {
+      t2=System.currentTimeMillis();
+    }
+    if (RequestContext.getExceptionPayload() instanceof Exception) {
+      throw (Exception)RequestContext.getExceptionPayload().getException();
+    }
     responseMsg=msgContext.getResponseMessage();
     if (responseMsg == null)     throw new Exception(Messages.getMessage("noResponse01"));
   }
@@ -54,7 +74,7 @@ catch (  Exception e) {
   contentType=responseMsg.getContentType(msgContext.getSOAPConstants());
   if (tlog.isDebugEnabled())   t3=System.currentTimeMillis();
   if (responseMsg != null)   sendResponse((String)context.getProperty(HttpConnector.HTTP_STATUS_PROPERTY),contentType,response,responseMsg);
-  if (isDebug) {
+  if (logger.isDebugEnabled()) {
     logger.debug("Response sent.");
     logger.debug("Exit: doPost()");
   }
