@@ -1,0 +1,34 @@
+{
+  UMOEvent prevEvent;
+  Properties props;
+  UMOMessage msg;
+  UMOEndpoint endpoint;
+  UMOEvent event;
+  prevEvent=getTestEvent("payload");
+  props=new Properties();
+  msg=new MuleMessage("payload",props);
+  endpoint=getTestEndpoint("Test",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  props=new Properties();
+  endpoint.setProperties(props);
+  event=new MuleEvent(msg,endpoint,prevEvent.getComponent(),prevEvent);
+  assertNull(event.getProperty("prop"));
+  prevEvent.setProperty("prop","value0");
+  event=new MuleEvent(msg,endpoint,prevEvent.getComponent(),prevEvent);
+  assertEquals("value0",event.getProperty("prop"));
+  props=new Properties();
+  props.put("prop","value2");
+  endpoint.setProperties(props);
+  event=new MuleEvent(msg,endpoint,prevEvent.getComponent(),prevEvent);
+  assertEquals("value2",event.getProperty("prop"));
+  props=new Properties();
+  props.put("prop","value1");
+  msg=new MuleMessage("payload",props);
+  endpoint=getTestEndpoint("Test",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  event=new MuleEvent(msg,endpoint,prevEvent.getComponent(),prevEvent);
+  assertEquals("value1",event.getProperty("prop"));
+  props=new Properties();
+  props.put("prop","value2");
+  endpoint.setProperties(props);
+  event=new MuleEvent(msg,endpoint,prevEvent.getComponent(),prevEvent);
+  assertEquals("value1",event.getProperty("prop"));
+}
