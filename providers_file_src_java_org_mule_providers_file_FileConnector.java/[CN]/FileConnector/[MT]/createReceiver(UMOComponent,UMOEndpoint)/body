@@ -1,7 +1,7 @@
 {
   String readDir=endpoint.getEndpointURI().getAddress();
   File dir=null;
-  long polling=0;
+  long polling=this.pollingFrequency;
   if (readDir != null) {
     dir=Utility.openDirectory(readDir);
     if (!(dir.canRead())) {
@@ -24,9 +24,11 @@
     }
   }
   if (polling <= 0) {
-    polling=1000;
+    polling=DEFAULT_POLLING_FREQUENCY;
   }
-  logger.debug("set polling frequency to: " + polling);
+  if (logger.isDebugEnabled()) {
+    logger.debug("set polling frequency to: " + polling);
+  }
   try {
     return serviceDescriptor.createMessageReceiver(this,component,endpoint,new Object[]{dir,moveTo,moveToPattern,new Long(polling)});
   }
