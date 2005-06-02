@@ -1,0 +1,21 @@
+{
+  String inbox=null;
+  if (connector.getProtocol().equals("imap") && endpoint.getEndpointURI().getParams().get("folder") != null) {
+    inbox=(String)endpoint.getEndpointURI().getParams().get("folder");
+  }
+ else {
+    inbox=Pop3Connector.MAILBOX;
+  }
+  URLName url=new URLName(endpoint.getEndpointURI().getScheme(),endpoint.getEndpointURI().getHost(),endpoint.getEndpointURI().getPort(),inbox,endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
+  Properties props=System.getProperties();
+  props.put("mail.smtp.host",endpoint.getEndpointURI().getHost());
+  props.put("mail.smtp.port",String.valueOf(endpoint.getEndpointURI().getPort()));
+  session=Session.getDefaultInstance(props,null);
+  session.setDebug(logger.isDebugEnabled());
+  PasswordAuthentication pw=new PasswordAuthentication(endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
+  session.setPasswordAuthentication(url,pw);
+  Store store=session.getStore(url);
+  store.connect();
+  folder=store.getFolder(inbox);
+  session.setDebug(logger.isDebugEnabled());
+}

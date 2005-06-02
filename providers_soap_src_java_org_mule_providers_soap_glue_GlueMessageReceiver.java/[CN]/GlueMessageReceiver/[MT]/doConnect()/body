@@ -1,0 +1,36 @@
+{
+  try {
+    Class[] interfaces=ServiceProxy.getInterfacesForComponent(component);
+    if (interfaces.length == 0) {
+      throw new InitialisationException(new Message("soap",2,component.getDescriptor().getName()),this);
+    }
+    if (endpoint instanceof ImmutableMuleEndpoint && !((ImmutableMuleEndpoint)endpoint).isSynchronousExplicitlySet()) {
+      if (!endpoint.isSynchronous()) {
+        logger.debug("overriding endpoint synchronicity and setting it to true. Web service requests are executed in a single thread");
+        endpoint.setSynchronous(true);
+      }
+    }
+    if (createServer) {
+      HTTP.startup(getEndpointURI().getScheme() + "://" + getEndpointURI().getHost()+ ":"+ getEndpointURI().getPort());
+      registerContextHeaders();
+    }
+    VirtualService.enable();
+    VirtualService vService=new VirtualService(interfaces,ServiceProxy.createGlueServiceHandler(this,endpoint.isSynchronous()));
+    MuleDescriptor desc=(MuleDescriptor)component.getDescriptor();
+    String serviceName=getEndpointURI().getPath();
+    if (!serviceName.endsWith("/")) {
+      serviceName+="/";
+    }
+    serviceName+=component.getDescriptor().getName();
+    desc.addInitialisationCallback(new GlueInitialisationCallback(vService,serviceName,new ServiceContext()));
+  }
+ catch (  ClassNotFoundException e) {
+    throw new InitialisationException(new Message(Messages.CLASS_X_NOT_FOUND,e.getMessage()),e,this);
+  }
+catch (  UMOException e) {
+    throw new InitialisationException(new Message("soap",3,component.getDescriptor().getName()),e,this);
+  }
+catch (  Exception e) {
+    throw new InitialisationException(new Message(Messages.FAILED_TO_START_X,"Soap Server"),e,this);
+  }
+}

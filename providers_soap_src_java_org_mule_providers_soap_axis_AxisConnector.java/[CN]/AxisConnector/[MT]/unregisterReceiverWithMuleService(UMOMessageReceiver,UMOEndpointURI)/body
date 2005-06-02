@@ -1,0 +1,33 @@
+{
+  String endpointKey=getCounterEndpointKey(receiver.getEndpointURI());
+  Map endpointCounters=(Map)axisDescriptor.getProperties().get(ENDPOINT_COUNTERS_PROPERTY);
+  if (endpointCounters == null) {
+    logger.error("There are no endpoints registered on the Axis service descriptor");
+    return;
+  }
+  Integer count=(Integer)endpointCounters.get(endpointKey);
+  if (count == null) {
+    logger.error("There are no services registered on: " + endpointKey);
+    return;
+  }
+  if (count.intValue() > 1) {
+    logger.warn("There are '" + count.intValue() + "' services registered on endpoint: "+ endpointKey+ ". Not unregistering the endpoint at this time");
+    count=new Integer(count.intValue() - 1);
+    endpointCounters.put(endpointKey,count);
+    return;
+  }
+ else {
+    endpointCounters.remove(endpointKey);
+    for (Iterator iterator=axisDescriptor.getInboundRouter().getEndpoints().iterator(); iterator.hasNext(); ) {
+      UMOEndpoint umoEndpoint=(UMOEndpoint)iterator.next();
+      if (endpointKey.startsWith(umoEndpoint.getEndpointURI().getAddress()))       logger.info("Unregistering Axis endpoint: " + endpointKey + " for service: "+ receiver.getComponent().getDescriptor().getName());
+      try {
+        umoEndpoint.getConnector().unregisterListener(receiver.getComponent(),receiver.getEndpoint());
+      }
+ catch (      Exception e) {
+        logger.error("Failed to unregistering Axis endpoint: " + endpointKey + " for service: "+ receiver.getComponent().getDescriptor().getName()+ ". Error is: "+ e.getMessage(),e);
+      }
+      break;
+    }
+  }
+}

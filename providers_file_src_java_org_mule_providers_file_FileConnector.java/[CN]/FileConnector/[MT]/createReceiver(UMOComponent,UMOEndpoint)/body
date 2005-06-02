@@ -2,21 +2,12 @@
   String readDir=endpoint.getEndpointURI().getAddress();
   File dir=null;
   long polling=this.pollingFrequency;
-  if (readDir != null) {
-    dir=Utility.openDirectory(readDir);
-    if (!(dir.canRead())) {
-      throw new MuleException(new Message(Messages.FILE_X_DOES_NTO_EXIST,dir.getAbsolutePath()));
-    }
- else {
-      logger.debug("Listening on endpointUri: " + dir.getAbsolutePath());
-    }
-  }
-  File moveTo=moveToDirectory;
+  String moveTo=moveToDirectoryName;
   Map props=endpoint.getProperties();
   if (props != null) {
     String move=(String)props.get(PROPERTY_MOVE_TO_DIRECTORY);
     if (move != null) {
-      moveTo=Utility.openDirectory(move);
+      moveTo=move;
     }
     String tempPolling=(String)props.get(PROPERTY_POLLING_FREQUENCY);
     if (tempPolling != null) {
@@ -30,9 +21,9 @@
     logger.debug("set polling frequency to: " + polling);
   }
   try {
-    return serviceDescriptor.createMessageReceiver(this,component,endpoint,new Object[]{dir,moveTo,moveToPattern,new Long(polling)});
+    return serviceDescriptor.createMessageReceiver(this,component,endpoint,new Object[]{readDir,moveTo,moveToPattern,new Long(polling)});
   }
  catch (  Exception e) {
-    throw new InitialisationException(new Message(Messages.FAILED_TO_CREATE_X_WITH_X,"Message Receiver",serviceDescriptor.getMessageReceiver()),e);
+    throw new InitialisationException(new Message(Messages.FAILED_TO_CREATE_X_WITH_X,"Message Receiver",serviceDescriptor.getMessageReceiver()),e,this);
   }
 }

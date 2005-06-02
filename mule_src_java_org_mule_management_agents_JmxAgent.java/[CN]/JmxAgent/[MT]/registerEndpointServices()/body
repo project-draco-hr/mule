@@ -1,0 +1,24 @@
+{
+  Iterator iter=MuleManager.getInstance().getConnectors().values().iterator();
+  UMOConnector connector;
+  List endpointMBeans;
+  while (iter.hasNext()) {
+    connector=(UMOConnector)iter.next();
+    if (connector instanceof AbstractConnector) {
+      endpointMBeans=((AbstractConnector)connector).getEndpointMBeans();
+      for (Iterator iterator=endpointMBeans.iterator(); iterator.hasNext(); ) {
+        EndpointServiceMBean mBean=(EndpointServiceMBean)iterator.next();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Attempting to register service with name: " + getDomainName() + ":type=control,name="+ mBean.getName()+ " EndpointService");
+        }
+        ObjectName on=new ObjectName(getDomainName() + ":type=control,name=" + mBean.getName()+ " EndpointService");
+        mBeanServer.registerMBean(mBean,on);
+        registeredMBeans.add(on);
+        logger.info("Registered Endpoint Service with name: " + on);
+      }
+    }
+ else {
+      logger.warn("Connector: " + connector + " is not an istance of AbstractConnector, cannot obtain Endpoint MBeans from it");
+    }
+  }
+}

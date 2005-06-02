@@ -27,18 +27,20 @@
       endpoint+="?" + sync;
     }
   }
-  boolean registered=false;
-  for (Iterator iterator=axisDescriptor.getInboundRouter().getEndpoints().iterator(); iterator.hasNext(); ) {
-    UMOEndpoint umoEndpoint=(UMOEndpoint)iterator.next();
-    if ((startsWith && endpoint.startsWith(umoEndpoint.getEndpointURI().getAddress())) || (!startsWith && endpoint.startsWith(umoEndpoint.getEndpointURI().getAddress()))) {
-      registered=true;
-      break;
-    }
+  Map endpointCounters=(Map)axisDescriptor.getProperties().get(ENDPOINT_COUNTERS_PROPERTY);
+  if (endpointCounters == null) {
+    endpointCounters=new HashMap();
   }
-  if (!registered) {
+  String endpointKey=getCounterEndpointKey(receiver.getEndpointURI());
+  Integer count=(Integer)endpointCounters.get(endpointKey.toString());
+  if (count == null)   count=new Integer(0);
+  if (count.intValue() == 0) {
     UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
     serviceEndpoint.setName(ep.getScheme() + ":" + receiver.getComponent().getDescriptor().getName());
     serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
     axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
   }
+  count=new Integer(count.intValue() + 1);
+  endpointCounters.put(endpointKey.toString(),count);
+  axisDescriptor.getProperties().put(ENDPOINT_COUNTERS_PROPERTY,endpointCounters);
 }

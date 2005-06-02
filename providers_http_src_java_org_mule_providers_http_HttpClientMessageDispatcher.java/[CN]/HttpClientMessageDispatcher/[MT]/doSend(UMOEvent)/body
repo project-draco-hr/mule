@@ -32,6 +32,12 @@
       httpMethod=new ConnectMethod(httpMethod);
     }
     httpMethod.setDoAuthentication(true);
+    if (event.getEndpoint().getEndpointURI().getUserInfo() != null) {
+      StringBuffer header=new StringBuffer();
+      header.append("Basic ");
+      header.append(new BASE64Encoder().encode(event.getEndpoint().getEndpointURI().getUserInfo().getBytes()));
+      httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
+    }
     httpMethod.execute(state,connection);
     Properties h=new Properties();
     Header[] headers=httpMethod.getRequestHeaders();

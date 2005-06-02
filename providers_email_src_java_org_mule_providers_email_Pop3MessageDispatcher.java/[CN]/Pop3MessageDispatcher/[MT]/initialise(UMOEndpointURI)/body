@@ -1,0 +1,23 @@
+{
+  if (!initialised.get()) {
+    URLName url=new URLName(endpoint.getAddress());
+    Properties props=System.getProperties();
+    props.put("mail.smtp.host",url.getHost());
+    props.put("mail.smtp.port",String.valueOf(url.getPort()));
+    session=Session.getDefaultInstance(props,null);
+    session.setDebug(logger.isDebugEnabled());
+    PasswordAuthentication pw=new PasswordAuthentication(url.getUsername(),url.getPassword());
+    session.setPasswordAuthentication(url,pw);
+    Store store=session.getStore(url);
+    store.connect();
+    String folder=null;
+    if (connector.getProtocol().equals("imap") && endpoint.getParams().get("folder") != null) {
+      folder=(String)endpoint.getParams().get("folder");
+    }
+ else {
+      folder=Pop3Connector.MAILBOX;
+    }
+    inbox=store.getFolder(folder);
+    if (!inbox.isOpen())     inbox.open(Folder.READ_ONLY);
+  }
+}

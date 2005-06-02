@@ -7,6 +7,13 @@
     if (connection.isProxied() && connection.isSecure()) {
       httpMethod=new ConnectMethod(httpMethod);
     }
+    httpMethod.setDoAuthentication(true);
+    if (endpointUri.getUserInfo() != null) {
+      StringBuffer header=new StringBuffer();
+      header.append("Basic ");
+      header.append(new BASE64Encoder().encode(endpointUri.getUserInfo().getBytes()));
+      httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
+    }
     httpMethod.execute(state,connection);
     if (httpMethod.getStatusCode() == HttpStatus.SC_OK) {
       return (UMOMessage)receiveTransformer.transform(httpMethod);
