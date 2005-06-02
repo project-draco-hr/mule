@@ -1,0 +1,24 @@
+{
+  if (logger.isDebugEnabled())   logger.debug("Attempting to connect to: " + endpoint.getEndpointURI());
+  if (!connecting) {
+    connecting=true;
+    connectionStrategy.connect(AbstractMessageReceiver.this);
+    logger.info("Successfully connected to: " + endpoint.getEndpointURI());
+    return;
+  }
+  try {
+    doConnect();
+    connector.fireEvent(new ConnectionEvent(endpoint.getEndpointURI(),ConnectionEvent.CONNECTION_CONNECTED));
+  }
+ catch (  Exception e) {
+    connector.fireEvent(new ConnectionEvent(endpoint.getEndpointURI(),ConnectionEvent.CONNECTION_FAILED));
+    if (e instanceof ConnectException) {
+      throw (ConnectException)e;
+    }
+ else {
+      throw new ConnectException(e,this);
+    }
+  }
+  connected.set(true);
+  connecting=false;
+}

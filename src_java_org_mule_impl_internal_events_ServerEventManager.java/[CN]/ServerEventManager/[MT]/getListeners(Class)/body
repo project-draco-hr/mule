@@ -2,28 +2,18 @@
   if (listenerClass == null) {
     throw new NullPointerException("Listener class cannot be null");
   }
-  if (ManagerEventListener.class.isAssignableFrom(listenerClass)) {
-    return (HashSet)listenersMap.get(ManagerEvent.class);
+  Class eventType=null;
+  for (Iterator iterator=eventsMap.keySet().iterator(); iterator.hasNext(); ) {
+    Class clazz=(Class)iterator.next();
+    if (clazz.isAssignableFrom(listenerClass)) {
+      eventType=(Class)eventsMap.get(clazz);
+      break;
+    }
   }
- else   if (ModelEventListener.class.isAssignableFrom(listenerClass)) {
-    return (HashSet)listenersMap.get(ModelEvent.class);
-  }
- else   if (ComponentEventListener.class.isAssignableFrom(listenerClass)) {
-    return (HashSet)listenersMap.get(ComponentEvent.class);
-  }
- else   if (ManagementEventListener.class.isAssignableFrom(listenerClass)) {
-    return (HashSet)listenersMap.get(ManagementEvent.class);
-  }
- else   if (SecurityEventListener.class.isAssignableFrom(listenerClass)) {
-    return (HashSet)listenersMap.get(SecurityEvent.class);
-  }
- else   if (CustomEventListener.class.isAssignableFrom(listenerClass)) {
-    return (HashSet)listenersMap.get(CustomEvent.class);
-  }
- else   if (AdminEventListener.class.isAssignableFrom(listenerClass)) {
-    return (HashSet)listenersMap.get(AdminEvent.class);
+  if (eventType != null) {
+    return (TreeMap)listenersMap.get(eventType);
   }
  else {
-    throw new IllegalArgumentException("Listener type not recognised: " + listenerClass.getName());
+    throw new IllegalArgumentException(new Message(Messages.PROPERTY_X_IS_NOT_SUPPORTED_TYPE_X_IT_IS_TYPE_X,"Listener Type","Registered Type",listenerClass.getName()).getMessage());
   }
 }

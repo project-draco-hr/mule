@@ -1,0 +1,23 @@
+{
+  while (true) {
+    try {
+      count++;
+      receiver.connect();
+      count=0;
+      logger.debug("Successfully connected to " + receiver.getEndpoint().getEndpointURI());
+      break;
+    }
+ catch (    Exception e) {
+      if (count == retryCount) {
+        throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),receiver.getEndpoint().getEndpointURI()),e,receiver);
+      }
+      logger.warn("Failed to connect/reconnect on endpoint: " + receiver.getEndpoint().getEndpointURI());
+      logger.debug("Waiting for " + frequency + "ms before reconnecting");
+      try {
+        Thread.sleep(frequency);
+      }
+ catch (      InterruptedException e1) {
+      }
+    }
+  }
+}

@@ -4,7 +4,12 @@
   }
   if (!started.get()) {
     if (logger.isInfoEnabled())     logger.info("Starting Connector: " + getClass().getName());
-    startConnector();
+    doStart();
+    for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
+      AbstractMessageReceiver amr=(AbstractMessageReceiver)iterator.next();
+      logger.debug("Starting receiver on endpoint: " + amr.getEndpoint().getEndpointURI());
+      amr.start();
+    }
     started.set(true);
     if (logger.isInfoEnabled())     logger.info("Connector: " + getClass().getName() + " has been started");
   }

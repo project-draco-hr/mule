@@ -4,7 +4,12 @@
   }
   if (started.get()) {
     if (logger.isInfoEnabled())     logger.info("Stopping Connector: " + getClass().getName());
-    stopConnector();
+    doStop();
+    for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
+      AbstractMessageReceiver amr=(AbstractMessageReceiver)iterator.next();
+      logger.debug("Stopping receiver on endpoint: " + amr.getEndpoint().getEndpointURI());
+      amr.stop();
+    }
     started.set(false);
     if (logger.isInfoEnabled())     logger.info("Connector " + getClass().getName() + " has been stopped");
   }
