@@ -1,0 +1,26 @@
+{
+  final MuleClient client=new MuleClient();
+  final Map props=new HashMap();
+  props.put("JMSReplyTo","replyTo.queue");
+  props.put(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,"false");
+  while (client.receive("jms://replyTo.queue",2000) != null)   ;
+  MuleTransactionConfig tc=new MuleTransactionConfig();
+  tc.setFactory(new JmsTransactionFactory());
+  tc.setAction(UMOTransactionConfig.ACTION_ALWAYS_BEGIN);
+  TransactionTemplate tt=new TransactionTemplate(tc,null);
+  tt.execute(new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      for (int i=0; i < 100; i++) {
+        client.send("jms://test.queue","Test Client Dispatch message " + i,props);
+      }
+      return null;
+    }
+  }
+);
+  for (int i=0; i < 100; i++) {
+    UMOMessage result=client.receive("jms://replyTo.queue",2000);
+    assertNotNull(result);
+  }
+  UMOMessage result=client.receive("jms://replyTo.queue",2000);
+  assertNull(result);
+}
