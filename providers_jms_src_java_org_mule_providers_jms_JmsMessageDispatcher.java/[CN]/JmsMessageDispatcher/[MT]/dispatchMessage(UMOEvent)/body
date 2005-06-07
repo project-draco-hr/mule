@@ -44,13 +44,14 @@
         }
         replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
       }
-      msg.setJMSReplyTo(replyTo);
     }
     if (syncReceive && replyTo == null) {
       replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
-      msg.setJMSReplyTo(replyTo);
     }
     if (replyTo != null) {
+      msg.setJMSReplyTo(replyTo);
+    }
+    if (syncReceive) {
       consumer=connector.getJmsSupport().createConsumer(session,replyTo);
     }
     String ttlString=(String)event.removeProperty("TimeToLive");
@@ -90,9 +91,9 @@
     return null;
   }
   finally {
+    JmsUtils.closeQuietly(consumer);
+    JmsUtils.closeQuietly(producer);
     if (session != null && session != txSession) {
-      JmsUtils.closeQuietly(consumer);
-      JmsUtils.closeQuietly(producer);
       JmsUtils.closeQuietly(session);
     }
   }

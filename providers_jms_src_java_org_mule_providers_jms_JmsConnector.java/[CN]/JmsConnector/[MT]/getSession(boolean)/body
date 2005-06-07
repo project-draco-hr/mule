@@ -1,12 +1,12 @@
 {
+  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
   Session session=getCurrentSession();
   if (session != null) {
     logger.debug("Retrieving jms session from current transaction");
     return session;
   }
   logger.debug("Retrieving new jms session from connection");
-  session=jmsSupport.createSession(connection,transacted,acknowledgementMode,noLocal);
-  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+  session=jmsSupport.createSession(connection,transacted || tx != null,acknowledgementMode,noLocal);
   if (tx != null) {
     logger.debug("Binding session to current transaction");
     try {
