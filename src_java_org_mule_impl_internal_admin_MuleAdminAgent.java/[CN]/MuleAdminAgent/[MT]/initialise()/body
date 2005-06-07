@@ -2,8 +2,13 @@
   serverEndpoint=MuleManager.getConfiguration().getServerUrl();
   UMOManager manager=MuleManager.getInstance();
   try {
+    if ("".equals(serverEndpoint)) {
+      logger.warn("No serverEndpointUrl specified, MuleAdminAgent will not start. E.g. use " + "<mule-environment-properties serverUrl=\"tcp://example.com:60504\"/> ");
+      manager.removeAgent(this.getName());
+      return;
+    }
     if (manager.getModel().isComponentRegistered(MuleManagerComponent.MANAGER_COMPONENT_NAME)) {
-      logger.info("Mule manager component has been already initialsied, ignoring server url");
+      logger.info("Mule manager component has already been initialised, ignoring server url");
     }
  else {
       if (manager.lookupConnector(DEFAULT_MANAGER_PROVIDER) != null) {
