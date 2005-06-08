@@ -2,17 +2,18 @@
   if (filter == null) {
     return true;
   }
-  Object payload=null;
+  UMOMessage message;
   if (transformFirst) {
     try {
-      payload=event.getTransformedMessage();
+      Object payload=event.getTransformedMessage();
+      message=new MuleMessage(payload,event.getMessage().getProperties());
     }
  catch (    TransformerException e) {
       throw new RoutingException(new Message(Messages.TRANSFORM_FAILED_BEFORE_FILTER),event.getMessage(),event.getEndpoint(),e);
     }
   }
  else {
-    payload=event.getMessage().getPayload();
+    message=event.getMessage();
   }
-  return filter.accept(payload);
+  return filter.accept(message);
 }

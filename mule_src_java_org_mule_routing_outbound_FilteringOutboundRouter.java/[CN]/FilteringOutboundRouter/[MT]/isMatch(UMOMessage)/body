@@ -2,17 +2,14 @@
   if (getFilter() == null) {
     return true;
   }
-  if (getFilter() instanceof MessageFilter) {
-    return getFilter().accept(message);
-  }
-  Object payload=message.getPayload();
-  try {
-    if (transformer != null) {
-      payload=transformer.transform(message);
+  if (transformer != null) {
+    try {
+      Object payload=transformer.transform(message.getPayload());
+      message=new MuleMessage(payload,message.getProperties());
+    }
+ catch (    TransformerException e) {
+      throw new RoutingException(new Message(Messages.TRANSFORM_FAILED_BEFORE_FILTER),message,(UMOEndpoint)endpoints.get(0),e);
     }
   }
- catch (  TransformerException e) {
-    throw new RoutingException(new Message(Messages.TRANSFORM_FAILED_BEFORE_FILTER),message,(UMOEndpoint)endpoints.get(0),e);
-  }
-  return getFilter().accept(payload);
+  return getFilter().accept(message);
 }
