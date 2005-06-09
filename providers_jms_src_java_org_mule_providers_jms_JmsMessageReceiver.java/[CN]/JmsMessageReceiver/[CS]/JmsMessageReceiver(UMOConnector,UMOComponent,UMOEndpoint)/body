@@ -1,10 +1,14 @@
 {
-  super(connector,component,endpoint,new Long(10));
+  super(connector,component,endpoint,new Long(0));
   this.connector=(JmsConnector)connector;
   this.frequency=PropertiesHelper.getLongProperty(endpoint.getProperties(),"frequency",10000L);
   this.reuseConsumer=PropertiesHelper.getBooleanProperty(endpoint.getProperties(),"reuseConsumer",true);
   this.reuseSession=PropertiesHelper.getBooleanProperty(endpoint.getProperties(),"reuseSession",true);
-  receiveMessagesInTransaction=endpoint.getTransactionConfig().getFactory() != null;
+  String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
+  boolean topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
+  if (!topic && endpoint.getTransactionConfig().getFactory() != null) {
+    receiveMessagesInTransaction=true;
+  }
   try {
     redeliveryHandler=this.connector.createRedeliveryHandler();
     redeliveryHandler.setConnector(this.connector);
