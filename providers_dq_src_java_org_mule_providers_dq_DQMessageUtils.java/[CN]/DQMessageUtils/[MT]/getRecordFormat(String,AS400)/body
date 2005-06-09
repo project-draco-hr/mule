@@ -1,0 +1,32 @@
+{
+  if (LOGGER.isDebugEnabled()) {
+    LOGGER.debug("Record descriptor :" + recordDescriptor);
+  }
+  if (recordDescriptor == null) {
+    throw new Exception("Failed to read record descriptor : recordDescriptor property is not set ");
+  }
+  InputStream input=null;
+  RecordFormat recordFormat=null;
+  try {
+    File file=new File(recordDescriptor);
+    if (file.exists()) {
+      input=new FileInputStream(file);
+    }
+ else {
+      input=DQMessageUtils.class.getClassLoader().getResourceAsStream(recordDescriptor);
+      if (input == null) {
+        throw new Exception("Failed to read record descriptor  (" + recordDescriptor + ") cannot be found ");
+      }
+    }
+    recordFormat=parse(input,as400);
+  }
+ catch (  Exception e) {
+    throw e;
+  }
+ finally {
+    if (input != null) {
+      input.close();
+    }
+  }
+  return recordFormat;
+}
