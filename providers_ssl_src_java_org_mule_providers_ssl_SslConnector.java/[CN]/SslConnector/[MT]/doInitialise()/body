@@ -1,28 +1,42 @@
 {
-  if (getProvider() == null)   throw new NullPointerException("The security provider cannot be null");
-  if (getKeyStore() == null)   throw new NullPointerException("The KeyStore location cannot be null");
-  if (getKeyPassword() == null)   throw new NullPointerException("The Key password cannot be null");
-  if (getStorePassword() == null)   throw new NullPointerException("The KeyStore password cannot be null");
-  if (getKeyManagerAlgorithm() == null)   throw new NullPointerException("The Key Manager Algorithm cannot be null");
-  KeyStore keystore=null;
-  try {
-    Security.addProvider(getProvider());
-    keystore=KeyStore.getInstance(keystoreType);
-    InputStream is=Utility.loadResource(getKeyStore(),getClass());
-    if (is == null) {
-      throw new FileNotFoundException("Failed to load keystore from classpath or local file: " + getKeyStore());
+  if (getProvider() == null) {
+    throw new NullPointerException("The security provider cannot be null");
+  }
+  if (getKeyStore() != null) {
+    if (getKeyPassword() == null) {
+      throw new NullPointerException("The Key password cannot be null");
     }
-    keystore.load(is,getKeyPassword().toCharArray());
+    if (getStorePassword() == null) {
+      throw new NullPointerException("The KeyStore password cannot be null");
+    }
+    if (getKeyManagerAlgorithm() == null) {
+      throw new NullPointerException("The Key Manager Algorithm cannot be null");
+    }
+    if (getKeyStoreType() == null) {
+      throw new NullPointerException("The KeyStore type cannot be null");
+    }
   }
- catch (  Exception e) {
-    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"KeyStore: " + getKeyStore()),e,this);
-  }
-  try {
-    keyManagerFactory=KeyManagerFactory.getInstance(getKeyManagerAlgorithm());
-    keyManagerFactory.init(keystore,getStorePassword().toCharArray());
-  }
- catch (  Exception e) {
-    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Key Manager (" + getKeyManagerAlgorithm() + ")"),e,this);
+  if (getKeyStore() != null) {
+    KeyStore keystore=null;
+    try {
+      Security.addProvider(getProvider());
+      keystore=KeyStore.getInstance(keyStoreType);
+      InputStream is=Utility.loadResource(getKeyStore(),getClass());
+      if (is == null) {
+        throw new FileNotFoundException("Failed to load keystore from classpath or local file: " + getKeyStore());
+      }
+      keystore.load(is,getKeyPassword().toCharArray());
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"KeyStore: " + getKeyStore()),e,this);
+    }
+    try {
+      keyManagerFactory=KeyManagerFactory.getInstance(getKeyManagerAlgorithm());
+      keyManagerFactory.init(keystore,getStorePassword().toCharArray());
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Key Manager (" + getKeyManagerAlgorithm() + ")"),e,this);
+    }
   }
   super.doInitialise();
   if (protocolHandler != null) {
