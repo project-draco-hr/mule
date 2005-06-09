@@ -1,0 +1,21 @@
+{
+  UMOSession session=MuleManager.getInstance().getModel().getComponentSession("orangeComponent");
+  final MuleComponent comp=(MuleComponent)session.getComponent();
+  assertFalse(comp.isStopped());
+  comp.pause();
+  new Thread(new Runnable(){
+    public void run(){
+      try {
+        Thread.sleep(2000);
+      }
+ catch (      InterruptedException e) {
+      }
+      comp.resume();
+    }
+  }
+).start();
+  long t0=System.currentTimeMillis();
+  comp.sendEvent(getTestEvent("hello"));
+  long t1=System.currentTimeMillis();
+  assertTrue(t1 - t0 > 1000);
+}
