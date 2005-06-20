@@ -5,9 +5,14 @@
   Properties props=System.getProperties();
   props.put("mail.smtp.host",url.getHost());
   props.put("mail.smtp.port",String.valueOf(url.getPort()));
-  Session session=Session.getDefaultInstance(props,null);
-  session.setDebug(logger.isDebugEnabled());
-  PasswordAuthentication pw=new PasswordAuthentication(url.getUsername(),url.getPassword());
-  session.setPasswordAuthentication(url,pw);
+  Session session;
+  if (url.getUsername() != null) {
+    props.put("mail.smtp.auth","true");
+    Authenticator auth=new SMTPAuthenticator(url.getUsername(),url.getPassword());
+    session=Session.getInstance(props,auth);
+  }
+ else {
+    session=Session.getDefaultInstance(props,null);
+  }
   return session;
 }

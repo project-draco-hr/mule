@@ -7,20 +7,9 @@
     inbox=Pop3Connector.MAILBOX;
   }
   URLName url=new URLName(endpoint.getEndpointURI().getScheme(),endpoint.getEndpointURI().getHost(),endpoint.getEndpointURI().getPort(),inbox,endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
-  Properties props=System.getProperties();
-  props.put("mail.smtp.host",endpoint.getEndpointURI().getHost());
-  props.put("mail.smtp.port",String.valueOf(endpoint.getEndpointURI().getPort()));
-  if (url.getUsername() != null) {
-    props.put("mail.smtp.auth","true");
-    SMTPAuthenticator customAuthenticator=new SMTPAuthenticator(endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
-    session=Session.getInstance(props,customAuthenticator);
-  }
- else {
-    session=Session.getDefaultInstance(props,null);
-  }
+  session=MailUtils.createMailSession(url);
   session.setDebug(logger.isDebugEnabled());
   Store store=session.getStore(url);
   store.connect();
   folder=store.getFolder(inbox);
-  session.setDebug(logger.isDebugEnabled());
 }
