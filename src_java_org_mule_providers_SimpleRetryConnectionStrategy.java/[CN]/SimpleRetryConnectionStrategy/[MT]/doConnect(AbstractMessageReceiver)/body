@@ -4,7 +4,9 @@
       count++;
       receiver.connect();
       count=0;
-      logger.debug("Successfully connected to " + receiver.getEndpoint().getEndpointURI());
+      if (logger.isDebugEnabled()) {
+        logger.debug("Successfully connected to " + receiver.getEndpoint().getEndpointURI());
+      }
       break;
     }
  catch (    Exception e) {
@@ -12,11 +14,14 @@
         throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),receiver.getEndpoint().getEndpointURI()),e,receiver);
       }
       logger.warn("Failed to connect/reconnect on endpoint: " + receiver.getEndpoint().getEndpointURI());
-      logger.debug("Waiting for " + frequency + "ms before reconnecting");
+      if (logger.isDebugEnabled()) {
+        logger.debug("Waiting for " + frequency + "ms before reconnecting");
+      }
       try {
         Thread.sleep(frequency);
       }
  catch (      InterruptedException e1) {
+        throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),receiver.getEndpoint().getEndpointURI()),e,receiver);
       }
     }
   }
