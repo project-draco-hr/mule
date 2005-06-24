@@ -1,7 +1,12 @@
 {
   Connection con=null;
   try {
-    con=this.connector.getConnection();
+    try {
+      con=this.connector.getConnection();
+    }
+ catch (    SQLException e) {
+      throw new ConnectException(e,this);
+    }
     Object[] readParams=JdbcUtils.getParams(getEndpointURI(),this.readParams,null);
     Object results=new QueryRunner().query(con,this.readStmt,readParams,new MapListHandler());
     return (List)results;

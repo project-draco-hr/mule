@@ -1,7 +1,7 @@
 {
   if (doThreading) {
     try {
-      receiver.getWorkManager().scheduleWork(new Work(){
+      MuleManager.getInstance().getWorkManager().scheduleWork(new Work(){
         public void release(){
         }
         public void run(){
@@ -9,14 +9,16 @@
             doConnect(receiver);
           }
  catch (          FatalConnectException e) {
-            receiver.handleException(e);
+            if (receiver instanceof AbstractMessageReceiver) {
+              ((AbstractMessageReceiver)receiver).handleException(e);
+            }
           }
         }
       }
 );
     }
  catch (    WorkException e) {
-      receiver.handleException(e);
+      throw new FatalConnectException(e,receiver);
     }
   }
  else {
