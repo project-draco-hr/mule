@@ -10,7 +10,12 @@
   Call call=(Call)getService(event).createCall();
   BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
   call.setTargetEndpointAddress(endpointUri.getAddress());
-  call.setSOAPActionURI(endpointUri.getAddress());
+  String soapAction=(String)event.getProperty("soapAction");
+  if (soapAction != null) {
+    soapAction=parseSoapAction(soapAction,method,event);
+    call.setSOAPActionURI(soapAction);
+    call.setUseSOAPAction(Boolean.TRUE.booleanValue());
+  }
   call.setOperationName(method);
   call.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
   int timeout=event.getIntProperty(MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,-1);
@@ -21,5 +26,6 @@
     call.setUsername(endpointUri.getUsername());
     call.setPassword(endpointUri.getPassword());
   }
+  setCallParams(call,event,method);
   return call;
 }
