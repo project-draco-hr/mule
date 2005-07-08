@@ -1,0 +1,22 @@
+{
+  File unzip=new File(dir,"unzip");
+  IOUtils.unzip(file,unzip);
+  File jbiFile=new File(unzip,JBI_DESCRIPTOR);
+  Jbi jbi=JbiDocument.Factory.parse(jbiFile).getJbi();
+  if (!"1.0".equals(jbi.getVersion().toString())) {
+    throw new JBIException("version attribute should be '1.0'");
+  }
+  if (!jbi.isSetSharedLibrary()) {
+    throw new JBIException("shared-library should be set");
+  }
+  String name=jbi.getSharedLibrary().getIdentification().getName();
+  if (this.container.getComponentRegistry().getSharedLibrary(name) != null) {
+    throw new JBIException("Shared library is already installed");
+  }
+  File installDir=new File(libDir,name);
+  if (!unzip.renameTo(installDir)) {
+    throw new IOException("Could not rename directory: " + unzip);
+  }
+  this.container.getComponentRegistry().registerSharedLibrary(name);
+  return name;
+}

@@ -1,0 +1,45 @@
+{
+  ServiceEndpoint se=me.getEndpoint();
+  QName service=me.getService();
+  QName interf=me.getInterfaceName();
+  if (se != null) {
+    se=this.container.getEndpointRegistry().getEndpoint(se.getServiceName(),se.getEndpointName());
+    if (se == null) {
+      throw new MessagingException("Could not find activated endpoint");
+    }
+    List components=getPossibleComponents(me,new ServiceEndpoint[]{se});
+    if (components.size() == 0) {
+      throw new MessagingException("Component refused exchange");
+    }
+    return chooseComponent(me,components);
+  }
+  if (service != null) {
+    ServiceEndpoint[] endpoints;
+    List components;
+    endpoints=this.container.getEndpointRegistry().getEndpointsForService(service);
+    components=getPossibleComponents(me,endpoints);
+    if (components.size() > 0) {
+      return chooseComponent(me,components);
+    }
+    endpoints=this.container.getEndpointRegistry().getExternalEndpointsForService(service);
+    components=getPossibleComponents(me,endpoints);
+    if (components.size() > 0) {
+      return chooseComponent(me,components);
+    }
+  }
+  if (interf != null) {
+    ServiceEndpoint[] endpoints;
+    List components;
+    endpoints=this.container.getEndpointRegistry().getEndpoints(interf);
+    components=getPossibleComponents(me,endpoints);
+    if (components.size() > 0) {
+      return chooseComponent(me,components);
+    }
+    endpoints=this.container.getEndpointRegistry().getExternalEndpoints(interf);
+    components=getPossibleComponents(me,endpoints);
+    if (components.size() > 0) {
+      return chooseComponent(me,components);
+    }
+  }
+  throw new MessagingException("No target specified");
+}

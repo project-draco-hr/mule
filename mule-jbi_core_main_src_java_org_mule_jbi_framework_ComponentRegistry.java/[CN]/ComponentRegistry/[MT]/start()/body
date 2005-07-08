@@ -1,0 +1,25 @@
+{
+  this.regFile=new File(this.container.getWorkingDir(),REGISTRY_FILE);
+  if (this.regFile.isFile()) {
+    try {
+      this.registry=RegistryDocument.Factory.parse(this.regFile);
+      if (!"1.0".equals(this.registry.getRegistry().getVersion().toString())) {
+        throw new JBIException("Invalid version of registry");
+      }
+      loadComponents();
+    }
+ catch (    JBIException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      LOGGER.warn("Could not parse registry, will create a new one",e);
+    }
+  }
+  if (this.registry == null) {
+    XmlOptions options=new XmlOptions();
+    options.setUseDefaultNamespace();
+    this.registry=RegistryDocument.Factory.newInstance(options);
+    this.registry.addNewRegistry().setVersion(new BigDecimal("1.0"));
+    saveRegistry();
+  }
+}
