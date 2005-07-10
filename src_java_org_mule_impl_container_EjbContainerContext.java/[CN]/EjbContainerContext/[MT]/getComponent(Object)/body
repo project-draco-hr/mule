@@ -1,0 +1,30 @@
+{
+  Object homeObject=null;
+  if (key == null) {
+    throw new ObjectNotFoundException("null");
+  }
+  try {
+    homeObject=context.lookup(key.toString());
+  }
+ catch (  NamingException e) {
+    throw new ObjectNotFoundException(key.toString(),e);
+  }
+  if (homeObject == null) {
+    throw new ObjectNotFoundException(key.toString());
+  }
+ else   if (homeObject instanceof EJBHome) {
+    Method method=ClassHelper.getMethod("create",homeObject.getClass());
+    if (method == null) {
+      throw new ObjectNotFoundException(key.toString(),new IllegalArgumentException(new Message(Messages.EJB_OBJECT_X_MISSING_CREATE,key).toString()));
+    }
+    try {
+      return method.invoke(homeObject,ClassHelper.NO_ARGS);
+    }
+ catch (    Exception e) {
+      throw new ObjectNotFoundException(key.toString(),e);
+    }
+  }
+ else {
+    throw new ObjectNotFoundException(key.toString(),new IllegalArgumentException(new Message(Messages.EJB_KEY_REF_X_NOT_VALID,key).toString()));
+  }
+}
