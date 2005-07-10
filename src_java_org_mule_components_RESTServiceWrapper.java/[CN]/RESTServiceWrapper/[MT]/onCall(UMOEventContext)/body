@@ -1,0 +1,33 @@
+{
+  String tempUrl;
+  if (urlFromMessage) {
+    tempUrl=(String)eventContext.getProperty(REST_SERVICE_URL);
+    if (tempUrl == null) {
+      throw new IllegalArgumentException(new Message(Messages.X_PROPERTY_IS_NOT_SET_ON_EVENT,REST_SERVICE_URL).toString());
+    }
+  }
+ else {
+    tempUrl=serviceUrl;
+  }
+  StringBuffer urlBuffer=new StringBuffer(tempUrl);
+  Map params=new HashMap(eventContext.getProperties());
+  if (payloadParameterName != null) {
+    params.put(payloadParameterName,eventContext.getTransformedMessageAsString());
+  }
+ else   if (eventContext.getTransformedMessage() instanceof Map) {
+    params.putAll((Map)eventContext.getTransformedMessage());
+  }
+  setRESTParams(urlBuffer,params,reqiredParams,false);
+  setRESTParams(urlBuffer,params,optionalParams,true);
+  tempUrl=urlBuffer.toString();
+  logger.info("Invoking REST service: " + tempUrl);
+  UMOEndpointURI endpointURI=new MuleEndpointURI(tempUrl);
+  eventContext.getMessage().setProperty("http.method",httpMethod);
+  if (eventContext.isSynchronous()) {
+    return eventContext.sendEvent(eventContext.getMessage(),endpointURI);
+  }
+ else {
+    eventContext.dispatchEvent(eventContext.getMessage(),endpointURI);
+    return null;
+  }
+}
