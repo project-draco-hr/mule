@@ -1,0 +1,27 @@
+{
+  if (doThreading) {
+    try {
+      MuleManager.getInstance().getWorkManager().scheduleWork(new Work(){
+        public void release(){
+        }
+        public void run(){
+          try {
+            doConnect(connectable);
+          }
+ catch (          FatalConnectException e) {
+            if (connectable instanceof AbstractMessageReceiver) {
+              ((AbstractMessageReceiver)connectable).handleException(e);
+            }
+          }
+        }
+      }
+);
+    }
+ catch (    WorkException e) {
+      throw new FatalConnectException(e,connectable);
+    }
+  }
+ else {
+    doConnect(connectable);
+  }
+}

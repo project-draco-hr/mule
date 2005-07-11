@@ -2,7 +2,12 @@
   JmsSupport jmsSupport=this.connector.getJmsSupport();
   JmsThreadContext ctx=context.getContext();
   if (ctx.session == null) {
-    ctx.session=this.connector.getSession(endpoint);
+    try {
+      ctx.session=this.connector.getSession(endpoint);
+    }
+ catch (    JMSException e) {
+      throw new ConnectException(e,this);
+    }
   }
   String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
   boolean topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));

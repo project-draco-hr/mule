@@ -1,0 +1,53 @@
+{
+  MuleDescriptor d=getTestDescriptor("anOrange",Orange.class.getName());
+  UMOComponent component=MuleManager.getInstance().getModel().registerComponent(d);
+  UMOEndpoint endpoint=new MuleEndpoint("test",new MuleEndpointURI("jms://my.queue"),connector,null,UMOEndpoint.ENDPOINT_TYPE_SENDER,0,new HashMap());
+  MuleManager.getInstance().start();
+  MuleManager.getInstance().registerListener(this);
+  connector.registerListener(component,endpoint);
+  long t0;
+  t0=System.currentTimeMillis();
+  while (true) {
+    ConnectionEvent event=(ConnectionEvent)events.take();
+    if (event.getAction() == ConnectionEvent.CONNECTION_FAILED) {
+      break;
+    }
+    if (System.currentTimeMillis() - t0 < 10000) {
+      fail("No connection attempt");
+    }
+  }
+  launchActiveMq();
+  t0=System.currentTimeMillis();
+  while (true) {
+    ConnectionEvent event=(ConnectionEvent)events.take();
+    if (event.getAction() == ConnectionEvent.CONNECTION_CONNECTED) {
+      break;
+    }
+    if (System.currentTimeMillis() - t0 < 10000) {
+      fail("Connection should have succeeded");
+    }
+  }
+  killActiveMq();
+  t0=System.currentTimeMillis();
+  while (true) {
+    ConnectionEvent event=(ConnectionEvent)events.take();
+    if (event.getAction() == ConnectionEvent.CONNECTION_DISCONNECTED) {
+      break;
+    }
+    if (System.currentTimeMillis() - t0 < 10000) {
+      fail("Connection should have been lost");
+    }
+  }
+  launchActiveMq();
+  t0=System.currentTimeMillis();
+  while (true) {
+    ConnectionEvent event=(ConnectionEvent)events.take();
+    if (event.getAction() == ConnectionEvent.CONNECTION_CONNECTED) {
+      break;
+    }
+    if (System.currentTimeMillis() - t0 < 10000) {
+      fail("Connection should have succeeded");
+    }
+  }
+  killActiveMq();
+}

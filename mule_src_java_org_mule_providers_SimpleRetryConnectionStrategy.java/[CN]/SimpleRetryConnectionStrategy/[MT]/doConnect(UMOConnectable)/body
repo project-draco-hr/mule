@@ -1,0 +1,28 @@
+{
+  while (true) {
+    try {
+      count++;
+      connectable.connect();
+      count=0;
+      if (logger.isDebugEnabled()) {
+        logger.debug("Successfully connected to " + getDescription(connectable));
+      }
+      break;
+    }
+ catch (    Exception e) {
+      if (count == retryCount) {
+        throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),getDescription(connectable)),e,connectable);
+      }
+      logger.warn("Failed to connect/reconnect on endpoint: " + getDescription(connectable));
+      if (logger.isDebugEnabled()) {
+        logger.debug("Waiting for " + frequency + "ms before reconnecting");
+      }
+      try {
+        Thread.sleep(frequency);
+      }
+ catch (      InterruptedException e1) {
+        throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),getDescription(connectable)),e,connectable);
+      }
+    }
+  }
+}
