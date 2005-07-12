@@ -1,6 +1,12 @@
 {
+  if (LOGGER.isDebugEnabled()) {
+    LOGGER.debug("Expanding installation archive");
+  }
   File unzip=new File(dir,"unzip");
   IOUtils.unzip(file,unzip);
+  if (LOGGER.isDebugEnabled()) {
+    LOGGER.debug("Loading jbi descriptor");
+  }
   File jbiFile=new File(unzip,JBI_DESCRIPTOR);
   if (!jbiFile.isFile()) {
     throw new JBIException("Jar has no jbi.xml");
@@ -18,6 +24,13 @@
   }
   if (this.installers.get(name) != null) {
     throw new JBIException("an installer has already been created");
+  }
+  com.sun.java.xml.ns.jbi.ComponentDocument.Component.SharedLibrary[] libs=jbi.getComponent().getSharedLibraryArray();
+  for (int i=0; i < libs.length; i++) {
+    String libName=libs[i].getDomNode().getFirstChild().getNodeValue();
+    if (this.container.getComponentRegistry().getSharedLibrary(libName) == null) {
+      throw new JBIException("Component requires a missing shared library: " + libName);
+    }
   }
   File installDir=new File(cmpDir,name);
   if (!unzip.renameTo(installDir)) {
