@@ -14,6 +14,9 @@
     if (body instanceof String) {
       ObjectToHttpClientMethodRequest trans=new ObjectToHttpClientMethodRequest();
       httpMethod=(HttpMethod)trans.transform(body.toString());
+      postMethod.setRequestBody(body.toString());
+      postMethod.setRequestContentLength(body.toString().length());
+      httpMethod=postMethod;
     }
  else     if (body instanceof HttpMethod) {
       httpMethod=(HttpMethod)body;
@@ -47,7 +50,7 @@
     String status=String.valueOf(httpMethod.getStatusCode());
     h.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,status);
     logger.debug("Http response is: " + status);
-    return new MuleMessage(httpMethod.getResponseBody(),h);
+    return new MuleMessage(httpMethod.getResponseBodyAsString(),h);
   }
  catch (  Exception e) {
     throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
