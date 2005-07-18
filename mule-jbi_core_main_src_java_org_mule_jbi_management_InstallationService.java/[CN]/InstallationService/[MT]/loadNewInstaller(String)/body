@@ -3,7 +3,7 @@
   try {
     LOGGER.info("Creating new installer for " + installJarURI);
     URI uri=new URI(installJarURI);
-    dir=getTmpDir();
+    dir=Directories.getNewTempDir(this.container.getWorkingDir());
     if (LOGGER.isDebugEnabled()) {
       LOGGER.debug("Temporary dir: " + dir);
     }
@@ -13,8 +13,60 @@
       LOGGER.debug("Copying installation jar to " + f);
     }
     IOUtils.copy(uri.toURL(),f);
-    ObjectName result=loadNewInstaller(f,dir);
-    return result;
+    File unzip=new File(dir,"/unzip");
+    IOUtils.unzip(f,unzip);
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Loading jbi descriptor");
+    }
+    File jbiFile=new File(unzip,JBI_DESCRIPTOR);
+    if (!jbiFile.isFile()) {
+      throw new JBIException("No jbi descriptor found");
+    }
+    Jbi jbi=JbiDocument.Factory.parse(jbiFile).getJbi();
+    if (jbi.getVersion().doubleValue() != 1.0) {
+      throw new JBIException("version attribute should be '1.0'");
+    }
+    if (!jbi.isSetComponent()) {
+      throw new JBIException("component should be set");
+    }
+    String name=jbi.getComponent().getIdentification().getName();
+    if (this.installers.get(name) != null) {
+      throw new JBIException("an installer has already been created");
+    }
+    if (this.container.getRegistry().getComponent(name) != null) {
+      throw new JBIException("component already installed");
+    }
+    boolean engine=jbi.getComponent().getType() == com.sun.java.xml.ns.jbi.ComponentDocument.Component.Type.SERVICE_ENGINE;
+    File installDir;
+    File workspaceDir;
+    if (engine) {
+      installDir=Directories.getEngineInstallDir(this.container.getWorkingDir(),name);
+      workspaceDir=Directories.getEngineWorkspaceDir(this.container.getWorkingDir(),name);
+    }
+ else {
+      installDir=Directories.getBindingInstallDir(this.container.getWorkingDir(),name);
+      workspaceDir=Directories.getBindingWorkspaceDir(this.container.getWorkingDir(),name);
+    }
+    IOUtils.createDirs(installDir);
+    IOUtils.createDirs(workspaceDir);
+    IOUtils.unzip(f,installDir);
+    Component component;
+    if (engine) {
+      component=this.container.getRegistry().addEngine(name);
+    }
+ else {
+      component=this.container.getRegistry().addBinding(name);
+    }
+    component.setInstallRoot(installDir.getAbsolutePath());
+    component.setWorkspaceRoot(workspaceDir.getAbsolutePath());
+    component.setDescriptor(jbi);
+    Installer installer=new Installer(this.container,component);
+    installer.init();
+    ObjectName objName=createComponentInstallerName(name);
+    StandardMBean mbean=new StandardMBean(installer,InstallerMBean.class);
+    this.container.getMBeanServer().registerMBean(mbean,objName);
+    this.installers.put(name,installer);
+    return objName;
   }
  catch (  Exception e) {
     LOGGER.error("Could not create installer",e);

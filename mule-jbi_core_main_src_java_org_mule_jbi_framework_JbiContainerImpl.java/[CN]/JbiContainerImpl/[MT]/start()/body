@@ -1,17 +1,23 @@
 {
-  if (LOGGER.isDebugEnabled()) {
-    LOGGER.debug("Starting JbiContainer");
+  try {
+    LOGGER.info("Starting JBI");
+    if (this.registry == null) {
+      initialize();
+    }
+    AdminService admin=new AdminService(this);
+    registerMBean(new StandardMBean(admin,AdminServiceMBean.class),createMBeanName(null,"service","admin"));
+    InstallationService install=new InstallationService(this);
+    registerMBean(new StandardMBean(install,InstallationServiceMBean.class),createMBeanName(null,"service","install"));
+    DeploymentService deploy=new DeploymentService(this);
+    registerMBean(new StandardMBean(deploy,DeploymentServiceMBean.class),createMBeanName(null,"service","deploy"));
+    this.registry.start();
   }
-  if (this.workingDir == null) {
-    throw new JBIException("Working directory must not be set to null");
-  }
-  if (!this.workingDir.isDirectory()) {
-    if (!this.workingDir.mkdirs()) {
-      throw new JBIException("Could not create working directory");
+ catch (  Exception e) {
+    if (e instanceof JBIException) {
+      throw (JBIException)e;
+    }
+ else {
+      throw new JBIException(e);
     }
   }
-  this.endpointRegistry=new EndpointRegistryImpl(this);
-  this.componentRegistry=new ComponentRegistryImpl(this);
-  this.endpointRegistry.start();
-  this.componentRegistry.start();
 }

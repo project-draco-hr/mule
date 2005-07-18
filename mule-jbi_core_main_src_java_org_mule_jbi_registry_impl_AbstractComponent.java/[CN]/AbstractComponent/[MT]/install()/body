@@ -1,0 +1,19 @@
+{
+  if (!getCurrentState().equals(UNKNOWN)) {
+    throw new JBIException("Illegal status: " + getCurrentState());
+  }
+  com.sun.java.xml.ns.jbi.ComponentDocument.Component.SharedLibrary[] libs=getDescriptor().getComponent().getSharedLibraryArray();
+  for (int i=0; i < libs.length; i++) {
+    String libName=libs[i].getDomNode().getFirstChild().getNodeValue();
+    Library library=getRegistry().getLibrary(libName);
+    if (library == null) {
+      throw new JBIException("Component requires a missing shared library: " + libName);
+    }
+    library.addComponent(this);
+  }
+  this.classPathElements=Arrays.asList(getDescriptor().getComponent().getComponentClassPath().getPathElementArray());
+  this.isClassLoaderParentFirst=com.sun.java.xml.ns.jbi.ComponentDocument.Component.ComponentClassLoaderDelegation.PARENT_FIRST.equals(getDescriptor().getComponent().getComponentClassLoaderDelegation());
+  this.componentClassName=getDescriptor().getComponent().getComponentClassName().getDomNode().getFirstChild().getNodeValue();
+  createComponent();
+  initComponent();
+}

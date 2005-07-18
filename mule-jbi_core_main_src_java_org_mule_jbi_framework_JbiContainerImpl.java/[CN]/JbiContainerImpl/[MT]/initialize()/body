@@ -1,0 +1,35 @@
+{
+  try {
+    JbiContainer.Factory.setInstance(this);
+    Directories.createDirectories(this.workingDir);
+    if (this.mBeanServer == null) {
+      LOGGER.debug("Creating MBeanServer");
+      List l=MBeanServerFactory.findMBeanServer(null);
+      if (l != null && l.size() > 0) {
+        this.mBeanServer=(MBeanServer)l.get(0);
+      }
+ else {
+        this.mBeanServer=MBeanServerFactory.createMBeanServer();
+      }
+    }
+    this.endpoints=new EndpointsImpl();
+    File regStore=new File(this.workingDir,"/registry.xml");
+    if (regStore.isFile()) {
+      this.registry=RegistryIO.load(regStore);
+    }
+ else {
+      this.registry=RegistryIO.create(regStore);
+    }
+    if (this.router == null) {
+      this.router=new RouterImpl();
+    }
+  }
+ catch (  Exception e) {
+    if (e instanceof JBIException) {
+      throw (JBIException)e;
+    }
+ else {
+      throw new JBIException(e);
+    }
+  }
+}

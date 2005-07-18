@@ -1,0 +1,40 @@
+{
+  File dir=null;
+  try {
+    URI uri=new URI(saZipURL);
+    dir=Directories.getNewTempDir(this.container.getWorkingDir());
+    IOUtils.createDirs(dir);
+    File archive=new File(dir,"jbi.zip");
+    IOUtils.copy(uri.toURL(),archive);
+    File unzip=new File(dir,"unzip");
+    IOUtils.unzip(archive,unzip);
+    File jbiFile=new File(unzip,JBI_DESCRIPTOR);
+    Jbi jbi=JbiDocument.Factory.parse(jbiFile).getJbi();
+    if (jbi.getVersion().doubleValue() != 1.0) {
+      throw new JBIException("version attribute should be '1.0'");
+    }
+    if (!jbi.isSetServiceAssembly()) {
+      throw new JBIException("service-assembly should be set");
+    }
+    String name=jbi.getServiceAssembly().getIdentification().getName();
+    if (this.registry.getAssembly(name) != null) {
+      throw new JBIException("Service assembly is already installed");
+    }
+    File installDir=Directories.getAssemblyInstallDir(this.container.getWorkingDir(),name);
+    if (!unzip.renameTo(installDir)) {
+      throw new IOException("Could not rename directory: " + unzip);
+    }
+    Assembly assembly=this.registry.addAssembly(name);
+    assembly.setDescriptor(jbi);
+    assembly.setInstallRoot(installDir.getAbsolutePath());
+    String result=assembly.deploy();
+    return result;
+  }
+ catch (  Exception e) {
+    LOGGER.error("Could not install shared library",e);
+    throw new RuntimeException("Could not install shared library",e);
+  }
+ finally {
+    IOUtils.deleteFile(dir);
+  }
+}

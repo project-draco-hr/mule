@@ -1,8 +1,24 @@
 {
-  if (this.installers.get(aComponentName) != null) {
-    return createComponentInstallerName(aComponentName);
-  }
+  try {
+    if (this.installers.get(aComponentName) != null) {
+      return createComponentInstallerName(aComponentName);
+    }
  else {
-    return null;
+      Component component=this.container.getRegistry().getComponent(aComponentName);
+      if (component == null) {
+        throw new JBIException("Component not installed: " + aComponentName);
+      }
+      Installer installer=new Installer(this.container,component);
+      installer.init();
+      ObjectName objName=createComponentInstallerName(aComponentName);
+      StandardMBean mbean=new StandardMBean(installer,InstallerMBean.class);
+      this.container.getMBeanServer().registerMBean(mbean,objName);
+      this.installers.put(aComponentName,installer);
+      return objName;
+    }
+  }
+ catch (  Exception e) {
+    LOGGER.error("Could not create installer",e);
+    throw new RuntimeException("Could not create installer",e);
   }
 }
