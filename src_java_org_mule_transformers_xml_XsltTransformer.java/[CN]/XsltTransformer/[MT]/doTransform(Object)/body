@@ -2,6 +2,10 @@
   try {
     DocumentSource sourceDoc=null;
     DocumentResult resultDoc=new DocumentResult();
+    DefaultErrorListener errorListener=null;
+    if (src instanceof byte[]) {
+      src=new String((byte[])src);
+    }
     if (src instanceof String) {
       String xml=(String)src;
       Document dom4jDoc=DocumentHelper.parseText(xml);
@@ -13,7 +17,12 @@
  else     if (src instanceof Document) {
       sourceDoc=new DocumentSource((Document)src);
     }
+    errorListener=new DefaultErrorListener(this);
+    transformer.setErrorListener(errorListener);
     transformer.transform(sourceDoc,resultDoc);
+    if (errorListener.isError()) {
+      throw errorListener.getException();
+    }
     if (Document.class.equals(returnClass)) {
       return resultDoc.getDocument();
     }
