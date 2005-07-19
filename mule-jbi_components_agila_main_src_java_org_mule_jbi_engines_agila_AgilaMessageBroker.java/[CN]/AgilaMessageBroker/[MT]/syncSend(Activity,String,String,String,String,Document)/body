@@ -1,0 +1,24 @@
+{
+  try {
+    AgilaComponent component=AgilaComponent.getInstance();
+    if (component == null) {
+      throw new IllegalStateException("AgilaComponent is not initialized");
+    }
+    DeliveryChannel channel=component.getContext().getDeliveryChannel();
+    MessageExchangeFactory mef=channel.createExchangeFactory();
+    MessageExchange me=mef.createInOnlyExchange();
+    me.setInterfaceName(new QName(namespace,portType));
+    me.setOperation(new QName(namespace,operation));
+    NormalizedMessage in=me.createMessage();
+    in.setContent(new DocumentSource(message));
+    me.setMessage(in,"in");
+    channel.sendSync(me);
+    NormalizedMessage out=me.getMessage("out");
+    DocumentResult result=new DocumentResult();
+    TransformerFactory.newInstance().newTransformer().transform(out.getContent(),result);
+    return result.getDocument();
+  }
+ catch (  Exception e) {
+    throw new EngineRuntimeException(e);
+  }
+}

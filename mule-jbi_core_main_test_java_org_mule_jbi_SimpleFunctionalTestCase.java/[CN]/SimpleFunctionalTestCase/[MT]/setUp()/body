@@ -1,15 +1,12 @@
 {
-  IOUtils.deleteFile(new File("target/.mule-jbi"));
   JbiContainerImpl jbi=new JbiContainerImpl();
   jbi.setWorkingDir(new File("target/.mule-jbi"));
-  List l=MBeanServerFactory.findMBeanServer(null);
-  if (l != null && l.size() > 0) {
-    jbi.setMBeanServer((MBeanServer)l.get(0));
-  }
- else {
-    jbi.setMBeanServer(MBeanServerFactory.createMBeanServer());
-  }
-  jbi.setRouter(new RouterImpl(jbi));
-  jbi.start();
   container=jbi;
+  container.initialize();
+  provider=new TestComponent();
+  consumer=new TestComponent();
+  container.getRegistry().addTransientEngine("provider",provider);
+  container.getRegistry().addTransientEngine("consumer",consumer);
+  container.start();
+  endpoint=provider.getContext().activateEndpoint(SERVICE_NAME,ENDPOINT_NAME);
 }

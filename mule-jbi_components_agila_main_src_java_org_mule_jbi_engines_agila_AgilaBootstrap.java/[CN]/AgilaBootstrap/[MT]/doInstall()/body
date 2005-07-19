@@ -1,0 +1,22 @@
+{
+  super.doInstall();
+  String installRoot=this.installContext.getContext().getInstallRoot();
+  String workspaceRoot=this.installContext.getContext().getWorkspaceRoot();
+  File hsqldbDir=new File(workspaceRoot,"hsqldb");
+  hsqldbDir.mkdirs();
+  File hibernateConfigFile=new File(installRoot,"/resources/hibernate.cfg.xml");
+  if (!hibernateConfigFile.isFile()) {
+    hibernateConfigFile=new File(Thread.currentThread().getContextClassLoader().getResource("hibernate.cfg.xml").toURI());
+  }
+  if (!hibernateConfigFile.isFile()) {
+    throw new FileNotFoundException("Could not find hibernate.cfg.xml file");
+  }
+  Document hibCfg=new SAXReader().read(hibernateConfigFile);
+  Node node=hibCfg.selectSingleNode("//property[@name = 'connection.url'");
+  String url="jdbc:hsqldb:" + hsqldbDir.getCanonicalFile().toURI() + "agila";
+  node.setText(url);
+  FileWriter w=new FileWriter(hibernateConfigFile);
+  w.write(hibCfg.asXML());
+  w.close();
+  new SchemaExport(new Configuration().configure()).create(false,true);
+}

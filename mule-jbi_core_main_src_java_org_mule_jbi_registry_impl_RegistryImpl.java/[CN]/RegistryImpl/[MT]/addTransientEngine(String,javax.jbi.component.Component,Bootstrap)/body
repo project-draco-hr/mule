@@ -1,0 +1,27 @@
+{
+  Component c=getComponent(name);
+  if (c == null) {
+    EngineImpl e=new EngineImpl();
+    e.setName(name);
+    e.setTransient(true);
+    e.setComponent(engine);
+    e.setStateAtShutdown(Engine.RUNNING);
+    e.setWorkspaceRoot(Directories.getEngineWorkspaceDir(JbiContainer.Factory.getInstance().getWorkingDir(),name).getAbsoluteFile().getCanonicalPath());
+    this.engines.add(e);
+    this.componentsMap.put(name,e);
+    if (bootstrap != null) {
+      InstallationContextImpl ctx=new InstallationContextImpl(e,bootstrap);
+      bootstrap.init(ctx);
+      ctx.install();
+    }
+    return e;
+  }
+ else {
+    if (!(c instanceof EngineImpl) || !c.isTransient()) {
+      throw new JBIException("A non-transient or non-engine component is already registered: " + name);
+    }
+    EngineImpl e=(EngineImpl)c;
+    e.setComponent(engine);
+    return e;
+  }
+}

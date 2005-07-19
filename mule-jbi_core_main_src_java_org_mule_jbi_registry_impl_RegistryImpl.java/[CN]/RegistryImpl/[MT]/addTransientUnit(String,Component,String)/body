@@ -1,0 +1,24 @@
+{
+  Assembly a=getAssembly(suName);
+  if (a == null) {
+    AssemblyImpl assembly=new AssemblyImpl();
+    assembly.setName(suName);
+    assembly.setTransient(true);
+    assembly.setStateAtShutdown(Assembly.RUNNING);
+    UnitImpl unit=new UnitImpl();
+    unit.setName(suName);
+    unit.setAssembly(assembly);
+    unit.setComponent(component);
+    unit.setInstallRoot(new File(installDir).getAbsoluteFile().getCanonicalPath());
+    this.assemblies.add(assembly);
+    this.assembliesMap.put(suName,assembly);
+    unit.deploy();
+    unit.start();
+    assembly.setCurrentState(Assembly.RUNNING);
+  }
+ else {
+    if (!(a instanceof AssemblyImpl) || !a.isTransient()) {
+      throw new JBIException("A non-transient or assembly is already deployed: " + suName);
+    }
+  }
+}

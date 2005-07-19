@@ -1,0 +1,22 @@
+{
+  Component c=getComponent(name);
+  if (c == null) {
+    BindingImpl b=new BindingImpl();
+    b.setName(name);
+    b.setTransient(true);
+    b.setComponent(binding);
+    b.setStateAtShutdown(Binding.RUNNING);
+    b.setWorkspaceRoot(Directories.getBindingWorkspaceDir(JbiContainer.Factory.getInstance().getWorkingDir(),name).getAbsoluteFile().getCanonicalPath());
+    this.bindings.add(b);
+    this.componentsMap.put(name,b);
+    return b;
+  }
+ else {
+    if (!(c instanceof BindingImpl) || !c.isTransient()) {
+      throw new JBIException("A non-transient or non-binding component is already registered: " + name);
+    }
+    BindingImpl b=(BindingImpl)c;
+    b.setComponent(binding);
+    return b;
+  }
+}

@@ -1,0 +1,26 @@
+{
+  JbiContainerImpl container=new JbiContainerImpl();
+  container.setWorkingDir(new File("target/.mule-jbi"));
+  container.initialize();
+  AgilaComponent provider=new AgilaComponent();
+  TestComponent consumer=new TestComponent();
+  container.getRegistry().addTransientEngine("consumer",consumer);
+  Engine agila=container.getRegistry().addTransientEngine("provider",provider,new AgilaBootstrap());
+  container.start();
+  URL url=Thread.currentThread().getContextClassLoader().getResource("loanbroker/process.xml");
+  File loanbroker=new File(url.toURI()).getParentFile();
+  container.getRegistry().addTransientUnit("loanbroker",agila,loanbroker.getAbsolutePath());
+  MessageExchangeFactory mef=consumer.getChannel().createExchangeFactory();
+  InOnly me=mef.createInOnlyExchange();
+  me.setInterfaceName(new QName("http://www.apache.org/agila/samples/exemple1/definition/","loanService"));
+  me.setOperation(new QName("http://www.apache.org/agila/samples/exemple1/definition/","request"));
+  NormalizedMessage m=me.createMessage();
+  Document doc=DocumentHelper.createDocument();
+  Element msg=doc.addElement("message");
+  msg.addElement("firstName").setText("john");
+  msg.addElement("lastName").setText("doe");
+  msg.addElement("amount").setText("5000");
+  m.setContent(new DocumentSource(msg));
+  me.setInMessage(m);
+  consumer.getChannel().send(me);
+}

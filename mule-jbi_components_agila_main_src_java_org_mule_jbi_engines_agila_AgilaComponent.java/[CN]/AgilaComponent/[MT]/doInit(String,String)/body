@@ -1,0 +1,16 @@
+{
+  File wsdl=new File(serviceUnitRootPath,"definition.xml");
+  DocumentBuilderFactory f=DocumentBuilderFactory.newInstance();
+  f.setNamespaceAware(true);
+  org.w3c.dom.Document wsdlDoc=f.newDocumentBuilder().parse(wsdl);
+  Definition def=WSDLFactory.newInstance().newWSDLReader().readWSDL(null,wsdlDoc);
+  for (Iterator it=def.getServices().keySet().iterator(); it.hasNext(); ) {
+    QName serviceName=(QName)it.next();
+    Service service=def.getService(serviceName);
+    for (Iterator it2=service.getPorts().keySet().iterator(); it2.hasNext(); ) {
+      String portName=(String)it2.next();
+      ServiceEndpoint se=this.context.activateEndpoint(serviceName,portName);
+      setServiceDescription(se,wsdlDoc);
+    }
+  }
+}

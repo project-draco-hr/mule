@@ -1,0 +1,20 @@
+{
+  if (isTimedOut()) {
+    startLatch.release();
+    endLatch.release();
+    return;
+  }
+  workListener.workStarted(new WorkEvent(this,WorkEvent.WORK_STARTED,worker,null));
+  startLatch.release();
+  try {
+    worker.run();
+    workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_COMPLETED,worker,null));
+  }
+ catch (  Throwable e) {
+    workException=(WorkException)(e instanceof WorkCompletedException ? e : new WorkCompletedException("Unknown error",WorkCompletedException.UNDEFINED).initCause(e));
+    workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_REJECTED,worker,workException));
+  }
+ finally {
+    endLatch.release();
+  }
+}

@@ -1,0 +1,27 @@
+{
+  this.workManager.start();
+  this.meListener=new Thread(new Runnable(){
+    public void run(){
+      try {
+        DeliveryChannel channel=AbstractComponent.this.context.getDeliveryChannel();
+        while (true) {
+          final MessageExchange me=channel.accept();
+          AbstractComponent.this.workManager.scheduleWork(new Work(){
+            public void release(){
+            }
+            public void run(){
+              AbstractComponent.this.process(me);
+            }
+          }
+);
+        }
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+);
+  this.meListener.setDaemon(true);
+  this.meListener.start();
+}
