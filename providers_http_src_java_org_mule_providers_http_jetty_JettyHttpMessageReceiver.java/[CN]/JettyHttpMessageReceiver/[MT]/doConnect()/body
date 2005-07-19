@@ -1,0 +1,20 @@
+{
+  httpServer=new Server();
+  SocketListener socketListener=new SocketListener(new InetAddrPort(endpoint.getEndpointURI().getPort()));
+  httpServer.addListener(socketListener);
+  String path=endpoint.getEndpointURI().getPath();
+  if (path == null || "".equals(path)) {
+    path="/";
+  }
+  HttpContext context=httpServer.getContext(path);
+  context.setRequestLog(null);
+  ServletHandler handler=new ServletHandler();
+  if ("jetty:rest".equals(endpoint.getEndpointURI().getSchemeMetaInfo())) {
+    handler.addServlet("MuleRESTReceiverServlet",path + "*",MuleRESTReceiverServlet.class.getName());
+  }
+ else {
+    handler.addServlet("MuleReceiverServlet",path + "*",DefaultMuleHttpReceiverServlet.class.getName());
+  }
+  context.addHandler(handler);
+  context.setAttribute("messageReceiver",this);
+}

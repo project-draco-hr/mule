@@ -1,0 +1,43 @@
+{
+  try {
+    request=message;
+    String payloadParam=(String)request.getAttribute(AbstractReceiverServlet.PAYLOAD_PARAMETER_NAME);
+    if (payloadParam == null) {
+      payloadParam=AbstractReceiverServlet.DEFAULT_PAYLOAD_PARAMETER_NAME;
+    }
+    String payload=request.getParameter(payloadParam);
+    if (payload == null) {
+      if (isText(request.getContentType())) {
+        BufferedReader reader=request.getReader();
+        StringBuffer buffer=new StringBuffer();
+        String line;
+        while ((line=reader.readLine()) != null) {
+          buffer.append(line);
+          buffer.append("\n");
+        }
+        this.message=buffer.toString();
+      }
+ else {
+        InputStream is=request.getInputStream();
+        ByteArrayOutputStream baos=new java.io.ByteArrayOutputStream();
+        byte[] buffer=new byte[1024 * 32];
+        int len=0;
+        while ((len=is.read(buffer,len,buffer.length)) != -1) {
+          baos.write(buffer,0,len);
+          if (len != buffer.length) {
+            break;
+          }
+        }
+        baos.flush();
+        this.message=baos.toByteArray();
+        baos.close();
+      }
+    }
+ else {
+      this.message=payload;
+    }
+  }
+ catch (  IOException e) {
+    throw new MessagingException(new Message("servlet",3,request.getRequestURL().toString()),e);
+  }
+}
