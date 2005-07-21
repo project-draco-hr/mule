@@ -1,3 +1,43 @@
 {
-  throw new NotImplementedException();
+  if (this.closed) {
+    throw new MessagingException("Channel is closed");
+  }
+  if (!(exchange instanceof MessageExchangeProxy)) {
+    throw new MessagingException("exchange should be created with MessageExchangeFactory");
+  }
+  MessageExchangeProxy me=(MessageExchangeProxy)exchange;
+  String target;
+  if (me.getRole() == MessageExchange.Role.CONSUMER) {
+    if (me.getConsumer() == null) {
+      me.setConsumer(this.component);
+      ServiceEndpoint se=this.container.getRouter().getTargetEndpoint(exchange);
+      me.setEndpoint(se);
+      target=((AbstractServiceEndpoint)se).getComponent();
+      me.setProvider(target);
+    }
+ else {
+      target=me.getProvider();
+    }
+  }
+ else {
+    target=me.getConsumer();
+  }
+  me.handleSend(true);
+  DeliveryChannelImpl ch=(DeliveryChannelImpl)this.container.getRegistry().getComponent(target).getChannel();
+  ch.enqueue(me.getTwin());
+  try {
+synchronized (exchange) {
+      exchange.wait(timeout);
+      if (me.getSyncState() == MessageExchangeProxy.SYNC_STATE_SYNC_RECEIVED) {
+        me.handleAccept();
+        return true;
+      }
+ else {
+        return false;
+      }
+    }
+  }
+ catch (  InterruptedException e) {
+    throw new MessagingException(e);
+  }
 }

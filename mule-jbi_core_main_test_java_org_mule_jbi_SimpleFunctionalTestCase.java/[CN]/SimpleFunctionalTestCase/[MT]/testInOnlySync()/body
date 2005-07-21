@@ -1,0 +1,27 @@
+{
+  new Thread(new Runnable(){
+    public void run(){
+      try {
+        InOnly mep=(InOnly)provider.getChannel().accept(10000L);
+        assertNotNull(mep);
+        assertEquals(ExchangeStatus.ACTIVE,mep.getStatus());
+        mep.setStatus(ExchangeStatus.DONE);
+        provider.getChannel().send(mep);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        fail();
+      }
+    }
+  }
+).start();
+  MessageExchangeFactory mef=consumer.getChannel().createExchangeFactory(endpoint);
+  InOnly mec=mef.createInOnlyExchange();
+  NormalizedMessage m=mec.createMessage();
+  m.setContent(new StreamSource(new ByteArrayInputStream(PAYLOAD.getBytes())));
+  mec.setInMessage(m);
+  consumer.getChannel().sendSync(mec,10000L);
+  assertEquals(ExchangeStatus.DONE,mec.getStatus());
+  assertNull(consumer.getChannel().accept(10L));
+  assertNull(provider.getChannel().accept(10L));
+}

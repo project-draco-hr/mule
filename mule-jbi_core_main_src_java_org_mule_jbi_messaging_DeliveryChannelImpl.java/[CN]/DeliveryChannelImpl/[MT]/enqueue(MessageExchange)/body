@@ -1,3 +1,15 @@
 {
-  queue.add(exchange);
+  if (!(exchange instanceof MessageExchangeProxy)) {
+    throw new MessagingException("exchange should be created with MessageExchangeFactory");
+  }
+  MessageExchangeProxy me=(MessageExchangeProxy)exchange;
+  if (me.getSyncState() == MessageExchangeProxy.SYNC_STATE_SYNC_SENT) {
+synchronized (me) {
+      me.setSyncState(MessageExchangeProxy.SYNC_STATE_SYNC_RECEIVED);
+      me.notify();
+    }
+  }
+ else {
+    queue.add(exchange);
+  }
 }

@@ -1,0 +1,34 @@
+{
+  Thread t=new Thread(new Runnable(){
+    public void run(){
+      try {
+        InOut mep=(InOut)provider.getChannel().accept(10000L);
+        assertNotNull(mep);
+        assertEquals(ExchangeStatus.ACTIVE,mep.getStatus());
+        NormalizedMessage m=mep.createMessage();
+        m.setContent(new StreamSource(new ByteArrayInputStream(RESPONSE.getBytes())));
+        mep.setOutMessage(m);
+        provider.getChannel().sendSync(mep);
+        assertEquals(ExchangeStatus.DONE,mep.getStatus());
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        fail();
+      }
+    }
+  }
+);
+  t.start();
+  MessageExchangeFactory mef=consumer.getChannel().createExchangeFactory(endpoint);
+  InOut mec=mef.createInOutExchange();
+  NormalizedMessage m=mec.createMessage();
+  m.setContent(new StreamSource(new ByteArrayInputStream(PAYLOAD.getBytes())));
+  mec.setInMessage(m);
+  consumer.getChannel().sendSync(mec,10000L);
+  assertEquals(ExchangeStatus.ACTIVE,mec.getStatus());
+  mec.setStatus(ExchangeStatus.DONE);
+  consumer.getChannel().send(mec);
+  t.join(1000L);
+  assertNull(consumer.getChannel().accept(10L));
+  assertNull(provider.getChannel().accept(10L));
+}
