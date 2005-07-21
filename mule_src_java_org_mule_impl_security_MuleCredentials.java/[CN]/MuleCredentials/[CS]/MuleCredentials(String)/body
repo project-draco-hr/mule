@@ -1,5 +1,23 @@
 {
-  StringTokenizer st=new StringTokenizer(header,TOKEN_DELIM);
+  int i=header.indexOf(" ");
+  if (i == -1) {
+    throw new IllegalArgumentException(new Message(Messages.HEADER_X_MALFORMED_VALUE_IS_X,MuleProperties.MULE_USER_PROPERTY,header).toString());
+  }
+ else {
+    scheme=header.substring(0,i);
+  }
+  String creds=header.substring(i + 1);
+  if (!scheme.equals("Plain")) {
+    UMOSecurityManager sm=MuleManager.getInstance().getSecurityManager();
+    UMOEncryptionStrategy es=sm.getEncryptionStrategy(scheme);
+    if (es == null) {
+      throw new EncryptionStrategyNotFoundException(scheme);
+    }
+ else {
+      creds=new String(es.decrypt(creds.getBytes(),null));
+    }
+  }
+  StringTokenizer st=new StringTokenizer(creds,TOKEN_DELIM);
   username=st.nextToken();
   password=st.nextToken().toCharArray();
   if (st.hasMoreTokens()) {
