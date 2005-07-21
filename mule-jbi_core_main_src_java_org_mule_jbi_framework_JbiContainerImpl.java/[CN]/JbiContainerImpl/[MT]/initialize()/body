@@ -12,12 +12,29 @@
         this.mBeanServer=MBeanServerFactory.createMBeanServer();
       }
     }
+    if (this.transactionManager == null) {
+      LOGGER.debug("Creating TransactionManager");
+      this.transactionManager=new Jotm(true,false).getTransactionManager();
+      this.transactionManager.setTransactionTimeout(60);
+    }
+    if (this.namingContext == null) {
+      System.setProperty(Context.INITIAL_CONTEXT_FACTORY,InMemoryContextFactory.class.getName());
+      System.setProperty(Context.PROVIDER_URL,"mule-jbi");
+    }
     this.endpoints=new EndpointsImpl();
     File regStore=new File(this.workingDir,"/registry.xml");
     if (regStore.isFile()) {
-      this.registry=RegistryIO.load(regStore);
+      try {
+        this.registry=RegistryIO.load(regStore);
+      }
+ catch (      Exception e) {
+        LOGGER.warn("Invalid registry found. Creating a new one");
+      }
     }
  else {
+      LOGGER.info("No registry found. Creating a new one");
+    }
+    if (this.registry == null) {
       this.registry=RegistryIO.create(regStore);
     }
     if (this.router == null) {

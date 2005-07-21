@@ -1,0 +1,36 @@
+{
+  JbiContainerImpl container=new JbiContainerImpl();
+  container.setWorkingDir(new File("target/.mule-jbi"));
+  container.initialize();
+  PxeComponent provider=new PxeComponent();
+  TestComponent consumer1=new TestComponent();
+  TestComponent consumer2=new TestComponent();
+  container.getRegistry().addTransientEngine("consumer1",consumer1);
+  container.getRegistry().addTransientEngine("consumer2",consumer2);
+  Engine pxe=container.getRegistry().addTransientEngine("provider",provider,new PxeBootstrap());
+  container.start();
+  URL url=Thread.currentThread().getContextClassLoader().getResource("AsyncProcessSU/AsyncProcess.jar");
+  File asyncProcessDir=new File(url.toURI()).getParentFile();
+  container.getRegistry().addTransientUnit("AsyncProcess",pxe,asyncProcessDir.getAbsolutePath());
+  consumer2.getContext().activateEndpoint(new QName("uri:com.bptest.process","ResponderSVC"),"ResponderPORT");
+  ServiceEndpoint se=consumer1.getContext().getEndpoint(new QName("uri:com.bptest.process","ProcessSVC"),"ProcessPORT");
+  MessageExchangeFactory mef=consumer1.getChannel().createExchangeFactory(se);
+  InOnly me=mef.createInOnlyExchange();
+  me.setOperation(new QName("uri:com.bptest.process","Run"));
+  NormalizedMessage m=me.createMessage();
+  DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
+  dbf.setNamespaceAware(true);
+  org.w3c.dom.Document soap=dbf.newDocumentBuilder().parse(Thread.currentThread().getContextClassLoader().getResourceAsStream("message.xml"));
+  m.setContent(new DOMSource(soap.getDocumentElement()));
+  me.setInMessage(m);
+  consumer1.getChannel().send(me);
+  assertNotNull(consumer1.getChannel().accept(5000));
+  MessageExchange me2=consumer2.getChannel().accept(5000);
+  assertNotNull(me2);
+  DOMResult r=new DOMResult();
+  TransformerFactory.newInstance().newTransformer().transform(me2.getMessage("in").getContent(),r);
+  String xml=DOMUtils.domToString(r.getNode());
+  System.err.println(xml);
+  me2.setStatus(ExchangeStatus.DONE);
+  consumer2.getChannel().send(me2);
+}

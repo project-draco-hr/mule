@@ -1,0 +1,21 @@
+{
+  try {
+    ServicePort[] ports=service.getImports();
+    if (ports != null && ports.length > 0) {
+      Definition def=service.getSystemWSDL();
+      QName serviceName=new QName(def.getTargetNamespace(),service.getServiceName());
+      logger.info("Activating service: " + serviceName);
+      List eps=new ArrayList();
+      for (int i=0; i < ports.length; i++) {
+        logger.info("Creating endpoint: " + ports[i].getPortName());
+        ServiceEndpoint endpoint=this.context.activateEndpoint(serviceName,ports[i].getPortName());
+        eps.add(endpoint);
+      }
+      this.endpoints.put(service.getServiceUUID(),eps);
+      this.services.put(service.getServiceUUID(),service);
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+}
