@@ -3,11 +3,15 @@
   String method=(String)endpointUri.getParams().remove("method");
   setContext(event);
   IProxy proxy=null;
-  String bindService=endpointUri.getAddress();
-  if (bindService.indexOf(".wsdl") == -1) {
-    bindService=bindService.replaceAll("/" + method,".wsdl/" + method);
+  String bindAddress=endpointUri.getAddress();
+  if (bindAddress.indexOf(".wsdl") == -1) {
+    bindAddress=bindAddress.replaceAll("/" + method,".wsdl/" + method);
   }
-  proxy=Registry.bind(bindService);
+  int i=bindAddress.indexOf("?");
+  if (i > -1) {
+    bindAddress=bindAddress.substring(0,i);
+  }
+  proxy=Registry.bind(bindAddress);
   Object payload=event.getTransformedMessage();
   Object[] args;
   if (payload instanceof Object[]) {

@@ -15,15 +15,9 @@
   }
   String endpoint=receiver.getEndpointURI().getAddress();
   String scheme=ep.getScheme().toLowerCase();
+  boolean sync=receiver.getEndpoint().isSynchronous();
   if (scheme.equals("http") || scheme.equals("tcp")) {
-    endpoint=scheme + "://" + ep.getHost()+ ":"+ ep.getPort();
-    String sync="synchronous=" + receiver.getEndpoint().isSynchronous();
-    if (endpoint.indexOf("?") > -1) {
-      endpoint+="&" + sync;
-    }
- else {
-      endpoint+="?" + sync;
-    }
+    sync=true;
   }
   Map endpointCounters=(Map)axisDescriptor.getProperties().get(ENDPOINT_COUNTERS_PROPERTY);
   if (endpointCounters == null) {
@@ -34,6 +28,7 @@
   if (count == null)   count=new Integer(0);
   if (count.intValue() == 0) {
     UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
+    serviceEndpoint.setSynchronous(sync);
     serviceEndpoint.setName(ep.getScheme() + ":" + receiver.getComponent().getDescriptor().getName());
     serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
     axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
