@@ -1,0 +1,29 @@
+{
+  path+="/" + parentElement;
+  digester.addRule(path,new ObjectCreateRule(path,HashMap.class){
+    public void end(    String string,    String string1) throws Exception {
+      Map props=(Map)digester.peek();
+      if (props.containsKey(MuleConfiguration.USE_MANAGER_PROPERTIES)) {
+        props.putAll(MuleManager.getInstance().getProperties());
+        props.remove(MuleConfiguration.USE_MANAGER_PROPERTIES);
+      }
+      super.end(string,string1);
+      if (propertiesSetterName == null) {
+        org.mule.util.BeanUtils.populateWithoutFail(digester.peek(),props,true);
+      }
+ else {
+        MethodUtils.invokeMethod(digester.peek(),propertiesSetterName,props);
+      }
+    }
+  }
+);
+  digester.addCallMethod(path + "/property","put",2);
+  digester.addRule(path + "/property",new ProcessedCallParamRule(0,"name"));
+  digester.addRule(path + "/property",new ProcessedCallParamRule(1,"value"));
+  addPropertyFactoryRule(digester,path + "/factory-property");
+  addSystemPropertyRule(digester,path + "/system-property");
+  addFilePropertiesRule(digester,path + "/file-properties");
+  addContainerPropertyRule(digester,path + "/container-property",propertiesSetterName == null);
+  addMapPropertyRules(digester,path);
+  addListPropertyRules(digester,path);
+}
