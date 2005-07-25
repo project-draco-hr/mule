@@ -1,40 +1,16 @@
 {
+  super(System.getProperty("org.mule.xml.validate","true").equalsIgnoreCase("true"),System.getProperty("org.mule.xml.dtd",MuleDtdResolver.DEFAULT_MULE_DTD));
   ConvertUtils.register(new EndpointConverter(),UMOEndpoint.class);
   ConvertUtils.register(new TransformerConverter(),UMOTransformer.class);
   ConvertUtils.register(new ConnectorConverter(),UMOConnector.class);
   ConvertUtils.register(new TransactionFactoryConverter(),UMOTransactionFactory.class);
   ConvertUtils.register(new EndpointURIConverter(),UMOEndpointURI.class);
-  digester=new Digester(){
-    public void warning(    SAXParseException e) throws SAXException {
-      if (errorHandler != null) {
-        errorHandler.warning(e);
-      }
-    }
-  }
-;
-  String dtd=System.getProperty("org.mule.xml.dtd",MuleDtdResolver.DEFAULT_MULE_DTD);
-  digester.setEntityResolver(new MuleDtdResolver(dtd));
-  String temp=System.getProperty("org.mule.xml.validate","true");
-  digester.setValidating((temp.equalsIgnoreCase("true")));
-  digester.setErrorHandler(new ErrorHandler(){
-    public void error(    SAXParseException exception) throws SAXException {
-      logger.error(exception.getMessage(),exception);
-      throw new SAXException(exception);
-    }
-    public void fatalError(    SAXParseException exception) throws SAXException {
-      logger.fatal(exception.getMessage(),exception);
-      throw new SAXException(exception);
-    }
-    public void warning(    SAXParseException exception) throws SAXException {
-      logger.warn(exception.getMessage());
-    }
-  }
-);
-  String path="mule-configuration";
+  String path=getRootName();
+  addManagerRules(digester,path);
+  addServerPropertiesRules(path + "/environment-properties","addProperties",0);
+  addContainerContextRules(path + "/container-context","setContainerContext",0);
   addMuleConfigurationRules(digester,path);
-  addContainerContextRules(digester,path);
   addTransformerRules(digester,path);
-  addMuleEnvironmentPropertiesRules(digester,path);
   addSecurityManagerRules(digester,path);
   addTransactionManagerRules(digester,path);
   addGlobalEndpointRules(digester,path);

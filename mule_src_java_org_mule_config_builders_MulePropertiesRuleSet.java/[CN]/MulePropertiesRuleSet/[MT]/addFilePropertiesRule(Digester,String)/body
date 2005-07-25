@@ -1,0 +1,30 @@
+{
+  digester.addRule(path,new Rule(){
+    public void begin(    String s,    String s1,    Attributes attributes) throws Exception {
+      attributes=processor.processAttributes(attributes,s1);
+      String location=attributes.getValue("location");
+      String temp=attributes.getValue("override");
+      boolean override="true".equalsIgnoreCase(temp);
+      InputStream is=Utility.loadResource(location,getClass());
+      if (is == null) {
+        throw new FileNotFoundException(location);
+      }
+      Properties p=new Properties();
+      p.load(is);
+      Map props=(Map)digester.peek();
+      if (override) {
+        props.putAll(p);
+      }
+ else {
+        String key;
+        for (Iterator iterator=p.keySet().iterator(); iterator.hasNext(); ) {
+          key=(String)iterator.next();
+          if (!props.containsKey(key)) {
+            props.put(key,p.getProperty(key));
+          }
+        }
+      }
+    }
+  }
+);
+}
