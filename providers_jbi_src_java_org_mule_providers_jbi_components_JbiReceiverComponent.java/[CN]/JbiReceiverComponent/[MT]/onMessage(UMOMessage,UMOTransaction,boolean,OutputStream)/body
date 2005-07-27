@@ -1,0 +1,42 @@
+{
+  MessageExchange me=null;
+  try {
+    if (synchronous) {
+      me=getExchangeFactory().createInOutExchange();
+    }
+ else {
+      me=getExchangeFactory().createInOnlyExchange();
+    }
+    ServiceEndpoint endpoint=null;
+    ServiceEndpoint[] eps=context.getEndpointsForService(targetService);
+    if (eps.length == 0) {
+    }
+ else {
+      endpoint=eps[0];
+    }
+    if (endpoint != null) {
+      me.setEndpoint(endpoint);
+    }
+    NormalizedMessage nmessage=me.createMessage();
+    JbiUtils.populateNormalizedMessage(message,nmessage);
+    me.setMessage(nmessage,IN);
+    if (synchronous) {
+      getContext().getDeliveryChannel().sendSync(me);
+      NormalizedMessage result=null;
+      try {
+        result=getOutMessage(me);
+      }
+ catch (      NoMessageException noMessageException) {
+        return null;
+      }
+      return new MuleMessage(new JbiMessageAdapter(result));
+    }
+ else {
+      getContext().getDeliveryChannel().send(me);
+      return null;
+    }
+  }
+ catch (  MessagingException e) {
+    throw new org.mule.umo.MessagingException(new Message(Messages.FAILED_TO_INVOKE_X,getName()),message,e);
+  }
+}
