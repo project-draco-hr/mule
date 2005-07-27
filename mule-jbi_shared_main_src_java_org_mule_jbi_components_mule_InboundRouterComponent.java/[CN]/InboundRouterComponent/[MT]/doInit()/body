@@ -1,0 +1,26 @@
+{
+  if (router == null) {
+    throw new NullPointerException("Inbound Message router must be set");
+  }
+  if (targetService == null) {
+    throw new NullPointerException("Inbound Message router must be set");
+  }
+  QName routerService=new QName(getName());
+  for (Iterator iterator=router.getEndpoints().iterator(); iterator.hasNext(); ) {
+    UMOEndpoint endpoint=(UMOEndpoint)iterator.next();
+    endpoint.initialise();
+    if (endpoint.getEndpointURI().getScheme().equals("container")) {
+      QName name=getServiceName(endpoint);
+      context.activateEndpoint(name,endpoint.getEndpointURI().getAddress());
+    }
+ else {
+      MuleReceiverComponent receiverComponent=new MuleReceiverComponent();
+      receiverComponent.setEndpoint(endpoint);
+      receiverComponent.setName(endpoint.getEndpointURI().getScheme() + ":" + getName());
+      receiverComponent.setTargetService(routerService);
+      receiverComponent.setContainer(container);
+      container.getRegistry().addTransientEngine(receiverComponent.getName(),receiverComponent,receiverComponent.getBootstrap());
+    }
+  }
+  getContext().activateEndpoint(routerService,routerService.getLocalPart());
+}

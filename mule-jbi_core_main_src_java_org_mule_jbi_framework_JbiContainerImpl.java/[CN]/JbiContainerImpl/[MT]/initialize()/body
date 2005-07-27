@@ -2,6 +2,9 @@
   try {
     JbiContainer.Factory.setInstance(this);
     Directories.createDirectories(this.workingDir);
+    MuleManager.getConfiguration().setEmbedded(true);
+    MuleManager.getInstance().setTransactionManager(transactionManager);
+    ((MuleManager)MuleManager.getInstance()).initialise();
     if (this.mBeanServer == null) {
       LOGGER.debug("Creating MBeanServer");
       List l=MBeanServerFactory.findMBeanServer(null);
@@ -18,7 +21,7 @@
       this.transactionManager.setTransactionTimeout(60);
     }
     if (this.namingContext == null) {
-      System.setProperty(Context.INITIAL_CONTEXT_FACTORY,InMemoryContextFactory.class.getName());
+      System.setProperty(Context.INITIAL_CONTEXT_FACTORY,MuleInitialContextFactory.class.getName());
       System.setProperty(Context.PROVIDER_URL,"mule-jbi");
     }
     this.endpoints=new EndpointsImpl();
@@ -38,7 +41,7 @@
       this.registry=RegistryIO.create(regStore);
     }
     if (this.router == null) {
-      this.router=new RouterImpl();
+      this.router=new InternalMessageRouter(this,new DirectRouter(registry));
     }
   }
  catch (  Exception e) {

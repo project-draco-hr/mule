@@ -1,7 +1,8 @@
 {
+  EngineImpl e=null;
   Component c=getComponent(name);
   if (c == null) {
-    EngineImpl e=new EngineImpl();
+    e=new EngineImpl();
     e.setName(name);
     e.setTransient(true);
     e.setComponent(engine);
@@ -14,14 +15,16 @@
       bootstrap.init(ctx);
       ctx.install();
     }
-    return e;
   }
  else {
     if (!(c instanceof EngineImpl) || !c.isTransient()) {
       throw new JBIException("A non-transient or non-engine component is already registered: " + name);
     }
-    EngineImpl e=(EngineImpl)c;
+    e=(EngineImpl)c;
     e.setComponent(engine);
-    return e;
   }
+  if (c instanceof AbstractComponent && c.isTransient()) {
+    ((AbstractComponent)c).initComponent();
+  }
+  return e;
 }
