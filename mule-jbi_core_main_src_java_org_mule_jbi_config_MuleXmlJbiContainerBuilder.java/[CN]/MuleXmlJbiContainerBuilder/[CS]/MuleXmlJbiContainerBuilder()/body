@@ -1,0 +1,19 @@
+{
+  super(System.getProperty("org.mule.xml.validate","false").equalsIgnoreCase("true"),System.getProperty("org.mule.xml.dtd",DEFAULT_MULE_JBI_DTD));
+  ConvertUtils.register(new QNameConverter(digester),QName.class);
+  ConvertUtils.register(new EndpointConverter(),UMOEndpoint.class);
+  ConvertUtils.register(new TransformerConverter(),UMOTransformer.class);
+  ConvertUtils.register(new ConnectorConverter(),UMOConnector.class);
+  ConvertUtils.register(new TransactionFactoryConverter(),UMOTransactionFactory.class);
+  ConvertUtils.register(new EndpointURIConverter(),UMOEndpointURI.class);
+  try {
+    String path=getRootName();
+    addJbiContainerRules(digester,path);
+    addServerPropertiesRules(path + "/properties","setProperties",0);
+    addContainerContextRules(path + "/object-container","addObjectContainer",0);
+    addMuleComponentRules(digester,path + "/mule-component");
+  }
+ catch (  ConfigurationException e) {
+    e.printStackTrace();
+  }
+}

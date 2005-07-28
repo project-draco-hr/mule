@@ -15,6 +15,14 @@
         this.mBeanServer=MBeanServerFactory.createMBeanServer();
       }
     }
+    if (rmiRegistry == null) {
+      rmiRegistry=LocateRegistry.createRegistry(DEFAULT_PORT);
+    }
+    String url=MessageFormat.format(DEFAULT_URL,new Object[]{DEFAULT_HOST,Integer.toString(DEFAULT_PORT)});
+    Map env=new HashMap();
+    env.put(RMIConnectorServer.JNDI_REBIND_ATTRIBUTE,"true");
+    JMXConnectorServer con=JMXConnectorServerFactory.newJMXConnectorServer(new JMXServiceURL(url),env,this.mBeanServer);
+    con.start();
     if (this.transactionManager == null) {
       LOGGER.debug("Creating TransactionManager");
       this.transactionManager=new Jotm(true,false).getTransactionManager();
@@ -23,6 +31,7 @@
     if (this.namingContext == null) {
       System.setProperty(Context.INITIAL_CONTEXT_FACTORY,MuleInitialContextFactory.class.getName());
       System.setProperty(Context.PROVIDER_URL,"mule-jbi");
+      this.namingContext=new InitialContext();
     }
     this.endpoints=new EndpointsImpl();
     File regStore=new File(this.workingDir,"/registry.xml");

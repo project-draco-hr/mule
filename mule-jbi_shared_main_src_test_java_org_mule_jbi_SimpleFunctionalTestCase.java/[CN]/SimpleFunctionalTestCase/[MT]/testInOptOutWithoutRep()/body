@@ -1,0 +1,17 @@
+{
+  MessageExchangeFactory mef=consumer.getChannel().createExchangeFactory(endpoint);
+  InOptionalOut mec=mef.createInOptionalOutExchange();
+  NormalizedMessage m=mec.createMessage();
+  m.setContent(new StreamSource(new ByteArrayInputStream(PAYLOAD.getBytes())));
+  mec.setInMessage(m);
+  consumer.getChannel().send(mec);
+  InOptionalOut mep=(InOptionalOut)provider.getChannel().accept(10L);
+  assertNotNull(mep);
+  assertEquals(ExchangeStatus.ACTIVE,mep.getStatus());
+  mep.setStatus(ExchangeStatus.DONE);
+  provider.getChannel().send(mep);
+  assertSame(mec,consumer.getChannel().accept(10L));
+  assertEquals(ExchangeStatus.DONE,mec.getStatus());
+  assertNull(consumer.getChannel().accept(10L));
+  assertNull(provider.getChannel().accept(10L));
+}

@@ -1,3 +1,22 @@
 {
-  return false;
+  Installer installer=(Installer)this.installers.get(aComponentName);
+  if (installer == null) {
+    return false;
+  }
+  try {
+    Component component=this.container.getRegistry().getComponent(aComponentName);
+    if (component != null && component.getCurrentState().equals(Component.UNKNOWN)) {
+      component.uninstall();
+    }
+    ObjectName objName=createComponentInstallerName(aComponentName);
+    if (this.container.getMBeanServer().isRegistered(objName)) {
+      this.container.getMBeanServer().unregisterMBean(objName);
+    }
+    this.installers.remove(aComponentName);
+    return true;
+  }
+ catch (  Exception e) {
+    LOGGER.info("unloadInstaller",e);
+    return false;
+  }
 }

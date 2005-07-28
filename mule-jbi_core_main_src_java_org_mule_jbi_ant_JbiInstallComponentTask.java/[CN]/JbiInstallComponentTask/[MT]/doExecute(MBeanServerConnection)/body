@@ -1,0 +1,25 @@
+{
+  try {
+    ObjectName service=getServiceName("install");
+    ObjectName installer=(ObjectName)server.invoke(service,"loadNewInstaller",new Object[]{file},new String[]{"java.lang.String"});
+    AttributeList attributes=getAttributes();
+    if (attributes.size() > 0) {
+      ObjectName config=(ObjectName)server.invoke(installer,"getInstallerConfigurationMBean",null,null);
+      if (config == null) {
+        if (isFailOnError()) {
+          throw new BuildException("Configuration parameters are defined, but no bean found");
+        }
+ else {
+          log("Configuration parameters are defined, but no bean found");
+        }
+      }
+ else {
+        server.setAttributes(config,attributes);
+      }
+    }
+    server.invoke(installer,"install",null,null);
+  }
+ catch (  Exception e) {
+    throw new BuildException(e);
+  }
+}
