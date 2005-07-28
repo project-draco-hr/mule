@@ -1,6 +1,11 @@
 {
   if (message.getPayload() instanceof List) {
     payload=new CopyOnWriteArrayList((List)message.getPayload());
+    if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
+      final int groupSize=payload.size();
+      logger.debug("java.util.List payload detected, setting correlation group size to " + groupSize);
+      message.setCorrelationGroupSize(groupSize);
+    }
   }
  else {
     throw new IllegalArgumentException("The payload for this router must be of type java.util.list");

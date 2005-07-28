@@ -15,14 +15,12 @@
       try {
         if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
           boolean correlationSet=message.getCorrelationId() != null;
-          if (correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
-            logger.debug("CorrelationId is already set, not setting Correlation group size");
-          }
- else {
+          if (!correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
             message.setCorrelationId(correlationId);
-            message.setCorrelationGroupSize(list.size());
-            message.setCorrelationSequence(i++);
           }
+          final int groupSize=message.getCorrelationGroupSize();
+          message.setCorrelationGroupSize(groupSize);
+          message.setCorrelationSequence(i++);
         }
         if (synchronous) {
           result=send(session,message,endpoint);
