@@ -8,6 +8,26 @@
     }
   }
   Call call=(Call)getService(event).createCall();
+  String style=(String)event.getProperties().get("style");
+  String use=(String)event.getProperties().get("use");
+  if (style != null) {
+    Style s=Style.getStyle(style);
+    if (s == null) {
+      throw new IllegalArgumentException(new org.mule.config.i18n.Message(Messages.X_IS_INVALID,"style=" + style).toString());
+    }
+ else {
+      call.setOperationStyle(s);
+    }
+  }
+  if (use != null) {
+    Use u=Use.getUse(use);
+    if (u == null) {
+      throw new IllegalArgumentException(new org.mule.config.i18n.Message(Messages.X_IS_INVALID,"use=" + use).toString());
+    }
+ else {
+      call.setOperationUse(u);
+    }
+  }
   BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
   call.setTargetEndpointAddress(endpointUri.getAddress());
   String soapAction=(String)event.getProperty("soapAction");
@@ -17,6 +37,7 @@
     call.setUseSOAPAction(Boolean.TRUE.booleanValue());
   }
   call.setOperationName(method);
+  call.setOperation(method);
   call.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
   int timeout=event.getIntProperty(MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,-1);
   if (timeout >= 0) {
