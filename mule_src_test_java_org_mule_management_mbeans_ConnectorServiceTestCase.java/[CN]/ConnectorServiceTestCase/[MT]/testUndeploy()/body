@@ -1,18 +1,18 @@
 {
   final String domainOriginal="TEST_DOMAIN_1";
   System.setProperty(MuleProperties.DISABLE_SERVER_CONNECTIONS,"true");
-  MuleManager manager=(MuleManager)getManager();
-  final MuleDescriptor descriptor=new MuleDescriptor("TEST_SERVICE");
-  descriptor.setImplementation(new Object());
-  manager.getModel().registerComponent(descriptor);
+  final UMOManager manager=getManager();
+  final UMOConnector connector=getTestConnector();
+  connector.setName("TEST_CONNECTOR");
+  final JmxAgent jmxAgent=new JmxAgent();
+  jmxAgent.setDomain(domainOriginal);
+  manager.registerConnector(connector);
+  manager.registerAgent(jmxAgent);
   manager.start();
   System.setProperty(MuleProperties.DISABLE_SERVER_CONNECTIONS,"false");
-  final ComponentService service=new ComponentService("TEST_SERVICE");
-  final ObjectName name=ObjectName.getInstance(domainOriginal + ":type=TEST_SERVICE");
-  mBeanServer.registerMBean(service,name);
   Set mbeans=mBeanServer.queryMBeans(ObjectName.getInstance(domainOriginal + ":*"),null);
   assertEquals("Unexpected number of components registered in the domain.",4,mbeans.size());
-  mBeanServer.unregisterMBean(name);
+  manager.dispose();
   mbeans=mBeanServer.queryMBeans(ObjectName.getInstance(domainOriginal + ":*"),null);
   assertEquals("There should be no MBeans left in the domain",0,mbeans.size());
 }
