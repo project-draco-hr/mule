@@ -1,0 +1,13 @@
+{
+  Jms11Support jmsSupport=new Jms11Support(new JmsConnector(),null,false,false);
+  Mock mockTopic=new Mock(Topic.class);
+  Topic topic=(Topic)mockTopic.proxy();
+  String durableName="durableName";
+  boolean noLocal=true;
+  FullConstraintMatcher matcher=new FullConstraintMatcher(new Constraint[]{C.eq(topic),C.eq(durableName),C.IS_NULL,C.IS_TRUE});
+  Mock mockSession=new Mock(Session.class);
+  mockSession.expect("createDurableSubscriber",matcher);
+  jmsSupport.createConsumer((Session)mockSession.proxy(),topic,null,noLocal,durableName);
+  mockTopic.verify();
+  mockSession.verify();
+}
