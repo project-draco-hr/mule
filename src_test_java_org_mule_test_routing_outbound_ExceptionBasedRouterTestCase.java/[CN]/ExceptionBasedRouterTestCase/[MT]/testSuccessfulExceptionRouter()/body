@@ -1,0 +1,28 @@
+{
+  Mock session=getMockSession();
+  OutboundMessageRouter messageRouter=new OutboundMessageRouter();
+  messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
+  UMOEndpoint endpoint1=new MuleEndpoint("test://AlwaysFail",false);
+  UMOEndpoint endpoint2=new MuleEndpoint("test://AlwaysFail",false);
+  UMOEndpoint endpoint3=new MuleEndpoint("test://Dummy",false);
+  ExceptionBasedRouter router=new ExceptionBasedRouter();
+  RegExFilter filter=new RegExFilter("(.*) event");
+  router.setFilter(filter);
+  List endpoints=new ArrayList();
+  endpoints.add(endpoint1);
+  endpoints.add(endpoint2);
+  endpoints.add(endpoint3);
+  router.setEndpoints(endpoints);
+  assertEquals(filter,router.getFilter());
+  UMOMessage message=new MuleMessage("test event",null);
+  assertTrue(router.isMatch(message));
+  session.expect("dispatchEvent",C.eq(message,endpoint1));
+  router.route(message,(UMOSession)session.proxy(),false);
+  session.verify();
+  message=new MuleMessage("test event",null);
+  session.expectAndReturn("sendEvent",C.eq(message,endpoint1),message);
+  UMOMessage result=router.route(message,(UMOSession)session.proxy(),true);
+  assertNotNull(result);
+  assertEquals(message,result);
+  session.verify();
+}
