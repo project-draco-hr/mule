@@ -1,15 +1,12 @@
 {
+  boolean stopProcessing=!descriptor.getOutboundRouter().hasEndpoints();
   UMOMessage returnMessage=null;
   if (descriptor.getResponseRouter() != null) {
-    if (event.isSynchronous() && !descriptor.getResponseRouter().isStopProcessing()) {
+    if (event.isSynchronous() && !stopProcessing) {
       descriptor.getOutboundRouter().route(message,event.getSession(),false);
     }
     logger.debug("Waiting for response router message");
     message=descriptor.getResponseRouter().getResponse(message);
-    if (descriptor.getResponseRouter().isStopProcessing()) {
-      logger.debug("Setting stop oubound processing according to response router");
-      RequestContext.getEvent().setStopFurtherProcessing(true);
-    }
   }
   UMOEvent event=RequestContext.getEvent();
   if (event.isStopFurtherProcessing()) {
