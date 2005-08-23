@@ -1,48 +1,6 @@
 {
-  String method=(String)event.getProperty(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
-  URI uri=event.getEndpoint().getEndpointURI().getUri();
-  HttpMethod httpMethod=null;
-  Object body=event.getTransformedMessage();
-  if (body instanceof HttpMethod) {
-    httpMethod=(HttpMethod)body;
-  }
- else   if ("GET".equalsIgnoreCase(method) || body instanceof NullPayload) {
-    httpMethod=new GetMethod(uri.toString());
-  }
- else {
-    PostMethod postMethod=new PostMethod(uri.toString());
-    if (body instanceof String) {
-      ObjectToHttpClientMethodRequest trans=new ObjectToHttpClientMethodRequest();
-      httpMethod=(HttpMethod)trans.transform(body.toString());
-      postMethod.setRequestBody(body.toString());
-      postMethod.setRequestContentLength(body.toString().length());
-      httpMethod=postMethod;
-    }
- else     if (body instanceof HttpMethod) {
-      httpMethod=(HttpMethod)body;
-    }
- else {
-      byte[] buffer=event.getTransformedMessageAsBytes();
-      postMethod.setRequestBody(new ByteArrayInputStream(buffer));
-      postMethod.setRequestContentLength(buffer.length);
-      httpMethod=postMethod;
-    }
-  }
-  HttpConnection connection=null;
+  HttpMethod httpMethod=execute(event);
   try {
-    connection=getConnection(uri);
-    if (connection.isProxied() && connection.isSecure()) {
-      httpMethod=new ConnectMethod(httpMethod);
-    }
-    httpMethod.setDoAuthentication(true);
-    if (event.getCredentials() != null) {
-      StringBuffer header=new StringBuffer();
-      header.append("Basic ");
-      String creds=event.getCredentials().getUsername().getBytes() + ":" + new String(event.getCredentials().getPassword());
-      header.append(new BASE64Encoder().encode(creds.getBytes()));
-      httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
-    }
-    httpMethod.execute(state,connection);
     Properties h=new Properties();
     Header[] headers=httpMethod.getRequestHeaders();
     for (int i=0; i < headers.length; i++) {

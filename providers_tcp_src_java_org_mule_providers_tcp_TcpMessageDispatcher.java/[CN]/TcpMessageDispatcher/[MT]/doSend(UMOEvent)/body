@@ -3,11 +3,11 @@
   try {
     Object payload=event.getTransformedMessage();
     socket=initSocket(event.getEndpoint().getEndpointURI().getAddress());
-    boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
+    boolean syncReceive=event.getEndpoint().isRemoteSync();
     write(socket,payload);
     if (syncReceive) {
       try {
-        byte[] result=receive(socket,event.getTimeout());
+        byte[] result=receive(socket,event.getEndpoint().getRemoteSyncTimeout());
         if (result == null) {
           return null;
         }

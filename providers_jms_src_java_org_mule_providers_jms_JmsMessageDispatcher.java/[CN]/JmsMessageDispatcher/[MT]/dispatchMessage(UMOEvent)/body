@@ -9,7 +9,7 @@
   try {
     session=connector.getSession(event.getEndpoint());
     txSession=connector.getCurrentSession();
-    boolean syncReceive=event.getBooleanProperty(MuleProperties.MULE_SYNCHRONOUS_RECEIVE_PROPERTY,MuleManager.getConfiguration().isSynchronousReceive());
+    boolean syncReceive=event.getEndpoint().isRemoteSync();
     if (txSession != null && syncReceive) {
       throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
     }
@@ -76,7 +76,7 @@
       connector.getJmsSupport().send(producer,msg,persistent,priority,ttl);
     }
     if (consumer != null) {
-      int timeout=event.getTimeout();
+      int timeout=event.getEndpoint().getRemoteSyncTimeout();
       logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
       Message result=consumer.receive(timeout);
       if (result == null) {
