@@ -1,0 +1,15 @@
+{
+  MuleClient client=new MuleClient();
+  DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
+  dbf.setNamespaceAware(true);
+  Document soap=dbf.newDocumentBuilder().parse(ClassHelper.getResourceAsStream("helloRequest.soap",getClass()));
+  Map props=new HashMap();
+  UMOMessage result=client.send("vm://pxe.in",new DOMSource(soap.getDocumentElement()),props);
+  assertNotNull(result);
+  StringWriter w=new StringWriter();
+  XMLWriter writer=new XMLWriter(w);
+  writer.write((Element)result.getPayload());
+  String xml=w.toString();
+  System.out.println(xml);
+  assertTrue(xml.indexOf("Hello World") > -1);
+}
