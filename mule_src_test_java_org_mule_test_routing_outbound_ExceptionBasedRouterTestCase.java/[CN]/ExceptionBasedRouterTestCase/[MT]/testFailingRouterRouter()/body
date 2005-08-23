@@ -1,0 +1,32 @@
+{
+  UMOSession session=getTestSession(getTestComponent(getTestDescriptor("test",EchoComponent.class.getName())));
+  OutboundMessageRouter messageRouter=new OutboundMessageRouter();
+  messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
+  UMOEndpoint endpoint1=new MuleEndpoint("test://AlwaysFail",false);
+  UMOEndpoint endpoint2=new MuleEndpoint("test://AlwaysFail",false);
+  ExceptionBasedRouter router=new ExceptionBasedRouter();
+  RegExFilter filter=new RegExFilter("(.*) event");
+  router.setFilter(filter);
+  List endpoints=new ArrayList();
+  endpoints.add(endpoint1);
+  endpoints.add(endpoint2);
+  router.setEndpoints(endpoints);
+  assertEquals(filter,router.getFilter());
+  UMOMessage message=new MuleMessage("test event",null);
+  assertTrue(router.isMatch(message));
+  try {
+    router.route(message,session,false);
+    fail("Should have thrown exception as both endpoints would have failed");
+  }
+ catch (  CouldNotRouteOutboundMessageException e) {
+  }
+  message=new MuleMessage("test event",null);
+  UMOMessage result=null;
+  try {
+    result=router.route(message,session,true);
+    fail("Should have thrown exception as both endpoints would have failed");
+  }
+ catch (  CouldNotRouteOutboundMessageException e) {
+  }
+  assertNull(result);
+}
