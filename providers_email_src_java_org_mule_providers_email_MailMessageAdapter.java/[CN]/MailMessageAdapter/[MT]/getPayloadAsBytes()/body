@@ -1,3 +1,19 @@
 {
-  return Utility.objectToByteArray(message.getContent());
+  if (contentBuffer == null) {
+    String contentType=messagePart.getContentType();
+    if (contentType.startsWith("text/")) {
+      getPayloadAsString();
+    }
+ else {
+      InputStream is=messagePart.getInputStream();
+      ByteArrayOutputStream baos=new ByteArrayOutputStream();
+      byte[] buf=new byte[1024 * 32];
+      int len=0;
+      while ((len=is.read(buf)) > -1) {
+        baos.write(buf,0,len);
+      }
+      contentBuffer=baos.toByteArray();
+    }
+  }
+  return contentBuffer;
 }
