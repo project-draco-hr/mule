@@ -1,18 +1,22 @@
 {
+  Object result=null;
   String xml=context.getMessageAsString();
   logger.debug("Message received by MuleManagerComponent");
   AdminEvent action=(AdminEvent)remoteTransformer.transform(xml);
   if (AdminEvent.ACTION_INVOKE == action.getAction()) {
-    return invokeAction(action,context);
+    result=invokeAction(action,context);
   }
  else   if (AdminEvent.ACTION_SEND == action.getAction()) {
-    return sendAction(action,context);
+    result=sendAction(action,context);
   }
  else   if (AdminEvent.ACTION_DISPATCH == action.getAction()) {
-    return sendAction(action,context);
+    result=sendAction(action,context);
   }
  else   if (AdminEvent.ACTION_RECEIVE == action.getAction()) {
-    return receiveAction(action,context);
+    result=receiveAction(action,context);
   }
-  return null;
+ else {
+    logger.error(new MuleException(new Message(Messages.EVENT_TYPE_X_NOT_RECOGNISED,"AdminEvent:" + action.getAction())));
+  }
+  return result;
 }

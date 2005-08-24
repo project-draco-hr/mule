@@ -3,6 +3,7 @@
   UMOMessage message=new MuleMessage(xml,(action.getMessage() == null ? null : action.getMessage().getProperties()));
   message.addProperties(action.getProperties());
   UMOEndpoint endpoint=ConnectorFactory.createEndpoint(serverEndpoint,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint.setRemoteSync(synchronous);
   UMOSession session=new MuleSession();
   UMOEvent event=new MuleEvent(message,endpoint,session,true);
   event.setTimeout(timeout);
@@ -22,7 +23,13 @@
     if (result != null) {
       String resultXml=result.getPayloadAsString();
       if (resultXml != null && resultXml.length() > 0) {
-        result=(UMOMessage)xstream.fromXML(resultXml);
+        Object obj=xstream.fromXML(resultXml);
+        if (obj instanceof AdminEvent) {
+          result=((AdminEvent)obj).getMessage();
+        }
+ else {
+          result=(UMOMessage)obj;
+        }
       }
  else {
         return null;
