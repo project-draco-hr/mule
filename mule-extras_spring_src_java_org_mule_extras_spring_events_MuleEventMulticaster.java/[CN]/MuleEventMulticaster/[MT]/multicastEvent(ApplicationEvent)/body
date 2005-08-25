@@ -31,7 +31,21 @@
   for (Iterator iterator=listeners.iterator(); iterator.hasNext(); ) {
     listener=(ApplicationListener)iterator.next();
     if (muleEvent != null) {
-      if (listener instanceof MuleSubscriptionEventListener) {
+      if (listener instanceof AsynchronousEventListener) {
+        AsynchronousEventListener asyncListener=(AsynchronousEventListener)listener;
+        if (asyncListener.getListener() instanceof MuleSubscriptionEventListener) {
+          if (isSubscriptionMatch(muleEvent.getEndpoint().getAddress(),((MuleSubscriptionEventListener)asyncListener.getListener()).getSubscriptions())) {
+            asyncListener.onApplicationEvent(muleEvent);
+          }
+        }
+ else         if (asyncListener.getListener() instanceof MuleEventListener) {
+          asyncListener.onApplicationEvent(muleEvent);
+        }
+ else         if (!(asyncListener.getListener() instanceof MuleEventListener)) {
+          asyncListener.onApplicationEvent(e);
+        }
+      }
+ else       if (listener instanceof MuleSubscriptionEventListener) {
         if (isSubscriptionMatch(muleEvent.getEndpoint().getAddress(),((MuleSubscriptionEventListener)listener).getSubscriptions())) {
           listener.onApplicationEvent(muleEvent);
         }
@@ -39,6 +53,9 @@
  else       if (listener instanceof MuleEventListener) {
         listener.onApplicationEvent(muleEvent);
       }
+    }
+ else     if (listener instanceof AsynchronousEventListener && !(((AsynchronousEventListener)listener).getListener() instanceof MuleEventListener)) {
+      listener.onApplicationEvent(e);
     }
  else     if (!(listener instanceof MuleEventListener)) {
       listener.onApplicationEvent(e);
