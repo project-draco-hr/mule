@@ -1,5 +1,4 @@
 {
-  boolean setContentLengthHeader=true;
   String endpoint=(String)context.getProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
   if (endpoint == null) {
     throw new TransformerException(new Message(Messages.EVENT_PROPERTY_X_NOT_SET_CANT_PROCESS_REQUEST,MuleProperties.MULE_ENDPOINT_PROPERTY),this);
@@ -10,6 +9,7 @@
     HttpMethod httpMethod=null;
     if (HttpConstants.METHOD_GET.equals(method)) {
       httpMethod=new GetMethod(uri.toString());
+      setHeaders(httpMethod,context);
       String paramName=(String)context.getProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY);
       String query=uri.getQuery();
       if (query == null) {
@@ -22,46 +22,24 @@
     }
  else {
       PostMethod postMethod=new PostMethod(uri.toString());
+      setHeaders(postMethod,context);
       String paramName=(String)context.getProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
       if (paramName == null) {
-        setContentLengthHeader=false;
+        addParameters(uri.getQuery(),postMethod);
         if (src instanceof String) {
-          postMethod.setRequestBody(src.toString());
+          postMethod.setRequestBody(new ByteArrayInputStream(src.toString().getBytes()));
           postMethod.setRequestContentLength(src.toString().length());
-          postMethod.setRequestHeader("Content-Length",String.valueOf(src.toString().length()));
         }
  else {
           byte[] buffer=Utility.objectToByteArray(src);
           postMethod.setRequestBody(new ByteArrayInputStream(buffer));
           postMethod.setRequestContentLength(buffer.length);
-          postMethod.setRequestHeader("Content-Length",String.valueOf(buffer.length));
         }
-        addParameters(uri.getQuery(),postMethod);
       }
  else {
         postMethod.addParameter(paramName,src.toString());
       }
       httpMethod=postMethod;
-    }
-    Map.Entry header;
-    String headerName;
-    Map p=context.getProperties();
-    for (Iterator iterator=p.entrySet().iterator(); iterator.hasNext(); ) {
-      header=(Map.Entry)iterator.next();
-      headerName=header.getKey().toString();
-      if (!responseHeaders.contains(headerName) && header.getValue() instanceof String) {
-        if (headerName.startsWith(MuleProperties.PROPERTY_PREFIX)) {
-          headerName="X-" + headerName;
-        }
-        if (headerName.startsWith("Content-Length")) {
-          if (setContentLengthHeader) {
-            httpMethod.addRequestHeader(headerName,(String)header.getValue());
-          }
-        }
- else {
-          httpMethod.addRequestHeader(headerName,(String)header.getValue());
-        }
-      }
     }
     return httpMethod;
   }

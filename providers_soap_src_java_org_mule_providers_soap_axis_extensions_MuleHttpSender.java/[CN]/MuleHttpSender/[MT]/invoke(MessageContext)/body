@@ -3,6 +3,12 @@
     log.debug(Messages.getMessage("enter00","HTTPSender::invoke"));
   }
   try {
+    if (msgContext.isClient() && msgContext.containsProperty("call_object")) {
+      Call call=(Call)msgContext.getProperty("call_object");
+      if (Boolean.TRUE.equals(call.getProperty("axis.one.way"))) {
+        return;
+      }
+    }
     BooleanHolder useFullURL=new BooleanHolder(false);
     StringBuffer otherHeaders=new StringBuffer();
     targetURL=new URL(msgContext.getStrProp(MessageContext.TRANS_URL));
@@ -10,10 +16,6 @@
     int port=targetURL.getPort();
     SocketHolder socketHolder=new SocketHolder(null);
     InputStream inp=writeToSocket(socketHolder,msgContext,targetURL,otherHeaders,host,port,msgContext.getTimeout(),useFullURL);
-    if (msgContext.isClient() && msgContext.containsProperty("call_object")) {
-      Call call=(Call)msgContext.getProperty("call_object");
-      if (Boolean.TRUE.equals(call.getProperty("axis.one.way")))       return;
-    }
     Hashtable headers=new Hashtable();
     inp=readHeadersFromSocket(socketHolder,msgContext,inp,headers);
     readFromSocket(socketHolder,msgContext,inp,headers);

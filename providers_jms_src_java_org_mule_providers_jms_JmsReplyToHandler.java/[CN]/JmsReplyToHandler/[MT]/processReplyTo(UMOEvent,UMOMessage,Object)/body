@@ -12,6 +12,7 @@
     }
     Object payload=returnMessage.getPayload();
     if (getTransformer() != null) {
+      getTransformer().setEndpoint(getEndpoint(event,"jms://temporary"));
       payload=getTransformer().transform(payload);
     }
     session=connector.getSession(false,replyToDestination instanceof Topic);
@@ -39,7 +40,7 @@
     ((MuleComponent)event.getComponent()).getStatistics().incSentReplyToEvent();
   }
  catch (  Exception e) {
-    throw new DispatchException(new org.mule.config.i18n.Message("jms",8,replyToDestination),returnMessage,null);
+    throw new DispatchException(new org.mule.config.i18n.Message("jms",8,replyToDestination),returnMessage,null,e);
   }
  finally {
     JmsUtils.closeQuietly(replyToProducer);
