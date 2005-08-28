@@ -1,23 +1,41 @@
 {
   Enumeration enumeration=null;
-  try {
-    enumeration=Thread.currentThread().getContextClassLoader().getResources(resourceName);
+  enumeration=(Enumeration)AccessController.doPrivileged(new PrivilegedAction(){
+    public Object run(){
+      try {
+        return Thread.currentThread().getContextClassLoader().getResources(resourceName);
+      }
+ catch (      IOException e) {
+        return null;
+      }
+    }
   }
- catch (  IOException e) {
+);
+  if (enumeration == null) {
+    enumeration=(Enumeration)AccessController.doPrivileged(new PrivilegedAction(){
+      public Object run(){
+        try {
+          return ClassHelper.class.getClassLoader().getResources(resourceName);
+        }
+ catch (        IOException e) {
+          return null;
+        }
+      }
+    }
+);
   }
   if (enumeration == null) {
-    try {
-      enumeration=ClassHelper.class.getClassLoader().getResources(resourceName);
+    enumeration=(Enumeration)AccessController.doPrivileged(new PrivilegedAction(){
+      public Object run(){
+        try {
+          return callingClass.getClassLoader().getResources(resourceName);
+        }
+ catch (        IOException e) {
+          return null;
+        }
+      }
     }
- catch (    IOException e) {
-    }
-  }
-  if (enumeration == null) {
-    try {
-      enumeration=callingClass.getClassLoader().getResources(resourceName);
-    }
- catch (    IOException e) {
-    }
+);
   }
   return enumeration;
 }
