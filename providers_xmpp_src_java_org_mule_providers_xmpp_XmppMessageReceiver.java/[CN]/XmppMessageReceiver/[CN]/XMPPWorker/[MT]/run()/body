@@ -1,11 +1,13 @@
 {
   try {
-    logger.info("processing xmpp message from: " + message.getFrom());
-    UMOMessageAdapter adapter=connector.getMessageAdapter(message);
+    logger.info("processing xmpp packet from: " + packet.getFrom());
+    UMOMessageAdapter adapter=connector.getMessageAdapter(packet);
     logger.info("UMOMessageAdapter is a: " + adapter.getClass().getName());
     UMOMessage returnMessage=routeMessage(new MuleMessage(adapter),endpoint.isSynchronous());
-    if (returnMessage != null) {
-      xmppConnection.sendPacket(new Message(returnMessage.getPayloadAsString()));
+    if (returnMessage != null && packet instanceof Message) {
+      RequestContext.rewriteEvent(returnMessage);
+      Packet result=(Packet)connector.getDefaultResponseTransformer().transform(returnMessage.getPayload());
+      xmppConnection.sendPacket(result);
     }
   }
  catch (  Exception e) {
