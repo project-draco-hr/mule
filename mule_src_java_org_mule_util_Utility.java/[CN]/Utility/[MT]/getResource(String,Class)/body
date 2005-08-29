@@ -1,22 +1,21 @@
 {
-  URL url=null;
-  url=Thread.currentThread().getContextClassLoader().getResource(resourceName);
+  URL url=ClassHelper.getResource(resourceName,callingClass);
   if (url == null) {
-    url=Utility.class.getClassLoader().getResource(resourceName);
-  }
-  if (url == null) {
-    url=callingClass.getClassLoader().getResource(resourceName);
-  }
-  if (url == null) {
-    File f=new File(resourceName);
-    if (f.exists()) {
-      try {
-        url=f.toURL();
-      }
- catch (      MalformedURLException e) {
+    url=(URL)AccessController.doPrivileged(new PrivilegedAction(){
+      public Object run(){
+        File f=new File(resourceName);
+        if (f.exists()) {
+          try {
+            return f.toURL();
+          }
+ catch (          MalformedURLException e) {
+            return null;
+          }
+        }
         return null;
       }
     }
+);
   }
   return url;
 }
