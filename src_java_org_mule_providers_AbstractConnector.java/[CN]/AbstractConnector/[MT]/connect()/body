@@ -1,0 +1,25 @@
+{
+  if (connected.get()) {
+    return;
+  }
+  if (connecting.commit(false,true)) {
+    connectionStrategy.connect(this);
+    logger.info("Connected: " + getConnectionDescription());
+    return;
+  }
+  try {
+    doConnect();
+    fireEvent(new ConnectionEvent(this,ConnectionEvent.CONNECTION_CONNECTED));
+  }
+ catch (  Exception e) {
+    fireEvent(new ConnectionEvent(this,ConnectionEvent.CONNECTION_FAILED));
+    if (e instanceof ConnectException) {
+      throw (ConnectException)e;
+    }
+ else {
+      throw new ConnectException(e,this);
+    }
+  }
+  connected.set(true);
+  connecting.set(false);
+}
