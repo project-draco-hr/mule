@@ -20,12 +20,18 @@ catch (      Exception e) {
         }
       }
       if (socket != null) {
-        Work work=createWork(socket);
+        Work work=null;
         try {
-          getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,null);
+          work=createWork(socket);
+          try {
+            getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,null);
+          }
+ catch (          WorkException e) {
+            logger.error("Tcp Server receiver Work was not processed: " + e.getMessage(),e);
+          }
         }
- catch (        WorkException e) {
-          logger.error("Tcp Server receiver Work was not processed: " + e.getMessage(),e);
+ catch (        SocketException e) {
+          handleException(e);
         }
       }
     }

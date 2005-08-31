@@ -1,5 +1,5 @@
 {
-  String cId=(String)correlationExtractor.getProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY,event.getMessage());
+  Object cId=getAggregateIdentifier(event);
   if (cId == null) {
     throw new RoutingException(new Message(Messages.NO_CORRELATION_ID),event.getMessage(),event.getEndpoint());
   }
@@ -8,7 +8,7 @@
     logger.debug("Adding event to response aggregator group: " + cId);
   }
   if (eg == null) {
-    eg=new EventGroup(cId);
+    eg=createEventGroup(cId,event);
     eg.addEvent(event);
     eventGroups.put(eg.getGroupId(),eg);
   }

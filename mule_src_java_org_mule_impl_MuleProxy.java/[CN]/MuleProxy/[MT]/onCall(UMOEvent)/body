@@ -28,7 +28,10 @@
           returnMessage.addProperties(context);
         }
         if (descriptor.getOutboundRouter().hasEndpoints()) {
-          returnMessage=descriptor.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
+          UMOMessage outboundReturnMessage=descriptor.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
+          if (outboundReturnMessage != null) {
+            returnMessage=outboundReturnMessage;
+          }
         }
  else {
           logger.debug("Outbound router on component '" + descriptor.getName() + "' doesn't have any endpoints configured.");
@@ -39,6 +42,13 @@
         if ((requestor != null && !requestor.equals(descriptor.getName())) || requestor == null) {
           replyToHandler.processReplyTo(event,returnMessage,replyTo);
         }
+      }
+      if (returnMessage != null && descriptor.getResponseRouter() != null) {
+        logger.debug("Waiting for response router message");
+        returnMessage=descriptor.getResponseRouter().getResponse(returnMessage);
+      }
+ else {
+        System.out.println("");
       }
     }
  else {
@@ -59,7 +69,9 @@
     }
   }
  finally {
-    ((MuleComponent)event.getComponent()).finaliseEvent(event);
+    if (event.getComponent() != null) {
+      ((MuleComponent)event.getComponent()).finaliseEvent(event);
+    }
   }
   return returnMessage;
 }

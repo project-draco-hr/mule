@@ -22,19 +22,6 @@
         resultMessage=new MuleMessage(result,event.getProperties());
       }
     }
-    boolean stopProcessing=!descriptor.getOutboundRouter().hasEndpoints() || event.isStopFurtherProcessing();
-    if (descriptor.getResponseRouter() != null) {
-      if (event.isSynchronous() && !stopProcessing) {
-        stopProcessing=true;
-        descriptor.getOutboundRouter().route(resultMessage,event.getSession(),false);
-      }
-      logger.debug("Waiting for response router message");
-      resultMessage=descriptor.getResponseRouter().getResponse(resultMessage);
-      if (stopProcessing) {
-        logger.debug("Setting stop oubound processing according to response router");
-        RequestContext.getEvent().setStopFurtherProcessing(true);
-      }
-    }
     return resultMessage;
   }
  catch (  Exception e) {

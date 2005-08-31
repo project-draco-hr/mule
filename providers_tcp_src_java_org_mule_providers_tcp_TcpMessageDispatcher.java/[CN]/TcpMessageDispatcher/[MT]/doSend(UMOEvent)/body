@@ -3,16 +3,14 @@
   try {
     Object payload=event.getTransformedMessage();
     socket=initSocket(event.getEndpoint().getEndpointURI().getAddress());
-    boolean syncReceive=event.getEndpoint().isRemoteSync();
     write(socket,payload);
-    if (syncReceive) {
+    if (useRemoteSync(event)) {
       try {
         byte[] result=receive(socket,event.getEndpoint().getRemoteSyncTimeout());
         if (result == null) {
           return null;
         }
-        UMOMessage message=new MuleMessage(connector.getMessageAdapter(result));
-        return message;
+        return (UMOMessage)new MuleMessage(connector.getMessageAdapter(result));
       }
  catch (      SocketTimeoutException e) {
         logger.info("Socket timed out normally while doing a synchronous receive on endpointUri: " + event.getEndpoint().getEndpointURI());

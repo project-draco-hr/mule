@@ -9,8 +9,8 @@
   try {
     session=connector.getSession(event.getEndpoint());
     txSession=connector.getCurrentSession();
-    boolean syncReceive=event.getEndpoint().isRemoteSync() || event.getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,false);
-    if (txSession != null && syncReceive) {
+    boolean remoteSync=useRemoteSync(event);
+    if (txSession != null && remoteSync) {
       throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
     }
     UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
@@ -45,13 +45,13 @@
         replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
       }
     }
-    if (syncReceive && replyTo == null) {
+    if (remoteSync && replyTo == null) {
       replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
     }
     if (replyTo != null) {
       msg.setJMSReplyTo(replyTo);
     }
-    if (syncReceive) {
+    if (remoteSync) {
       consumer=connector.getJmsSupport().createConsumer(session,replyTo);
     }
     String ttlString=(String)event.removeProperty("TimeToLive");
