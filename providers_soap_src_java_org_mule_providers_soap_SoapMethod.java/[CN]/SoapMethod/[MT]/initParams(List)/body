@@ -1,0 +1,29 @@
+{
+  NamedParameter param;
+  for (Iterator iterator=params.iterator(); iterator.hasNext(); ) {
+    String s=(String)iterator.next();
+    for (StringTokenizer tokenizer=new StringTokenizer(s,";"); tokenizer.hasMoreTokens(); ) {
+      String name=tokenizer.nextToken();
+      String type=tokenizer.nextToken();
+      if (name.equalsIgnoreCase("return")) {
+        returnType=NamedParameter.createQName(type);
+      }
+ else       if (name.equalsIgnoreCase("returnClass")) {
+        returnClass=ClassHelper.loadClass(type,getClass());
+      }
+ else {
+        String mode=tokenizer.nextToken();
+        QName paramName=(QName)converter.convert(QName.class,name);
+        QName qtype=null;
+        if (type.startsWith("qname{")) {
+          qtype=(QName)converter.convert(QName.class,name);
+        }
+ else {
+          qtype=NamedParameter.createQName(type);
+        }
+        param=new NamedParameter(paramName,qtype,mode);
+        addNamedParameter(param);
+      }
+    }
+  }
+}

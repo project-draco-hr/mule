@@ -6,8 +6,17 @@
   requestUri.append(endpoint.getProtocol()).append("://");
   requestUri.append(endpoint.getEndpointURI().getHost());
   requestUri.append(":").append(endpoint.getEndpointURI().getPort());
-  requestUri.append(path);
   AbstractMessageReceiver receiver=connector.getReceiver(requestUri.toString());
+  if (receiver == null && !"/".equals(path)) {
+    int x=path.lastIndexOf("/");
+    if (x > 1 && path.indexOf(".") > x) {
+      requestUri.append(path.substring(0,x));
+    }
+ else {
+      requestUri.append(path);
+    }
+    receiver=connector.getReceiver(requestUri.toString());
+  }
   if (receiver == null) {
     throw new ConnectException(new Message(Messages.CANNOT_BIND_TO_ADDRESS_X,requestUri.toString()),this);
   }
