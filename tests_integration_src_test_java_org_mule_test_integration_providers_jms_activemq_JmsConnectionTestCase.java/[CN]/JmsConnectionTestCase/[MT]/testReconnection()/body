@@ -5,25 +5,27 @@
   MuleManager.getInstance().start();
   MuleManager.getInstance().registerListener(this);
   connector.registerListener(component,endpoint);
-  long t0;
+  long t0, t1;
   t0=System.currentTimeMillis();
   while (true) {
     ConnectionEvent event=(ConnectionEvent)events.take();
     if (event.getAction() == ConnectionEvent.CONNECTION_FAILED) {
       break;
     }
-    if (System.currentTimeMillis() - t0 < 10000) {
+    t1=System.currentTimeMillis() - t0;
+    if (t1 > TIME_OUT) {
       fail("No connection attempt");
     }
   }
-  ServerTools.launchActiveMq();
+  ServerTools.launchActiveMq(BROKER_URL);
   t0=System.currentTimeMillis();
   while (true) {
     ConnectionEvent event=(ConnectionEvent)events.take();
     if (event.getAction() == ConnectionEvent.CONNECTION_CONNECTED) {
       break;
     }
-    if (System.currentTimeMillis() - t0 < 10000) {
+    t1=System.currentTimeMillis() - t0;
+    if (t1 > TIME_OUT) {
       fail("Connection should have succeeded");
     }
   }
@@ -34,18 +36,20 @@
     if (event.getAction() == ConnectionEvent.CONNECTION_DISCONNECTED) {
       break;
     }
-    if (System.currentTimeMillis() - t0 < 10000) {
+    t1=System.currentTimeMillis() - t0;
+    if (t1 > TIME_OUT) {
       fail("Connection should have been lost");
     }
   }
-  ServerTools.launchActiveMq();
+  ServerTools.launchActiveMq(BROKER_URL);
   t0=System.currentTimeMillis();
   while (true) {
     ConnectionEvent event=(ConnectionEvent)events.take();
     if (event.getAction() == ConnectionEvent.CONNECTION_CONNECTED) {
       break;
     }
-    if (System.currentTimeMillis() - t0 < 10000) {
+    t1=System.currentTimeMillis() - t0;
+    if (t1 > TIME_OUT) {
       fail("Connection should have succeeded");
     }
   }
