@@ -1,20 +1,23 @@
 {
-  try {
-    event.setSynchronous(false);
-    event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
-    RequestContext.setEvent(event);
-    UMOEndpoint endpoint=event.getEndpoint();
-    if (endpoint.getSecurityFilter() != null) {
-      try {
-        endpoint.getSecurityFilter().authenticate(event);
-      }
- catch (      org.mule.umo.security.SecurityException e) {
-        logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
-        connector.handleException(e);
-        return;
-      }
+  event.setSynchronous(false);
+  event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+  RequestContext.setEvent(event);
+  UMOEndpoint endpoint=event.getEndpoint();
+  if (endpoint.getSecurityFilter() != null) {
+    try {
+      endpoint.getSecurityFilter().authenticate(event);
     }
-    event=RequestContext.getEvent();
+ catch (    org.mule.umo.security.SecurityException e) {
+      logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+      connector.handleException(e);
+      return;
+    }
+catch (    UMOException e) {
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+    }
+  }
+  event=RequestContext.getEvent();
+  try {
     UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
     if (doThreading && !event.isSynchronous() && tx == null) {
       workManager.scheduleWork(new Worker(event));
@@ -23,8 +26,10 @@
       doDispatch(event);
     }
   }
- catch (  Exception e) {
-    logger.info("Exception occurred while executing on this dispatcher. disposing before continuing");
+ catch (  DispatchException e) {
     throw e;
+  }
+catch (  Exception e) {
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }
 }
