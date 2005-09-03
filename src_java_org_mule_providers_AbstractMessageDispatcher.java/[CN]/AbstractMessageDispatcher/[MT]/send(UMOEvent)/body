@@ -12,14 +12,19 @@
       connector.handleException(e);
       return event.getMessage();
     }
+catch (    UMOException e) {
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+    }
   }
   event=RequestContext.getEvent();
   try {
     UMOMessage result=doSend(event);
     return result;
   }
- catch (  Exception e) {
-    logger.info("Exception occurred while executing on this dispatcher. disposing before continuing");
+ catch (  DispatchException e) {
     throw e;
+  }
+catch (  Exception e) {
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }
 }
