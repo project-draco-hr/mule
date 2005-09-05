@@ -1,5 +1,5 @@
 {
-  String muleHomeProperty=System.getProperty(MULE_HOME_PROPERTY);
+  String muleHomeProperty=getProperty(MULE_HOME_PROPERTY);
   File muleHome=null;
   File sourceJar=Locator.getClassSource(getClass());
   File jarDir=sourceJar.getParentFile();
@@ -9,6 +9,7 @@
   if (muleHome == null || !muleHome.exists()) {
     muleHome=jarDir.getParentFile();
     System.setProperty(MULE_HOME_PROPERTY,muleHome.getAbsolutePath());
+    if (debug)     System.out.println("Set " + MULE_HOME_PROPERTY + " to "+ muleHome.getAbsolutePath());
   }
   if (!muleHome.exists()) {
     throw new LauncherException("Mule home is set incorrectly or ant could not be located");
@@ -18,6 +19,11 @@
   List argList=new ArrayList();
   String[] newArgs;
   boolean noClassPath=false;
+  if (debug) {
+    for (int i=0; i < args.length; ++i) {
+      System.out.println("Arg " + i + "="+ args[i]);
+    }
+  }
   for (int i=0; i < args.length; ++i) {
     if (args[i].equals("-lib")) {
       if (i == args.length - 1) {
@@ -59,17 +65,19 @@
   File toolsJar=Locator.getToolsJar();
   File muleLibDir=null;
   File muleLibOptDir=null;
-  String muleLibDirProperty=System.getProperty(MULE_LIB_DIR_PROPERTY);
+  String muleLibDirProperty=getProperty(MULE_LIB_DIR_PROPERTY);
   if (muleLibDirProperty != null) {
     muleLibDir=new File(muleLibDirProperty);
   }
   if ((muleLibDir == null) || !muleLibDir.exists()) {
     muleLibDir=new File(muleHome + File.separator + "lib");
     System.setProperty(MULE_LIB_DIR_PROPERTY,muleLibDir.getAbsolutePath());
+    if (debug)     System.out.println("Set " + MULE_LIB_DIR_PROPERTY + " to "+ muleLibDir.getAbsolutePath());
   }
   if ((muleLibDir == null) || !muleLibDir.exists()) {
     muleLibDir=jarDir;
     System.setProperty(MULE_LIB_DIR_PROPERTY,muleLibDir.getAbsolutePath());
+    if (debug)     System.out.println("Set " + MULE_LIB_DIR_PROPERTY + " to "+ muleLibDir.getAbsolutePath());
   }
   URL[] systemJars=Locator.getLocationURLs(muleLibDir);
   muleLibOptDir=new File(muleLibDir.getAbsolutePath() + File.separator + "opt");
@@ -85,44 +93,46 @@
   if (toolsJar != null) {
     jars[jars.length - 1]=toolsJar.toURL();
   }
-  StringBuffer baseClassPath=new StringBuffer(System.getProperty(JAVA_CLASS_PATH));
+  StringBuffer baseClassPath=new StringBuffer(getProperty(JAVA_CLASS_PATH));
   if (baseClassPath.charAt(baseClassPath.length() - 1) == File.pathSeparatorChar) {
     baseClassPath.setLength(baseClassPath.length() - 1);
   }
+  String url;
   for (int i=0; i < jars.length; ++i) {
     baseClassPath.append(File.pathSeparatorChar);
-    baseClassPath.append(Locator.fromURI(jars[i].toString()));
+    url=Locator.fromURI(jars[i].toString());
+    baseClassPath.append(url);
+    if (debug) {
+      System.out.println("Added: " + url);
+    }
   }
   System.setProperty(JAVA_CLASS_PATH,baseClassPath.toString());
   URLClassLoader loader=new URLClassLoader(jars);
   Thread.currentThread().setContextClassLoader(loader);
-  String tempMain=System.getProperty(MAIN_CLASS_PROPERTY,MAIN_CLASS);
+  String tempMain=getProperty(MAIN_CLASS_PROPERTY,MAIN_CLASS);
+  if (debug)   System.out.println("Using Main class: " + tempMain);
   Class mainClass=null;
   try {
     mainClass=loader.loadClass(tempMain);
   }
- catch (  Exception ex) {
-    System.err.println("Incompatible version of org.mule.tools.laucher detected");
+ catch (  Exception e) {
     File mainJar=Locator.getClassSource(mainClass);
-    System.err.println("Location of this class is: " + mainJar);
+    logError("Incompatible version of org.mule.tools.laucher detected. Location of this class is: " + mainJar,e);
   }
   Method main=null;
   try {
     main=mainClass.getMethod("main",new Class[]{String[].class});
   }
  catch (  NoSuchMethodException e) {
-    System.err.println("There is no main(String[] args) method on launch class: " + mainClass);
-    e.printStackTrace(System.err);
+    logError("There is no main(String[] args) method on launch class: " + mainClass,e);
   }
 catch (  SecurityException e) {
-    System.err.println("A Security Exception blocked access to the main method of class: " + mainClass);
-    e.printStackTrace(System.err);
+    logError("A Security Exception blocked access to the main method of class: " + mainClass,e);
   }
   try {
     main.invoke(mainClass,new Object[]{newArgs});
   }
  catch (  Exception e) {
-    System.err.println("Failed to invoke class: " + mainClass);
-    e.printStackTrace(System.err);
+    logError("Failed to invoke class: " + mainClass,e);
   }
 }
