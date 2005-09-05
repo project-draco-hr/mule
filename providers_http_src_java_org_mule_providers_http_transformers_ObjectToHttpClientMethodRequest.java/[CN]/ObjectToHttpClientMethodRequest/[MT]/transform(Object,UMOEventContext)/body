@@ -24,16 +24,17 @@
       PostMethod postMethod=new PostMethod(uri.toString());
       setHeaders(postMethod,context);
       String paramName=(String)context.getProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
+      postMethod.setRequestContentLength(PostMethod.CONTENT_LENGTH_AUTO);
       if (paramName == null) {
         addParameters(uri.getQuery(),postMethod);
-        if (src instanceof String) {
-          postMethod.setRequestBody(new ByteArrayInputStream(src.toString().getBytes()));
-          postMethod.setRequestContentLength(PostMethod.CONTENT_LENGTH_AUTO);
-        }
+        if (!(context.getMessage().getPayload() instanceof NullPayload)) {
+          if (src instanceof String) {
+            postMethod.setRequestBody(new ByteArrayInputStream(src.toString().getBytes()));
+          }
  else {
-          byte[] buffer=Utility.objectToByteArray(src);
-          postMethod.setRequestBody(new ByteArrayInputStream(buffer));
-          postMethod.setRequestContentLength(PostMethod.CONTENT_LENGTH_AUTO);
+            byte[] buffer=Utility.objectToByteArray(src);
+            postMethod.setRequestBody(new ByteArrayInputStream(buffer));
+          }
         }
       }
  else {
