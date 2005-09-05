@@ -1,0 +1,43 @@
+{
+  RequestInputStream req=new RequestInputStream(is);
+  byte[] payload;
+  String startLine=null;
+  do {
+    try {
+      startLine=req.readline();
+    }
+ catch (    IOException e) {
+      logger.debug(e.getMessage());
+    }
+    if (startLine == null)     return null;
+  }
+ while (startLine.trim().length() == 0);
+  StringTokenizer tokenizer=new StringTokenizer(startLine);
+  String method=tokenizer.nextToken();
+  String request=tokenizer.nextToken();
+  String httpVersion=tokenizer.nextToken();
+  p.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,method);
+  p.setProperty(HttpConnector.HTTP_REQUEST_PROPERTY,request);
+  p.setProperty(HttpConnector.HTTP_VERSION_PROPERTY,httpVersion);
+  readHeaders(req,p);
+  if (method.equals(HttpConstants.METHOD_GET)) {
+    payload=request.getBytes();
+  }
+ else {
+    String contentLengthHeader=p.getProperty(HttpConstants.HEADER_CONTENT_LENGTH,null);
+    if (contentLengthHeader == null)     throw new IllegalStateException(HttpConstants.HEADER_CONTENT_LENGTH + " header must be set");
+    int contentLength=Integer.parseInt(contentLengthHeader);
+    byte[] buffer=new byte[contentLength];
+    int length=-1;
+    int offset=req.read(buffer);
+    while (offset >= 0 && offset < buffer.length) {
+      length=req.read(buffer,offset,buffer.length - offset);
+      if (length == -1) {
+        break;
+      }
+      offset+=length;
+    }
+    payload=buffer;
+  }
+  return payload;
+}

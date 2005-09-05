@@ -1,13 +1,9 @@
 {
+  boolean keepAlive;
   try {
-    int counter=0;
     dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
     dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
     do {
-      if (isServerSide() && ++counter > 500) {
-        counter=0;
-        Thread.yield();
-      }
       if (disposing.get() || socket.isClosed()) {
         logger.debug("Peer closed connection");
         break;
@@ -18,65 +14,34 @@
         break;
       }
       UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{payload,headers});
-      boolean http11=((String)adapter.getProperty(HttpConnector.HTTP_VERSION_PROPERTY)).equalsIgnoreCase(HttpConstants.HTTP11);
-      if (!http11) {
-        keepAlive=adapter.getProperty(HttpConstants.HEADER_KEEP_ALIVE) != null;
+      keepAlive=adapter.getBooleanProperty(HttpConstants.HEADER_KEEP_ALIVE,true);
+      UMOMessage message=new MuleMessage(adapter);
+      if (logger.isDebugEnabled()) {
+        logger.debug(message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
+      }
+      OutputStream os=new ResponseOutputStream(dataOut,socket);
+      AbstractMessageReceiver receiver=getTargetReceiver(message,endpoint);
+      UMOMessage returnMessage=receiver.routeMessage(message,endpoint.isSynchronous(),os);
+      if (returnMessage == null) {
+        returnMessage=new MuleMessage("",null);
+      }
+      RequestContext.rewriteEvent(returnMessage);
+      Object response=responseTransformer.transform(returnMessage.getPayload());
+      if (response instanceof byte[]) {
+        dataOut.write((byte[])response);
       }
  else {
-        String connection=(String)adapter.getProperty(HttpConstants.HEADER_CONNECTION);
-        if (connection != null && connection.equalsIgnoreCase("close")) {
-          keepAlive=false;
-        }
- else {
-          keepAlive=true;
-        }
+        dataOut.write(response.toString().getBytes());
       }
-      if (keepAlive && !keepAliveRegistered) {
-        keepAliveRegistered=true;
-        if (keepAliveMonitor != null) {
-          keepAliveMonitor.addExpirable(((HttpConnector)connector).getKeepAliveTimeout(),this);
-        }
- else {
-          logger.info("Request has Keep alive set but the HttpConnector has keep alive disables");
-          keepAlive=false;
-        }
-      }
-      if (adapter != null) {
-        UMOMessage message=new MuleMessage(adapter);
-        if (logger.isDebugEnabled()) {
-          logger.debug(message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
-        }
-        OutputStream os=new ResponseOutputStream(dataOut,socket);
-        AbstractMessageReceiver receiver=getTargetReceiver(message,endpoint);
-        UMOMessage returnMessage=receiver.routeMessage(message,endpoint.isSynchronous(),os);
-        if (returnMessage == null) {
-          returnMessage=new MuleMessage("",null);
-        }
-        RequestContext.rewriteEvent(returnMessage);
-        Object response=responseTransformer.transform(returnMessage.getPayload());
-        if (response instanceof byte[]) {
-          dataOut.write((byte[])response);
-        }
- else {
-          dataOut.write(response.toString().getBytes());
-        }
-        dataOut.flush();
-        if (keepAliveMonitor != null) {
-          keepAliveMonitor.resetExpirable(this);
-        }
-      }
+      dataOut.flush();
     }
  while (socket.isConnected() && keepAlive);
-    System.out.println("");
   }
  catch (  Exception e) {
     keepAlive=false;
     handleException(e);
   }
  finally {
-    if (keepAliveMonitor != null) {
-      keepAliveMonitor.removeExpirable(this);
-    }
     dispose();
   }
 }
