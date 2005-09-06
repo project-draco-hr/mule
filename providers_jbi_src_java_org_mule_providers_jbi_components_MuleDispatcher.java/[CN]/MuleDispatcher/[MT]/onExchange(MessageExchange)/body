@@ -1,0 +1,26 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("In Mule Dispatcher");
+  }
+  try {
+    UMOMessageDispatcher dispatcher=muleEndpoint.getConnector().getDispatcher(muleEndpoint.getEndpointURI().getAddress());
+    NormalizedMessage out=messageExchange.getMessage(IN);
+    UMOMessage message=JbiUtils.createMessage(out);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Dispatching Message via Mule: " + message);
+    }
+    UMOEvent event=new MuleEvent(message,muleEndpoint,new MuleSession(),muleEndpoint.isSynchronous());
+    if (muleEndpoint.isSynchronous()) {
+      logger.debug("Dispatching to: " + muleEndpoint.getEndpointURI());
+      logger.debug("Payload is: " + event.getMessageAsString());
+      UMOMessage result=dispatcher.send(event);
+    }
+ else {
+      dispatcher.dispatch(event);
+    }
+  }
+ catch (  Exception e) {
+    handleException(e);
+    error(messageExchange,e);
+  }
+}

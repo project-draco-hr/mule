@@ -1,8 +1,13 @@
 {
-  InOnly exchange=connector.getExchangeFactory().createInOnlyExchange();
+  InOut exchange=connector.getExchangeFactory().createInOutExchange();
   NormalizedMessage message=exchange.createMessage();
   exchange.setInMessage(message);
   JbiUtils.populateNormalizedMessage(event.getMessage(),message);
+  NormalizedMessage nm=exchange.getOutMessage();
+  UMOMessage response=null;
+  if (nm != null) {
+    response=new MuleMessage(connector.getMessageAdapter(nm));
+  }
   done(exchange);
-  return null;
+  return response;
 }

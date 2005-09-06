@@ -1,5 +1,4 @@
 {
-  Object source=message.getContent();
   Map properties=new HashMap();
   for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
     String s=(String)iterator.next();
@@ -8,5 +7,16 @@
   if (message.getSecuritySubject() != null) {
     properties.put(MuleProperties.MULE_USER_PROPERTY,message.getSecuritySubject());
   }
-  return new MuleMessage(source,properties);
+  try {
+    Source source=message.getContent();
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    StreamResult result=new StreamResult(baos);
+    TransformerFactory.newInstance().newTransformer().transform(source,result);
+    UMOMessage msg=new MuleMessage(baos.toByteArray(),properties);
+    baos.close();
+    return msg;
+  }
+ catch (  Exception e) {
+    throw new MessagingException(e.getMessage(),e);
+  }
 }
