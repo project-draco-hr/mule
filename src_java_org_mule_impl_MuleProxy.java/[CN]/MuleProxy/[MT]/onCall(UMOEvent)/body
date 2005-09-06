@@ -37,18 +37,15 @@
           logger.debug("Outbound router on component '" + descriptor.getName() + "' doesn't have any endpoints configured.");
         }
       }
+      if (returnMessage != null && descriptor.getResponseRouter() != null) {
+        logger.debug("Waiting for response router message");
+        returnMessage=descriptor.getResponseRouter().getResponse(returnMessage);
+      }
       if (returnMessage != null && replyToHandler != null) {
         String requestor=(String)returnMessage.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
         if ((requestor != null && !requestor.equals(descriptor.getName())) || requestor == null) {
           replyToHandler.processReplyTo(event,returnMessage,replyTo);
         }
-      }
-      if (returnMessage != null && descriptor.getResponseRouter() != null) {
-        logger.debug("Waiting for response router message");
-        returnMessage=descriptor.getResponseRouter().getResponse(returnMessage);
-      }
- else {
-        System.out.println("");
       }
     }
  else {
