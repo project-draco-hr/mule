@@ -1,40 +1,5 @@
 {
   digester.addObjectCreate(path,DEFAULT_CONTAINER_CONTEXT,"className");
   addMulePropertiesRule(path,digester);
-  NodeCreateRule nodeCreateRule=null;
-  try {
-    nodeCreateRule=new NodeCreateRule(Node.DOCUMENT_FRAGMENT_NODE){
-      private String encoding;
-      private String doctype;
-      public void begin(      String endpointName,      String endpointName1,      Attributes attributes) throws Exception {
-        encoding=attributes.getValue("encoding");
-        doctype=attributes.getValue("doctype");
-        super.begin(endpointName,endpointName1,attributes);
-      }
-      public void end(      String endpointName,      String endpointName1) throws Exception {
-        super.end(endpointName,endpointName1);
-        DocumentFragment config=(DocumentFragment)digester.pop();
-        StringWriter s=new StringWriter();
-        StreamResult streamResult=new StreamResult(s);
-        TransformerFactory tFactory=TransformerFactory.newInstance();
-        try {
-          Transformer transformer=tFactory.newTransformer();
-          transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,"yes");
-          transformer.transform(new DOMSource(config),streamResult);
-        }
- catch (        TransformerException e) {
-          throw new ContainerException(new Message(Messages.COULD_NOT_RECOVER_CONTIANER_CONFIG),e);
-        }
-        Reader reader=new StringReader(s.toString());
-        UMOContainerContext ctx=(UMOContainerContext)digester.peek();
-        ctx.configure(reader,doctype,encoding);
-      }
-    }
-;
-  }
- catch (  ParserConfigurationException e) {
-    throw new ConfigurationException(e);
-  }
-  digester.addRule(path + "/configuration",nodeCreateRule);
   digester.addSetNext(path,setterMethod);
 }
