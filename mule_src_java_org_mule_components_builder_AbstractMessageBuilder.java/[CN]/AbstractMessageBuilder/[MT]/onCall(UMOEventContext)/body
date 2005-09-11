@@ -1,0 +1,26 @@
+{
+  UMOMessage requestMessage=eventContext.getMessage();
+  ;
+  UMOMessage responseMessage=requestMessage;
+  UMOEventContext c=RequestContext.getEventContext();
+  Object builtMessage;
+  if (descriptor.getOutboundRouter().hasEndpoints()) {
+    List endpoints=new ArrayList();
+    for (Iterator iterator=descriptor.getOutboundRouter().getRouters().iterator(); iterator.hasNext(); ) {
+      UMOOutboundRouter router=(UMOOutboundRouter)iterator.next();
+      endpoints.addAll(router.getEndpoints());
+    }
+    for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
+      UMOEndpoint endpoint=(UMOEndpoint)iterator.next();
+      responseMessage=eventContext.sendEvent(requestMessage,endpoint);
+      builtMessage=buildMessage(requestMessage,responseMessage);
+      responseMessage=new MuleMessage(builtMessage,responseMessage.getProperties());
+      requestMessage=responseMessage;
+    }
+  }
+ else {
+    logger.info("There are currently no endpoints configured on component: " + descriptor.getName());
+  }
+  eventContext.setStopFurtherProcessing(true);
+  return responseMessage;
+}
