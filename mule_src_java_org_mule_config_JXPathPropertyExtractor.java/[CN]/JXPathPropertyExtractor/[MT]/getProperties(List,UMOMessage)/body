@@ -1,0 +1,38 @@
+{
+  Map props=new HashMap();
+  Object result=null;
+  Object obj=message.getPayload();
+  Document doc=null;
+  JXPathContext context=null;
+  if (obj instanceof String) {
+    try {
+      doc=DocumentHelper.parseText((String)obj);
+    }
+ catch (    DocumentException e) {
+      logger.error(e);
+      return null;
+    }
+  }
+ else {
+    context=JXPathContext.newContext(obj);
+  }
+  for (Iterator iterator=names.iterator(); iterator.hasNext(); ) {
+    String name=(String)iterator.next();
+    if (doc != null) {
+      result=doc.valueOf(name);
+    }
+ else {
+      try {
+        result=context.getValue(name);
+      }
+ catch (      Exception e) {
+        result=null;
+      }
+    }
+    if (result == null) {
+      result=super.getProperty(name,message);
+    }
+    props.put(name,result);
+  }
+  return props;
+}
