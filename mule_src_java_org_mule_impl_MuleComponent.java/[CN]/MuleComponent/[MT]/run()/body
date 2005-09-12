@@ -2,10 +2,16 @@
   MuleEvent event=null;
   MuleProxy proxy=null;
   QueueSession queueSession=null;
-  while (!stopped.get() && !stopping.get()) {
+  while (!stopped.get()) {
     try {
       paused.whenFalse(null);
       queueSession=MuleManager.getInstance().getQueueManager().getQueueSession();
+      if (stopping.get()) {
+        if (queueSession.getQueue(descriptor.getName() + ".component").size() == 0) {
+          stopping.set(false);
+          break;
+        }
+      }
       event=(MuleEvent)queueSession.getQueue(descriptor.getName() + ".component").take();
       if (stats.isEnabled()) {
         stats.decQueuedEvent();
