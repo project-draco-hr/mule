@@ -1,0 +1,15 @@
+{
+  if (initialised.get()) {
+    throw new InitialisationException(new Message(Messages.OBJECT_X_ALREADY_INITIALISED,"Component '" + descriptor.getName() + "'"),this);
+  }
+  descriptor.initialise();
+  this.exceptionListener=descriptor.getExceptionListener();
+  stats=new ComponentStatistics(getName(),descriptor.getPoolingProfile().getMaxActive(),descriptor.getThreadingProfile().getMaxThreadsActive());
+  stats.setEnabled(((MuleManager)MuleManager.getInstance()).getStatistics().isEnabled());
+  ((MuleManager)MuleManager.getInstance()).getStatistics().add(stats);
+  stats.setOutboundRouterStat(getDescriptor().getOutboundRouter().getStatistics());
+  stats.setInboundRouterStat(getDescriptor().getInboundRouter().getStatistics());
+  doInitialise();
+  initialised.set(true);
+  fireComponentEvent(ComponentEvent.COMPONENT_INITIALISED);
+}

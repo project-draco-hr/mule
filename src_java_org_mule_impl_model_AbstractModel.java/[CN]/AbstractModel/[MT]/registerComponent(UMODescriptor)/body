@@ -1,0 +1,28 @@
+{
+  if (descriptor == null) {
+    throw new ModelException(new Message(Messages.X_IS_NULL,"UMO Descriptor"));
+  }
+  if (descriptor.getExceptionListener() == null) {
+    descriptor.setExceptionListener(exceptionListener);
+  }
+  if (descriptors.get(descriptor.getName()) != null) {
+    throw new ModelException(new Message(Messages.DESCRIPTOR_X_ALREADY_EXISTS,descriptor.getName()));
+  }
+  UMOComponent component=(UMOComponent)components.get(descriptor.getName());
+  if (component == null) {
+    component=createComponent(descriptor);
+    descriptors.put(descriptor.getName(),descriptor);
+    components.put(descriptor.getName(),component);
+  }
+  logger.debug("Added Mule UMO: " + descriptor.getName());
+  if (initialised.get()) {
+    logger.info("Initialising component: " + descriptor.getName());
+    component.initialise();
+  }
+  if (started.get()) {
+    logger.info("Starting component: " + descriptor.getName());
+    registerListeners(component);
+    component.start();
+  }
+  return component;
+}

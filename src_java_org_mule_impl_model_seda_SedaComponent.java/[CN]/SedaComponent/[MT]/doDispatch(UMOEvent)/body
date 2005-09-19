@@ -1,0 +1,19 @@
+{
+  if (stats.isEnabled()) {
+    stats.incReceivedEventASync();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Component: " + descriptor.getName() + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
+  }
+  try {
+    enqueue(event);
+    if (stats.isEnabled()) {
+      stats.incQueuedEvent();
+    }
+  }
+ catch (  Exception e) {
+    FailedToQueueEventException e1=new FailedToQueueEventException(new Message(Messages.INTERRUPTED_QUEUING_EVENT_FOR_X,getName()),event.getMessage(),this,e);
+    handleException(e1);
+  }
+  logger.trace("Event added to queue for: " + descriptor.getName());
+}

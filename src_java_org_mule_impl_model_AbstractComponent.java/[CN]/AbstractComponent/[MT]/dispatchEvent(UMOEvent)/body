@@ -1,0 +1,22 @@
+{
+  if (stopping.get() || stopped.get()) {
+    throw new ComponentException(new Message(Messages.COMPONENT_X_IS_STOPPED,getDescriptor().getName()),event.getMessage(),this);
+  }
+  if (!event.getEndpoint().canReceive()) {
+    UMOMessageDispatcher dispatcher=event.getEndpoint().getConnector().getDispatcher(event.getEndpoint().getEndpointURI().getAddress());
+    try {
+      dispatcher.dispatch(event);
+    }
+ catch (    Exception e) {
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+    }
+    return;
+  }
+  if (stats.isEnabled()) {
+    stats.incReceivedEventASync();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Component: " + descriptor.getName() + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
+  }
+  doDispatch(event);
+}

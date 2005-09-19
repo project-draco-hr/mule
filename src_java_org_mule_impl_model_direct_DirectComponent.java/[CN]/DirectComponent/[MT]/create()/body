@@ -1,0 +1,33 @@
+{
+  UMOManager manager=MuleManager.getInstance();
+  Object impl=descriptor.getImplementation();
+  Object component=null;
+  if (impl instanceof String) {
+    String reference=impl.toString();
+    if (reference.startsWith(MuleDescriptor.IMPLEMENTATION_TYPE_LOCAL)) {
+      String refName=reference.substring(MuleDescriptor.IMPLEMENTATION_TYPE_LOCAL.length());
+      component=descriptor.getProperties().get(refName);
+      if (component == null) {
+        throw new InitialisationException(new Message(Messages.NO_LOCAL_IMPL_X_SET_ON_DESCRIPTOR_X,refName,descriptor.getName()),this);
+      }
+    }
+    if (component == null) {
+      if (descriptor.isContainerManaged()) {
+        component=manager.getContainerContext().getComponent(reference);
+      }
+ else {
+        try {
+          component=ClassHelper.instanciateClass(reference,new Object[]{});
+        }
+ catch (        Exception e) {
+          throw new InitialisationException(new Message(Messages.CANT_INSTANCIATE_NON_CONTAINER_REF_X,reference),e,descriptor);
+        }
+      }
+    }
+  }
+ else {
+    component=impl;
+  }
+  descriptor.fireInitialisationCallbacks(component);
+  return component;
+}

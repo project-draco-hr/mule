@@ -1,0 +1,31 @@
+{
+  UMOMessage result=null;
+  MuleProxy proxy=null;
+  try {
+    proxy=(MuleProxy)proxyPool.borrowObject();
+    getStatistics().setComponentPoolSize(proxyPool.getSize());
+    proxy.setStatistics(getStatistics());
+    if (logger.isDebugEnabled()) {
+      logger.debug(this + " : got proxy for " + event.getId()+ " = "+ proxy);
+    }
+    result=(UMOMessage)proxy.onCall(event);
+  }
+ catch (  UMOException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new ComponentException(event.getMessage(),this,e);
+  }
+ finally {
+    try {
+      if (proxy != null) {
+        proxyPool.returnObject(proxy);
+      }
+    }
+ catch (    Exception e) {
+      throw new ComponentException(event.getMessage(),this,e);
+    }
+    getStatistics().setComponentPoolSize(proxyPool.getSize());
+  }
+  return result;
+}
