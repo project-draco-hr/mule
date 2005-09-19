@@ -1,0 +1,22 @@
+{
+  if (stopping.get() || stopped.get()) {
+    throw new ComponentException(new Message(Messages.COMPONENT_X_IS_STOPPED,getDescriptor().getName()),event.getMessage(),this);
+  }
+  if (logger.isDebugEnabled() && paused.get()) {
+    logger.debug("Component: " + descriptor.getName() + " is paused. Blocking call until resume is called");
+  }
+  try {
+    paused.whenFalse(null);
+  }
+ catch (  InterruptedException e) {
+    throw new ComponentException(event.getMessage(),this,e);
+  }
+  if (stats.isEnabled()) {
+    stats.incReceivedEventSync();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Component: " + descriptor.getName() + " has received synchronous event on: "+ event.getEndpoint().getEndpointURI());
+  }
+  UMOMessage result=doSend(event);
+  return result;
+}

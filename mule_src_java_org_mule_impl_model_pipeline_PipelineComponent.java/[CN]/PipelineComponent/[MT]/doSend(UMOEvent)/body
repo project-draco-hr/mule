@@ -1,0 +1,31 @@
+{
+  try {
+    Object result=callable.onCall(RequestContext.getEventContext());
+    UMOMessage returnMessage=null;
+    if (result instanceof UMOMessage) {
+      returnMessage=(UMOMessage)result;
+    }
+ else {
+      returnMessage=new MuleMessage(result,RequestContext.getProperties());
+    }
+    if (returnMessage != null && !event.isStopFurtherProcessing()) {
+      Map context=RequestContext.clearProperties();
+      if (context != null) {
+        returnMessage.addProperties(context);
+      }
+      if (descriptor.getOutboundRouter().hasEndpoints()) {
+        UMOMessage outboundReturnMessage=descriptor.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
+        if (outboundReturnMessage != null) {
+          returnMessage=outboundReturnMessage;
+        }
+      }
+ else {
+        logger.debug("Outbound router on component '" + descriptor.getName() + "' doesn't have any endpoints configured.");
+      }
+    }
+    return returnMessage;
+  }
+ catch (  Exception e) {
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+  }
+}
