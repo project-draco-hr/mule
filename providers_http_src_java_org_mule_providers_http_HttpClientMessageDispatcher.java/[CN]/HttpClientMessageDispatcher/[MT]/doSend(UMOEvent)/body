@@ -9,7 +9,13 @@
     String status=String.valueOf(httpMethod.getStatusCode());
     h.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,status);
     logger.debug("Http response is: " + status);
-    return new MuleMessage(httpMethod.getResponseBodyAsString(),h);
+    ExceptionPayload ep=null;
+    if (httpMethod.getStatusCode() >= 400) {
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),new Exception("Http call returned a status of: " + httpMethod.getStatusCode() + " "+ httpMethod.getStatusText()));
+    }
+    UMOMessage m=new MuleMessage(httpMethod.getResponseBodyAsString(),h);
+    m.setExceptionPayload(ep);
+    return m;
   }
  catch (  Exception e) {
     throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
