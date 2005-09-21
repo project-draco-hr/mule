@@ -23,8 +23,23 @@
     return;
   }
   try {
-    ByteArrayOutputStream baos=new ByteArrayOutputStream();
-    msgContext.getRequestMessage().writeTo(baos);
+    Object payload=null;
+    int contentLength=0;
+    if (msgContext.getRequestMessage().countAttachments() > 0) {
+      File temp=File.createTempFile("soap",".tmp");
+      temp.deleteOnExit();
+      FileOutputStream fos=new FileOutputStream(temp);
+      msgContext.getRequestMessage().writeTo(fos);
+      fos.close();
+      contentLength=(int)temp.length();
+      payload=new FileInputStream(temp);
+    }
+ else {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream();
+      msgContext.getRequestMessage().writeTo(baos);
+      baos.close();
+      payload=baos.toByteArray();
+    }
     Map props=new HashMap();
     for (Iterator iterator=msgContext.getPropertyNames(); iterator.hasNext(); ) {
       String name=(String)iterator.next();
@@ -33,11 +48,14 @@
       }
     }
     props.put("SOAPAction",uri);
+    if (contentLength > 0) {
+      props.put(HttpConstants.HEADER_CONTENT_LENGTH,Integer.toString(contentLength));
+    }
     UMOSession session=new MuleSession();
-    UMOEvent dispatchEvent=new MuleEvent(new MuleMessage(baos.toByteArray(),props),endpoint,session,sync);
+    UMOEvent dispatchEvent=new MuleEvent(new MuleMessage(payload,props),endpoint,session,sync);
     logger.info("Making Axis soap request on: " + uri);
     if (logger.isDebugEnabled()) {
-      logger.debug("Soap request is:\n" + baos.toString());
+      logger.debug("Soap request is:\n" + payload.toString());
     }
     if (sync) {
       dispatchEvent.getEndpoint().setRemoteSync(true);
@@ -50,9 +68,12 @@
  else {
         logger.warn("No response message was returned from synchronous call to: " + uri);
       }
+      if (payload instanceof File) {
+        ((File)payload).delete();
+      }
     }
  else {
-      dispatchEvent.getSession().dispatchEvent(dispatchEvent);
+      session.dispatchEvent(dispatchEvent);
     }
   }
  catch (  Exception e) {

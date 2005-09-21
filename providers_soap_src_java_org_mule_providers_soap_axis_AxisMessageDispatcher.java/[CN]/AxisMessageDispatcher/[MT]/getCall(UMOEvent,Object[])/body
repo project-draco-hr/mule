@@ -52,6 +52,21 @@
     call.setUsername(endpointUri.getUsername());
     call.setPassword(endpointUri.getPassword());
   }
+  Map methodCalls=(Map)event.getProperty("soapMethods");
+  if (methodCalls == null) {
+    ArrayList params=new ArrayList();
+    for (int i=0; i < args.length; i++) {
+      if (args[i] instanceof DataHandler[]) {
+        params.add("attachments;qname{DataHandler:http://xml.apache.org/xml-soap};in");
+      }
+ else {
+        params.add("value" + i + ";"+ args[i].getClass().getName()+ ";in");
+      }
+    }
+    HashMap map=new HashMap();
+    map.put(method,params);
+    event.setProperty("soapMethods",map);
+  }
   setCallParams(call,event,call.getOperationName());
   return call;
 }

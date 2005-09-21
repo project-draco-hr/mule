@@ -29,8 +29,8 @@
       }
       msgContext.setProperty("securityProvider",securityProvider);
     }
-    String request=context.getTransformedMessageAsString();
-    Message requestMsg=new Message(request,false,(String)context.getProperty(HTTPConstants.HEADER_CONTENT_TYPE),(String)context.getProperty(HTTPConstants.HEADER_CONTENT_LOCATION));
+    Object request=context.getTransformedMessage();
+    Message requestMsg=new Message((request instanceof File) ? new FileInputStream((File)request) : request,false,(String)context.getProperty(HTTPConstants.HEADER_CONTENT_TYPE),(String)context.getProperty(HTTPConstants.HEADER_CONTENT_LOCATION));
     if (logger.isDebugEnabled()) {
       logger.debug("Request Message:" + requestMsg);
     }
@@ -56,6 +56,9 @@
     }
     if (RequestContext.getExceptionPayload() instanceof Exception) {
       throw (Exception)RequestContext.getExceptionPayload().getException();
+    }
+    if (request instanceof File) {
+      ((File)request).delete();
     }
     responseMsg=msgContext.getResponseMessage();
     if (responseMsg == null)     throw new Exception(Messages.getMessage("noResponse01"));
