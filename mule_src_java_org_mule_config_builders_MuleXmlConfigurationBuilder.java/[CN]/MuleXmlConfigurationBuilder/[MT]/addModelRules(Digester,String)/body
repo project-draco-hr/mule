@@ -1,6 +1,15 @@
 {
   path+="/model";
-  addObjectCreateOrGetFromContainer(path,DEFAULT_MODEL,"className","ref",false);
+  digester.addRule(path,new Rule(){
+    public void begin(    String string,    String string1,    Attributes attributes) throws Exception {
+      String modelType=attributes.getValue("type");
+      if (modelType == null) {
+        modelType=MuleManager.getConfiguration().getModelType();
+        digester.push(ModelFactory.createModel(modelType));
+      }
+    }
+  }
+);
   addSetPropertiesRule(path,digester);
   digester.addSetRoot(path,"setModel");
   digester.addObjectCreate(path + "/entry-point-resolver",DEFAULT_ENTRY_POINT_RESOLVER,"className");
@@ -9,9 +18,6 @@
   digester.addObjectCreate(path + "/component-lifecycle-adapter-factory",DEFAULT_LIFECYCLE_ADAPTER,"className");
   addSetPropertiesRule(path,digester);
   digester.addSetNext(path + "/component-lifecycle-adapter-factory","setLifecycleAdapterFactory");
-  digester.addObjectCreate(path + "/component-factory",DEFAULT_COMPONENT_FACTORY,"className");
-  addSetPropertiesRule(path,digester);
-  digester.addSetNext(path + "/component-factory","setComponentFactory");
   addPoolingProfileRules(digester,path);
   addExceptionStrategyRules(digester,path);
   addMuleDescriptorRules(digester,path);

@@ -29,6 +29,12 @@
       fail("Connection should have succeeded");
     }
   }
+  Thread.sleep(3000);
+  MuleClient client=new MuleClient();
+  UMOMessage m=client.send("jms://reconnect.queue","test",null);
+  Thread.sleep(200000);
+  assertNotNull(m);
+  assertEquals("Received: test",m.getPayloadAsString());
   ServerTools.killActiveMq();
   t0=System.currentTimeMillis();
   while (true) {
@@ -53,5 +59,8 @@
       fail("Connection should have succeeded");
     }
   }
+  m=client.send("jms://reconnect.queue","test",null);
+  assertNotNull(m);
+  assertEquals("Received: test",m.getPayloadAsString());
   ServerTools.killActiveMq();
 }
