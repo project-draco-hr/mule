@@ -7,5 +7,11 @@
     endpoint=component.getDescriptor().getOutboundEndpoint();
   }
   UMOEvent event=createOutboundEvent(message,endpoint,RequestContext.getEvent());
-  return sendEvent(event);
+  UMOMessage result=sendEvent(event);
+  if (endpoint.isRemoteSync() && endpoint.getResponseTransformer() != null) {
+    Object response=endpoint.getResponseTransformer().transform(result.getPayload());
+    result=new MuleMessage(response,result);
+  }
+  if (result != null)   RequestContext.rewriteEvent(result);
+  return result;
 }
