@@ -7,19 +7,24 @@
       throw new DispatchException(new org.mule.config.i18n.Message("ejb",RmiConnector.MSG_PARAM_SERVICE_METHOD_NOT_SET),event.getMessage(),event.getEndpoint());
     }
   }
-  try {
-    String arguments=(String)event.getEndpoint().getProperties().get(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES);
-    if (null != arguments) {
-      ArrayList methodArgumentTypes=new ArrayList();
-      String[] split=arguments.split(",");
-      for (int i=0; i < split.length; i++) {
-        methodArgumentTypes.add(split[i]);
-      }
-      connector.setMethodArgumentTypes(methodArgumentTypes);
+  String arguments=(String)event.getEndpoint().getProperties().get(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES);
+  ArrayList methodArgumentTypes=new ArrayList();
+  if (null != arguments) {
+    String[] split=arguments.split(",");
+    for (int i=0; i < split.length; i++) {
+      methodArgumentTypes.add(ClassHelper.loadClass(split[i].trim(),getClass()));
     }
   }
- catch (  Exception e) {
-    logger.warn("getMethodObject raised exception",e);
+ else   if (event.getTransformedMessage().getClass().isArray()) {
+    Object args[]=(Object[])event.getTransformedMessage();
+    for (int i=0; i < args.length; i++) {
+      methodArgumentTypes.add(args[i].getClass());
+    }
   }
-  return (remoteObject.getClass().getMethod(methodName,connector.getArgumentClasses()));
+ else {
+    methodArgumentTypes.add(event.getTransformedMessage().getClass());
+  }
+  Class types[]=new Class[methodArgumentTypes.size()];
+  types=(Class[])methodArgumentTypes.toArray(types);
+  return (remoteObject.getClass().getMethod(methodName,types));
 }
