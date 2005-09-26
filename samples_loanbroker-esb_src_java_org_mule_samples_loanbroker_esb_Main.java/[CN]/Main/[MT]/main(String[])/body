@@ -2,7 +2,20 @@
   Main loanConsumer=null;
   int response=0;
   try {
-    loanConsumer=new Main("mule-config.xml");
+    System.out.println(StringMessageHelper.getBoilerPlate("Welcome to the Mule Loan broker ESB example. This example demonstrates using JMS, Web Services, Http/Rest and EJBs using an ESB topology. " + "\nFor more information see http://mule.codehaus.org/LoanBroker." + "\n\nThe example demonstrates integrating EJB applications in 2 ways -"+ "\n1. Calling out to a remote EJB using a Mule endpoint."+ "\n2. Managing an Ejb as a Mule component.  This Allows a remote Ejb to be used in the same way as any other Mule component."+ "\nBoth behave the same way but but the second method enabled tighter integration"+ "\nPlease select [1], [2] or [q]uit",'*',90));
+    response=getSelection();
+    if (response == '1') {
+      System.out.println("Loading 'Ejb via an Endpoint' version");
+      loanConsumer=new Main("mule-config.xml");
+    }
+ else     if (response == 'q') {
+      System.out.println("Bye");
+      System.exit(0);
+    }
+ else {
+      System.out.println("Loading 'Managed Ejb Component' version");
+      loanConsumer=new Main("mule-config-with-ejb-container.xml");
+    }
     while (response != 'q') {
       System.out.println("\n[1] make a loan request");
       System.out.println("[q] quit");
@@ -10,7 +23,13 @@
       response=getSelection();
       if (response == '1') {
         CustomerQuoteRequest request=getRequestFromUser();
-        loanConsumer.request(request,true);
+        UMOMessage result=loanConsumer.request(request);
+        if (result == null) {
+          System.out.println("A result was not received, an error must have occurred. Check the logs.");
+        }
+ else {
+          System.out.println("Loan Consumer received a Quote: " + result.getPayload());
+        }
       }
  else       if (response == 'q') {
         System.out.println("Exiting now");
