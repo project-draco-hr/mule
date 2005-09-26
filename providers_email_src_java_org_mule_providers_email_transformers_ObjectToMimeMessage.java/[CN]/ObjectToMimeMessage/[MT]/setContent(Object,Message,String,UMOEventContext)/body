@@ -1,12 +1,14 @@
 {
   if (context.getMessage().getAttachmentNames().size() > 0) {
-    MimeMultipart multipart=new MimeMultipart();
+    MimeMultipart multipart=new MimeMultipart("mixed");
     multipart.addBodyPart(getPayloadBodyPart(payload,contentType));
-    for (Iterator iterator=context.getMessage().getAttachmentNames().iterator(); iterator.hasNext(); ) {
-      String name=(String)iterator.next();
+    for (Iterator it=context.getMessage().getAttachmentNames().iterator(); it.hasNext(); ) {
+      String name=(String)it.next();
       BodyPart part=getBodyPartForAttachment(context.getMessage().getAttachment(name),name);
       multipart.addBodyPart(part);
     }
+    payload=multipart;
+    contentType=multipart.getContentType();
   }
   super.setContent(payload,msg,contentType,context);
 }
