@@ -4,11 +4,11 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Waiting for response for message id: " + messageId + " in "+ this);
   }
-  Sync s=(Sync)locks.get(messageId);
-  if (s == null) {
+  Lock l=(Lock)locks.get(messageId);
+  if (l == null) {
     logger.debug("Got response but no one is waiting for it yet. Creating latch for " + messageId + " in "+ this);
-    s=new Latch();
-    locks.put(messageId,s);
+    l=new Latch();
+    locks.put(messageId,l);
   }
  else {
     logger.debug("Got latch for message: " + messageId);
@@ -17,11 +17,11 @@
   try {
     logger.debug("Waiting for response to message: " + messageId);
     if (getTimeout() <= 0) {
-      s.acquire();
+      l.lock();
       b=true;
     }
  else {
-      b=s.attempt(getTimeout());
+      b=l.tryLock(this.getTimeout(),TimeUnit.MILLISECONDS);
     }
   }
  catch (  InterruptedException e) {

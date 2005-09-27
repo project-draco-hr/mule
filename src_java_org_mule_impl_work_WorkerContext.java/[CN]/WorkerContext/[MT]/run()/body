@@ -1,14 +1,13 @@
 {
   if (isTimedOut()) {
-    startLatch.release();
-    endLatch.release();
+    startLatch.countDown();
+    endLatch.countDown();
     return;
   }
   workListener.workStarted(new WorkEvent(this,WorkEvent.WORK_STARTED,worker,null));
-  startLatch.release();
+  startLatch.countDown();
   try {
     if (executionContext == null || executionContext.getXid() == null) {
-      ExecutionContext context=new ExecutionContext();
       try {
         worker.run();
       }
@@ -29,6 +28,6 @@
     workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_REJECTED,worker,workException));
   }
  finally {
-    endLatch.release();
+    endLatch.countDown();
   }
 }
