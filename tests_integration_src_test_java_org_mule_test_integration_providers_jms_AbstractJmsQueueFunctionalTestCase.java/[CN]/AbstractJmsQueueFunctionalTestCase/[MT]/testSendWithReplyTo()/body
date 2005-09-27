@@ -1,11 +1,11 @@
 {
-  final CountDown countDown=new CountDown(2);
-  receiverIsUp=new CountDown(1);
+  final CountDownLatch countDown=new CountDownLatch(2);
+  receiverIsUp=new CountDownLatch(1);
   EventCallback callback=new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object Component){
       callbackCalled=true;
       assertNull(context.getCurrentTransaction());
-      countDown.release();
+      countDown.countDown();
     }
   }
 ;
@@ -21,15 +21,15 @@
   mc.setMessageListener(new MessageListener(){
     public void onMessage(    Message message){
       currentMsg=message;
-      countDown.release();
+      countDown.countDown();
     }
   }
 );
   logger.debug("Waiting for coutdown isReceiverUp");
-  assertTrue(receiverIsUp.attempt(LOCK_WAIT));
+  assertTrue(receiverIsUp.tryLock(LOCK_WAIT,TimeUnit.MILLISECONDS));
   receiverIsUp=null;
   send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE,"replyto");
-  assertTrue(countDown.attempt(LOCK_WAIT));
+  assertTrue(countDown.tryLock(LOCK_WAIT,TimeUnit.MILLISECONDS));
   assertNotNull(currentMsg);
   assertTrue(currentMsg instanceof TextMessage);
   assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)currentMsg).getText());
