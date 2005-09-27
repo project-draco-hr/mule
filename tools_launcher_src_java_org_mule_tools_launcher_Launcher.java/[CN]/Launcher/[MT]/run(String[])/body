@@ -64,6 +64,7 @@
   URL[] libJars=(URL[])libPathURLs.toArray(new URL[libPathURLs.size()]);
   File toolsJar=Locator.getToolsJar();
   File muleLibDir=null;
+  File muleCustomLibDir=null;
   File muleLibOptDir=null;
   File muleLibPatchDir=null;
   String muleLibDirProperty=getProperty(MULE_LIB_DIR_PROPERTY);
@@ -80,12 +81,17 @@
     System.setProperty(MULE_LIB_DIR_PROPERTY,muleLibDir.getAbsolutePath());
     if (debug)     System.out.println("Set " + MULE_LIB_DIR_PROPERTY + " to "+ muleLibDir.getAbsolutePath());
   }
+  String muleCustomLibDirProperty=getProperty(MULE_CUSTOM_LIB_DIR_PROPERTY);
+  if (muleCustomLibDirProperty != null) {
+    muleCustomLibDir=new File(muleCustomLibDirProperty);
+  }
   URL[] systemJars=Locator.getLocationURLs(muleLibDir);
   muleLibOptDir=new File(muleLibDir.getAbsolutePath() + File.separator + "opt");
   URL[] muleOptJars=muleLibOptDir.exists() ? Locator.getLocationURLs(muleLibOptDir) : new URL[0];
   muleLibPatchDir=new File(muleLibDir.getAbsolutePath() + File.separator + "patch");
   URL[] mulePatchJars=muleLibOptDir.exists() ? Locator.getLocationURLs(muleLibPatchDir) : new URL[0];
-  int numJars=mulePatchJars.length + libJars.length + muleOptJars.length+ systemJars.length;
+  URL[] muleCustomLibJars=(muleCustomLibDir != null && muleCustomLibDir.exists() ? Locator.getLocationURLs(muleCustomLibDir) : new URL[0]);
+  int numJars=mulePatchJars.length + libJars.length + muleOptJars.length+ systemJars.length+ muleCustomLibJars.length;
   if (toolsJar != null) {
     numJars++;
   }
@@ -93,7 +99,8 @@
   System.arraycopy(mulePatchJars,0,jars,0,mulePatchJars.length);
   System.arraycopy(libJars,0,jars,mulePatchJars.length,libJars.length);
   System.arraycopy(muleOptJars,0,jars,mulePatchJars.length + libJars.length,muleOptJars.length);
-  System.arraycopy(systemJars,0,jars,mulePatchJars.length + muleOptJars.length + libJars.length,systemJars.length);
+  System.arraycopy(systemJars,0,jars,mulePatchJars.length + libJars.length + muleOptJars.length,systemJars.length);
+  System.arraycopy(muleCustomLibJars,0,jars,mulePatchJars.length + libJars.length + muleOptJars.length+ systemJars.length,muleCustomLibJars.length);
   if (toolsJar != null) {
     jars[jars.length - 1]=toolsJar.toURL();
   }

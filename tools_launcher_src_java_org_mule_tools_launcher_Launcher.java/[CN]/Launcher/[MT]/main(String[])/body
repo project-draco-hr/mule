@@ -1,8 +1,31 @@
 {
-  InputStream is=Thread.currentThread().getContextClassLoader().getResourceAsStream(MULE_LAUNCHER_PROPERTIES);
+  InputStream is=null;
+  String propsFile=System.getProperty(MULE_LAUNCHER_PROPERTIES_PROPERTY,null);
+  if (propsFile != null) {
+    File file=new File(propsFile);
+    try {
+      is=new FileInputStream(file);
+    }
+ catch (    FileNotFoundException e) {
+      logError("Failed to load " + propsFile,e);
+      System.exit(1);
+    }
+  }
+  File file=new File(MULE_LAUNCHER_PROPERTIES);
+  if (file.exists()) {
+    try {
+      is=new FileInputStream(file);
+    }
+ catch (    FileNotFoundException e) {
+    }
+  }
+  if (is == null) {
+    is=Thread.currentThread().getContextClassLoader().getResourceAsStream(MULE_LAUNCHER_PROPERTIES);
+  }
   if (is != null) {
     try {
       properties.load(is);
+      System.out.println("Loaded Mule launcher from " + Thread.currentThread().getContextClassLoader().getResource(MULE_LAUNCHER_PROPERTIES));
     }
  catch (    Throwable e) {
       logError("Failed to load " + MULE_LAUNCHER_PROPERTIES,e);
