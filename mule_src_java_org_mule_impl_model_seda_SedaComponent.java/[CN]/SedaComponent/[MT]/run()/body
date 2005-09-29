@@ -12,18 +12,20 @@
         }
       }
       event=(MuleEvent)dequeue();
-      if (stats.isEnabled()) {
-        stats.decQueuedEvent();
+      if (event != null) {
+        if (stats.isEnabled()) {
+          stats.decQueuedEvent();
+        }
+        if (logger.isDebugEnabled()) {
+          logger.debug("Component: " + descriptor.getName() + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
+        }
+        proxy=(MuleProxy)proxyPool.borrowObject();
+        getStatistics().setComponentPoolSize(proxyPool.getSize());
+        proxy.setStatistics(getStatistics());
+        proxy.start();
+        proxy.onEvent(queueSession,event);
+        workManager.scheduleWork(proxy,WorkManager.INDEFINITE,null,null);
       }
-      if (logger.isDebugEnabled()) {
-        logger.debug("Component: " + descriptor.getName() + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
-      }
-      proxy=(MuleProxy)proxyPool.borrowObject();
-      getStatistics().setComponentPoolSize(proxyPool.getSize());
-      proxy.setStatistics(getStatistics());
-      proxy.start();
-      proxy.onEvent(queueSession,event);
-      workManager.scheduleWork(proxy,WorkManager.INDEFINITE,null,null);
     }
  catch (    Exception e) {
       if (proxy != null) {
