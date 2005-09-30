@@ -30,11 +30,13 @@
   }
   BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
   call.setTargetEndpointAddress(endpointUri.toString());
-  String soapAction=(String)event.getProperty("soapAction");
+  String soapAction=(String)event.getProperty(AxisConnector.SOAP_ACTION_PROPERTY);
   if (soapAction != null) {
     soapAction=parseSoapAction(soapAction,method,event);
     call.setSOAPActionURI(soapAction);
     call.setUseSOAPAction(Boolean.TRUE.booleanValue());
+  }
+ else {
   }
   String methodNamespace=(String)event.getProperty(AxisConnector.METHOD_NAMESPACE_PROPERTY);
   if (methodNamespace != null) {
@@ -44,6 +46,7 @@
     call.setOperationName(new QName(method));
   }
   call.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
+  call.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint());
   int timeout=event.getIntProperty(MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,-1);
   if (timeout >= 0) {
     call.setTimeout(new Integer(timeout));

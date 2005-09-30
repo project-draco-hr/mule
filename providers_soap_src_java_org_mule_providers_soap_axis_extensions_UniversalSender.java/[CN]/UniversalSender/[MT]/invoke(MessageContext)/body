@@ -7,23 +7,20 @@
   if (Boolean.TRUE.equals(call.getProperty("axis.one.way"))) {
     sync=false;
   }
-  UMOEvent event=(UMOEvent)call.getProperty(MuleProperties.MULE_EVENT_PROPERTY);
   String uri=msgContext.getStrProp(MessageContext.TRANS_URL);
+  UMOEndpoint requestEndpoint=(UMOEndpoint)call.getProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
   UMOEndpoint endpoint=null;
   try {
     endpoint=lookupEndpoint(uri);
   }
  catch (  UMOException e) {
-    if (event != null) {
-      event.getEndpoint().getConnector().handleException(e);
-    }
- else {
-      logger.error("Failed to dispatch soap event from Axis Universal transport: " + e.toString(),e);
-    }
+    requestEndpoint.getConnector().handleException(e);
     return;
   }
   try {
-    msgContext.setTypeMappingRegistry(((AxisConnector)event.getEndpoint().getConnector()).getAxisServer().getTypeMappingRegistry());
+    if (requestEndpoint.getConnector() instanceof AxisConnector) {
+      msgContext.setTypeMappingRegistry(((AxisConnector)requestEndpoint.getConnector()).getAxisServer().getTypeMappingRegistry());
+    }
     Object payload=null;
     int contentLength=0;
     if (msgContext.getRequestMessage().countAttachments() > 0) {
@@ -47,6 +44,9 @@
       if (!name.equals("call_object") && !name.equals("wsdl.service")) {
         props.put(name,msgContext.getProperty(name));
       }
+    }
+    if (call.useSOAPAction()) {
+      uri=call.getSOAPActionURI();
     }
     props.put("SOAPAction",uri);
     if (contentLength > 0) {
@@ -79,11 +79,6 @@
   }
  catch (  Exception e) {
     logger.error("Failed to dispatch soap event from Axis Universal transport: " + e.toString());
-    if (event != null) {
-      event.getEndpoint().getConnector().handleException(e);
-    }
- else {
-      endpoint.getConnector().handleException(e);
-    }
+    requestEndpoint.getConnector().handleException(e);
   }
 }
