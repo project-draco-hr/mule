@@ -1,19 +1,19 @@
 {
-  UMOTransformer trans=null;
   FutureMessageResult result=null;
-  if (transformers != null) {
-    trans=MuleObjectHelper.getTransformer(transformers,",");
-    result=new FutureMessageResult(trans);
-  }
- else {
-    result=new FutureMessageResult();
-  }
+  UMOTransformer trans=null;
   Callable callable=new Callable(){
     public Object call() throws Exception {
       return doToRemoteComponent(component,payload,messageProperties,true);
     }
   }
 ;
-  result.execute(callable);
+  if (transformers != null) {
+    trans=MuleObjectHelper.getTransformer(transformers,",");
+    result=new FutureMessageResult(callable,trans);
+  }
+ else {
+    result=new FutureMessageResult(callable);
+  }
+  result.execute();
   return result;
 }
