@@ -1,18 +1,18 @@
 {
   try {
     JbiContainer.Factory.setInstance(this);
-    Directories.createDirectories(this.workingDir);
+    Directories.createDirectories(getWorkingDir());
     MuleManager.getConfiguration().setEmbedded(true);
-    MuleManager.getInstance().setTransactionManager(transactionManager);
+    MuleManager.getInstance().setTransactionManager(getTransactionManager());
     ((MuleManager)MuleManager.getInstance()).initialise();
-    if (this.mBeanServer == null) {
+    if (getMBeanServer() == null) {
       LOGGER.debug("Creating MBeanServer");
       List l=MBeanServerFactory.findMBeanServer(null);
       if (l != null && l.size() > 0) {
-        this.mBeanServer=(MBeanServer)l.get(0);
+        setMBeanServer((MBeanServer)l.get(0));
       }
  else {
-        this.mBeanServer=MBeanServerFactory.createMBeanServer();
+        setMBeanServer(MBeanServerFactory.createMBeanServer());
       }
     }
     if (rmiRegistry == null) {
@@ -21,23 +21,23 @@
     String url=MessageFormat.format(DEFAULT_URL,new Object[]{DEFAULT_HOST,Integer.toString(DEFAULT_PORT)});
     Map env=new HashMap();
     env.put(RMIConnectorServer.JNDI_REBIND_ATTRIBUTE,"true");
-    JMXConnectorServer con=JMXConnectorServerFactory.newJMXConnectorServer(new JMXServiceURL(url),env,this.mBeanServer);
+    JMXConnectorServer con=JMXConnectorServerFactory.newJMXConnectorServer(new JMXServiceURL(url),env,getMBeanServer());
     con.start();
-    if (this.transactionManager == null) {
+    if (getTransactionManager() == null) {
       LOGGER.debug("Creating TransactionManager");
-      this.transactionManager=new Jotm(true,false).getTransactionManager();
-      this.transactionManager.setTransactionTimeout(60);
+      setTransactionManager(new Jotm(true,false).getTransactionManager());
+      getTransactionManager().setTransactionTimeout(60);
     }
-    if (this.namingContext == null) {
+    if (getNamingContext() == null) {
       System.setProperty(Context.INITIAL_CONTEXT_FACTORY,MuleInitialContextFactory.class.getName());
       System.setProperty(Context.PROVIDER_URL,"mule-jbi");
-      this.namingContext=new InitialContext();
+      setNamingContext(new InitialContext());
     }
     this.endpoints=new EndpointsImpl();
-    File regStore=new File(this.workingDir,"/registry.xml");
+    File regStore=new File(getWorkingDir(),"/registry.xml");
     if (regStore.isFile()) {
       try {
-        this.registry=RegistryIO.load(regStore);
+        context.setRegistry(new XmlRegistryStore().load(regStore.getAbsolutePath()));
       }
  catch (      Exception e) {
         LOGGER.warn("Invalid registry found. Creating a new one");
@@ -46,11 +46,11 @@
  else {
       LOGGER.info("No registry found. Creating a new one");
     }
-    if (this.registry == null) {
-      this.registry=RegistryIO.create(regStore);
+    if (getRegistry() == null) {
+      context.setRegistry(new XmlRegistryStore().create(regStore.getAbsolutePath(),new JbiRegistryFactory()));
     }
     if (this.router == null) {
-      this.router=new InternalMessageRouter(this,new DirectRouter(registry));
+      this.router=new InternalMessageRouter(this,new DirectRouter(getRegistry()));
     }
   }
  catch (  Exception e) {
