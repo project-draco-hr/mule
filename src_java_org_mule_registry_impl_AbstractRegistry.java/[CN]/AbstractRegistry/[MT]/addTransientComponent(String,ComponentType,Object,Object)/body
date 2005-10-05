@@ -1,0 +1,38 @@
+{
+  RegistryComponent rc=getComponent(name);
+  if (rc == null) {
+    rc=createComponent(name,type);
+    rc.setTransient(true);
+    rc.setComponent(component);
+    rc.setStateAtShutdown(RegistryComponent.RUNNING);
+    try {
+      rc.setWorkspaceRoot(context.getComponentWorkspaceDir(getWorkingDirectory(),name).getAbsoluteFile().getCanonicalPath());
+    }
+ catch (    IOException e) {
+      throw new RegistryException(e);
+    }
+    this.componentsMap.put(name,rc);
+    components.add(rc);
+    if (bootstrap != null) {
+      try {
+        bootstrapComponent(rc,bootstrap);
+      }
+ catch (      Exception e) {
+        throw new RegistryException(e);
+      }
+    }
+  }
+ else {
+    if (!rc.isTransient()) {
+      throw new RegistryException("A non-transient component is already registered: " + name);
+    }
+    rc.setComponent(component);
+  }
+  try {
+    rc.initComponent();
+  }
+ catch (  Exception e) {
+    throw new RegistryException(e);
+  }
+  return rc;
+}
