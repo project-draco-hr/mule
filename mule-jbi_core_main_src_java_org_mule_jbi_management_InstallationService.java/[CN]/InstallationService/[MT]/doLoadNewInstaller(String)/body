@@ -1,0 +1,89 @@
+{
+  File dir=null;
+  try {
+    LOGGER.info("Creating new installer for " + installJarURI);
+    URI uri;
+    try {
+      uri=new URI(installJarURI);
+    }
+ catch (    URISyntaxException e) {
+      uri=new File(installJarURI).toURI();
+    }
+    dir=Directories.getNewTempDir(context.getWorkingDir());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Temporary dir: " + dir);
+    }
+    IOUtils.createDirs(dir);
+    File f=new File(dir,"jbi.zip");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Copying installation jar to " + f);
+    }
+    IOUtils.copy(uri.toURL(),f);
+    File unzip=new File(dir,"/unzip");
+    IOUtils.unzip(f,unzip);
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Loading jbi descriptor");
+    }
+    File jbiFile=new File(unzip,JBI_DESCRIPTOR);
+    if (!jbiFile.isFile()) {
+      throw new JBIException("No jbi descriptor found");
+    }
+    Jbi jbi=JbiDocument.Factory.parse(jbiFile).getJbi();
+    if (jbi.getVersion().doubleValue() != 1.0) {
+      throw new JBIException("version attribute should be '1.0'");
+    }
+    if (!jbi.isSetComponent()) {
+      throw new JBIException("component should be set");
+    }
+    String name=jbi.getComponent().getIdentification().getName();
+    if (this.installers.get(name) != null) {
+      throw new JBIException("an installer has already been created");
+    }
+    if (context.getRegistry().getComponent(name) != null) {
+      throw new JBIException("component already installed");
+    }
+    boolean engine=jbi.getComponent().getType() == com.sun.java.xml.ns.jbi.ComponentDocument.Component.Type.SERVICE_ENGINE;
+    File installDir;
+    File workspaceDir;
+    if (engine) {
+      installDir=Directories.getEngineInstallDir(context.getWorkingDir(),name);
+      workspaceDir=Directories.getEngineWorkspaceDir(context.getWorkingDir(),name);
+    }
+ else {
+      installDir=Directories.getBindingInstallDir(context.getWorkingDir(),name);
+      workspaceDir=Directories.getBindingWorkspaceDir(context.getWorkingDir(),name);
+    }
+    IOUtils.deleteFile(installDir);
+    IOUtils.deleteFile(workspaceDir);
+    IOUtils.createDirs(installDir);
+    IOUtils.createDirs(workspaceDir);
+    IOUtils.unzip(f,installDir);
+    RegistryComponent component;
+    if (engine) {
+      component=context.getRegistry().addComponent(name,ComponentType.JBI_ENGINE_COMPONENT);
+    }
+ else {
+      component=context.getRegistry().addComponent(name,ComponentType.JBI_BINDING_COMPONENT);
+    }
+    component.setInstallRoot(installDir.getAbsolutePath());
+    component.setWorkspaceRoot(workspaceDir.getAbsolutePath());
+    component.setDescriptor(new JbiDescriptor(jbi));
+    Installer installer=new Installer(context,component);
+    installer.init();
+    ObjectName objName=createComponentInstallerName(name);
+    StandardMBean mbean=new StandardMBean(installer,InstallerMBean.class);
+    context.getMBeanServer().registerMBean(mbean,objName);
+    this.installers.put(name,installer);
+    return objName;
+  }
+ catch (  Exception e) {
+    LOGGER.error("Could not create installer",e);
+    throw new RuntimeException("Could not create installer",e);
+  }
+ finally {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Deleting temporary dir: " + dir);
+    }
+    Utility.deleteTree(dir);
+  }
+}
