@@ -1,0 +1,37 @@
+{
+  ZipFile zip=null;
+  if (directory.exists()) {
+    if (!directory.isDirectory()) {
+      throw new IOException("Directory is not a directory: " + directory);
+    }
+  }
+ else {
+    if (!directory.mkdirs()) {
+      throw new IOException("Could not create directory: " + directory);
+    }
+  }
+  try {
+    zip=new ZipFile(archive);
+    for (Enumeration entries=zip.entries(); entries.hasMoreElements(); ) {
+      ZipEntry entry=(ZipEntry)entries.nextElement();
+      File f=new File(directory,entry.getName());
+      if (entry.isDirectory()) {
+        if (!f.mkdirs()) {
+          throw new IOException("Could not create directory: " + f);
+        }
+      }
+ else {
+        InputStream is=zip.getInputStream(entry);
+        OutputStream os=new BufferedOutputStream(new FileOutputStream(f));
+        copy(is,os);
+        is.close();
+        os.close();
+      }
+    }
+  }
+  finally {
+    if (zip != null) {
+      zip.close();
+    }
+  }
+}
