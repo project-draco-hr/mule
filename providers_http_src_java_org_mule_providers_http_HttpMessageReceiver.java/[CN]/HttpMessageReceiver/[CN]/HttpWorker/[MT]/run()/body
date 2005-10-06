@@ -4,17 +4,12 @@
     dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
     dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
     do {
-      if (disposing.get() || socket.isClosed()) {
-        logger.debug("Peer closed connection");
-        break;
-      }
       Properties headers=new Properties();
       Object payload=parseRequest(dataIn,headers);
       if (payload == null) {
         break;
       }
       UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{payload,headers});
-      keepAlive=false;
       UMOMessage message=new MuleMessage(adapter);
       if (logger.isDebugEnabled()) {
         logger.debug(message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
@@ -43,10 +38,12 @@
       }
       dataOut.flush();
     }
- while (socket.isConnected() && keepAlive);
+ while (!socket.isClosed() && !disposing.get() && keepAlive);
+    if (logger.isDebugEnabled() && socket.isClosed()) {
+      logger.debug("Peer closed connection");
+    }
   }
  catch (  Exception e) {
-    keepAlive=false;
     handleException(e);
   }
  finally {
