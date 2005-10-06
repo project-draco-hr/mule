@@ -1,6 +1,7 @@
 {
   logger.trace("MuleProxy: sync call for Mule UMO " + descriptor.getName());
   UMOMessage returnMessage=null;
+  UMOTransformer responseTransformer=null;
   try {
     if (event.getEndpoint().canReceive()) {
       RequestContext.setEvent(event);
@@ -9,6 +10,7 @@
       if (replyTo != null) {
         replyToHandler=((AbstractConnector)event.getEndpoint().getConnector()).getReplyToHandler();
       }
+      responseTransformer=event.getEndpoint().getResponseTransformer();
       InterceptorsInvoker invoker=new InterceptorsInvoker(interceptorList,descriptor,event.getMessage());
       long startTime=0;
       if (stat.isEnabled()) {
@@ -65,5 +67,5 @@
       handleException(new MessagingException(new Message(Messages.EVENT_PROCESSING_FAILED_FOR_X,descriptor.getName()),event.getMessage(),e));
     }
   }
-  return applyResponseTransformer(returnMessage);
+  return applyResponseTransformer(returnMessage,responseTransformer);
 }

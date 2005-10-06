@@ -1,0 +1,20 @@
+{
+  if (returnMessage == null)   return null;
+  if (transformer == null)   transformer=descriptor.getResponseTransformer();
+  if (transformer == null)   return returnMessage;
+  if (transformer.isSourceTypeSupported(returnMessage.getPayload().getClass())) {
+    Object result=transformer.transform(returnMessage.getPayload());
+    if (result instanceof UMOMessage) {
+      returnMessage=(UMOMessage)result;
+    }
+ else {
+      returnMessage=new MuleMessage(result,returnMessage.getProperties());
+    }
+  }
+ else {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Response transformer: " + transformer + " doesn't support the result payload: "+ returnMessage.getPayload().getClass());
+    }
+  }
+  return returnMessage;
+}
