@@ -1,6 +1,6 @@
 {
   TreeMap listeners;
-  String resourceIdentifier=null;
+  String subscription=null;
   Class listenerClass=null;
   Map.Entry entry=null;
   for (Iterator iterator=eventsMap.entrySet().iterator(); iterator.hasNext(); ) {
@@ -19,15 +19,15 @@
 synchronized (listeners) {
     for (Iterator iterator=listeners.keySet().iterator(); iterator.hasNext(); ) {
       l=(UMOServerEventListener)iterator.next();
-      resourceIdentifier=(String)listeners.get(l);
-      if (resourceIdentifier == null) {
-        resourceIdentifier=NULL_RESOURCE_IDENTIFIER;
+      subscription=(String)listeners.get(l);
+      if (subscription == null) {
+        subscription=NULL_SUBSCRIPTION;
       }
-      if (NULL_RESOURCE_IDENTIFIER.equals(resourceIdentifier) || resourceIdentifier.equals(event.getResourceIdentifier())) {
+      if (NULL_SUBSCRIPTION.equals(subscription) || new WildcardFilter(subscription).accept(event.getResourceIdentifier())) {
         l.onEvent(event);
       }
  else {
-        logger.trace("Resource id '" + resourceIdentifier + "' for listener "+ l.getClass().getName()+ " does not match Resource id '"+ event.getResourceIdentifier()+ "' for event, not firing event for this listener");
+        logger.trace("Resource id '" + subscription + "' for listener "+ l.getClass().getName()+ " does not match Resource id '"+ event.getResourceIdentifier()+ "' for event, not firing event for this listener");
       }
     }
   }
