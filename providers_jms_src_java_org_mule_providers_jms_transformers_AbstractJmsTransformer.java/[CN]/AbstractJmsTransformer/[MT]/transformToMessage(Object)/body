@@ -28,7 +28,12 @@
         msg.setJMSCorrelationID(entry.getValue().toString());
       }
       if (!(MuleProperties.MULE_REPLY_TO_PROPERTY.equals(key) && entry.getValue() instanceof Destination)) {
-        msg.setObjectProperty(encodeHeader(key),entry.getValue());
+        try {
+          msg.setObjectProperty(encodeHeader(key),entry.getValue());
+        }
+ catch (        JMSException e) {
+          if (logger.isDebugEnabled())           logger.debug("Unable to set property '" + encodeHeader(key) + "' of type "+ entry.getValue().getClass().getName()+ "': "+ e.getMessage());
+        }
       }
     }
     return msg;
