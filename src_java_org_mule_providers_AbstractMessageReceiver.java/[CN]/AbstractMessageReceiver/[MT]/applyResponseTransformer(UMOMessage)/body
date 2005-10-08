@@ -1,7 +1,15 @@
 {
-  if (returnMessage == null)   return null;
-  if (transformer == null)   transformer=descriptor.getResponseTransformer();
+  UMOTransformer transformer=endpoint.getResponseTransformer();
+  if (transformer == null)   transformer=component.getDescriptor().getResponseTransformer();
   if (transformer == null)   return returnMessage;
+  if ((returnMessage == null)) {
+    if (transformer.isAcceptNull()) {
+      returnMessage=new MuleMessage(new NullPayload(),RequestContext.getProperties());
+    }
+ else {
+      return null;
+    }
+  }
   if (transformer.isSourceTypeSupported(returnMessage.getPayload().getClass())) {
     Object result=transformer.transform(returnMessage.getPayload());
     if (result instanceof UMOMessage) {
