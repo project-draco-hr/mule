@@ -1,4 +1,5 @@
 {
+  UMOMessage resultMessage=null;
   ResponseOutputStream ros=null;
   if (outputStream != null) {
     if (outputStream instanceof ResponseOutputStream) {
@@ -11,25 +12,28 @@
   UMOSession session=new MuleSession(component,trans);
   UMOEvent muleEvent=new MuleEvent(message,endpoint,session,synchronous,ros);
   RequestContext.setEvent(muleEvent);
+  boolean authorised=false;
   if (endpoint.getSecurityFilter() != null) {
     try {
       endpoint.getSecurityFilter().authenticate(muleEvent);
+      authorised=true;
     }
  catch (    SecurityException e) {
       logger.warn("Request was made but was not authenticated: " + e.getMessage(),e);
       connector.fireEvent(new SecurityEvent(e,SecurityEvent.SECURITY_AUTHENTICATION_FAILED));
       handleException(e);
-      return message;
+      resultMessage=message;
     }
   }
-  muleEvent=RequestContext.getEvent();
-  UMOMessage resultMessage=null;
-  if (UMOEndpoint.ENDPOINT_TYPE_RESPONSE.equals(endpoint.getType())) {
-    component.getDescriptor().getResponseRouter().route(muleEvent);
-    return null;
-  }
+  if (authorised) {
+    muleEvent=RequestContext.getEvent();
+    if (UMOEndpoint.ENDPOINT_TYPE_RESPONSE.equals(endpoint.getType())) {
+      component.getDescriptor().getResponseRouter().route(muleEvent);
+      return null;
+    }
  else {
-    resultMessage=component.getDescriptor().getInboundRouter().route(muleEvent);
+      resultMessage=component.getDescriptor().getInboundRouter().route(muleEvent);
+    }
   }
-  return resultMessage;
+  return applyResponseTransformer(resultMessage);
 }
