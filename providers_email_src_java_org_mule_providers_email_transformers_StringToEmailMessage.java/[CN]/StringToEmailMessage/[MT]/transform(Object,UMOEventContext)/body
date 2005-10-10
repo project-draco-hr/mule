@@ -1,14 +1,53 @@
 {
-  String contentType=(String)context.getProperty("contentType");
-  if (contentType == null)   contentType="text/plain";
+  String contentType=context.getStringProperty(MailProperties.CONTENT_TYPE_PROPERTY,SmtpConnector.DEFAULT_CONTENT_TYPE);
+  String endpointAddress=endpoint.getEndpointURI().getAddress();
+  SmtpConnector connector=(SmtpConnector)endpoint.getConnector();
+  String to=context.getStringProperty(MailProperties.TO_ADDRESSES_PROPERTY,endpointAddress);
+  String cc=context.getStringProperty(MailProperties.CC_ADDRESSES_PROPERTY,connector.getCcAddresses());
+  String bcc=context.getStringProperty(MailProperties.BCC_ADDRESSES_PROPERTY,connector.getBccAddresses());
+  String from=context.getStringProperty(MailProperties.FROM_ADDRESS_PROPERTY,connector.getFromAddress());
+  String replyTo=context.getStringProperty(MailProperties.REPLY_TO_ADDRESSES_PROPERTY,connector.getReplyToAddresses());
+  String subject=context.getStringProperty(MailProperties.SUBJECT_PROPERTY,connector.getSubject());
+  Properties headers=new Properties();
+  if (connector.getCustomHeaders() != null)   headers.putAll(connector.getCustomHeaders());
+  Properties otherHeaders=(Properties)context.getProperty(MailProperties.CUSTOM_HEADERS_MAP_PROPERTY);
+  if (otherHeaders != null)   headers.putAll(otherHeaders);
+  if (logger.isDebugEnabled()) {
+    StringBuffer buf=new StringBuffer();
+    buf.append("Constucting email using:\n");
+    buf.append("To: ").append(to);
+    buf.append("From: ").append(from);
+    buf.append("CC: ").append(cc);
+    buf.append("BCC: ").append(bcc);
+    buf.append("Subject: ").append(subject);
+    buf.append("ReplyTo: ").append(replyTo);
+    buf.append("Content type: ").append(contentType);
+    buf.append("Payload type: ").append(src.getClass().getName());
+    buf.append("Custom Headers: ").append(PropertiesHelper.propertiesToString(headers,false));
+    logger.debug(buf.toString());
+  }
   try {
-    Message msg=new MimeMessage((Session)endpoint.getConnector().getDispatcher("ANY").getDelegateSession());
-    msg.setRecipients(Message.RecipientType.TO,inetToAddresses);
+    Message msg=new MimeMessage((Session)endpoint.getConnector().getDispatcher(endpointAddress).getDelegateSession());
+    msg.setRecipients(Message.RecipientType.TO,MailUtils.StringToInternetAddresses(to));
     msg.setSentDate(Calendar.getInstance().getTime());
-    if (inetFromAddress != null) {
-      msg.setFrom(inetFromAddress);
+    if (from != null && !Utility.EMPTY_STRING.equals(from)) {
+      msg.setFrom(MailUtils.StringToInternetAddresses(from)[0]);
     }
-    msg.setSubject(getSubject());
+    if (cc != null && !Utility.EMPTY_STRING.equals(cc)) {
+      msg.setRecipients(Message.RecipientType.CC,MailUtils.StringToInternetAddresses(cc));
+    }
+    if (bcc != null && !Utility.EMPTY_STRING.equals(bcc)) {
+      msg.setRecipients(Message.RecipientType.BCC,MailUtils.StringToInternetAddresses(bcc));
+    }
+    if (replyTo != null && !Utility.EMPTY_STRING.equals(replyTo)) {
+      msg.setReplyTo(MailUtils.StringToInternetAddresses(replyTo));
+    }
+    msg.setSubject(subject);
+    Map.Entry entry;
+    for (Iterator iterator=headers.entrySet().iterator(); iterator.hasNext(); ) {
+      entry=(Map.Entry)iterator.next();
+      msg.setHeader(entry.getKey().toString(),entry.getValue().toString());
+    }
     setContent(src,msg,contentType,context);
     return msg;
   }

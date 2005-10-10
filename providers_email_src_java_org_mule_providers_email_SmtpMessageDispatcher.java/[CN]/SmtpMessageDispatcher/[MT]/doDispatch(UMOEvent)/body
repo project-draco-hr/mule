@@ -1,49 +1,14 @@
 {
-  UMOEndpoint endpoint=event.getEndpoint();
-  String endpointAddress=endpoint.getEndpointURI().getAddress();
-  Map props=event.getProperties();
-  String to=PropertiesHelper.getStringProperty(props,SmtpConnector.TO_ADDRESSES_PROPERTY,endpointAddress);
-  String cc=PropertiesHelper.getStringProperty(props,SmtpConnector.CC_ADDRESSES_PROPERTY,connector.getCcAddresses());
-  String bcc=PropertiesHelper.getStringProperty(props,SmtpConnector.BCC_ADDRESSES_PROPERTY,connector.getBccAddresses());
-  String from=PropertiesHelper.getStringProperty(props,SmtpConnector.FROM_ADDRESS_PROPERTY,connector.getFromAddress());
-  String subject=PropertiesHelper.getStringProperty(props,SmtpConnector.SUBJECT_PROPERTY,connector.getSubject());
   Message msg=null;
   try {
     Object data=event.getTransformedMessage();
     if (!(data instanceof Message)) {
-      msg=connector.createMessage(from,to,cc,bcc,subject,data == null ? null : data.toString(),session);
+      throw new DispatchException(new org.mule.config.i18n.Message(Messages.TRANSFORM_X_UNEXPECTED_TYPE_X,data.getClass().getName(),Message.class.getName()),event.getMessage(),event.getEndpoint());
     }
  else {
       msg=(Message)data;
-      if (msg.getRecipients(Message.RecipientType.TO) == null) {
-        InternetAddress[] toAddrs=null;
-        toAddrs=InternetAddress.parse(to,false);
-        msg.setRecipients(Message.RecipientType.TO,toAddrs);
-        if (logger.isDebugEnabled()) {
-          logger.debug("Sending message to: " + to);
-        }
-      }
-      if (msg.getFrom() == null) {
-        msg.setFrom(new InternetAddress(from));
-      }
-      InternetAddress[] ccAddrs=null;
-      if ((cc != null) && !cc.equals("")) {
-        ccAddrs=InternetAddress.parse(cc,false);
-        msg.setRecipients(Message.RecipientType.CC,ccAddrs);
-      }
-      InternetAddress[] bccAddrs=null;
-      if ((bcc != null) && !bcc.equals("")) {
-        bccAddrs=InternetAddress.parse(bcc,false);
-        msg.setRecipients(Message.RecipientType.BCC,bccAddrs);
-      }
-      if (msg.getSubject() == null || "".equals(msg.getSubject())) {
-        msg.setSubject(subject);
-      }
     }
     sendMailMessage(msg);
-    if (logger.isDebugEnabled()) {
-      logger.debug("Sent message to: " + msg.getRecipients(Message.RecipientType.TO)[0].toString() + ", cc: "+ cc+ ", bcc: "+ bcc+ ", from: "+ from);
-    }
   }
  catch (  Exception e) {
     connector.handleException(e);
