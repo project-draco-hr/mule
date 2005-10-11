@@ -1,0 +1,24 @@
+{
+  JobDataMap map=jobExecutionContext.getJobDetail().getJobDataMap();
+  AbstractMessageReceiver receiver=(AbstractMessageReceiver)map.get(QuartzMessageReceiver.QUARTZ_RECEIVER_PROPERTY);
+  Object payload=jobExecutionContext.getJobDetail().getJobDataMap().get(QuartzConnector.PROPERTY_PAYLOAD);
+  try {
+    if (payload == null) {
+      String ref=jobExecutionContext.getJobDetail().getJobDataMap().getString(QuartzConnector.PROPERTY_PAYLOAD_REFERENCE);
+      if (ref == null) {
+        ref=jobExecutionContext.getJobDetail().getJobDataMap().getString(QuartzConnector.PROPERTY_PAYLOAD_CLASS_NAME);
+      }
+      try {
+        payload=MuleManager.getInstance().getContainerContext().getComponent(ref);
+      }
+ catch (      ObjectNotFoundException e) {
+        logger.warn("There is no payload attached to this quartz job. Sending Null payload");
+        payload=new NullPayload();
+      }
+    }
+    receiver.routeMessage(new MuleMessage(receiver.getConnector().getMessageAdapter(payload)));
+  }
+ catch (  Exception e) {
+    receiver.handleException(e);
+  }
+}
