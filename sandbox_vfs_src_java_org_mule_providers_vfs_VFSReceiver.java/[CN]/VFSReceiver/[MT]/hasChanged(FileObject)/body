@@ -1,0 +1,30 @@
+{
+  boolean changed=false;
+  String key=fileObject.getName().getPath();
+  long checksum=0;
+  if (checksumMap.containsKey(key)) {
+    checksum=((Long)checksumMap.get(key)).longValue();
+  }
+  long newChecksum=0;
+  CheckedInputStream checkedInputStream=null;
+  try {
+    InputStream inputStream=fileObject.getContent().getInputStream();
+    checkedInputStream=new CheckedInputStream(inputStream,new Adler32());
+    byte[] buffer=new byte[inputStream.available()];
+    while (checkedInputStream.read(buffer) >= 0) {
+      ;
+    }
+    newChecksum=checkedInputStream.getChecksum().getValue();
+    if (newChecksum != checksum) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("calculated a new checksum of " + newChecksum);
+      }
+      checksumMap.put(key,new Long(newChecksum));
+      changed=true;
+    }
+  }
+ catch (  IOException e) {
+    connector.handleException(e);
+  }
+  return changed;
+}

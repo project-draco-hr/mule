@@ -1,0 +1,35 @@
+{
+  directory=endpoint.getEndpointURI().getAddress();
+  fsManager=VFS.getManager();
+  dirObject=fsManager.resolveFile(directory);
+  Map props=endpoint.getProperties();
+  if (props != null) {
+    String overrideFileExtension=(String)props.get(PROPERTY_FILE_EXTENSION);
+    if (overrideFileExtension != null) {
+      fileExtension=overrideFileExtension;
+    }
+    String overrideIncludeSubFolders=(String)props.get(PROPERTY_INCLUDE_SUBFOLDERS);
+    if (overrideIncludeSubFolders != null) {
+      includeSubFolders=new Boolean(overrideIncludeSubFolders).booleanValue();
+    }
+  }
+  if (dirObject.getType() == FileType.FOLDER) {
+    if (dirObject instanceof LocalFile) {
+      if (versionControlled) {
+        versionControlled=SVNWCUtil.isVersionedDirectory(new File(directory));
+      }
+    }
+ else {
+      versionControlled=false;
+    }
+    UMOMessageReceiver fileReceiver=new VFSReceiver(this,component,endpoint);
+    if (versionControlled) {
+      options=SVNWCUtil.createDefaultOptions(true);
+      authManager=SVNWCUtil.createDefaultAuthenticationManager();
+    }
+    return fileReceiver;
+  }
+ else {
+    throw new MuleException(Message.createStaticMessage("Path is not a directory"));
+  }
+}
