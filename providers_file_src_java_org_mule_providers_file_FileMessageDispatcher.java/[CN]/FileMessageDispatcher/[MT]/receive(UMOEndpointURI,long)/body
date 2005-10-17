@@ -1,12 +1,18 @@
 {
   File file=new File(endpointUri.getAddress());
   File result=null;
+  FilenameFilter filenameFilter=null;
+  String filter=(String)endpointUri.getParams().get("filter");
+  if (filter != null) {
+    filter=URLDecoder.decode(filter,MuleManager.getConfiguration().getEncoding());
+    filenameFilter=new FilenameWildcardFilter(filter);
+  }
   if (file.exists()) {
     if (file.isFile()) {
       result=file;
     }
  else     if (file.isDirectory()) {
-      result=getNextFile(endpointUri.getAddress());
+      result=getNextFile(endpointUri.getAddress(),filenameFilter);
     }
     if (result != null) {
       MuleMessage message=new MuleMessage(connector.getMessageAdapter(result));
