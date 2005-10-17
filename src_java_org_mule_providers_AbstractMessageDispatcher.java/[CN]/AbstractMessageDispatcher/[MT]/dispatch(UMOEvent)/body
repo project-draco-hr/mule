@@ -1,35 +1,45 @@
 {
-  event.setSynchronous(false);
-  event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
-  RequestContext.setEvent(event);
-  UMOEndpoint endpoint=event.getEndpoint();
-  if (endpoint.getSecurityFilter() != null) {
+  try {
+    event.setSynchronous(false);
+    event.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+    RequestContext.setEvent(event);
+    UMOEndpoint endpoint=event.getEndpoint();
+    if (endpoint.getSecurityFilter() != null) {
+      try {
+        endpoint.getSecurityFilter().authenticate(event);
+      }
+ catch (      org.mule.umo.security.SecurityException e) {
+        logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+        connector.handleException(e);
+        return;
+      }
+catch (      UMOException e) {
+        dispose();
+        throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+      }
+    }
+    event=RequestContext.getEvent();
     try {
-      endpoint.getSecurityFilter().authenticate(event);
+      UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+      if (doThreading && !event.isSynchronous() && tx == null) {
+        workManager.scheduleWork(new Worker(event));
+      }
+ else {
+        doDispatch(event);
+      }
     }
- catch (    org.mule.umo.security.SecurityException e) {
-      logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
-      connector.handleException(e);
-      return;
+ catch (    DispatchException e) {
+      dispose();
+      throw e;
     }
-catch (    UMOException e) {
+catch (    Exception e) {
+      dispose();
       throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
     }
   }
-  event=RequestContext.getEvent();
-  try {
-    UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
-    if (doThreading && !event.isSynchronous() && tx == null) {
-      workManager.scheduleWork(new Worker(event));
+  finally {
+    if (connector.isCreateDispatcherPerRequest()) {
+      dispose();
     }
- else {
-      doDispatch(event);
-    }
-  }
- catch (  DispatchException e) {
-    throw e;
-  }
-catch (  Exception e) {
-    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }
 }
