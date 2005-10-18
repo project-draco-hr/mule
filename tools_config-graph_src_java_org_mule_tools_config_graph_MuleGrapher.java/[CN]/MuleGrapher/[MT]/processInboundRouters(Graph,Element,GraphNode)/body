@@ -1,0 +1,31 @@
+{
+  Element inboundRouter=descriptor.getChild("inbound-router");
+  if (inboundRouter != null) {
+    GraphNode endpointsLink=node;
+    Element router=inboundRouter.getChild("router");
+    if (router != null) {
+      GraphNode routerNode=graph.addNode();
+      routerNode.getInfo().setCaption(router.getAttributeValue("className"));
+      routerNode.getInfo().setFillColor(COLOR_ROUTER);
+      graph.addEdge(routerNode,node).getInfo().setCaption("inbound router");
+      endpointsLink=routerNode;
+    }
+    List inbounEndpoints=inboundRouter.getChildren(TAG_ENDPOINT);
+    for (Iterator iterator=inbounEndpoints.iterator(); iterator.hasNext(); ) {
+      Element endpointIn=(Element)iterator.next();
+      String url=endpointIn.getAttributeValue(TAG_ATTRIBUTE_ADDRESS);
+      if (url != null) {
+        GraphNode in=(GraphNode)endpoints.get(url);
+        if (in == null) {
+          in=graph.addNode();
+          StringBuffer caption=new StringBuffer();
+          caption.append(url).append("\n");
+          appendProperties(endpointIn,caption);
+          appendDescription(endpointIn,caption);
+          in.getInfo().setCaption(caption.toString());
+        }
+        if (in != null)         graph.addEdge(in,endpointsLink).getInfo().setCaption("in");
+      }
+    }
+  }
+}
