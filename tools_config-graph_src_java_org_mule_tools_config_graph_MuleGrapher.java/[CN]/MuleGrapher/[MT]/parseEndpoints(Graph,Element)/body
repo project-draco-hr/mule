@@ -1,17 +1,19 @@
 {
-  Element endpointIdentifiers=root.getChild("endpoint-identifiers");
-  if (endpointIdentifiers == null) {
-    System.out.println("no endpoint-identifiers tag");
+  Element globalEndpoints=root.getChild("global-endpoints");
+  if (globalEndpoints == null) {
+    System.out.println("no global-endpoints");
     return;
   }
-  List namedChildren=endpointIdentifiers.getChildren("endpoint-identifier");
+  List namedChildren=globalEndpoints.getChildren("endpoint");
   for (Iterator iter=namedChildren.iterator(); iter.hasNext(); ) {
     Element endpoint=(Element)iter.next();
     GraphNode node=graph.addNode();
     node.getInfo().setFillColor(COLOR_DEFINED_ENDPOINTS);
     String name=endpoint.getAttributeValue("name");
-    node.getInfo().setHeader(name);
-    node.getInfo().setCaption(endpoint.getAttributeValue("value"));
+    node.getInfo().setHeader(endpoint.getAttributeValue("address") + " (" + name+ ")");
+    StringBuffer caption=new StringBuffer();
+    appendProperties(endpoint,caption);
+    node.getInfo().setCaption(caption.toString());
     endpoints.put(name,node);
   }
 }

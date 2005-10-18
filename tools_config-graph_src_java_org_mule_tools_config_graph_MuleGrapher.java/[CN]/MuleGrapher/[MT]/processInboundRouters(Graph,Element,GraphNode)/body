@@ -12,19 +12,28 @@
     }
     List inbounEndpoints=inboundRouter.getChildren(TAG_ENDPOINT);
     for (Iterator iterator=inbounEndpoints.iterator(); iterator.hasNext(); ) {
-      Element endpointIn=(Element)iterator.next();
-      String url=endpointIn.getAttributeValue(TAG_ATTRIBUTE_ADDRESS);
+      Element inEndpoint=(Element)iterator.next();
+      String url=inEndpoint.getAttributeValue(TAG_ATTRIBUTE_ADDRESS);
       if (url != null) {
         GraphNode in=(GraphNode)endpoints.get(url);
+        StringBuffer caption=new StringBuffer();
         if (in == null) {
           in=graph.addNode();
-          StringBuffer caption=new StringBuffer();
+          in.getInfo().setFillColor(COLOR_ENDPOINT);
           caption.append(url).append("\n");
-          appendProperties(endpointIn,caption);
-          appendDescription(endpointIn,caption);
+          appendProperties(inEndpoint,caption);
+          appendDescription(inEndpoint,caption);
           in.getInfo().setCaption(caption.toString());
         }
-        if (in != null)         graph.addEdge(in,endpointsLink).getInfo().setCaption("in");
+ else {
+          caption.append(url).append("\n");
+          appendProperties(inEndpoint,caption);
+          appendDescription(inEndpoint,caption);
+          in.getInfo().setCaption(caption.toString());
+        }
+        if (in != null) {
+          processInboundFilter(graph,inEndpoint,in,endpointsLink);
+        }
       }
     }
   }
