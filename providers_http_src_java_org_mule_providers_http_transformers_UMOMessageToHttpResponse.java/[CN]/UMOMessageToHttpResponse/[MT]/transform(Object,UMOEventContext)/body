@@ -41,7 +41,7 @@
   httpMessage.append(": ").append(response.length).append(HttpConstants.CRLF);
   String headerName;
   String value;
-  for (Iterator iterator=headers.iterator(); iterator.hasNext(); ) {
+  for (Iterator iterator=HttpConstants.RESPONSE_HEADER_NAMES.iterator(); iterator.hasNext(); ) {
     headerName=(String)iterator.next();
     value=context.getStringProperty(headerName);
     if (value != null) {
@@ -80,13 +80,8 @@
   byte[] resultPayload=new byte[httpMessage.length() + response.length];
   System.arraycopy(httpMessage.toString().getBytes(),0,resultPayload,0,httpMessage.length());
   System.arraycopy(response,0,resultPayload,httpMessage.length(),response.length);
-  if (contentType.startsWith("text")) {
-    if (resultPayload instanceof byte[]) {
-      return new String((byte[])resultPayload);
-    }
- else {
-      return resultPayload.toString();
-    }
+  if (contentType.startsWith("text/")) {
+    return new String(resultPayload);
   }
  else {
     return resultPayload;
