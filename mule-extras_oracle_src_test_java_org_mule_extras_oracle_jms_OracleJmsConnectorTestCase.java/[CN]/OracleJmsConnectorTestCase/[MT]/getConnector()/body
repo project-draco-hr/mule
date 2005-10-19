@@ -1,0 +1,20 @@
+{
+  if (connector == null) {
+    connector=new OracleJmsConnector();
+    connector.setName("TestConnector");
+    connector.setUrl("jdbc:oracle:oci:@TEST_DB");
+    connector.setUsername("scott");
+    connector.setPassword("tiger");
+    Mock connectionFactory=new Mock(ConnectionFactory.class);
+    Mock connection=new Mock(Connection.class);
+    connectionFactory.expectAndReturn("createConnection",(Connection)connection.proxy());
+    connection.expect("close");
+    connection.expect("start");
+    connection.expect("stop");
+    connection.expect("stop");
+    connection.expect("setClientID","mule.TestConnector");
+    connector.setConnectionFactory((ConnectionFactory)connectionFactory.proxy());
+    connector.initialise();
+  }
+  return connector;
+}
