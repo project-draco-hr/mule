@@ -1,0 +1,26 @@
+{
+  if (null != connectedSocket)   return (true);
+  boolean success=false;
+  int retrycount=-1;
+  while (!success && !disposed && (retrycount < maxretries)) {
+    try {
+      connectedSocket=initSocket(event.getEndpoint().getEndpointURI().getAddress());
+      success=true;
+    }
+ catch (    Exception e) {
+      success=false;
+      if (maxretries != TcpConnector.KEEP_RETRYING_INDEFINETLY)       retrycount++;
+      logger.warn("run() warning at host: '" + event.getEndpoint().getEndpointURI().getAddress() + "'. Reason: "+ e.getMessage());
+      if (retrycount < maxretries) {
+        try {
+          Thread.sleep(connector.getReconnectMillisecs());
+        }
+ catch (        Exception ex) {
+          logger.warn("SocketConnector threadsleep interrupted. Reason: " + ex.getMessage());
+        }
+      }
+ else       throw e;
+    }
+  }
+  return (success);
+}
