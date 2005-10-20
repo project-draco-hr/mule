@@ -1,0 +1,51 @@
+{
+  logger.trace("MuleProxy: sync call for Mule UMO " + descriptor.getName());
+  UMOMessage returnMessage=null;
+  try {
+    if (event.getEndpoint().canReceive()) {
+      long startTime=0;
+      if (stat.isEnabled()) {
+        startTime=System.currentTimeMillis();
+      }
+      returnMessage=invokeUmo(RequestContext.getEventContext());
+      if (stat.isEnabled()) {
+        stat.addExecutionTime(System.currentTimeMillis() - startTime);
+      }
+      event=RequestContext.getEvent();
+      if (event.isStopFurtherProcessing()) {
+        logger.debug("Event stop further processing has been set, no outbound routing will be performed.");
+      }
+      if (returnMessage != null && !event.isStopFurtherProcessing()) {
+        Map context=RequestContext.clearProperties();
+        if (context != null) {
+          returnMessage.addProperties(context);
+        }
+        if (descriptor.getOutboundRouter().hasEndpoints()) {
+          UMOMessage outboundReturnMessage=descriptor.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
+          if (outboundReturnMessage != null) {
+            returnMessage=outboundReturnMessage;
+          }
+        }
+ else {
+          logger.debug("Outbound router on component '" + descriptor.getName() + "' doesn't have any endpoints configured.");
+        }
+      }
+    }
+ else {
+      returnMessage=event.getSession().sendEvent(event);
+    }
+    if (stat.isEnabled()) {
+      stat.incSentEventSync();
+    }
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof UMOException) {
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(new Message(Messages.EVENT_PROCESSING_FAILED_FOR_X,descriptor.getName()),event.getMessage(),e));
+    }
+  }
+  return returnMessage;
+}
