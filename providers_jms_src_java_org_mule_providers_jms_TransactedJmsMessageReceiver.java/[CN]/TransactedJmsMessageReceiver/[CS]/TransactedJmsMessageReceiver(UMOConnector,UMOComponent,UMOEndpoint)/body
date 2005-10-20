@@ -1,0 +1,21 @@
+{
+  super(connector,component,endpoint,new Long(0));
+  this.connector=(JmsConnector)connector;
+  this.frequency=PropertiesHelper.getLongProperty(endpoint.getProperties(),"frequency",10000L);
+  if (this.connectionStrategy instanceof SingleAttemptConnectionStrategy) {
+    this.reuseConsumer=true;
+    this.reuseSession=true;
+  }
+  this.reuseConsumer=PropertiesHelper.getBooleanProperty(endpoint.getProperties(),"reuseConsumer",this.reuseConsumer);
+  this.reuseSession=PropertiesHelper.getBooleanProperty(endpoint.getProperties(),"reuseSession",this.reuseSession);
+  String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
+  boolean topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
+  useMultipleReceivers=!topic;
+  try {
+    redeliveryHandler=this.connector.createRedeliveryHandler();
+    redeliveryHandler.setConnector(this.connector);
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+}

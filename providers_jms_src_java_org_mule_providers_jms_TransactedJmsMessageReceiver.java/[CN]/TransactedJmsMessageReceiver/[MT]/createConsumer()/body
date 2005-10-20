@@ -1,12 +1,13 @@
 {
   try {
     JmsSupport jmsSupport=this.connector.getJmsSupport();
-    if (session == null) {
-      session=this.connector.getSession(endpoint);
+    JmsThreadContext ctx=context.getContext();
+    if (ctx.session == null) {
+      ctx.session=this.connector.getSession(endpoint);
     }
     String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
     boolean topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
-    Destination dest=jmsSupport.createDestination(session,endpoint.getEndpointURI().getAddress(),topic);
+    Destination dest=jmsSupport.createDestination(ctx.session,endpoint.getEndpointURI().getAddress(),topic);
     String selector=null;
     if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {
       selector=((JmsSelectorFilter)endpoint.getFilter()).getExpression();
@@ -22,7 +23,7 @@
       durableName="mule." + connector.getName() + "."+ endpoint.getEndpointURI().getAddress();
       logger.debug("Jms Connector for this receiver is durable but no durable name has been specified. Defaulting to: " + durableName);
     }
-    consumer=jmsSupport.createConsumer(session,dest,selector,connector.isNoLocal(),durableName);
+    ctx.consumer=jmsSupport.createConsumer(ctx.session,dest,selector,connector.isNoLocal(),durableName);
   }
  catch (  JMSException e) {
     throw new ConnectException(e,this);
