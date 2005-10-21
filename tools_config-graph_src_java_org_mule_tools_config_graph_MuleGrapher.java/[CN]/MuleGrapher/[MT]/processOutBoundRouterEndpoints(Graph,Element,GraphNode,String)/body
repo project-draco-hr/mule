@@ -1,0 +1,29 @@
+{
+  List epList=router.getChildren(TAG_ENDPOINT);
+  for (Iterator iterator=epList.iterator(); iterator.hasNext(); ) {
+    Element outEndpoint=(Element)iterator.next();
+    String url=outEndpoint.getAttributeValue(TAG_ATTRIBUTE_ADDRESS);
+    if (url != null) {
+      GraphNode out=(GraphNode)getEndpoint(url,componentName);
+      if (out == null) {
+        out=graph.addNode();
+        StringBuffer caption=new StringBuffer();
+        caption.append(url).append("\n");
+        appendProperties(outEndpoint,caption);
+        appendDescription(outEndpoint,caption);
+        out.getInfo().setCaption(caption.toString());
+        endpoints.put(url,out);
+        processOutboundFilter(graph,outEndpoint,out,routerNode);
+      }
+ else {
+        graph.addEdge(routerNode,out).getInfo().setCaption("out");
+      }
+    }
+    GraphNode[] virtual=getVirtualEndpoint(componentName);
+    if (virtual.length > 0) {
+      for (int i=0; i < virtual.length; i++) {
+        graph.addEdge(routerNode,virtual[i]).getInfo().setCaption("out (dynamic)");
+      }
+    }
+  }
+}

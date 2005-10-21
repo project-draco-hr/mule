@@ -1,0 +1,39 @@
+{
+  try {
+    config.validate();
+  }
+ catch (  IllegalStateException e) {
+    e.printStackTrace();
+    System.exit(0);
+  }
+  try {
+    String filename=config.getOutputFilename();
+    if (config.isCombineFiles()) {
+      if (filename == null)       filename=config.getFiles().get(0).toString() + ".combined";
+      generateGraph(config.getFiles(),config.getOutputDirectory(),config.getCaption(),filename);
+    }
+ else {
+      for (Iterator iterator=config.getFiles().iterator(); iterator.hasNext(); ) {
+        String s=(String)iterator.next();
+        List list=new ArrayList(1);
+        list.add(s);
+        generateGraph(list,config.getOutputDirectory(),config.getCaption(),new File(s).getName());
+      }
+    }
+    if (!config.isKeepDotFiles()) {
+      File[] dotFiles=config.getOutputDirectory().listFiles(new FilenameFilter(){
+        public boolean accept(        File dir,        String name){
+          return name.endsWith(".dot");
+        }
+      }
+);
+      for (int x=0; x < dotFiles.length; x++) {
+        dotFiles[x].delete();
+      }
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    System.exit(1);
+  }
+}

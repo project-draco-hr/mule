@@ -1,7 +1,7 @@
 {
   String inbound=descriptor.getAttributeValue("inboundEndpoint");
   if (inbound != null) {
-    GraphNode in=(GraphNode)endpoints.get(inbound);
+    GraphNode in=(GraphNode)getEndpoint(inbound,node.getInfo().getHeader());
     if (in == null) {
       in=graph.addNode();
       in.getInfo().setCaption(inbound);
@@ -11,7 +11,7 @@
   }
   String outbound=descriptor.getAttributeValue("outboundEndpoint");
   if (outbound != null) {
-    GraphNode out=(GraphNode)endpoints.get(outbound);
+    GraphNode out=(GraphNode)getEndpoint(outbound,node.getInfo().getHeader());
     if (out == null) {
       out=graph.addNode();
       out.getInfo().setCaption(outbound);
@@ -27,5 +27,11 @@
       caption.append("transformer " + i + " : "+ transformers[i]+ "\n");
     }
     node.getInfo().setCaption(caption.toString());
+  }
+  GraphNode[] virtual=getVirtualEndpoint(node.getInfo().getHeader());
+  if (virtual.length > 0) {
+    for (int i=0; i < virtual.length; i++) {
+      graph.addEdge(node,virtual[i]).getInfo().setCaption("out (dynamic)");
+    }
   }
 }
