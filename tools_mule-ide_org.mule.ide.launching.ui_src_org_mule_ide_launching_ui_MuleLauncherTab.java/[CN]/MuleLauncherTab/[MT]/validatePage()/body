@@ -1,0 +1,39 @@
+{
+  setErrorMessage(null);
+  setMessage(null);
+  File muleRoot=MuleCorePlugin.getDefault().getMulePath();
+  if (muleRoot == null) {
+    setErrorMessage("Mule is not set up (see Preferences...)");
+    return;
+  }
+  String projectName=fProjText.getText().trim();
+  if (projectName.length() == 0) {
+    setErrorMessage("No project selected");
+    return;
+  }
+  IProject project=getWorkspaceRoot().getProject(projectName);
+  if (!project.exists()) {
+    setErrorMessage("Project does not exist");
+    return;
+  }
+  try {
+    if (!project.hasNature(MuleConfigNature.NATURE_ID)) {
+      setErrorMessage("The selected project is not a Mule project");
+    }
+    if (!project.hasNature(JavaCore.NATURE_ID)) {
+      setMessage("The selected project is not a Java project");
+    }
+    String configPath=fConfigText.getText().trim();
+    if (configPath.length() == 0) {
+      setErrorMessage("No Mule Configuration selected");
+      return;
+    }
+    IFile theFile=project.getFile(configPath);
+    if (!theFile.exists()) {
+      setErrorMessage("Mule Configuration does not exists");
+      return;
+    }
+  }
+ catch (  Exception e) {
+  }
+}
