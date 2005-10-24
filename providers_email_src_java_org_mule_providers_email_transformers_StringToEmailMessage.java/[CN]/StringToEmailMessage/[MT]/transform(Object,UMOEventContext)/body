@@ -1,5 +1,4 @@
 {
-  String contentType=context.getStringProperty(MailProperties.CONTENT_TYPE_PROPERTY,SmtpConnector.DEFAULT_CONTENT_TYPE);
   String endpointAddress=endpoint.getEndpointURI().getAddress();
   SmtpConnector connector=(SmtpConnector)endpoint.getConnector();
   String to=context.getStringProperty(MailProperties.TO_ADDRESSES_PROPERTY,endpointAddress);
@@ -8,10 +7,15 @@
   String from=context.getStringProperty(MailProperties.FROM_ADDRESS_PROPERTY,connector.getFromAddress());
   String replyTo=context.getStringProperty(MailProperties.REPLY_TO_ADDRESSES_PROPERTY,connector.getReplyToAddresses());
   String subject=context.getStringProperty(MailProperties.SUBJECT_PROPERTY,connector.getSubject());
+  String contentType=context.getStringProperty(MailProperties.CONTENT_TYPE_PROPERTY,connector.getContentType());
   Properties headers=new Properties();
   if (connector.getCustomHeaders() != null)   headers.putAll(connector.getCustomHeaders());
   Properties otherHeaders=(Properties)context.getProperty(MailProperties.CUSTOM_HEADERS_MAP_PROPERTY);
-  if (otherHeaders != null)   headers.putAll(otherHeaders);
+  if (otherHeaders != null) {
+    Map props=new HashMap(MuleManager.getInstance().getProperties());
+    props.putAll(context.getProperties());
+    headers.putAll(templateParser.parse(props,otherHeaders));
+  }
   if (logger.isDebugEnabled()) {
     StringBuffer buf=new StringBuffer();
     buf.append("Constucting email using:\n");
