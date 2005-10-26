@@ -1,8 +1,15 @@
 {
   UMOTransformer trans=null;
-  if (url.getTransformers() != null) {
+  String transId=null;
+  if (type == 2) {
+    transId=url.getResponseTransformers();
+  }
+ else {
+    transId=url.getResponseTransformers();
+  }
+  if (transId != null) {
     try {
-      trans=MuleObjectHelper.getTransformer(url.getTransformers(),",");
+      trans=MuleObjectHelper.getTransformer(transId,",");
     }
  catch (    MuleException e) {
       throw new ConnectorFactoryException(e);
@@ -18,11 +25,14 @@
     }
     String scheme=url.getSchemeMetaInfo();
     ConnectorServiceDescriptor csd=getServiceDescriptor(scheme,overrides);
-    if (inbound) {
+    if (type == 0) {
       trans=csd.createInboundTransformer();
     }
- else {
+ else     if (type == 1) {
       trans=csd.createOutboundTransformer();
+    }
+ else {
+      trans=csd.createResponseTransformer();
     }
   }
   return trans;
