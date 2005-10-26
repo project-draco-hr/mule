@@ -1,0 +1,20 @@
+{
+  List protocols=new ArrayList();
+  if (config.getConnectorConfig() != null) {
+    Properties props=PropertiesHelper.loadProperties(config.getConnectorConfig());
+    for (Iterator iterator=protocols.iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      String key=entry.getKey().toString();
+      String protocol=key.substring(0,key.indexOf("."));
+      if (!protocols.contains(protocol)) {
+        protocols.add(protocol);
+        Map pp=PropertiesHelper.getPropertiesWithPrefix(props,protocol);
+        UMOConnector cnn=ConnectorFactory.getServiceDescriptor(protocol).createConnector(protocol);
+        cnn.setName(cnn.toString());
+        pp=PropertiesHelper.removeNamspaces(pp);
+        org.mule.util.BeanUtils.populateWithoutFail(cnn,pp,true);
+        MuleManager.getInstance().registerConnector(cnn);
+      }
+    }
+  }
+}
