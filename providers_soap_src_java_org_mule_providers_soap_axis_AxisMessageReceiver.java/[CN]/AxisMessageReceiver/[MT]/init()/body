@@ -43,12 +43,6 @@
  else {
     setOptionIfNotset(service,RPCProvider.OPTION_ALLOWEDMETHODS,methodNames);
   }
-  ServiceDesc sd=service.getInitializedServiceDesc(null);
-  sd.setName(serviceName);
-  if (uri.getScheme().equalsIgnoreCase("servlet")) {
-    connector.addServletService(service);
-  }
-  sd.setEndpointURL(uri.getAddress() + "/" + serviceName);
   String style=(String)descriptor.getProperties().get("style");
   String use=(String)descriptor.getProperties().get("use");
   String doc=(String)descriptor.getProperties().get("documentation");
@@ -58,7 +52,7 @@
       throw new InitialisationException(new Message(Messages.VALUE_X_IS_INVALID_FOR_X,style,"style"),this);
     }
  else {
-      sd.setStyle(s);
+      service.setStyle(s);
     }
   }
   if (use != null) {
@@ -67,16 +61,25 @@
       throw new InitialisationException(new Message(Messages.VALUE_X_IS_INVALID_FOR_X,use,"use"),this);
     }
  else {
-      sd.setUse(u);
+      service.setUse(u);
     }
   }
-  sd.setDocumentation(doc);
+  service.getServiceDescription().setDocumentation(doc);
   TypeMappingRegistryImpl registry=(TypeMappingRegistryImpl)service.getTypeMappingRegistry();
   AxisProperties.setProperty("axis.doAutoTypes","true");
   List types=(List)descriptor.getProperties().get("beanTypes");
   registerTypes(registry,types);
   registerTypes(registry,connector.getBeanTypes());
   service.setName(serviceName);
-  service.stop();
   descriptor.addInitialisationCallback(new AxisInitialisationCallback(service));
+  if (uri.getScheme().equalsIgnoreCase("servlet")) {
+    connector.addServletService(service);
+    String endpointUrl=uri.getAddress() + "/" + serviceName;
+    endpointUrl.replaceFirst("servlet:","http:");
+    service.getServiceDescription().setEndpointURL(endpointUrl);
+  }
+ else {
+    service.getServiceDescription().setEndpointURL(uri.getAddress() + "/" + serviceName);
+  }
+  service.stop();
 }
