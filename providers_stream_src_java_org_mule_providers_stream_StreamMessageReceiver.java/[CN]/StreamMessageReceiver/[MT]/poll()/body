@@ -1,15 +1,18 @@
 {
   try {
+    if (inputStream.available() == 0) {
+      return;
+    }
     byte[] buf=new byte[getBufferSize()];
     int len=inputStream.read(buf);
     if (len == -1) {
       return;
     }
-    StringBuffer message=new StringBuffer(new String(buf,0,len));
-    if (message.charAt(message.length() - 1) == '\n') {
-      message.setLength(message.length() - 1);
+    String message=new String(buf,0,len);
+    if (message.endsWith(Utility.CRLF)) {
+      message=message.substring(0,message.length() - Utility.CRLF.length());
     }
-    UMOMessage umoMessage=new MuleMessage(connector.getMessageAdapter(message.toString()));
+    UMOMessage umoMessage=new MuleMessage(connector.getMessageAdapter(message));
     routeMessage(umoMessage,endpoint.isSynchronous());
     ((StreamConnector)endpoint.getConnector()).reinitialise();
   }
