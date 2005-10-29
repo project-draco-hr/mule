@@ -11,8 +11,14 @@
     for (int i=0; i < endpointsCount; i++) {
       endpoint=(UMOEndpoint)endpoints.get(i);
       boolean lastEndpointInChain=(i == endpointsCount - 1);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Sending Chained message '" + i + "': "+ (intermediaryResult == null ? "null" : intermediaryResult.toString()));
+      }
       if (!lastEndpointInChain) {
         intermediaryResult=send(session,intermediaryResult,endpoint);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Received Chain result '" + i + "': "+ (intermediaryResult == null ? "null" : intermediaryResult.toString()));
+        }
         if (intermediaryResult == null) {
           logger.warn("Chaining router cannot process any further endpoints. " + "There was no result returned from endpoint invocation: " + endpoint);
           break;
@@ -21,6 +27,9 @@
  else {
         if (synchronous) {
           resultToReturn=send(session,intermediaryResult,endpoint);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Received final Chain result '" + i + "': "+ (resultToReturn == null ? "null" : resultToReturn.toString()));
+          }
         }
  else {
           resultToReturn=null;
