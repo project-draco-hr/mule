@@ -10,6 +10,7 @@
       }
  catch (      org.mule.umo.security.SecurityException e) {
         logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+        connector.fireEvent(new SecurityEvent(e,SecurityEvent.SECURITY_AUTHENTICATION_FAILED));
         connector.handleException(e);
         return event.getMessage();
       }
@@ -21,6 +22,9 @@ catch (      UMOException e) {
     event=RequestContext.getEvent();
     try {
       UMOMessage result=doSend(event);
+      if (connector.isEnableMessageEvents()) {
+        connector.fireEvent(new MessageEvent(event.getMessage(),event.getEndpoint(),event.getComponent().getDescriptor().getName(),MessageEvent.MESSAGE_SENT));
+      }
       if (result != null)       result.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
       return result;
     }
