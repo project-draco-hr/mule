@@ -13,8 +13,15 @@
     axisDescriptor.setContainerManaged(false);
   }
   String serviceName=receiver.getComponent().getDescriptor().getName();
-  String endpoint=receiver.getEndpointURI().getAddress() + "/" + serviceName;
+  String endpoint=null;
   String scheme=ep.getScheme().toLowerCase();
+  if (scheme.equals("jms") || scheme.equals("vm")) {
+    endpoint=ep.toString();
+  }
+ else {
+    endpoint=receiver.getEndpointURI().getAddress() + "/" + serviceName;
+  }
+  if (logger.isDebugEnabled())   logger.debug("Modified endpoint with " + scheme + " scheme to "+ endpoint);
   boolean sync=receiver.getEndpoint().isSynchronous();
   if (scheme.equals("http") || scheme.equals("tcp")) {
     sync=true;
@@ -30,6 +37,7 @@
     serviceEndpoint.setSynchronous(sync);
     serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
     serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
+    serviceEndpoint.getProperties().putAll(receiver.getEndpoint().getProperties());
     axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
   }
   count=new Integer(count.intValue() + 1);
