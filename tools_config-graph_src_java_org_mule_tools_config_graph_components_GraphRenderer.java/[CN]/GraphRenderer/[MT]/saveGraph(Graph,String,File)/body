@@ -1,0 +1,20 @@
+{
+  final String dotFileName=outFolder + "\\" + filename+ ".dot";
+  final String mapFileName=outFolder + "\\" + filename+ ".cmapx";
+  final String gifFileName=outFolder + "\\" + filename+ ".gif";
+  final String exeFile=getSaveExecutable();
+  System.out.println("Executing: " + exeFile);
+  GRAPHtoDOTtoGIF.transform(graph,dotFileName,gifFileName,exeFile);
+  System.out.println("generating MAP");
+  DOTtoMAP.transform(exeFile,dotFileName,mapFileName);
+  Map context=new HashMap();
+  context.put("dotFileName",filename + ".dot");
+  context.put("mapFileName",mapFileName);
+  context.put("gifFileName",filename + ".gif");
+  context.put("htmlFileName",filename + ".html");
+  context.put("outFolder",outFolder.getAbsolutePath());
+  for (Iterator iter=postRenderers.iterator(); iter.hasNext(); ) {
+    PostRenderer element=(PostRenderer)iter.next();
+    element.postRender(config,context,graph);
+  }
+}

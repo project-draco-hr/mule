@@ -1,0 +1,32 @@
+{
+  Document doc=builder.build(myFile);
+  String caption="";
+  Element root=doc.getRootElement();
+  if (caption == null) {
+    caption=root.getAttribute("id").getValue();
+    if (caption != null) {
+      caption=caption.replaceAll("_"," ");
+    }
+ else {
+      caption="Mule Configuration";
+    }
+  }
+  StringBuffer captionBuffer=new StringBuffer();
+  captionBuffer.append(caption);
+  appendDescription(root,captionBuffer);
+  graph.getInfo().setCaption(captionBuffer.toString());
+  endpointRegistry.parseEndpointIdentifiers(graph,root);
+  endpointRegistry.parseEndpoints(graph,root);
+  Element model=root.getChild("model");
+  if (model != null) {
+    muleModelProcessor.parseModel(graph,model);
+  }
+ else {
+    muleModelProcessor.parseModel(graph,root);
+  }
+  connectorProcessor.parseConnectors(graph,root);
+  for (Iterator iter=postProcessors.iterator(); iter.hasNext(); ) {
+    PostProcessor postProcessor=(PostProcessor)iter.next();
+    postProcessor.postProcess(graph,config);
+  }
+}
