@@ -1,0 +1,25 @@
+{
+  UMODescriptor descriptor=getDescriptor("testComponent",FunctionalTestComponent.class.getName());
+  final int countDownInitialCount=2;
+  final CountDownLatch countDown=new CountDownLatch(countDownInitialCount);
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object Component){
+      callbackCalled=true;
+      assertNull(context.getCurrentTransaction());
+      countDown.countDown();
+    }
+  }
+;
+  initialiseComponent(descriptor,UMOTransactionConfig.ACTION_NONE,callback);
+  addResultListener(getOutDest().getAddress(),countDown);
+  MuleManager.getInstance().start();
+  afterInitialise();
+  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
+  countDown.tryLock(LOCK_WAIT,TimeUnit.MILLISECONDS);
+  assertTrue("Only " + (countDownInitialCount - countDown.getCount()) + " of "+ countDownInitialCount+ " checkpoints hit",countDown.tryLock());
+  assertNotNull(currentMsg);
+  assertTrue(currentMsg instanceof TextMessage);
+  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)currentMsg).getText());
+  assertTrue(callbackCalled);
+  assertNull(currentTx);
+}
