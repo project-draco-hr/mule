@@ -1,0 +1,20 @@
+{
+  for (int i=0; i < nodes.size(); i++) {
+    Node node=(Node)nodes.get(i);
+    try {
+      UMOMessage result=new MuleMessage(DocumentHelper.parseText(node.asXML()),new HashMap(properties));
+      if (endpoint.getFilter() == null || endpoint.getFilter().accept(result)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Endpoint filter matched. Routing message over: " + endpoint.getEndpointURI().toString());
+        }
+        nodes.remove(i);
+        return result;
+      }
+    }
+ catch (    Exception e) {
+      logger.error("Unable to create message for node as position " + i,e);
+      return null;
+    }
+  }
+  return null;
+}
