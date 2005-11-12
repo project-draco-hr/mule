@@ -17,21 +17,27 @@
       OutputStream os=new ResponseOutputStream(dataOut,socket);
       AbstractMessageReceiver receiver=getTargetReceiver(message,endpoint);
       UMOMessage returnMessage=null;
+      boolean transformResponse=false;
       if (receiver != null) {
         returnMessage=receiver.routeMessage(message,endpoint.isSynchronous(),os);
         if (returnMessage == null) {
           returnMessage=new MuleMessage("");
+          transformResponse=true;
+          RequestContext.rewriteEvent(returnMessage);
         }
-        RequestContext.rewriteEvent(returnMessage);
       }
  else {
+        transformResponse=true;
         String failedPath=endpoint.getEndpointURI().getScheme() + "://" + endpoint.getEndpointURI().getHost()+ ":"+ endpoint.getEndpointURI().getPort()+ getRequestPath(message);
         logger.debug("Failed to bind to " + failedPath);
-        returnMessage=new MuleMessage(new Message(Messages.CANNOT_BIND_TO_ADDRESS_X,failedPath));
+        returnMessage=new MuleMessage(new Message(Messages.CANNOT_BIND_TO_ADDRESS_X,failedPath).toString());
         returnMessage.setIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_NOT_FOUND);
         RequestContext.setEvent(new MuleEvent(returnMessage,endpoint,new MuleSession(),true));
       }
       Object response=returnMessage.getPayload();
+      if (transformResponse) {
+        response=connector.getDefaultResponseTransformer().transform(response);
+      }
       if (response instanceof byte[]) {
         dataOut.write((byte[])response);
       }

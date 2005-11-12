@@ -20,16 +20,16 @@
     }
  else {
       byte[] buffer=event.getTransformedMessageAsBytes();
-      postMethod.setRequestBody(new ByteArrayInputStream(buffer));
-      postMethod.setRequestContentLength(PostMethod.CONTENT_LENGTH_AUTO);
+      postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer));
       httpMethod=postMethod;
     }
   }
   HttpConnection connection=null;
   try {
     connection=getConnection(uri);
+    connection.open();
     if (connection.isProxied() && connection.isSecure()) {
-      httpMethod=new ConnectMethod(httpMethod);
+      httpMethod=new ConnectMethod();
     }
     httpMethod.setDoAuthentication(true);
     if (event.getCredentials() != null) {
@@ -40,14 +40,13 @@
       httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
     }
     try {
-      connection.open();
       httpMethod.execute(state,connection);
     }
  catch (    BindException e) {
       Thread.sleep(100);
       httpMethod.execute(state,connection);
     }
-catch (    HttpRecoverableException e) {
+catch (    HttpException e) {
       logger.error(e,e);
     }
     return httpMethod;

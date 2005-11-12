@@ -2,11 +2,16 @@
   Object msg;
   HttpMethod httpMethod=(HttpMethod)src;
   Header contentType=httpMethod.getResponseHeader(HttpConstants.HEADER_CONTENT_TYPE);
-  if (contentType != null && !contentType.getValue().startsWith("text/")) {
-    msg=httpMethod.getResponseBody();
-  }
+  try {
+    if (contentType != null && !contentType.getValue().startsWith("text/")) {
+      msg=httpMethod.getResponseBody();
+    }
  else {
-    msg=httpMethod.getResponseBodyAsString();
+      msg=httpMethod.getResponseBodyAsString();
+    }
+  }
+ catch (  IOException e) {
+    throw new TransformerException(this,e);
   }
   Map headerProps=new HashMap();
   Header[] headers=httpMethod.getRequestHeaders();

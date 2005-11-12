@@ -26,37 +26,61 @@
  else {
     boolean multipart=p.getProperty(HttpConstants.HEADER_CONTENT_TYPE,"").indexOf("multipart/related") > -1;
     String contentLengthHeader=p.getProperty(HttpConstants.HEADER_CONTENT_LENGTH,null);
-    if (contentLengthHeader == null)     throw new IllegalStateException(HttpConstants.HEADER_CONTENT_LENGTH + " header must be set");
-    int contentLength=Integer.parseInt(contentLengthHeader);
-    if (multipart) {
-      byte[] buffer=new byte[1024];
-      payload=File.createTempFile("mime",".att");
-      ((File)payload).deleteOnExit();
-      FileOutputStream os=new FileOutputStream((File)payload);
-      int length=-1;
-      int offset=0;
-      while (offset != contentLength) {
-        buffer=new byte[1024];
-        length=is.read(buffer);
-        if (length != -1) {
-          os.write(buffer,0,length);
-          offset+=length;
-        }
-      }
-      os.close();
+    String chunkedString=PropertiesHelper.getStringProperty(p,HttpConstants.HEADER_TRANSFER_ENCODING,null);
+    boolean chunked="chunked".equalsIgnoreCase(chunkedString);
+    if (contentLengthHeader == null && !chunked) {
+      throw new IllegalStateException(HttpConstants.HEADER_CONTENT_LENGTH + " header must be set");
     }
- else {
-      byte[] buffer=new byte[contentLength];
+    if (chunked) {
+      byte[] buffer=new byte[1024 * 32];
       int length=-1;
-      int offset=req.read(buffer);
-      while (offset >= 0 && offset < buffer.length) {
-        length=req.read(buffer,offset,buffer.length - offset);
+      ChunkedInputStream cis=new ChunkedInputStream(req);
+      ByteArrayOutputStream baos=new ByteArrayOutputStream();
+      int offset=cis.read(buffer);
+      if (offset == -1)       return null;
+      baos.write(buffer,0,offset);
+      while (offset >= 0) {
+        length=cis.read(buffer,offset,buffer.length);
         if (length == -1) {
           break;
         }
+        baos.write(buffer,offset,length);
         offset+=length;
       }
-      payload=buffer;
+      payload=baos.toByteArray();
+    }
+ else {
+      int contentLength=Integer.parseInt(contentLengthHeader);
+      if (multipart) {
+        byte[] buffer=new byte[1024];
+        payload=File.createTempFile("mime",".att");
+        ((File)payload).deleteOnExit();
+        FileOutputStream os=new FileOutputStream((File)payload);
+        int length=-1;
+        int offset=0;
+        while (offset != contentLength) {
+          buffer=new byte[1024];
+          length=is.read(buffer);
+          if (length != -1) {
+            os.write(buffer,0,length);
+            offset+=length;
+          }
+        }
+        os.close();
+      }
+ else {
+        byte[] buffer=new byte[contentLength];
+        int length=-1;
+        int offset=req.read(buffer);
+        while (offset >= 0 && offset < buffer.length) {
+          length=req.read(buffer,offset,buffer.length - offset);
+          if (length == -1) {
+            break;
+          }
+          offset+=length;
+        }
+        payload=buffer;
+      }
     }
   }
   return payload;
