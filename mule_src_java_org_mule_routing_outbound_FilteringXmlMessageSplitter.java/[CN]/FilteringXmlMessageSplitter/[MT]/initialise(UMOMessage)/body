@@ -2,14 +2,31 @@
   if (logger.isDebugEnabled()) {
     logger.debug("splitExpression is " + splitExpression);
   }
-  if (message.getPayload() instanceof org.dom4j.Document) {
-    dom4jDoc=(org.dom4j.Document)message.getPayload();
-    XPath xpath=dom4jDoc.createXPath(splitExpression);
-    if (namespaces != null)     xpath.setNamespaceURIs(namespaces);
-    nodes=xpath.selectNodes(dom4jDoc);
-  }
+  Object src=message.getPayload();
+  try {
+    if (src instanceof byte[]) {
+      src=new String((byte[])src);
+    }
+    Document dom4jDoc=null;
+    if (src instanceof String) {
+      String xml=(String)src;
+      dom4jDoc=DocumentHelper.parseText(xml);
+    }
+ else     if (src instanceof org.dom4j.Document) {
+      dom4jDoc=(org.dom4j.Document)src;
+    }
  else {
-    logger.error("Message is not a dom4j.Document! It is: " + message.getPayload().getClass().toString());
+      logger.error("Non-xml message payload: " + src.getClass().toString());
+      return;
+    }
+    if (dom4jDoc != null) {
+      XPath xpath=dom4jDoc.createXPath(splitExpression);
+      if (namespaces != null)       xpath.setNamespaceURIs(namespaces);
+      nodes=xpath.selectNodes(dom4jDoc);
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Error spliting document with " + splitExpression,e);
   }
   properties=message.getProperties();
 }
