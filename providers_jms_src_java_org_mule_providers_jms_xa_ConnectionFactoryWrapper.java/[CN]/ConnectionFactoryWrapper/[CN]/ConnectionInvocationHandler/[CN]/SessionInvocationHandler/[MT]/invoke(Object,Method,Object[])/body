@@ -3,8 +3,14 @@
     logger.debug("Invoking " + method);
   }
   Object result=method.invoke(session,args);
-  if (result instanceof MessageConsumer) {
+  if (result instanceof QueueReceiver) {
+    result=Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{QueueReceiver.class},new ConsumerProducerInvocationHandler(result));
+  }
+ else   if (result instanceof MessageConsumer) {
     result=Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{MessageConsumer.class},new ConsumerProducerInvocationHandler(result));
+  }
+ else   if (result instanceof QueueSender) {
+    result=Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{QueueSender.class},new ConsumerProducerInvocationHandler(result));
   }
  else   if (result instanceof MessageProducer) {
     result=Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{MessageProducer.class},new ConsumerProducerInvocationHandler(result));
