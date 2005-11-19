@@ -1,0 +1,22 @@
+{
+  UMOEndpoint endpoint=new MuleEndpoint(action.getResourceIdentifier(),false);
+  try {
+    if (AdminNotification.ACTION_DISPATCH == action.getAction()) {
+      context.dispatchEvent(action.getMessage(),endpoint);
+      return null;
+    }
+ else {
+      endpoint.setRemoteSync(true);
+      UMOMessage result=context.sendEvent(action.getMessage(),endpoint);
+      if (result != null) {
+        return xstream.toXML(result);
+      }
+ else {
+        return null;
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new DispatchException(action.getMessage(),new MuleEndpoint(action.getResourceIdentifier(),true),e);
+  }
+}
