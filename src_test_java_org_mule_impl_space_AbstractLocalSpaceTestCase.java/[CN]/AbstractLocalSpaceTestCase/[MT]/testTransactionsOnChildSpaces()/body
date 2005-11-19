@@ -1,0 +1,55 @@
+{
+  TransactionalQueueManager manager=new TransactionalQueueManager();
+  DefaultSpaceFactory factory=getSpaceFactory();
+  manager.setPersistenceStrategy(factory.getPersistenceStrategy());
+  factory.setQueueManager(manager);
+  factory.setPersistenceStrategy(null);
+  manager.start();
+  DefaultSpace space1a=(DefaultSpace)factory.create("space1");
+  DefaultSpace space1b=space1a.createChild("child");
+  DefaultSpace space2a=(DefaultSpace)factory.create("space2");
+  DefaultSpace space2b=space2a.createChild("child");
+  try {
+    space1a.put("String1");
+    assertEquals(1,space1a.size());
+    assertEquals(1,space1b.size());
+    space1a.beginTransaction();
+    Object o=space1a.take();
+    assertNotNull(o);
+    assertEquals("String1",o);
+    assertEquals(0,space1a.size());
+    assertEquals(0,space1b.size());
+    space2a.put("String2");
+    assertEquals(1,space2a.size());
+    assertEquals(1,space2b.size());
+    space1a.commitTransaction();
+    assertEquals(0,space1a.size());
+    assertEquals(0,space1b.size());
+    assertEquals(1,space2a.size());
+    assertEquals(1,space2b.size());
+    space1a.beginTransaction();
+    o=space2a.take();
+    assertNotNull(o);
+    assertEquals("String2",o);
+    assertEquals(0,space1a.size());
+    assertEquals(0,space1b.size());
+    assertEquals(0,space2a.size());
+    assertEquals(0,space2b.size());
+    space1a.put("String1");
+    space2a.put("String1");
+    assertEquals(1,space1a.size());
+    assertEquals(1,space1b.size());
+    assertEquals(1,space2a.size());
+    assertEquals(1,space2b.size());
+    space1a.rollbackTransaction();
+    assertEquals(0,space1a.size());
+    assertEquals(0,space1b.size());
+    assertEquals(1,space2a.size());
+    assertEquals(1,space2b.size());
+  }
+  finally {
+    space1a.dispose();
+    space2a.dispose();
+    manager.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
+  }
+}

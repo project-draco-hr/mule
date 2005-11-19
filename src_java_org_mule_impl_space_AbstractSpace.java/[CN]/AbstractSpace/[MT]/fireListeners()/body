@@ -1,0 +1,19 @@
+{
+  if (listeners.size() > 0) {
+    Object item=null;
+    try {
+      item=takeNoWait();
+    }
+ catch (    UMOSpaceException e) {
+      logger.error(e.getMessage(),e);
+    }
+    if (item == null) {
+      logger.warn("Item was taken before listeners could be updated, try using a different type of space");
+      return;
+    }
+    for (Iterator iterator=listeners.iterator(); iterator.hasNext(); ) {
+      UMOSpaceEventListener spaceEventListener=(UMOSpaceEventListener)iterator.next();
+      spaceEventListener.onEvent(new UMOSpaceEvent(item,this));
+    }
+  }
+}
