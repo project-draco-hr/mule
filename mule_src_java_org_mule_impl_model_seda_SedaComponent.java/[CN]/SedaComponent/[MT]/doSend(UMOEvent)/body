@@ -2,8 +2,16 @@
   UMOMessage result=null;
   MuleProxy proxy=null;
   try {
-    proxy=(MuleProxy)proxyPool.borrowObject();
-    getStatistics().setComponentPoolSize(proxyPool.getSize());
+    if (proxyPool != null) {
+      proxy=(MuleProxy)proxyPool.borrowObject();
+      getStatistics().setComponentPoolSize(proxyPool.getSize());
+    }
+ else     if (componentPerRequest) {
+      proxy=createComponentProxy();
+    }
+ else {
+      proxy=componentProxy;
+    }
     proxy.setStatistics(getStatistics());
     if (logger.isDebugEnabled()) {
       logger.debug(this + " : got proxy for " + event.getId()+ " = "+ proxy);
@@ -18,14 +26,19 @@ catch (  Exception e) {
   }
  finally {
     try {
-      if (proxy != null) {
+      if (proxy != null && proxyPool != null) {
         proxyPool.returnObject(proxy);
+      }
+ else       if (componentPerRequest) {
+        proxy.dispose();
       }
     }
  catch (    Exception e) {
       throw new ComponentException(event.getMessage(),this,e);
     }
-    getStatistics().setComponentPoolSize(proxyPool.getSize());
+    if (proxyPool != null) {
+      getStatistics().setComponentPoolSize(proxyPool.getSize());
+    }
   }
   return result;
 }

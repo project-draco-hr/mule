@@ -19,8 +19,16 @@
         if (logger.isDebugEnabled()) {
           logger.debug("Component: " + descriptor.getName() + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
         }
-        proxy=(MuleProxy)proxyPool.borrowObject();
-        getStatistics().setComponentPoolSize(proxyPool.getSize());
+        if (proxyPool != null) {
+          proxy=(MuleProxy)proxyPool.borrowObject();
+          getStatistics().setComponentPoolSize(proxyPool.getSize());
+        }
+ else         if (componentPerRequest) {
+          proxy=createComponentProxy();
+        }
+ else {
+          proxy=componentProxy;
+        }
         proxy.setStatistics(getStatistics());
         proxy.start();
         proxy.onEvent(queueSession,event);
@@ -28,7 +36,7 @@
       }
     }
  catch (    Exception e) {
-      if (proxy != null) {
+      if (proxy != null && proxyPool != null) {
         try {
           proxyPool.returnObject(proxy);
         }
@@ -55,6 +63,9 @@
     }
  finally {
       stopping.set(false);
+      if (componentPerRequest) {
+        proxy.dispose();
+      }
     }
   }
 }
