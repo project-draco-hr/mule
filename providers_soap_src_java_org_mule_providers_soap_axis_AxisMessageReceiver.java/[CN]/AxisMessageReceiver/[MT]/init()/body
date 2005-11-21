@@ -1,7 +1,15 @@
 {
   AxisProperties.setProperty("axis.doAutoTypes","true");
-  service=new SOAPService(new MuleProvider(connector));
   MuleDescriptor descriptor=(MuleDescriptor)component.getDescriptor();
+  String style=(String)descriptor.getProperties().get("style");
+  if (style != null && style.equalsIgnoreCase("message")) {
+    logger.debug("Creating Message Provider");
+    service=new SOAPService(new MuleMsgProvider(connector));
+  }
+ else {
+    logger.debug("Creating RPC Provider");
+    service=new SOAPService(new MuleProvider(connector));
+  }
   service.setEngine(connector.getAxisServer());
   UMOEndpointURI uri=endpoint.getEndpointURI();
   String serviceName=component.getDescriptor().getName();
@@ -33,17 +41,16 @@
   methodNames=buf.toString();
   methodNames=methodNames.substring(0,methodNames.length() - 1);
   String namespace=Namespaces.makeNamespace(className);
-  setOptionIfNotset(service,RPCProvider.OPTION_WSDL_SERVICEPORT,serviceName);
-  setOptionIfNotset(service,RPCProvider.OPTION_CLASSNAME,className);
-  setOptionIfNotset(service,RPCProvider.OPTION_SCOPE,"Request");
-  setOptionIfNotset(service,RPCProvider.OPTION_WSDL_TARGETNAMESPACE,namespace);
+  setOptionIfNotset(service,JavaProvider.OPTION_WSDL_SERVICEPORT,serviceName);
+  setOptionIfNotset(service,JavaProvider.OPTION_CLASSNAME,className);
+  setOptionIfNotset(service,JavaProvider.OPTION_SCOPE,"Request");
+  setOptionIfNotset(service,JavaProvider.OPTION_WSDL_TARGETNAMESPACE,namespace);
   if (methodNames == null) {
-    setOptionIfNotset(service,RPCProvider.OPTION_ALLOWEDMETHODS,"*");
+    setOptionIfNotset(service,JavaProvider.OPTION_ALLOWEDMETHODS,"*");
   }
  else {
-    setOptionIfNotset(service,RPCProvider.OPTION_ALLOWEDMETHODS,methodNames);
+    setOptionIfNotset(service,JavaProvider.OPTION_ALLOWEDMETHODS,methodNames);
   }
-  String style=(String)descriptor.getProperties().get("style");
   String use=(String)descriptor.getProperties().get("use");
   String doc=(String)descriptor.getProperties().get("documentation");
   if (style != null) {
