@@ -29,31 +29,33 @@
       msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
     }
     Destination replyTo=null;
-    Object tempReplyTo=event.removeProperty("JMSReplyTo");
-    if (tempReplyTo != null) {
-      if (tempReplyTo instanceof Destination) {
-        replyTo=(Destination)tempReplyTo;
-      }
- else {
-        boolean replyToTopic=false;
-        String reply=tempReplyTo.toString();
-        int i=reply.indexOf(":");
-        if (i > -1) {
-          String qtype=reply.substring(0,i);
-          replyToTopic="topic".equalsIgnoreCase(qtype);
-          reply=reply.substring(i + 1);
+    if (connector.getJmsSupport().supportsProperty("ReplyTo")) {
+      Object tempReplyTo=event.removeProperty("JMSReplyTo");
+      if (tempReplyTo != null) {
+        if (tempReplyTo instanceof Destination) {
+          replyTo=(Destination)tempReplyTo;
         }
-        replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
+ else {
+          boolean replyToTopic=false;
+          String reply=tempReplyTo.toString();
+          int i=reply.indexOf(":");
+          if (i > -1) {
+            String qtype=reply.substring(0,i);
+            replyToTopic="topic".equalsIgnoreCase(qtype);
+            reply=reply.substring(i + 1);
+          }
+          replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
+        }
       }
-    }
-    if (remoteSync && replyTo == null) {
-      replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
-    }
-    if (replyTo != null) {
-      msg.setJMSReplyTo(replyTo);
-    }
-    if (remoteSync) {
-      consumer=connector.getJmsSupport().createConsumer(session,replyTo);
+      if (remoteSync && replyTo == null) {
+        replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
+      }
+      if (replyTo != null) {
+        msg.setJMSReplyTo(replyTo);
+      }
+      if (remoteSync) {
+        consumer=connector.getJmsSupport().createConsumer(session,replyTo);
+      }
     }
     String ttlString=(String)event.removeProperty("TimeToLive");
     String priorityString=(String)event.removeProperty("Priority");
