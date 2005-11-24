@@ -15,7 +15,7 @@
   clientProvider=createAxisProvider(clientConfig);
   axisServer=new AxisServer(serverProvider);
   axisServer.setOption("axis.doAutoTypes",new Boolean(doAutoTypes));
-  WSDDProvider.registerProvider(QNAME_MULERPC_PROVIDER,new WSDDJavaMuleProvider(this));
+  WSDDProvider.registerProvider(QNAME_MULE_PROVIDER,new WSDDJavaMuleProvider(this));
   try {
     registerTransportTypes();
   }
@@ -28,5 +28,11 @@
     handlerPkgs="org.mule.providers.soap.axis.transport|" + handlerPkgs;
     System.setProperty("java.protocol.handler.pkgs",handlerPkgs);
     logger.debug("Setting java.protocol.handler.pkgs to: " + handlerPkgs);
+  }
+  try {
+    registerTypes((TypeMappingRegistryImpl)axisServer.getTypeMappingRegistry(),beanTypes);
+  }
+ catch (  ClassNotFoundException e) {
+    throw new InitialisationException(e,this);
   }
 }

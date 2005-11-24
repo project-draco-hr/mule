@@ -7,7 +7,8 @@
       throw new DispatchException(new org.mule.config.i18n.Message("soap",4),event.getMessage(),event.getEndpoint());
     }
   }
-  Call call=(Call)getService(event).createCall();
+  Service service=getService(event);
+  Call call=(Call)service.createCall();
   String style=(String)event.getProperties().get("style");
   String use=(String)event.getProperties().get("use");
   if (style != null) {
@@ -29,7 +30,7 @@
     }
   }
   BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
-  call.setTargetEndpointAddress(endpointUri.toString());
+  call.setTargetEndpointAddress(endpointUri.getAddress());
   String methodNamespace=(String)event.getProperty(AxisConnector.METHOD_NAMESPACE_PROPERTY);
   if (methodNamespace != null) {
     call.setOperationName(new QName(methodNamespace,method));
