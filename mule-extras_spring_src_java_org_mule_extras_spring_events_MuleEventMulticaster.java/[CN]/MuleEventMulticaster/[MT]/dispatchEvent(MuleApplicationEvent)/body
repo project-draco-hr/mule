@@ -17,11 +17,12 @@
         applicationEvent.getMuleEventContext().dispatchEvent(message,endpoint);
       }
  else {
+        UMOSession session=new MuleSession(component,null);
+        RequestContext.setEvent(new MuleEvent(message,endpoint,session,false));
         if (endpoint.getTransformer() != null) {
           message=new MuleMessage(endpoint.getTransformer().transform(applicationEvent.getSource()),applicationEvent.getProperties());
         }
         UMOMessageDispatcher dispatcher=endpoint.getConnector().getDispatcher(endpoint.getEndpointURI().getAddress());
-        UMOSession session=new MuleSession(component,null);
         dispatcher.dispatch(new MuleEvent(message,endpoint,session,false));
       }
     }
