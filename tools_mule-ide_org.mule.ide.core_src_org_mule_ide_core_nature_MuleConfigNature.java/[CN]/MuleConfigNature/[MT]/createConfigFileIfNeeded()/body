@@ -1,0 +1,21 @@
+{
+  IFile file=getProject().getFile(IMuleDefaults.MULE_IDE_CONFIG_FILENAME);
+  if (!file.exists()) {
+    try {
+      URI uri=URI.createFileURI(getProject().getLocation().toString() + IPath.SEPARATOR + IMuleDefaults.MULE_IDE_CONFIG_FILENAME);
+      Resource resource=(new MuleIDEResourceFactoryImpl()).createResource(uri);
+      DocumentRoot root=MuleIDEFactory.eINSTANCE.createDocumentRoot();
+      MuleIdeConfigType config=MuleIDEFactory.eINSTANCE.createMuleIdeConfigType();
+      root.setMuleIdeConfig(config);
+      resource.getContents().add(root);
+      ByteArrayOutputStream output=new ByteArrayOutputStream();
+      resource.save(output,Collections.EMPTY_MAP);
+      ByteArrayInputStream input=new ByteArrayInputStream(output.toByteArray());
+      file.create(input,true,new NullProgressMonitor());
+    }
+ catch (    Exception e) {
+      MuleCorePlugin.getDefault().createMarker(getProject(),IMarker.SEVERITY_ERROR,ERROR_CREATING_CONFIG_FILE);
+      MuleCorePlugin.getDefault().logException(ERROR_CREATING_CONFIG_FILE,e);
+    }
+  }
+}
