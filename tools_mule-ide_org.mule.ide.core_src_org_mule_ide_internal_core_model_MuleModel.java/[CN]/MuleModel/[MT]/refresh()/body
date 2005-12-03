@@ -1,0 +1,25 @@
+{
+  setStatus(Status.OK_STATUS);
+  IFile file=getProject().getFile(IMuleDefaults.MULE_IDE_CONFIG_FILENAME);
+  if (file.exists()) {
+    try {
+      Resource resource=(new MuleIDEResourceFactoryImpl()).createResource(null);
+      resource.load(file.getContents(),Collections.EMPTY_MAP);
+      if (!resource.getContents().isEmpty()) {
+        DocumentRoot root=(DocumentRoot)resource.getContents().get(0);
+        MuleIdeConfigType config=root.getMuleIdeConfig();
+        if (config != null) {
+          setStatus(loadFrom(config));
+          return getStatus();
+        }
+      }
+    }
+ catch (    Exception e) {
+      MuleCorePlugin.getDefault().logException(ERROR_READING_CONFIG_FILE,e);
+      setStatus(MuleCorePlugin.getDefault().createErrorStatus(ERROR_READING_CONFIG_FILE,e));
+      return getStatus();
+    }
+  }
+  setStatus(MuleCorePlugin.getDefault().createErrorStatus(ERROR_READING_CONFIG_FILE,null));
+  return getStatus();
+}
