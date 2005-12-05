@@ -1,0 +1,25 @@
+{
+  if (registry == null) {
+    throw new IllegalStateException("HiveMind registry has not been set");
+  }
+  if (key == null) {
+    throw new ObjectNotFoundException("Component not found for null key");
+  }
+  Object component=null;
+  if (key instanceof String) {
+    try {
+      Class keyClass=ClassHelper.loadClass((String)key,getClass());
+      component=registry.getService(keyClass);
+    }
+ catch (    ClassNotFoundException e) {
+      throw new ObjectNotFoundException("Component class not found: " + key.toString());
+    }
+  }
+ else   if (key instanceof Class) {
+    component=registry.getService((Class)key);
+  }
+  if (component == null) {
+    throw new ObjectNotFoundException("Component not found for key: " + key.toString());
+  }
+  return component;
+}
