@@ -7,9 +7,10 @@
     if (src instanceof byte[]) {
       src=new String((byte[])src);
     }
-    Document dom4jDoc;
+    Document dom4jDoc=null;
     if (src instanceof String) {
       String xml=(String)src;
+      logger.debug("Incoming payload size " + xml.length());
       dom4jDoc=DocumentHelper.parseText(xml);
     }
  else     if (src instanceof org.dom4j.Document) {
@@ -22,12 +23,14 @@
     if (dom4jDoc != null) {
       XPath xpath=dom4jDoc.createXPath(splitExpression);
       if (namespaces != null)       xpath.setNamespaceURIs(namespaces);
-{
-        nodes=xpath.selectNodes(dom4jDoc);
+      List nodes=xpath.selectNodes(dom4jDoc);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Split into " + nodes.size());
       }
+      tlNodes.set(nodes);
     }
  else {
-      logger.warn("Unsupported message type, ignoring");
+      logger.error("Unable to create dom4j document from payload");
     }
   }
  catch (  Exception e) {
