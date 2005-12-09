@@ -3,14 +3,21 @@
   IFile configFile=parent.getProject().getFile(relativePath);
   setFilePath(configFile.getFullPath());
   if (!configFile.exists()) {
-    setResource(null);
+    this.configDocument=null;
     setStatus(MuleCorePlugin.getDefault().createErrorStatus(ERROR_CONFIG_NOT_FOUND + relativePath,null));
   }
  else {
     try {
       Resource.Factory factory=new MuleResourceFactoryImpl();
-      setResource(factory.createResource(null));
-      getResource().load(configFile.getContents(),Collections.EMPTY_MAP);
+      Resource resource=factory.createResource(null);
+      resource.load(configFile.getContents(),Collections.EMPTY_MAP);
+      EList contents=resource.getContents();
+      if (!contents.isEmpty()) {
+        this.configDocument=(DocumentRoot)contents.get(0);
+      }
+ else {
+        this.configDocument=null;
+      }
     }
  catch (    Exception e) {
       setStatus(MuleCorePlugin.getDefault().createErrorStatus(ERROR_LOADING_CONFIG + relativePath,e));
