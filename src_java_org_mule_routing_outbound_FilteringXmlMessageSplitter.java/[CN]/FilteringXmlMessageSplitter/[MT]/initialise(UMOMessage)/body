@@ -1,17 +1,29 @@
 {
+  splitExpression=splitExpression.trim();
   if (logger.isDebugEnabled()) {
-    logger.debug("splitExpression is " + splitExpression);
+    if (splitExpression.length() == 0) {
+      logger.warn("splitExpression is not specified, no processing will take place");
+    }
+ else {
+      logger.debug("splitExpression is " + splitExpression);
+    }
   }
   Object src=message.getPayload();
   try {
     if (src instanceof byte[]) {
       src=new String((byte[])src);
     }
-    Document dom4jDoc=null;
+    Document dom4jDoc;
     if (src instanceof String) {
       String xml=(String)src;
-      logger.debug("Incoming payload size " + xml.length());
-      dom4jDoc=DocumentHelper.parseText(xml);
+      SAXReader reader=new SAXReader();
+      setDoSchemaValidation(reader,isValidateSchema());
+      InputStream xsdAsStream=ClassHelper.getResourceAsStream(getExternalSchemaLocation(),getClass());
+      if (xsdAsStream == null) {
+        throw new IllegalArgumentException("Couldn't find schema at " + getExternalSchemaLocation());
+      }
+      reader.setProperty("http://java.sun.com/xml/jaxp/properties/schemaSource",xsdAsStream);
+      dom4jDoc=reader.read(new StringReader(xml));
     }
  else     if (src instanceof org.dom4j.Document) {
       dom4jDoc=(org.dom4j.Document)src;
@@ -21,20 +33,23 @@
       return;
     }
     if (dom4jDoc != null) {
-      XPath xpath=dom4jDoc.createXPath(splitExpression);
-      if (namespaces != null)       xpath.setNamespaceURIs(namespaces);
-      List nodes=xpath.selectNodes(dom4jDoc);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Split into " + nodes.size());
+      if (splitExpression.length() > 0) {
+        XPath xpath=dom4jDoc.createXPath(splitExpression);
+        if (namespaces != null)         xpath.setNamespaceURIs(namespaces);
+        List nodes=xpath.selectNodes(dom4jDoc);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Split into " + nodes.size());
+        }
+        FilteringXmlMessageSplitter.nodes.set(nodes);
       }
-      tlNodes.set(nodes);
     }
  else {
-      logger.error("Unable to create dom4j document from payload");
+      logger.warn("Unsupported message type, ignoring");
     }
   }
- catch (  Exception e) {
-    logger.error("Error spliting document with " + splitExpression,e);
+ catch (  Exception ex) {
+    throw new IllegalArgumentException("Failed to initialise the payload.",ex);
   }
-  properties=message.getProperties();
+  Map theProperties=message.getProperties();
+  properties.set(theProperties);
 }
