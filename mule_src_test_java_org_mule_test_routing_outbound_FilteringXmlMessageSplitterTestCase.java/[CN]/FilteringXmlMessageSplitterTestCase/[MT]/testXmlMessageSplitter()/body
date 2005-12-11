@@ -1,0 +1,34 @@
+{
+  Mock session=getMockSession();
+  UMOEndpoint endpoint1=getTestEndpoint("Test1Endpoint",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint1.setEndpointURI(new MuleEndpointURI("test://endpointUri.1"));
+  UMOEndpoint endpoint2=getTestEndpoint("Test2Endpoint",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint2.setEndpointURI(new MuleEndpointURI("test://endpointUri.2"));
+  UMOEndpoint endpoint3=getTestEndpoint("Test3Endpoint",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint3.setEndpointURI(new MuleEndpointURI("test://endpointUri.3"));
+  FilteringXmlMessageSplitter splitter=new FilteringXmlMessageSplitter();
+  splitter.setValidateSchema(true);
+  splitter.setExternalSchemaLocation("purchase-order.xsd");
+  Map namespaces=new HashMap();
+  namespaces.put("e","http://www.example.com");
+  splitter.setSplitExpression("/e:purchaseOrder/e:items/e:item");
+  splitter.setNamespaces(namespaces);
+  splitter.addEndpoint(endpoint1);
+  splitter.addEndpoint(endpoint2);
+  splitter.addEndpoint(endpoint3);
+  String payload=Utility.loadResourceAsString("purchase-order.xml",getClass());
+  UMOMessage message=new MuleMessage(payload);
+  assertTrue(splitter.isMatch(message));
+  final ItemNodeConstraint itemNodeConstraint=new ItemNodeConstraint();
+  session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint1)));
+  session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint1)));
+  splitter.route(message,(UMOSession)session.proxy(),false);
+  session.verify();
+  message=new MuleMessage(payload);
+  session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint1)),message);
+  session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint1)),message);
+  UMOMessage result=splitter.route(message,(UMOSession)session.proxy(),true);
+  assertNotNull(result);
+  assertEquals(message,result);
+  session.verify();
+}
