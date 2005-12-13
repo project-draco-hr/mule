@@ -1,13 +1,27 @@
 {
   try {
-    StringBuffer message=new StringBuffer();
-    byte[] buf=new byte[getBufferSize()];
-    int len=inputStream.read(buf);
-    if (len == -1)     return;
-    message.append(new String(buf,0,len));
-    String read=message.toString();
-    if (read.endsWith("\n"))     read=read.substring(0,message.length() - 1);
-    UMOMessage umoMessage=new MuleMessage(connector.getMessageAdapter(read));
+    byte[] inputBuffer=new byte[bufferSize];
+    int len=inputStream.read(inputBuffer);
+    if (len == -1) {
+      return;
+    }
+    StringBuffer fullBuffer=new StringBuffer(bufferSize);
+    while (len > 0) {
+      fullBuffer.append(new String(inputBuffer,0,len));
+      len=0;
+      if (inputStream.available() > 0) {
+        len=inputStream.read(inputBuffer);
+      }
+    }
+    String finalMessageString;
+    int noCRLFLength=fullBuffer.length() - Utility.CRLF.length();
+    if (fullBuffer.indexOf(Utility.CRLF,noCRLFLength) != -1) {
+      finalMessageString=fullBuffer.substring(0,noCRLFLength);
+    }
+ else {
+      finalMessageString=fullBuffer.toString();
+    }
+    UMOMessage umoMessage=new MuleMessage(connector.getMessageAdapter(finalMessageString));
     routeMessage(umoMessage,endpoint.isSynchronous());
     ((StreamConnector)endpoint.getConnector()).reinitialise();
   }
