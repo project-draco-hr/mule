@@ -1,6 +1,7 @@
 {
   FTPClient client=null;
-  UMOEndpointURI uri=event.getEndpoint().getEndpointURI();
+  final UMOEndpoint endpoint=event.getEndpoint();
+  UMOEndpointURI uri=endpoint.getEndpointURI();
   try {
     String filename=(String)event.getProperty(FtpConnector.PROPERTY_FILENAME);
     if (filename == null) {
@@ -22,6 +23,7 @@
       buf=data.toString().getBytes();
     }
     client=connector.getFtp(uri);
+    connector.enterActiveOrPassiveMode(client,endpoint.getProperties());
     if (!client.changeWorkingDirectory(uri.getPath())) {
       throw new IOException("Ftp error: " + client.getReplyCode());
     }
