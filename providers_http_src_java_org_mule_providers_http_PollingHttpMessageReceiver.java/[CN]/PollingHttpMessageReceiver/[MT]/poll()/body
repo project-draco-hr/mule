@@ -25,7 +25,15 @@
   }
   buffer=baos.toByteArray();
   baos.close();
-  UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{buffer,connection.getHeaderFields()});
+  Map respHeaders=new HashMap();
+  Iterator it=connection.getHeaderFields().entrySet().iterator();
+  while (it.hasNext()) {
+    Map.Entry msgHeader=(Map.Entry)it.next();
+    if (msgHeader.getValue() != null) {
+      respHeaders.put(msgHeader.getKey(),((List)msgHeader.getValue()).get(0));
+    }
+  }
+  UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{buffer,respHeaders});
   connection.disconnect();
   UMOMessage message=new MuleMessage(adapter);
   routeMessage(message,endpoint.isSynchronous());
