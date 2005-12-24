@@ -17,27 +17,30 @@
     secure=true;
   }
   Properties props=System.getProperties();
-  props.put("mail." + protocol + ".host",url.getHost());
-  int port=url.getPort();
-  if (port == -1) {
-    port=connector.getPort();
-  }
-  props.put("mail." + protocol + ".port",String.valueOf(port));
-  if (secure) {
-    System.setProperty("mail." + protocol + ".socketFactory.port",String.valueOf(port));
-  }
   Session session;
-  if (url.getPassword() != null) {
-    props.put("mail." + protocol + ".auth","true");
-    Authenticator auth=connector.getAuthenticator();
-    if (auth == null) {
-      auth=new DefaultAuthenticator(url.getUsername(),url.getPassword());
-      logger.debug("No Authenticator set on Connector: " + connector.getName() + ". Using default.");
+synchronized (props) {
+    props.put("mail." + protocol + ".host",url.getHost());
+    int port=url.getPort();
+    if (port == -1) {
+      port=connector.getPort();
     }
-    session=Session.getInstance(props,auth);
-  }
+    props.put("mail." + protocol + ".port",String.valueOf(port));
+    if (secure) {
+      System.setProperty("mail." + protocol + ".socketFactory.port",String.valueOf(port));
+    }
+    if (url.getPassword() != null) {
+      props.put("mail." + protocol + ".auth","true");
+      Authenticator auth=connector.getAuthenticator();
+      if (auth == null) {
+        auth=new DefaultAuthenticator(url.getUsername(),url.getPassword());
+        logger.debug("No Authenticator set on Connector: " + connector.getName() + ". Using default.");
+      }
+      session=Session.getInstance(props,auth);
+    }
  else {
-    session=Session.getDefaultInstance(props,null);
+      props.put("mail." + protocol + ".auth","false");
+      session=Session.getDefaultInstance(props,null);
+    }
   }
   return session;
 }
