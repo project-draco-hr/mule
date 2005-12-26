@@ -1,16 +1,31 @@
 {
-  String projectName="";
   try {
-    projectName=config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,"");
+    refreshProjectList();
+    String projectName=config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,"");
+    if (projectName.length() > 0) {
+      IProject project=ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+      if (project != null) {
+        updateSelectedProject(project);
+        getProjectsTable().setSelection(new StructuredSelection(project));
+        String configSetId=config.getAttribute(IMuleConfigLaunchConfigurationConstants.ATTR_MULE_CONFIG_SET_ID,"");
+        IMuleModel model=MuleCorePlugin.getDefault().getMuleModel(project);
+        if (configSetId.length() > 0) {
+          IMuleConfigSet configSet=model.getMuleConfigSet(configSetId);
+          if (configSet != null) {
+            updateSelectedConfigSet(configSet);
+            getConfigSetsTable().setSelection(new StructuredSelection(configSet));
+          }
+        }
+ else {
+          Iterator it=model.getMuleConfigSets().iterator();
+          if (it.hasNext()) {
+            getConfigSetsTable().setSelection(new StructuredSelection(it.next()));
+          }
+        }
+      }
+    }
   }
- catch (  CoreException ce) {
+ catch (  CoreException e) {
+    MuleCorePlugin.getDefault().logException("Unable to initialize from launch config.",e);
   }
-  fProjText.setText(projectName);
-  String configName="";
-  try {
-    configName=config.getAttribute(IMuleConfigLaunchConfigurationConstants.ATTR_CONFIG_FILE_NAME,"");
-  }
- catch (  CoreException ce) {
-  }
-  fConfigText.setText(configName);
 }

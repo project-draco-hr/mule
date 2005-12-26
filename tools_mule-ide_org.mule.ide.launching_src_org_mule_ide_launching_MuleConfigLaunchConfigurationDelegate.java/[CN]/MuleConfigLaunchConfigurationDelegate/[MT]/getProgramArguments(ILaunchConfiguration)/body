@@ -1,10 +1,31 @@
 {
-  String configName=configuration.getAttribute(IMuleConfigLaunchConfigurationConstants.ATTR_CONFIG_FILE_NAME,(String)null);
+  String configSetId=configuration.getAttribute(IMuleConfigLaunchConfigurationConstants.ATTR_MULE_CONFIG_SET_ID,(String)null);
   String projectName=configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,(String)null);
-  if (configName == null || projectName == null)   abort("Missing launcher data for Mule UMO config launch",null,42);
+  if ((configSetId == null) || (projectName == null)) {
+    abort("A valid Mule project and config set are required for launch",null,0);
+  }
   IProject project=ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-  if (project == null)   abort("No project found called " + projectName,null,43);
-  IFile file=project.getFile(configName);
-  if (file == null)   abort("No file found called " + configName,null,43);
-  return "-config \"" + file.getRawLocation() + "\"";
+  if (project == null) {
+    abort("Project '" + projectName + "' not found.",null,0);
+  }
+  IMuleModel muleModel=MuleCorePlugin.getDefault().getMuleModel(project);
+  if (muleModel == null) {
+    abort("Mule model not available for project '" + projectName + "'.",null,0);
+  }
+  IMuleConfigSet configSet=muleModel.getMuleConfigSet(configSetId);
+  if (configSet == null) {
+    abort("Configuration set '" + configSetId + "' not available for project '"+ projectName+ "'.",null,0);
+  }
+  IPath[] paths=configSet.getConfigFilePaths();
+  StringBuffer buffer=new StringBuffer();
+  buffer.append("-config ");
+  for (int i=0; i < paths.length; i++) {
+    if (paths[i] != null) {
+      if (i > 0) {
+        buffer.append(",");
+      }
+      buffer.append(paths[i].toString());
+    }
+  }
+  return buffer.toString();
 }
