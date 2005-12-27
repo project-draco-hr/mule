@@ -1,0 +1,27 @@
+{
+  if (!hasExternalMuleRootVariable()) {
+    updateExternalMuleRootVariable();
+  }
+  MuleConfigNature nature=getMuleNature(project);
+  if (nature == null) {
+    throw new MuleModelException(createErrorStatus("Project does not have a Mule nature.",null));
+  }
+  IFolder folder=nature.getExternalLibFolder();
+  if (!folder.exists()) {
+    throw new MuleModelException(MuleCorePlugin.getDefault().createErrorStatus("External Mule lib folder not found",null));
+  }
+  try {
+    List entries=new ArrayList();
+    IResource[] members=folder.members();
+    for (int i=0; i < members.length; i++) {
+      if ((members[i].getType() == IResource.FILE) && ("jar".equals(members[i].getFileExtension()))) {
+        IClasspathEntry entry=JavaCore.newLibraryEntry(members[i].getRawLocation(),null,null);
+        entries.add(entry);
+      }
+    }
+    return (IClasspathEntry[])entries.toArray(new IClasspathEntry[entries.size()]);
+  }
+ catch (  CoreException e) {
+    throw new MuleModelException(e.getStatus());
+  }
+}
