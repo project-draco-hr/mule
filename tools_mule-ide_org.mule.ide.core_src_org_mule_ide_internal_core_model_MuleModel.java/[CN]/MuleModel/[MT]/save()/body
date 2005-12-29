@@ -1,4 +1,5 @@
 {
+  IStatus status=Status.OK_STATUS;
   IFile file=getProject().getFile(IMuleDefaults.MULE_IDE_CONFIG_FILENAME);
   try {
     ByteArrayInputStream stream=new ByteArrayInputStream(getAsXML().getBytes());
@@ -10,10 +11,12 @@
     }
   }
  catch (  IOException e) {
-    return MuleCorePlugin.getDefault().createErrorStatus(e.getMessage(),e);
+    status=MuleCorePlugin.getDefault().createErrorStatus(e.getMessage(),e);
   }
 catch (  CoreException e) {
-    return e.getStatus();
+    status=e.getStatus();
   }
-  return Status.OK_STATUS;
+  if (!status.isOK()) {
+    throw new MuleModelException(status);
+  }
 }
