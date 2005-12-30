@@ -1,0 +1,24 @@
+{
+  checkIfDestroyed();
+  PasswordCredential pc=RaHelper.getPasswordCredential(mcf,subject,connectionRequestInfo);
+  if (!pc.equals(passCred)) {
+    throw new SecurityException(new Message(Messages.AUTH_DENIED_ON_ENDPOINT_X,this).getMessage());
+  }
+  String user;
+  String password;
+  MuleConnectionRequestInfo info=(MuleConnectionRequestInfo)connectionRequestInfo;
+  user=info.getUserName();
+  password=info.getPassword();
+  if (user == null) {
+    user=mcf.getUsername();
+    password=mcf.getPassword();
+  }
+  MuleCredentials creds=null;
+  if (user != null) {
+    if (password == null)     password="";
+    creds=new MuleCredentials(user,password.toCharArray());
+  }
+  MuleConnection connection=new DefaultMuleConnection(this,info.getManager(),creds);
+  addConnection(connection);
+  return connection;
+}

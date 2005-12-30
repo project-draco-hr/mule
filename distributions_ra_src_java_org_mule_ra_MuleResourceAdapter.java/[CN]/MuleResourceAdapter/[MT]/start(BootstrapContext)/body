@@ -1,0 +1,25 @@
+{
+  this.bootstrapContext=bootstrapContext;
+  MuleManager.getConfiguration().setModelType("jca");
+  if (info.getConfigurations() != null) {
+    if (MuleManager.isInstanciated()) {
+      throw new ResourceAdapterInternalException("A manageris already configured, cannot configure a new one using the configurations set on the Resource Adapter");
+    }
+ else {
+      ConfigurationBuilder builder=null;
+      try {
+        builder=(ConfigurationBuilder)ClassHelper.instanciateClass(info.getConfigurationBuilder(),ClassHelper.NO_ARGS);
+      }
+ catch (      Exception e) {
+        throw new ResourceAdapterInternalException("Failed to instanciate configurationBuilder class: " + info.getConfigurationBuilder(),e);
+      }
+      try {
+        manager=builder.configure(info.getConfigurations());
+      }
+ catch (      ConfigurationException e) {
+        throw new ResourceAdapterInternalException("Failed to load configurations: " + info.getConfigurations(),e);
+      }
+    }
+  }
+  manager=MuleManager.getInstance();
+}
