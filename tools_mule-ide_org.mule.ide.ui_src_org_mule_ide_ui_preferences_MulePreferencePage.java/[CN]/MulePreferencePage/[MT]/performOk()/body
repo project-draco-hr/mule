@@ -1,11 +1,20 @@
 {
   boolean ok=super.performOk();
   if (ok) {
-    try {
-      MuleCorePlugin.getDefault().updateExternalMuleRootVariable();
+    String newExternalMuleRoot=getPreferenceStore().getString(IPreferenceConstants.EXTERNAL_MULE_ROOT);
+    boolean externalMuleRootChanged=((getInitialExternalMuleRoot() == null) || (!getInitialExternalMuleRoot().equals(newExternalMuleRoot)));
+    if (externalMuleRootChanged) {
+      try {
+        MuleCorePlugin.getDefault().updateExternalMuleRootVariable();
+      }
+ catch (      MuleModelException e) {
+        MulePlugin.getDefault().showError(e.getMessage(),e.getStatus());
+      }
     }
- catch (    MuleModelException e) {
-      MuleCorePlugin.getDefault().logException("Unable to set Mule root variable",e);
+    String newClasspathType=getPreferenceStore().getString(IPreferenceConstants.MULE_CLASSPATH_TYPE);
+    boolean classpathTypeChanged=((getInitialClasspathType() == null) || (!getInitialClasspathType().equals(newClasspathType)));
+    if (classpathTypeChanged) {
+      updateClasspathForMuleProjects();
     }
   }
   return ok;
