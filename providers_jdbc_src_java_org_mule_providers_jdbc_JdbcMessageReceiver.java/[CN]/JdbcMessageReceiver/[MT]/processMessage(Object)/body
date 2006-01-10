@@ -14,9 +14,13 @@
     UMOMessage umoMessage=new MuleMessage(msgAdapter);
     routeMessage(umoMessage,tx,tx != null || endpoint.isSynchronous());
   }
-  finally {
-    if (tx == null) {
-      JdbcUtils.close(con);
+ catch (  Exception ex) {
+    if (tx != null) {
+      tx.setRollbackOnly();
     }
+    throw ex;
+  }
+ finally {
+    JdbcUtils.close(con);
   }
 }
