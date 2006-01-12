@@ -1,0 +1,26 @@
+{
+  if (!useTemplates) {
+    return (UMOEndpoint)endpoints.get(index);
+  }
+ else {
+    UMOEndpoint ep=(UMOEndpoint)endpoints.get(index);
+    String uri=ep.getEndpointURI().toString();
+    if (logger.isDebugEnabled())     logger.debug("Uri before parsing is: " + uri);
+    Map props=new HashMap();
+    props.putAll(ep.getProperties());
+    props.putAll(message.getProperties());
+    String newUriString=parser.parse(props,uri);
+    if (logger.isDebugEnabled())     logger.debug("Uri after parsing is: " + uri);
+    try {
+      UMOEndpointURI newUri=new MuleEndpointURI(newUriString);
+      if (!newUri.getScheme().equalsIgnoreCase(ep.getEndpointURI().getScheme())) {
+        throw new CouldNotRouteOutboundMessageException(new Message(Messages.SCHEME_CANT_CHANGE_FOR_ROUTER_X_X,ep.getEndpointURI().getScheme(),newUri.getScheme()),message,ep);
+      }
+      ep.setEndpointURI(newUri);
+    }
+ catch (    EndpointException e) {
+      throw new CouldNotRouteOutboundMessageException(new Message(Messages.TEMPLATE_X_CAUSED_MALFORMED_ENDPOINT_X,uri,newUriString),message,ep,e);
+    }
+    return ep;
+  }
+}
