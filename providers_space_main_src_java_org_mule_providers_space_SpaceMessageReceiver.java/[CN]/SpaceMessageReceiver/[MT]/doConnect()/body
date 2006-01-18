@@ -1,0 +1,18 @@
+{
+  String destination=endpoint.getEndpointURI().getAddress();
+  Properties props=new Properties();
+  props.putAll(endpoint.getProperties());
+  try {
+    logger.info("Connecting to space: " + destination);
+    space=connector.getSpace(endpoint);
+  }
+ catch (  UMOSpaceException e) {
+    throw new ConnectException(new Message("space",1,destination),e,this);
+  }
+  try {
+    getWorkManager().scheduleWork(this,WorkManager.INDEFINITE,null,null);
+  }
+ catch (  WorkException e) {
+    throw new ConnectException(new Message(Messages.FAILED_TO_SCHEDULE_WORK),e,this);
+  }
+}
