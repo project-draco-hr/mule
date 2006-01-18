@@ -1,36 +1,31 @@
 {
-  try {
-    String endpoint=event.getEndpoint().getEndpointURI().getAddress();
-    Object data=event.getTransformedMessage();
-    String filename=(String)event.getProperty(FileConnector.PROPERTY_FILENAME);
-    if (filename == null) {
-      String outPattern=(String)event.getProperty(FileConnector.PROPERTY_OUTPUT_PATTERN);
-      if (outPattern == null) {
-        outPattern=connector.getOutputPattern();
-      }
-      filename=generateFilename(event,outPattern);
+  String endpoint=event.getEndpoint().getEndpointURI().getAddress();
+  Object data=event.getTransformedMessage();
+  String filename=(String)event.getProperty(FileConnector.PROPERTY_FILENAME);
+  if (filename == null) {
+    String outPattern=(String)event.getProperty(FileConnector.PROPERTY_OUTPUT_PATTERN);
+    if (outPattern == null) {
+      outPattern=connector.getOutputPattern();
     }
-    if (filename == null) {
-      throw new IOException("Filename is null");
-    }
-    File file=Utility.createFile(endpoint + "/" + filename);
-    byte[] buf;
-    if (data instanceof byte[]) {
-      buf=(byte[])data;
-    }
- else {
-      buf=data.toString().getBytes();
-    }
-    logger.info("Writing file to: " + file.getAbsolutePath());
-    FileOutputStream fos=new FileOutputStream(file,connector.isOutputAppend());
-    try {
-      fos.write(buf);
-    }
-  finally {
-      fos.close();
-    }
+    filename=generateFilename(event,outPattern);
   }
- catch (  Exception e) {
-    getConnector().handleException(e);
+  if (filename == null) {
+    throw new IOException("Filename is null");
+  }
+  File file=Utility.createFile(endpoint + "/" + filename);
+  byte[] buf;
+  if (data instanceof byte[]) {
+    buf=(byte[])data;
+  }
+ else {
+    buf=data.toString().getBytes();
+  }
+  logger.info("Writing file to: " + file.getAbsolutePath());
+  FileOutputStream fos=new FileOutputStream(file,connector.isOutputAppend());
+  try {
+    fos.write(buf);
+  }
+  finally {
+    fos.close();
   }
 }
