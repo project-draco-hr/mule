@@ -12,9 +12,16 @@
     }
   }
   if (listenerClass == null) {
-    throw new IllegalArgumentException(new Message(Messages.EVENT_TYPE_X_NOT_RECOGNISED,notification.getClass().getName()).getMessage());
+    logger.error(new NotificationException(new Message(Messages.EVENT_TYPE_X_NOT_RECOGNISED,notification.getClass().getName())));
+    return;
   }
-  listeners=getListeners(listenerClass);
+  try {
+    listeners=getListeners(listenerClass);
+  }
+ catch (  NotificationException e) {
+    logger.error(e.getMessage(),e);
+    return;
+  }
   UMOServerNotificationListener l;
 synchronized (listeners) {
     for (Iterator iterator=listeners.keySet().iterator(); iterator.hasNext(); ) {
