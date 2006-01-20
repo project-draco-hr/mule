@@ -1,0 +1,30 @@
+{
+  try {
+    GSSpace space=new GSSpace(endpoint.getEndpointURI().toString(),enableMonitorEvents);
+    if (endpoint.getTransactionConfig().getFactory() != null) {
+      JiniTransactionFactory txFactory=(JiniTransactionFactory)endpoint.getTransactionConfig().getFactory();
+      TransactionManager transactionManager=(LocalTransactionManager)LocalTransactionManager.getInstance((IJSpace)space.getJavaSpace());
+      txFactory.setTransactionManager(transactionManager);
+      txFactory.setTransactionTimeout(((GSConnector)endpoint.getConnector()).getTransactionTimeout());
+      space.setTransactionFactory(txFactory);
+    }
+    if (endpoint.getFilter() != null) {
+      UMOFilter filter=endpoint.getFilter();
+      if (filter instanceof JiniEntryFilter) {
+        space.setEntryTemplate(((JiniEntryFilter)filter).getEntry());
+      }
+ else {
+        logger.warn("Filter on endpoint " + endpoint.getEndpointURI().toString() + " Was not a JiniEntryFilter. Endpoint will match all entries of all types for this endpoint");
+        space.setEntryTemplate(createDefaultEntry(endpoint.getEndpointURI().toString()));
+      }
+    }
+ else {
+      logger.warn("Filter on endpoint " + endpoint.getEndpointURI().toString() + " Was not set. Endpoint will match all entries of all types for this endpoint");
+      space.setEntryTemplate(createDefaultEntry(endpoint.getEndpointURI().toString()));
+    }
+    return space;
+  }
+ catch (  Exception e) {
+    throw new CreateSpaceException(e);
+  }
+}
