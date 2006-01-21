@@ -1,0 +1,21 @@
+{
+  Mock mockSession=getMockSession();
+  UMOEndpoint endpoint1=getTestEndpoint("TestFailEndpoint",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint1.setEndpointURI(new MuleEndpointURI("test://Failure"));
+  UMOEndpoint endpoint2=getTestEndpoint("TestSuccessEndpoint",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint2.setEndpointURI(new MuleEndpointURI("test://Success"));
+  ExceptionBasedRouter router=new ExceptionBasedRouter();
+  router.addEndpoint(endpoint1);
+  router.addEndpoint(endpoint2);
+  UMOMessage message=new MuleMessage("test event");
+  UMOMessage expectedResultMessage=new MuleMessage("Return event");
+  assertTrue(router.isMatch(message));
+  UMOMessage exPayloadMessage=new MuleMessage("there was a failure");
+  exPayloadMessage.setExceptionPayload(new ExceptionPayload(new RuntimeException()));
+  final UMOSession session=(UMOSession)mockSession.proxy();
+  mockSession.expectAndReturn("sendEvent",C.args(C.eq(message),C.eq(endpoint1)),exPayloadMessage);
+  mockSession.expectAndReturn("sendEvent",C.args(C.eq(message),C.eq(endpoint2)),expectedResultMessage);
+  UMOMessage actualResultMessage=router.route(message,session,true);
+  mockSession.verify();
+  assertEquals("Got an invalid return message.",expectedResultMessage,actualResultMessage);
+}
