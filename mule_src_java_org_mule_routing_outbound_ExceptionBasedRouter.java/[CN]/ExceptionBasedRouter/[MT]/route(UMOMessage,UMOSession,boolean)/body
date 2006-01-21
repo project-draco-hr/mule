@@ -25,8 +25,13 @@ synchronized (endpoints) {
       if (!lastEndpoint || synchronous) {
         try {
           result=send(session,message,endpoint);
-          success=true;
-          break;
+          if (!exceptionPayloadAvailable(result)) {
+            if (logger.isDebugEnabled()) {
+              logger.debug("Successful invocation detected, stopping further processing.");
+            }
+            success=true;
+            break;
+          }
         }
  catch (        UMOException e) {
           logger.info("Failed to send to endpoint: " + endpoint.getEndpointURI().toString() + ". Error was: "+ e.getMessage()+ ". Trying next endpoint");
