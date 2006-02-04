@@ -2,6 +2,10 @@
   IPath basePath=new Path(location);
   IPath libPath=basePath.append("lib");
   IPath sourcePath=basePath.append("src").append("java");
+  IPath javadocPath=basePath.append("docs").append("apidocs");
+  String javadocPathURI=javadocPath.toFile().toURI().toString();
+  IClasspathAttribute jdocAttr=JavaCore.newClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME,javadocPathURI);
+  IClasspathAttribute[] muleAttrs=new IClasspathAttribute[]{jdocAttr};
   File externalRoot=libPath.toFile();
   if (!externalRoot.exists()) {
     throw new MuleModelException(MuleCorePlugin.getDefault().createErrorStatus("External Mule root is invalid",null));
@@ -12,7 +16,8 @@
     File file=members[i];
     if (file.getPath().endsWith(".jar")) {
       IPath source=(isMuleJar(file.getName())) ? sourcePath : null;
-      IClasspathEntry entry=JavaCore.newLibraryEntry(new Path(file.getPath()),source,null);
+      IClasspathAttribute[] attrs=(isMuleJar(file.getName())) ? muleAttrs : new IClasspathAttribute[0];
+      IClasspathEntry entry=JavaCore.newLibraryEntry(new Path(file.getPath()),source,null,new IAccessRule[0],attrs,false);
       entries.add(entry);
     }
   }
