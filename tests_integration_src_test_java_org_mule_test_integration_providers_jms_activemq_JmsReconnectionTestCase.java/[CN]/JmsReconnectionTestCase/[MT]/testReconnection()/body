@@ -9,6 +9,9 @@
   t0=System.currentTimeMillis();
   while (true) {
     ConnectionNotification event=(ConnectionNotification)events.take();
+    if (event == null) {
+      fail("no notification event was received");
+    }
     if (event.getAction() == ConnectionNotification.CONNECTION_FAILED) {
       break;
     }
@@ -31,10 +34,15 @@
   }
   Thread.sleep(3000);
   MuleClient client=new MuleClient();
-  UMOMessage m=client.send("jms://reconnect.queue","test",null);
-  Thread.sleep(200000);
-  assertNotNull(m);
-  assertEquals("Received: test",m.getPayloadAsString());
+  MuleManager.getInstance().registerListener(new FunctionalTestNotificationListener(){
+    public void onNotification(    UMOServerNotification notification){
+      eventCount++;
+    }
+  }
+);
+  client.sendNoReceive("jms://reconnect.queue","test",null);
+  Thread.sleep(4000);
+  assertEquals(1,eventCount);
   ServerTools.killActiveMq();
   t0=System.currentTimeMillis();
   while (true) {
@@ -59,8 +67,8 @@
       fail("Connection should have succeeded");
     }
   }
-  m=client.send("jms://reconnect.queue","test",null);
-  assertNotNull(m);
-  assertEquals("Received: test",m.getPayloadAsString());
+  client.sendNoReceive("jms://reconnect.queue","test",null);
+  Thread.sleep(4000);
+  assertEquals(2,eventCount);
   ServerTools.killActiveMq();
 }

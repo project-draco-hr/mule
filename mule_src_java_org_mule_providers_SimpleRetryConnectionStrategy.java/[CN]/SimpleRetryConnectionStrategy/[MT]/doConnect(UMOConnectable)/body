@@ -13,7 +13,13 @@
       if (count == retryCount) {
         throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),getDescription(connectable)),e,connectable);
       }
-      logger.warn("Failed to connect/reconnect on endpoint: " + getDescription(connectable));
+      if (logger.isErrorEnabled()) {
+        StringBuffer msg=new StringBuffer();
+        msg.append("Failed to connect/reconnect on endpoint: ").append(getDescription(connectable));
+        Throwable t=ExceptionHelper.getRootException(e);
+        msg.append(". Root Exception was: ").append(ExceptionHelper.writeException(t));
+        logger.error(msg.toString(),e);
+      }
       if (logger.isDebugEnabled()) {
         logger.debug("Waiting for " + frequency + "ms before reconnecting");
       }

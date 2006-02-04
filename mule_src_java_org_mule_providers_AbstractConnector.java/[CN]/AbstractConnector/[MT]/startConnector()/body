@@ -4,12 +4,15 @@
   }
   if (!started.get()) {
     if (!isConnected()) {
+      startOnConnect.set(true);
       getConnectionStrategy().connect(this);
+      return;
     }
     if (logger.isInfoEnabled()) {
       logger.info("Starting Connector: " + getClass().getName());
     }
     doStart();
+    started.set(true);
     for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
       AbstractMessageReceiver amr=(AbstractMessageReceiver)iterator.next();
       if (logger.isDebugEnabled()) {
@@ -17,7 +20,6 @@
       }
       amr.start();
     }
-    started.set(true);
     if (logger.isInfoEnabled()) {
       logger.info("Connector: " + getClass().getName() + " has been started");
     }
