@@ -1,0 +1,31 @@
+{
+  try {
+    URL local=Platform.asLocalURL(input);
+    File inputFile=new File(local.toURI());
+    IPath relative=new Path(input.getFile());
+    relative=relative.removeFirstSegments(2);
+    if (relative.toString().indexOf("CVS") != -1) {
+      return null;
+    }
+    if (inputFile.isDirectory()) {
+      IFolder folder=parent.getFolder(relative);
+      folder.create(true,true,new NullProgressMonitor());
+      return folder;
+    }
+ else     if (inputFile.isFile()) {
+      IFile file=parent.getFile(relative);
+      file.create(input.openStream(),true,new NullProgressMonitor());
+      return file;
+    }
+  }
+ catch (  IOException e) {
+    MuleCorePlugin.getDefault().logException("Unable to copy sample resource.",e);
+  }
+catch (  URISyntaxException e) {
+    MuleCorePlugin.getDefault().logException("Unable to get URI for sample resource.",e);
+  }
+catch (  CoreException e) {
+    MuleCorePlugin.getDefault().logException("Unable to create resource.",e);
+  }
+  return null;
+}
