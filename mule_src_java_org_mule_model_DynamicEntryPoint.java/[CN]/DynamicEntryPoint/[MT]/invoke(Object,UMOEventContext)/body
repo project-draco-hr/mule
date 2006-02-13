@@ -1,5 +1,14 @@
 {
   Object payload=null;
+  Object methodOverride=context.getProperties().remove(MuleProperties.MULE_METHOD_PROPERTY);
+  Method method=null;
+  if (methodOverride instanceof Method) {
+    method=(Method)methodOverride;
+  }
+ else   if (methodOverride != null) {
+    payload=context.getTransformedMessage();
+    method=ClassHelper.getMethod(methodOverride.toString(),ClassHelper.getClassTypes(payload),component.getClass());
+  }
   if (method == null) {
     if (component instanceof Callable) {
       method=Callable.class.getMethods()[0];
