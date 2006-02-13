@@ -1,5 +1,6 @@
 {
   String destComponent=null;
+  UMOMessage result=null;
   String endpoint=action.getResourceIdentifier();
   if (action.getResourceIdentifier().startsWith("mule:")) {
     destComponent=endpoint.substring(endpoint.lastIndexOf("/") + 1);
@@ -13,7 +14,7 @@
     UMOEvent event=RequestContext.getEvent();
     event.getEndpoint().setTransformer(null);
     if (context.isSynchronous()) {
-      UMOMessage result=session.getComponent().sendEvent(event);
+      result=session.getComponent().sendEvent(event);
       return xstream.toXML(result);
     }
  else {
@@ -22,6 +23,6 @@
     }
   }
  else {
-    throw new MuleException(new Message(Messages.EVENT_PROPERTY_X_NOT_SET_CANT_PROCESS_REQUEST,MuleProperties.COMPONENT_NAME_PROPERTY));
+    return handleException(result,new MuleException(new Message(Messages.COULD_NOT_DETERMINE_DESTINATION_COMPONENT_FROM_ENDPOINT_X,endpoint)));
   }
 }
