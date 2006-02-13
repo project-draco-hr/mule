@@ -5,10 +5,7 @@
     if (event.getEndpoint().canReceive()) {
       RequestContext.setEvent(event);
       Object replyTo=event.getMessage().getReplyTo();
-      ReplyToHandler replyToHandler=null;
-      if (replyTo != null) {
-        replyToHandler=((AbstractConnector)event.getEndpoint().getConnector()).getReplyToHandler();
-      }
+      ReplyToHandler replyToHandler=getReplyToHandler(event);
       InterceptorsInvoker invoker=new InterceptorsInvoker(interceptorList,descriptor,event.getMessage());
       long startTime=0;
       if (stat.isEnabled()) {
@@ -64,6 +61,10 @@
  else {
       handleException(new MessagingException(new Message(Messages.EVENT_PROCESSING_FAILED_FOR_X,descriptor.getName()),event.getMessage(),e));
     }
+    if (returnMessage == null) {
+      returnMessage=new MuleMessage(new NullPayload());
+    }
+    returnMessage.setExceptionPayload(new ExceptionPayload(e));
   }
   return returnMessage;
 }

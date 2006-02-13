@@ -1,11 +1,12 @@
 {
-  UMOEndpointURI endpointUri=new MuleEndpointURI(action.getResourceIdentifier());
-  UMOEndpoint endpoint=MuleEndpoint.getOrCreateEndpointForUri(endpointUri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
-  UMOMessageDispatcher dispatcher=endpoint.getConnector().getDispatcher(action.getResourceIdentifier());
-  long timeout=PropertiesHelper.getLongProperty(action.getProperties(),MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,MuleManager.getConfiguration().getSynchronousEventTimeout());
+  UMOMessage result=null;
   try {
+    UMOEndpointURI endpointUri=new MuleEndpointURI(action.getResourceIdentifier());
+    UMOEndpoint endpoint=MuleEndpoint.getOrCreateEndpointForUri(endpointUri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+    UMOMessageDispatcher dispatcher=endpoint.getConnector().getDispatcher(action.getResourceIdentifier());
+    long timeout=PropertiesHelper.getLongProperty(action.getProperties(),MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,MuleManager.getConfiguration().getSynchronousEventTimeout());
     UMOEndpointURI ep=new MuleEndpointURI(action.getResourceIdentifier());
-    UMOMessage result=dispatcher.receive(ep,timeout);
+    result=dispatcher.receive(ep,timeout);
     if (result != null) {
       UMOTransformer trans=((AbstractConnector)endpoint.getConnector()).getDefaultInboundTransformer();
       if (trans != null) {
@@ -19,6 +20,6 @@
     }
   }
  catch (  Exception e) {
-    throw new ReceiveException(endpointUri,timeout,e);
+    return handleException(result,e);
   }
 }

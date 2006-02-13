@@ -1,22 +1,23 @@
 {
-  UMOEndpoint endpoint=new MuleEndpoint(action.getResourceIdentifier(),false);
+  UMOMessage result=null;
   try {
+    UMOEndpoint endpoint=new MuleEndpoint(action.getResourceIdentifier(),false);
     if (AdminNotification.ACTION_DISPATCH == action.getAction()) {
       context.dispatchEvent(action.getMessage(),endpoint);
       return null;
     }
  else {
       endpoint.setRemoteSync(true);
-      UMOMessage result=context.sendEvent(action.getMessage(),endpoint);
-      if (result != null) {
-        return xstream.toXML(result);
+      result=context.sendEvent(action.getMessage(),endpoint);
+      if (result == null) {
+        return null;
       }
  else {
-        return null;
+        return xstream.toXML(result);
       }
     }
   }
  catch (  Exception e) {
-    throw new DispatchException(action.getMessage(),new MuleEndpoint(action.getResourceIdentifier(),true),e);
+    return handleException(result,e);
   }
 }
