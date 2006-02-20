@@ -1,0 +1,52 @@
+{
+  OutStreamMessageAdapter response=null;
+  UMOEndpointURI endpointURI=null;
+  String method=null;
+  if (eventContext.isStreaming()) {
+    StreamMessageAdapter sma=(StreamMessageAdapter)eventContext.getMessage().getPayload();
+    if (sma.getOutput() != null) {
+      response=new OutStreamMessageAdapter(sma.getOutput());
+    }
+ else {
+      response=new OutStreamMessageAdapter(new ByteArrayOutputStream());
+    }
+  }
+ else {
+    response=new OutStreamMessageAdapter(new ByteArrayOutputStream());
+  }
+  String endpointHeader=eventContext.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
+  if (eventContext.getEndpointURI().getScheme().startsWith("http")) {
+    String uri="soap:" + eventContext.getEndpointURI().toString();
+    uri+=eventContext.getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
+    endpointURI=new MuleEndpointURI(uri);
+    method=endpointURI.getParams().getProperty(MuleProperties.MULE_METHOD_PROPERTY);
+  }
+ else {
+    endpointURI=eventContext.getEndpointURI();
+    method=eventContext.getStringProperty(MuleProperties.MULE_METHOD_PROPERTY);
+    if (method == null) {
+      if (endpointHeader != null) {
+        endpointURI=new MuleEndpointURI(endpointHeader);
+        method=endpointURI.getParams().getProperty(MuleProperties.MULE_METHOD_PROPERTY);
+      }
+    }
+  }
+  String serviceName=getService(eventContext);
+  String request=eventContext.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
+  if (request != null && request.endsWith("?wsdl")) {
+    generateWSDL(response,serviceName);
+  }
+  if (method == null) {
+    throw new MuleException(new Message(Messages.PROPERTIES_X_NOT_SET,"method"));
+  }
+  ServiceRegistry reg=getServiceRegistry();
+  if (serviceName == null || serviceName.length() == 0 || !reg.hasService(serviceName)) {
+    if (!reg.hasService(serviceName)) {
+      eventContext.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_NOT_FOUND));
+    }
+    generateServices(response);
+    return response;
+  }
+  invoke(eventContext,endpointURI,response,serviceName,method);
+  return response.getPayloadAsBytes();
+}
