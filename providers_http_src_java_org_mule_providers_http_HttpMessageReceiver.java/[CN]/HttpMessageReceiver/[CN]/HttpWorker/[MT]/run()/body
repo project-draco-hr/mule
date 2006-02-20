@@ -38,7 +38,13 @@
       HttpResponse response=null;
       if (receiver != null) {
         UMOMessage returnMessage=receiver.routeMessage(message,endpoint.isSynchronous(),null);
-        response=(HttpResponse)returnMessage.getPayload();
+        Object tempResponse=returnMessage.getPayload();
+        if (tempResponse instanceof HttpResponse) {
+          response=(HttpResponse)tempResponse;
+        }
+ else {
+          response=(HttpResponse)connector.getDefaultResponseTransformer().transform(tempResponse);
+        }
         response.disableKeepAlive(!((HttpConnector)connector).isKeepAlive());
       }
  else {
