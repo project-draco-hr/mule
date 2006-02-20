@@ -5,13 +5,20 @@
       try {
         socket=serverSocket.accept();
         TcpConnector connector=(TcpConnector)this.connector;
-        socket.setReceiveBufferSize(connector.getBufferSize());
-        socket.setSendBufferSize(connector.getBufferSize());
-        socket.setSoTimeout(connector.getReceiveTimeout());
-        logger.trace("Server socket Accepted on: " + serverSocket.getLocalPort());
+        if (connector.getBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getReceiveBufferSize() != connector.getBufferSize()) {
+          socket.setReceiveBufferSize(connector.getBufferSize());
+        }
+        if (connector.getBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getSendBufferSize() != connector.getBufferSize()) {
+          socket.setSendBufferSize(connector.getBufferSize());
+        }
+        if (connector.getReceiveTimeout() != UMOConnector.INT_VALUE_NOT_SET && socket.getSoTimeout() != connector.getReceiveTimeout()) {
+          socket.setSoTimeout(connector.getReceiveTimeout());
+        }
+        socket.setTcpNoDelay(true);
+        if (logger.isTraceEnabled())         logger.trace("Server socket Accepted on: " + serverSocket.getLocalPort());
       }
  catch (      java.io.InterruptedIOException iie) {
-        logger.debug("Interupted IO doing serverSocket.accept: " + iie.getMessage());
+        if (logger.isDebugEnabled())         logger.debug("Interupted IO doing serverSocket.accept: " + iie.getMessage());
       }
 catch (      Exception e) {
         if (!connector.isDisposed() && !disposing.get()) {
@@ -29,7 +36,7 @@ catch (      Exception e) {
             logger.error("Tcp Server receiver Work was not processed: " + e.getMessage(),e);
           }
         }
- catch (        SocketException e) {
+ catch (        IOException e) {
           handleException(e);
         }
       }
