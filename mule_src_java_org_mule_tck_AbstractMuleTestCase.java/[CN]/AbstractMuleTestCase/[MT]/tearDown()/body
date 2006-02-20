@@ -1,10 +1,25 @@
 {
-  doTearDown();
-  if (MuleManager.isInstanciated())   MuleManager.getInstance().dispose();
   try {
-    Utility.deleteTree(new File(MuleManager.getConfiguration().getWorkingDirectory()));
+    if (getTestInfo().getRunCount() == getTestInfo().getTestCount()) {
+      log("Pre suiteTearDown for test: " + getTestInfo());
+      suitePreTearDown();
+    }
+    doTearDown();
+    if (!getTestInfo().isDisposeManagerPerSuite()) {
+      disposeManager();
+    }
   }
- catch (  Exception e) {
+  finally {
+    getTestInfo().incRunCount();
+    if (getTestInfo().getRunCount() == getTestInfo().getTestCount()) {
+      try {
+        log("Post suiteTearDown for test: " + getTestInfo());
+        suitePostTearDown();
+      }
+  finally {
+        clearCounter();
+        disposeManager();
+      }
+    }
   }
-  MuleManager.setConfiguration(new MuleConfiguration());
 }

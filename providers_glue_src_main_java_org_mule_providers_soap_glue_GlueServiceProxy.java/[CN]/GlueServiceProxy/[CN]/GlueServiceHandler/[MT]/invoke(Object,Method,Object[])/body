@@ -1,0 +1,21 @@
+{
+  GlueMessageAdapter.GlueMessageHolder holder;
+  if (args.length == 1) {
+    holder=new GlueMessageAdapter.GlueMessageHolder(args[0],(IService)proxy);
+  }
+ else {
+    holder=new GlueMessageAdapter.GlueMessageHolder(args,(IService)proxy);
+  }
+  UMOMessageAdapter messageAdapter=receiver.getConnector().getMessageAdapter(holder);
+  messageAdapter.setProperty(MuleProperties.MULE_METHOD_PROPERTY,method);
+  UMOMessage message=receiver.routeMessage(new MuleMessage(messageAdapter),synchronous);
+  if (message != null) {
+    if (message.getExceptionPayload() != null) {
+      throw message.getExceptionPayload().getException();
+    }
+    return message.getPayload();
+  }
+ else {
+    return null;
+  }
+}

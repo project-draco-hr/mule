@@ -1,21 +1,16 @@
 {
   if (endpointUri == null)   return null;
   HttpMethod httpMethod=new GetMethod(endpointUri.getAddress());
-  HttpConnection connection=null;
+  httpMethod.setDoAuthentication(true);
+  if (endpointUri.getUserInfo() != null) {
+    StringBuffer header=new StringBuffer();
+    header.append("Basic ");
+    header.append(new BASE64Encoder().encode(endpointUri.getUserInfo().getBytes()));
+    httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
+  }
   try {
-    connection=getConnection(endpointUri.getUri());
-    connection.open();
-    if (connection.isProxied() && connection.isSecure()) {
-      httpMethod=new ConnectMethod();
-    }
-    httpMethod.setDoAuthentication(true);
-    if (endpointUri.getUserInfo() != null) {
-      StringBuffer header=new StringBuffer();
-      header.append("Basic ");
-      header.append(new BASE64Encoder().encode(endpointUri.getUserInfo().getBytes()));
-      httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
-    }
-    httpMethod.execute(state,connection);
+    HttpClient client=new HttpClient();
+    client.executeMethod(httpMethod);
     if (httpMethod.getStatusCode() == HttpStatus.SC_OK) {
       return (UMOMessage)receiveTransformer.transform(httpMethod);
     }

@@ -1,89 +1,66 @@
 {
   if (src instanceof NullPayload)   src=Utility.EMPTY_STRING;
-  int status=context.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_OK);
-  String version=context.getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
-  String date=format.format(new Date());
-  byte[] response=null;
-  String contentType=context.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,HttpConstants.DEFAULT_CONTENT_TYPE);
-  if (src instanceof byte[]) {
-    response=(byte[])src;
-  }
- else   if (contentType.startsWith("text/")) {
-    response=src.toString().getBytes();
-  }
+  try {
+    HttpResponse response=null;
+    if (src instanceof HttpResponse) {
+      response=(HttpResponse)src;
+    }
  else {
-    try {
-      response=Utility.objectToByteArray(src);
+      response=createResponse(src,context);
     }
- catch (    IOException e) {
-      throw new TransformerException(new Message(Messages.TRANSFORM_FAILED_FROM_X_TO_X,"Object","byte[]"),this,e);
+    if (!response.containsHeader(HttpConstants.HEADER_CONTENT_TYPE)) {
+      response.addHeader(new Header(HttpConstants.HEADER_CONTENT_TYPE,HttpConstants.DEFAULT_CONTENT_TYPE));
     }
-  }
-  StringBuffer httpMessage=new StringBuffer(512);
-  httpMessage.append(version).append(" ");
-  httpMessage.append(status).append(HttpConstants.CRLF);
-  httpMessage.append(HttpConstants.HEADER_DATE);
-  httpMessage.append(": ").append(date).append(HttpConstants.CRLF);
-  httpMessage.append(HttpConstants.HEADER_SERVER);
-  httpMessage.append(": ").append(server).append(HttpConstants.CRLF);
-  if (context.getProperty(HttpConstants.HEADER_EXPIRES) == null) {
-    httpMessage.append(HttpConstants.HEADER_EXPIRES);
-    httpMessage.append(": ").append(date).append(HttpConstants.CRLF);
-  }
-  httpMessage.append(HttpConstants.HEADER_CONTENT_TYPE);
-  if (contentType == null) {
-    httpMessage.append(": ").append(HttpConstants.DEFAULT_CONTENT_TYPE).append(HttpConstants.CRLF);
-  }
+    if (!response.containsHeader(HttpConstants.HEADER_CONTENT_LENGTH) && !response.containsHeader(HttpConstants.HEADER_TRANSFER_ENCODING)) {
+      InputStream content=response.getBody();
+      if (content != null) {
+        long len=response.getContentLength();
+        if (len < 0) {
+          if (response.getHttpVersion().lessEquals(HttpVersion.HTTP_1_0)) {
+            throw new IOException("Chunked encoding not supported for HTTP version " + response.getHttpVersion());
+          }
+          Header header=new Header(HttpConstants.HEADER_TRANSFER_ENCODING,"chunked");
+          response.addHeader(header);
+        }
  else {
-    httpMessage.append(": ").append(contentType).append(HttpConstants.CRLF);
-  }
-  httpMessage.append(HttpConstants.HEADER_CONTENT_LENGTH);
-  httpMessage.append(": ").append(response.length).append(HttpConstants.CRLF);
-  String headerName;
-  String value;
-  for (Iterator iterator=HttpConstants.RESPONSE_HEADER_NAMES.values().iterator(); iterator.hasNext(); ) {
-    headerName=(String)iterator.next();
-    value=context.getStringProperty(headerName);
-    if (value != null) {
-      httpMessage.append(headerName).append(": ").append(value);
-      httpMessage.append(HttpConstants.CRLF);
-    }
-  }
-  Map customHeaders=(Map)context.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
-  if (customHeaders != null) {
-    Map.Entry entry;
-    for (Iterator iterator=customHeaders.entrySet().iterator(); iterator.hasNext(); ) {
-      entry=(Map.Entry)iterator.next();
-      httpMessage.append(entry.getKey()).append(": ").append(entry.getValue());
-      httpMessage.append(HttpConstants.CRLF);
-    }
-  }
-  UMOMessage m=context.getMessage();
-  String user=(String)m.getProperty(MuleProperties.MULE_USER_PROPERTY);
-  if (user != null) {
-    httpMessage.append("X-" + MuleProperties.MULE_USER_PROPERTY).append(": ").append(user);
-    httpMessage.append(HttpConstants.CRLF);
-  }
-  if (m.getCorrelationId() != null) {
-    httpMessage.append("X-" + MuleProperties.MULE_CORRELATION_ID_PROPERTY).append(": ").append(m.getCorrelationId());
-    httpMessage.append(HttpConstants.CRLF);
-    httpMessage.append("X-" + MuleProperties.MULE_CORRELATION_GROUP_SIZE_PROPERTY).append(": ").append(m.getCorrelationGroupSize());
-    httpMessage.append(HttpConstants.CRLF);
-    httpMessage.append("X-" + MuleProperties.MULE_CORRELATION_SEQUENCE_PROPERTY).append(": ").append(m.getCorrelationSequence());
-    httpMessage.append(HttpConstants.CRLF);
-  }
-  if (m.getReplyTo() != null) {
-    httpMessage.append("X-" + MuleProperties.MULE_REPLY_TO_PROPERTY).append(": ").append(m.getReplyTo().toString());
-    httpMessage.append(HttpConstants.CRLF);
-  }
-  httpMessage.append(HttpConstants.CRLF);
-  byte[] resultPayload=new byte[httpMessage.length() + response.length];
-  System.arraycopy(httpMessage.toString().getBytes(),0,resultPayload,0,httpMessage.length());
-  System.arraycopy(response,0,resultPayload,httpMessage.length(),response.length);
-  if (contentType.startsWith("text/")) {
-    return new String(resultPayload);
-  }
+          Header header=new Header(HttpConstants.HEADER_CONTENT_LENGTH,Long.toString(len));
+          response.setHeader(header);
+        }
+      }
  else {
-    return resultPayload;
+        Header header=new Header(HttpConstants.HEADER_CONTENT_LENGTH,"0");
+        response.addHeader(header);
+      }
+    }
+    if (!response.containsHeader(HttpConstants.HEADER_CONNECTION)) {
+      String connHeader=context.getStringProperty(HttpConstants.HEADER_CONNECTION);
+      if (connHeader != null) {
+        if (connHeader.equalsIgnoreCase("keep-alive")) {
+          Header header=new Header(HttpConstants.HEADER_CONNECTION,"keep-alive");
+          response.addHeader(header);
+          response.setKeepAlive(true);
+        }
+        if (connHeader.equalsIgnoreCase("close")) {
+          Header header=new Header(HttpConstants.HEADER_CONNECTION,"close");
+          response.addHeader(header);
+          response.setKeepAlive(false);
+        }
+      }
+ else {
+        if (response.getHttpVersion().greaterEquals(HttpVersion.HTTP_1_1)) {
+          response.setKeepAlive(true);
+        }
+ else {
+          response.setKeepAlive(false);
+        }
+      }
+    }
+    if ("HEAD".equalsIgnoreCase(context.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY))) {
+      response.setBody(null);
+    }
+    return response;
+  }
+ catch (  IOException e) {
+    throw new TransformerException(this,e);
   }
 }

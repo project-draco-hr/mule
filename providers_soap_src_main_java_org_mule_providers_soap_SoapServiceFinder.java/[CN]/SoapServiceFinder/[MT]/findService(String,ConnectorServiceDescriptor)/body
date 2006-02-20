@@ -1,0 +1,17 @@
+{
+  Map finders=PropertiesHelper.getPropertiesWithPrefix(csd.getProperties(),"finder.class");
+  StringBuffer buf=new StringBuffer();
+  for (Iterator iterator=finders.entrySet().iterator(); iterator.hasNext(); ) {
+    Map.Entry entry=(Map.Entry)iterator.next();
+    try {
+      ClassHelper.loadClass(entry.getValue().toString(),getClass());
+      String protocol=entry.getKey().toString();
+      protocol=protocol.substring(protocol.lastIndexOf('.') + 1);
+      return ConnectorFactory.getServiceDescriptor(protocol);
+    }
+ catch (    ClassNotFoundException e1) {
+      buf.append(entry.getValue().toString()).append("(").append(entry.getKey().toString()).append(")").append(", ");
+    }
+  }
+  throw new ConnectorServiceException(new Message(Messages.COULD_NOT_FIND_SOAP_PROVIDER_X,buf.toString()));
+}

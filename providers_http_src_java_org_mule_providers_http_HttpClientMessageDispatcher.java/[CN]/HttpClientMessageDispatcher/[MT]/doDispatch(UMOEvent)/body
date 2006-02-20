@@ -1,10 +1,9 @@
 {
-  HttpMethod httpMethod=execute(event,true);
-  if (httpMethod != null) {
-    httpMethod.releaseConnection();
-    if (httpMethod.getStatusCode() >= 400) {
-      logger.error(httpMethod.getResponseBodyAsString());
-      throw new DispatchException(event.getMessage(),event.getEndpoint(),new Exception("Http call returned a status of: " + httpMethod.getStatusCode() + " "+ httpMethod.getStatusText()));
-    }
+  HttpMethod httpMethod=getMethod(event);
+  execute(event,httpMethod,false);
+  httpMethod.releaseConnection();
+  if (httpMethod.getStatusCode() >= 400) {
+    logger.error(httpMethod.getResponseBodyAsString());
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),new Exception("Http call returned a status of: " + httpMethod.getStatusCode() + " "+ httpMethod.getStatusText()));
   }
 }

@@ -1,22 +1,31 @@
 {
   if (message == null) {
-    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    servletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
     if (feedback) {
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.getWriter().write("Action was processed successfully. There was no result");
+      servletResponse.setStatus(HttpServletResponse.SC_OK);
+      servletResponse.getWriter().write("Action was processed successfully. There was no result");
     }
   }
  else {
-    String contentType=(String)message.getProperty("Content-Type");
-    if (contentType == null)     contentType=defaultContentType;
-    if (!contentType.startsWith("text")) {
-      response.setContentType(contentType);
-      response.getOutputStream().write(message.getPayloadAsBytes());
+    HttpResponse httpResponse=null;
+    if (message.getAdapter() instanceof WriterMessageAdapter) {
+      WriterMessageAdapter adapter=(WriterMessageAdapter)message.getAdapter();
+      httpResponse=new HttpResponse();
+      httpResponse.setBodyString(adapter.getPayloadAsString());
     }
  else {
-      response.setContentType(contentType);
-      response.getWriter().write(message.getPayloadAsString());
+      httpResponse=(HttpResponse)message.getPayload();
     }
-    response.setStatus(HttpServletResponse.SC_OK);
+    String contentType=httpResponse.getFirstHeader("Content-Type").getValue();
+    if (contentType == null)     contentType=defaultContentType;
+    if (!contentType.startsWith("text")) {
+      servletResponse.setContentType(contentType);
+      servletResponse.getOutputStream().write(httpResponse.getBodyBytes());
+    }
+ else {
+      servletResponse.setContentType(contentType);
+      servletResponse.getWriter().write(httpResponse.getBodyString());
+    }
+    servletResponse.setStatus(HttpServletResponse.SC_OK);
   }
 }

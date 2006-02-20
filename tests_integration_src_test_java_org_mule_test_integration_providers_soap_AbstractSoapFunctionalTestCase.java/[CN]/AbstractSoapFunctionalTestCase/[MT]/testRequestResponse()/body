@@ -1,9 +1,13 @@
 {
   MuleClient client=new MuleClient();
   List results=new ArrayList();
-  int number=100;
+  int number=1;
+  Map props=new HashMap();
   for (int i=0; i < number; i++) {
-    results.add(client.send(getRequestResponseEndpoint(),"Message " + i,null).getPayload());
+    props.put("X-Message-Number",String.valueOf(i));
+    UMOMessage msg=client.send(getRequestResponseEndpoint(),"Message " + i,props);
+    assertNotNull(msg);
+    results.add(msg.getPayload());
   }
   assertEquals(number,results.size());
   for (int i=0; i < number; i++) {

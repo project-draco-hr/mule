@@ -1,0 +1,42 @@
+{
+  if (response == null) {
+    return;
+  }
+  setKeepAlive(response.isKeepAlive());
+  ResponseWriter writer=new ResponseWriter(this.out,HTTP_ELEMENT_CHARSET);
+  OutputStream outsream=this.out;
+  writer.println(response.getStatusLine());
+  Iterator item=response.getHeaderIterator();
+  while (item.hasNext()) {
+    Header header=(Header)item.next();
+    writer.print(header.toExternalForm());
+  }
+  writer.println();
+  writer.flush();
+  InputStream content=response.getBody();
+  if (content != null) {
+    Header transferenc=response.getFirstHeader("Transfer-Encoding");
+    if (transferenc != null) {
+      response.removeHeaders("Content-Length");
+      if (transferenc.getValue().indexOf("chunked") != -1) {
+        outsream=new ChunkedOutputStream(outsream);
+        byte[] tmp=new byte[1024];
+        int i=0;
+        while ((i=content.read(tmp)) >= 0) {
+          outsream.write(tmp,0,i);
+        }
+        if (outsream instanceof ChunkedOutputStream) {
+          ((ChunkedOutputStream)outsream).finish();
+        }
+      }
+    }
+ else {
+      byte[] tmp=new byte[1024];
+      int i=0;
+      while ((i=content.read(tmp)) >= 0) {
+        outsream.write(tmp,0,i);
+      }
+    }
+  }
+  outsream.flush();
+}

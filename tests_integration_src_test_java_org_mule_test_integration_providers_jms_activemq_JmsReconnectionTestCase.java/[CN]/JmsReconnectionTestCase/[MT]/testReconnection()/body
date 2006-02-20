@@ -1,4 +1,5 @@
 {
+  if (!isPrereqsMet("org.mule.test.integration.providers.jms.activemq.JmsReconnectionTestCase.testReconnection()"))   return;
   MuleDescriptor d=getTestDescriptor("anOrange",Orange.class.getName());
   UMOComponent component=MuleManager.getInstance().getModel().registerComponent(d);
   UMOEndpoint endpoint=new MuleEndpoint("test",new MuleEndpointURI("jms://my.queue"),connector,null,UMOEndpoint.ENDPOINT_TYPE_SENDER,0,new HashMap());
@@ -8,7 +9,7 @@
   long t0, t1;
   t0=System.currentTimeMillis();
   while (true) {
-    ConnectionNotification event=(ConnectionNotification)events.take();
+    ConnectionNotification event=(ConnectionNotification)events.poll(TIME_OUT,TimeUnit.MILLISECONDS);
     if (event == null) {
       fail("no notification event was received");
     }
@@ -23,7 +24,7 @@
   ServerTools.launchActiveMq(BROKER_URL);
   t0=System.currentTimeMillis();
   while (true) {
-    ConnectionNotification event=(ConnectionNotification)events.take();
+    ConnectionNotification event=(ConnectionNotification)events.poll(TIME_OUT,TimeUnit.MILLISECONDS);
     if (event.getAction() == ConnectionNotification.CONNECTION_CONNECTED) {
       break;
     }
@@ -46,7 +47,7 @@
   ServerTools.killActiveMq();
   t0=System.currentTimeMillis();
   while (true) {
-    ConnectionNotification event=(ConnectionNotification)events.take();
+    ConnectionNotification event=(ConnectionNotification)events.poll(TIME_OUT,TimeUnit.MILLISECONDS);
     if (event.getAction() == ConnectionNotification.CONNECTION_DISCONNECTED) {
       break;
     }
@@ -58,7 +59,7 @@
   ServerTools.launchActiveMq(BROKER_URL);
   t0=System.currentTimeMillis();
   while (true) {
-    ConnectionNotification event=(ConnectionNotification)events.take();
+    ConnectionNotification event=(ConnectionNotification)events.poll(TIME_OUT,TimeUnit.MILLISECONDS);
     if (event.getAction() == ConnectionNotification.CONNECTION_CONNECTED) {
       break;
     }

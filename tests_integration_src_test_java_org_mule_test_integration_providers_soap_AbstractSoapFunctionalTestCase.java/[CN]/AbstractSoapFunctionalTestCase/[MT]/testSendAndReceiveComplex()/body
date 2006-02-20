@@ -1,16 +1,10 @@
 {
-  UMOConnector c=ConnectorFactory.getConnectorByProtocol(getProtocol());
-  assertNotNull(c);
-  UMOMessageDispatcher dispatcher=c.getDispatcher("ANY");
-  UMOEndpoint endpoint=new MuleEndpoint("test",new MuleEndpointURI(getSendReceiveComplexEndpoint1()),c,null,UMOEndpoint.ENDPOINT_TYPE_SENDER,0,null);
-  UMOEvent event=getTestEvent(new Person("Ross","Mason"),endpoint);
-  UMOMessage result=dispatcher.send(event);
+  MuleClient client=new MuleClient();
+  UMOMessage result=client.send(getSendReceiveComplexEndpoint1(),new Person("Dino","Flintstone"),null);
   assertNull(result);
-  dispatcher.dispose();
-  dispatcher=c.getDispatcher("ANY");
-  result=dispatcher.receive(new MuleEndpointURI(getSendReceiveComplexEndpoint2()),0);
+  result=client.receive(getSendReceiveComplexEndpoint2(),0);
   assertNotNull(result);
   assertTrue(result.getPayload() instanceof Person);
-  assertEquals("Ross",((Person)result.getPayload()).getFirstName());
-  assertEquals("Mason",((Person)result.getPayload()).getLastName());
+  assertEquals("Dino",((Person)result.getPayload()).getFirstName());
+  assertEquals("Flintstone",((Person)result.getPayload()).getLastName());
 }

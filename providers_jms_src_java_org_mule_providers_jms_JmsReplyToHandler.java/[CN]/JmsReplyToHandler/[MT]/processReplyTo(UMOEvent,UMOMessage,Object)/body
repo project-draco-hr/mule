@@ -13,7 +13,12 @@
     Object payload=returnMessage.getPayload();
     if (getTransformer() != null) {
       getTransformer().setEndpoint(getEndpoint(event,"jms://temporary"));
-      payload=getTransformer().transform(payload);
+      if (getTransformer().isSourceTypeSupported(payload.getClass())) {
+        payload=getTransformer().transform(payload);
+      }
+ else       if (logger.isDebugEnabled()) {
+        logger.debug("transformer for replyTo Handler: " + getTransformer().toString() + " does not support source type: "+ payload.getClass()+ ". Not doing a transform");
+      }
     }
     session=connector.getSession(false,replyToDestination instanceof Topic);
     Message replyToMessage=JmsMessageUtils.getMessageForObject(payload,session);

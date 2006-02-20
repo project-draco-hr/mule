@@ -1,8 +1,9 @@
 {
-  HttpMethod httpMethod=execute(event,false);
+  HttpMethod httpMethod=getMethod(event);
+  httpMethod=execute(event,httpMethod,false);
   try {
     Properties h=new Properties();
-    Header[] headers=httpMethod.getRequestHeaders();
+    Header[] headers=httpMethod.getResponseHeaders();
     for (int i=0; i < headers.length; i++) {
       h.setProperty(headers[i].getName(),headers[i].getValue());
     }
@@ -16,7 +17,12 @@
     }
     UMOMessage m=null;
     Header header=httpMethod.getResponseHeader(HttpConstants.HEADER_CONTENT_TYPE);
-    if ((header != null) && header.getValue().startsWith("text/")) {
+    if ((header != null) && event.isStreaming()) {
+      StreamMessageAdapter sp=(StreamMessageAdapter)event.getMessage().getAdapter();
+      sp.setResponse(httpMethod.getResponseBodyAsStream());
+      m=new MuleMessage(sp,h);
+    }
+ else     if ((header != null) && header.getValue().startsWith("text/")) {
       m=new MuleMessage(httpMethod.getResponseBodyAsString(),h);
     }
  else {
@@ -29,6 +35,6 @@
     throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }
  finally {
-    if (httpMethod != null)     httpMethod.releaseConnection();
+    if (httpMethod != null && !event.isStreaming())     httpMethod.releaseConnection();
   }
 }

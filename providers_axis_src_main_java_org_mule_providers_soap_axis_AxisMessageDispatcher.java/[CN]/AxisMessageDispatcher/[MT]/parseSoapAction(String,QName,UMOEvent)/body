@@ -1,0 +1,21 @@
+{
+  UMOEndpointURI endpointURI=event.getEndpoint().getEndpointURI();
+  Map properties=new HashMap(event.getProperties());
+  properties.put("method",method.getLocalPart());
+  properties.put("methodNamespace",method.getNamespaceURI());
+  properties.put("address",endpointURI.getAddress());
+  properties.put("scheme",endpointURI.getScheme());
+  properties.put("host",endpointURI.getHost());
+  properties.put("port",String.valueOf(endpointURI.getPort()));
+  properties.put("path",endpointURI.getPath());
+  properties.put("hostInfo",endpointURI.getScheme() + "://" + endpointURI.getHost()+ (endpointURI.getPort() > -1 ? ":" + String.valueOf(endpointURI.getPort()) : ""));
+  if (event.getComponent() != null) {
+    properties.put("serviceName",event.getComponent().getDescriptor().getName());
+  }
+  TemplateParser tp=TemplateParser.createAntStyleParser();
+  soapAction=tp.parse(properties,soapAction);
+  if (logger.isDebugEnabled()) {
+    logger.debug("SoapAction for this call is: " + soapAction);
+  }
+  return soapAction;
+}

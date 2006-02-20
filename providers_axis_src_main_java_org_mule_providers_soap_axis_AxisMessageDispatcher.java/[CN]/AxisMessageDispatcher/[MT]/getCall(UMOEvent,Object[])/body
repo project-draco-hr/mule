@@ -1,0 +1,77 @@
+{
+  UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  String method=(String)endpointUri.getParams().remove("method");
+  if (method == null) {
+    throw new DispatchException(new org.mule.config.i18n.Message("soap",4),event.getMessage(),event.getEndpoint());
+  }
+  Service service=getService(event);
+  Call call=(Call)service.createCall();
+  String style=(String)event.getProperties().get("style");
+  String use=(String)event.getProperties().get("use");
+  if (style != null) {
+    Style s=Style.getStyle(style);
+    if (s == null) {
+      throw new IllegalArgumentException(new org.mule.config.i18n.Message(Messages.VALUE_X_IS_INVALID_FOR_X,style,"style").toString());
+    }
+ else {
+      call.setOperationStyle(s);
+    }
+  }
+  if (use != null) {
+    Use u=Use.getUse(use);
+    if (u == null) {
+      throw new IllegalArgumentException(new org.mule.config.i18n.Message(Messages.VALUE_X_IS_INVALID_FOR_X,use,"use").toString());
+    }
+ else {
+      call.setOperationUse(u);
+    }
+  }
+  BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
+  call.setTargetEndpointAddress(endpointUri.getAddress());
+  String methodNamespace=(String)event.getProperty(AxisConnector.METHOD_NAMESPACE_PROPERTY);
+  if (methodNamespace != null) {
+    call.setOperationName(new QName(methodNamespace,method));
+  }
+ else {
+    call.setOperationName(new QName(method));
+  }
+  call.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
+  call.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint());
+  int timeout=event.getIntProperty(MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,-1);
+  if (timeout >= 0) {
+    call.setTimeout(new Integer(timeout));
+  }
+  if (endpointUri.getUserInfo() != null) {
+    call.setUsername(endpointUri.getUsername());
+    call.setPassword(endpointUri.getPassword());
+  }
+  Map methodCalls=(Map)event.getProperty("soapMethods");
+  if (methodCalls == null) {
+    ArrayList params=new ArrayList();
+    for (int i=0; i < args.length; i++) {
+      if (args[i] instanceof DataHandler[]) {
+        params.add("attachments;qname{DataHandler:http://xml.apache.org/xml-soap};in");
+      }
+ else       if (call.getTypeMapping().getTypeQName(args[i].getClass()) != null) {
+        QName qname=call.getTypeMapping().getTypeQName(args[i].getClass());
+        params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+      }
+ else {
+        params.add("value" + i + ";qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+      }
+    }
+    HashMap map=new HashMap();
+    map.put(method,params);
+    event.setProperty("soapMethods",map);
+  }
+  setCallParams(call,event,call.getOperationName());
+  String soapAction=(String)event.getProperty(AxisConnector.SOAP_ACTION_PROPERTY);
+  if (soapAction != null) {
+    soapAction=parseSoapAction(soapAction,call.getOperationName(),event);
+    call.setSOAPActionURI(soapAction);
+    call.setUseSOAPAction(Boolean.TRUE.booleanValue());
+  }
+ else {
+  }
+  return call;
+}
