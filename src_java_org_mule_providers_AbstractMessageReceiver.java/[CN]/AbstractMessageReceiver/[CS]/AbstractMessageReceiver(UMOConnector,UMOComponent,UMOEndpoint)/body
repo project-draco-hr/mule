@@ -4,18 +4,12 @@
   setEndpoint(endpoint);
   listener=new DefaultInternalMessageListener();
   endpointUri=endpoint.getEndpointURI();
-  if (connector instanceof AbstractConnector) {
-    ThreadingProfile tp=((AbstractConnector)connector).getReceiverThreadingProfile();
-    if (serverSide) {
-      tp.setThreadPriority(Thread.NORM_PRIORITY + 2);
-    }
-    workManager=tp.createWorkManager(connector.getName() + "." + endpoint.getName()+ ".receiver");
-    try {
-      workManager.start();
-    }
- catch (    UMOException e) {
-      throw new InitialisationException(e,this);
-    }
+  workManager=this.connector.createReceiverWorkManager(endpoint.getName());
+  try {
+    workManager.start();
+  }
+ catch (  UMOException e) {
+    throw new InitialisationException(e,this);
   }
   connectionStrategy=this.connector.getConnectionStrategy();
 }
