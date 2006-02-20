@@ -1,0 +1,33 @@
+{
+  URL[] urls=new URL[0];
+  if (!location.exists()) {
+    return urls;
+  }
+  if (!location.isDirectory()) {
+    urls=new URL[1];
+    String path=location.getPath();
+    for (int i=0; i < extensions.length; ++i) {
+      if (path.toLowerCase().endsWith(extensions[i])) {
+        urls[0]=location.toURL();
+        break;
+      }
+    }
+    return urls;
+  }
+  File[] matches=location.listFiles(new FilenameFilter(){
+    public boolean accept(    File dir,    String name){
+      for (int i=0; i < extensions.length; ++i) {
+        if (name.toLowerCase().endsWith(extensions[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+);
+  urls=new URL[matches.length];
+  for (int i=0; i < matches.length; ++i) {
+    urls[i]=matches[i].toURL();
+  }
+  return urls;
+}
