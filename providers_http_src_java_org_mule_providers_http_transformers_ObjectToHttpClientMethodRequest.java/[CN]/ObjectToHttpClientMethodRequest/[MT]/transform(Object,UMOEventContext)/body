@@ -1,4 +1,5 @@
 {
+  String encoding=(String)context.getProperty(MuleProperties.MULE_ENCODING_SYSTEM_PROPERTY,null);
   String endpoint=(String)context.getProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
   if (endpoint == null) {
     throw new TransformerException(new Message(Messages.EVENT_PROPERTY_X_NOT_SET_CANT_PROCESS_REQUEST,MuleProperties.MULE_ENDPOINT_PROPERTY),this);
@@ -30,7 +31,12 @@
         addParameters(uri.getQuery(),postMethod);
         if (!(context.getMessage().getPayload() instanceof NullPayload)) {
           if (src instanceof String) {
-            postMethod.setRequestEntity(new ByteArrayRequestEntity(src.toString().getBytes()));
+            if (encoding != null) {
+              postMethod.setRequestEntity(new ByteArrayRequestEntity(src.toString().getBytes(encoding)));
+            }
+ else {
+              postMethod.setRequestEntity(new ByteArrayRequestEntity(src.toString().getBytes()));
+            }
           }
  else           if (src instanceof InputStream) {
             postMethod.setRequestEntity(new InputStreamRequestEntity((InputStream)src));
