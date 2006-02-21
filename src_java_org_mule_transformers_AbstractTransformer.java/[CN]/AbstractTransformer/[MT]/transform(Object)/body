@@ -1,6 +1,8 @@
 {
   Object result;
+  String encoding=null;
   if (src instanceof UMOMessage) {
+    encoding=((UMOMessage)src).getEncoding();
     src=((UMOMessage)src).getPayload();
   }
   if (!isSourceTypeSupported(src.getClass())) {
@@ -13,9 +15,11 @@
     }
   }
  else {
-    String encoding=null;
-    if (endpoint != null && endpoint.getEndpointEncoding() != null) {
-      encoding=endpoint.getEndpointEncoding();
+    if (endpoint != null && endpoint.getEncoding() != null) {
+      encoding=endpoint.getEncoding();
+    }
+    if (encoding == null) {
+      encoding=MuleManager.getConfiguration().getEncoding();
     }
     result=doTransform(src,encoding);
     result=checkReturnClass(result);
