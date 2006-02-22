@@ -7,8 +7,20 @@
   MessageProducer producer=null;
   MessageConsumer consumer=null;
   try {
-    session=connector.getSession(event.getEndpoint());
     txSession=connector.getCurrentSession();
+    cacheSession=PropertiesHelper.getBooleanProperty(event.getProperties(),JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions());
+    if (txSession != null) {
+      cacheSession=false;
+    }
+    if (cacheSession) {
+      if (cachedSession == null) {
+        cachedSession=connector.getSession(event.getEndpoint());
+      }
+      session=cachedSession;
+    }
+ else {
+      session=connector.getSession(event.getEndpoint());
+    }
     boolean remoteSync=useRemoteSync(event);
     if (txSession != null && remoteSync) {
       throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
@@ -29,8 +41,8 @@
       msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
     }
     Destination replyTo=null;
-    if (connector.getJmsSupport().supportsProperty("ReplyTo")) {
-      Object tempReplyTo=event.removeProperty("JMSReplyTo");
+    if (connector.getJmsSupport().supportsProperty(JmsConstants.JMS_REPLY_TO)) {
+      Object tempReplyTo=event.removeProperty(JmsConstants.JMS_REPLY_TO);
       if (tempReplyTo != null) {
         if (tempReplyTo instanceof Destination) {
           replyTo=(Destination)tempReplyTo;
@@ -57,9 +69,9 @@
         consumer=connector.getJmsSupport().createConsumer(session,replyTo);
       }
     }
-    String ttlString=(String)event.removeProperty("TimeToLive");
-    String priorityString=(String)event.removeProperty("Priority");
-    String persistentDeliveryString=(String)event.removeProperty("PersistentDelivery");
+    String ttlString=(String)event.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
+    String priorityString=(String)event.removeProperty(JmsConstants.PRIORITY_PROPERTY);
+    String persistentDeliveryString=(String)event.removeProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY);
     long ttl=Message.DEFAULT_TIME_TO_LIVE;
     int priority=Message.DEFAULT_PRIORITY;
     boolean persistent=Message.DEFAULT_DELIVERY_MODE == DeliveryMode.PERSISTENT;
