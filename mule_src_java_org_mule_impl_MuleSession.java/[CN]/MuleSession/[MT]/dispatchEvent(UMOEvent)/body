@@ -2,7 +2,15 @@
   if (event.getEndpoint().canSend()) {
     try {
       logger.debug("dispatching event: " + event);
-      UMOMessageDispatcher dispatcher=event.getEndpoint().getConnector().getDispatcher(event.getEndpoint().getEndpointURI().getAddress());
+      UMOConnector connector=event.getEndpoint().getConnector();
+      UMOMessageDispatcher dispatcher=connector.getDispatcher(event.getEndpoint().getEndpointURI().getAddress());
+      if (connector instanceof AbstractConnector) {
+        ((AbstractConnector)connector).getSessionHandler().writeSession(event.getMessage(),this);
+      }
+ else {
+        logger.warn("A session handler could not be obtained, using  default");
+        new MuleSessionHandler().writeSession(event.getMessage(),this);
+      }
       dispatcher.dispatch(event);
     }
  catch (    Exception e) {

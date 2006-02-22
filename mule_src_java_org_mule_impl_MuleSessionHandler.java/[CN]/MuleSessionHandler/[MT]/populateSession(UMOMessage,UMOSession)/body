@@ -1,0 +1,29 @@
+{
+  String sessionId=(String)message.removeProperty(MuleProperties.MULE_SESSION_ID_PROPERTY);
+  Object sessionHeader=message.removeProperty(MuleProperties.MULE_SESSION_PROPERTY);
+  if (sessionId != null) {
+    throw new IllegalStateException("This session handler does not know how to look up session information for session id: " + sessionId);
+  }
+  if (sessionHeader != null) {
+    String sessionString=(String)decoder.transform(sessionHeader);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Parsing session header: " + sessionString);
+    }
+    String pair;
+    String name;
+    String value;
+    for (StringTokenizer stringTokenizer=new StringTokenizer(sessionString,";"); stringTokenizer.hasMoreTokens(); ) {
+      pair=stringTokenizer.nextToken();
+      int i=pair.indexOf("=");
+      if (i == -1) {
+        throw new IllegalArgumentException(new Message(Messages.SESSION_VALUE_X_IS_MALFORMED,pair).toString());
+      }
+      name=pair.substring(0,i).trim();
+      value=pair.substring(i + 2).trim();
+      session.setProperty(name,value);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Added Session variable: " + pair);
+      }
+    }
+  }
+}
