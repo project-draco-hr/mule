@@ -15,7 +15,14 @@
         logger.debug("Sending Chained message '" + i + "': "+ (intermediaryResult == null ? "null" : intermediaryResult.toString()));
       }
       if (!lastEndpointInChain) {
-        intermediaryResult=send(session,intermediaryResult,endpoint);
+        UMOMessage tempResult=send(session,intermediaryResult,endpoint);
+        if (tempResult != null) {
+          tempResult.setCorrelationId(intermediaryResult.getCorrelationId());
+          tempResult.setCorrelationSequence(intermediaryResult.getCorrelationSequence());
+          tempResult.setCorrelationGroupSize(intermediaryResult.getCorrelationGroupSize());
+          tempResult.setReplyTo(intermediaryResult.getReplyTo());
+        }
+        intermediaryResult=tempResult;
         if (logger.isDebugEnabled()) {
           logger.debug("Received Chain result '" + i + "': "+ (intermediaryResult == null ? "null" : intermediaryResult.toString()));
         }
