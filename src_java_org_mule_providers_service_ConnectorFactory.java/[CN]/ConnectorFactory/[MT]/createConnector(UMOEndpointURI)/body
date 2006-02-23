@@ -1,19 +1,21 @@
 {
   String scheme=url.getSchemeMetaInfo();
   UMOConnector connector=null;
-  ConnectorServiceDescriptor psd;
-  psd=getServiceDescriptor(scheme);
-  if (psd.getServiceError() != null) {
-    throw new ConnectorServiceException(Message.createStaticMessage(psd.getServiceError()));
+  ConnectorServiceDescriptor csd=getServiceDescriptor(scheme);
+  if (csd.getServiceError() != null) {
+    throw new ConnectorServiceException(Message.createStaticMessage(csd.getServiceError()));
+  }
+  if (csd.getServiceFinder() != null) {
+    csd=csd.createServiceFinder().findService(scheme,csd);
   }
   try {
-    if (psd.getConnectorFactory() != null) {
-      ObjectFactory factory=(ObjectFactory)ClassHelper.loadClass(psd.getConnectorFactory(),ConnectorFactory.class).newInstance();
+    if (csd.getConnectorFactory() != null) {
+      ObjectFactory factory=(ObjectFactory)ClassHelper.loadClass(csd.getConnectorFactory(),ConnectorFactory.class).newInstance();
       connector=(UMOConnector)factory.create();
     }
  else {
-      if (psd.getConnector() != null) {
-        connector=(UMOConnector)ClassHelper.loadClass(psd.getConnector(),ConnectorFactory.class).newInstance();
+      if (csd.getConnector() != null) {
+        connector=(UMOConnector)ClassHelper.loadClass(csd.getConnector(),ConnectorFactory.class).newInstance();
         if (connector instanceof AbstractServiceEnabledConnector) {
           ((AbstractServiceEnabledConnector)connector).initialiseFromUrl(url);
         }
