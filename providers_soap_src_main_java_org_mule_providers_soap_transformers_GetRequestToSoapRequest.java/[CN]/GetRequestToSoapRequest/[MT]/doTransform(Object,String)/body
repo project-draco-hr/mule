@@ -1,0 +1,28 @@
+{
+  String request=src.toString();
+  StringBuffer result=new StringBuffer();
+  int i=request.indexOf("?");
+  if (i > -1) {
+    String query=request.substring(i + 1);
+    Properties p=PropertiesHelper.getPropertiesFromQueryString(query);
+    String header=StringMessageHelper.getFormattedMessage(SOAP_HEADER,new Object[]{encoding});
+    result.append(header);
+    String method=(String)p.remove(MuleProperties.MULE_METHOD_PROPERTY);
+    if (method == null) {
+      throw new TransformerException(new Message(Messages.PROPERTIES_X_NOT_SET,MuleProperties.MULE_METHOD_PROPERTY),this);
+    }
+    result.append("<").append(method).append(" xmlns=\"").append(DEFAULT_NAMESPACE).append("\">");
+    for (Iterator iterator=p.entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      result.append("<").append(entry.getKey()).append(">");
+      result.append(entry.getValue());
+      result.append("</").append(entry.getKey()).append(">");
+    }
+    result.append("</").append(method).append(">");
+    result.append(SOAP_FOOTER);
+  }
+ else {
+    throw new TransformerException(new Message(Messages.PROPERTIES_X_NOT_SET,MuleProperties.MULE_METHOD_PROPERTY),this);
+  }
+  return result.toString();
+}

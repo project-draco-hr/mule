@@ -13,7 +13,14 @@
     }
   }
  else {
-    is=new ByteArrayInputStream(context.getMessageAsBytes());
+    String method=context.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY);
+    if (method != null && method.equalsIgnoreCase("GET")) {
+      String data=(String)new GetRequestToSoapRequest().transform(context.getTransformedMessageAsString());
+      is=new ByteArrayInputStream(data.getBytes());
+    }
+ else {
+      is=new ByteArrayInputStream(context.getTransformedMessageAsBytes());
+    }
   }
   return is;
 }
