@@ -1,24 +1,31 @@
 {
-  if (model == null) {
-    System.err.println("model is null");
-    return;
+  List models=root.getChildren(MuleTag.ELEMENT_MODEL);
+  for (Iterator iter=models.iterator(); iter.hasNext(); ) {
+    Element modelElement=(Element)iter.next();
+    if (config.isShowModels()) {
+      String name=modelElement.getAttributeValue(MuleTag.ATTRIBUTE_NAME);
+      String type=modelElement.getAttributeValue(MuleTag.ATTRIBUTE_TYPE);
+      String className=modelElement.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME);
+      if (type != null) {
+        if (type.equals("custom")) {
+          name+=" (custom: " + className + ")";
+        }
+ else {
+          name+=" (" + type + ")";
+        }
+      }
+      GraphNode node=graph.addNode();
+      node.getInfo().setHeader(name);
+      node.getInfo().setFillColor(ColorRegistry.COLOR_MODEL);
+      StringBuffer caption=new StringBuffer();
+      appendProperties(modelElement,caption);
+      appendDescription(modelElement,caption);
+      node.getInfo().setCaption(caption.toString());
+      exceptionStrategyProcessor.processExceptionStrategy(graph,modelElement,node);
+    }
+    descriptorProcessor.parseModel(graph,modelElement);
   }
-  List descriptors=model.getChildren("mule-descriptor");
-  for (Iterator iter=descriptors.iterator(); iter.hasNext(); ) {
-    Element descriptor=(Element)iter.next();
-    String name=descriptor.getAttributeValue("name");
-    GraphNode node=graph.addNode();
-    node.getInfo().setHeader(name);
-    node.getInfo().setFillColor("grey");
-    StringBuffer caption=new StringBuffer();
-    appendProfiles(descriptor,caption);
-    appendProperties(descriptor,caption);
-    appendDescription(descriptor,caption);
-    node.getInfo().setCaption(caption.toString());
-    shortestNotationHandler.processShortestNotation(graph,descriptor,node);
-    exceptionStrategyProcessor.processExceptionStrategy(graph,descriptor,node);
-    inboundRoutersProcessor.processInboundRouters(graph,descriptor,node);
-    outBoundRoutersProcessor.processOutBoundRouters(graph,descriptor,node);
-    responseRouterProcessor.processResponseRouter(graph,descriptor,node);
+  if (models.size() == 0) {
+    descriptorProcessor.parseModel(graph,root);
   }
 }

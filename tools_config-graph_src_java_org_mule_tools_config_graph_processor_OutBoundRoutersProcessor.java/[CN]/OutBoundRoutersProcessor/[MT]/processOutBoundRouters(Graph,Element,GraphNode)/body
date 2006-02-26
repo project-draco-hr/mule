@@ -1,20 +1,20 @@
 {
-  Element outboundRouter=descriptor.getChild("outbound-router");
+  Element outboundRouter=descriptor.getChild(MuleTag.ELEMENT_OUTBOUND_ROUTER);
   if (outboundRouter != null) {
     String componentName=node.getInfo().getHeader();
-    List routers=outboundRouter.getChildren("router");
+    List routers=outboundRouter.getChildren(MuleTag.ELEMENT_ROUTER);
     exceptionStrategyProcessor.processExceptionStrategy(graph,outboundRouter,node);
     for (Iterator iterator=routers.iterator(); iterator.hasNext(); ) {
       Element router=(Element)iterator.next();
       if (router != null) {
         GraphNode routerNode=graph.addNode();
-        routerNode.getInfo().setHeader(router.getAttributeValue("className"));
+        routerNode.getInfo().setHeader(router.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME));
         routerNode.getInfo().setFillColor(ColorRegistry.COLOR_ROUTER);
         graph.addEdge(node,routerNode).getInfo().setCaption("outbound router");
         outBoundRouterEndpointsHandler.processOutBoundRouterEndpoints(graph,router,routerNode,componentName);
         processReplyTOasElement(graph,router,routerNode,componentName);
         processReplyTOasProperty(graph,router,routerNode,componentName);
-        GraphNode[] virtual=endpointRegistry.getVirtualEndpoint(componentName + "." + router.getAttributeValue("className"));
+        GraphNode[] virtual=endpointRegistry.getVirtualEndpoint(componentName + "." + router.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME));
         if (virtual.length > 0) {
           for (int i=0; i < virtual.length; i++) {
             graph.addEdge(routerNode,virtual[i]).getInfo().setCaption("out (dynamic)");

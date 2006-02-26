@@ -1,13 +1,27 @@
 {
   init();
+  String properties=getOpt(args,ARG_CONFIG,null);
+  if (properties != null) {
+    loadProperties(properties);
+  }
+  workingDirectory=getOpt(args,ARG_WORKING_DIRECTORY,null);
+  if (workingDirectory != null) {
+    File f=new File(workingDirectory);
+    if (!f.exists())     f.mkdirs();
+    workingDirectory=f.getAbsolutePath();
+    System.out.println("working directory is: " + workingDirectory);
+  }
   String filesString=getOpt(args,ARG_FILES,null);
   if (filesString != null) {
     files=new ArrayList();
     for (StringTokenizer stringTokenizer=new StringTokenizer(filesString,","); stringTokenizer.hasMoreTokens(); ) {
-      files.add(stringTokenizer.nextToken());
+      files.add(applyWorkingDirectory(stringTokenizer.nextToken()));
     }
   }
-  String outputDir=getOpt(args,ARG_OUTPUT_DIR,".");
+  String outputDir=getOpt(args,ARG_OUTPUT_DIR,null);
+  if (outputDir == null) {
+    outputDir=(workingDirectory == null ? "." : workingDirectory);
+  }
   outputDirectory=new File(outputDir);
   if (!outputDirectory.exists())   outputDirectory.mkdirs();
   System.out.println("Outputting graphs to: " + outputDirectory.getAbsolutePath());
@@ -16,9 +30,24 @@
   executeCommand=getOpt(args,ARG_EXEC,null);
   keepDotFiles=Boolean.valueOf(getOpt(args,ARG_KEEP_DOT_FILES,"false")).booleanValue();
   combineFiles=Boolean.valueOf(getOpt(args,ARG_COMBINE_FILES,"false")).booleanValue();
+  showAll=Boolean.valueOf(getOpt(args,ARG_SHOW_ALL,String.valueOf(showAll))).booleanValue();
+  if (showAll) {
+    showConfig=true;
+    showConnectors=true;
+    showAgents=true;
+    showModels=true;
+    showTransformers=true;
+  }
+ else {
+    showConnectors=Boolean.valueOf(getOpt(args,ARG_SHOW_CONNECTORS,String.valueOf(showConnectors))).booleanValue();
+    showConfig=Boolean.valueOf(getOpt(args,ARG_SHOW_CONFIG,String.valueOf(showConfig))).booleanValue();
+    showAgents=Boolean.valueOf(getOpt(args,ARG_SHOW_AGENTS,String.valueOf(showAgents))).booleanValue();
+    showModels=Boolean.valueOf(getOpt(args,ARG_SHOW_MODELS,String.valueOf(showModels))).booleanValue();
+    showTransformers=Boolean.valueOf(getOpt(args,ARG_SHOW_TRANSFORMERS,String.valueOf(showTransformers))).booleanValue();
+  }
   String temp=getOpt(args,ARG_MAPPINGS,null);
   if (temp != null) {
-    mappingsFile=new File(temp);
+    mappingsFile=new File(applyWorkingDirectory(temp));
     System.out.println("Using mappings file: " + mappingsFile.getAbsolutePath());
     if (mappingsFile.exists()) {
       mappings=new Properties();
@@ -35,7 +64,7 @@
   }
   temp=getOpt(args,ARG_URLS,null);
   if (temp != null) {
-    urlsFile=new File(temp);
+    urlsFile=new File(applyWorkingDirectory(temp));
     System.out.println("Using urls file: " + urlsFile.getAbsolutePath());
     if (urlsFile.exists()) {
       urls=new Properties();

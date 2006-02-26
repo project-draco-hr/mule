@@ -1,16 +1,19 @@
 {
-  List connectorsElement=root.getChildren("connector");
+  if (!config.isShowConnectors())   return;
+  List connectorsElement=root.getChildren(MuleTag.ELEMENT_CONNECTOR);
   for (Iterator iter=connectorsElement.iterator(); iter.hasNext(); ) {
     Element connector=(Element)iter.next();
     GraphNode connectorNode=graph.addNode();
     connectorNode.getInfo().setFillColor(ColorRegistry.COLOR_CONNECTOR);
-    String name=connector.getAttributeValue("name");
+    String name=connector.getAttributeValue(MuleTag.ATTRIBUTE_NAME);
     connectorNode.getInfo().setHeader(name);
     StringBuffer caption=new StringBuffer();
     String className=connector.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME);
-    caption.append("className :" + className + "\n");
+    caption.append(MuleTag.ATTRIBUTE_CLASS_NAME + " :" + className+ "\n");
+    appendProfiles(connector,caption);
     appendProperties(connector,caption);
     appendDescription(connector,caption);
     connectorNode.getInfo().setCaption(caption.toString());
+    connectionStrategyProcessor.parseConnectionStrategy(graph,connector,connectorNode);
   }
 }

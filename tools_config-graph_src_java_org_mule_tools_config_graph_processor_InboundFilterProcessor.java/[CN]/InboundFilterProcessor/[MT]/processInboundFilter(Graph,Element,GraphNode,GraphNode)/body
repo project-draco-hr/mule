@@ -1,8 +1,8 @@
 {
-  Element filter=endpoint.getChild("filter");
+  Element filter=endpoint.getChild(MuleTag.ELEMENT_FILTER);
   boolean conditional=false;
   if (filter == null) {
-    filter=endpoint.getChild("left-filter");
+    filter=endpoint.getChild(MuleTag.ELEMENT_LEFT_FILTER);
     conditional=filter != null;
   }
   if (filter != null) {
@@ -13,7 +13,7 @@
     appendProperties(filter,caption);
     filterNode.getInfo().setCaption(caption.toString());
     if (conditional) {
-      filter=endpoint.getChild("right-filter");
+      filter=endpoint.getChild(MuleTag.ELEMENT_RIGHT_FILTER);
       GraphNode filterNode2=graph.addNode();
       filterNode2.getInfo().setHeader(filter.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME));
       filterNode2.getInfo().setFillColor(ColorRegistry.COLOR_FILTER);
@@ -26,6 +26,10 @@
     graph.addEdge(endpointNode,filterNode).getInfo().setCaption("filters on");
   }
  else {
-    graph.addEdge(endpointNode,parent).getInfo().setCaption("in");
+    GraphEdge e=graph.addEdge(endpointNode,parent);
+    e.getInfo().setCaption("in");
+    if ("true".equalsIgnoreCase(endpoint.getAttributeValue(MuleTag.ATTRIBUTE_SYNCHRONOUS))) {
+      e.getInfo().setArrowTailNormal();
+    }
   }
 }

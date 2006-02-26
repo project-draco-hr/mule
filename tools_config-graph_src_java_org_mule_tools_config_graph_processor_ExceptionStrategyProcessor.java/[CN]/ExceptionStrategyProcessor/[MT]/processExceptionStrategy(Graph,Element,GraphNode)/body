@@ -1,15 +1,19 @@
 {
-  Element exceptionStrategy=descriptor.getChild("catch-all-strategy");
-  if (exceptionStrategy == null)   exceptionStrategy=descriptor.getChild("exception-strategy");
+  String edgeCaption=MuleTag.ELEMENT_CATCH_ALL_STRATEGY;
+  Element exceptionStrategy=descriptor.getChild(edgeCaption);
+  if (exceptionStrategy == null) {
+    edgeCaption=MuleTag.ELEMENT_EXCEPTION_STRATEGY;
+    exceptionStrategy=descriptor.getChild(edgeCaption);
+  }
   if (exceptionStrategy != null) {
     String className=exceptionStrategy.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME);
     GraphNode exceptionNode=graph.addNode();
     exceptionNode.getInfo().setHeader(className);
     exceptionNode.getInfo().setFillColor(ColorRegistry.COLOR_EXCEPTION_STRATEGY);
-    graph.addEdge(node,exceptionNode).getInfo().setCaption("catch-all-strategy");
-    Element endpoint=exceptionStrategy.getChild(MuleTag.TAG_ENDPOINT);
+    graph.addEdge(node,exceptionNode).getInfo().setCaption(edgeCaption);
+    Element endpoint=exceptionStrategy.getChild(MuleTag.ELEMENT_ENDPOINT);
     if (endpoint != null) {
-      String url=endpoint.getAttributeValue(MuleTag.TAG_ATTRIBUTE_ADDRESS);
+      String url=endpoint.getAttributeValue(MuleTag.ATTRIBUTE_ADDRESS);
       if (url != null) {
         GraphNode out=(GraphNode)registry.getEndpoint(url,node.getInfo().getHeader());
         if (out == null) {

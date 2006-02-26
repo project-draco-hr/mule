@@ -1,8 +1,9 @@
 {
-  List epList=router.getChildren(MuleTag.TAG_ENDPOINT);
-  for (Iterator iterator=epList.iterator(); iterator.hasNext(); ) {
+  List epList=router.getChildren(MuleTag.ELEMENT_ENDPOINT);
+  int x=1;
+  for (Iterator iterator=epList.iterator(); iterator.hasNext(); x++) {
     Element outEndpoint=(Element)iterator.next();
-    String url=outEndpoint.getAttributeValue(MuleTag.TAG_ATTRIBUTE_ADDRESS);
+    String url=outEndpoint.getAttributeValue(MuleTag.ATTRIBUTE_ADDRESS);
     if (url != null) {
       GraphNode out=(GraphNode)endpointRegistry.getEndpoint(url,componentName);
       if (out == null) {
@@ -16,7 +17,16 @@
         processOutboundFilter(graph,outEndpoint,out,routerNode);
       }
  else {
-        graph.addEdge(routerNode,out).getInfo().setCaption("out");
+        GraphEdge e=graph.addEdge(routerNode,out);
+        if (epList.size() == 1) {
+          e.getInfo().setCaption("out");
+        }
+ else {
+          e.getInfo().setCaption("out (" + x + " of "+ epList.size()+ ")");
+        }
+        if ("true".equalsIgnoreCase(outEndpoint.getAttributeValue(MuleTag.ATTRIBUTE_SYNCHRONOUS))) {
+          e.getInfo().setArrowTailNormal();
+        }
       }
     }
     GraphNode[] virtual=endpointRegistry.getVirtualEndpoint(componentName);
