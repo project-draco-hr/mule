@@ -1,0 +1,49 @@
+{
+  Properties envProps=new Properties();
+  FileInputStream in=null;
+  File f=null;
+  try {
+    boolean unix=true;
+    Process process=null;
+    if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+      process=Runtime.getRuntime().exec("cmd /c set>temp.env");
+      unix=false;
+    }
+ else {
+      process=Runtime.getRuntime().exec("export -p >temp.env");
+    }
+    process.waitFor();
+    f=new File("temp.env");
+    in=new FileInputStream(f);
+    BufferedReader br=new BufferedReader(new InputStreamReader(in));
+    String line=null;
+    while ((line=br.readLine()) != null) {
+      int index=-1;
+      if (line.startsWith("declare -")) {
+        line=line.substring(11);
+      }
+      if ((index=line.indexOf("=")) > -1) {
+        String key=line.substring(0,index).trim();
+        String value=line.substring(index + 1).trim();
+        if (unix && value.length() > 1) {
+          value=value.substring(1,value.length() - 1);
+        }
+        envProps.setProperty(key,value);
+      }
+ else {
+        envProps.setProperty(line,Utility.EMPTY_STRING);
+      }
+    }
+  }
+ catch (  Exception e) {
+  }
+ finally {
+    try {
+      if (in != null)       in.close();
+    }
+ catch (    IOException e) {
+    }
+    f.delete();
+  }
+  return envProps;
+}
