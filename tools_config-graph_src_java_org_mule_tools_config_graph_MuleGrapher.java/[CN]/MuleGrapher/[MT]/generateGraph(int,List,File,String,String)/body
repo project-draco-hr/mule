@@ -4,22 +4,22 @@
   builder.setEntityResolver(new MuleDtdResolver());
   Graph graph=GraphFactory.newGraph();
   builder.setIgnoringElementContentWhitespace(true);
-  MuleParser muleParser=new MuleParser(config,builder);
+  MuleParser muleParser=new MuleParser(env,builder);
   for (Iterator iterator=files.iterator(); iterator.hasNext(); ) {
     String s=(String)iterator.next();
     File myFile=new File(s);
-    System.out.println("**************** processing " + i + " of "+ files.size()+ 1+ " : "+ myFile.getCanonicalPath());
+    env.log("**************** processing " + i + " of "+ files.size()+ 1+ " : "+ myFile.getCanonicalPath());
     muleParser.parseMuleConfig(myFile,graph);
     if (files.size() > 1) {
       if (caption == null)       caption="(no caption set)";
       graph.getInfo().setCaption(caption);
     }
-    if (!config.isCombineFiles()) {
+    if (!env.getConfig().isCombineFiles()) {
       muleParser.finalise(graph);
       graphRenderer.saveGraph(graph,fileName,outputDir);
     }
   }
-  if (config.isCombineFiles()) {
+  if (env.getConfig().isCombineFiles()) {
     muleParser.finalise(graph);
     graphRenderer.saveGraph(graph,fileName,outputDir);
   }
