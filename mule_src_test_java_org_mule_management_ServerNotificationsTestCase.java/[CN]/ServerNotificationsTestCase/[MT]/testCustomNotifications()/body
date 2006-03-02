@@ -1,0 +1,19 @@
+{
+  final CountDownLatch latch=new CountDownLatch(2);
+  UMOManager m=getManager(true);
+  m.start();
+  m.registerListener(new DummyNotificationListener(){
+    public void onNotification(    UMOServerNotification notification){
+      if (notification.getAction() == DummyNotification.EVENT_RECEIVED) {
+        customNotificationCount++;
+        assertEquals("hello",notification.getSource());
+        latch.countDown();
+      }
+    }
+  }
+);
+  m.fireNotification(new DummyNotification("hello",DummyNotification.EVENT_RECEIVED));
+  m.fireNotification(new DummyNotification("hello",DummyNotification.EVENT_RECEIVED));
+  latch.await(2000,TimeUnit.MILLISECONDS);
+  assertEquals(2,customNotificationCount);
+}
