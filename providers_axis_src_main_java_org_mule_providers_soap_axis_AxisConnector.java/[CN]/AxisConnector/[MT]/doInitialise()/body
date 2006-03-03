@@ -1,18 +1,16 @@
 {
   super.doInitialise();
   axisTransportProtocols=new HashMap();
-  for (Iterator iterator=supportedSchemes.iterator(); iterator.hasNext(); ) {
-    String s=(String)iterator.next();
-    if (!(s.equalsIgnoreCase("http") || s.equalsIgnoreCase("https") || s.equalsIgnoreCase("servlet"))) {
-      axisTransportProtocols.put(s,MuleTransport.class);
-    }
-    registerSupportedProtocol(s);
-  }
   try {
+    for (Iterator iterator=supportedSchemes.iterator(); iterator.hasNext(); ) {
+      String s=(String)iterator.next();
+      axisTransportProtocols.put(s,MuleTransport.getTransportClass(s));
+      registerSupportedProtocol(s);
+    }
     MuleManager.getInstance().registerListener(this);
   }
- catch (  NotificationException nex) {
-    throw new InitialisationException(nex,this);
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
   }
   if (serverConfig == null)   serverConfig=DEFAULT_MULE_AXIS_SERVER_CONFIG;
   if (clientConfig == null)   clientConfig=DEFAULT_MULE_AXIS_CLIENT_CONFIG;

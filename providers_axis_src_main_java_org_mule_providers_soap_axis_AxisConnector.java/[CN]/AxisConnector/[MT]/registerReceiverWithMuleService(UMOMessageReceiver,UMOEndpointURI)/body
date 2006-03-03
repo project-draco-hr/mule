@@ -23,29 +23,18 @@
   }
   if (logger.isDebugEnabled())   logger.debug("Modified endpoint with " + scheme + " scheme to "+ endpoint);
   boolean sync=receiver.getEndpoint().isSynchronous();
-  if (scheme.equals("http") || scheme.equals("tcp")) {
+  if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")) {
     if (!receiver.getEndpoint().isSynchronousSet()) {
       sync=true;
     }
   }
-  Map endpointCounters=(Map)axisDescriptor.getProperties().get(ENDPOINT_COUNTERS_PROPERTY);
-  if (endpointCounters == null) {
-    endpointCounters=new HashMap();
-  }
-  Integer count=(Integer)endpointCounters.get(endpoint);
-  if (count == null)   count=new Integer(0);
-  if (count.intValue() == 0) {
-    UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
-    serviceEndpoint.setSynchronous(sync);
-    serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
-    serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
-    receiver.getEndpoint().setFilter(null);
-    serviceEndpoint.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
-    receiver.getEndpoint().setSecurityFilter(null);
-    serviceEndpoint.getProperties().putAll(receiver.getEndpoint().getProperties());
-    axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
-  }
-  count=new Integer(count.intValue() + 1);
-  endpointCounters.put(endpoint,count);
-  axisDescriptor.getProperties().put(ENDPOINT_COUNTERS_PROPERTY,endpointCounters);
+  UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
+  serviceEndpoint.setSynchronous(sync);
+  serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
+  serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
+  receiver.getEndpoint().setFilter(null);
+  serviceEndpoint.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  receiver.getEndpoint().setSecurityFilter(null);
+  serviceEndpoint.getProperties().putAll(receiver.getEndpoint().getProperties());
+  axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
 }
