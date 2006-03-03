@@ -11,24 +11,20 @@
   }
   writer.println();
   writer.flush();
-  OutputStream outsream=this.out;
+  OutputStream outstream=this.out;
   InputStream content=request.getBody();
   if (content != null) {
-    Header transferenc=request.getFirstHeader("Transfer-Encoding");
+    Header transferenc=request.getFirstHeader(HttpConstants.HEADER_TRANSFER_ENCODING);
     if (transferenc != null) {
-      request.removeHeaders("Content-Length");
-      if (transferenc.getValue().indexOf("chunked") != -1) {
-        outsream=new ChunkedOutputStream(outsream);
+      request.removeHeaders(HttpConstants.HEADER_CONTENT_LENGTH);
+      if (transferenc.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
+        outstream=new ChunkedOutputStream(outstream);
       }
     }
-    byte[] tmp=new byte[4096];
-    int i=0;
-    while ((i=content.read(tmp)) >= 0) {
-      outsream.write(tmp,0,i);
-    }
-    if (outsream instanceof ChunkedOutputStream) {
-      ((ChunkedOutputStream)outsream).finish();
+    IOUtils.copy(content,outstream);
+    if (outstream instanceof ChunkedOutputStream) {
+      ((ChunkedOutputStream)outstream).finish();
     }
   }
-  outsream.flush();
+  outstream.flush();
 }

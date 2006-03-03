@@ -4,7 +4,7 @@
   }
   setKeepAlive(response.isKeepAlive());
   ResponseWriter writer=new ResponseWriter(this.out,encoding);
-  OutputStream outsream=this.out;
+  OutputStream outstream=this.out;
   writer.println(response.getStatusLine());
   Iterator item=response.getHeaderIterator();
   while (item.hasNext()) {
@@ -18,25 +18,14 @@
     Header transferenc=response.getFirstHeader(HttpConstants.HEADER_TRANSFER_ENCODING);
     if (transferenc != null) {
       response.removeHeaders(HttpConstants.HEADER_CONTENT_LENGTH);
-      if (transferenc.getValue().indexOf("chunked") != -1) {
-        outsream=new ChunkedOutputStream(outsream);
-        byte[] tmp=new byte[4096];
-        int i=0;
-        while ((i=content.read(tmp)) >= 0) {
-          outsream.write(tmp,0,i);
-        }
-        if (outsream instanceof ChunkedOutputStream) {
-          ((ChunkedOutputStream)outsream).finish();
-        }
+      if (transferenc.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
+        outstream=new ChunkedOutputStream(outstream);
       }
     }
- else {
-      byte[] tmp=new byte[4096];
-      int i=0;
-      while ((i=content.read(tmp)) >= 0) {
-        outsream.write(tmp,0,i);
-      }
+    IOUtils.copy(content,outstream);
+    if (outstream instanceof ChunkedOutputStream) {
+      ((ChunkedOutputStream)outstream).finish();
     }
   }
-  outsream.flush();
+  outstream.flush();
 }

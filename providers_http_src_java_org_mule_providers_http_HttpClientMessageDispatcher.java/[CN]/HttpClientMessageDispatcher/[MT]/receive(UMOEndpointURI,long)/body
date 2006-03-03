@@ -1,11 +1,13 @@
 {
-  if (endpointUri == null)   return null;
+  if (endpointUri == null) {
+    return null;
+  }
   HttpMethod httpMethod=new GetMethod(endpointUri.getAddress());
   httpMethod.setDoAuthentication(true);
   if (endpointUri.getUserInfo() != null) {
-    StringBuffer header=new StringBuffer();
+    StringBuffer header=new StringBuffer(64);
     header.append("Basic ");
-    header.append(new BASE64Encoder().encode(endpointUri.getUserInfo().getBytes()));
+    header.append(new String(Base64.encodeBase64(endpointUri.getUserInfo().getBytes())));
     httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
   }
   try {
@@ -25,6 +27,6 @@ catch (  Exception e) {
     throw new ReceiveException(endpointUri,timeout,e);
   }
  finally {
-    if (httpMethod != null)     httpMethod.releaseConnection();
+    httpMethod.releaseConnection();
   }
 }
