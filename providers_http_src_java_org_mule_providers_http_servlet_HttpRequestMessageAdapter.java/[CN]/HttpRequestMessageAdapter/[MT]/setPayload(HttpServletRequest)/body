@@ -9,28 +9,18 @@
     if (payload == null) {
       if (isText(request.getContentType())) {
         BufferedReader reader=request.getReader();
-        StringBuffer buffer=new StringBuffer();
+        StringBuffer buffer=new StringBuffer(32768);
         String line;
         while ((line=reader.readLine()) != null) {
           buffer.append(line);
-          buffer.append(Utility.CRLF);
+          buffer.append(SystemUtils.LINE_SEPARATOR);
         }
         this.message=buffer.toString();
       }
  else {
-        InputStream is=request.getInputStream();
-        ByteArrayOutputStream baos=new ByteArrayOutputStream();
-        byte[] buffer=new byte[1024 * 32];
-        int len=0;
-        while ((len=is.read(buffer,len,buffer.length)) != -1) {
-          baos.write(buffer,0,len);
-          if (len != buffer.length) {
-            break;
-          }
-        }
-        baos.flush();
+        ByteArrayOutputStream baos=new ByteArrayOutputStream(32768);
+        IOUtils.copy(request.getInputStream(),baos);
         this.message=baos.toByteArray();
-        baos.close();
       }
     }
  else {
