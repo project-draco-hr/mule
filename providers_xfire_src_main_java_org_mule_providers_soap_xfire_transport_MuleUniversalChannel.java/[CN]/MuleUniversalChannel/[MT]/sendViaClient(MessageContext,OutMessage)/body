@@ -8,7 +8,7 @@
           atts.write(out);
         }
  else {
-          XMLStreamWriter writer=STAXUtils.createXMLStreamWriter(out,message.getEncoding());
+          XMLStreamWriter writer=STAXUtils.createXMLStreamWriter(out,message.getEncoding(),context);
           message.getSerializer().writeMessage(message,writer,context);
           try {
             writer.flush();
@@ -30,14 +30,14 @@
   sp.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
   client.sendStream(getUri(),sp);
   if (sp.hasResponse()) {
-    InMessage inMessage=null;
+    InMessage inMessage;
     String ct=(String)sp.getProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
     InputStream in=sp.getResponse();
     if (ct.toLowerCase().indexOf("multipart/related") != -1) {
       try {
         Attachments atts=new JavaMailAttachments(in,ct);
         InputStream msgIs=atts.getSoapMessage().getDataHandler().getInputStream();
-        inMessage=new InMessage(STAXUtils.createXMLStreamReader(msgIs,message.getEncoding()),getUri());
+        inMessage=new InMessage(STAXUtils.createXMLStreamReader(msgIs,message.getEncoding(),context),getUri());
         inMessage.setAttachments(atts);
       }
  catch (      MessagingException e) {
@@ -45,7 +45,7 @@
       }
     }
  else {
-      inMessage=new InMessage(STAXUtils.createXMLStreamReader(in,message.getEncoding()),getUri());
+      inMessage=new InMessage(STAXUtils.createXMLStreamReader(in,message.getEncoding(),context),getUri());
     }
     getEndpoint().onReceive(context,inMessage);
   }
