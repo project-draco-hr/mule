@@ -8,11 +8,11 @@
   MessageConsumer consumer=null;
   try {
     txSession=connector.getCurrentSession();
-    cacheSession=PropertiesHelper.getBooleanProperty(event.getProperties(),JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions());
+    cacheJmsSession=PropertiesHelper.getBooleanProperty(event.getProperties(),JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions());
     if (txSession != null) {
-      cacheSession=false;
+      cacheJmsSession=false;
     }
-    if (cacheSession) {
+    if (cacheJmsSession) {
       if (cachedSession == null) {
         cachedSession=connector.getSession(event.getEndpoint());
       }
@@ -28,9 +28,9 @@
     UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
     boolean topic=false;
     String resourceInfo=endpointUri.getResourceInfo();
-    topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
+    topic=(resourceInfo != null && JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(resourceInfo));
     if (!topic) {
-      topic=PropertiesHelper.getBooleanProperty(event.getEndpoint().getProperties(),"topic",false);
+      topic=PropertiesHelper.getBooleanProperty(event.getEndpoint().getProperties(),JmsConstants.TOPIC_PROPERTY,false);
     }
     Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
     producer=connector.getJmsSupport().createProducer(session,dest);
@@ -127,7 +127,7 @@
   finally {
     JmsUtils.closeQuietly(consumer);
     JmsUtils.closeQuietly(producer);
-    if (session != null && session != txSession) {
+    if (session != null && !cacheJmsSession && !session.equals(txSession)) {
       JmsUtils.closeQuietly(session);
     }
   }
