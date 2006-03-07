@@ -1,35 +1,25 @@
 {
   File file=(File)src;
-  byte[] buf=new byte[8 * 1024];
   if (file.length() == 0) {
-    logger.warn("File is empty: " + ((File)src).getAbsolutePath());
-    return new byte[]{};
+    logger.warn("File is empty: " + file.getAbsolutePath());
+    return ArrayUtils.EMPTY_BYTE_ARRAY;
   }
   FileInputStream fis=null;
-  ByteArrayOutputStream baos=null;
+  byte[] bytes=null;
   try {
-    fis=new FileInputStream((File)src);
-    baos=new ByteArrayOutputStream(new Long(((File)src).length()).intValue());
-    int len=0;
-    while ((len=fis.read(buf)) != -1) {
-      baos.write(buf,0,len);
-    }
-    return baos.toByteArray();
+    fis=new FileInputStream(file);
+    int length=new Long(file.length()).intValue();
+    bytes=new byte[length];
+    fis.read(bytes);
+    return bytes;
   }
- catch (  IOException e) {
+ catch (  OutOfMemoryError oom) {
+    throw new TransformerException(this,oom);
+  }
+catch (  IOException e) {
     throw new TransformerException(this,e);
   }
  finally {
-    try {
-      if (fis != null) {
-        fis.close();
-      }
-      if (baos != null) {
-        baos.close();
-      }
-    }
- catch (    IOException e) {
-      logger.debug("Failed to close reader in transformer: " + e.getMessage());
-    }
+    IOUtils.closeQuietly(fis);
   }
 }
