@@ -2,55 +2,54 @@
   boolean checkFileAge=((FileConnector)connector).getCheckFileAge();
   if (checkFileAge) {
     long fileAge=((FileConnector)connector).getFileAge();
-    long lastMod=file.lastModified();
+    long lastMod=sourceFile.lastModified();
     long now=(new java.util.Date()).getTime();
     if ((now - lastMod) < fileAge) {
       return;
     }
   }
   File destinationFile=null;
-  String orginalFilename=file.getName();
-  UMOMessageAdapter msgAdapter=connector.getMessageAdapter(file);
-  msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,orginalFilename);
+  String sourceFileOriginalName=sourceFile.getName();
+  UMOMessageAdapter msgAdapter=connector.getMessageAdapter(sourceFile);
+  msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
   if (moveDir != null) {
-    String fileName=file.getName();
+    String destinationFileName=sourceFileOriginalName;
     if (moveToPattern != null) {
-      fileName=((FileConnector)connector).getFilenameParser().getFilename(msgAdapter,moveToPattern);
+      destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(msgAdapter,moveToPattern);
     }
-    destinationFile=new File(moveDir,fileName);
+    destinationFile=new File(moveDir,destinationFileName);
   }
-  boolean resultOfFileMoveOperation=false;
+  boolean fileWasMoved=false;
   try {
-    if (!(file.canRead() && file.exists() && file.isFile())) {
-      throw new MuleException(new Message(Messages.FILE_X_DOES_NOT_EXIST,file.getName()));
+    if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
+      throw new MuleException(new Message(Messages.FILE_X_DOES_NOT_EXIST,sourceFileOriginalName));
     }
+    if (destinationFile != null) {
+      fileWasMoved=this.moveFile(sourceFile,destinationFile);
+      if (!fileWasMoved) {
+        throw new MuleException(new Message("file",4,sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
+      }
+      msgAdapter=connector.getMessageAdapter(destinationFile);
+      msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+    }
+    if (((FileConnector)connector).isAutoDelete()) {
+      if (destinationFile == null) {
+        assert(msgAdapter.getPayloadAsBytes() != null);
+        if (!sourceFile.delete()) {
+          throw new MuleException(new Message("file",3,sourceFile.getAbsolutePath()));
+        }
+      }
  else {
-      if (destinationFile != null) {
-        resultOfFileMoveOperation=file.renameTo(destinationFile);
-        if (!resultOfFileMoveOperation) {
-          throw new MuleException(new Message("file",4,file.getAbsolutePath(),destinationFile.getAbsolutePath()));
-        }
-        msgAdapter=connector.getMessageAdapter(destinationFile);
       }
-      if (((FileConnector)connector).isAutoDelete()) {
-        msgAdapter.getPayloadAsBytes();
-        if (destinationFile == null) {
-          resultOfFileMoveOperation=file.delete();
-          if (!resultOfFileMoveOperation) {
-            throw new MuleException(new Message("file",3,file.getAbsolutePath()));
-          }
-        }
-      }
-      UMOMessage message=new MuleMessage(msgAdapter);
-      routeMessage(message,endpoint.isSynchronous());
     }
+    this.routeMessage(new MuleMessage(msgAdapter),endpoint.isSynchronous());
   }
  catch (  Exception e) {
-    boolean resultOfRollbackFileMove=false;
-    if (resultOfFileMoveOperation) {
-      resultOfRollbackFileMove=rollbackFileMove(destinationFile,file.getAbsolutePath());
+    boolean fileWasRolledBack=false;
+    if (fileWasMoved) {
+      fileWasRolledBack=this.rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
     }
-    Exception ex=new MuleException(new Message("file",2,file.getName(),(resultOfRollbackFileMove ? "successful" : "unsuccessful")),e);
-    handleException(ex);
+    Exception ex=new MuleException(new Message("file",2,sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),e);
+    this.handleException(ex);
   }
 }
