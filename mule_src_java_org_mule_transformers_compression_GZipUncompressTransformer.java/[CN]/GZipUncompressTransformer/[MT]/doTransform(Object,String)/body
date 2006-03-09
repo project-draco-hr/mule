@@ -1,17 +1,24 @@
 {
-  byte[] buf=uncompressMessage(src);
+  byte[] buffer=null;
+  try {
+    buffer=getStrategy().uncompressByteArray((byte[])src);
+  }
+ catch (  IOException e) {
+    logger.error("Failed to uncompress message:",e);
+    throw new TransformerException(this,e);
+  }
   if (getReturnClass().equals(String.class)) {
     if (encoding != null) {
       try {
-        return new String(buf,encoding);
+        return new String(buffer,encoding);
       }
  catch (      UnsupportedEncodingException ex) {
-        return new String(buf);
+        return new String(buffer);
       }
     }
  else {
-      return new String(buf);
+      return new String(buffer);
     }
   }
-  return buf;
+  return buffer;
 }
