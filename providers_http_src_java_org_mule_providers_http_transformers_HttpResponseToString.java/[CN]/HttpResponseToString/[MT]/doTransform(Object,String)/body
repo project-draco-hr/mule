@@ -1,8 +1,8 @@
 {
   try {
     HttpResponse response=(HttpResponse)src;
-    ByteArrayOutputStream out=new ByteArrayOutputStream();
-    OutputStream outstream=out;
+    ByteArrayOutputStream bos=new ByteArrayOutputStream(8192);
+    OutputStream outstream=bos;
     ResponseWriter writer=new ResponseWriter(outstream,encoding);
     writer.println(response.getStatusLine());
     Iterator item=response.getHeaderIterator();
@@ -19,29 +19,18 @@
         response.removeHeaders(HttpConstants.HEADER_CONTENT_LENGTH);
         if (transferenc.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
           outstream=new ChunkedOutputStream(outstream);
-          byte[] tmp=new byte[1024];
-          int i=0;
-          while ((i=content.read(tmp)) >= 0) {
-            outstream.write(tmp,0,i);
-          }
-          if (outstream instanceof ChunkedOutputStream) {
-            ((ChunkedOutputStream)outstream).finish();
-          }
         }
-      }
- else {
-        byte[] tmp=new byte[1024];
-        int i=0;
-        while ((i=content.read(tmp)) >= 0) {
-          outstream.write(tmp,0,i);
+        IOUtils.copy(content,outstream);
+        if (outstream instanceof ChunkedOutputStream) {
+          ((ChunkedOutputStream)outstream).finish();
         }
       }
     }
     outstream.flush();
-    out.flush();
-    byte[] result=out.toByteArray();
+    bos.flush();
+    byte[] result=bos.toByteArray();
     outstream.close();
-    out.close();
+    bos.close();
     if (getReturnClass().equals(String.class)) {
       return new String(result,encoding);
     }
