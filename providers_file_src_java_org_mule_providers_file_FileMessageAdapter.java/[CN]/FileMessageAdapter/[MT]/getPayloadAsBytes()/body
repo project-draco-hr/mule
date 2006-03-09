@@ -1,6 +1,13 @@
 {
-  if (contents == null) {
-    this.contents=(byte[])transformer.transform(message);
+synchronized (this) {
+    if (contents == null) {
+      try {
+        this.contents=(byte[])transformer.transform(file);
+      }
+ catch (      Exception noPayloadException) {
+        throw new MuleRuntimeException(new Message(Messages.FAILED_TO_READ_PAYLOAD),noPayloadException);
+      }
+    }
+    return contents;
   }
-  return contents;
 }
