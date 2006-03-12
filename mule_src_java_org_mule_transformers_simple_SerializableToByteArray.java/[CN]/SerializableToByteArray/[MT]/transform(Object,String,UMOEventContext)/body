@@ -1,43 +1,24 @@
 {
-  Object obj=null;
   if (isSourceTypeSupported(UMOMessage.class,true)) {
-    obj=context.getMessage();
+    src=context.getMessage();
   }
  else {
-    obj=src;
-    if (obj instanceof byte[]) {
-      return obj;
+    if (src instanceof byte[]) {
+      return src;
     }
- else     if (obj instanceof String) {
+ else     if (src instanceof String) {
       try {
-        return ((String)obj).getBytes(encoding);
+        return ((String)src).getBytes(encoding);
       }
  catch (      UnsupportedEncodingException e) {
         throw new TransformerException(this,e);
       }
     }
   }
-  byte[] dest=null;
-  ByteArrayOutputStream bs=null;
-  ObjectOutputStream os=null;
   try {
-    bs=new ByteArrayOutputStream();
-    os=new ObjectOutputStream(bs);
-    os.writeObject(obj);
-    os.flush();
-    dest=bs.toByteArray();
+    return SerializationUtils.serialize((Serializable)src);
   }
  catch (  Exception e) {
     throw new TransformerException(this,e);
   }
- finally {
-    try {
-      if (os != null) {
-        os.close();
-      }
-    }
- catch (    IOException e) {
-    }
-  }
-  return dest;
 }
