@@ -1,14 +1,21 @@
 {
   byte[] buf;
-  if (src instanceof String) {
-    buf=src.toString().getBytes();
-  }
+  try {
+    if (src instanceof String) {
+      buf=((String)src).getBytes(encoding);
+    }
  else {
-    buf=(byte[])src;
+      buf=(byte[])src;
+    }
+    String result=Base64.encodeBytes(buf);
+    if (getReturnClass().equals(byte[].class)) {
+      return result.getBytes(encoding);
+    }
+ else {
+      return result;
+    }
   }
-  String result=encoder.encode(buf);
-  if (getReturnClass().equals(byte[].class)) {
-    return result.getBytes();
+ catch (  Exception ex) {
+    throw new TransformerException(new Message(Messages.TRANSFORM_FAILED_FROM_X_TO_X,src.getClass().getName(),"base64"),this,ex);
   }
-  return result;
 }
