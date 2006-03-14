@@ -2,32 +2,37 @@
   DefaultSpaceFactory factory=getSpaceFactory();
   factory.setCapacity(2);
   final UMOSpace space=factory.create("test");
-  final Latch latch=new Latch();
-  Thread t=new Thread(){
-    public void run(){
-      try {
-        latch.await();
-        Thread.sleep(200);
-        Object o=space.take();
-        assertEquals("String1",o);
-      }
- catch (      Exception e) {
+  try {
+    final Latch latch=new Latch();
+    Thread t=new Thread(){
+      public void run(){
+        try {
+          latch.await();
+          Thread.sleep(200);
+          Object o=space.take();
+          assertEquals("String1",o);
+        }
+ catch (        Exception e) {
+          logger.warn(e);
+        }
       }
     }
-  }
 ;
-  t.start();
-  assertNull(space.takeNoWait());
-  space.put("String1");
-  space.put("String2");
-  latch.countDown();
-  long t0=System.currentTimeMillis();
-  space.put("String3");
-  long t1=System.currentTimeMillis();
-  t.join();
-  assertNotNull(space.takeNoWait());
-  assertNotNull(space.takeNoWait());
-  assertNull(space.takeNoWait());
-  assertTrue(t1 - t0 > 100);
-  space.dispose();
+    t.start();
+    assertNull(space.takeNoWait());
+    space.put("String1");
+    space.put("String2");
+    latch.countDown();
+    long t0=System.currentTimeMillis();
+    space.put("String3");
+    long t1=System.currentTimeMillis();
+    t.join();
+    assertNotNull(space.takeNoWait());
+    assertNotNull(space.takeNoWait());
+    assertNull(space.takeNoWait());
+    assertTrue(t1 - t0 > 100);
+  }
+  finally {
+    space.dispose();
+  }
 }
