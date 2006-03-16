@@ -1,0 +1,37 @@
+{
+  if (previous != null) {
+    try {
+      id=previous.getUniqueId();
+    }
+ catch (    UniqueIdNotSupportedException e) {
+      id=UUID.getUUID();
+    }
+    if (message == null) {
+      this.message=new NullPayload();
+    }
+ else {
+      this.message=message;
+    }
+    for (Iterator iterator=previous.getAttachmentNames().iterator(); iterator.hasNext(); ) {
+      String name=(String)iterator.next();
+      try {
+        addAttachment(name,previous.getAttachment(name));
+      }
+ catch (      Exception e) {
+        throw new MuleRuntimeException(new Message(Messages.FAILED_TO_READ_PAYLOAD),e);
+      }
+    }
+    for (Iterator iterator=previous.getPropertyNames(); iterator.hasNext(); ) {
+      String name=(String)iterator.next();
+      try {
+        setProperty(name,previous.getProperty(name));
+      }
+ catch (      Exception e) {
+        throw new MuleRuntimeException(new Message(Messages.FAILED_TO_READ_PAYLOAD),e);
+      }
+    }
+  }
+ else {
+    throw new NullPointerException("previousAdapter");
+  }
+}

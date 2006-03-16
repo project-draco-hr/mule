@@ -4,15 +4,21 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Waiting for response for message id: " + messageId + " in "+ this);
   }
-  Lock l=(Lock)locks.get(messageId);
+  Lock l=null;
+  locksCollectionLock.lock();
+  l=(Lock)locks.get(messageId);
   if (l == null) {
     logger.debug("Got response but no one is waiting for it yet. Creating latch for " + messageId + " in "+ this);
     l=new Latch();
+    if (locks.get(messageId) != null) {
+      throw new IllegalStateException("There is already a lock with ID: " + messageId);
+    }
     locks.put(messageId,l);
   }
  else {
     logger.debug("Got latch for message: " + messageId);
   }
+  locksCollectionLock.unlock();
   boolean b=false;
   try {
     logger.debug("Waiting for response to message: " + messageId);
@@ -28,6 +34,11 @@
     logger.error(e.getMessage(),e);
   }
   if (!b) {
+    if (logger.isTraceEnabled()) {
+synchronized (responseEvents) {
+        logger.trace("Current responses are: \n" + PropertiesHelper.propertiesToString(responseEvents,true));
+      }
+    }
     throw new ResponseTimeoutException(new Message(Messages.RESPONSE_TIMED_OUT_X_WAITING_FOR_ID_X,String.valueOf(getTimeout()),messageId),message,null);
   }
   UMOMessage result=(UMOMessage)responseEvents.remove(messageId);

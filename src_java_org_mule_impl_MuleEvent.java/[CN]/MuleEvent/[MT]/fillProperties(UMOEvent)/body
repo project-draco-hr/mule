@@ -1,16 +1,20 @@
 {
-  if (previousEvent != null && previousEvent.getProperties() != null) {
-    properties=previousEvent.getProperties();
-  }
- else {
-    properties=new HashMap();
-  }
-  if (endpoint != null && endpoint.getProperties() != null) {
-    properties.putAll(endpoint.getProperties());
-    if (endpoint.getEndpointURI().getParams() != null) {
-      properties.putAll(endpoint.getEndpointURI().getParams());
+  if (previousEvent != null) {
+    for (Iterator iterator=previousEvent.getMessage().getPropertyNames(); iterator.hasNext(); ) {
+      Object prop=iterator.next();
+      if (message.getProperty(prop) == null) {
+        message.setProperty(prop,previousEvent.getMessage().getProperty(prop));
+      }
     }
   }
-  properties.putAll(message.getProperties());
+  if (endpoint != null && endpoint.getProperties() != null) {
+    for (Iterator iterator=endpoint.getProperties().keySet().iterator(); iterator.hasNext(); ) {
+      Object prop=iterator.next();
+      if (message.getProperty(prop) == null) {
+        Object value=endpoint.getProperties().get(prop);
+        message.setProperty(prop,value);
+      }
+    }
+  }
   setCredentials();
 }
