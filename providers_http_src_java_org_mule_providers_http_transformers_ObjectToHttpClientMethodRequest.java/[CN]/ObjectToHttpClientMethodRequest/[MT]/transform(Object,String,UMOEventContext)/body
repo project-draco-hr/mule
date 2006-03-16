@@ -29,20 +29,24 @@
       if (paramName == null) {
         addParameters(uri.getQuery(),postMethod);
         if (!(context.getMessage().getPayload() instanceof NullPayload)) {
+          String mimeType=context.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
           if (src instanceof String) {
-            if (encoding != null) {
-              postMethod.setRequestEntity(new ByteArrayRequestEntity(src.toString().getBytes(encoding)));
+            int parameterIndex=mimeType != null ? mimeType.indexOf(";") : -1;
+            if (parameterIndex > 0) {
+              mimeType=mimeType.substring(0,parameterIndex);
             }
- else {
-              postMethod.setRequestEntity(new ByteArrayRequestEntity(src.toString().getBytes()));
-            }
+            if (mimeType == null)             mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
+            if (encoding == null)             encoding=MuleManager.getConfiguration().getEncoding();
+            postMethod.setRequestEntity(new StringRequestEntity(src.toString(),mimeType,encoding));
           }
  else           if (src instanceof InputStream) {
-            postMethod.setRequestEntity(new InputStreamRequestEntity((InputStream)src));
+            if (mimeType == null)             mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
+            postMethod.setRequestEntity(new InputStreamRequestEntity((InputStream)src,mimeType));
           }
  else {
+            if (mimeType == null)             mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
             byte[] buffer=(byte[])serializableToByteArray.doTransform(src,encoding);
-            postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer));
+            postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer,mimeType));
           }
         }
       }
