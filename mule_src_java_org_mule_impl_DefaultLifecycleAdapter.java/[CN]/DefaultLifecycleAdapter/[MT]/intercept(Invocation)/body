@@ -1,16 +1,25 @@
 {
-  UMOEvent currentEvent=RequestContext.getEvent();
-  Object result=onCall(currentEvent);
-  if (result instanceof UMOMessage) {
-    return (UMOMessage)result;
+  Object result=null;
+  try {
+    result=entryPoint.invoke(component,RequestContext.getEventContext());
   }
- else   if (result instanceof UMOEvent) {
-    return ((UMOEvent)result).getMessage();
+ catch (  Exception e) {
+    throw new MuleException(new Message(Messages.FAILED_TO_INVOKE_X,component.getClass().getName()),e);
+  }
+  UMOMessage resultMessage=null;
+  if (result == null && entryPoint.isVoid()) {
+    resultMessage=new MuleMessage(RequestContext.getEventContext().getTransformedMessage(),RequestContext.getEventContext().getMessage());
   }
  else   if (result != null) {
-    return new MuleMessage(result,currentEvent.getProperties());
-  }
+    if (result instanceof UMOMessage) {
+      resultMessage=(UMOMessage)result;
+    }
  else {
-    return null;
+      resultMessage=new MuleMessage(result,RequestContext.getEventContext().getMessage());
+    }
   }
+  if (resultMessage != null) {
+    resultMessage.removeProperty("method");
+  }
+  return resultMessage;
 }

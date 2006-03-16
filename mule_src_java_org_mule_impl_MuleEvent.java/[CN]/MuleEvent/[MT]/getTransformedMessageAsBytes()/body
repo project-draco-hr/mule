@@ -1,6 +1,25 @@
 {
-  if (serializableToByteArray == null) {
-    serializableToByteArray=new SerializableToByteArray();
+  Object msg=getTransformedMessage();
+  if (msg instanceof byte[]) {
+    return (byte[])msg;
   }
-  return (byte[])serializableToByteArray.doTransform(getTransformedMessage(),getEncoding());
+ else   if (msg instanceof String) {
+    try {
+      return msg.toString().getBytes(getEncoding());
+    }
+ catch (    UnsupportedEncodingException e) {
+      throw new TransformerException(new Message(Messages.TRANSFORM_FAILED_FROM_X,msg.getClass().getName(),e));
+    }
+  }
+ else   if (msg instanceof Serializable) {
+    try {
+      return SerializationUtils.serialize((Serializable)msg);
+    }
+ catch (    Exception e) {
+      throw new TransformerException(new Message(Messages.TRANSFORM_FAILED_FROM_X_TO_X,msg.getClass().getName(),"byte[]"),e);
+    }
+  }
+ else {
+    throw new TransformerException(new Message(Messages.TRANSFORM_ON_X_NOT_OF_SPECIFIED_TYPE_X,msg.getClass().getName(),"byte[] or " + Serializable.class.getName()));
+  }
 }

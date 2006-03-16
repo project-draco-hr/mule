@@ -1,0 +1,23 @@
+{
+  Object value;
+  String key;
+  for (Iterator iterator=umoMessage.getPropertyNames(); iterator.hasNext(); ) {
+    key=iterator.next().toString();
+    if (!key.startsWith("JMS")) {
+      value=umoMessage.getProperty(key);
+      if (MuleProperties.MULE_CORRELATION_ID_PROPERTY.equals(key)) {
+        msg.setJMSCorrelationID(umoMessage.getCorrelationId());
+      }
+      if (!(MuleProperties.MULE_REPLY_TO_PROPERTY.equals(key) && value instanceof Destination)) {
+        try {
+          msg.setObjectProperty(encodeHeader(key),value);
+        }
+ catch (        JMSException e) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Unable to set property '" + encodeHeader(key) + "' of type "+ value.getClass().getName()+ "': "+ e.getMessage());
+          }
+        }
+      }
+    }
+  }
+}

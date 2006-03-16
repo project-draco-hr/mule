@@ -1,6 +1,6 @@
 {
   Object payload=null;
-  Object methodOverride=context.getProperties().remove(MuleProperties.MULE_METHOD_PROPERTY);
+  Object methodOverride=context.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
   Method method=null;
   if (methodOverride instanceof Method) {
     method=(Method)methodOverride;
@@ -20,7 +20,7 @@
         payload=context.getTransformedMessage();
         method=getMethod(component,payload);
         if (method != null) {
-          RequestContext.rewriteEvent(new MuleMessage(payload));
+          RequestContext.rewriteEvent(new MuleMessage(payload,context.getMessage()));
         }
       }
  else {
@@ -32,7 +32,7 @@
     currentMethod=method;
     if (payload == null) {
       payload=context.getTransformedMessage();
-      RequestContext.rewriteEvent(new MuleMessage(payload));
+      RequestContext.rewriteEvent(new MuleMessage(payload,context.getMessage()));
     }
     return invokeCurrent(component,payload);
   }

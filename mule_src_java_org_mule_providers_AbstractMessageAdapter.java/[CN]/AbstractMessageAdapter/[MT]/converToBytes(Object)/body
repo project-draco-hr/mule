@@ -2,8 +2,18 @@
   if (object instanceof String) {
     return object.toString().getBytes(getEncoding());
   }
-  if (serializableToByteArray == null) {
-    serializableToByteArray=new SerializableToByteArray();
+  if (object instanceof byte[]) {
+    return (byte[])object;
   }
-  return (byte[])serializableToByteArray.doTransform(object,getEncoding());
+ else   if (object instanceof Serializable) {
+    try {
+      return SerializationUtils.serialize((Serializable)object);
+    }
+ catch (    Exception e) {
+      throw new TransformerException(new Message(Messages.TRANSFORM_FAILED_FROM_X_TO_X,object.getClass().getName(),"byte[]"),e);
+    }
+  }
+ else {
+    throw new TransformerException(new Message(Messages.TRANSFORM_ON_X_NOT_OF_SPECIFIED_TYPE_X,object.getClass().getName(),"byte[] or " + Serializable.class.getName()));
+  }
 }
