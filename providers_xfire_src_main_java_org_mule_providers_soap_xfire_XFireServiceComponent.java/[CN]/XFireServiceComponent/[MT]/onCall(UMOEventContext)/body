@@ -14,16 +14,17 @@
  else {
     response=new OutStreamMessageAdapter(new ByteArrayOutputStream());
   }
-  String endpointHeader=eventContext.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
+  UMOMessage eventMsg=eventContext.getMessage();
+  String endpointHeader=eventMsg.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
   if (eventContext.getEndpointURI().getScheme().startsWith("http")) {
     String uri="soap:" + eventContext.getEndpointURI().toString();
-    uri+=eventContext.getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
+    uri+=eventMsg.getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY,null);
     endpointURI=new MuleEndpointURI(uri);
     method=endpointURI.getParams().getProperty(MuleProperties.MULE_METHOD_PROPERTY);
   }
  else {
     endpointURI=eventContext.getEndpointURI();
-    method=eventContext.getStringProperty(MuleProperties.MULE_METHOD_PROPERTY);
+    method=eventMsg.getStringProperty(MuleProperties.MULE_METHOD_PROPERTY,null);
     if (method == null) {
       if (endpointHeader != null) {
         endpointURI=new MuleEndpointURI(endpointHeader);
@@ -32,7 +33,7 @@
     }
   }
   String serviceName=getService(eventContext);
-  String request=eventContext.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
+  String request=eventMsg.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
   if (request != null && request.endsWith("?wsdl")) {
     generateWSDL(response,serviceName);
   }
@@ -42,7 +43,7 @@
   ServiceRegistry reg=getServiceRegistry();
   if (serviceName == null || serviceName.length() == 0 || !reg.hasService(serviceName)) {
     if (!reg.hasService(serviceName)) {
-      eventContext.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_NOT_FOUND));
+      eventMsg.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_NOT_FOUND));
     }
     generateServices(response);
     return response;

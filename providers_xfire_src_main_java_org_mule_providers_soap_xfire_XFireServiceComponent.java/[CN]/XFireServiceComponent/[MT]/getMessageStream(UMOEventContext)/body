@@ -1,10 +1,12 @@
 {
   InputStream is;
-  if (context.getMessage().getPayload() instanceof InputStream) {
-    is=(InputStream)context.getMessage().getPayload();
+  UMOMessage eventMsg=context.getMessage();
+  Object eventMsgPayload=eventMsg.getPayload();
+  if (eventMsgPayload instanceof InputStream) {
+    is=(InputStream)eventMsgPayload;
   }
- else   if (context.getMessage().getAdapter() instanceof StreamMessageAdapter) {
-    StreamMessageAdapter sma=(StreamMessageAdapter)context.getMessage().getAdapter();
+ else   if (eventMsg.getAdapter() instanceof StreamMessageAdapter) {
+    StreamMessageAdapter sma=(StreamMessageAdapter)eventMsg.getAdapter();
     if (sma.getInput() != null) {
       is=sma.getInput();
     }
@@ -13,7 +15,7 @@
     }
   }
  else {
-    String method=context.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY);
+    String method=eventMsg.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,null);
     if (method != null && method.equalsIgnoreCase(HttpConstants.METHOD_GET)) {
       String data=(String)new GetRequestToSoapRequest().transform(context.getTransformedMessageAsString());
       is=new ByteArrayInputStream(data.getBytes());
