@@ -28,7 +28,7 @@
   }
   BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
   call.setTargetEndpointAddress(endpointUri.getAddress());
-  String methodNamespace=(String)event.getProperty(AxisConnector.METHOD_NAMESPACE_PROPERTY);
+  String methodNamespace=(String)event.getMessage().getProperty(AxisConnector.METHOD_NAMESPACE_PROPERTY);
   if (methodNamespace != null) {
     call.setOperationName(new QName(methodNamespace,method));
   }
@@ -42,7 +42,7 @@
     call.setUsername(endpointUri.getUsername());
     call.setPassword(endpointUri.getPassword());
   }
-  Map methodCalls=(Map)event.getProperty("soapMethods");
+  Map methodCalls=(Map)event.getMessage().getProperty("soapMethods");
   if (methodCalls == null) {
     ArrayList params=new ArrayList();
     for (int i=0; i < args.length; i++) {
@@ -72,10 +72,10 @@
     }
     HashMap map=new HashMap();
     map.put(method,params);
-    event.setProperty("soapMethods",map);
+    event.getMessage().setProperty("soapMethods",map);
   }
   setCallParams(call,event,call.getOperationName());
-  String soapAction=(String)event.getProperty(AxisConnector.SOAP_ACTION_PROPERTY);
+  String soapAction=(String)event.getMessage().getProperty(AxisConnector.SOAP_ACTION_PROPERTY);
   if (soapAction != null) {
     soapAction=parseSoapAction(soapAction,call.getOperationName(),event);
     call.setSOAPActionURI(soapAction);
