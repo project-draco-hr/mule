@@ -1,16 +1,17 @@
 {
-  String endpoint=(String)context.getProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
+  UMOMessage msg=context.getMessage();
+  String endpoint=msg.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
   if (endpoint == null) {
     throw new TransformerException(new Message(Messages.EVENT_PROPERTY_X_NOT_SET_CANT_PROCESS_REQUEST,MuleProperties.MULE_ENDPOINT_PROPERTY),this);
   }
-  String method=(String)context.getProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
+  String method=msg.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
   try {
     URI uri=new URI(endpoint);
     HttpMethod httpMethod=null;
     if (HttpConstants.METHOD_GET.equals(method)) {
       httpMethod=new GetMethod(uri.toString());
       setHeaders(httpMethod,context);
-      String paramName=(String)context.getProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY);
+      String paramName=msg.getStringProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY);
       String query=uri.getQuery();
       if (!(src instanceof NullPayload) && !StringUtils.EMPTY.equals(src)) {
         if (query == null) {
@@ -25,11 +26,11 @@
  else {
       PostMethod postMethod=new PostMethod(uri.toString());
       setHeaders(postMethod,context);
-      String paramName=(String)context.getProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
+      String paramName=msg.getStringProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY,null);
       if (paramName == null) {
         addParameters(uri.getQuery(),postMethod);
         if (!(context.getMessage().getPayload() instanceof NullPayload)) {
-          String mimeType=context.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
+          String mimeType=msg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
           if (src instanceof String) {
             int parameterIndex=mimeType != null ? mimeType.indexOf(";") : -1;
             if (parameterIndex > 0) {

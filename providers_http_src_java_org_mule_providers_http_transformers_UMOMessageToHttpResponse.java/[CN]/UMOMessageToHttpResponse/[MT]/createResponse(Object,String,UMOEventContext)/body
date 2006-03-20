@@ -1,27 +1,28 @@
 {
   HttpResponse response=new HttpResponse();
-  int status=context.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_OK);
-  String version=context.getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+  UMOMessage msg=context.getMessage();
+  int status=msg.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_OK);
+  String version=msg.getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
   String date=format.format(new Date());
-  String contentType=context.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,HttpConstants.DEFAULT_CONTENT_TYPE);
+  String contentType=msg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,HttpConstants.DEFAULT_CONTENT_TYPE);
   response.setStatusLine(HttpVersion.parse(version),status);
   response.setHeader(new Header(HttpConstants.HEADER_CONTENT_TYPE,contentType));
   response.setHeader(new Header(HttpConstants.HEADER_DATE,date));
   response.setHeader(new Header(HttpConstants.HEADER_SERVER,server));
-  if (context.getProperty(HttpConstants.HEADER_EXPIRES) == null) {
+  if (msg.getProperty(HttpConstants.HEADER_EXPIRES) == null) {
     response.setHeader(new Header(HttpConstants.HEADER_EXPIRES,date));
   }
   response.setFallbackCharset(encoding);
-  String headerName;
-  String value;
-  for (Iterator iterator=HttpConstants.RESPONSE_HEADER_NAMES.values().iterator(); iterator.hasNext(); ) {
+  Collection headerNames=HttpConstants.RESPONSE_HEADER_NAMES.values();
+  String headerName, value;
+  for (Iterator iterator=headerNames.iterator(); iterator.hasNext(); ) {
     headerName=(String)iterator.next();
-    value=context.getStringProperty(headerName);
+    value=msg.getStringProperty(headerName,null);
     if (value != null) {
       response.setHeader(new Header(headerName,value));
     }
   }
-  Map customHeaders=(Map)context.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
+  Map customHeaders=(Map)msg.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
   if (customHeaders != null) {
     Map.Entry entry;
     for (Iterator iterator=customHeaders.entrySet().iterator(); iterator.hasNext(); ) {
