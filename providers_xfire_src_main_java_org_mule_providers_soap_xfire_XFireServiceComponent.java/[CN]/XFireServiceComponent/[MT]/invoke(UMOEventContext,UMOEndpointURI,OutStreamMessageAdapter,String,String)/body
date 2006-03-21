@@ -19,9 +19,8 @@
     logger.debug("Couldn't open channel.",e);
     throw new MessagingException(new Message("xfire",7,uri),eventContext.getMessage(),e);
   }
-  UMOMessage eventMsg=eventContext.getMessage();
-  String encoding=eventMsg.getStringProperty(HttpConstants.HEADER_CONTENT_ENCODING,MuleManager.getConfiguration().getEncoding());
-  String contentType=eventMsg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
+  String encoding=eventContext.getStringProperty(HttpConstants.HEADER_CONTENT_ENCODING,MuleManager.getConfiguration().getEncoding());
+  String contentType=eventContext.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
   if (contentType == null) {
     contentType=DEFAULT_CONTENT_TYPE + "; charset=" + encoding;
     logger.warn("Content-Type not set on request, defaulting to: " + contentType);
@@ -34,7 +33,7 @@
       Attachments atts=new JavaMailAttachments(getMessageStream(eventContext),contentType);
       XMLStreamReader reader=STAXUtils.createXMLStreamReader(atts.getSoapMessage().getDataHandler().getInputStream(),encoding,context);
       InMessage message=new InMessage(reader,uri);
-      message.setProperty(SoapConstants.SOAP_ACTION,eventMsg.getStringProperty(SoapConstants.SOAP_ACTION,StringUtils.EMPTY));
+      message.setProperty(SoapConstants.SOAP_ACTION,eventContext.getStringProperty(SoapConstants.SOAP_ACTION,StringUtils.EMPTY));
       message.setAttachments(atts);
       context.getExchange().setInMessage(message);
       context.setCurrentMessage(message);
