@@ -1,22 +1,25 @@
 {
   this.name=name;
-  this.endpointUri=endpointUri;
   this.connector=connector;
-  this.transformer=transformer;
   this.createConnector=createConnector;
   this.endpointEncoding=endpointEncoding;
-  if (transformer != null) {
-    getTransformer().setEndpoint(this);
-  }
   this.type=type;
-  if (properties != null) {
-    this.properties=properties;
+  if (endpointUri != null) {
+    this.endpointUri=new MuleEndpointURI(endpointUri);
   }
- else {
-    properties=new HashMap();
+  if (transformer != null) {
+    transformer.setEndpoint(this);
+    this.transformer=transformer;
   }
-  transactionConfig=new MuleTransactionConfig();
-  if (properties != null && endpointUri != null) {
+  this.properties=new ConcurrentHashMap();
+  if (props != null) {
+    this.properties.putAll(props);
+  }
+  if (endpointUri != null) {
     properties.putAll(endpointUri.getParams());
   }
+  if (!(this instanceof MuleEndpoint)) {
+    this.properties=Collections.unmodifiableMap(this.properties);
+  }
+  transactionConfig=new MuleTransactionConfig();
 }
