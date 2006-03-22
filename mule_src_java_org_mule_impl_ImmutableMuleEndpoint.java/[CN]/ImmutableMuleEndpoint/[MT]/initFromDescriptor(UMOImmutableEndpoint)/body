@@ -2,8 +2,8 @@
   if (this.name == null) {
     this.name=source.getName();
   }
-  if (this.endpointUri == null) {
-    this.endpointUri=source.getEndpointURI();
+  if (this.endpointUri == null && source.getEndpointURI() != null) {
+    this.endpointUri=new MuleEndpointURI(source.getEndpointURI());
   }
   if (this.endpointEncoding == null) {
     this.endpointEncoding=source.getEncoding();
@@ -14,25 +14,31 @@
   if (this.transformer == null) {
     this.transformer=source.getTransformer();
   }
-  if (transformer != null) {
-    getTransformer().setEndpoint(this);
+  if (this.transformer != null) {
+    this.transformer.setEndpoint(this);
   }
   if (this.responseTransformer == null) {
     this.responseTransformer=source.getResponseTransformer();
   }
   if (responseTransformer != null) {
-    getResponseTransformer().setEndpoint(this);
+    this.responseTransformer.setEndpoint(this);
+  }
+  this.properties=new ConcurrentHashMap();
+  if (source.getProperties() != null) {
+    this.properties.putAll(source.getProperties());
+  }
+  if (endpointUri != null && endpointUri.getParams() != null) {
+    this.properties.putAll(endpointUri.getParams());
+  }
+  if (!(this instanceof MuleEndpoint)) {
+    this.properties=Collections.unmodifiableMap(this.properties);
   }
   this.type=source.getType();
-  if (source.getProperties() != null) {
-    this.properties=source.getProperties();
-  }
   this.transactionConfig=source.getTransactionConfig();
-  if (properties != null && endpointUri != null && endpointUri.getParams() != null) {
-    properties.putAll(endpointUri.getParams());
-  }
+  this.deleteUnacceptedMessages=source.isDeleteUnacceptedMessages();
+  this.initialState=source.getInitialState();
   remoteSyncTimeout=new Integer(source.getRemoteSyncTimeout());
-  remoteSync=new Boolean(source.isRemoteSync());
+  remoteSync=Boolean.valueOf(source.isRemoteSync());
   filter=source.getFilter();
   securityFilter=source.getSecurityFilter();
 }
