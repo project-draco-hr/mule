@@ -17,20 +17,13 @@
       throw new JMSException("JNDI destination not found with name: " + name);
     }
   }
-  if (!topic) {
-    if (session instanceof QueueSession) {
-      return ((QueueSession)session).createQueue(name);
-    }
- else {
-      return session.createQueue(name);
-    }
+  if (topic && session instanceof TopicSession) {
+    return ((TopicSession)session).createTopic(name);
+  }
+ else   if (session instanceof QueueSession) {
+    return ((QueueSession)session).createQueue(name);
   }
  else {
-    if (session instanceof TopicSession) {
-      return ((TopicSession)session).createTopic(name);
-    }
- else {
-      return session.createTopic(name);
-    }
+    throw new IllegalArgumentException("Session and domain type do not match");
   }
 }

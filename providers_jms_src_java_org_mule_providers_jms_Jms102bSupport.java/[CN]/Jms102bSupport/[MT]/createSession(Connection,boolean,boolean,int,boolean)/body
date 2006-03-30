@@ -1,13 +1,11 @@
 {
-  if (topic) {
-    if (connection instanceof TopicConnection) {
-      return ((TopicConnection)connection).createTopicSession(noLocal,ackMode);
-    }
+  if (topic && connection instanceof TopicConnection) {
+    return ((TopicConnection)connection).createTopicSession(noLocal,ackMode);
+  }
+ else   if (connection instanceof QueueConnection) {
+    return ((QueueConnection)connection).createQueueSession(transacted,ackMode);
   }
  else {
-    if (connection instanceof QueueConnection) {
-      return ((QueueConnection)connection).createQueueSession(transacted,ackMode);
-    }
+    throw new IllegalArgumentException("Unknown Jms connection: " + connection.getClass().getName());
   }
-  throw new IllegalArgumentException("Unknown Jms connection: " + connection.getClass().getName());
 }

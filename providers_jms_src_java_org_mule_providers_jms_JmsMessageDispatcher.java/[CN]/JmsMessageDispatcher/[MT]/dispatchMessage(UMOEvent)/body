@@ -33,7 +33,7 @@
       topic=PropertiesHelper.getBooleanProperty(event.getEndpoint().getProperties(),JmsConstants.TOPIC_PROPERTY,false);
     }
     Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
-    producer=connector.getJmsSupport().createProducer(session,dest);
+    producer=connector.getJmsSupport().createProducer(session,dest,topic);
     Object message=event.getTransformedMessage();
     if (!(message instanceof Message)) {
       throw new DispatchException(new org.mule.config.i18n.Message(Messages.MESSAGE_NOT_X_IT_IS_TYPE_X_CHECK_TRANSFORMER_ON_X,"JMS message",message.getClass().getName(),connector.getName()),event.getMessage(),event.getEndpoint());
@@ -69,7 +69,7 @@
         msg.setJMSReplyTo(replyTo);
       }
       if (remoteSync) {
-        consumer=connector.getJmsSupport().createConsumer(session,replyTo);
+        consumer=connector.getJmsSupport().createConsumer(session,replyTo,topic);
       }
     }
     String ttlString=(String)eventMsg.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
@@ -91,7 +91,7 @@
       Latch l=new Latch();
       ReplyToListener listener=new ReplyToListener(l);
       consumer.setMessageListener(listener);
-      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl);
+      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
       int timeout=event.getTimeout();
       logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
       l.await(timeout,TimeUnit.MILLISECONDS);
@@ -108,7 +108,7 @@
       }
     }
  else {
-      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl);
+      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
       if (consumer != null) {
         int timeout=event.getTimeout();
         logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);

@@ -20,19 +20,20 @@
         logger.debug("transformer for replyTo Handler: " + getTransformer().toString() + " does not support source type: "+ payload.getClass()+ ". Not doing a transform");
       }
     }
-    session=connector.getSession(false,replyToDestination instanceof Topic);
+    boolean topic=replyToDestination instanceof Topic;
+    session=connector.getSession(false,topic);
     Message replyToMessage=JmsMessageUtils.getMessageForObject(payload,session);
     replyToMessage.setJMSReplyTo(null);
     if (logger.isDebugEnabled()) {
       logger.debug("Sending jms reply to: " + replyToDestination + "("+ replyToDestination.getClass().getName()+ ")");
     }
-    replyToProducer=connector.getJmsSupport().createProducer(session,replyToDestination);
+    replyToProducer=connector.getJmsSupport().createProducer(session,replyToDestination,topic);
     UMOMessage eventMsg=event.getMessage();
     String ttlString=(String)eventMsg.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
     String priorityString=(String)eventMsg.removeProperty(JmsConstants.PRIORITY_PROPERTY);
     String persistentDeliveryString=(String)eventMsg.removeProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY);
     if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
-      connector.getJmsSupport().send(replyToProducer,replyToMessage);
+      connector.getJmsSupport().send(replyToProducer,replyToMessage,topic);
     }
  else {
       long ttl=Message.DEFAULT_TIME_TO_LIVE;
@@ -47,7 +48,7 @@
       if (persistentDeliveryString != null) {
         persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
       }
-      connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl);
+      connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl,topic);
     }
     logger.info("Reply Message sent to: " + replyToDestination);
     ((AbstractComponent)event.getComponent()).getStatistics().incSentReplyToEvent();
