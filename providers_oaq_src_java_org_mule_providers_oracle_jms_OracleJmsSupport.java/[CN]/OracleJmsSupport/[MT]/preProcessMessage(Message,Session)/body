@@ -1,0 +1,21 @@
+{
+  Object payload;
+  Message newMessage;
+  if (message instanceof AdtMessage) {
+    payload=((AdtMessage)message).getAdtPayload();
+    if (payload instanceof XMLType) {
+      newMessage=session.createTextMessage(((XMLType)payload).getStringVal());
+    }
+ else     if (payload instanceof Serializable) {
+      newMessage=session.createObjectMessage((Serializable)payload);
+    }
+ else {
+      throw new JMSException("The payload of the incoming AdtMessage must be serializable.");
+    }
+    JmsMessageUtils.copyJMSProperties(message,newMessage,this);
+    return newMessage;
+  }
+ else {
+    return message;
+  }
+}
