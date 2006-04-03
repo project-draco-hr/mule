@@ -1,0 +1,33 @@
+{
+  if (connected.get()) {
+    return;
+  }
+  if (disposed) {
+    if (logger.isWarnEnabled()) {
+      logger.warn("Dispatcher has been disposed. Cannot connector resource");
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Attempting to connect to: " + endpoint.getEndpointURI());
+  }
+  if (connecting.compareAndSet(false,true)) {
+    connectionStrategy.connect(this);
+    logger.info("Successfully connected to: " + endpoint.getEndpointURI());
+    return;
+  }
+  try {
+    doConnect(endpoint);
+    connector.fireNotification(new ConnectionNotification(this,getConnectEventId(endpoint),ConnectionNotification.CONNECTION_CONNECTED));
+  }
+ catch (  Exception e) {
+    connector.fireNotification(new ConnectionNotification(this,getConnectEventId(endpoint),ConnectionNotification.CONNECTION_FAILED));
+    if (e instanceof ConnectException) {
+      throw (ConnectException)e;
+    }
+ else {
+      throw new ConnectException(e,this);
+    }
+  }
+  connected.set(true);
+  connecting.set(false);
+}

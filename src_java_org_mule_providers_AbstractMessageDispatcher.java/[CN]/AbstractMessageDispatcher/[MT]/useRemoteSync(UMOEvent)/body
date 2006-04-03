@@ -1,8 +1,7 @@
 {
   boolean remoteSync=false;
-  UMOMessage msg=event.getMessage();
   if (event.getEndpoint().getConnector().isRemoteSyncEnabled()) {
-    remoteSync=event.getEndpoint().isRemoteSync() || msg.getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,false);
+    remoteSync=event.getEndpoint().isRemoteSync() || event.getMessage().getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,false);
     if (remoteSync) {
       if (event.getComponent() != null) {
         remoteSync=event.getComponent().getDescriptor().getResponseRouter() == null;
@@ -10,7 +9,8 @@
     }
   }
   if (!remoteSync) {
-    msg.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
+    event.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
+    event.getMessage().removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
   }
   return remoteSync;
 }

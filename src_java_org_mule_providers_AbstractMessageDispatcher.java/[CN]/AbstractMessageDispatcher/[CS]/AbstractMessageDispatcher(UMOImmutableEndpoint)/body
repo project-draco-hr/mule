@@ -1,0 +1,20 @@
+{
+  this.endpoint=endpoint;
+  this.connector=(AbstractConnector)endpoint.getConnector();
+  connectionStrategy=connector.getConnectionStrategy();
+  if (connectionStrategy instanceof AbstractConnectionStrategy) {
+    ((AbstractConnectionStrategy)connectionStrategy).setDoThreading(false);
+  }
+  ThreadingProfile profile=connector.getDispatcherThreadingProfile();
+  doThreading=profile.isDoThreading();
+  if (doThreading) {
+    workManager=connector.createDispatcherWorkManager(connector.getName() + ".dispatchers");
+    try {
+      workManager.start();
+    }
+ catch (    UMOException e) {
+      dispose();
+      throw new MuleRuntimeException(new Message(Messages.FAILED_TO_START_X,"WorkManager"),e);
+    }
+  }
+}

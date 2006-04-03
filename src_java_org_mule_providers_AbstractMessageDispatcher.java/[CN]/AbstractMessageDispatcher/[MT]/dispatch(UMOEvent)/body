@@ -3,7 +3,7 @@
     event.setSynchronous(false);
     event.getMessage().setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
     RequestContext.setEvent(event);
-    UMOEndpoint endpoint=event.getEndpoint();
+    UMOImmutableEndpoint endpoint=event.getEndpoint();
     if (endpoint.getSecurityFilter() != null) {
       try {
         endpoint.getSecurityFilter().authenticate(event);
@@ -26,6 +26,7 @@ catch (      UMOException e) {
         workManager.scheduleWork(new Worker(event));
       }
  else {
+        connectionStrategy.connect(this);
         doDispatch(event);
         if (connector.isEnableMessageEvents()) {
           String component=null;
