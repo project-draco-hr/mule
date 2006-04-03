@@ -1,6 +1,7 @@
 {
-  AQUtil.createOrReplaceXmlQueue(session,connector.getUsername(),TestConfig.QUEUE_XML);
-  MuleUtil.sendXmlMessageToQueue(TestConfig.QUEUE_XML,TestConfig.XML_MESSAGE);
-  assertXMLEqual(TestConfig.XML_MESSAGE,(String)MuleUtil.receiveMessage("jms://" + TestConfig.QUEUE_XML,"XMLMessageToString"));
-  AQUtil.dropQueue(session,connector.getUsername(),TestConfig.QUEUE_XML,false);
+  AQUtil.createOrReplaceXmlQueue(jmsSession,jmsConnector.getUsername(),TestConfig.QUEUE_XML,false);
+  MuleUtil.sendXmlMessageToQueue(muleClient,TestConfig.QUEUE_XML,TestConfig.XML_MESSAGE);
+  wait(2000);
+  assertXMLEqual(TestConfig.XML_MESSAGE,muleClient.receive("jms://" + TestConfig.QUEUE_XML,"JMSMessageToObject",MuleUtil.MULE_RECEIVE_TIMEOUT).getPayloadAsString());
+  AQUtil.dropQueue(jmsSession,jmsConnector.getUsername(),TestConfig.QUEUE_XML,false);
 }

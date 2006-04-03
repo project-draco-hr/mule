@@ -1,6 +1,6 @@
 {
-  AQUtil.createOrReplaceTextQueue(session,connector.getUsername(),TestConfig.QUEUE_TEXT);
-  MuleUtil.sendMessage("jms://" + TestConfig.QUEUE_TEXT,TestConfig.TEXT_MESSAGE);
-  assertEquals(TestConfig.TEXT_MESSAGE,MuleUtil.receiveMessage("jms://" + TestConfig.QUEUE_TEXT,"JMSMessageToObject"));
-  AQUtil.dropQueue(session,connector.getUsername(),TestConfig.QUEUE_TEXT,false);
+  AQUtil.createOrReplaceTextQueue(jmsSession,jmsConnector.getUsername(),TestConfig.QUEUE_TEXT,false);
+  muleClient.dispatch("jms://" + TestConfig.QUEUE_TEXT,TestConfig.TEXT_MESSAGE,null);
+  assertEquals(TestConfig.TEXT_MESSAGE,muleClient.receive("jms://" + TestConfig.QUEUE_TEXT,"JMSMessageToObject",MuleUtil.MULE_RECEIVE_TIMEOUT).getPayloadAsString());
+  AQUtil.dropQueue(jmsSession,jmsConnector.getUsername(),TestConfig.QUEUE_TEXT,false);
 }

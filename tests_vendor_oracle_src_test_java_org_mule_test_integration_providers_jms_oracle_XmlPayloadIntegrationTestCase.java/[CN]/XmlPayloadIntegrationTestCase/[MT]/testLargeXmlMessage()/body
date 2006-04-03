@@ -1,7 +1,10 @@
 {
-  AQUtil.createOrReplaceXmlQueue(session,connector.getUsername(),TestConfig.QUEUE_XML);
-  String xml=Util.getResourceAsString(TestConfig.XML_MESSAGE_FILE,getClass());
-  MuleUtil.sendXmlMessageToQueue(TestConfig.QUEUE_XML,xml);
-  assertXMLEqual(xml,MuleUtil.receiveXmlMessageAsString(TestConfig.QUEUE_XML));
-  AQUtil.dropQueue(session,connector.getUsername(),TestConfig.QUEUE_XML,false);
+  AQUtil.createOrReplaceXmlQueue(jmsSession,jmsConnector.getUsername(),TestConfig.QUEUE_XML,false);
+  final ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
+  final InputStream is=currentClassLoader.getResourceAsStream(TestConfig.XML_MESSAGE_FILE);
+  assertNotNull("Test resource not found.",is);
+  String xml=IOUtils.toString(is);
+  MuleUtil.sendXmlMessageToQueue(muleClient,TestConfig.QUEUE_XML,xml);
+  assertXMLEqual(xml,MuleUtil.receiveXmlMessageAsString(muleClient,TestConfig.QUEUE_XML));
+  AQUtil.dropQueue(jmsSession,jmsConnector.getUsername(),TestConfig.QUEUE_XML,false);
 }

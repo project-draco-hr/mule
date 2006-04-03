@@ -7,7 +7,11 @@
     configurationFiles=getConfigurationFiles();
     manager=new MuleXmlConfigurationBuilder().configure(configurationFiles);
     manager.start();
-    connector=((OracleJmsConnector)manager.lookupConnector("oracleJmsConnector"));
-    session=(AQjmsSession)connector.getSession(false,false);
+    jmsConnector=((OracleJmsConnector)manager.lookupConnector("oracleJmsConnector"));
+    if (jmsConnector == null) {
+      throw new ConfigurationException(Message.createStaticMessage("Unable to lookup the Oracle JMS Connector."));
+    }
+    jmsSession=(AQjmsSession)jmsConnector.getSession(false,false);
+    muleClient=new MuleClient();
   }
 }
