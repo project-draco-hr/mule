@@ -9,6 +9,7 @@
             doConnect(connectable);
           }
  catch (          FatalConnectException e) {
+            resetState();
             if (connectable instanceof AbstractMessageReceiver) {
               ((AbstractMessageReceiver)connectable).handleException(e);
             }
@@ -18,10 +19,16 @@
 );
     }
  catch (    WorkException e) {
+      resetState();
       throw new FatalConnectException(e,connectable);
     }
   }
  else {
-    doConnect(connectable);
+    try {
+      doConnect(connectable);
+    }
+  finally {
+      resetState();
+    }
   }
 }

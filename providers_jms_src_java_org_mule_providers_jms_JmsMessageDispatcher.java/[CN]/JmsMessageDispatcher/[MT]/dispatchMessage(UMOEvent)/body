@@ -18,6 +18,9 @@
       }
       session=cachedSession;
     }
+ else     if (txSession != null) {
+      session=txSession;
+    }
  else {
       session=connector.getSession(event.getEndpoint());
     }
@@ -103,8 +106,8 @@
         return null;
       }
  else {
-        Object resultObject=JmsMessageUtils.getObjectForMessage(result);
-        return new MuleMessage(resultObject);
+        UMOMessageAdapter adapter=connector.getMessageAdapter(result);
+        return new MuleMessage(JmsMessageUtils.getObjectForMessage(result),adapter);
       }
     }
  else {
@@ -118,8 +121,8 @@
           return null;
         }
  else {
-          Object resultObject=JmsMessageUtils.getObjectForMessage(result);
-          return new MuleMessage(resultObject);
+          UMOMessageAdapter adapter=connector.getMessageAdapter(result);
+          return new MuleMessage(JmsMessageUtils.getObjectForMessage(result),adapter);
         }
       }
     }
@@ -128,7 +131,7 @@
   finally {
     connector.closeQuietly(consumer);
     connector.closeQuietly(producer);
-    if (session != null && !cacheJmsSession && !session.equals(txSession)) {
+    if (session != null && !cacheJmsSession && txSession == null) {
       connector.closeQuietly(session);
     }
   }

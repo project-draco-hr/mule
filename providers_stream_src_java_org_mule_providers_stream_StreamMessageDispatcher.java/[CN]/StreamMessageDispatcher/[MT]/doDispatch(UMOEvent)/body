@@ -1,10 +1,24 @@
 {
-  Object data=event.getTransformedMessage();
-  if (data instanceof byte[]) {
-    connector.getOutputStream().write((byte[])data);
+  OutputStream out=null;
+  String streamName=event.getEndpoint().getEndpointURI().getAddress();
+  if (StreamConnector.STREAM_SYSTEM_OUT.equalsIgnoreCase(streamName)) {
+    out=System.out;
+  }
+ else   if (StreamConnector.STREAM_SYSTEM_ERR.equalsIgnoreCase(streamName)) {
+    out=System.err;
   }
  else {
-    connector.getOutputStream().write(data.toString().getBytes());
+    out=connector.getOutputStream();
   }
-  connector.getOutputStream().flush();
+  if (out == null) {
+    throw new DispatchException(new Message("stream",1,streamName),event.getMessage(),event.getEndpoint());
+  }
+  Object data=event.getTransformedMessage();
+  if (data instanceof byte[]) {
+    out.write((byte[])data);
+  }
+ else {
+    out.write(data.toString().getBytes());
+  }
+  out.flush();
 }

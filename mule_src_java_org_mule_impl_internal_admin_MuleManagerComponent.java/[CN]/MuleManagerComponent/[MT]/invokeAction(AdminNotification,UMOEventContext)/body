@@ -10,12 +10,13 @@
   }
   if (destComponent != null) {
     UMOSession session=MuleManager.getInstance().getModel().getComponentSession(destComponent);
-    RequestContext.rewriteEvent(action.getMessage());
-    UMOEvent event=RequestContext.getEvent();
-    event.getEndpoint().setTransformer(null);
+    UMOEndpoint ep=new MuleEndpoint(RequestContext.getEvent().getEndpoint());
+    ep.setTransformer(null);
+    UMOEvent event=new MuleEvent(action.getMessage(),ep,context.getSession(),context.isSynchronous());
+    RequestContext.setEvent(event);
     if (context.isSynchronous()) {
       result=session.getComponent().sendEvent(event);
-      return xstream.toXML(result);
+      return objectToXml.transform(result);
     }
  else {
       session.getComponent().dispatchEvent(event);

@@ -1,0 +1,35 @@
+{
+  checkDisposed();
+  UMOMessageDispatcher dispatcher=null;
+  if (endpoint == null && dispatchers.size() > 0) {
+    Map.Entry entry;
+    for (Iterator iterator=dispatchers.entrySet().iterator(); iterator.hasNext(); ) {
+      entry=(Map.Entry)iterator.next();
+      if (((UMOMessageDispatcher)entry.getValue()).isDisposed()) {
+        dispatchers.remove(entry.getKey());
+      }
+ else {
+        dispatcher=(UMOMessageDispatcher)entry.getValue();
+        break;
+      }
+    }
+  }
+ else {
+    if (dispatchers == null) {
+      throw new NullPointerException("Dispatchers are null for connector: " + name);
+    }
+    dispatcher=(UMOMessageDispatcher)dispatchers.get(endpoint.getEndpointURI().toString());
+    if (dispatcher != null && dispatcher.isDisposed()) {
+      dispatchers.values().remove(dispatcher);
+      dispatcher=null;
+    }
+  }
+  if (!supportsProtocol(endpoint.getConnector().getProtocol())) {
+    throw new IllegalArgumentException(new Message(Messages.CONNECTOR_SCHEME_X_INCOMPATIBLE_WITH_ENDPOINT_SCHEME_X,getProtocol(),endpoint.getEndpointURI().toString()).getMessage());
+  }
+  if (dispatcher == null) {
+    dispatcher=createDispatcher(endpoint);
+    dispatchers.put(endpoint.getEndpointURI().toString(),dispatcher);
+  }
+  return dispatcher;
+}

@@ -14,7 +14,6 @@
     }
     ExceptionPayload ep=null;
     if (httpMethod.getStatusCode() >= 400) {
-      logger.error(IOUtils.toString(httpMethod.getResponseBodyAsStream()));
       ep=new ExceptionPayload(new DispatchException(event.getMessage(),event.getEndpoint(),new Exception("Http call returned a status of: " + httpMethod.getStatusCode() + " "+ httpMethod.getStatusText())));
     }
     UMOMessage m=null;
@@ -24,11 +23,13 @@
       sp.setResponse(httpMethod.getResponseBodyAsStream());
       m=new MuleMessage(sp,h);
     }
- else     if ((header != null) && header.getValue().startsWith("text/")) {
-      m=new MuleMessage(httpMethod.getResponseBodyAsString(),h);
-    }
  else {
-      m=new MuleMessage(httpMethod.getResponseBody(),h);
+      Object body=httpMethod.getResponseBody();
+      if (body == null) {
+        body=StringUtils.EMPTY;
+      }
+      UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{body,h});
+      m=new MuleMessage(adapter);
     }
     m.setExceptionPayload(ep);
     return m;

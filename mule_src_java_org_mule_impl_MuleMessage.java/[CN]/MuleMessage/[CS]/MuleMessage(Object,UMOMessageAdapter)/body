@@ -1,0 +1,26 @@
+{
+  if (message instanceof UMOMessageAdapter) {
+    adapter=(UMOMessageAdapter)message;
+  }
+ else {
+    adapter=new DefaultMessageAdapter(message,previous);
+  }
+  if (previous.getExceptionPayload() != null) {
+    setExceptionPayload(previous.getExceptionPayload());
+  }
+  setEncoding(previous.getEncoding());
+  if (previous.getAttachmentNames().size() > 0) {
+    Set attNames=adapter.getAttachmentNames();
+synchronized (attNames) {
+      for (Iterator iterator=attNames.iterator(); iterator.hasNext(); ) {
+        String s=(String)iterator.next();
+        try {
+          addAttachment(s,adapter.getAttachment(s));
+        }
+ catch (        Exception e) {
+          throw new MuleRuntimeException(new Message(Messages.FAILED_TO_READ_ATTACHMENT_X,s),e);
+        }
+      }
+    }
+  }
+}

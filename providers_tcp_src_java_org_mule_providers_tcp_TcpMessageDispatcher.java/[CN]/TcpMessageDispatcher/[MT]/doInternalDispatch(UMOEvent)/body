@@ -1,28 +1,14 @@
 {
   Object payload=event.getTransformedMessage();
   final boolean keepSendSocketOpen=connector.isKeepSendSocketOpen();
-  if (connectedSocket == null || !keepSendSocketOpen) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Creating a new socket. keepSendSocketOpen is " + keepSendSocketOpen);
-    }
-    connectedSocket=initSocket(event.getEndpoint().getEndpointURI().getAddress());
-  }
- else {
-    reconnect(event,connector.getMaxRetryCount());
-    if (logger.isDebugEnabled()) {
-      logger.debug("Reconnecting the socket. keepSendSocketOpen is " + keepSendSocketOpen);
-    }
-  }
   try {
     write(connectedSocket,payload);
   }
  catch (  IOException e) {
     if (keepSendSocketOpen) {
       logger.warn("Write raised exception: '" + e.getMessage() + "' attempting to reconnect.");
-      doDispose();
-      if (reconnect(event,connector.getMaxRetryCount())) {
-        write(connectedSocket,payload);
-      }
+      reconnect();
+      write(connectedSocket,payload);
     }
  else {
       throw e;

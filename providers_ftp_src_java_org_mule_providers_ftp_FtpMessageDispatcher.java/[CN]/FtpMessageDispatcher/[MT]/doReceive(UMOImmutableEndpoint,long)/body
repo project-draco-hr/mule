@@ -1,0 +1,43 @@
+{
+  FTPClient client=null;
+  try {
+    client=connector.getFtp(endpoint.getEndpointURI());
+    connector.enterActiveOrPassiveMode(client,endpoint);
+    connector.setupFileType(client,endpoint);
+    if (!client.changeWorkingDirectory(endpoint.getEndpointURI().getPath())) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    FilenameFilter filenameFilter=null;
+    if (endpoint.getFilter() instanceof FilenameFilter) {
+      filenameFilter=(FilenameFilter)endpoint.getFilter();
+    }
+    FTPFile[] files=client.listFiles();
+    if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    if (files == null || files.length == 0) {
+      return null;
+    }
+    List fileList=new ArrayList();
+    for (int i=0; i < files.length; i++) {
+      if (files[i].isFile()) {
+        if (filenameFilter == null || filenameFilter.accept(null,files[i].getName())) {
+          fileList.add(files[i]);
+          break;
+        }
+      }
+    }
+    if (fileList.size() == 0) {
+      return null;
+    }
+    FTPFile file=(FTPFile)fileList.get(0);
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    if (!client.retrieveFile(file.getName(),baos)) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    return new MuleMessage(connector.getMessageAdapter(baos.toByteArray()));
+  }
+  finally {
+    connector.releaseFtp(endpoint.getEndpointURI(),client);
+  }
+}

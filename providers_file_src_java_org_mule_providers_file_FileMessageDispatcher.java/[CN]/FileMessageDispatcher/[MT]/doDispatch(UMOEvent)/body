@@ -1,25 +1,14 @@
 {
-  String endpoint=event.getEndpoint().getEndpointURI().getAddress();
   Object data=event.getTransformedMessage();
-  UMOMessage msg=event.getMessage();
-  String filename=msg.getStringProperty(FileConnector.PROPERTY_FILENAME,null);
-  if (filename == null) {
-    String outPattern=msg.getStringProperty(FileConnector.PROPERTY_OUTPUT_PATTERN,connector.getOutputPattern());
-    filename=generateFilename(event,outPattern);
-  }
-  if (filename == null) {
-    throw new IOException("Filename is null");
-  }
-  File file=Utility.createFile(endpoint + "/" + filename);
+  UMOMessage message=new MuleMessage(data,event.getMessage());
   byte[] buf;
   if (data instanceof byte[]) {
     buf=(byte[])data;
   }
  else {
-    buf=data.toString().getBytes();
+    buf=data.toString().getBytes(event.getEncoding());
   }
-  logger.info("Writing file to: " + file.getAbsolutePath());
-  FileOutputStream fos=new FileOutputStream(file,connector.isOutputAppend());
+  FileOutputStream fos=(FileOutputStream)getOutputStream(event.getEndpoint(),message);
   try {
     fos.write(buf);
   }

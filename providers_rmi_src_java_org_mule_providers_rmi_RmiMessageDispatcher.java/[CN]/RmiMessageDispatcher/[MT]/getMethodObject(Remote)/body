@@ -1,0 +1,18 @@
+{
+  Method method;
+  UMOEndpointURI endpointUri=endpoint.getEndpointURI();
+  String methodName=PropertiesHelper.getStringProperty(endpointUri.getParams(),RmiConnector.PARAM_SERVICE_METHOD,null);
+  if (methodName == null) {
+    methodName=(String)endpoint.getProperties().get(RmiConnector.PARAM_SERVICE_METHOD);
+    if (methodName == null) {
+      throw new InitialisationException(new org.mule.config.i18n.Message("rmi",RmiConnector.MSG_PARAM_SERVICE_METHOD_NOT_SET),this);
+    }
+  }
+  List methodArgumentTypes=(List)endpoint.getProperty(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES);
+  if (methodArgumentTypes != null) {
+    connector.setMethodArgumentTypes(methodArgumentTypes);
+  }
+  Class[] argTypes=connector.getArgumentClasses();
+  method=remoteObject.getClass().getMethod(methodName,argTypes);
+  return method;
+}

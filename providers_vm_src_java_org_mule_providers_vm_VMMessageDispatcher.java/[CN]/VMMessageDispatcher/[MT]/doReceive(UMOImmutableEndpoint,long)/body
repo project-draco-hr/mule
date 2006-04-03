@@ -1,0 +1,43 @@
+{
+  if (!connector.isQueueEvents()) {
+    throw new UnsupportedOperationException("Receive only supported on the VM Queue Connector");
+  }
+  QueueSession queueSession=null;
+  try {
+    queueSession=connector.getQueueSession();
+    Queue queue=queueSession.getQueue(endpoint.getEndpointURI().getAddress());
+    if (queue == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("No queue with name " + endpoint.getEndpointURI().getAddress());
+      }
+      return null;
+    }
+ else {
+      UMOEvent event=null;
+      if (logger.isDebugEnabled()) {
+        logger.debug("Waiting for a message on " + endpoint.getEndpointURI().getAddress());
+      }
+      try {
+        event=(UMOEvent)queue.poll(timeout);
+      }
+ catch (      InterruptedException e) {
+        logger.error("Failed to receive event from queue: " + endpoint.getEndpointURI());
+      }
+      if (event != null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Event received: " + event);
+        }
+        return event.getMessage();
+      }
+ else {
+        if (logger.isDebugEnabled()) {
+          logger.debug("No event received after " + timeout + " ms");
+        }
+        return null;
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw e;
+  }
+}

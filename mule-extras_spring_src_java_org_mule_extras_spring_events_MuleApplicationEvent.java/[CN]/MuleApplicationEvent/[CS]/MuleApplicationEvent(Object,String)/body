@@ -1,5 +1,16 @@
 {
   super(message);
-  String temp=PropertiesHelper.getStringProperty(MuleManager.getInstance().getEndpointIdentifiers(),endpoint,endpoint);
-  setEndpoint(new MuleEndpointURI(temp));
+  String temp=PropertiesHelper.getStringProperty(MuleManager.getInstance().getEndpointIdentifiers(),endpoint,null);
+  if (temp == null) {
+    UMOEndpoint ep=MuleManager.getInstance().lookupEndpoint(endpoint);
+    if (ep != null) {
+      setEndpoint(ep.getEndpointURI());
+    }
+ else {
+      setEndpoint(new MuleEndpointURI(endpoint));
+    }
+  }
+ else {
+    setEndpoint(new MuleEndpointURI(temp));
+  }
 }

@@ -2,14 +2,13 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Dispatch event: " + event);
   }
-  UMOEndpoint endpoint=event.getEndpoint();
-  UMOEndpointURI endpointURI=endpoint.getEndpointURI();
-  String writeStmt=endpointURI.getAddress();
+  UMOImmutableEndpoint endpoint=event.getEndpoint();
+  String writeStmt=endpoint.getEndpointURI().getAddress();
   String str;
   if ((str=this.connector.getQuery(endpoint,writeStmt)) != null) {
     writeStmt=str;
   }
-  if (writeStmt == null) {
+  if (StringUtils.isEmpty(writeStmt)) {
     throw new IllegalArgumentException("Write statement should not be null");
   }
   if (!"insert".equalsIgnoreCase(writeStmt.substring(0,6)) && !"update".equalsIgnoreCase(writeStmt.substring(0,6)) && !"delete".equalsIgnoreCase(writeStmt.substring(0,6))) {
@@ -17,7 +16,7 @@
   }
   List paramNames=new ArrayList();
   writeStmt=JdbcUtils.parseStatement(writeStmt,paramNames);
-  Object[] paramValues=JdbcUtils.getParams(endpointURI,paramNames,event.getTransformedMessage());
+  Object[] paramValues=JdbcUtils.getParams(endpoint,paramNames,event.getTransformedMessage());
   UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
   Connection con=null;
   try {

@@ -1,17 +1,7 @@
 {
   FTPClient client=null;
-  final UMOEndpoint endpoint=event.getEndpoint();
-  UMOEndpointURI uri=endpoint.getEndpointURI();
+  UMOEndpointURI uri=event.getEndpoint().getEndpointURI();
   try {
-    UMOMessage msg=event.getMessage();
-    String filename=msg.getStringProperty(FtpConnector.PROPERTY_FILENAME,null);
-    if (filename == null) {
-      String outPattern=msg.getStringProperty(FtpConnector.PROPERTY_OUTPUT_PATTERN,connector.getOutputPattern());
-      filename=generateFilename(event,outPattern);
-    }
-    if (filename == null) {
-      throw new IOException("Filename is null");
-    }
     byte[] buf;
     Object data=event.getTransformedMessage();
     if (data instanceof byte[]) {
@@ -20,15 +10,10 @@
  else {
       buf=data.toString().getBytes();
     }
-    client=connector.getFtp(uri);
-    connector.enterActiveOrPassiveMode(client,endpoint.getProperties());
-    connector.setupFileType(client,endpoint.getProperties());
-    if (!client.changeWorkingDirectory(uri.getPath())) {
-      throw new IOException("Ftp error: " + client.getReplyCode());
-    }
-    if (!client.storeFile(filename,new ByteArrayInputStream(buf))) {
-      throw new IOException("Ftp error: " + client.getReplyCode());
-    }
+    FtpOutputStreamWrapper out=(FtpOutputStreamWrapper)getOutputStream(event.getEndpoint(),event.getMessage());
+    client=out.getFtpClient();
+    IOUtils.copy(new ByteArrayInputStream(buf),out);
+    out.close();
   }
   finally {
     connector.releaseFtp(uri,client);
