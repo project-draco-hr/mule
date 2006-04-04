@@ -77,7 +77,14 @@
     methodNames=methodNames.substring(0,methodNames.length() - 1);
   }
   String className=interfaces[0].getName();
-  String namespace=Namespaces.makeNamespace(className);
+  String namespace=(String)descriptor.getProperties().get("serviceNamespace");
+  if (namespace == null) {
+    namespace=Namespaces.makeNamespace(className);
+  }
+  String wsdlFile=(String)descriptor.getProperties().get("wsdlFile");
+  if (wsdlFile != null) {
+    service.getServiceDescription().setWSDLFile(wsdlFile);
+  }
   setOptionIfNotset(service,JavaProvider.OPTION_WSDL_SERVICEPORT,serviceName);
   setOptionIfNotset(service,JavaProvider.OPTION_CLASSNAME,className);
   setOptionIfNotset(service,JavaProvider.OPTION_SCOPE,"Request");
@@ -122,5 +129,6 @@
  else {
     service.getServiceDescription().setEndpointURL(uri.getAddress() + "/" + serviceName);
   }
+  service.getServiceDescription().setDefaultNamespace(namespace);
   service.stop();
 }
