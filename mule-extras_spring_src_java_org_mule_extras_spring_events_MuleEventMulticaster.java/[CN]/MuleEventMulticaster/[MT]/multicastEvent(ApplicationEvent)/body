@@ -36,7 +36,7 @@
       if (listener instanceof AsynchronousEventListener) {
         AsynchronousEventListener asyncListener=(AsynchronousEventListener)listener;
         if (asyncListener.getListener() instanceof MuleSubscriptionEventListener) {
-          if (isSubscriptionMatch(muleEvent.getEndpoint().getAddress(),((MuleSubscriptionEventListener)asyncListener.getListener()).getSubscriptions())) {
+          if (isSubscriptionMatch(muleEvent.getEndpoint(),((MuleSubscriptionEventListener)asyncListener.getListener()).getSubscriptions())) {
             asyncListener.onApplicationEvent(muleEvent);
           }
         }
@@ -48,7 +48,7 @@
         }
       }
  else       if (listener instanceof MuleSubscriptionEventListener) {
-        if (isSubscriptionMatch(muleEvent.getEndpoint().getAddress(),((MuleSubscriptionEventListener)listener).getSubscriptions())) {
+        if (isSubscriptionMatch(muleEvent.getEndpoint(),((MuleSubscriptionEventListener)listener).getSubscriptions())) {
           listener.onApplicationEvent(muleEvent);
         }
       }
@@ -61,6 +61,14 @@
     }
  else     if (!(listener instanceof MuleEventListener)) {
       listener.onApplicationEvent(e);
+    }
+ else {
+      for (int i=0; i < listener.getClass().getInterfaces().length; i++) {
+        if (listener.getClass().getInterfaces()[i].equals(ApplicationListener.class)) {
+          listener.onApplicationEvent(e);
+          break;
+        }
+      }
     }
   }
 }

@@ -1,13 +1,9 @@
 {
-  super.onApplicationEvent(orderEvent);
-  Order order=(Order)orderEvent.getSource();
+  super.onApplicationEvent(event);
+  Order order=(Order)event.getSource();
   String result=processOrder(order);
-  MuleApplicationEvent muleEvent=(MuleApplicationEvent)orderEvent;
+  MuleApplicationEvent muleEvent=(MuleApplicationEvent)event;
   MuleApplicationEvent returnEvent=null;
-  try {
-    returnEvent=new MuleApplicationEvent(result,"jms://processed.queue");
-  }
- catch (  MalformedEndpointException e) {
-  }
+  returnEvent=new MuleApplicationEvent(result,"jms://processed.queue");
   muleEvent.getApplicationContext().publishEvent(returnEvent);
 }
