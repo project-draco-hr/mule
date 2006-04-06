@@ -43,9 +43,13 @@
   }
   Map methodCalls=(Map)event.getMessage().getProperty("soapMethods");
   if (methodCalls == null) {
-    ArrayList params=new ArrayList();
+    List params=new ArrayList();
     for (int i=0; i < args.length; i++) {
-      if (args[i] instanceof DataHandler[]) {
+      if (args[i] == null) {
+        QName qname=call.getTypeMapping().getTypeQName(Object.class);
+        params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+      }
+ else       if (args[i] instanceof DataHandler[]) {
         params.add("attachments;qname{DataHandler:http://xml.apache.org/xml-soap};in");
       }
  else       if (args[i] instanceof Map && connector.isTreatMapAsNamedParams()) {
