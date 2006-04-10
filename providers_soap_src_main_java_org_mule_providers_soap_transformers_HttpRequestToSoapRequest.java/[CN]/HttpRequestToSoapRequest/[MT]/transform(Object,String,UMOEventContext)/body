@@ -13,7 +13,7 @@
   }
   String httpMethod=context.getMessage().getStringProperty("http.method","GET");
   String request=context.getMessage().getStringProperty("http.request",null);
-  int i=request.indexOf("?");
+  int i=request.indexOf('?');
   String query=request.substring(i + 1);
   Properties p=PropertiesHelper.getPropertiesFromQueryString(query);
   String method=(String)p.remove(SoapConstants.SOAP_METHOD_PROPERTY);
@@ -28,18 +28,19 @@
       throw new TransformerException(this,e);
     }
   }
-  StringBuffer result=new StringBuffer();
+  StringBuffer result=new StringBuffer(8192);
   String header=StringMessageHelper.getFormattedMessage(SOAP_HEADER,new Object[]{encoding});
   if (p.size() > 0) {
     result.append(header);
-    result.append("<").append(method).append(" xmlns=\"").append(DEFAULT_NAMESPACE).append("\">");
+    result.append('<').append(method).append(" xmlns=\"");
+    result.append(DEFAULT_NAMESPACE).append("\">");
     for (Iterator iterator=p.entrySet().iterator(); iterator.hasNext(); ) {
       Map.Entry entry=(Map.Entry)iterator.next();
-      result.append("<").append(entry.getKey()).append(">");
+      result.append('<').append(entry.getKey()).append('>');
       result.append(entry.getValue());
-      result.append("</").append(entry.getKey()).append(">");
+      result.append("</").append(entry.getKey()).append('>');
     }
-    result.append("</").append(method).append(">");
+    result.append("</").append(method).append('>');
     result.append(SOAP_FOOTER);
   }
  else {
