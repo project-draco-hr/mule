@@ -1,21 +1,37 @@
 {
+  Object prop=null;
+  Object value=null;
+  Object currentValue=null;
   if (previousEvent != null) {
     UMOMessage msg=previousEvent.getMessage();
 synchronized (msg) {
       for (Iterator iterator=msg.getPropertyNames().iterator(); iterator.hasNext(); ) {
-        Object prop=iterator.next();
-        if (message.getProperty(prop) == null) {
-          message.setProperty(prop,msg.getProperty(prop));
+        prop=iterator.next();
+        value=msg.getProperty(prop);
+        if (!ignoreProperty(prop,value)) {
+          message.setProperty(prop,value);
+        }
+        if (logger.isDebugEnabled()) {
+          currentValue=message.getProperty(prop);
+          if (!value.equals(currentValue)) {
+            logger.warn("Property on the current message " + prop + "="+ currentValue+ " overrides property on the previous event: "+ prop+ "="+ value);
+          }
         }
       }
     }
   }
   if (endpoint != null && endpoint.getProperties() != null) {
     for (Iterator iterator=endpoint.getProperties().keySet().iterator(); iterator.hasNext(); ) {
-      Object prop=iterator.next();
-      if (message.getProperty(prop) == null) {
-        Object value=endpoint.getProperties().get(prop);
+      prop=iterator.next();
+      value=endpoint.getProperties().get(prop);
+      if (!ignoreProperty(prop,value)) {
         message.setProperty(prop,value);
+      }
+      if (logger.isDebugEnabled()) {
+        currentValue=message.getProperty(prop);
+        if (!value.equals(currentValue)) {
+          logger.warn("Property on the current message " + prop + "="+ currentValue+ " overrides property on the endpoint: "+ prop+ "="+ value);
+        }
       }
     }
   }
