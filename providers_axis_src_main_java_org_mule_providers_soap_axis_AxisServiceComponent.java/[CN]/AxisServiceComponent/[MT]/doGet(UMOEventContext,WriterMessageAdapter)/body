@@ -1,8 +1,11 @@
 {
   try {
-    String uri="soap:" + context.getEndpointURI().getScheme() + "://"+ context.getEndpointURI().getHost()+ ":"+ context.getEndpointURI().getPort();
-    uri+=context.getMessageAsString();
-    UMOEndpointURI endpointUri=new MuleEndpointURI(uri);
+    UMOEndpointURI endpointUri=context.getEndpointURI();
+    if (!"servlet".equalsIgnoreCase(context.getEndpointURI().getSchemeMetaInfo())) {
+      String uri=SoapConstants.SOAP_ENDPOINT_PREFIX + context.getEndpointURI().getScheme() + "://"+ context.getEndpointURI().getHost()+ ":"+ context.getEndpointURI().getPort();
+      uri+=context.getMessageAsString();
+      endpointUri=new MuleEndpointURI(uri);
+    }
     AxisEngine engine=getAxisServer();
     String pathInfo=endpointUri.getPath();
     boolean wsdlRequested=false;
