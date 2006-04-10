@@ -1,10 +1,19 @@
 {
-  StringBuffer buf=new StringBuffer();
+  StringBuffer buf=new StringBuffer(80);
   if (message != null) {
     buf.append(message.getMessage()).append(". ");
   }
-  String type=umoMessage.getPayload().getClass().getName();
-  buf.append(Messages.get(Messages.MESSAGE_IS_OF_TYPE_X,type));
-  addInfo("Payload",umoMessage.getPayload().toString());
+  if (umoMessage != null) {
+    Object payload=umoMessage.getPayload();
+    if (payload == null) {
+      payload=new NullPayload();
+    }
+    buf.append(Messages.get(Messages.MESSAGE_IS_OF_TYPE_X,payload.getClass().getName()));
+    addInfo("Payload",payload.toString());
+  }
+ else {
+    buf.append("The current UMOMessage is null! Please report this to dev@mule.codehaus.org.");
+    addInfo("Payload",new NullPayload().toString());
+  }
   return buf.toString();
 }
