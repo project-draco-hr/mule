@@ -3,16 +3,31 @@
     setPayload((HttpServletRequest)message);
     final Map parameterMap=request.getParameterMap();
     if (parameterMap != null && parameterMap.size() > 0) {
-      properties.putAll(parameterMap);
+      for (Iterator iterator=parameterMap.entrySet().iterator(); iterator.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)iterator.next();
+        if (entry.getValue() != null) {
+          if (entry.getValue().getClass().isArray() && ((Object[])entry.getValue()).length == 1) {
+            properties.put(entry.getKey(),((Object[])entry.getValue())[0]);
+          }
+ else {
+            properties.put(entry.getKey(),entry.getValue());
+          }
+        }
+      }
     }
     String key;
     for (Enumeration e=request.getAttributeNames(); e.hasMoreElements(); ) {
       key=(String)e.nextElement();
       properties.put(key,request.getAttribute(key));
     }
+    String realKey;
     for (Enumeration e=request.getHeaderNames(); e.hasMoreElements(); ) {
       key=(String)e.nextElement();
-      properties.put(key,request.getHeader(key));
+      realKey=key;
+      if (key.startsWith("X-" + MuleProperties.PROPERTY_PREFIX)) {
+        realKey=key.substring(2);
+      }
+      properties.put(realKey,request.getHeader(key));
     }
   }
  else {
