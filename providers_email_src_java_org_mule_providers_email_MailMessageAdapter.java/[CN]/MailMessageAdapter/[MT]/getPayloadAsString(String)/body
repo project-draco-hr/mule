@@ -3,13 +3,16 @@
     String contentType=messagePart.getContentType();
     if (contentType.startsWith("text/")) {
       InputStream is=messagePart.getInputStream();
+      if ((is instanceof BufferedInputStream) == false) {
+        is=new BufferedInputStream(is);
+      }
       BufferedReader reader=new BufferedReader(new InputStreamReader(is));
       StringBuffer buffer=new StringBuffer(32768);
       String line=reader.readLine();
-      buffer.append(line);
+      buffer.append(line).append(SystemUtils.LINE_SEPARATOR);
       while (line != null) {
         line=reader.readLine();
-        buffer.append(line);
+        buffer.append(line).append(SystemUtils.LINE_SEPARATOR);
       }
       contentBuffer=buffer.toString().getBytes();
     }
