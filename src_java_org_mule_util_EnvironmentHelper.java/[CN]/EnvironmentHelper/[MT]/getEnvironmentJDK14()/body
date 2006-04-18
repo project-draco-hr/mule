@@ -1,0 +1,54 @@
+{
+  Properties envProps=new Properties();
+  FileInputStream in=null;
+  File f=null;
+  try {
+    boolean isUnix=true;
+    Process process=null;
+    StringBuffer cmdBuffer=new StringBuffer(80);
+    String tempEnvFileName="mule-environment.tmp";
+    if (SystemUtils.IS_OS_WINDOWS) {
+      cmdBuffer.append("cmd /c set");
+      isUnix=false;
+    }
+ else {
+      cmdBuffer.append("export -p");
+    }
+    cmdBuffer.append(" > ");
+    cmdBuffer.append(SystemUtils.getJavaIoTmpDir()).append(SystemUtils.FILE_SEPARATOR);
+    cmdBuffer.append(tempEnvFileName);
+    process=Runtime.getRuntime().exec(cmdBuffer.toString());
+    process.waitFor();
+    f=new File(SystemUtils.getJavaIoTmpDir(),tempEnvFileName);
+    in=new FileInputStream(f);
+    BufferedReader br=new BufferedReader(new InputStreamReader(in));
+    String line;
+    while ((line=br.readLine()) != null) {
+      if (line.startsWith("declare -") || line.startsWith("typeset -")) {
+        line=line.substring(11);
+      }
+      int index=-1;
+      if ((index=line.indexOf('=')) > -1) {
+        String key=line.substring(0,index).trim();
+        String value=line.substring(index + 1).trim();
+        if (isUnix && value.length() > 1 && (value.startsWith("\"") || value.startsWith("'"))) {
+          value=value.substring(1,value.length() - 1);
+        }
+        envProps.setProperty(key,value);
+      }
+ else {
+        envProps.setProperty(line,StringUtils.EMPTY);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw e;
+  }
+ finally {
+    IOUtils.closeQuietly(in);
+    if (f != null) {
+      f.delete();
+    }
+  }
+  return envProps;
+}
