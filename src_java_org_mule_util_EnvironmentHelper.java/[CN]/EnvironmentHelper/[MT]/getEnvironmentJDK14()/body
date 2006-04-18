@@ -1,27 +1,18 @@
 {
   Properties envProps=new Properties();
-  FileInputStream in=null;
-  File f=null;
+  Process process=null;
   try {
     boolean isUnix=true;
-    Process process=null;
-    StringBuffer cmdBuffer=new StringBuffer(80);
-    String tempEnvFileName="mule-environment.tmp";
+    String command;
     if (SystemUtils.IS_OS_WINDOWS) {
-      cmdBuffer.append("cmd /c set");
+      command="cmd /c set";
       isUnix=false;
     }
  else {
-      cmdBuffer.append("export -p");
+      command="export -p";
     }
-    cmdBuffer.append(" > ");
-    cmdBuffer.append(SystemUtils.getJavaIoTmpDir()).append(SystemUtils.FILE_SEPARATOR);
-    cmdBuffer.append(tempEnvFileName);
-    process=Runtime.getRuntime().exec(cmdBuffer.toString());
-    process.waitFor();
-    f=new File(SystemUtils.getJavaIoTmpDir(),tempEnvFileName);
-    in=new FileInputStream(f);
-    BufferedReader br=new BufferedReader(new InputStreamReader(in));
+    process=Runtime.getRuntime().exec(command);
+    BufferedReader br=new BufferedReader(new InputStreamReader(process.getInputStream()));
     String line;
     while ((line=br.readLine()) != null) {
       if (line.startsWith("declare -") || line.startsWith("typeset -")) {
@@ -45,9 +36,8 @@
     throw e;
   }
  finally {
-    IOUtils.closeQuietly(in);
-    if (f != null) {
-      f.delete();
+    if (process != null) {
+      process.destroy();
     }
   }
   return envProps;
