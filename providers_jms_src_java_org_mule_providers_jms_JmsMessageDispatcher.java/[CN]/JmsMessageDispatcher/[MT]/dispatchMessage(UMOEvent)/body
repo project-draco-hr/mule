@@ -6,6 +6,7 @@
   Session session=null;
   MessageProducer producer=null;
   MessageConsumer consumer=null;
+  Destination replyTo=null;
   try {
     txSession=connector.getCurrentSession();
     cacheJmsSession=event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions());
@@ -46,7 +47,6 @@
       msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
     }
     UMOMessage eventMsg=event.getMessage();
-    Destination replyTo=null;
     if (connector.supportsProperty(JmsConstants.JMS_REPLY_TO)) {
       Object tempReplyTo=eventMsg.removeProperty(JmsConstants.JMS_REPLY_TO);
       if (tempReplyTo != null) {
@@ -129,6 +129,14 @@
     return null;
   }
   finally {
+    if (replyTo != null && (replyTo instanceof TemporaryQueue || replyTo instanceof TemporaryTopic)) {
+      if (replyTo instanceof TemporaryQueue) {
+        connector.closeQuietly((TemporaryQueue)replyTo);
+      }
+ else {
+        connector.closeQuietly((TemporaryTopic)replyTo);
+      }
+    }
     connector.closeQuietly(consumer);
     connector.closeQuietly(producer);
     if (session != null && !cacheJmsSession && txSession == null) {
