@@ -18,7 +18,7 @@
     }
  else {
       logger.debug("Creating RPC Provider");
-      service=new SOAPService(new MuleProvider(connector));
+      service=new SOAPService(new MuleRPCProvider(connector));
     }
     service.setEngine(connector.getAxisServer());
   }
@@ -41,13 +41,23 @@
     throw new InitialisationException(new Message(Messages.X_MUST_IMPLEMENT_AN_INTERFACE,serviceName),component);
   }
   String methodNames="*";
-  if (endpoint.getProperties().get("soapMethods") != null) {
-    Map methods=(Map)endpoint.getProperties().get("soapMethods");
+  Map methods=(Map)endpoint.getProperties().get("soapMethods");
+  if (methods == null) {
+    methods=(Map)descriptor.getProperties().get("soapMethods");
+  }
+  if (methods != null) {
     Iterator i=methods.keySet().iterator();
     StringBuffer buf=new StringBuffer(64);
     while (i.hasNext()) {
       String name=(String)i.next();
-      SoapMethod method=new SoapMethod(name,(String)methods.get(name));
+      Object m=methods.get(name);
+      SoapMethod method=null;
+      if (m instanceof List) {
+        method=new SoapMethod(name,(List)m);
+      }
+ else {
+        method=new SoapMethod(name,(String)m);
+      }
       List namedParameters=method.getNamedParameters();
       ParameterDesc[] parameters=new ParameterDesc[namedParameters.size()];
       for (int j=0; j < namedParameters.size(); j++) {
@@ -61,17 +71,17 @@
         }
         parameters[j]=new ParameterDesc(parameter.getName(),mode,parameter.getType());
       }
-      service.getServiceDescription().addOperationDesc(new OperationDesc(name,parameters,method.getReturnType()));
-      buf.append(name + ",");
+      service.getServiceDescription().addOperationDesc(new OperationDesc(method.getName().getLocalPart(),parameters,method.getReturnType()));
+      buf.append(method.getName().getLocalPart() + ",");
     }
     methodNames=buf.toString();
     methodNames=methodNames.substring(0,methodNames.length() - 1);
   }
  else {
-    String[] methods=ServiceProxy.getMethodNames(interfaces);
+    String[] methodNamesArray=ServiceProxy.getMethodNames(interfaces);
     StringBuffer buf=new StringBuffer(64);
-    for (int i=0; i < methods.length; i++) {
-      buf.append(methods[i]).append(",");
+    for (int i=0; i < methodNamesArray.length; i++) {
+      buf.append(methodNamesArray[i]).append(",");
     }
     methodNames=buf.toString();
     methodNames=methodNames.substring(0,methodNames.length() - 1);
@@ -116,10 +126,7 @@
     }
   }
   service.getServiceDescription().setDocumentation(doc);
-  TypeMappingRegistryImpl registry=(TypeMappingRegistryImpl)service.getTypeMappingRegistry();
-  AxisProperties.setProperty("axis.doAutoTypes",String.valueOf(connector.isDoAutoTypes()));
   List types=(List)descriptor.getProperties().get("beanTypes");
-  connector.registerTypes(registry,types);
   service.setName(serviceName);
   descriptor.addInitialisationCallback(new AxisInitialisationCallback(service));
   if (uri.getScheme().equalsIgnoreCase("servlet")) {
@@ -134,5 +141,6 @@
   if (StringUtils.isNotBlank(namespace)) {
     service.getServiceDescription().setDefaultNamespace(namespace);
   }
+  service.init();
   service.stop();
 }
