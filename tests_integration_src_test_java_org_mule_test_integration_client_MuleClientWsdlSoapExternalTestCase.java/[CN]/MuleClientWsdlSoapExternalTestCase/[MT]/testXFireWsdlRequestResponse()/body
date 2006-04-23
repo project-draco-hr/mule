@@ -3,14 +3,16 @@
     return;
   }
   String url="wsdl-xfire:" + WSDL_URL + "&method="+ METHOD;
-  MuleClient client=null;
+  UMOMessage result=null;
+  String resultPayload=StringUtils.EMPTY;
   try {
-    client=new MuleClient();
+    MuleClient client=new MuleClient();
+    result=client.send(url,INPUT,null);
+    resultPayload=(result != null ? result.getPayloadAsString() : StringUtils.EMPTY);
   }
  catch (  UMOException e) {
-    e.printStackTrace();
+    fail(ExceptionUtils.getStackTrace(e));
   }
-  UMOMessage result=client.send(url,INPUT,null);
   assertNotNull(result);
-  assertEquals(OUTPUT,result.getPayload());
+  assertEquals(OUTPUT,resultPayload);
 }
