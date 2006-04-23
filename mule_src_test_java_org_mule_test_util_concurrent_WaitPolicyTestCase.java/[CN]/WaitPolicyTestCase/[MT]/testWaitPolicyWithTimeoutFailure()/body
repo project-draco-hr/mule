@@ -3,9 +3,7 @@
   long failureInterval=100;
   LastRejectedWaitPolicy policy=new LastRejectedWaitPolicy(failureInterval,TimeUnit.MILLISECONDS);
   _executor.setRejectedExecutionHandler(policy);
-  WaitableBoolean taskIsRunning=new WaitableBoolean(false);
-  this.execute(_executor,new SleepyTask("hans",1000,taskIsRunning));
-  taskIsRunning.whenTrue(null);
+  this.execute(_executor,new SleepyTask("hans",1000));
   this.execute(_executor,new SleepyTask("franz",1000));
   Runnable s3=new SleepyTask("butthead",1000);
   Thread failedThread=this.execute(_executor,s3);
@@ -17,6 +15,6 @@
   assertEquals(RejectedExecutionException.class,threadFailure.getValue().getClass());
   _executor.shutdown();
   assertTrue(_executor.awaitTermination(2500,TimeUnit.MILLISECONDS));
-  assertSame(s3,policy.lastRejectedRunnable());
+  assertEquals(s3,policy.lastRejectedRunnable());
   assertEquals(0,SleepyTask.activeTasks.get());
 }
