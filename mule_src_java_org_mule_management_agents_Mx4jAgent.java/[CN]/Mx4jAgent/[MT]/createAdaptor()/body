@@ -1,8 +1,20 @@
 {
-  Object adaptor=null;
+  Object adaptor;
   Log.redirectTo(new CommonsLogger());
   URI uri=new URI(jmxAdaptorUrl);
   adaptor=new HttpAdaptor(uri.getPort(),uri.getHost());
-  ((HttpAdaptor)adaptor).setProcessor(new XSLTProcessor());
+  XSLTProcessor processor=new XSLTProcessor();
+  if (xslFilePath != null) {
+    processor.setFile(xslFilePath);
+  }
+  if (pathInJar != null) {
+    processor.setPathInJar(pathInJar);
+  }
+  processor.setUseCache(cacheXsl);
+  ((HttpAdaptor)adaptor).setProcessor(processor);
+  if (login != null) {
+    ((HttpAdaptor)adaptor).addAuthorization(login,password);
+    ((HttpAdaptor)adaptor).setAuthenticationMethod(authenticationMethod);
+  }
   return adaptor;
 }
