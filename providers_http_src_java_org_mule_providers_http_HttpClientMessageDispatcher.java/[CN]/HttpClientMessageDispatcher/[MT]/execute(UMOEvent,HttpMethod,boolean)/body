@@ -1,16 +1,14 @@
 {
   try {
     URI uri=event.getEndpoint().getEndpointURI().getUri();
-    try {
-      processCookies(event);
-      client.executeMethod(getHostConfig(uri),httpMethod);
-    }
- catch (    Exception e) {
-      logger.error(e,e);
-    }
+    processCookies(event);
+    int code=client.executeMethod(getHostConfig(uri),httpMethod);
     return httpMethod;
   }
- catch (  Exception e) {
+ catch (  ConnectException cex) {
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),cex);
+  }
+catch (  Exception e) {
     throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }
  finally {
