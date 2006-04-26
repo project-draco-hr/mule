@@ -30,9 +30,6 @@
       method=endpointURI.getParams().getProperty(org.mule.providers.soap.SoapConstants.SOAP_METHOD_PROPERTY);
     }
   }
-  if (method == null) {
-    throw new MuleException(new Message(Messages.PROPERTIES_X_NOT_SET,"method"));
-  }
   String serviceName=getService(eventContext);
   if (request == null) {
     request=endpointHeader;
@@ -40,14 +37,19 @@
   if (request != null && request.endsWith("?wsdl")) {
     generateWSDL(response,serviceName);
   }
-  ServiceRegistry reg=getServiceRegistry();
-  if (serviceName == null || serviceName.length() == 0 || !reg.hasService(serviceName)) {
-    if (!reg.hasService(serviceName)) {
-      eventMsg.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_NOT_FOUND));
+ else {
+    if (method == null) {
+      throw new MuleException(new Message(Messages.PROPERTIES_X_NOT_SET,"method"));
     }
-    generateServices(response);
-    return response;
+    ServiceRegistry reg=getServiceRegistry();
+    if (serviceName == null || serviceName.length() == 0 || !reg.hasService(serviceName)) {
+      if (!reg.hasService(serviceName)) {
+        eventMsg.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_NOT_FOUND));
+      }
+      generateServices(response);
+      return response;
+    }
+    invoke(eventContext,endpointURI,response,serviceName,method);
   }
-  invoke(eventContext,endpointURI,response,serviceName,method);
   return response.getPayloadAsBytes();
 }
