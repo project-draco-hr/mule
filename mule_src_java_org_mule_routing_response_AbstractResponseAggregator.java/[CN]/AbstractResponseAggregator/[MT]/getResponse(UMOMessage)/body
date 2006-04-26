@@ -1,27 +1,26 @@
 {
-  String messageId=null;
-  messageId=message.getUniqueId();
+  Object responseId=getCallResponseAggregateIdentifier(message);
   if (logger.isDebugEnabled()) {
-    logger.debug("Waiting for response for message id: " + messageId + " in "+ this);
+    logger.debug("Waiting for response for message id: " + responseId + " in "+ this);
   }
   Lock l=null;
   locksCollectionLock.lock();
-  l=(Lock)locks.get(messageId);
+  l=(Lock)locks.get(responseId);
   if (l == null) {
-    logger.debug("Got response but no one is waiting for it yet. Creating latch for " + messageId + " in "+ this);
+    logger.debug("Got response but no one is waiting for it yet. Creating latch for " + responseId + " in "+ this);
     l=new Latch();
-    if (locks.get(messageId) != null) {
-      throw new IllegalStateException("There is already a lock with ID: " + messageId);
+    if (locks.get(responseId) != null) {
+      throw new IllegalStateException("There is already a lock with ID: " + responseId);
     }
-    locks.put(messageId,l);
+    locks.put(responseId,l);
   }
  else {
-    logger.debug("Got latch for message: " + messageId);
+    logger.debug("Got latch for message: " + responseId);
   }
   locksCollectionLock.unlock();
   boolean b=false;
   try {
-    logger.debug("Waiting for response to message: " + messageId);
+    logger.debug("Waiting for response to message: " + responseId);
     if (getTimeout() <= 0) {
       l.lock();
       b=true;
@@ -39,10 +38,10 @@ synchronized (responseEvents) {
         logger.trace("Current responses are: \n" + PropertiesHelper.propertiesToString(responseEvents,true));
       }
     }
-    throw new ResponseTimeoutException(new Message(Messages.RESPONSE_TIMED_OUT_X_WAITING_FOR_ID_X,String.valueOf(getTimeout()),messageId),message,null);
+    throw new ResponseTimeoutException(new Message(Messages.RESPONSE_TIMED_OUT_X_WAITING_FOR_ID_X,String.valueOf(getTimeout()),responseId),message,null);
   }
-  UMOMessage result=(UMOMessage)responseEvents.remove(messageId);
-  locks.remove(messageId);
+  UMOMessage result=(UMOMessage)responseEvents.remove(responseId);
+  locks.remove(responseId);
   if (result == null) {
     throw new IllegalStateException("Response Message is null");
   }
