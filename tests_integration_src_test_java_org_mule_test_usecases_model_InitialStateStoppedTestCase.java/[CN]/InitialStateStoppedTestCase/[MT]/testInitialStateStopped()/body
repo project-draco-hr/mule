@@ -1,13 +1,19 @@
 {
-  if (MuleManager.isInstanciated()) {
-    MuleManager.getInstance().dispose();
-  }
-  manager=new MuleXmlConfigurationBuilder().configure("org/mule/test/usecases/model/initial-state-stopped-config.xml");
+  UMOManager manager=new MuleXmlConfigurationBuilder().configure("org/mule/test/usecases/model/initial-state-stopped-config.xml");
+  UMOComponent c=manager.getModel().getComponent("TestComponent");
+  assertNotNull(c);
+  assertFalse(c.isStarted());
   manager.start();
+  assertFalse(c.isStarted());
   AbstractConnector connector=(AbstractConnector)manager.lookupConnector("TestConnector");
   assertTrue(connector.isStarted());
   assertTrue(connector.getReceivers().isEmpty());
   manager.getModel().startComponent("TestComponent");
   assertTrue(connector.isStarted());
   assertFalse(connector.getReceivers().isEmpty());
+  assertTrue(c.isStarted());
+  Iterator it=connector.getReceivers().values().iterator();
+  while (it.hasNext()) {
+    assertTrue(((UMOMessageReceiver)it.next()).isConnected());
+  }
 }
