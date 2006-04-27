@@ -3,15 +3,23 @@
     dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
     dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
     while (!socket.isClosed() && !disposing.get()) {
-      byte[] b=protocol.read(dataIn);
-      if (b == null) {
-        break;
+      byte[] b=null;
+      try {
+        b=protocol.read(dataIn);
+        if (b == null) {
+          break;
+        }
+        byte[] result=processData(b);
+        if (result != null) {
+          protocol.write(dataOut,result);
+        }
+        dataOut.flush();
       }
-      byte[] result=processData(b);
-      if (result != null) {
-        protocol.write(dataOut,result);
+ catch (      SocketTimeoutException e) {
+        if (!socket.getKeepAlive()) {
+          break;
+        }
       }
-      dataOut.flush();
     }
   }
  catch (  Exception e) {
