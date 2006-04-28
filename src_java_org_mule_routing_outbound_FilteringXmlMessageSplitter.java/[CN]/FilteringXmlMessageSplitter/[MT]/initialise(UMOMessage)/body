@@ -42,7 +42,18 @@
         if (logger.isDebugEnabled()) {
           logger.debug("Split into " + nodes.size());
         }
-        FilteringXmlMessageSplitter.nodes.set(nodes);
+        List parts=new ArrayList();
+        for (Iterator iterator=nodes.iterator(); iterator.hasNext(); ) {
+          Node node=(Node)iterator.next();
+          if (node instanceof Element) {
+            node=(Node)node.clone();
+            parts.add(DocumentHelper.createDocument((Element)node));
+          }
+ else {
+            logger.warn("Dcoument node: " + node.asXML() + " is not an element and thus is not a valid part");
+          }
+        }
+        FilteringXmlMessageSplitter.nodes.set(parts);
       }
     }
  else {
@@ -50,7 +61,7 @@
     }
   }
  catch (  Exception ex) {
-    throw new IllegalArgumentException("Failed to initialise the payload: " + ex.getMessage());
+    throw new IllegalArgumentException("Failed to initialise the payload: " + ex.getMessage(),ex);
   }
   Map theProperties=new HashMap();
   for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
