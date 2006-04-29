@@ -4,7 +4,17 @@
   if (tx != null) {
     tx.bindResource(connector.getConnection(),ctx.session);
   }
-  Message message=ctx.consumer.receive(frequency);
+  Message message=null;
+  try {
+    message=ctx.consumer.receive(frequency);
+  }
+ catch (  JMSException e) {
+    if (!this.isConnected()) {
+    }
+ else {
+      throw e;
+    }
+  }
   if (message == null) {
     if (tx != null) {
       tx.setRollbackOnly();
