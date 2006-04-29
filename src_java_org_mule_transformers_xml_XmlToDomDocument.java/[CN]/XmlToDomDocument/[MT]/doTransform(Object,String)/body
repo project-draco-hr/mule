@@ -1,13 +1,14 @@
 {
   try {
-    String xml=(String)src;
-    org.dom4j.Document dom4jDoc=DocumentHelper.parseText(xml);
-    if (org.dom4j.Document.class.equals(getReturnClass())) {
-      return dom4jDoc;
-    }
- else {
-      return new DOMWriter().write(dom4jDoc);
-    }
+    Source sourceDoc=getXmlSource(src);
+    ResultHolder holder=getResultHolder(returnClass != null ? returnClass : Document.class);
+    assert(sourceDoc != null);
+    assert(holder != null);
+    Transformer idTransformer=TransformerFactory.newInstance().newTransformer();
+    idTransformer.setOutputProperty(OutputKeys.ENCODING,encoding);
+    idTransformer.transform(sourceDoc,holder.getResult());
+    Object result=holder.getResultObject();
+    return result;
   }
  catch (  Exception e) {
     throw new TransformerException(this,e);
