@@ -16,10 +16,10 @@
         long start=System.currentTimeMillis();
         List results=loanConsumer.requestSend(i,"vm://LoanBrokerRequests");
         System.out.println("Number or quotes received: " + results.size());
-        List output=new ArrayList();
+        List output=new ArrayList(results.size());
         int x=1;
         for (Iterator iterator=results.iterator(); iterator.hasNext(); x++) {
-          org.mule.samples.loanbroker.LoanQuote quote=(org.mule.samples.loanbroker.LoanQuote)iterator.next();
+          LoanQuote quote=(LoanQuote)iterator.next();
           output.add(x + ". " + quote.toString());
         }
         System.out.println(StringMessageHelper.getBoilerPlate(output,'*',80));
@@ -32,59 +32,95 @@
       }
     }
  else {
-      System.out.println(StringMessageHelper.getBoilerPlate("Welcome to the Mule Loan broker example"));
-      System.out.println("\nWould you like to run the [s]ynchronous or [a]synchronous version?");
-      int response=getSelection();
-      if (response == 's') {
-        System.out.println("Loading Synchronous Loan Broker");
-        synchronous=true;
-        loanConsumer=new LoanConsumer("loan-broker-sync-config.xml");
-      }
- else {
-        System.out.println("Loading Asynchronous Loan Broker");
-        synchronous=false;
-        loanConsumer=new LoanConsumer("loan-broker-async-config.xml");
-      }
-      while (response != 'q') {
-        System.out.println("\n[1] make a loan request");
-        System.out.println("[2] send 100 random requests");
-        System.out.println("[3] send x requests");
-        System.out.println("[q] quit");
-        System.out.println("\nPlease make your selection: ");
-        response=getSelection();
-        if (response == '1') {
-          LoanRequest request=getRequestFromUser();
-          loanConsumer.request(request,synchronous);
-        }
- else         if (response == '2') {
-          loanConsumer.sendRandomRequests(100,synchronous);
-        }
- else         if (response == '3') {
-          byte[] buf=new byte[16];
-          System.out.println("Enter number of requests:");
-          System.in.read(buf);
-          int number=Integer.valueOf(new String(buf).trim()).intValue();
-          if (number < 1) {
-            System.out.println("Number of requests must be at least 1");
+      System.out.println(StringMessageHelper.getBoilerPlate("Welcome to the Mule Loan Broker example"));
+      int response=0;
+      String provider="axis";
+      while (response != 'a' && response != 'x') {
+        System.out.println("\nWhich SOAP stack would you like to use: [a]xis or [x]fire?");
+        response=readCharacter();
+switch (response) {
+case 'a':
+{
+            provider="axis";
+            break;
           }
- else {
-            loanConsumer.sendRandomRequests(number,synchronous);
-          }
+case 'x':
+{
+          provider="xfire";
+          break;
         }
- else         if (response == 'q') {
-          System.out.println("Exiting now");
-          loanConsumer.close();
-          System.exit(0);
-        }
- else {
-          System.out.println("That response is not recognised, try again:");
-        }
-      }
     }
   }
- catch (  Exception e) {
-    System.err.println(e.getMessage());
-    e.printStackTrace(System.err);
-    System.exit(1);
+  response=0;
+  while (response != 'a' && response != 's') {
+    System.out.println("\nWould you like to run the [s]ynchronous or [a]synchronous version?");
+    response=readCharacter();
+switch (response) {
+case 'a':
+{
+        System.out.println("Loading Asynchronous Loan Broker");
+        synchronous=false;
+        break;
+      }
+case 's':
+{
+      System.out.println("Loading Synchronous Loan Broker");
+      synchronous=true;
+      break;
+    }
+}
+}
+String config="loan-broker-" + provider + "-"+ (synchronous ? "sync" : "async")+ "-config.xml";
+loanConsumer=new LoanConsumer(config);
+response=0;
+while (response != 'q') {
+System.out.println("\n[1] make a loan request");
+System.out.println("[2] send 100 random requests");
+System.out.println("[3] send x requests");
+System.out.println("[q] quit");
+System.out.println("\nPlease make your selection: ");
+response=readCharacter();
+switch (response) {
+case '1':
+{
+    LoanRequest request=getRequestFromUser();
+    loanConsumer.request(request,synchronous);
+    break;
   }
+case '2':
+{
+  loanConsumer.sendRandomRequests(100,synchronous);
+  break;
+}
+case '3':
+{
+System.out.println("Enter number of requests: ");
+int number=Integer.parseInt(readString());
+if (number < 1) {
+  System.out.println("Number of requests must be at least 1");
+}
+ else {
+  loanConsumer.sendRandomRequests(number,synchronous);
+}
+break;
+}
+case 'q':
+{
+System.out.println("Exiting now.");
+loanConsumer.close();
+System.exit(0);
+}
+default :
+{
+System.out.println("That response is not recognised, try again.");
+}
+}
+}
+}
+}
+ catch (Exception e) {
+System.err.println(e.getMessage());
+e.printStackTrace(System.err);
+System.exit(1);
+}
 }
