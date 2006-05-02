@@ -3,12 +3,19 @@
     if (expectedType == null) {
       return null;
     }
-    entry=(Entry)ClassHelper.instanciateClass(expectedType,ClassHelper.NO_ARGS);
-    if (entry.getClass().isAssignableFrom(Entry.class)) {
-      throw new IllegalArgumentException(new Message("gs",1,expectedType).toString());
+    Object entryType=ClassHelper.instanciateClass(expectedType,ClassHelper.NO_ARGS);
+    if (!(entryType instanceof Entry)) {
+      entry=new JiniMessage(null,entryType);
+      if (fields.size() > 0) {
+        BeanUtils.populate(entry,fields);
+        BeanUtils.populate(((JiniMessage)entry).getPayload(),fields);
+      }
     }
-    if (fields.size() > 0) {
-      BeanUtils.populate(entry,fields);
+ else {
+      entry=(Entry)entryType;
+      if (fields.size() > 0) {
+        BeanUtils.populate(entry,fields);
+      }
     }
   }
   return entry;
