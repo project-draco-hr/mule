@@ -1,24 +1,8 @@
 {
-  String impl=null;
   Class implClass=null;
-  if (implementationReference instanceof String) {
-    impl=implementationReference.toString();
-    if (impl.startsWith(MuleDescriptor.IMPLEMENTATION_TYPE_LOCAL)) {
-      impl=impl.substring(MuleDescriptor.IMPLEMENTATION_TYPE_LOCAL.length());
-      Object obj=properties.get(impl);
-      if (obj != null) {
-        implClass=obj.getClass();
-        if (implClass.equals(String.class)) {
-          implClass=getImplementationForReference(impl);
-        }
-      }
- else {
-        throw new MuleException(new Message(Messages.NO_COMPONENT_FOR_LOCAL_REFERENCE,impl));
-      }
-    }
- else {
-      implClass=getImplementationForReference(impl);
-    }
+  if (implementationReference instanceof String || implementationReference instanceof ContainerKeyPair) {
+    Object object=MuleManager.getInstance().getContainerContext().getComponent(implementationReference);
+    implClass=object.getClass();
   }
  else {
     implClass=implementationReference.getClass();
