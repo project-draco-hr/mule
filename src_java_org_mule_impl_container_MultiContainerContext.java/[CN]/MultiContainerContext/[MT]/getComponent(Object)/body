@@ -1,19 +1,20 @@
 {
-  String containerName=null;
-  Object realKey=key;
-  if (key instanceof ContainerKeyPair) {
-    containerName=((ContainerKeyPair)key).getContaimerName();
-    realKey=((ContainerKeyPair)key).getKey();
+  ContainerKeyPair realKey=null;
+  if (key instanceof String) {
+    realKey=new ContainerKeyPair(null,key);
+  }
+ else {
+    realKey=(ContainerKeyPair)key;
   }
   Object component=null;
   UMOContainerContext container;
-  if (containerName != null) {
-    container=(UMOContainerContext)containers.get(containerName);
+  if (realKey.getContainerName() != null) {
+    container=(UMOContainerContext)containers.get(realKey.getContainerName());
     if (container != null) {
       return container.getComponent(realKey);
     }
  else {
-      throw new ObjectNotFoundException("Container: " + containerName);
+      throw new ObjectNotFoundException("Container: " + realKey.getContainerName());
     }
   }
   for (Iterator iterator=containers.values().iterator(); iterator.hasNext(); ) {
@@ -34,7 +35,13 @@
     }
   }
   if (component == null) {
-    component=defaultContainer.getComponent(realKey);
+    if (realKey.isRequired()) {
+      throw new ObjectNotFoundException(realKey.toString());
+    }
+ else     if (logger.isDebugEnabled()) {
+      logger.debug("Component reference not found: " + realKey.toFullString());
+      return null;
+    }
   }
   return component;
 }
