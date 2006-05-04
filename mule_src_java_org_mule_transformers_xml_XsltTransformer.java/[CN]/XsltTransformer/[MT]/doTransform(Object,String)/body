@@ -5,20 +5,27 @@
     ResultHolder holder=getResultHolder(returnClass);
     if (holder == null)     holder=getResultHolder(src.getClass());
     DefaultErrorListener errorListener=new DefaultErrorListener(this);
-    transformer.setErrorListener(errorListener);
-    transformer.setOutputProperty(OutputKeys.ENCODING,encoding);
-    if (logger.isDebugEnabled()) {
-      logger.debug("Before transform: " + convertToText(src));
+    Transformer transformer=null;
+    try {
+      transformer=(Transformer)transformerPool.borrowObject();
+      transformer.setErrorListener(errorListener);
+      transformer.setOutputProperty(OutputKeys.ENCODING,encoding);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Before transform: " + convertToText(src));
+      }
+      transformer.transform(sourceDoc,holder.getResult());
+      Object result=holder.getResultObject();
+      if (logger.isDebugEnabled()) {
+        logger.debug("After transform: " + convertToText(result));
+      }
+      if (errorListener.isError()) {
+        throw errorListener.getException();
+      }
+      return result;
     }
-    transformer.transform(sourceDoc,holder.getResult());
-    Object result=holder.getResultObject();
-    if (logger.isDebugEnabled()) {
-      logger.debug("After transform: " + convertToText(result));
+  finally {
+      if (transformer != null)       transformerPool.returnObject(transformer);
     }
-    if (errorListener.isError()) {
-      throw errorListener.getException();
-    }
-    return result;
   }
  catch (  Exception e) {
     throw new TransformerException(this,e);
