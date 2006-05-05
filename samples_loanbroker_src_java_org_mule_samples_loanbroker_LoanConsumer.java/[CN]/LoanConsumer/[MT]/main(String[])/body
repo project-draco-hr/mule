@@ -32,95 +32,14 @@
       }
     }
  else {
-      System.out.println(StringMessageHelper.getBoilerPlate("Welcome to the Mule Loan Broker example"));
-      int response=0;
-      String provider="axis";
-      while (response != 'a' && response != 'x') {
-        System.out.println("\nWhich SOAP stack would you like to use: [a]xis or [x]fire?");
-        response=readCharacter();
-switch (response) {
-case 'a':
-{
-            provider="axis";
-            break;
-          }
-case 'x':
-{
-          provider="xfire";
-          break;
-        }
+      String config=getConfig();
+      loanConsumer=new LoanConsumer(config);
+      loanConsumer.run(synchronous);
     }
   }
-  response=0;
-  while (response != 'a' && response != 's') {
-    System.out.println("\nWould you like to run the [s]ynchronous or [a]synchronous version?");
-    response=readCharacter();
-switch (response) {
-case 'a':
-{
-        System.out.println("Loading Asynchronous Loan Broker");
-        synchronous=false;
-        break;
-      }
-case 's':
-{
-      System.out.println("Loading Synchronous Loan Broker");
-      synchronous=true;
-      break;
-    }
-}
-}
-String config="loan-broker-" + provider + "-"+ (synchronous ? "sync" : "async")+ "-config.xml";
-loanConsumer=new LoanConsumer(config);
-response=0;
-while (response != 'q') {
-System.out.println("\n[1] make a loan request");
-System.out.println("[2] send 100 random requests");
-System.out.println("[3] send x requests");
-System.out.println("[q] quit");
-System.out.println("\nPlease make your selection: ");
-response=readCharacter();
-switch (response) {
-case '1':
-{
-    LoanRequest request=getRequestFromUser();
-    loanConsumer.request(request,synchronous);
-    break;
+ catch (  Exception e) {
+    System.err.println(e.getMessage());
+    e.printStackTrace(System.err);
+    System.exit(1);
   }
-case '2':
-{
-  loanConsumer.sendRandomRequests(100,synchronous);
-  break;
-}
-case '3':
-{
-System.out.println("Enter number of requests: ");
-int number=Integer.parseInt(readString());
-if (number < 1) {
-  System.out.println("Number of requests must be at least 1");
-}
- else {
-  loanConsumer.sendRandomRequests(number,synchronous);
-}
-break;
-}
-case 'q':
-{
-System.out.println("Exiting now.");
-loanConsumer.close();
-System.exit(0);
-}
-default :
-{
-System.out.println("That response is not recognised, try again.");
-}
-}
-}
-}
-}
- catch (Exception e) {
-System.err.println(e.getMessage());
-e.printStackTrace(System.err);
-System.exit(1);
-}
 }

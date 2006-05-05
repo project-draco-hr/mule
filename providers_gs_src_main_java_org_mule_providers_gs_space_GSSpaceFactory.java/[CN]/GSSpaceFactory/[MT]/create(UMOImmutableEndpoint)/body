@@ -8,23 +8,25 @@
       txFactory.setTransactionTimeout(((GSConnector)endpoint.getConnector()).getTransactionTimeout());
       space.setTransactionFactory(txFactory);
     }
-    if (endpoint.getFilter() != null) {
-      UMOFilter filter=endpoint.getFilter();
-      if (filter instanceof JavaSpaceTemplateFilter) {
-        space.setEntryTemplate(((JavaSpaceTemplateFilter)filter).getEntry());
+    if (!endpoint.getType().equalsIgnoreCase(UMOEndpoint.ENDPOINT_TYPE_SENDER)) {
+      if (endpoint.getFilter() != null) {
+        UMOFilter filter=endpoint.getFilter();
+        if (filter instanceof JavaSpaceTemplateFilter) {
+          space.setEntryTemplate(((JavaSpaceTemplateFilter)filter).getEntry());
+        }
+ else {
+          if (!endpoint.getType().equals(UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER)) {
+            logger.warn("Filter on endpoint " + endpoint.getEndpointURI().toString() + " Was not a JiniEntryFilter. Endpoint will match all entries of all types for this endpoint");
+          }
+          space.setEntryTemplate(createDefaultEntry(endpoint.getEndpointURI().toString()));
+        }
       }
  else {
         if (!endpoint.getType().equals(UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER)) {
-          logger.warn("Filter on endpoint " + endpoint.getEndpointURI().toString() + " Was not a JiniEntryFilter. Endpoint will match all entries of all types for this endpoint");
+          logger.warn("Filter on endpoint " + endpoint.getEndpointURI().toString() + " Was not set. Endpoint will match all entries of all types for this endpoint");
         }
         space.setEntryTemplate(createDefaultEntry(endpoint.getEndpointURI().toString()));
       }
-    }
- else {
-      if (!endpoint.getType().equals(UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER)) {
-        logger.warn("Filter on endpoint " + endpoint.getEndpointURI().toString() + " Was not set. Endpoint will match all entries of all types for this endpoint");
-      }
-      space.setEntryTemplate(createDefaultEntry(endpoint.getEndpointURI().toString()));
     }
     return space;
   }
