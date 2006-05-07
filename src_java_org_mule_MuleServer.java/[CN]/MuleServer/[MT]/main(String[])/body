@@ -19,24 +19,16 @@
   if (config == null) {
     Message message=new Message(Messages.CONFIG_NOT_FOUND_USAGE);
     logger.fatal(message.toString());
-    System.exit(0);
+    System.exit(1);
   }
-  configBuilderClassName=getOption("-configBuilderClassName",opts);
-  if (configBuilderClassName != null) {
+  String cfgBuilderClassName=getOption("-configBuilderClassName",opts);
+  if (cfgBuilderClassName != null) {
     try {
-      configBuilder=(ConfigurationBuilder)ClassHelper.loadClass(configBuilderClassName,MuleServer.class).newInstance();
+      setConfigBuilderClassName(cfgBuilderClassName);
     }
  catch (    Exception e) {
-      logger.fatal(new Message(Messages.FAILED_LOAD_X,"Builder: " + configBuilderClassName),e);
-    }
-  }
- else {
-    try {
-      configBuilder=new MuleXmlConfigurationBuilder();
-    }
- catch (    ConfigurationException e) {
-      logger.fatal(e.getMessage(),e);
-      System.exit(0);
+      logger.fatal(new Message(Messages.FAILED_LOAD_X,"Builder: " + cfgBuilderClassName),e);
+      System.exit(1);
     }
   }
   server.start(false);
