@@ -2,18 +2,16 @@
   logger.info("Mule Server starting...");
   if (System.getSecurityManager() == null) {
   }
-  if (StringUtils.isNotBlank(configBuilderClassName)) {
-    configBuilder=(ConfigurationBuilder)ClassHelper.loadClass(configBuilderClassName,MuleServer.class).newInstance();
-  }
-  if (!configBuilder.isConfigured()) {
+  Class cfgBuilderClass=ClassHelper.loadClass(getConfigBuilderClassName(),MuleServer.class);
+  ConfigurationBuilder cfgBuilder=(ConfigurationBuilder)cfgBuilderClass.newInstance();
+  if (!cfgBuilder.isConfigured()) {
     if (configurationResources != null) {
-      configBuilder.configure(configurationResources);
+      cfgBuilder.configure(configurationResources);
     }
  else {
       logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
-      configBuilder.configure(DEFAULT_CONFIGURATION);
+      cfgBuilder.configure(DEFAULT_CONFIGURATION);
     }
   }
   logger.info("Mule Server initialized.");
-  configBuilder=null;
 }
