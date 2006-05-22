@@ -3,9 +3,13 @@
     this.message=((Object[])message)[0];
     if (((Object[])message).length > 1) {
       Map props=(Map)((Object[])message)[1];
-      for (Iterator iterator=props.keySet().iterator(); iterator.hasNext(); ) {
-        Object o=iterator.next();
-        setProperty(o,props.get(o));
+      for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
+        Map.Entry e=(Map.Entry)iterator.next();
+        String key=(String)e.getKey();
+        Object value=e.getValue();
+        if (value != null) {
+          setProperty(key,value);
+        }
       }
     }
   }
@@ -19,7 +23,7 @@
  else {
     throw new MessageTypeNotSupportedException(message,getClass());
   }
-  String temp=(String)properties.get(HttpConnector.HTTP_VERSION_PROPERTY);
+  String temp=getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,null);
   if (HttpConstants.HTTP10.equalsIgnoreCase(temp)) {
     http11=false;
   }
