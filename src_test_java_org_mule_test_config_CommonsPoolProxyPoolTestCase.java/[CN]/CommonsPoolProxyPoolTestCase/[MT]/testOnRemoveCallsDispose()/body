@@ -1,0 +1,19 @@
+{
+  MuleDescriptor descriptor=getTestDescriptor("test","java.lang.Object");
+  CommonsPoolProxyFactory factory=new CommonsPoolProxyFactory(descriptor);
+  CommonsPoolProxyPool pool=new CommonsPoolProxyPool(descriptor,factory);
+  factory.setPool(pool);
+  Object obj=factory.makeObject();
+  factory.destroyObject(obj);
+  boolean exceptionWasThrown=false;
+  try {
+    ((MuleProxy)obj).dispose();
+  }
+ catch (  IllegalStateException isex) {
+    assertEquals("Component has already been disposed of",isex.getMessage());
+    exceptionWasThrown=true;
+  }
+  if (!exceptionWasThrown) {
+    fail("Expected exception has never been thrown. Was the component disposed before?");
+  }
+}

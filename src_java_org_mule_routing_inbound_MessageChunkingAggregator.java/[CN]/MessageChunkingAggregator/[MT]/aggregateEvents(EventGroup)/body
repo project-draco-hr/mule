@@ -1,0 +1,22 @@
+{
+  List eventList=IteratorUtils.toList(events.iterator(),events.size());
+  UMOEvent firstEvent=(UMOEvent)eventList.get(0);
+  Collections.sort(eventList,SequenceComparator.getInstance());
+  ByteArrayOutputStream baos=new ByteArrayOutputStream(4096);
+  try {
+    for (Iterator iterator=eventList.iterator(); iterator.hasNext(); ) {
+      UMOEvent event=(UMOEvent)iterator.next();
+      baos.write(event.getMessageAsBytes());
+    }
+    UMOMessage message=new MuleMessage(baos.toByteArray(),firstEvent.getMessage());
+    message.setCorrelationGroupSize(-1);
+    message.setCorrelationSequence(-1);
+    return message;
+  }
+ catch (  Exception e) {
+    throw new AggregationException(events,firstEvent.getEndpoint(),e);
+  }
+ finally {
+    IOUtils.closeQuietly(baos);
+  }
+}

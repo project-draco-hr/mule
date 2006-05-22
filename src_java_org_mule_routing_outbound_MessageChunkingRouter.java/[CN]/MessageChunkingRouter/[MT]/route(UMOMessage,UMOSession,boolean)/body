@@ -1,0 +1,43 @@
+{
+  if (chunkSize == 0 && numberOfMessages < 2) {
+    return super.route(message,session,synchronous);
+  }
+ else   if (chunkSize > 0) {
+    byte[] data=new byte[0];
+    try {
+      data=message.getPayloadAsBytes();
+    }
+ catch (    Exception e) {
+      throw new RoutingException(new Message(Messages.FAILED_TO_READ_PAYLOAD),message,getEndpoint(0,message),e);
+    }
+    int parts=data.length / chunkSize;
+    if ((parts * chunkSize) < data.length) {
+      parts++;
+    }
+    int len=chunkSize;
+    UMOMessage part=null;
+    int count=0;
+    int pos=0;
+    byte[] buffer=null;
+    try {
+      for (; count < parts; count++) {
+        if ((pos + len) > data.length) {
+          len=data.length - pos;
+        }
+        buffer=new byte[len];
+        System.arraycopy(data,pos,buffer,0,buffer.length);
+        pos+=len;
+        part=new MuleMessage(buffer,message);
+        part.setCorrelationId(message.getUniqueId());
+        part.setCorrelationGroupSize(parts);
+        part.setCorrelationSequence(count);
+        super.route(part,session,synchronous);
+      }
+    }
+ catch (    RoutingException e) {
+      e=new RoutingException(e.getI18nMessage(),e.getUmoMessage(),e.getEndpoint(),e.getCause());
+      throw e;
+    }
+  }
+  return message;
+}
