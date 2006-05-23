@@ -1,0 +1,57 @@
+{
+  Class clazz=null;
+  clazz=(Class)AccessController.doPrivileged(new PrivilegedAction(){
+    public Object run(){
+      try {
+        return Thread.currentThread().getContextClassLoader().loadClass(className);
+      }
+ catch (      ClassNotFoundException e) {
+        return null;
+      }
+    }
+  }
+);
+  if (clazz == null) {
+    clazz=(Class)AccessController.doPrivileged(new PrivilegedAction(){
+      public Object run(){
+        try {
+          return Class.forName(className);
+        }
+ catch (        ClassNotFoundException e) {
+          return null;
+        }
+      }
+    }
+);
+  }
+  if (clazz == null) {
+    clazz=(Class)AccessController.doPrivileged(new PrivilegedAction(){
+      public Object run(){
+        try {
+          return ClassUtils.class.getClassLoader().loadClass(className);
+        }
+ catch (        ClassNotFoundException e) {
+          return null;
+        }
+      }
+    }
+);
+  }
+  if (clazz == null) {
+    clazz=(Class)AccessController.doPrivileged(new PrivilegedAction(){
+      public Object run(){
+        try {
+          return callingClass.getClassLoader().loadClass(className);
+        }
+ catch (        ClassNotFoundException e) {
+          return null;
+        }
+      }
+    }
+);
+  }
+  if (clazz == null) {
+    throw new ClassNotFoundException(className);
+  }
+  return clazz;
+}
