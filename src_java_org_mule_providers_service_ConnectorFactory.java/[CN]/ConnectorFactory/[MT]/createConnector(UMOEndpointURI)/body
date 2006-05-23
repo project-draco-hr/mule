@@ -10,12 +10,12 @@
   }
   try {
     if (csd.getConnectorFactory() != null) {
-      ObjectFactory factory=(ObjectFactory)ClassHelper.loadClass(csd.getConnectorFactory(),ConnectorFactory.class).newInstance();
+      ObjectFactory factory=(ObjectFactory)ClassUtils.loadClass(csd.getConnectorFactory(),ConnectorFactory.class).newInstance();
       connector=(UMOConnector)factory.create();
     }
  else {
       if (csd.getConnector() != null) {
-        connector=(UMOConnector)ClassHelper.loadClass(csd.getConnector(),ConnectorFactory.class).newInstance();
+        connector=(UMOConnector)ClassUtils.loadClass(csd.getConnector(),ConnectorFactory.class).newInstance();
         if (connector instanceof AbstractServiceEnabledConnector) {
           ((AbstractServiceEnabledConnector)connector).initialiseFromUrl(url);
         }
@@ -35,10 +35,10 @@ catch (  Exception e) {
     connector.setName("_" + scheme + "Connector#"+ connector.hashCode());
   }
   Map props=new HashMap();
-  PropertiesHelper.getPropertiesWithPrefix(MuleManager.getInstance().getProperties(),connector.getProtocol().toLowerCase(),props);
+  PropertiesUtils.getPropertiesWithPrefix(MuleManager.getInstance().getProperties(),connector.getProtocol().toLowerCase(),props);
   if (props.size() > 0) {
-    props=PropertiesHelper.removeNamespaces(props);
-    org.mule.util.BeanUtils.populateWithoutFail(connector,props,true);
+    props=PropertiesUtils.removeNamespaces(props);
+    BeanUtils.populateWithoutFail(connector,props,true);
   }
   return connector;
 }
