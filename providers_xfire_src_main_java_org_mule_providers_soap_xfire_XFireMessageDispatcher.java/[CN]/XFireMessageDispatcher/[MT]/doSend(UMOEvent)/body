@@ -1,18 +1,24 @@
 {
-  if (client.getTimeout() != event.getTimeout()) {
+  Client client=null;
+  try {
+    client=(Client)clientPool.borrowObject();
     client.setTimeout(event.getTimeout());
+    client.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
+    Object[] response=client.invoke(getMethod(event),getArgs(event));
+    UMOMessage result=null;
+    if (response != null && response.length <= 1) {
+      if (response.length == 1) {
+        result=new MuleMessage(response[0],event.getMessage());
+      }
+    }
+ else {
+      result=new MuleMessage(response,event.getMessage());
+    }
+    return result;
   }
-  client.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
-  String method=getMethod(event);
-  Object[] response=client.invoke(method,getArgs(event));
-  UMOMessage result=null;
-  if (response != null && response.length <= 1) {
-    if (response.length == 1) {
-      result=new MuleMessage(response[0],event.getMessage());
+  finally {
+    if (client != null) {
+      clientPool.returnObject(client);
     }
   }
- else {
-    result=new MuleMessage(response,event.getMessage());
-  }
-  return result;
 }

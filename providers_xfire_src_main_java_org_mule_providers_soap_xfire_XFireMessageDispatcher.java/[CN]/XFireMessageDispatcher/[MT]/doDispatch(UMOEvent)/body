@@ -1,8 +1,14 @@
 {
-  if (client.getTimeout() != event.getTimeout()) {
+  Client client=null;
+  try {
+    client=(Client)clientPool.borrowObject();
     client.setTimeout(event.getTimeout());
+    client.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
+    client.invoke(getMethod(event),getArgs(event));
   }
-  client.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
-  String method=getMethod(event);
-  client.invoke(method,getArgs(event));
+  finally {
+    if (client != null) {
+      clientPool.returnObject(client);
+    }
+  }
 }

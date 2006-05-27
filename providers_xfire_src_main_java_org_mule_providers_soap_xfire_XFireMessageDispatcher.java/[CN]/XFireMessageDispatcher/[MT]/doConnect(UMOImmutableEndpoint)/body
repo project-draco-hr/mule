@@ -1,15 +1,29 @@
 {
-  if (client == null) {
-    String serviceName=getService(endpoint);
-    XFire xfire=connector.getXfire();
-    Service service=xfire.getServiceRegistry().getService(serviceName);
+  if (clientPool == null) {
+    final XFire xfire=connector.getXfire();
+    final String serviceName=getServiceName(endpoint);
+    final Service service=xfire.getServiceRegistry().getService(serviceName);
     if (service == null) {
       throw new FatalConnectException(new Message("xfire",8,serviceName),this);
     }
-    client=new Client(new MuleUniversalTransport(),service,endpoint.getEndpointURI().toString());
-    client.setXFire(xfire);
-    client.setEndpointUri(endpoint.getEndpointURI().toString());
-    client.addInHandler(new MuleHeadersInHandler());
-    client.addOutHandler(new MuleHeadersOutHandler());
+    try {
+      clientPool=new StackObjectPool(new BasePoolableObjectFactory(){
+        public Object makeObject() throws Exception {
+          Client client=new Client(new MuleUniversalTransport(),service,endpoint.getEndpointURI().toString());
+          client.setXFire(xfire);
+          client.setEndpointUri(endpoint.getEndpointURI().toString());
+          client.addInHandler(new MuleHeadersInHandler());
+          client.addOutHandler(new MuleHeadersOutHandler());
+          return client;
+        }
+      }
+);
+      clientPool.addObject();
+      clientPool.addObject();
+    }
+ catch (    Exception ex) {
+      disconnect();
+      throw ex;
+    }
   }
 }
