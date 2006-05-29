@@ -1,20 +1,26 @@
 {
   Object adaptor;
   Log.redirectTo(new CommonsLogger());
-  URI uri=new URI(jmxAdaptorUrl);
+  URI uri=new URI(StringUtils.stripToEmpty(jmxAdaptorUrl));
   adaptor=new HttpAdaptor(uri.getPort(),uri.getHost());
   XSLTProcessor processor=new XSLTProcessor();
-  if (xslFilePath != null) {
-    processor.setFile(xslFilePath);
+  if (StringUtils.isNotBlank(xslFilePath)) {
+    processor.setFile(xslFilePath.trim());
   }
-  if (pathInJar != null) {
-    processor.setPathInJar(pathInJar);
+  if (StringUtils.isNotBlank(pathInJar)) {
+    processor.setPathInJar(pathInJar.trim());
   }
   processor.setUseCache(cacheXsl);
-  ((HttpAdaptor)adaptor).setProcessor(processor);
+  final HttpAdaptor httpAdaptor=((HttpAdaptor)adaptor);
+  httpAdaptor.setProcessor(processor);
   if (login != null) {
-    ((HttpAdaptor)adaptor).addAuthorization(login,password);
-    ((HttpAdaptor)adaptor).setAuthenticationMethod(authenticationMethod);
+    httpAdaptor.addAuthorization(login,password);
+    httpAdaptor.setAuthenticationMethod(authenticationMethod);
+  }
+  if (socketFactoryProperties != null && !socketFactoryProperties.isEmpty()) {
+    SSLAdaptorServerSocketFactory factory=new SSLAdaptorServerSocketFactory();
+    BeanUtils.populateWithoutFail(factory,socketFactoryProperties,true);
+    httpAdaptor.setSocketFactory(factory);
   }
   return adaptor;
 }
