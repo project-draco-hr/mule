@@ -7,18 +7,7 @@
       throw new FatalConnectException(new Message("xfire",8,serviceName),this);
     }
     try {
-      clientPool=new StackObjectPool(new BasePoolableObjectFactory(){
-        public Object makeObject() throws Exception {
-          Client client=new Client(new MuleUniversalTransport(),service,endpoint.getEndpointURI().toString());
-          client.setXFire(xfire);
-          client.setEndpointUri(endpoint.getEndpointURI().toString());
-          client.addInHandler(new MuleHeadersInHandler());
-          client.addOutHandler(new MuleHeadersOutHandler());
-          return client;
-        }
-      }
-);
-      clientPool.addObject();
+      clientPool=new StackObjectPool(new XFireClientPoolFactory(endpoint,service,xfire));
       clientPool.addObject();
     }
  catch (    Exception ex) {
