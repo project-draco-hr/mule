@@ -1,0 +1,26 @@
+{
+  if (xslt != null) {
+    return new StreamSource(new StringReader(xslt));
+  }
+  if (xslFile == null) {
+    throw new InitialisationException(new Message(Messages.X_IS_NULL,"xslFile"),this);
+  }
+  File file=new File(xslFile);
+  StreamSource source;
+  if (file.exists()) {
+    source=new StreamSource(file);
+  }
+ else {
+    try {
+      InputStream stream=FileUtils.loadResource(xslFile,getClass());
+      if (stream == null) {
+        throw new InitialisationException(new Message(Messages.CANT_LOAD_X_FROM_CLASSPATH_FILE,xslFile),this);
+      }
+      source=new StreamSource(stream);
+    }
+ catch (    IOException e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,xslFile),e,this);
+    }
+  }
+  return source;
+}

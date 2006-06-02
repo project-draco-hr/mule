@@ -1,0 +1,21 @@
+{
+  InputStream is;
+  UMOMessage eventMsg=context.getMessage();
+  Object eventMsgPayload=eventMsg.getPayload();
+  if (eventMsgPayload instanceof InputStream) {
+    is=(InputStream)eventMsgPayload;
+  }
+ else   if (eventMsg.getAdapter() instanceof StreamMessageAdapter) {
+    StreamMessageAdapter sma=(StreamMessageAdapter)eventMsg.getAdapter();
+    if (sma.getInput() != null) {
+      is=sma.getInput();
+    }
+ else {
+      is=sma.getResponse();
+    }
+  }
+ else {
+    is=new ByteArrayInputStream(context.getTransformedMessageAsBytes());
+  }
+  return is;
+}

@@ -1,0 +1,19 @@
+{
+  initialiseComponent(null);
+  MuleManager.getInstance().start();
+  execSqlUpdate("INSERT INTO TEST(ID, TYPE, DATA, ACK, RESULT) VALUES (NULL, 1, '" + DEFAULT_MESSAGE + "', NULL, NULL)");
+  long t0=System.currentTimeMillis();
+  while (System.currentTimeMillis() - t0 < 20000) {
+    Object[] rs=execSqlQuery("SELECT COUNT(*) FROM TEST WHERE TYPE = 2");
+    assertNotNull(rs);
+    assertEquals(1,rs.length);
+    if (((Number)rs[0]).intValue() > 0) {
+      break;
+    }
+    Thread.sleep(100);
+  }
+  Object[] obj2=execSqlQuery("SELECT DATA FROM TEST WHERE TYPE = 2");
+  assertNotNull(obj2);
+  assertEquals(1,obj2.length);
+  assertEquals(DEFAULT_MESSAGE + " Received",obj2[0]);
+}

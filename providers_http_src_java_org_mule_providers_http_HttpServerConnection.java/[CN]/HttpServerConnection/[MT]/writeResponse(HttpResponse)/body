@@ -1,0 +1,31 @@
+{
+  if (response == null) {
+    return;
+  }
+  setKeepAlive(response.isKeepAlive());
+  ResponseWriter writer=new ResponseWriter(this.out,encoding);
+  OutputStream outstream=this.out;
+  writer.println(response.getStatusLine());
+  Iterator item=response.getHeaderIterator();
+  while (item.hasNext()) {
+    Header header=(Header)item.next();
+    writer.print(header.toExternalForm());
+  }
+  writer.println();
+  writer.flush();
+  InputStream content=response.getBody();
+  if (content != null) {
+    Header transferenc=response.getFirstHeader(HttpConstants.HEADER_TRANSFER_ENCODING);
+    if (transferenc != null) {
+      response.removeHeaders(HttpConstants.HEADER_CONTENT_LENGTH);
+      if (transferenc.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
+        outstream=new ChunkedOutputStream(outstream);
+      }
+    }
+    IOUtils.copy(content,outstream);
+    if (outstream instanceof ChunkedOutputStream) {
+      ((ChunkedOutputStream)outstream).finish();
+    }
+  }
+  outstream.flush();
+}

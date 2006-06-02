@@ -1,0 +1,86 @@
+{
+  ExtendedKeyStore clientPubRing=null;
+  ExtendedKeyStore clientPrivRing=null;
+  ExtendedKeyStore serverPubRing=null;
+  ExtendedKeyStore serverPrivRing=null;
+  try {
+    clientPubRing=(ExtendedKeyStore)ExtendedKeyStore.getInstance("OpenPGP/KeyRing");
+    clientPrivRing=(ExtendedKeyStore)ExtendedKeyStore.getInstance("OpenPGP/KeyRing");
+    serverPubRing=(ExtendedKeyStore)ExtendedKeyStore.getInstance("OpenPGP/KeyRing");
+    serverPrivRing=(ExtendedKeyStore)ExtendedKeyStore.getInstance("OpenPGP/KeyRing");
+  }
+ catch (  KeyStoreException kse) {
+    System.err.println("KeyStoreException on creating a keyring. " + "This means that the KeyStore implementation could not be " + "found and that there is potentially a problem with the "+ "provider");
+    kse.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    clientPubRing.load(null,null);
+    clientPrivRing.load(null,null);
+    serverPubRing.load(null,null);
+    serverPrivRing.load(null,null);
+  }
+ catch (  IOException ioe) {
+    System.err.println("KeyStoreException on keyring init. " + "There should be no way for this exception to turn up.");
+    ioe.printStackTrace();
+    System.exit(-1);
+  }
+catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("NoSuchAlgorithmException on keyring init. " + "There should be no way for this exception to turn up.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  CertificateException ce) {
+    System.err.println("CertificateException on keyring init. " + "There should be no way for this exception to turn up.");
+    ce.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    clientPubRing.setKeyBundleEntry(clientPublicKey);
+    clientPubRing.setKeyBundleEntry(serverPublicKey);
+    clientPrivRing.setKeyBundleEntry(clientPrivateKey);
+    serverPubRing.setKeyBundleEntry(clientPublicKey);
+    serverPubRing.setKeyBundleEntry(serverPublicKey);
+    serverPrivRing.setKeyBundleEntry(serverPrivateKey);
+  }
+ catch (  KeyStoreException kse) {
+    System.err.println("KeyStoreException on adding a key.");
+    kse.printStackTrace();
+    System.exit(-1);
+  }
+  FileOutputStream out;
+  try {
+    out=new FileOutputStream("clientPublic.gpg");
+    clientPubRing.store(out,null);
+    out.close();
+    out=new FileOutputStream("clientPrivate.gpg");
+    clientPrivRing.store(out,null);
+    out.close();
+    out=new FileOutputStream("serverPublic.gpg");
+    serverPubRing.store(out,null);
+    out.close();
+    out=new FileOutputStream("serverPrivate.gpg");
+    serverPrivRing.store(out,null);
+    out.close();
+  }
+ catch (  IOException ioe) {
+    System.err.println("IOException on writing a keyring.");
+    ioe.printStackTrace();
+    System.exit(-1);
+  }
+catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("NoSuchAlgorithmException on writing a keyring." + " Given that no encryption is used while writing the keystore, " + "this should not happen!");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  CertificateException ce) {
+    System.err.println("CertificateException on writing a keyring.");
+    ce.printStackTrace();
+    System.exit(-1);
+  }
+catch (  KeyStoreException kse) {
+    System.err.println("KeyStoreException on writing a keyring.");
+    kse.printStackTrace();
+    System.exit(-1);
+  }
+}

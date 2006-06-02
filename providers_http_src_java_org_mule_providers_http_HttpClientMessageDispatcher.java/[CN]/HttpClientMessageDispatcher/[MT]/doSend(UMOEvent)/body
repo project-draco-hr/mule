@@ -1,0 +1,45 @@
+{
+  HttpMethod httpMethod=getMethod(event);
+  httpMethod=execute(event,httpMethod,false);
+  try {
+    Properties h=new Properties();
+    Header[] headers=httpMethod.getResponseHeaders();
+    for (int i=0; i < headers.length; i++) {
+      h.setProperty(headers[i].getName(),headers[i].getValue());
+    }
+    String status=String.valueOf(httpMethod.getStatusCode());
+    h.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,status);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Http response is: " + status);
+    }
+    ExceptionPayload ep=null;
+    if (httpMethod.getStatusCode() >= 400) {
+      ep=new ExceptionPayload(new DispatchException(event.getMessage(),event.getEndpoint(),new Exception("Http call returned a status of: " + httpMethod.getStatusCode() + " "+ httpMethod.getStatusText())));
+    }
+    UMOMessage m;
+    Header header=httpMethod.getResponseHeader(HttpConstants.HEADER_CONTENT_TYPE);
+    if ((header != null) && event.isStreaming()) {
+      StreamMessageAdapter sp=(StreamMessageAdapter)event.getMessage().getAdapter();
+      sp.setResponse(httpMethod.getResponseBodyAsStream());
+      m=new MuleMessage(sp,h);
+    }
+ else {
+      Object body=IOUtils.toByteArray(httpMethod.getResponseBodyAsStream());
+      if (body == null) {
+        body=StringUtils.EMPTY;
+      }
+      UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{body,h});
+      m=new MuleMessage(adapter);
+    }
+    m.setExceptionPayload(ep);
+    return m;
+  }
+ catch (  Exception e) {
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+  }
+ finally {
+    if (httpMethod != null && !event.isStreaming()) {
+      httpMethod.releaseConnection();
+    }
+  }
+}

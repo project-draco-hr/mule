@@ -1,0 +1,43 @@
+{
+  if (sample == null) {
+    return;
+  }
+  Bundle bundle=Platform.getBundle(sample.getPluginId());
+  if (bundle == null) {
+    return;
+  }
+  String src=IPath.SEPARATOR + sample.getRoot() + IPath.SEPARATOR+ sample.getSourcePath();
+  String conf=IPath.SEPARATOR + sample.getRoot() + IPath.SEPARATOR+ sample.getConfigPath();
+  Enumeration srcs=bundle.findEntries(src,"*",true);
+  Enumeration confs=bundle.findEntries(conf,"*",true);
+  try {
+    IContainer sourceFolder=getSourceContainer(project);
+    if (srcs != null) {
+      while (srcs.hasMoreElements()) {
+        URL url=(URL)srcs.nextElement();
+        copyIntoProject(url,sourceFolder);
+      }
+    }
+  }
+ catch (  JavaModelException e) {
+    MuleCorePlugin.getDefault().logException("Unable to find a source folder.",e);
+  }
+  try {
+    IFolder configFolder=project.getProject().getFolder(CONFIG_FOLDER_NAME);
+    configFolder.create(true,true,new NullProgressMonitor());
+    Map configs=new HashMap();
+    if (confs != null) {
+      while (confs.hasMoreElements()) {
+        URL url=(URL)confs.nextElement();
+        IResource config=copyIntoProject(url,configFolder);
+        if (config != null) {
+          configs.put(config.getName(),config);
+        }
+      }
+    }
+    addConfigSets(sample,configs,project.getProject());
+  }
+ catch (  CoreException e) {
+    MuleCorePlugin.getDefault().logException("Unable to create config folder.",e);
+  }
+}

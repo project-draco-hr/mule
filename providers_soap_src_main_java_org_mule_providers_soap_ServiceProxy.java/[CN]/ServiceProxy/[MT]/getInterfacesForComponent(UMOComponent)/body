@@ -1,0 +1,20 @@
+{
+  Class[] interfaces;
+  List ifaces=(List)component.getDescriptor().getProperties().get("serviceInterfaces");
+  if (ifaces == null || ifaces.size() == 0) {
+    final Class implementationClass=component.getDescriptor().getImplementationClass();
+    final List intfList=ClassUtils.getAllInterfaces(implementationClass);
+    interfaces=(Class[])intfList.toArray(new Class[intfList.size()]);
+  }
+ else {
+    interfaces=new Class[ifaces.size()];
+    for (int i=0; i < ifaces.size(); i++) {
+      String iface=(String)ifaces.get(i);
+      interfaces[i]=ClassUtils.loadClass(iface,ServiceProxy.class);
+    }
+  }
+  interfaces=removeInterface(interfaces,Callable.class);
+  interfaces=removeInterface(interfaces,Disposable.class);
+  interfaces=removeInterface(interfaces,Initialisable.class);
+  return interfaces;
+}

@@ -1,0 +1,28 @@
+{
+  Object result=null;
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Message type received is: " + source.getClass().getName());
+    }
+    if (source instanceof BytesMessage) {
+      byte[] bytes=JmsMessageUtils.getBytesFromMessage(source);
+      CompressionStrategy strategy=CompressionHelper.getDefaultCompressionStrategy();
+      if (strategy.isCompressed(bytes)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Message received is compressed");
+        }
+        result=strategy.uncompressByteArray(bytes);
+      }
+ else {
+        result=JmsMessageUtils.getObjectForMessage(source);
+      }
+    }
+ else {
+      result=JmsMessageUtils.getObjectForMessage(source);
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+  return result;
+}

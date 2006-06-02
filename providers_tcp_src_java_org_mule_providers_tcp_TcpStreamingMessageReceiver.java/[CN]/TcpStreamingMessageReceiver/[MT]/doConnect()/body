@@ -1,0 +1,19 @@
+{
+  URI uri=endpoint.getEndpointURI().getUri();
+  String host=StringUtils.defaultIfEmpty(uri.getHost(),"localhost");
+  try {
+    logger.debug("Attempting to connect to server socket");
+    InetAddress inetAddress=InetAddress.getByName(host);
+    clientSocket=new Socket(inetAddress,uri.getPort());
+    TcpConnector connector=(TcpConnector)this.connector;
+    clientSocket.setReceiveBufferSize(connector.getBufferSize());
+    clientSocket.setSendBufferSize(connector.getBufferSize());
+    clientSocket.setSoTimeout(connector.getReceiveTimeout());
+    dataIn=new DataInputStream(new BufferedInputStream(clientSocket.getInputStream()));
+    logger.debug("Connected to server socket");
+  }
+ catch (  Exception e) {
+    logger.error(e);
+    throw new ConnectException(new Message("tcp",1,uri),e,this);
+  }
+}

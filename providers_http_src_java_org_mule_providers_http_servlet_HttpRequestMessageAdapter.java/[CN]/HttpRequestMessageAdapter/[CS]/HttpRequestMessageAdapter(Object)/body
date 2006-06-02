@@ -1,0 +1,38 @@
+{
+  if (message instanceof HttpServletRequest) {
+    setPayload((HttpServletRequest)message);
+    final Map parameterMap=request.getParameterMap();
+    if (parameterMap != null && parameterMap.size() > 0) {
+      for (Iterator iterator=parameterMap.entrySet().iterator(); iterator.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)iterator.next();
+        String key=(String)entry.getKey();
+        Object value=entry.getValue();
+        if (value != null) {
+          if (value.getClass().isArray() && ((Object[])value).length == 1) {
+            setProperty(key,((Object[])value)[0]);
+          }
+ else {
+            setProperty(key,value);
+          }
+        }
+      }
+    }
+    String key;
+    for (Enumeration e=request.getAttributeNames(); e.hasMoreElements(); ) {
+      key=(String)e.nextElement();
+      properties.put(key,request.getAttribute(key));
+    }
+    String realKey;
+    for (Enumeration e=request.getHeaderNames(); e.hasMoreElements(); ) {
+      key=(String)e.nextElement();
+      realKey=key;
+      if (key.startsWith(HttpConstants.X_PROPERTY_PREFIX)) {
+        realKey=key.substring(2);
+      }
+      setProperty(realKey,request.getHeader(key));
+    }
+  }
+ else {
+    throw new MessageTypeNotSupportedException(message,getClass());
+  }
+}

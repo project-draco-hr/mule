@@ -1,0 +1,18 @@
+{
+  if (connector.isQueueEvents()) {
+    QueueSession queueSession=connector.getQueueSession();
+    Queue queue=queueSession.getQueue(endpoint.getEndpointURI().getAddress());
+    try {
+      queue.put(event);
+    }
+ catch (    InterruptedException e) {
+      throw new MuleException(new Message(Messages.INTERRUPTED_QUEUING_EVENT_FOR_X,this.endpoint.getEndpointURI()),e);
+    }
+  }
+ else {
+    UMOMessage msg=new MuleMessage(event.getTransformedMessage(),event.getMessage());
+synchronized (lock) {
+      routeMessage(msg);
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  SecureRandom sr=new SecureRandom();
+  try {
+    KeyBundleFactory kbf=KeyBundleFactory.getInstance("OpenPGP");
+    clientPublicKey=(PGPKeyBundle)kbf.generateEmptyKeyBundle();
+    clientPrivateKey=(PGPKeyBundle)kbf.generateEmptyKeyBundle();
+  }
+ catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("Cannot find the OpenPGP KeyBundleFactory. " + "This usually means that the Cryptix OpenPGP provider is not " + "installed correctly.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  KeyBundleException kbe) {
+    System.err.println("Generating an empty KeyBundle failed.");
+    kbe.printStackTrace();
+    System.exit(-1);
+  }
+  KeyPairGenerator kpg=null;
+  try {
+    kpg=KeyPairGenerator.getInstance("OpenPGP/Signing/RSA");
+  }
+ catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("Cannot find the OpenPGP KeyPairGenerator. " + "This usually means that the Cryptix OpenPGP provider is not " + "installed correctly.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+  kpg.initialize(1024,sr);
+  KeyPair kp=kpg.generateKeyPair();
+  PublicKey pubkey=kp.getPublic();
+  PrivateKey privkey=kp.getPrivate();
+  Principal userid=null;
+  try {
+    PrincipalBuilder princbuilder=PrincipalBuilder.getInstance("OpenPGP/UserID");
+    userid=princbuilder.build("Mule client <mule_client@mule.com>");
+  }
+ catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("Cannot find the OpenPGP PrincipalBuilder. " + "This usually means that the Cryptix OpenPGP provider is not " + "installed correctly.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  PrincipalException pe) {
+    System.err.println("Generating the user id failed.");
+    pe.printStackTrace();
+    System.exit(-1);
+  }
+  Certificate cert=null;
+  try {
+    CertificateBuilder certbuilder=CertificateBuilder.getInstance("OpenPGP/Self");
+    cert=certbuilder.build(pubkey,userid,privkey,sr);
+  }
+ catch (  NoSuchAlgorithmException nsae) {
+    System.err.println("Cannot find the OpenPGP CertificateBuilder. " + "This usually means that the Cryptix OpenPGP provider is not " + "installed correctly.");
+    nsae.printStackTrace();
+    System.exit(-1);
+  }
+catch (  CertificateException ce) {
+    System.err.println("Generating the self certification sig failed.");
+    ce.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    clientPublicKey.addCertificate(cert);
+    clientPrivateKey.addCertificate(cert);
+  }
+ catch (  KeyBundleException kbe) {
+    System.err.println("Adding the self certificate to the keybundle failed.");
+    kbe.printStackTrace();
+    System.exit(-1);
+  }
+  try {
+    clientPrivateKey.addPrivateKey(privkey,pubkey,"TestingPassphrase".toCharArray(),sr);
+  }
+ catch (  KeyBundleException kbe) {
+    System.err.println("Adding the private key to the keybundle failed.");
+    kbe.printStackTrace();
+    System.exit(-1);
+  }
+}

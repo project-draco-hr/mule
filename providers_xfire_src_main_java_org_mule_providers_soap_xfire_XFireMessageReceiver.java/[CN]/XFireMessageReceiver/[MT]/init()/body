@@ -1,0 +1,29 @@
+{
+  try {
+    String namespace=XFireConnector.DEFAULT_MULE_NAMESPACE_URI;
+    Map props=new HashMap(component.getDescriptor().getProperties());
+    props.putAll(endpoint.getProperties());
+    if (props.size() == 0) {
+      props=null;
+    }
+ else {
+      rewriteProperty(props,"portType");
+      rewriteProperty(props,"style");
+      rewriteProperty(props,"use");
+      rewriteProperty(props,"createDefaultBindings");
+      rewriteProperty(props,"soap12Transports");
+      rewriteProperty(props,"soap11Transports");
+      rewriteProperty(props,"scope");
+      rewriteProperty(props,"schemas");
+    }
+    service=connector.getServiceFactory().create(component.getDescriptor().getImplementationClass(),component.getDescriptor().getName(),namespace,props);
+    boolean sync=endpoint.isSynchronous();
+    if (endpoint.getEndpointURI().getScheme().startsWith("http")) {
+      sync=true;
+    }
+    service.setInvoker(new MuleInvoker(this,sync));
+  }
+ catch (  UMOException e) {
+    throw new InitialisationException(e,this);
+  }
+}

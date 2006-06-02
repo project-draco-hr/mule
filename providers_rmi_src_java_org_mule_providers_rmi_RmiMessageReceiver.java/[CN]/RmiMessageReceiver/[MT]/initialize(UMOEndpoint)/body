@@ -1,0 +1,23 @@
+{
+  logger.debug("Initializing with endpoint " + endpoint);
+  String rmiPolicyPath=connector.getSecurityPolicy();
+  System.setProperty("java.security.policy",rmiPolicyPath);
+  UMOEndpointURI endpointUri=endpoint.getEndpointURI();
+  int port=endpointUri.getPort();
+  if (port < 1) {
+    port=RmiConnector.DEFAULT_RMI_REGISTRY_PORT;
+  }
+  try {
+    InetAddress inetAddress=InetAddress.getByName(endpointUri.getHost());
+    bindName=endpointUri.getPath();
+    remoteObject=getRmiObject();
+    Method theMethod=remoteObject.getClass().getMethod("setReceiver",new Class[]{RmiMessageReceiver.class});
+    theMethod.invoke(remoteObject,new Object[]{this});
+    jndi=connector.getJndiContext(inetAddress.getHostAddress() + ":" + port);
+    jndi.rebind(bindName,remoteObject);
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+  logger.debug("Initialized successfully");
+}

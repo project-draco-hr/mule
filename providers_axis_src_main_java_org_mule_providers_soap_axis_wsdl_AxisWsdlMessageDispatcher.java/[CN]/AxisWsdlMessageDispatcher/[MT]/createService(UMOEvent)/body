@@ -1,0 +1,29 @@
+{
+  String wsdlUrl=event.getEndpoint().getEndpointURI().getAddress();
+  Parser parser=new Parser();
+  if (event.getEndpoint().getEndpointURI().getUserInfo() != null) {
+    parser.setUsername(event.getEndpoint().getEndpointURI().getUsername());
+    parser.setPassword(event.getEndpoint().getEndpointURI().getPassword());
+  }
+  parser.run(wsdlUrl);
+  Map map=parser.getSymbolTable().getHashMap();
+  List entries=new ArrayList();
+  for (Iterator it=map.entrySet().iterator(); it.hasNext(); ) {
+    Map.Entry entry=(Map.Entry)it.next();
+    Vector v=(Vector)entry.getValue();
+    for (Iterator it2=v.iterator(); it2.hasNext(); ) {
+      SymTabEntry e=(SymTabEntry)it2.next();
+      if (ServiceEntry.class.isInstance(e)) {
+        entries.add(entry.getKey());
+      }
+    }
+  }
+  if (entries.size() != 1) {
+    throw new Exception("Need one and only one service entry, found " + entries.size());
+  }
+  Service service=new Service(parser,(QName)entries.get(0));
+  service.setEngineConfiguration(clientConfig);
+  service.setEngine(new AxisClient(clientConfig));
+  event.getMessage().setProperty(AxisConnector.METHOD_NAMESPACE_PROPERTY,parser.getCurrentDefinition().getTargetNamespace());
+  return service;
+}

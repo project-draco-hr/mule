@@ -1,0 +1,71 @@
+{
+  Object[] params=new Object[paramNames.size()];
+  for (int i=0; i < paramNames.size(); i++) {
+    String param=(String)paramNames.get(i);
+    String name=param.substring(2,param.length() - 1);
+    Object value=null;
+    boolean foundValue=false;
+    if ("NOW".equalsIgnoreCase(name)) {
+      value=new Timestamp(Calendar.getInstance().getTimeInMillis());
+      foundValue=true;
+    }
+ else     if (root instanceof org.w3c.dom.Document) {
+      org.w3c.dom.Document x3cDoc=(org.w3c.dom.Document)root;
+      org.dom4j.Document dom4jDoc=new DOMReader().read(x3cDoc);
+      try {
+        Node node=dom4jDoc.selectSingleNode(name);
+        if (node != null) {
+          value=node.getText();
+          foundValue=true;
+        }
+      }
+ catch (      Exception ignored) {
+      }
+    }
+ else     if (root instanceof org.dom4j.Document) {
+      org.dom4j.Document dom4jDoc=(org.dom4j.Document)root;
+      try {
+        Node node=dom4jDoc.selectSingleNode(name);
+        if (node != null) {
+          value=node.getText();
+          foundValue=true;
+        }
+      }
+ catch (      Exception ignored) {
+      }
+    }
+ else     if (root instanceof org.dom4j.Node) {
+      org.dom4j.Node dom4jNode=(org.dom4j.Node)root;
+      try {
+        Node node=dom4jNode.selectSingleNode(name);
+        if (node != null) {
+          value=node.getText();
+          foundValue=true;
+        }
+      }
+ catch (      Exception ignored) {
+      }
+    }
+ else {
+      try {
+        value=PropertyUtils.getProperty(root,name);
+        foundValue=(value != null);
+      }
+ catch (      Exception ignored) {
+      }
+    }
+    if (value == null) {
+      value=endpoint.getProperty(name);
+      foundValue=foundValue || endpoint.getProperties().containsKey(name);
+    }
+    if (name.equals("payload")) {
+      value=root;
+      foundValue=true;
+    }
+    if (value == null && !foundValue) {
+      throw new IllegalArgumentException("Can not retrieve argument " + name);
+    }
+    params[i]=value;
+  }
+  return params;
+}

@@ -1,0 +1,26 @@
+{
+  super.doInitialise();
+  try {
+    MuleManager.getInstance().registerListener(this);
+  }
+ catch (  NotificationException e) {
+    throw new InitialisationException(e,this);
+  }
+  if (xfire == null) {
+    xfire=new DefaultXFire();
+  }
+  if (serviceFactory == null) {
+    if (enableJSR181Annotations) {
+      serviceFactory=new AnnotationServiceFactory(new Jsr181WebAnnotations(),xfire.getTransportManager());
+    }
+ else {
+      serviceFactory=new MuleObjectServiceFactory(xfire.getTransportManager());
+    }
+  }
+  if (serviceFactory instanceof ObjectServiceFactory) {
+    ObjectServiceFactory osf=(ObjectServiceFactory)serviceFactory;
+    if (osf.getTransportManager() == null) {
+      osf.setTransportManager(xfire.getTransportManager());
+    }
+  }
+}

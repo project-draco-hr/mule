@@ -1,0 +1,29 @@
+{
+  HttpMethod httpMethod=new GetMethod(endpoint.getEndpointURI().getAddress());
+  httpMethod.setDoAuthentication(true);
+  if (endpoint.getEndpointURI().getUserInfo() != null && endpoint.getProperty(HttpConstants.HEADER_AUTHORIZATION) == null) {
+    StringBuffer header=new StringBuffer(128);
+    header.append("Basic ");
+    header.append(new String(Base64.encodeBase64(endpoint.getEndpointURI().getUserInfo().getBytes(endpoint.getEncoding()))));
+    httpMethod.addRequestHeader(HttpConstants.HEADER_AUTHORIZATION,header.toString());
+  }
+  try {
+    HttpClient client=new HttpClient();
+    client.executeMethod(httpMethod);
+    if (httpMethod.getStatusCode() == HttpStatus.SC_OK) {
+      return (UMOMessage)receiveTransformer.transform(httpMethod);
+    }
+ else {
+      throw new ReceiveException(new Message("http",3,httpMethod.getStatusLine().toString()),endpoint,timeout);
+    }
+  }
+ catch (  ReceiveException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new ReceiveException(endpoint,timeout,e);
+  }
+ finally {
+    httpMethod.releaseConnection();
+  }
+}

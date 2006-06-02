@@ -1,0 +1,108 @@
+{
+  UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  Object method=event.getMessage().getProperty(SoapConstants.SOAP_METHOD_PROPERTY);
+  if (method == null) {
+    throw new DispatchException(new org.mule.config.i18n.Message("soap",4),event.getMessage(),event.getEndpoint());
+  }
+ else   if (method instanceof SoapMethod) {
+    if (callParameters == null) {
+      callParameters=new HashMap();
+    }
+    callParameters.put(((SoapMethod)method).getName().getLocalPart(),method);
+  }
+  Call call=(Call)service.createCall();
+  String style=event.getMessage().getStringProperty("style",null);
+  String use=event.getMessage().getStringProperty("use",null);
+  if (style != null) {
+    Style s=Style.getStyle(style);
+    if (s == null) {
+      throw new IllegalArgumentException(new org.mule.config.i18n.Message(Messages.VALUE_X_IS_INVALID_FOR_X,style,"style").toString());
+    }
+ else {
+      call.setOperationStyle(s);
+    }
+  }
+  if (use != null) {
+    Use u=Use.getUse(use);
+    if (u == null) {
+      throw new IllegalArgumentException(new org.mule.config.i18n.Message(Messages.VALUE_X_IS_INVALID_FOR_X,use,"use").toString());
+    }
+ else {
+      call.setOperationUse(u);
+    }
+  }
+  BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
+  call.setTargetEndpointAddress(endpointUri.getAddress());
+  String methodNamespace=null;
+  if (method instanceof String) {
+    methodNamespace=(String)event.getMessage().getProperty(AxisConnector.METHOD_NAMESPACE_PROPERTY);
+    if (methodNamespace != null) {
+      call.setOperationName(new QName(methodNamespace,method.toString()));
+    }
+ else {
+      call.setOperationName(new QName(method.toString()));
+    }
+  }
+ else   if (method instanceof QName) {
+    call.setOperationName((QName)method);
+    method=((QName)method).getLocalPart();
+  }
+ else {
+    call.setOperationName(((SoapMethod)method).getName());
+  }
+  methodNamespace=call.getOperationName().getNamespaceURI();
+  call.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
+  call.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint());
+  call.setTimeout(new Integer(event.getTimeout()));
+  if (endpointUri.getUserInfo() != null) {
+    call.setUsername(endpointUri.getUsername());
+    call.setPassword(endpointUri.getPassword());
+  }
+  Map methodCalls=(Map)event.getMessage().getProperty("soapMethods");
+  if (methodCalls == null && !(method instanceof SoapMethod)) {
+    List params=new ArrayList();
+    for (int i=0; i < args.length; i++) {
+      if (args[i] == null) {
+        QName qname=call.getTypeMapping().getTypeQName(Object.class);
+        params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+      }
+ else       if (args[i] instanceof DataHandler[]) {
+        params.add("attachments;qname{DataHandler:http://xml.apache.org/xml-soap};in");
+      }
+ else       if (args[i] instanceof Map && connector.isTreatMapAsNamedParams()) {
+        for (Iterator iterator=((Map)args[i]).entrySet().iterator(); iterator.hasNext(); ) {
+          Map.Entry entry=(Map.Entry)iterator.next();
+          if (call.getTypeMapping().getTypeQName(entry.getValue().getClass()) != null) {
+            QName type=call.getTypeMapping().getTypeQName(entry.getValue().getClass());
+            params.add("qname{" + entry.getKey().toString() + (methodNamespace == null ? "" : ":" + methodNamespace)+ "};qname{"+ type.getPrefix()+ ":"+ type.getLocalPart()+ ":"+ type.getNamespaceURI()+ "};in");
+          }
+ else {
+            params.add("value" + i + ";qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+            params.add("qname{" + entry.getKey().toString() + (methodNamespace == null ? "" : ":" + methodNamespace)+ "};qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+          }
+        }
+      }
+ else       if (call.getTypeMapping().getTypeQName(args[i].getClass()) != null) {
+        QName qname=call.getTypeMapping().getTypeQName(args[i].getClass());
+        params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+      }
+ else {
+        params.add("value" + i + ";qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+      }
+    }
+    HashMap map=new HashMap();
+    map.put(method,params);
+    event.getMessage().setProperty("soapMethods",map);
+  }
+  setCallParams(call,event,call.getOperationName());
+  String soapAction=(String)event.getMessage().getProperty(AxisConnector.SOAP_ACTION_PROPERTY);
+  if (soapAction != null) {
+    soapAction=parseSoapAction(soapAction,call.getOperationName(),event);
+    call.setSOAPActionURI(soapAction);
+    call.setUseSOAPAction(Boolean.TRUE.booleanValue());
+  }
+ else {
+    call.setSOAPActionURI(endpointUri.getAddress());
+  }
+  return call;
+}

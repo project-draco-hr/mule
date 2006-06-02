@@ -1,0 +1,19 @@
+{
+  final Latch receiverLatch=new Latch();
+  final Latch tappedReceiverLatch=new Latch();
+  MuleManager.getInstance().registerListener(new FunctionalTestNotificationListener(){
+    public void onNotification(    UMOServerNotification notification){
+      if (notification.getResourceIdentifier().equals("Receiver")) {
+        receiverLatch.countDown();
+      }
+ else       if (notification.getResourceIdentifier().equals("TappedReceiver")) {
+        tappedReceiverLatch.countDown();
+      }
+    }
+  }
+);
+  MuleClient client=new MuleClient();
+  client.send("vm://inbound.channel","test",null);
+  assertTrue(receiverLatch.await(3L,TimeUnit.SECONDS));
+  assertTrue(tappedReceiverLatch.await(1L,TimeUnit.SECONDS));
+}

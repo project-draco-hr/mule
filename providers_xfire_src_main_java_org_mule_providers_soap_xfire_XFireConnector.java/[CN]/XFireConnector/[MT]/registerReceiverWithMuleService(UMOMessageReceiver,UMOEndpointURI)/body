@@ -1,0 +1,37 @@
+{
+  if (xfireDescriptor == null) {
+    xfireDescriptor=(MuleDescriptor)MuleManager.getInstance().getModel().getDescriptor(XFIRE_SERVICE_COMPONENT_NAME);
+    if (xfireDescriptor == null) {
+      xfireDescriptor=createxfireDescriptor();
+    }
+ else {
+      MuleManager.getInstance().getModel().unregisterComponent(xfireDescriptor);
+    }
+    if (xfireDescriptor.getProperties().get("xfire") == null) {
+      xfireDescriptor.getProperties().put("xfire",xfire);
+    }
+    xfireDescriptor.setContainerManaged(false);
+  }
+  String serviceName=receiver.getComponent().getDescriptor().getName();
+  String endpoint=receiver.getEndpointURI().getAddress();
+  String scheme=ep.getScheme().toLowerCase();
+  boolean sync=receiver.getEndpoint().isSynchronous();
+  if (scheme.equals("http") || scheme.equals("tcp")) {
+    sync=true;
+    receiver.getEndpoint().getProperties().put(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
+    receiver.getEndpoint().getProperties().put(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+    endpoint+="/" + serviceName;
+  }
+  UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
+  serviceEndpoint.setSynchronous(sync);
+  serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
+  serviceEndpoint.setTransformer(receiver.getEndpoint().getTransformer());
+  receiver.getEndpoint().setTransformer(null);
+  serviceEndpoint.setResponseTransformer(receiver.getEndpoint().getResponseTransformer());
+  receiver.getEndpoint().setResponseTransformer(null);
+  serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
+  receiver.getEndpoint().setFilter(null);
+  serviceEndpoint.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  receiver.getEndpoint().setSecurityFilter(null);
+  xfireDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
+}

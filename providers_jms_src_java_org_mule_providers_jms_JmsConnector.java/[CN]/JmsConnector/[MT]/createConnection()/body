@@ -1,0 +1,49 @@
+{
+  Connection connection;
+  if (connectionFactory == null) {
+    connectionFactory=createConnectionFactory();
+  }
+  if (connectionFactory != null && connectionFactory instanceof XAConnectionFactory) {
+    if (MuleManager.getInstance().getTransactionManager() != null) {
+      connectionFactory=new ConnectionFactoryWrapper(connectionFactory,MuleManager.getInstance().getTransactionManager());
+    }
+  }
+  if (username != null) {
+    connection=jmsSupport.createConnection(connectionFactory,username,password);
+  }
+ else {
+    connection=jmsSupport.createConnection(connectionFactory);
+  }
+  if (clientId != null) {
+    connection.setClientID(getClientId());
+  }
+  final ConnectionStrategy connectionStrategy=getConnectionStrategy();
+  if (recoverJmsConnections && connectionStrategy != null && connection != null) {
+    connection.setExceptionListener(new ExceptionListener(){
+      public void onException(      JMSException jmsException){
+        logger.debug("About to recycle myself due to remote JMS connection shutdown.");
+        final JmsConnector jmsConnector=JmsConnector.this;
+        try {
+          jmsConnector.stopConnector();
+          jmsConnector.initialised.set(false);
+        }
+ catch (        UMOException e) {
+          logger.warn(e.getMessage(),e);
+        }
+        try {
+          connectionStrategy.connect(jmsConnector);
+          jmsConnector.initialise();
+          jmsConnector.startConnector();
+        }
+ catch (        FatalConnectException fcex) {
+          logger.fatal("Failed to reconnect to JMS server. I'm giving up.");
+        }
+catch (        UMOException umoex) {
+          throw new UnhandledException("Failed to recover a connector.",umoex);
+        }
+      }
+    }
+);
+  }
+  return connection;
+}

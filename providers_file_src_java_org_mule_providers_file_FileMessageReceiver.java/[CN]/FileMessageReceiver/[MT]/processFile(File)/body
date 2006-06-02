@@ -1,0 +1,54 @@
+{
+  boolean checkFileAge=((FileConnector)connector).getCheckFileAge();
+  if (checkFileAge) {
+    long fileAge=((FileConnector)connector).getFileAge();
+    long lastMod=sourceFile.lastModified();
+    long now=(new java.util.Date()).getTime();
+    if ((now - lastMod) < fileAge) {
+      return;
+    }
+  }
+  File destinationFile=null;
+  String sourceFileOriginalName=sourceFile.getName();
+  UMOMessageAdapter msgAdapter=connector.getMessageAdapter(sourceFile);
+  msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+  if (moveDir != null) {
+    String destinationFileName=sourceFileOriginalName;
+    if (moveToPattern != null) {
+      destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(msgAdapter,moveToPattern);
+    }
+    destinationFile=new File(moveDir,destinationFileName);
+  }
+  boolean fileWasMoved=false;
+  try {
+    if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
+      throw new MuleException(new Message(Messages.FILE_X_DOES_NOT_EXIST,sourceFileOriginalName));
+    }
+    if (destinationFile != null) {
+      fileWasMoved=this.moveFile(sourceFile,destinationFile);
+      if (!fileWasMoved) {
+        throw new MuleException(new Message("file",4,sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
+      }
+      msgAdapter=connector.getMessageAdapter(destinationFile);
+      msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+    }
+    if (((FileConnector)connector).isAutoDelete()) {
+      if (destinationFile == null) {
+        if (!sourceFile.delete()) {
+          throw new MuleException(new Message("file",3,sourceFile.getAbsolutePath()));
+        }
+      }
+ else {
+      }
+    }
+    this.routeMessage(new MuleMessage(msgAdapter),endpoint.isSynchronous());
+  }
+ catch (  Exception e) {
+    boolean fileWasRolledBack=false;
+    if (fileWasMoved) {
+      fileWasRolledBack=this.rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
+    }
+    Exception ex=new RoutingException(new Message("file",2,sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new MuleMessage(msgAdapter),endpoint,e);
+    this.handleException(ex);
+  }
+}

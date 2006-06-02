@@ -1,0 +1,36 @@
+{
+  ByteArrayOutputStream baos=new ByteArrayOutputStream(BUFFER_SIZE);
+  byte[] buffer=new byte[BUFFER_SIZE];
+  int len=0;
+  try {
+    while ((len=is.read(buffer)) == 0) {
+    }
+  }
+ catch (  SocketException e) {
+    logger.debug("Socket exception occured: " + e.getMessage());
+    return null;
+  }
+catch (  SocketTimeoutException e) {
+    logger.debug("Socket timeout, returning null.");
+    return null;
+  }
+  if (len == -1) {
+    return null;
+  }
+ else {
+    do {
+      baos.write(buffer,0,len);
+      if (len < buffer.length) {
+        break;
+      }
+      int av=is.available();
+      if (av == 0) {
+        break;
+      }
+    }
+ while ((len=is.read(buffer)) > 0);
+    baos.flush();
+    baos.close();
+    return baos.toByteArray();
+  }
+}

@@ -1,0 +1,69 @@
+{
+  if (getProvider() == null) {
+    throw new NullPointerException("The security provider cannot be null");
+  }
+  if (getKeyStore() != null) {
+    if (getKeyPassword() == null) {
+      throw new NullPointerException("The Key password cannot be null");
+    }
+    if (getStorePassword() == null) {
+      throw new NullPointerException("The KeyStore password cannot be null");
+    }
+    if (getKeyManagerAlgorithm() == null) {
+      throw new NullPointerException("The Key Manager Algorithm cannot be null");
+    }
+    if (getKeyStoreType() == null) {
+      throw new NullPointerException("The KeyStore type cannot be null");
+    }
+  }
+  if (getKeyStore() != null) {
+    KeyStore keystore=null;
+    try {
+      Security.addProvider(getProvider());
+      keystore=KeyStore.getInstance(keyStoreType);
+      InputStream is=FileUtils.loadResource(getKeyStore(),getClass());
+      if (is == null) {
+        throw new FileNotFoundException("Failed to load keystore from classpath or local file: " + getKeyStore());
+      }
+      keystore.load(is,getKeyPassword().toCharArray());
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"KeyStore: " + getKeyStore()),e,this);
+    }
+    try {
+      keyManagerFactory=KeyManagerFactory.getInstance(getKeyManagerAlgorithm());
+      keyManagerFactory.init(keystore,getStorePassword().toCharArray());
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Key Manager (" + getKeyManagerAlgorithm() + ")"),e,this);
+    }
+  }
+  super.doInitialise();
+  if (protocolHandler != null) {
+    System.setProperty("java.protocol.handler.pkgs",protocolHandler);
+  }
+  if (clientKeyStore != null) {
+    try {
+      String clientPath=FileUtils.getResourcePath(clientKeyStore,getClass());
+      System.setProperty("javax.net.ssl.keyStore",clientPath);
+      System.setProperty("javax.net.ssl.keyStorePassword",clientKeyStorePassword);
+      logger.info("Set Client Key store: javax.net.ssl.keyStore=" + clientPath);
+    }
+ catch (    IOException e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Client KeyStore: " + clientKeyStore),e,this);
+    }
+  }
+  if (trustStore != null) {
+    System.setProperty("javax.net.ssl.trustStore",getTrustStore());
+    System.setProperty("javax.net.ssl.trustStorePassword",getTrustStorePassword());
+    logger.debug("Set Trust store: javax.net.ssl.trustStore=" + getTrustStore());
+  }
+ else   if (!isExplicitTrustStoreOnly()) {
+    logger.info("Defaulting trust store to client Key Store");
+    trustStore=getClientKeyStore();
+    trustStorePassword=getClientKeyStorePassword();
+    System.setProperty("javax.net.ssl.trustStore",getTrustStore());
+    System.setProperty("javax.net.ssl.trustStorePassword",getTrustStorePassword());
+    logger.debug("Set Trust store: javax.net.ssl.trustStore=" + getTrustStore());
+  }
+}

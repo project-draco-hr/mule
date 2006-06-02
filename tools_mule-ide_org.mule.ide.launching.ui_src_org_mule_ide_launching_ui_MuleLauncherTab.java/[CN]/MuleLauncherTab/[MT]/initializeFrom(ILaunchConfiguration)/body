@@ -1,0 +1,31 @@
+{
+  try {
+    refreshProjectList();
+    String projectName=config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,"");
+    if (projectName.length() > 0) {
+      IProject project=ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+      if ((project != null) && (project.isAccessible())) {
+        updateSelectedProject(project);
+        getProjectsTable().setSelection(new StructuredSelection(project));
+        String configSetId=config.getAttribute(IMuleLaunchConfigurationConstants.ATTR_MULE_CONFIG_SET_ID,"");
+        IMuleModel model=MuleCorePlugin.getDefault().getMuleModel(project);
+        if (configSetId.length() > 0) {
+          IMuleConfigSet configSet=model.getMuleConfigSet(configSetId);
+          if (configSet != null) {
+            updateSelectedConfigSet(configSet);
+            getConfigSetsTable().setSelection(new StructuredSelection(configSet));
+          }
+        }
+ else {
+          Iterator it=model.getMuleConfigSets().iterator();
+          if (it.hasNext()) {
+            getConfigSetsTable().setSelection(new StructuredSelection(it.next()));
+          }
+        }
+      }
+    }
+  }
+ catch (  CoreException e) {
+    MuleCorePlugin.getDefault().logException("Unable to initialize from launch config.",e);
+  }
+}

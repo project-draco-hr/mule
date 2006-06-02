@@ -1,0 +1,44 @@
+{
+  try {
+    if (versionControlled) {
+      updateClient.doUpdate(new File(dirObject.getName().getPath()),SVNRevision.HEAD,true);
+    }
+    if (dirObject.exists()) {
+      if (dirObject.getType() == FileType.FOLDER) {
+        FileObject[] files=null;
+        files=dirObject.findFiles(new FileSelector(){
+          public boolean includeFile(          FileSelectInfo fileInfo) throws java.lang.Exception {
+            if ((!fileInfo.getFile().isHidden()) && (fileInfo.getFile().getType() != FileType.FOLDER)) {
+              if (fileExtension.equals("*")) {
+                return true;
+              }
+ else {
+                return (fileInfo.getFile().getName().getPath().endsWith(fileExtension));
+              }
+            }
+ else {
+              return false;
+            }
+          }
+          public boolean traverseDescendents(          FileSelectInfo fileInfo) throws java.lang.Exception {
+            if (includeSubfolders) {
+              return (!fileInfo.getFile().isHidden());
+            }
+ else {
+              return ((!fileInfo.getFile().isHidden()) && fileInfo.getDepth() < 2);
+            }
+          }
+        }
+);
+        for (int i=0; i < files.length; i++) {
+          if (hasChanged(files[i])) {
+            processFile(files[i]);
+          }
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    connector.handleException(e);
+  }
+}

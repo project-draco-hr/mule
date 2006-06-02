@@ -1,0 +1,41 @@
+{
+  String str;
+  String readStmt;
+  if ((str=(String)endpoint.getProperty("sql")) != null) {
+    readStmt=str;
+  }
+ else {
+    readStmt=endpoint.getEndpointURI().getAddress();
+  }
+  String ackStmt;
+  if ((str=(String)endpoint.getProperty("ack")) != null) {
+    ackStmt=str;
+    if ((str=getQuery(endpoint,ackStmt)) != null) {
+      ackStmt=str;
+    }
+  }
+ else {
+    ackStmt=readStmt + ".ack";
+    if ((str=getQuery(endpoint,ackStmt)) != null) {
+      ackStmt=str;
+    }
+ else {
+      ackStmt=null;
+    }
+  }
+  if ((str=getQuery(endpoint,readStmt)) != null) {
+    readStmt=str;
+  }
+  if (readStmt == null) {
+    throw new IllegalArgumentException("Read statement should not be null");
+  }
+  if (!"select".equalsIgnoreCase(readStmt.substring(0,6))) {
+    throw new IllegalArgumentException("Read statement should be a select sql statement");
+  }
+  if (ackStmt != null) {
+    if (!"insert".equalsIgnoreCase(ackStmt.substring(0,6)) && !"update".equalsIgnoreCase(ackStmt.substring(0,6)) && !"delete".equalsIgnoreCase(ackStmt.substring(0,6))) {
+      throw new IllegalArgumentException("Ack statement should be an insert / update / delete sql statement");
+    }
+  }
+  return new String[]{readStmt,ackStmt};
+}

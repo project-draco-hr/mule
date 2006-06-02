@@ -1,0 +1,25 @@
+{
+  FTPClient client=null;
+  UMOEndpointURI uri=endpoint.getEndpointURI();
+  try {
+    client=connector.getFtp(uri);
+    connector.enterActiveOrPassiveMode(client,endpoint);
+    connector.setupFileType(client,endpoint);
+    if (!client.changeWorkingDirectory(endpoint.getEndpointURI().getPath())) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    if (!client.retrieveFile(file.getName(),baos)) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+    UMOMessage message=new MuleMessage(connector.getMessageAdapter(baos.toByteArray()));
+    message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,file.getName());
+    routeMessage(message);
+    if (!client.deleteFile(file.getName())) {
+      throw new IOException("Ftp error: " + client.getReplyCode());
+    }
+  }
+  finally {
+    connector.releaseFtp(uri,client);
+  }
+}

@@ -1,0 +1,24 @@
+{
+  MuleApplicationEvent event=new MuleApplicationEvent("Event from a spring bean","vm://testBean2");
+  TestSubscriptionEventBean bean2=(TestSubscriptionEventBean)context.getBean("testSubscribingEventBean2");
+  assertNotNull(bean2);
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
+      eventCount++;
+      if (eventCount == NUMBER_OF_MESSAGES) {
+synchronized (lock) {
+          lock.notifyAll();
+        }
+      }
+    }
+  }
+;
+  bean2.setEventCallback(callback);
+  for (int i=0; i < NUMBER_OF_MESSAGES; i++) {
+    context.publishEvent(event);
+  }
+synchronized (lock) {
+    lock.wait(5000);
+  }
+  assertEquals(NUMBER_OF_MESSAGES,eventCount);
+}

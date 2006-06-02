@@ -1,0 +1,16 @@
+{
+  Jms11Support jmsSupport=new Jms11Support(new JmsConnector(),null,false,false);
+  Mock mockQueue=new Mock(Queue.class);
+  Queue queue=(Queue)mockQueue.proxy();
+  String durableName="durableName";
+  boolean noLocal=true;
+  Mock mockSession=new Mock(Session.class);
+  try {
+    jmsSupport.createConsumer((Session)mockSession.proxy(),queue,null,noLocal,durableName,false);
+  }
+ catch (  JMSException jmsex) {
+    assertEquals("Wrong exception text.","A durable subscriber name was set but the destination was not a Topic",jmsex.getMessage());
+  }
+  mockQueue.verify();
+  mockSession.verify();
+}

@@ -1,0 +1,15 @@
+{
+  File s=store;
+  if (s == null) {
+    s=new File(MuleManager.getConfiguration().getWorkingDirectory() + File.separator + MuleConfiguration.DEFAULT_QUEUE_STORE);
+  }
+  s.mkdirs();
+  journal=new JournalImpl(s,8,LogFileManager.DEFAULT_LOGFILE_SIZE);
+  journal.setJournalEventListener(this);
+  marks=new ConcurrentHashMap();
+  pendingMarks=new TreeSet();
+  unusedMarks=new TreeSet();
+  marker=new Thread(this,"JournalPersistenceStrategy");
+  marker.setDaemon(true);
+  marker.start();
+}

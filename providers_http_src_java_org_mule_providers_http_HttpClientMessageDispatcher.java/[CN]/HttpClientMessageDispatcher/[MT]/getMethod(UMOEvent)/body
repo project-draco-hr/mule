@@ -1,0 +1,42 @@
+{
+  UMOMessage msg=event.getMessage();
+  String method=msg.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
+  URI uri=event.getEndpoint().getEndpointURI().getUri();
+  HttpMethod httpMethod;
+  Object body=event.getTransformedMessage();
+  if (body instanceof HttpMethod) {
+    httpMethod=(HttpMethod)body;
+  }
+ else   if (HttpConstants.METHOD_GET.equalsIgnoreCase(method)) {
+    httpMethod=new GetMethod(uri.toString());
+  }
+ else {
+    PostMethod postMethod=new PostMethod(uri.toString());
+    if (body instanceof String) {
+      ObjectToHttpClientMethodRequest trans=new ObjectToHttpClientMethodRequest();
+      httpMethod=(HttpMethod)trans.transform(body.toString());
+    }
+ else     if (body instanceof HttpMethod) {
+      httpMethod=(HttpMethod)body;
+    }
+ else     if (body instanceof StreamMessageAdapter) {
+      postMethod.setRequestEntity(new StreamPayloadRequestEntity((StreamMessageAdapter)body,event));
+      postMethod.setContentChunked(true);
+      httpMethod=postMethod;
+    }
+ else {
+      byte[] buffer=event.getTransformedMessageAsBytes();
+      postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer,event.getEncoding()));
+      httpMethod=postMethod;
+    }
+  }
+  httpMethod.setDoAuthentication(true);
+  if (event.getCredentials() != null) {
+    String authScopeHost=msg.getStringProperty("http.auth.scope.host",null);
+    int authScopePort=msg.getIntProperty("http.auth.scope.port",-1);
+    String authScopeRealm=msg.getStringProperty("http.auth.scope.realm",null);
+    String authScopeScheme=msg.getStringProperty("http.auth.scope.scheme",null);
+    client.getState().setCredentials(new AuthScope(authScopeHost,authScopePort,authScopeRealm,authScopeScheme),new UsernamePasswordCredentials(event.getCredentials().getUsername(),new String(event.getCredentials().getPassword())));
+  }
+  return httpMethod;
+}

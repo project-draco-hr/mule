@@ -1,0 +1,29 @@
+{
+  this.isQueue=isQueue;
+  try {
+    FileInputStream fis=new FileInputStream(new File(jndiProps));
+    Properties p=new Properties();
+    p.load(fis);
+    fis.close();
+    String cnnFactoryName=p.getProperty("connectionFactoryJNDIName");
+    if (cnnFactoryName == null) {
+      throw new Exception("You must set the property connectionFactoryJNDIName in the JNDI property file");
+    }
+    Context ctx=new InitialContext(p);
+    if (isQueue) {
+      QueueConnectionFactory qcf=(QueueConnectionFactory)ctx.lookup(cnnFactoryName);
+      cnn=qcf.createQueueConnection();
+      session=((QueueConnection)cnn).createQueueSession(false,QueueSession.AUTO_ACKNOWLEDGE);
+    }
+ else {
+      TopicConnectionFactory tcf=(TopicConnectionFactory)ctx.lookup(cnnFactoryName);
+      cnn=tcf.createTopicConnection();
+      session=((TopicConnection)cnn).createTopicSession(false,0);
+    }
+    cnn.start();
+  }
+ catch (  Exception e) {
+    logger.error("Initialisation failed: " + e,e);
+    System.exit(0);
+  }
+}

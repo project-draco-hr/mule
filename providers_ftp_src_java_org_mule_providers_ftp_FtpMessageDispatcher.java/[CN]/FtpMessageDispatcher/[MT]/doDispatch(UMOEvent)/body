@@ -1,0 +1,21 @@
+{
+  FTPClient client=null;
+  UMOEndpointURI uri=event.getEndpoint().getEndpointURI();
+  try {
+    byte[] buf;
+    Object data=event.getTransformedMessage();
+    if (data instanceof byte[]) {
+      buf=(byte[])data;
+    }
+ else {
+      buf=data.toString().getBytes();
+    }
+    FtpOutputStreamWrapper out=(FtpOutputStreamWrapper)getOutputStream(event.getEndpoint(),event.getMessage());
+    client=out.getFtpClient();
+    IOUtils.write(buf,out);
+    out.close();
+  }
+  finally {
+    connector.releaseFtp(uri,client);
+  }
+}

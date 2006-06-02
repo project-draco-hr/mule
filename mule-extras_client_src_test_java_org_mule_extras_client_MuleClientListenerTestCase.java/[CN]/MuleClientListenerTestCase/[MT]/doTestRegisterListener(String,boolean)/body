@@ -1,0 +1,33 @@
+{
+  MuleClient client=new MuleClient();
+  client.getConfiguration().setSynchronous(true);
+  client.getConfiguration().setRemoteSync(true);
+  if (!canSendWithoutReceiver) {
+    try {
+      client.send(urlString,"Test Client Send message",null);
+      fail("There is no receiver for this endpointUri");
+    }
+ catch (    Exception e) {
+      assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+    }
+  }
+  TestReceiver receiver=new TestReceiver();
+  MuleEndpointURI url=new MuleEndpointURI(urlString);
+  String name="myComponent";
+  client.registerComponent(receiver,name,url);
+  assertTrue(MuleManager.getInstance().getModel().isComponentRegistered(name));
+  UMOMessage message=client.send(urlString,"Test Client Send message",null);
+  assertNotNull(message);
+  assertEquals("Received: Test Client Send message",message.getPayloadAsString());
+  client.unregisterComponent(name);
+  assertTrue(!MuleManager.getInstance().getModel().isComponentRegistered(name));
+  if (!canSendWithoutReceiver) {
+    try {
+      message=client.send(urlString,"Test Client Send message",null);
+      fail("There is no receiver for this endpointUri");
+    }
+ catch (    Exception e) {
+      assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+    }
+  }
+}

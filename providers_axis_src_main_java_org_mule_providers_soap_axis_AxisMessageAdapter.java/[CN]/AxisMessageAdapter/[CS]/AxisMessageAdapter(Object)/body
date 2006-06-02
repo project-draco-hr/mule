@@ -1,0 +1,36 @@
+{
+  this.payload=message;
+  try {
+    MessageContext ctx=MessageContext.getCurrentContext();
+    if (ctx != null) {
+      MuleSoapHeaders header=new MuleSoapHeaders(ctx.getMessage().getSOAPPart().getEnvelope().getHeader());
+      if (StringUtils.isNotBlank(header.getReplyTo())) {
+        setReplyTo(header.getReplyTo());
+      }
+      if (StringUtils.isNotBlank(header.getCorrelationGroup())) {
+        setCorrelationGroupSize(Integer.parseInt(header.getCorrelationGroup()));
+      }
+      if (StringUtils.isNotBlank(header.getCorrelationSequence())) {
+        setCorrelationSequence(Integer.parseInt(header.getCorrelationSequence()));
+      }
+      if (StringUtils.isNotBlank(header.getCorrelationId())) {
+        setCorrelationId(header.getCorrelationId());
+      }
+      this.message=ctx.getMessage();
+      int x=1;
+      try {
+        for (Iterator i=this.message.getAttachments(); i.hasNext(); x++) {
+          super.addAttachment(String.valueOf(x),((AttachmentPart)i.next()).getActivationDataHandler());
+        }
+      }
+ catch (      Exception e) {
+        logger.fatal("Failed to read attachments",e);
+      }
+    }
+ else {
+    }
+  }
+ catch (  SOAPException e) {
+    throw new MessagingException(new Message("soap",5),message,e);
+  }
+}

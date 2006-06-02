@@ -1,0 +1,27 @@
+{
+  QuickConfigurationBuilder builder=new QuickConfigurationBuilder(true);
+  builder.setModel(config.getModel());
+  ThreadingProfile tp=new ThreadingProfile(config.getConnectorThreads(),config.getConnectorThreads(),-1,(byte)2,null,null);
+  MuleManager.getConfiguration().setMessageReceiverThreadingProfile(tp);
+  MuleManager.getConfiguration().setMessageDispatcherThreadingProfile(tp);
+  UMOManager manager=builder.createStartedManager(config.isSynchronous(),"");
+  manager.stop();
+  if (config.getEndpointsArray().length > 1) {
+    int j=1;
+    String in;
+    String out;
+    String[] endpoints=config.getEndpointsArray();
+    for (int i=0; i < endpoints.length - 1; i++) {
+      in=endpoints[i];
+      if ((i + 1) <= endpoints.length) {
+        out=endpoints[i + 1];
+      }
+ else {
+        break;
+      }
+      MuleDescriptor d=createDescriptor("benchmark" + j,in,out);
+      builder.registerComponent(d);
+      j++;
+    }
+  }
+}

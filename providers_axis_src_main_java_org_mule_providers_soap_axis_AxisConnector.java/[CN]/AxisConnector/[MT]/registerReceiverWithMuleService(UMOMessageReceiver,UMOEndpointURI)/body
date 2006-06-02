@@ -1,0 +1,46 @@
+{
+  if (axisDescriptor == null) {
+    axisDescriptor=(MuleDescriptor)MuleManager.getInstance().getModel().getDescriptor(AXIS_SERVICE_COMPONENT_NAME);
+    if (axisDescriptor == null) {
+      axisDescriptor=createAxisDescriptor();
+    }
+ else {
+      MuleManager.getInstance().getModel().unregisterComponent(axisDescriptor);
+    }
+    if (axisDescriptor.getProperties().get("axisServer") == null) {
+      axisDescriptor.getProperties().put("axisServer",axisServer);
+    }
+    axisDescriptor.setContainerManaged(false);
+  }
+  String serviceName=receiver.getComponent().getDescriptor().getName();
+  String endpoint=null;
+  String scheme=ep.getScheme().toLowerCase();
+  if (scheme.equals("jms") || scheme.equals("vm")) {
+    endpoint=ep.toString();
+  }
+ else {
+    endpoint=receiver.getEndpointURI().getAddress() + "/" + serviceName;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Modified endpoint with " + scheme + " scheme to "+ endpoint);
+  }
+  boolean sync=receiver.getEndpoint().isSynchronous();
+  if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")) {
+    if (!receiver.getEndpoint().isSynchronousSet()) {
+      sync=true;
+    }
+  }
+  UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
+  serviceEndpoint.setSynchronous(sync);
+  serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
+  serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
+  receiver.getEndpoint().setFilter(null);
+  serviceEndpoint.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  receiver.getEndpoint().setSecurityFilter(null);
+  if (receiver.getEndpoint().getTransformer() != null) {
+    serviceEndpoint.setTransformer(receiver.getEndpoint().getTransformer());
+    receiver.getEndpoint().setTransformer(null);
+  }
+  serviceEndpoint.getProperties().putAll(receiver.getEndpoint().getProperties());
+  axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
+}

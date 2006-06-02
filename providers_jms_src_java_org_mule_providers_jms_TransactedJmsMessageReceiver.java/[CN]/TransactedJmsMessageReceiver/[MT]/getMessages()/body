@@ -1,0 +1,48 @@
+{
+  JmsThreadContext ctx=context.getContext();
+  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+  if (tx != null) {
+    tx.bindResource(connector.getConnection(),ctx.session);
+  }
+  Message message=null;
+  try {
+    message=ctx.consumer.receive(frequency);
+  }
+ catch (  JMSException e) {
+    if (!this.isConnected()) {
+    }
+ else {
+      throw e;
+    }
+  }
+  if (message == null) {
+    if (tx != null) {
+      tx.setRollbackOnly();
+    }
+    return null;
+  }
+  message=connector.preProcessMessage(message,ctx.session);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Message received it is of type: " + message.getClass().getName());
+    if (message.getJMSDestination() != null) {
+      logger.debug("Message received on " + message.getJMSDestination() + " ("+ message.getJMSDestination().getClass().getName()+ ")");
+    }
+ else {
+      logger.debug("Message received on unknown destination");
+    }
+    logger.debug("Message CorrelationId is: " + message.getJMSCorrelationID());
+    logger.debug("Jms Message Id is: " + message.getJMSMessageID());
+  }
+  if (message.getJMSRedelivered()) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Message with correlationId: " + message.getJMSCorrelationID() + " is redelivered. handing off to Exception Handler");
+    }
+    redeliveryHandler.handleRedelivery(message);
+  }
+  if (tx instanceof JmsClientAcknowledgeTransaction) {
+    tx.bindResource(message,null);
+  }
+  UMOMessageAdapter adapter=connector.getMessageAdapter(message);
+  routeMessage(new MuleMessage(adapter));
+  return null;
+}

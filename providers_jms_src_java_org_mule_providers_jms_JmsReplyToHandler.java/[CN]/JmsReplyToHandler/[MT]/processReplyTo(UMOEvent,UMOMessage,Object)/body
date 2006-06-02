@@ -1,0 +1,63 @@
+{
+  Destination replyToDestination=null;
+  MessageProducer replyToProducer=null;
+  Session session=null;
+  try {
+    if (replyTo instanceof Destination) {
+      replyToDestination=(Destination)replyTo;
+    }
+    if (replyToDestination == null) {
+      super.processReplyTo(event,returnMessage,replyTo);
+      return;
+    }
+    Object payload=returnMessage.getPayload();
+    if (getTransformer() != null) {
+      getTransformer().setEndpoint(getEndpoint(event,"jms://temporary"));
+      if (getTransformer().isSourceTypeSupported(payload.getClass())) {
+        payload=getTransformer().transform(payload);
+      }
+ else       if (logger.isDebugEnabled()) {
+        logger.debug("transformer for replyTo Handler: " + getTransformer().toString() + " does not support source type: "+ payload.getClass()+ ". Not doing a transform");
+      }
+    }
+    boolean topic=replyToDestination instanceof Topic;
+    session=connector.getSession(false,topic);
+    Message replyToMessage=JmsMessageUtils.getMessageForObject(payload,session);
+    replyToMessage.setJMSReplyTo(null);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Sending jms reply to: " + replyToDestination + "("+ replyToDestination.getClass().getName()+ ")");
+    }
+    replyToProducer=connector.getJmsSupport().createProducer(session,replyToDestination,topic);
+    UMOMessage eventMsg=event.getMessage();
+    String ttlString=(String)eventMsg.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
+    String priorityString=(String)eventMsg.removeProperty(JmsConstants.PRIORITY_PROPERTY);
+    String persistentDeliveryString=(String)eventMsg.removeProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY);
+    if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
+      connector.getJmsSupport().send(replyToProducer,replyToMessage,topic);
+    }
+ else {
+      long ttl=Message.DEFAULT_TIME_TO_LIVE;
+      int priority=Message.DEFAULT_PRIORITY;
+      boolean persistent=Message.DEFAULT_DELIVERY_MODE == DeliveryMode.PERSISTENT;
+      if (ttlString != null) {
+        ttl=Long.parseLong(ttlString);
+      }
+      if (priorityString != null) {
+        priority=Integer.parseInt(priorityString);
+      }
+      if (persistentDeliveryString != null) {
+        persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
+      }
+      connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl,topic);
+    }
+    logger.info("Reply Message sent to: " + replyToDestination);
+    ((AbstractComponent)event.getComponent()).getStatistics().incSentReplyToEvent();
+  }
+ catch (  Exception e) {
+    throw new DispatchException(new org.mule.config.i18n.Message("jms",8,ObjectUtils.toString(replyToDestination,"null")),returnMessage,null,e);
+  }
+ finally {
+    connector.closeQuietly(replyToProducer);
+    connector.closeQuietly(session);
+  }
+}

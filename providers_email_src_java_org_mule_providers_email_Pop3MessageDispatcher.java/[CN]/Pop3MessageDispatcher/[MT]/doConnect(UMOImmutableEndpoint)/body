@@ -1,0 +1,22 @@
+{
+  if (folder == null || !folder.isOpen()) {
+    String inbox=(String)endpoint.getProperty("folder");
+    if (inbox == null || endpoint.getProtocol().toLowerCase().startsWith("pop3")) {
+      inbox=Pop3Connector.MAILBOX;
+    }
+    URLName url=new URLName(endpoint.getEndpointURI().getScheme(),endpoint.getEndpointURI().getHost(),endpoint.getEndpointURI().getPort(),inbox,endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
+    session=MailUtils.createMailSession(url,connector);
+    session.setDebug(logger.isDebugEnabled());
+    Store store=session.getStore(url);
+    store.connect(endpoint.getEndpointURI().getHost(),endpoint.getEndpointURI().getPort(),endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
+    folder=store.getFolder(inbox);
+    if (!folder.isOpen()) {
+      try {
+        folder.open(Folder.READ_WRITE);
+      }
+ catch (      MessagingException e) {
+        logger.warn("Failed to open folder: " + folder.getFullName(),e);
+      }
+    }
+  }
+}

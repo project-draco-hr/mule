@@ -1,0 +1,57 @@
+{
+  HttpResponse response=new HttpResponse();
+  UMOMessage msg=context.getMessage();
+  int status=msg.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_OK);
+  String version=msg.getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+  String date=format.format(new Date());
+  String contentType=msg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,HttpConstants.DEFAULT_CONTENT_TYPE);
+  response.setStatusLine(HttpVersion.parse(version),status);
+  response.setHeader(new Header(HttpConstants.HEADER_CONTENT_TYPE,contentType));
+  response.setHeader(new Header(HttpConstants.HEADER_DATE,date));
+  response.setHeader(new Header(HttpConstants.HEADER_SERVER,server));
+  if (msg.getProperty(HttpConstants.HEADER_EXPIRES) == null) {
+    response.setHeader(new Header(HttpConstants.HEADER_EXPIRES,date));
+  }
+  response.setFallbackCharset(encoding);
+  Collection headerNames=HttpConstants.RESPONSE_HEADER_NAMES.values();
+  String headerName, value;
+  for (Iterator iterator=headerNames.iterator(); iterator.hasNext(); ) {
+    headerName=(String)iterator.next();
+    value=msg.getStringProperty(headerName,null);
+    if (value != null) {
+      response.setHeader(new Header(headerName,value));
+    }
+  }
+  Map customHeaders=(Map)msg.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
+  if (customHeaders != null) {
+    Map.Entry entry;
+    for (Iterator iterator=customHeaders.entrySet().iterator(); iterator.hasNext(); ) {
+      entry=(Map.Entry)iterator.next();
+      if (entry.getValue() != null) {
+        response.setHeader(new Header(entry.getKey().toString(),entry.getValue().toString()));
+      }
+    }
+  }
+  String user=msg.getStringProperty(MuleProperties.MULE_USER_PROPERTY,null);
+  if (user != null) {
+    response.setHeader(new Header(CUSTOM_HEADER_PREFIX + MuleProperties.MULE_USER_PROPERTY,user));
+  }
+  if (msg.getCorrelationId() != null) {
+    response.setHeader(new Header(CUSTOM_HEADER_PREFIX + MuleProperties.MULE_CORRELATION_ID_PROPERTY,msg.getCorrelationId()));
+    response.setHeader(new Header(CUSTOM_HEADER_PREFIX + MuleProperties.MULE_CORRELATION_GROUP_SIZE_PROPERTY,String.valueOf(msg.getCorrelationGroupSize())));
+    response.setHeader(new Header(CUSTOM_HEADER_PREFIX + MuleProperties.MULE_CORRELATION_SEQUENCE_PROPERTY,String.valueOf(msg.getCorrelationSequence())));
+  }
+  if (msg.getReplyTo() != null) {
+    response.setHeader(new Header(CUSTOM_HEADER_PREFIX + MuleProperties.MULE_REPLY_TO_PROPERTY,msg.getReplyTo().toString()));
+  }
+  if (src instanceof InputStream) {
+    response.setBody((InputStream)src);
+  }
+ else   if (src instanceof String) {
+    response.setBodyString(src.toString());
+  }
+ else {
+    response.setBody(new ByteArrayInputStream((byte[])serializableToByteArray.doTransform(src,encoding)));
+  }
+  return response;
+}

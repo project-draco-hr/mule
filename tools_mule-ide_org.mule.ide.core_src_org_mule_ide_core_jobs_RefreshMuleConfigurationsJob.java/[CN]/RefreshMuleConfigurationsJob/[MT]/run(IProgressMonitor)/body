@@ -1,0 +1,28 @@
+{
+  MultiStatus status=MuleCorePlugin.getDefault().createMultiStatus("Errors loading Mule configuration files.");
+  int numConfigs=model.getMuleConfigurations().size();
+  Iterator it=model.getMuleConfigurations().iterator();
+  monitor.beginTask("Refreshing Mule configuration files...",numConfigs);
+  while (it.hasNext()) {
+    IMuleConfiguration config=(IMuleConfiguration)it.next();
+    try {
+      if (this.reloadAll) {
+        IStatus refreshResult=config.refresh();
+        if (!refreshResult.isOK()) {
+          status.add(refreshResult);
+        }
+      }
+ else {
+        config.getConfigDocument();
+      }
+    }
+ catch (    MuleModelException e) {
+      status.add(e.getStatus());
+    }
+    monitor.worked(1);
+  }
+  if (!status.isOK()) {
+    MuleCorePlugin.getDefault().getLog().log(status);
+  }
+  return Status.OK_STATUS;
+}

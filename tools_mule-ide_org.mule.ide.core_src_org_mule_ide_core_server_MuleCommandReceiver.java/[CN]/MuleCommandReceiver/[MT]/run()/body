@@ -1,0 +1,26 @@
+{
+  try {
+    ServerSocket commandSocket=new ServerSocket(getPort());
+    LOGGER.info("Mule server controller listening for commands on port '" + getPort() + "'.");
+    while (true) {
+      Socket incoming=commandSocket.accept();
+      ObjectInputStream input=new ObjectInputStream(incoming.getInputStream());
+      try {
+        Object commandObj=input.readObject();
+        if (commandObj instanceof MuleCommand) {
+          MuleCommand command=(MuleCommand)commandObj;
+          fireCommand(command);
+        }
+ else {
+          LOGGER.error("Command received was not a MuleCommand.");
+        }
+      }
+ catch (      ClassNotFoundException e) {
+        LOGGER.error("Class not found for command.",e);
+      }
+    }
+  }
+ catch (  IOException e) {
+    LOGGER.error("Unable to start IDE command listener socket.",e);
+  }
+}

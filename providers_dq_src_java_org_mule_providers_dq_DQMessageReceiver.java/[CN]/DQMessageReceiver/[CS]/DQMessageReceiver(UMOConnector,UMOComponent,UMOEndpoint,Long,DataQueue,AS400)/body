@@ -1,0 +1,19 @@
+{
+  super(connector,component,endpoint,frequency);
+  this.dataQueue=pDq;
+  String recordDescriptor=(String)endpoint.getEndpointURI().getParams().get(DQConnector.RECORD_DESCRIPTOR_PROPERTY);
+  if (recordDescriptor == null) {
+    format=((DQConnector)connector).getFormat();
+    if (format == null) {
+      throw new InitialisationException(new Message("dq",1),this);
+    }
+  }
+ else {
+    try {
+      format=DQMessageUtils.getRecordFormat(recordDescriptor,pAs400);
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"recordDescriptor: " + recordDescriptor),e,this);
+    }
+  }
+}

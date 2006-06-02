@@ -1,0 +1,15 @@
+{
+  ObjectName adminName=(ObjectName)this.server.getAttribute(new ObjectName("fivesight.pxe:mod=PXE"),"DomainAdminMBean");
+  DomainAdminMBean _domainAdminMBean=(DomainAdminMBean)resolveJmx(adminName,DomainAdminMBean.class);
+  SystemDescriptor desc=sdb.getDescriptor();
+  ObjectName systemName=_domainAdminMBean.getSystem(desc.getName());
+  SystemAdminMBean system=(SystemAdminMBean)resolveJmx(systemName,SystemAdminMBean.class);
+  if (systemName != null && system != null) {
+    logger.info("System '" + desc.getName() + "' already exist.  Undeploying...");
+    system.undeploy();
+  }
+  systemName=_domainAdminMBean.deploySystemBundle(sdb);
+  system=(SystemAdminMBean)resolveJmx(systemName,SystemAdminMBean.class);
+  system.enable();
+  logger.info("System " + sdb.getDescriptor().getName() + " successfully deployed.");
+}

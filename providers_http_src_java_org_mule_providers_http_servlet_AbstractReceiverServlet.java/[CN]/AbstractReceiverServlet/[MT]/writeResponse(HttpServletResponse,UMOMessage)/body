@@ -1,0 +1,34 @@
+{
+  if (message == null) {
+    servletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    if (feedback) {
+      servletResponse.setStatus(HttpServletResponse.SC_OK);
+      servletResponse.getWriter().write("Action was processed successfully. There was no result");
+    }
+  }
+ else {
+    HttpResponse httpResponse;
+    if (message.getAdapter() instanceof WriterMessageAdapter) {
+      WriterMessageAdapter adapter=(WriterMessageAdapter)message.getAdapter();
+      httpResponse=new HttpResponse();
+      httpResponse.setBodyString(adapter.getPayloadAsString());
+    }
+ else {
+      httpResponse=(HttpResponse)message.getPayload();
+    }
+    String contentType=httpResponse.getFirstHeader(HttpConstants.HEADER_CONTENT_TYPE).getValue();
+    if (contentType == null) {
+      contentType=defaultContentType;
+    }
+    if (!contentType.startsWith("text")) {
+      servletResponse.setContentType(contentType);
+      servletResponse.getOutputStream().write(httpResponse.getBodyBytes());
+    }
+ else {
+      servletResponse.setContentType(contentType);
+      servletResponse.getWriter().write(httpResponse.getBodyString());
+    }
+    servletResponse.setStatus(HttpServletResponse.SC_OK);
+  }
+  servletResponse.flushBuffer();
+}

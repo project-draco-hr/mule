@@ -1,0 +1,34 @@
+{
+  try {
+    if (applicationContext.containsBean(EVENT_MULTICASTER_DESCRIPTOR_NAME)) {
+      descriptor=(UMODescriptor)applicationContext.getBean(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+    }
+    if (applicationContext.containsBean("muleManager")) {
+      registerMulticasterDescriptor();
+      return;
+    }
+    UMOManager manager=MuleManager.getInstance();
+    Map map=applicationContext.getBeansOfType(MuleConfiguration.class);
+    if (map != null && map.size() > 0) {
+      MuleManager.setConfiguration((MuleConfiguration)map.values().iterator().next());
+    }
+    if (!manager.isStarted()) {
+      MuleManager.getConfiguration().setSynchronous(!asynchronous);
+      registerEndpointMappings();
+    }
+    SpringContainerContext containerContext=new SpringContainerContext();
+    containerContext.setBeanFactory(applicationContext);
+    manager.setContainerContext(null);
+    manager.setContainerContext(containerContext);
+    registerConnectors();
+    registerTransformers();
+    registerGlobalEndpoints();
+    registerMulticasterDescriptor();
+    if (!manager.isStarted()) {
+      manager.start();
+    }
+  }
+ catch (  UMOException e) {
+    throw new MuleRuntimeException(new Message("spring",1),e);
+  }
+}

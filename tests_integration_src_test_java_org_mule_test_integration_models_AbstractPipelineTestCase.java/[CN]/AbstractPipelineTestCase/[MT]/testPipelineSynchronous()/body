@@ -1,0 +1,22 @@
+{
+  QuickConfigurationBuilder builder=new QuickConfigurationBuilder(true);
+  builder.createStartedManager(true,"",getModelType());
+  configureModel(builder.getManager().getModel());
+  builder.registerComponent(EchoComponent.class.getName(),"component1","vm://component1","vm://component2",null);
+  builder.registerComponent(EchoComponent.class.getName(),"component2","vm://component2","vm://component3",null);
+  Map props=new HashMap();
+  props.put("data","request received by component 3");
+  builder.registerComponent(StaticComponent.class.getName(),"component3","vm://component3",null,props);
+  MuleClient client=new MuleClient();
+  List results=new ArrayList();
+  for (int i=0; i < getNumberOfMessages(); i++) {
+    UMOMessage result=client.send("vm://component1","test",null);
+    assertNotNull(result);
+    results.add(result);
+  }
+  assertEquals(results.size(),getNumberOfMessages());
+  for (Iterator iterator=results.iterator(); iterator.hasNext(); ) {
+    UMOMessage umoMessage=(UMOMessage)iterator.next();
+    assertEquals("request received by component 3",umoMessage.getPayloadAsString());
+  }
+}

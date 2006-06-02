@@ -1,0 +1,94 @@
+{
+  try {
+    do {
+      conn.setKeepAlive(false);
+      HttpRequest request=conn.readRequest();
+      if (request == null) {
+        break;
+      }
+      Map headers=new HashMap();
+      for (Iterator rhi=request.getHeaderIterator(); rhi.hasNext(); ) {
+        Header header=(Header)rhi.next();
+        String headerName=header.getName();
+        Object headerValue=header.getValue();
+        if (headerName.startsWith("X-MULE")) {
+          headerName=headerName.substring(2);
+        }
+ else         if (headerName.equals(HttpConnector.HTTP_COOKIES_PROPERTY)) {
+          if (enableCookies) {
+            Cookie[] cookies=CookieHelper.parseCookies(header,cookieSpec);
+            if (cookies.length > 0) {
+              headerValue=cookies;
+            }
+ else {
+              continue;
+            }
+          }
+ else {
+            continue;
+          }
+        }
+        headers.put(headerName,headerValue);
+      }
+      RequestLine reqLine=request.getRequestLine();
+      headers.put(HttpConnector.HTTP_METHOD_PROPERTY,reqLine.getMethod());
+      headers.put(HttpConnector.HTTP_REQUEST_PROPERTY,reqLine.getUri());
+      headers.put(HttpConnector.HTTP_VERSION_PROPERTY,reqLine.getHttpVersion().toString());
+      headers.put(HttpConnector.HTTP_COOKIE_SPEC_PROPERTY,cookieSpec);
+      UMOMessageAdapter adapter;
+      Object body=null;
+      if (endpoint.isStreaming() && request.getBody() != null) {
+        adapter=new StreamMessageAdapter(request.getBody(),conn.getOutputStream());
+        for (Iterator iterator=headers.entrySet().iterator(); iterator.hasNext(); ) {
+          Map.Entry entry=(Map.Entry)iterator.next();
+          adapter.setProperty((String)entry.getKey(),entry.getValue());
+        }
+      }
+ else {
+        body=request.getBodyBytes();
+        if (body == null) {
+          body=reqLine.getUri();
+        }
+        adapter=connector.getMessageAdapter(new Object[]{body,headers});
+      }
+      UMOMessage message=new MuleMessage(adapter);
+      if (logger.isDebugEnabled()) {
+        logger.debug(message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
+      }
+      AbstractMessageReceiver receiver=getTargetReceiver(message,endpoint);
+      HttpResponse response=null;
+      if (receiver != null) {
+        UMOMessage returnMessage=receiver.routeMessage(message,endpoint.isSynchronous(),null);
+        Object tempResponse=returnMessage.getPayload();
+        if (tempResponse instanceof HttpResponse) {
+          response=(HttpResponse)tempResponse;
+        }
+ else {
+          response=(HttpResponse)connector.getDefaultResponseTransformer().transform(tempResponse);
+        }
+        response.disableKeepAlive(!((HttpConnector)connector).isKeepAlive());
+      }
+ else {
+        UMOEndpointURI uri=endpoint.getEndpointURI();
+        String failedPath=uri.getScheme() + "://" + uri.getHost()+ ":"+ uri.getPort()+ getRequestPath(message);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Failed to bind to " + failedPath);
+        }
+        response=new HttpResponse();
+        response.setStatusLine(reqLine.getHttpVersion(),HttpConstants.SC_NOT_FOUND);
+        response.setBodyString(new Message(Messages.CANNOT_BIND_TO_ADDRESS_X,failedPath).toString());
+        RequestContext.setEvent(new MuleEvent(new MuleMessage(response),endpoint,new MuleSession(component),true));
+        response=(HttpResponse)connector.getDefaultResponseTransformer().transform(response);
+      }
+      conn.writeResponse(response);
+    }
+ while (conn.isKeepAlive());
+  }
+ catch (  Exception e) {
+    handleException(e);
+  }
+ finally {
+    conn.close();
+    conn=null;
+  }
+}

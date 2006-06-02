@@ -1,0 +1,28 @@
+{
+  UMOEndpoint endpoint=descriptor.getInboundEndpoint();
+  if (endpoint != null) {
+    if (endpoint.getTransformer() != null) {
+      if (endpoint.getTransformer().isSourceTypeSupported(payload.getClass())) {
+        return endpoint;
+      }
+ else {
+        endpoint=new MuleEndpoint(endpoint);
+        endpoint.setTransformer(null);
+        return endpoint;
+      }
+    }
+ else {
+      return endpoint;
+    }
+  }
+ else {
+    UMOConnector connector=null;
+    UMOEndpointURI defaultEndpointUri=new MuleEndpointURI("vm://localhost/mule.client");
+    connector=ConnectorFactory.createConnector(defaultEndpointUri);
+    manager.registerConnector(connector);
+    connector.startConnector();
+    endpoint=new MuleEndpoint("muleClientProvider",defaultEndpointUri,connector,null,UMOEndpoint.ENDPOINT_TYPE_RECEIVER,0,null,null);
+  }
+  manager.registerEndpoint(endpoint);
+  return endpoint;
+}

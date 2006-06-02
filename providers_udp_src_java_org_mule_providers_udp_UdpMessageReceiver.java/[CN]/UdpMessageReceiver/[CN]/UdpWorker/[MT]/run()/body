@@ -1,0 +1,32 @@
+{
+  UMOMessage returnMessage=null;
+  try {
+    UMOMessageAdapter adapter=connector.getMessageAdapter(packet);
+    returnMessage=routeMessage(new MuleMessage(adapter),endpoint.isSynchronous());
+    if (returnMessage != null) {
+      byte[] data;
+      if (responseTransformer != null) {
+        Object response=responseTransformer.transform(returnMessage.getPayload());
+        if (response instanceof byte[]) {
+          data=(byte[])response;
+        }
+ else {
+          data=response.toString().getBytes();
+        }
+      }
+ else {
+        data=returnMessage.getPayloadAsBytes();
+      }
+      DatagramPacket result=new DatagramPacket(data,data.length,packet.getAddress(),packet.getPort());
+      socket.send(result);
+    }
+  }
+ catch (  Exception e) {
+    if (!disposing.get()) {
+      handleException(e);
+    }
+  }
+ finally {
+    dispose();
+  }
+}

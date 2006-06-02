@@ -1,0 +1,27 @@
+{
+  try {
+    if (requireNewSession || getEndpoint() != null) {
+      UMOMessageDispatcher dispatcher=getEndpoint().getConnector().getDispatcher(getEndpoint());
+      session=(Session)dispatcher.getDelegateSession();
+      requireNewSession=session == null;
+    }
+    Message msg=null;
+    if (src instanceof Message) {
+      msg=(Message)src;
+      msg.clearProperties();
+    }
+ else {
+      msg=JmsMessageUtils.getMessageForObject(src,session);
+    }
+    UMOEventContext ctx=RequestContext.getEventContext();
+    if (ctx == null) {
+      logger.warn("There is no current event context");
+      return msg;
+    }
+    setJmsProperties(ctx.getMessage(),msg);
+    return msg;
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

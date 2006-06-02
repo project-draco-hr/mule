@@ -1,0 +1,40 @@
+{
+  UMOMessage message=event.getMessage();
+  String userId=(String)getCredentialsAccessor().getCredentials(event);
+  byte[] creds=null;
+  try {
+    creds=message.getPayloadAsBytes();
+    creds=strategy.decrypt(creds,null);
+  }
+ catch (  Exception e1) {
+    throw new UnauthorisedException(new org.mule.config.i18n.Message(Messages.FAILED_TO_READ_PAYLOAD),event.getMessage(),e1);
+  }
+  UMOAuthentication authResult;
+  UMOAuthentication umoAuthentication;
+  try {
+    umoAuthentication=new PGPAuthentication(userId,decodeMsgRaw(creds));
+  }
+ catch (  Exception e1) {
+    throw new UnauthorisedException(new org.mule.config.i18n.Message(Messages.FAILED_TO_READ_PAYLOAD),event.getMessage(),e1);
+  }
+  try {
+    authResult=getSecurityManager().authenticate(umoAuthentication);
+  }
+ catch (  Exception e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Authentication request for user: " + userId + " failed: "+ e.toString());
+    }
+    throw new UnauthorisedException(new org.mule.config.i18n.Message(Messages.AUTH_FAILED_FOR_USER_X,userId),event.getMessage(),e);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Authentication success: " + authResult.toString());
+  }
+  UMOSecurityContext context=getSecurityManager().createSecurityContext(authResult);
+  event.getSession().setSecurityContext(context);
+  try {
+    RequestContext.rewriteEvent(new MuleMessage(getUnencryptedMessageWithoutSignature((PGPAuthentication)authResult)));
+  }
+ catch (  Exception e2) {
+    throw new UnauthorisedException(event.getMessage(),context,event.getEndpoint(),this);
+  }
+}

@@ -1,0 +1,28 @@
+{
+  Connection con=null;
+  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+  try {
+    con=this.connector.getConnection();
+    if (this.ackStmt != null) {
+      Object[] ackParams=JdbcUtils.getParams(endpoint,this.ackParams,message);
+      int nbRows=connector.createQueryRunner().update(con,this.ackStmt,ackParams);
+      if (nbRows != 1) {
+        logger.warn("Row count for ack should be 1 and not " + nbRows);
+      }
+    }
+    UMOMessageAdapter msgAdapter=this.connector.getMessageAdapter(message);
+    UMOMessage umoMessage=new MuleMessage(msgAdapter);
+    routeMessage(umoMessage,tx,tx != null || endpoint.isSynchronous());
+  }
+ catch (  Exception ex) {
+    if (tx != null) {
+      tx.setRollbackOnly();
+    }
+    throw ex;
+  }
+ finally {
+    if (MuleManager.getInstance().getTransactionManager() != null || tx == null) {
+      JdbcUtils.close(con);
+    }
+  }
+}

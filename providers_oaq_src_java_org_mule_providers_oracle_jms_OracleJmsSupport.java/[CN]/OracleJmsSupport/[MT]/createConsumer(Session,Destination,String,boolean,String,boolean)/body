@@ -1,0 +1,27 @@
+{
+  Object payloadFactory=getPayloadFactory();
+  if (payloadFactory == null) {
+    return super.createConsumer(session,destination,messageSelector,noLocal,durableName,topic);
+  }
+ else {
+    if (topic && session instanceof TopicSession) {
+      if (durableName == null) {
+        return ((AQjmsSession)session).createSubscriber((Topic)destination,messageSelector,noLocal);
+      }
+ else {
+        return ((AQjmsSession)session).createDurableSubscriber((Topic)destination,messageSelector,durableName,noLocal,payloadFactory);
+      }
+    }
+ else     if (session instanceof QueueSession) {
+      if (messageSelector != null) {
+        return ((AQjmsSession)session).createReceiver((Queue)destination,messageSelector,payloadFactory);
+      }
+ else {
+        return ((AQjmsSession)session).createReceiver((Queue)destination,payloadFactory);
+      }
+    }
+ else {
+      throw new IllegalArgumentException("Session and domain type do not match");
+    }
+  }
+}

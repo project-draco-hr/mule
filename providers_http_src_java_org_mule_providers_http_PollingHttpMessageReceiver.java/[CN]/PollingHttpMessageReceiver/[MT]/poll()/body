@@ -1,0 +1,40 @@
+{
+  HttpURLConnection connection=(HttpURLConnection)pollUrl.openConnection();
+  int len=0;
+  int bytesWritten=0;
+  int contentLength=connection.getContentLength();
+  boolean contentLengthNotSet=false;
+  if (contentLength < 0) {
+    contentLength=defaultBufferSize;
+    contentLengthNotSet=true;
+  }
+  byte[] buffer=new byte[contentLength];
+  ByteArrayOutputStream baos=new ByteArrayOutputStream(contentLength);
+  InputStream is=connection.getInputStream();
+  while (bytesWritten != contentLength) {
+    len=is.read(buffer);
+    if (len != -1) {
+      baos.write(buffer,0,len);
+      bytesWritten+=len;
+    }
+ else {
+      if (contentLengthNotSet) {
+        contentLength=bytesWritten;
+      }
+    }
+  }
+  buffer=baos.toByteArray();
+  baos.close();
+  Map respHeaders=new HashMap();
+  Iterator it=connection.getHeaderFields().entrySet().iterator();
+  while (it.hasNext()) {
+    Map.Entry msgHeader=(Map.Entry)it.next();
+    if (msgHeader.getValue() != null) {
+      respHeaders.put(msgHeader.getKey(),((List)msgHeader.getValue()).get(0));
+    }
+  }
+  UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{buffer,respHeaders});
+  connection.disconnect();
+  UMOMessage message=new MuleMessage(adapter);
+  routeMessage(message,endpoint.isSynchronous());
+}

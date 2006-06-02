@@ -1,0 +1,20 @@
+{
+  SslConnector cnn=null;
+  ServerSocketFactory ssf=null;
+  cnn=(SslConnector)connector;
+  SSLContext sslc=SSLContext.getInstance(cnn.getProtocol().toLowerCase());
+  sslc.init(cnn.getKeyManagerFactory().getKeyManagers(),null,null);
+  ssf=sslc.getServerSocketFactory();
+  String host=StringUtils.defaultIfEmpty(uri.getHost(),"localhost");
+  int backlog=cnn.getBacklog();
+  SSLServerSocket serverSocket=null;
+  InetAddress inetAddress=InetAddress.getByName(host);
+  if (inetAddress.equals(InetAddress.getLocalHost()) || inetAddress.isLoopbackAddress() || host.trim().equals("localhost")) {
+    serverSocket=(SSLServerSocket)ssf.createServerSocket(uri.getPort(),backlog);
+  }
+ else {
+    serverSocket=(SSLServerSocket)ssf.createServerSocket(uri.getPort(),backlog,inetAddress);
+  }
+  serverSocket.setNeedClientAuth(cnn.isRequireClientAuthentication());
+  return serverSocket;
+}

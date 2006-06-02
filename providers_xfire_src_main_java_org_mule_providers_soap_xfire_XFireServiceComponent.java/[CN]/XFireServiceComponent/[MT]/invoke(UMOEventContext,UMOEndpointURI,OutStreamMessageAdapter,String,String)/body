@@ -1,0 +1,56 @@
+{
+  MessageContext context=new MessageContext();
+  context.setXFire(xfire);
+  XFireMuleSession session=new XFireMuleSession(eventContext.getSession());
+  context.setSession(session);
+  context.setService(getService(service));
+  OperationInfo op=context.getService().getServiceInfo().getOperation(methodName);
+  if (op == null) {
+    throw new NoSuchMethodException(methodName);
+  }
+  context.setExchange(new MessageExchange(context));
+  context.getExchange().setOperation(op);
+  Channel channel;
+  String uri=endpointURI.toString();
+  try {
+    channel=transport.createChannel(uri);
+  }
+ catch (  Exception e) {
+    logger.debug("Couldn't open channel.",e);
+    throw new MessagingException(new Message("xfire",7,uri),eventContext.getMessage(),e);
+  }
+  UMOMessage eventMsg=eventContext.getMessage();
+  String encoding=eventMsg.getStringProperty(HttpConstants.HEADER_CONTENT_ENCODING,MuleManager.getConfiguration().getEncoding());
+  String contentType=eventMsg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
+  if (contentType == null) {
+    contentType=DEFAULT_CONTENT_TYPE + "; charset=" + encoding;
+    logger.warn("Content-Type not set on request, defaulting to: " + contentType);
+  }
+ else   if (contentType.indexOf("charset=") == -1) {
+    contentType+="; charset=" + encoding;
+  }
+  if (contentType.toLowerCase().indexOf("multipart/related") != -1) {
+    try {
+      Attachments atts=new JavaMailAttachments(getMessageStream(eventContext),contentType);
+      XMLStreamReader reader=STAXUtils.createXMLStreamReader(atts.getSoapMessage().getDataHandler().getInputStream(),encoding,context);
+      InMessage message=new InMessage(reader,uri);
+      message.setProperty(SoapConstants.SOAP_ACTION,eventMsg.getStringProperty(SoapConstants.SOAP_ACTION,StringUtils.EMPTY));
+      message.setAttachments(atts);
+      context.getExchange().setInMessage(message);
+      context.setCurrentMessage(message);
+      context.setProperty(Channel.BACKCHANNEL_URI,response.getStream());
+      channel.receive(context,message);
+    }
+ catch (    javax.mail.MessagingException e) {
+      throw new XFireRuntimeException("Couldn't parse request message.",e);
+    }
+  }
+ else {
+    XMLStreamReader reader=STAXUtils.createXMLStreamReader(getMessageStream(eventContext),encoding,context);
+    InMessage message=new InMessage(reader,uri);
+    context.getExchange().setInMessage(message);
+    context.setCurrentMessage(message);
+    context.setProperty(Channel.BACKCHANNEL_URI,response.getStream());
+    channel.receive(context,message);
+  }
+}

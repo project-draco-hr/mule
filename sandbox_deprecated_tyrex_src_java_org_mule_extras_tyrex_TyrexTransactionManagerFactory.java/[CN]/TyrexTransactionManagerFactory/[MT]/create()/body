@@ -1,0 +1,22 @@
+{
+  if (domainConfig != null) {
+    domain=TransactionDomain.createDomain(domainConfig);
+  }
+ else {
+    DomainConfig config=new DomainConfig();
+    config.setName(name);
+    config.setMaximum(maximumTransactions);
+    config.setTimeout(timeout);
+    domain=new TransactionDomainImpl(config);
+  }
+  try {
+    domain.recover();
+  }
+ catch (  RecoveryException exception) {
+    while (exception != null) {
+      logger.error("Recovery error: " + exception);
+      exception=exception.getNextException();
+    }
+  }
+  return domain.getTransactionManager();
+}

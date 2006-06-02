@@ -1,0 +1,26 @@
+{
+  final AtomicInteger messagePartsCount=new AtomicInteger(0);
+  final Latch chunkingReceiverLatch=new Latch();
+  MuleManager.getInstance().registerListener(new FunctionalTestNotificationListener(){
+    public void onNotification(    UMOServerNotification notification){
+      assertEquals("ChunkingReceiver",notification.getResourceIdentifier());
+      Object reply=((FunctionalTestNotification)notification).getReplyMessage();
+      assertEquals(data + " Received",reply);
+      chunkingReceiverLatch.countDown();
+    }
+  }
+,"ChunkingReceiver");
+  MuleManager.getInstance().registerListener(new MessageNotificationListener(){
+    public void onNotification(    UMOServerNotification notification){
+      if (notification.getAction() == MessageNotification.MESSAGE_RECEIVED) {
+        messagePartsCount.getAndIncrement();
+      }
+      assertEquals("ChunkingReceiver",notification.getResourceIdentifier());
+    }
+  }
+,"ChunkingReceiver");
+  MuleClient client=new MuleClient();
+  client.dispatch("vm://inbound.channel",data,null);
+  assertTrue(chunkingReceiverLatch.await(20L,TimeUnit.SECONDS));
+  assertEquals(partsCount,messagePartsCount.get());
+}

@@ -1,0 +1,16 @@
+{
+  MuleClient client=new MuleClient();
+  OrderManagerBean orderManager=(OrderManagerBean)context.getBean("orderManager");
+  assertNotNull(orderManager);
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
+      eventCount++;
+    }
+  }
+;
+  orderManager.setEventCallback(callback);
+  Order order=new Order("Sausage and Mash");
+  UMOMessage result=client.send("axis:http://localhost:44444/mule/orderManager?method=processOrder",order,null);
+  assertNotNull(result);
+  assertEquals("Order 'Sausage and Mash' Processed",(result.getPayload()));
+}

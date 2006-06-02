@@ -1,0 +1,47 @@
+{
+  super.doInitialise();
+  axisTransportProtocols=new HashMap();
+  try {
+    for (Iterator iterator=supportedSchemes.iterator(); iterator.hasNext(); ) {
+      String s=(String)iterator.next();
+      axisTransportProtocols.put(s,MuleTransport.getTransportClass(s));
+      registerSupportedProtocol(s);
+    }
+    MuleManager.getInstance().registerListener(this);
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+  if (serverConfig == null) {
+    serverConfig=DEFAULT_MULE_AXIS_SERVER_CONFIG;
+  }
+  if (clientConfig == null) {
+    clientConfig=DEFAULT_MULE_AXIS_CLIENT_CONFIG;
+  }
+  serverProvider=createAxisProvider(serverConfig);
+  clientProvider=createAxisProvider(clientConfig);
+  axisServer=new AxisServer(serverProvider);
+  axisServer.setOption("axis.doAutoTypes",Boolean.valueOf(doAutoTypes));
+  WSDDProvider.registerProvider(QNAME_MULE_PROVIDER,new WSDDJavaMuleProvider(this));
+  try {
+    registerTransportTypes();
+  }
+ catch (  ClassNotFoundException e) {
+    throw new InitialisationException(new org.mule.config.i18n.Message(Messages.CANT_LOAD_X_FROM_CLASSPATH_FILE,e.getMessage()),e,this);
+  }
+  String handlerPkgs=System.getProperty("java.protocol.handler.pkgs",null);
+  if (handlerPkgs != null) {
+    if (!handlerPkgs.endsWith("|")) {
+      handlerPkgs+="|";
+    }
+    handlerPkgs="org.mule.providers.soap.axis.transport|" + handlerPkgs;
+    System.setProperty("java.protocol.handler.pkgs",handlerPkgs);
+    logger.debug("Setting java.protocol.handler.pkgs to: " + handlerPkgs);
+  }
+  try {
+    registerTypes((TypeMappingRegistryImpl)axisServer.getTypeMappingRegistry(),beanTypes);
+  }
+ catch (  ClassNotFoundException e) {
+    throw new InitialisationException(e,this);
+  }
+}

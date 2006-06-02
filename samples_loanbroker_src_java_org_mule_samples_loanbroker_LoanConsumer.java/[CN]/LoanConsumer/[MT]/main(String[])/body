@@ -1,0 +1,43 @@
+{
+  LoanConsumer loanConsumer=null;
+  try {
+    if (args.length > 0) {
+      loanConsumer=new LoanConsumer(args[0]);
+      int i=100;
+      if (args.length > 1) {
+        i=Integer.parseInt(args[1]);
+      }
+      if (args.length > 2) {
+        synchronous=Boolean.valueOf(args[2]).booleanValue();
+      }
+      if (synchronous) {
+        long start=System.currentTimeMillis();
+        List results=loanConsumer.requestSend(i,"vm://LoanBrokerRequests");
+        System.out.println("Number or quotes received: " + results.size());
+        List output=new ArrayList(results.size());
+        int x=1;
+        for (Iterator iterator=results.iterator(); iterator.hasNext(); x++) {
+          LoanQuote quote=(LoanQuote)iterator.next();
+          output.add(x + ". " + quote.toString());
+        }
+        System.out.println(StringMessageUtils.getBoilerPlate(output,'*',80));
+        long cur=System.currentTimeMillis();
+        System.out.println(DateUtils.getFormattedDuration(cur - start));
+        System.out.println("Avg request: " + ((cur - start) / x));
+      }
+ else {
+        loanConsumer.requestDispatch(i,"vm://LoanBrokerRequests");
+      }
+    }
+ else {
+      String config=getConfig();
+      loanConsumer=new LoanConsumer(config);
+      loanConsumer.run(synchronous);
+    }
+  }
+ catch (  Exception e) {
+    System.err.println(e.getMessage());
+    e.printStackTrace(System.err);
+    System.exit(1);
+  }
+}

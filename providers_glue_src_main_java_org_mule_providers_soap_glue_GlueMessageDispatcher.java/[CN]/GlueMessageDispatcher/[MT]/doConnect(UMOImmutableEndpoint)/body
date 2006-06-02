@@ -1,0 +1,22 @@
+{
+  if (proxy == null) {
+    String bindAddress=endpoint.getEndpointURI().getAddress();
+    String method=(String)endpoint.getProperty(SoapConstants.SOAP_METHOD_PROPERTY);
+    if (bindAddress.indexOf(".wsdl") == -1 && method != null) {
+      bindAddress=bindAddress.replaceAll("/" + method,".wsdl/" + method);
+    }
+    int i=bindAddress.indexOf("?");
+    if (i > -1) {
+      bindAddress=bindAddress.substring(0,i);
+    }
+    if (endpoint.getEndpointURI().getUsername() != null) {
+      ProxyContext context=new ProxyContext();
+      context.setAuthUser(endpoint.getEndpointURI().getUsername());
+      context.setAuthPassword(new String(endpoint.getEndpointURI().getPassword()));
+      proxy=Registry.bind(bindAddress,context);
+    }
+ else {
+      proxy=Registry.bind(bindAddress);
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  Hashtable options=getOptions();
+  if (timeout > 0) {
+    if (options == null) {
+      options=new Hashtable();
+    }
+    options.put(DefaultSocketFactory.CONNECT_TIMEOUT,Integer.toString(timeout));
+  }
+  SocketFactory factory=SocketFactoryFactory.getFactory(protocol,options);
+  if (factory == null) {
+    throw new IOException(Messages.getMessage("noSocketFactory",protocol));
+  }
+  Socket sock=null;
+  try {
+    sock=factory.create(host,port,otherHeaders,useFullURL);
+  }
+ catch (  Exception e) {
+    Thread.sleep(1000);
+    try {
+      sock=factory.create(host,port,otherHeaders,useFullURL);
+    }
+ catch (    Exception e1) {
+      log.fatal("Axis client Failed: connect on socket: " + host + ":"+ port,e);
+      throw e;
+    }
+  }
+  if (timeout > 0) {
+    sock.setSoTimeout(timeout);
+  }
+  sockHolder.setSocket(sock);
+}

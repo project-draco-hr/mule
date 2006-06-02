@@ -1,0 +1,19 @@
+{
+  String uri=getReceiverName(httpServletRequest);
+  if (uri == null) {
+    throw new EndpointException(new Message("http",4,httpServletRequest.getRequestURI()));
+  }
+  AbstractMessageReceiver receiver=(AbstractMessageReceiver)getReceivers().get(uri);
+  if (receiver == null) {
+    int i=uri.lastIndexOf("/");
+    if (i > -1) {
+      uri=uri.substring(i + 1);
+      receiver=(AbstractMessageReceiver)getReceivers().get(uri);
+    }
+    if (receiver == null) {
+      throw new NoReceiverForEndpointException("No receiver found for endpointUri: " + uri);
+    }
+  }
+  receiver.getEndpoint().setEndpointURI(new MuleEndpointURI(getRequestUrl(httpServletRequest)));
+  return receiver;
+}

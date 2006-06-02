@@ -1,0 +1,74 @@
+{
+  MuleApplicationEvent muleEvent=null;
+  if (e instanceof ContextRefreshedEvent) {
+    if (MuleManager.isInstanciated() && !MuleManager.getInstance().isInitialised()) {
+      try {
+        registerMulticasterDescriptor();
+      }
+ catch (      UMOException ex) {
+        throw new MuleRuntimeException(new Message("spring",1),ex);
+      }
+    }
+ else {
+      initMule();
+    }
+  }
+ else   if (e instanceof ContextClosedEvent) {
+    MuleManager.getInstance().dispose();
+    return;
+  }
+ else   if (e instanceof MuleApplicationEvent) {
+    muleEvent=(MuleApplicationEvent)e;
+    if (muleEvent.getMuleEventContext() == null) {
+      try {
+        dispatchEvent(muleEvent);
+      }
+ catch (      ApplicationEventException e1) {
+        exceptionListener.exceptionThrown(e1);
+      }
+      return;
+    }
+  }
+  ApplicationListener listener;
+  for (Iterator iterator=listeners.iterator(); iterator.hasNext(); ) {
+    listener=(ApplicationListener)iterator.next();
+    if (muleEvent != null) {
+      if (listener instanceof AsynchronousEventListener) {
+        AsynchronousEventListener asyncListener=(AsynchronousEventListener)listener;
+        if (asyncListener.getListener() instanceof MuleSubscriptionEventListener) {
+          if (isSubscriptionMatch(muleEvent.getEndpoint(),((MuleSubscriptionEventListener)asyncListener.getListener()).getSubscriptions())) {
+            asyncListener.onApplicationEvent(muleEvent);
+          }
+        }
+ else         if (asyncListener.getListener() instanceof MuleEventListener) {
+          asyncListener.onApplicationEvent(muleEvent);
+        }
+ else         if (!(asyncListener.getListener() instanceof MuleEventListener)) {
+          asyncListener.onApplicationEvent(e);
+        }
+      }
+ else       if (listener instanceof MuleSubscriptionEventListener) {
+        if (isSubscriptionMatch(muleEvent.getEndpoint(),((MuleSubscriptionEventListener)listener).getSubscriptions())) {
+          listener.onApplicationEvent(muleEvent);
+        }
+      }
+ else       if (listener instanceof MuleEventListener) {
+        listener.onApplicationEvent(muleEvent);
+      }
+    }
+ else     if (listener instanceof AsynchronousEventListener && !(((AsynchronousEventListener)listener).getListener() instanceof MuleEventListener)) {
+      listener.onApplicationEvent(e);
+    }
+ else     if (!(listener instanceof MuleEventListener)) {
+      listener.onApplicationEvent(e);
+    }
+ else {
+      for (int i=0; i < listener.getClass().getInterfaces().length; i++) {
+        if (listener.getClass().getInterfaces()[i].equals(ApplicationListener.class)) {
+          listener.onApplicationEvent(e);
+          break;
+        }
+      }
+    }
+  }
+}

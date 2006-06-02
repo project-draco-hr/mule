@@ -1,0 +1,68 @@
+{
+  try {
+    UMOEndpointURI endpointUri=context.getEndpointURI();
+    if (!"servlet".equalsIgnoreCase(context.getEndpointURI().getSchemeMetaInfo())) {
+      String uri=SoapConstants.SOAP_ENDPOINT_PREFIX + context.getEndpointURI().getScheme() + "://"+ context.getEndpointURI().getHost()+ ":"+ context.getEndpointURI().getPort();
+      uri+=context.getMessageAsString();
+      endpointUri=new MuleEndpointURI(uri);
+    }
+    AxisEngine engine=getAxisServer();
+    String pathInfo=endpointUri.getPath();
+    boolean wsdlRequested=false;
+    boolean listRequested=false;
+    if (endpointUri.getAddress().endsWith(".jws")) {
+      throw new AxisFault("Jws not supported by the Mule Axis service");
+    }
+    String queryString=endpointUri.getQuery();
+    if (queryString != null) {
+      if (queryString.equalsIgnoreCase(SoapConstants.WSDL_PROPERTY)) {
+        wsdlRequested=true;
+      }
+ else {
+        if (queryString.equalsIgnoreCase(SoapConstants.LIST_PROPERTY)) {
+          listRequested=true;
+        }
+      }
+    }
+    boolean hasNoPath=(StringUtils.isEmpty(pathInfo) || pathInfo.equals("/"));
+    if (!wsdlRequested && !listRequested && hasNoPath) {
+      reportAvailableServices(context,response);
+    }
+ else {
+      MessageContext msgContext=new MessageContext(engine);
+      populateMessageContext(msgContext,context,endpointUri);
+      msgContext.setProperty("transport.url",endpointUri.toString());
+      if (wsdlRequested) {
+        processWsdlRequest(msgContext,response);
+      }
+ else       if (listRequested) {
+        processListRequest(response);
+      }
+ else       if (true) {
+        processMethodRequest(msgContext,context,response,endpointUri);
+      }
+ else {
+        String serviceName=(String)msgContext.getProperty("serviceName");
+        if (pathInfo.startsWith("/")) {
+          serviceName=pathInfo.substring(1);
+        }
+ else {
+          serviceName=pathInfo;
+        }
+        SOAPService s=engine.getService(serviceName);
+        if (s == null) {
+          reportCantGetAxisService(context,response);
+        }
+ else {
+          reportServiceInfo(response,s,serviceName);
+        }
+      }
+    }
+  }
+ catch (  AxisFault fault) {
+    reportTroubleInGet(fault,response);
+  }
+catch (  Exception e) {
+    reportTroubleInGet(e,response);
+  }
+}

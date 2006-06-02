@@ -1,0 +1,19 @@
+{
+  logger.info("Inside Method : " + serviceParamTO);
+  UMOMessage msg=null;
+  List endPoints=null;
+  UMOEventContext umoEventContext=RequestContext.getEventContext();
+  UMOMessage umoMessage=umoEventContext.sendEvent(serviceParamTO.getCustomer().getAddress());
+  Integer isValidAddress=(Integer)umoMessage.getPayload();
+  if (isValidAddress.intValue() == AddressValidation.SUCCESS) {
+    umoMessage=umoEventContext.sendEvent(serviceParamTO.getCreditCard().getCardType());
+    endPoints=(List)umoMessage.getPayload();
+    logger.info("Inside Method : isValidAddress = " + isValidAddress + "; endPoints = "+ endPoints);
+    Map props=new HashMap();
+    props.put("recipients",endPoints);
+    msg=new MuleMessage(new CreditProfileTO(serviceParamTO.getCustomer()),props);
+    umoEventContext.dispatchEvent(msg);
+    umoEventContext.setStopFurtherProcessing(true);
+  }
+  return msg;
+}

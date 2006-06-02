@@ -1,0 +1,18 @@
+{
+  if (clientPool == null) {
+    final XFire xfire=connector.getXfire();
+    final String serviceName=getServiceName(endpoint);
+    final Service service=xfire.getServiceRegistry().getService(serviceName);
+    if (service == null) {
+      throw new FatalConnectException(new Message("xfire",8,serviceName),this);
+    }
+    try {
+      clientPool=new StackObjectPool(new XFireClientPoolFactory(endpoint,service,xfire));
+      clientPool.addObject();
+    }
+ catch (    Exception ex) {
+      disconnect();
+      throw ex;
+    }
+  }
+}

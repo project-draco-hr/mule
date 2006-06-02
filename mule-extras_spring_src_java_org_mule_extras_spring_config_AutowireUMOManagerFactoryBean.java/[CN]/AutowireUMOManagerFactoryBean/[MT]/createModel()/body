@@ -1,0 +1,25 @@
+{
+  Map temp=context.getBeansOfType(UMOModel.class,true,true);
+  UMOModel model;
+  if (temp.size() > 0) {
+    Map.Entry entry=(Map.Entry)temp.entrySet().iterator().next();
+    model=(UMOModel)entry.getValue();
+    model.setName(entry.getKey().toString());
+  }
+ else {
+    model=ModelFactory.createModel(MuleManager.getConfiguration().getModelType());
+  }
+  Map epr=context.getBeansOfType(UMOEntryPointResolver.class,true,true);
+  if (epr.size() > 0) {
+    model.setEntryPointResolver((UMOEntryPointResolver)epr.values().iterator().next());
+  }
+  Map lcaf=context.getBeansOfType(UMOLifecycleAdapterFactory.class,true,true);
+  if (lcaf.size() > 0) {
+    model.setLifecycleAdapterFactory((UMOLifecycleAdapterFactory)lcaf.values().iterator().next());
+  }
+  Object listener=getBean(MULE_MODEL_EXCEPTION_STRATEGY_BEAN_NAME,ExceptionListener.class);
+  if (listener != null) {
+    model.setExceptionListener((ExceptionListener)listener);
+  }
+  manager.setModel(model);
+}

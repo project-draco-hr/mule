@@ -1,0 +1,27 @@
+{
+  boolean fileIsValid;
+  Exception fileInvalidException;
+  try {
+    fileIsValid=(message != null && message.isFile());
+    fileInvalidException=null;
+  }
+ catch (  Exception ex) {
+    fileInvalidException=ex;
+    fileIsValid=false;
+  }
+  if (!fileIsValid) {
+    Object exceptionArg;
+    if (fileInvalidException != null) {
+      exceptionArg=fileInvalidException;
+    }
+ else {
+      exceptionArg=ObjectUtils.toString(message,"null");
+    }
+    Message msg=new Message(Messages.FILE_X_DOES_NOT_EXIST,ObjectUtils.toString(message,"null"));
+    throw new MessagingException(msg,exceptionArg);
+  }
+  this.file=message;
+  this.contents=null;
+  this.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,this.file.getName());
+  this.setProperty(FileConnector.PROPERTY_DIRECTORY,this.file.getParent());
+}

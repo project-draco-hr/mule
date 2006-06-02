@@ -1,0 +1,40 @@
+{
+  PushbackInputStream pbis=(PushbackInputStream)pbMap.get(is);
+  if (pbis == null) {
+    pbis=new PushbackInputStream(is,PUSHBACK_BUFFER_SIZE);
+    pbMap.put(is,pbis);
+  }
+  byte[] buffer=new byte[READ_BUFFER_SIZE];
+  int len=0;
+  try {
+    while ((len=pbis.read(buffer)) == 0) {
+    }
+  }
+ catch (  SocketException e) {
+    return null;
+  }
+catch (  SocketTimeoutException e) {
+    return null;
+  }
+ finally {
+    if (len <= 0) {
+      pbMap.remove(is);
+      return null;
+    }
+  }
+  StringBuffer out=new StringBuffer(READ_BUFFER_SIZE);
+  int patternIndex=-1;
+  do {
+    out.append(new String(buffer,0,len));
+    patternIndex=out.toString().indexOf(XML_PATTERN,1);
+    if (patternIndex > 0 || len < buffer.length || pbis.available() == 0) {
+      break;
+    }
+  }
+ while ((len=pbis.read(buffer)) > 0);
+  if (patternIndex > 0) {
+    pbis.unread(out.substring(patternIndex,out.length()).getBytes());
+    out.setLength(patternIndex);
+  }
+  return out.toString().getBytes();
+}

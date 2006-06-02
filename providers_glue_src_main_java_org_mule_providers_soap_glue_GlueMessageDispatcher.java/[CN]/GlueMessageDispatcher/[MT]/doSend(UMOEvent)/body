@@ -1,0 +1,30 @@
+{
+  String method=event.getMessage().getStringProperty("method",null);
+  setContext(event);
+  Object payload=event.getTransformedMessage();
+  Object[] args;
+  if (payload instanceof Object[]) {
+    args=(Object[])payload;
+  }
+ else {
+    args=new Object[]{payload};
+  }
+  if (event.getMessage().getReplyTo() != null) {
+    ThreadContext.setProperty(MuleProperties.MULE_REPLY_TO_PROPERTY,event.getMessage().getReplyTo());
+  }
+  if (event.getMessage().getCorrelationId() != null) {
+    ThreadContext.setProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY,event.getMessage().getCorrelationId());
+  }
+  try {
+    Object result=proxy.invoke(method,args);
+    if (result == null) {
+      return null;
+    }
+ else {
+      return new MuleMessage(result);
+    }
+  }
+ catch (  Throwable t) {
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),t);
+  }
+}

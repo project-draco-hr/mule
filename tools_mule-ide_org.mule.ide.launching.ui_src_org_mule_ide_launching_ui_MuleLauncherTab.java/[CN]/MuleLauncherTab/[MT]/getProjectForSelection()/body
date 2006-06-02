@@ -1,0 +1,30 @@
+{
+  IWorkbenchWindow window=PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+  if (window == null) {
+    return null;
+  }
+  IWorkbenchPage page=window.getActivePage();
+  if (page == null) {
+    return null;
+  }
+  ISelection selection=page.getSelection();
+  if (selection instanceof IStructuredSelection) {
+    IStructuredSelection ss=(IStructuredSelection)selection;
+    if (!ss.isEmpty()) {
+      Object obj=ss.getFirstElement();
+      if (obj instanceof IResource) {
+        IResource aResource=(IResource)obj;
+        return aResource.getProject();
+      }
+    }
+  }
+  IEditorPart part=page.getActiveEditor();
+  if (part != null) {
+    IEditorInput input=part.getEditorInput();
+    IResource aResource=(IResource)input.getAdapter(IResource.class);
+    if (aResource != null) {
+      return aResource.getProject();
+    }
+  }
+  return null;
+}

@@ -1,0 +1,34 @@
+{
+  try {
+    if (isQueue) {
+      Queue queue=((QueueSession)session).createQueue(destination);
+      producer=((QueueSession)session).createSender(queue);
+    }
+ else {
+      Topic topic=((TopicSession)session).createTopic(destination);
+      producer=((TopicSession)session).createPublisher(topic);
+    }
+    TextMessage tm;
+    logger.info("Sending message: " + data + " on "+ destination);
+    for (int i=0; i < noOfMessages; i++) {
+      tm=session.createTextMessage(data);
+      if (isQueue) {
+        ((QueueSender)producer).send(tm);
+      }
+ else {
+        ((TopicPublisher)producer).publish(tm);
+      }
+    }
+    logger.info(noOfMessages + " message(s) sent successfully");
+  }
+ catch (  Exception e) {
+    logger.error("Initialisation failed: " + e,e);
+    try {
+      cnn.close();
+    }
+ catch (    JMSException e1) {
+      System.exit(0);
+    }
+    System.exit(0);
+  }
+}

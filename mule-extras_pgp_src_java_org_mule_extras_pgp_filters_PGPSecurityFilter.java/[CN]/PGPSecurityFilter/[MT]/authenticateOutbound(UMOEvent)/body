@@ -1,0 +1,25 @@
+{
+  logger.debug("authenticateOutbound:" + event.getId());
+  if (!isAuthenticate()) {
+    return;
+  }
+  UMOMessage message=event.getMessage();
+  KeyBundle userKeyBundle=keyManager.getKeyBundle((String)getCredentialsAccessor().getCredentials(event));
+  PGPCryptInfo cryptInfo=new PGPCryptInfo(userKeyBundle,signRequired);
+  byte[] msg=null;
+  try {
+    msg=message.getPayloadAsBytes();
+    msg=strategy.encrypt(msg,cryptInfo);
+  }
+ catch (  Exception e1) {
+    throw new UnauthorisedException(new org.mule.config.i18n.Message(Messages.FAILED_TO_READ_PAYLOAD),event.getMessage(),e1);
+  }
+  try {
+    String mesg=new String(msg);
+    RequestContext.rewriteEvent(new MuleMessage(mesg));
+    logger.debug("Message:" + mesg);
+  }
+ catch (  Exception e2) {
+    throw new UnauthorisedException(event.getMessage(),event.getSession().getSecurityContext(),event.getEndpoint(),this);
+  }
+}

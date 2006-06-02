@@ -1,0 +1,13 @@
+{
+  MuleSecurityManager sm=new MuleSecurityManager();
+  UMOSecurityProvider provider=new AcegiProviderAdapter(getTestProvider(),"testProvider");
+  sm.addProvider(provider);
+  QuickConfigurationBuilder builder=null;
+  builder=new QuickConfigurationBuilder(true);
+  UMOManager manager=builder.createStartedManager(true,"");
+  manager.setSecurityManager(sm);
+  UMODescriptor d=builder.createDescriptor(EchoComponent.class.getName(),"echo","http://localhost:4567",null,null);
+  d.getInboundEndpoint().setSecurityFilter(new HttpBasicAuthenticationFilter("mule-realm"));
+  builder.registerComponent(d);
+  return builder;
+}

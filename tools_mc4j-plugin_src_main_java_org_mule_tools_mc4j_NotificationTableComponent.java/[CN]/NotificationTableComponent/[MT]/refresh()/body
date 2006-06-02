@@ -1,0 +1,27 @@
+{
+  if (this.tableModel instanceof AttributeTableModel)   ((AttributeTableModel)this.tableModel).resetChangeList();
+  int row=0;
+  List notifs=(List)mbeanNode.getAttributeNodeMap().get("NotificationList");
+  for (Iterator iterator=notifs.iterator(); iterator.hasNext(); ) {
+    Notification notification=(Notification)iterator.next();
+    List attributes=new ArrayList();
+    attributes.add(notification.getType());
+    attributes.add(new Date(notification.getTimeStamp()));
+    attributes.add(new Long(notification.getSequenceNumber()));
+    attributes.add(notification.getMessage());
+    int col=0;
+    for (Iterator iterator1=attributes.iterator(); iterator1.hasNext(); ) {
+      Object value=iterator1.next();
+      if (!this.sorted) {
+        this.tableModel.setColumnClass(col,value.getClass());
+      }
+      if ((value != null) && !value.equals(this.tableModel.getValueAt(row,col))) {
+        this.tableModel.setValueAt(value,row,col);
+      }
+      col++;
+    }
+    if (!this.sorted)     this.sorted=true;
+    row++;
+  }
+  this.tableModel.fireTableDataChanged();
+}

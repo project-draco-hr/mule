@@ -1,0 +1,22 @@
+{
+  if (message.getUri().equals(Channel.BACKCHANNEL_URI)) {
+    final OutputStream out=(OutputStream)context.getProperty(Channel.BACKCHANNEL_URI);
+    if (out != null) {
+      final XMLStreamWriter writer=STAXUtils.createXMLStreamWriter(out,message.getEncoding(),context);
+      message.getSerializer().writeMessage(message,writer,context);
+    }
+ else {
+      MessageContext oldContext=(MessageContext)context.getProperty(OLD_CONTEXT);
+      sendViaNewChannel(context,oldContext,message,(String)context.getProperty(SENDER_URI));
+    }
+  }
+ else {
+    MessageContext receivingContext=new MessageContext();
+    receivingContext.setXFire(context.getXFire());
+    receivingContext.setService(getService(context.getXFire(),message.getUri()));
+    receivingContext.setProperty(OLD_CONTEXT,context);
+    receivingContext.setProperty(SENDER_URI,getUri());
+    receivingContext.setSession(session);
+    sendViaNewChannel(context,receivingContext,message,message.getUri());
+  }
+}

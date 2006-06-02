@@ -1,0 +1,74 @@
+{
+  String soapAction=null;
+  AxisEngine engine=getAxisServer();
+  if (engine == null) {
+    ServletException se=new ServletException(Messages.getMessage("noEngine00"));
+    logger.debug("No Engine!",se);
+    throw se;
+  }
+  MessageContext msgContext=new MessageContext(engine);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Enter: doPost()");
+  }
+  Message responseMsg=null;
+  String contentType=null;
+  try {
+    UMOEndpointURI endpointUri=getEndpoint(context);
+    populateMessageContext(msgContext,context,endpointUri);
+    if (securityProvider != null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("securityProvider:" + securityProvider);
+      }
+      msgContext.setProperty("securityProvider",securityProvider);
+    }
+    Object request=context.getTransformedMessage();
+    Message requestMsg=new Message((request instanceof File) ? new FileInputStream((File)request) : request,false,context.getMessage().getStringProperty(HTTPConstants.HEADER_CONTENT_TYPE,null),context.getMessage().getStringProperty(HTTPConstants.HEADER_CONTENT_LOCATION,null));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Request Message:" + requestMsg);
+    }
+    msgContext.setRequestMessage(requestMsg);
+    msgContext.setProperty("transport.url",endpointUri.toString());
+    soapAction=getSoapAction(context);
+    if (soapAction != null) {
+      msgContext.setUseSOAPAction(true);
+      msgContext.setSOAPActionURI(soapAction);
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Invoking Axis Engine.");
+    }
+    engine.invoke(msgContext);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Return from Axis Engine.");
+    }
+    if (RequestContext.getExceptionPayload() instanceof Exception) {
+      throw (Exception)RequestContext.getExceptionPayload().getException();
+    }
+    if (request instanceof File) {
+      ((File)request).delete();
+    }
+    responseMsg=msgContext.getResponseMessage();
+    if (responseMsg == null) {
+      throw new Exception(Messages.getMessage("noResponse01"));
+    }
+  }
+ catch (  AxisFault fault) {
+    logger.error(fault.toString() + ". Event is: " + context.toString(),fault);
+    processAxisFault(fault);
+    configureResponseFromAxisFault(response,fault);
+    responseMsg=msgContext.getResponseMessage();
+    if (responseMsg == null) {
+      responseMsg=new Message(fault);
+    }
+  }
+catch (  Exception e) {
+    responseMsg=msgContext.getResponseMessage();
+    response.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,"500");
+    responseMsg=convertExceptionToAxisFault(e,responseMsg);
+  }
+  contentType=responseMsg.getContentType(msgContext.getSOAPConstants());
+  sendResponse(context.getMessage().getStringProperty(HttpConnector.HTTP_STATUS_PROPERTY,null),contentType,response,responseMsg);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Response sent.");
+    logger.debug("Exit: doPost()");
+  }
+}

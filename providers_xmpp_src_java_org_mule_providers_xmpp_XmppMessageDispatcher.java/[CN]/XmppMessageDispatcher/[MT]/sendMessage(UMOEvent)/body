@@ -1,0 +1,37 @@
+{
+  if (chat == null && groupChat == null) {
+    UMOMessage msg=event.getMessage();
+    boolean group=msg.getBooleanProperty(XmppConnector.XMPP_GROUP_CHAT,false);
+    String nickname=msg.getStringProperty(XmppConnector.XMPP_NICKNAME,"mule");
+    String recipient=event.getEndpoint().getEndpointURI().getPath().substring(1);
+    if (group) {
+      groupChat=new GroupChat(xmppConnection,recipient);
+      if (!groupChat.isJoined()) {
+        groupChat.join(nickname);
+      }
+    }
+ else {
+      chat=new Chat(xmppConnection,recipient);
+    }
+  }
+  Object msgObj=event.getMessage().getPayload();
+  Message message;
+  if (!(msgObj instanceof Message)) {
+    message=(Message)event.getTransformedMessage();
+  }
+ else {
+    message=(Message)msgObj;
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace("Transformed packet: " + message.toXML());
+  }
+  if (chat != null) {
+    chat.sendMessage(message);
+  }
+ else {
+    groupChat.sendMessage(message);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("packet successfully sent");
+  }
+}

@@ -1,0 +1,14 @@
+{
+  countDown=new CountDownLatch(3);
+  ConfigurationBuilder configBuilder=new MuleXmlConfigurationBuilder();
+  configBuilder.configure("org/mule/test/integration/providers/quartz/quartz-receive-dispatch-delegating-job.xml");
+  new MuleClient().send("vm://event.queue","quartz test",null);
+  new MuleClient().send("vm://event.queue","quartz test",null);
+  new MuleClient().send("vm://event.queue","quartz test",null);
+  Map props=new HashMap();
+  props.put(QuartzConnector.PROPERTY_JOB_RECEIVE_ENDPOINT,"vm://event.queue");
+  props.put(QuartzConnector.PROPERTY_JOB_DISPATCH_ENDPOINT,"vm://quartz.in");
+  Object payload=new MuleClientReceiveJob();
+  new MuleClient().send("vm://quartz.scheduler",payload,props);
+  assertTrue(countDown.tryLock(5000,TimeUnit.MILLISECONDS));
+}

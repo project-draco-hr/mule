@@ -1,0 +1,30 @@
+{
+  if (message == null) {
+    throw new MessageTypeNotSupportedException(message,getClass());
+  }
+  if (message instanceof Entry) {
+    this.message=(Entry)message;
+  }
+ else {
+    this.message=new JiniMessage(null,message);
+  }
+  if (this.message instanceof JiniMessage) {
+    JiniMessage jm=(JiniMessage)this.message;
+    this.id=jm.getMessageId();
+    if (this.id == null) {
+      id=UUID.getUUID();
+    }
+    this.setCorrelationId(jm.getCorrelationId());
+    Integer value=jm.getCorrelationGroupSize();
+    this.setCorrelationGroupSize(value != null ? value.intValue() : -1);
+    value=jm.getCorrelationSequence();
+    this.setCorrelationSequence(value != null ? value.intValue() : -1);
+    this.setReplyTo(jm.getReplyTo());
+    this.setEncoding(StringUtils.defaultIfEmpty(jm.getEncoding(),MuleManager.getConfiguration().getEncoding()));
+    this.setExceptionPayload(jm.getExceptionPayload());
+    this.addProperties(jm.getProperties());
+  }
+ else {
+    id=UUID.getUUID();
+  }
+}

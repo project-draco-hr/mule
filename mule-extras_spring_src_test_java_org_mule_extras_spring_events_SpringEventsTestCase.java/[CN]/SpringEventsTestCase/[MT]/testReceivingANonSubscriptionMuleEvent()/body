@@ -1,0 +1,15 @@
+{
+  TestMuleEventBean bean=(TestMuleEventBean)context.getBean("testNonSubscribingMuleEventBean");
+  assertNotNull(bean);
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
+      eventCount++;
+    }
+  }
+;
+  bean.setEventCallback(callback);
+  MuleClient client=new MuleClient();
+  client.send("vm://event.multicaster","Test Spring Event",null);
+  afterPublishEvent();
+  assertEquals(1,eventCount);
+}

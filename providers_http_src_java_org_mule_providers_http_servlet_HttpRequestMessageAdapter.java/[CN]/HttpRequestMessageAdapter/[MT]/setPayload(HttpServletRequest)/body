@@ -1,0 +1,34 @@
+{
+  try {
+    request=message;
+    String payloadParam=(String)request.getAttribute(AbstractReceiverServlet.PAYLOAD_PARAMETER_NAME);
+    if (payloadParam == null) {
+      payloadParam=AbstractReceiverServlet.DEFAULT_PAYLOAD_PARAMETER_NAME;
+    }
+    String payload=request.getParameter(payloadParam);
+    if (payload == null) {
+      if (isText(request.getContentType())) {
+        BufferedReader reader=request.getReader();
+        StringBuffer buffer=new StringBuffer(8192);
+        String line=reader.readLine();
+        while (line != null) {
+          buffer.append(line);
+          line=reader.readLine();
+          if (line != null)           buffer.append(SystemUtils.LINE_SEPARATOR);
+        }
+        this.message=buffer.toString();
+      }
+ else {
+        ByteArrayOutputStream baos=new ByteArrayOutputStream(8192);
+        IOUtils.copy(request.getInputStream(),baos);
+        this.message=baos.toByteArray();
+      }
+    }
+ else {
+      this.message=payload;
+    }
+  }
+ catch (  IOException e) {
+    throw new MessagingException(new Message("servlet",3,request.getRequestURL().toString()),e);
+  }
+}

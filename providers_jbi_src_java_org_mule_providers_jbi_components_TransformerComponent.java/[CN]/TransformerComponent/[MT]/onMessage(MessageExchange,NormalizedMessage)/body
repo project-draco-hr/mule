@@ -1,0 +1,22 @@
+{
+  if (messageExchange.getRole() == MessageExchange.Role.PROVIDER) {
+    return;
+  }
+  NormalizedMessage in=messageExchange.getMessage("in");
+  try {
+    NormalizedMessage out=messageExchange.createMessage();
+    transform(messageExchange,in,out);
+    if (messageExchange instanceof InOut) {
+      messageExchange.setMessage(out,OUT);
+    }
+ else {
+      InOnly outExchange=exchangeFactory.createInOnlyExchange();
+      outExchange.setInMessage(out);
+      deliveryChannel.sendSync(outExchange);
+    }
+    done(messageExchange);
+  }
+ catch (  Exception e) {
+    error(messageExchange,e);
+  }
+}

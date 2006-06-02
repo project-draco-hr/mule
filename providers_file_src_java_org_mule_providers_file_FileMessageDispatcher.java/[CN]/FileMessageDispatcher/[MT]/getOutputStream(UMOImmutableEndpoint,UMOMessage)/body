@@ -1,0 +1,24 @@
+{
+  String address=endpoint.getEndpointURI().getAddress();
+  String filename=message.getStringProperty(FileConnector.PROPERTY_FILENAME,null);
+  try {
+    if (filename == null) {
+      String outPattern=message.getStringProperty(FileConnector.PROPERTY_OUTPUT_PATTERN,null);
+      if (outPattern == null) {
+        outPattern=connector.getOutputPattern();
+      }
+      filename=generateFilename(message,outPattern);
+    }
+    if (filename == null) {
+      throw new IOException("Filename is null");
+    }
+    File file=FileUtils.createFile(address + "/" + filename);
+    if (logger.isInfoEnabled()) {
+      logger.info("Writing file to: " + file.getAbsolutePath());
+    }
+    return new FileOutputStream(file,connector.isOutputAppend());
+  }
+ catch (  IOException e) {
+    throw new DispatchException(new Message(Messages.STREAMING_FAILED_NO_STREAM),message,endpoint,e);
+  }
+}

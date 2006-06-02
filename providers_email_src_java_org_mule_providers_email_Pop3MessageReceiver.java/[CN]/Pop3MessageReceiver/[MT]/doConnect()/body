@@ -1,0 +1,30 @@
+{
+  String inbox=null;
+  if (connector.getProtocol().toLowerCase().startsWith("imap")) {
+    inbox=endpoint.getEndpointURI().getPath();
+    if (inbox.length() == 0) {
+      inbox=Pop3Connector.MAILBOX;
+    }
+ else {
+      inbox=inbox.substring(1);
+    }
+  }
+ else {
+    inbox=Pop3Connector.MAILBOX;
+  }
+  URLName url=new URLName(endpoint.getEndpointURI().getScheme(),endpoint.getEndpointURI().getHost(),endpoint.getEndpointURI().getPort(),inbox,endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
+  session=MailUtils.createMailSession(url,connector);
+  session.setDebug(logger.isDebugEnabled());
+  Store store=session.getStore(url);
+  store.connect();
+  folder=store.getFolder(inbox);
+  if (backupFolder == null) {
+    this.backupFolder=MuleManager.getConfiguration().getWorkingDirectory() + "/mail/" + folder.getName();
+  }
+ else   if (StringUtils.EMPTY.equals(backupFolder)) {
+    backupFolder=null;
+  }
+  if (backupFolder != null && !this.backupFolder.endsWith(File.separator)) {
+    this.backupFolder+=File.separator;
+  }
+}

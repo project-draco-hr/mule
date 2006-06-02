@@ -1,0 +1,17 @@
+{
+  logger.debug(System.getProperties().get("user.dir"));
+  InputStream in=FileUtils.loadResource(publicKeyRingFileName,getClass());
+  ExtendedKeyStore ring=(ExtendedKeyStore)ExtendedKeyStore.getInstance("OpenPGP/KeyRing");
+  ring.load(in,null);
+  in.close();
+  for (Enumeration e=ring.aliases(); e.hasMoreElements(); ) {
+    String aliasId=(String)e.nextElement();
+    KeyBundle bundle=ring.getKeyBundle(aliasId);
+    if (bundle != null) {
+      for (Iterator users=bundle.getPrincipals(); users.hasNext(); ) {
+        Principal princ=(Principal)users.next();
+        principalsKeyBundleMap.put(princ.getName(),bundle);
+      }
+    }
+  }
+}

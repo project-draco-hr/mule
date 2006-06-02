@@ -1,0 +1,146 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". Event id is: "+ event.getId());
+  }
+  Session txSession=null;
+  Session session=null;
+  MessageProducer producer=null;
+  MessageConsumer consumer=null;
+  Destination replyTo=null;
+  try {
+    txSession=connector.getCurrentSession();
+    cacheJmsSession=event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions());
+    if (txSession != null) {
+      cacheJmsSession=false;
+    }
+    if (cacheJmsSession) {
+      if (cachedSession == null) {
+        cachedSession=connector.getSession(event.getEndpoint());
+      }
+      session=cachedSession;
+    }
+ else     if (txSession != null) {
+      session=txSession;
+    }
+ else {
+      session=connector.getSession(event.getEndpoint());
+    }
+    boolean remoteSync=useRemoteSync(event);
+    if (txSession != null && remoteSync) {
+      throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
+    }
+    UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+    boolean topic=false;
+    String resourceInfo=endpointUri.getResourceInfo();
+    topic=(resourceInfo != null && JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(resourceInfo));
+    if (!topic) {
+      topic=MapUtils.getBooleanValue(event.getEndpoint().getProperties(),JmsConstants.TOPIC_PROPERTY,false);
+    }
+    Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
+    producer=connector.getJmsSupport().createProducer(session,dest,topic);
+    Object message=event.getTransformedMessage();
+    if (!(message instanceof Message)) {
+      throw new DispatchException(new org.mule.config.i18n.Message(Messages.MESSAGE_NOT_X_IT_IS_TYPE_X_CHECK_TRANSFORMER_ON_X,"JMS message",message.getClass().getName(),connector.getName()),event.getMessage(),event.getEndpoint());
+    }
+    Message msg=(Message)message;
+    if (event.getMessage().getCorrelationId() != null) {
+      msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
+    }
+    UMOMessage eventMsg=event.getMessage();
+    if (connector.supportsProperty(JmsConstants.JMS_REPLY_TO)) {
+      Object tempReplyTo=eventMsg.removeProperty(JmsConstants.JMS_REPLY_TO);
+      if (tempReplyTo != null) {
+        if (tempReplyTo instanceof Destination) {
+          replyTo=(Destination)tempReplyTo;
+        }
+ else {
+          boolean replyToTopic=false;
+          String reply=tempReplyTo.toString();
+          int i=reply.indexOf(":");
+          if (i > -1) {
+            String qtype=reply.substring(0,i);
+            replyToTopic="topic".equalsIgnoreCase(qtype);
+            reply=reply.substring(i + 1);
+          }
+          replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
+        }
+      }
+      if (remoteSync && replyTo == null) {
+        replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
+      }
+      if (replyTo != null) {
+        msg.setJMSReplyTo(replyTo);
+      }
+      if (remoteSync) {
+        consumer=connector.getJmsSupport().createConsumer(session,replyTo,topic);
+      }
+    }
+    String ttlString=(String)eventMsg.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
+    String priorityString=(String)eventMsg.removeProperty(JmsConstants.PRIORITY_PROPERTY);
+    String persistentDeliveryString=(String)eventMsg.removeProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY);
+    long ttl=Message.DEFAULT_TIME_TO_LIVE;
+    int priority=Message.DEFAULT_PRIORITY;
+    boolean persistent=Message.DEFAULT_DELIVERY_MODE == DeliveryMode.PERSISTENT;
+    if (ttlString != null) {
+      ttl=Long.parseLong(ttlString);
+    }
+    if (priorityString != null) {
+      priority=Integer.parseInt(priorityString);
+    }
+    if (persistentDeliveryString != null) {
+      persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
+    }
+    if (consumer != null && topic) {
+      Latch l=new Latch();
+      ReplyToListener listener=new ReplyToListener(l);
+      consumer.setMessageListener(listener);
+      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
+      int timeout=event.getTimeout();
+      logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
+      l.await(timeout,TimeUnit.MILLISECONDS);
+      consumer.setMessageListener(null);
+      listener.release();
+      Message result=listener.getMessage();
+      if (result == null) {
+        logger.debug("No message was returned via replyTo destination");
+        return null;
+      }
+ else {
+        UMOMessageAdapter adapter=connector.getMessageAdapter(result);
+        return new MuleMessage(JmsMessageUtils.getObjectForMessage(result),adapter);
+      }
+    }
+ else {
+      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
+      if (consumer != null) {
+        int timeout=event.getTimeout();
+        logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
+        Message result=consumer.receive(timeout);
+        if (result == null) {
+          logger.debug("No message was returned via replyTo destination");
+          return null;
+        }
+ else {
+          UMOMessageAdapter adapter=connector.getMessageAdapter(result);
+          return new MuleMessage(JmsMessageUtils.getObjectForMessage(result),adapter);
+        }
+      }
+    }
+    return null;
+  }
+  finally {
+    connector.closeQuietly(consumer);
+    connector.closeQuietly(producer);
+    if (replyTo != null && (replyTo instanceof TemporaryQueue || replyTo instanceof TemporaryTopic)) {
+      if (replyTo instanceof TemporaryQueue) {
+        connector.closeQuietly((TemporaryQueue)replyTo);
+      }
+ else {
+        connector.closeQuietly((TemporaryTopic)replyTo);
+      }
+    }
+    if (session != null && !cacheJmsSession && txSession == null) {
+      connector.closeQuietly(session);
+    }
+  }
+}
