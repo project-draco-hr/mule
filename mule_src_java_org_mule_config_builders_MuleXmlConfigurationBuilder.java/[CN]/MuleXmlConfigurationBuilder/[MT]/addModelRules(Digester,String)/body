@@ -2,22 +2,24 @@
   path+="/model";
   digester.addRule(path,new Rule(){
     public void begin(    String string,    String string1,    Attributes attributes) throws Exception {
-      String modelType=attributes.getValue("type");
-      if (modelType == null) {
-        modelType=MuleManager.getConfiguration().getModelType();
-      }
-      UMOModel model=null;
-      if (modelType.equalsIgnoreCase("custom")) {
-        String className=attributes.getValue("className");
-        if (className == null) {
-          throw new IllegalArgumentException("Cannot use 'custom' model type without setting the 'className' for the model");
+      UMOModel model=manager.getModel();
+      if (model == null) {
+        String modelType=attributes.getValue("type");
+        if (modelType == null) {
+          modelType=MuleManager.getConfiguration().getModelType();
+        }
+        if (modelType.equalsIgnoreCase("custom")) {
+          String className=attributes.getValue("className");
+          if (className == null) {
+            throw new IllegalArgumentException("Cannot use 'custom' model type without setting the 'className' for the model");
+          }
+ else {
+            model=(UMOModel)ClassUtils.instanciateClass(className,ClassUtils.NO_ARGS,getClass());
+          }
         }
  else {
-          model=(UMOModel)ClassUtils.instanciateClass(className,ClassUtils.NO_ARGS,getClass());
+          model=ModelFactory.createModel(modelType);
         }
-      }
- else {
-        model=ModelFactory.createModel(modelType);
       }
       digester.push(model);
     }
