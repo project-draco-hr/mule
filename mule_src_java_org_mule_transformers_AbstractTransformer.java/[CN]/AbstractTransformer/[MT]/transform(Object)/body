@@ -21,13 +21,21 @@
     if (encoding == null) {
       encoding=MuleManager.getConfiguration().getEncoding();
     }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Applying transformer " + getName() + " ("+ getClass().getName()+ ")");
+      logger.debug("Object before transform: " + StringMessageUtils.truncate(src.toString(),200,false));
+    }
     result=doTransform(src,encoding);
     if (result == null) {
       result=new NullPayload();
     }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Object after transform: " + StringMessageUtils.truncate(result.toString(),200,false));
+    }
     result=checkReturnClass(result);
-    if (transformer != null) {
-      result=transformer.transform(result);
+    if (nextTransformer != null) {
+      logger.debug("Following transformer in the chain is " + nextTransformer.getName() + " ("+ nextTransformer.getClass().getName()+ ")");
+      result=nextTransformer.transform(result);
     }
   }
   return result;
