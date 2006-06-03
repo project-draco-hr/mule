@@ -5,20 +5,17 @@
   if (!started.get()) {
     fireNotification(new ModelNotification(this,ModelNotification.MODEL_STARTING));
     for (Iterator i=components.values().iterator(); i.hasNext(); ) {
-      UMOComponent temp=(UMOComponent)i.next();
-      if (temp.getDescriptor().getInitialState().equals(ImmutableMuleDescriptor.INITIAL_STATE_STARTED)) {
-        temp.start();
-        registerListeners(temp);
-        logger.info("Component " + temp + " has been started successfully");
+      UMOComponent component=(UMOComponent)i.next();
+      if (component.getDescriptor().getInitialState().equals(ImmutableMuleDescriptor.INITIAL_STATE_STARTED)) {
+        ComponentUtil.start(component);
+        logger.info("Component " + component + " has been started successfully");
       }
- else       if (temp.getDescriptor().getInitialState().equals(ImmutableMuleDescriptor.INITIAL_STATE_PAUSED)) {
-        temp.start();
-        temp.pause();
-        registerListeners(temp);
-        logger.info("Component " + temp + " has an initial state of 'paused'");
+ else       if (component.getDescriptor().getInitialState().equals(ImmutableMuleDescriptor.INITIAL_STATE_PAUSED)) {
+        ComponentUtil.start(component,true);
+        logger.info("Component " + component + " has been started and paused (initial state = 'paused')");
       }
  else {
-        logger.info("Component " + temp + " has an initial state of 'stopped'");
+        logger.info("Component " + component + " has not been started (initial state = 'stopped')");
       }
     }
     started.set(true);
