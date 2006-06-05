@@ -6,7 +6,7 @@
   int gzip=(options & GZIP);
   int dontBreakLines=(options & DONT_BREAK_LINES);
   try {
-    baos=new ByteArrayOutputStream(1024);
+    baos=new ByteArrayOutputStream(4096);
     b64os=new Base64.OutputStream(baos,ENCODE | dontBreakLines);
     if (gzip == GZIP) {
       gzos=new GZIPOutputStream(b64os);
@@ -16,6 +16,11 @@
       oos=new ObjectOutputStream(b64os);
     }
     oos.writeObject(serializableObject);
+    if (gzos != null) {
+      gzos.finish();
+      gzos.close();
+    }
+    oos.close();
   }
  catch (  IOException e) {
     return null;
