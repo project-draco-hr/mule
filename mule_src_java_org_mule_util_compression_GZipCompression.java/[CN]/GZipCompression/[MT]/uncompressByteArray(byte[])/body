@@ -1,21 +1,36 @@
 {
   if (!isCompressed(bytes)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Data already uncompressed; doing nothing");
+    }
     return bytes;
   }
   if (logger.isDebugEnabled()) {
     logger.debug("Uncompressing message of size: " + bytes.length);
   }
-  if (!isCompressed(bytes)) {
-    logger.warn("Data is not of type GZIP compressed." + " The data may not have been compressed in the first place.");
-    throw new CompressionException("Not in GZIP format");
+  ByteArrayInputStream bais=null;
+  GZIPInputStream gzis=null;
+  ByteArrayOutputStream baos=null;
+  try {
+    bais=new ByteArrayInputStream(bytes);
+    gzis=new GZIPInputStream(bais);
+    baos=new ByteArrayOutputStream(32768);
+    IOUtils.copy(gzis,baos);
+    gzis.close();
+    bais.close();
+    byte[] uncompressedByteArray=baos.toByteArray();
+    baos.close();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Uncompressed message to size: " + uncompressedByteArray.length);
+    }
+    return uncompressedByteArray;
   }
-  ByteArrayInputStream bais=new ByteArrayInputStream(bytes);
-  GZIPInputStream gis=new GZIPInputStream(bais);
-  ByteArrayOutputStream baos=new ByteArrayOutputStream(bytes.length * 4);
-  IOUtils.copy(gis,baos);
-  byte[] uncompressedByteArray=baos.toByteArray();
-  if (logger.isDebugEnabled()) {
-    logger.debug("Uncompressed message to size: " + uncompressedByteArray.length);
+ catch (  IOException ioex) {
+    throw ioex;
   }
-  return uncompressedByteArray;
+ finally {
+    IOUtils.closeQuietly(gzis);
+    IOUtils.closeQuietly(bais);
+    IOUtils.closeQuietly(baos);
+  }
 }
