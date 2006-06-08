@@ -22,7 +22,13 @@
       msgContext.setProperty("securityProvider",securityProvider);
     }
     Object request=context.getTransformedMessage();
-    Message requestMsg=new Message((request instanceof File) ? new FileInputStream((File)request) : request,false,context.getMessage().getStringProperty(HTTPConstants.HEADER_CONTENT_TYPE,null),context.getMessage().getStringProperty(HTTPConstants.HEADER_CONTENT_LOCATION,null));
+    if (request instanceof File) {
+      request=new FileInputStream((File)request);
+    }
+ else     if (request instanceof byte[]) {
+      request=new ByteArrayInputStream((byte[])request);
+    }
+    Message requestMsg=new Message(request,false,context.getMessage().getStringProperty(HTTPConstants.HEADER_CONTENT_TYPE,null),context.getMessage().getStringProperty(HTTPConstants.HEADER_CONTENT_LOCATION,null));
     if (logger.isDebugEnabled()) {
       logger.debug("Request Message:" + requestMsg);
     }

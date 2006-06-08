@@ -2,6 +2,9 @@
   UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
   Object method=event.getMessage().getProperty(SoapConstants.SOAP_METHOD_PROPERTY);
   if (method == null) {
+    method=event.getEndpoint().getEndpointURI().getParams().getProperty(SoapConstants.SOAP_METHOD_PROPERTY);
+  }
+  if (method == null) {
     throw new DispatchException(new org.mule.config.i18n.Message("soap",4),event.getMessage(),event.getEndpoint());
   }
  else   if (method instanceof SoapMethod) {
@@ -103,6 +106,12 @@
   }
  else {
     call.setSOAPActionURI(endpointUri.getAddress());
+  }
+  for (Iterator iterator=event.getMessage().getAttachmentNames().iterator(); iterator.hasNext(); ) {
+    String name=(String)iterator.next();
+    DataHandler dh=event.getMessage().getAttachment(name);
+    AttachmentPart part=new AttachmentPart(dh);
+    call.addAttachmentPart(part);
   }
   return call;
 }
