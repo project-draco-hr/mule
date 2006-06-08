@@ -15,12 +15,19 @@
   String serviceName=receiver.getComponent().getDescriptor().getName();
   String endpoint=receiver.getEndpointURI().getAddress();
   String scheme=ep.getScheme().toLowerCase();
-  boolean sync=receiver.getEndpoint().isSynchronous();
-  if (scheme.equals("http") || scheme.equals("tcp")) {
-    sync=true;
+  boolean sync=false;
+  if (!receiver.getEndpoint().isSynchronousSet()) {
+    if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")) {
+      sync=true;
+    }
+  }
+ else {
+    sync=receiver.getEndpoint().isSynchronous();
+  }
+  if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")) {
+    endpoint+="/" + serviceName;
     receiver.getEndpoint().getProperties().put(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
     receiver.getEndpoint().getProperties().put(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
-    endpoint+="/" + serviceName;
   }
   UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
   serviceEndpoint.setSynchronous(sync);
