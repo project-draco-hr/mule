@@ -4,7 +4,13 @@
     client=(Client)clientPool.borrowObject();
     client.setTimeout(event.getTimeout());
     client.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
-    Object[] response=client.invoke(getMethod(event),getArgs(event));
+    String method=getMethod(event);
+    String soapAction=(String)event.getMessage().getProperty(SoapConstants.SOAP_ACTION_PROPERTY);
+    if (soapAction != null) {
+      soapAction=parseSoapAction(soapAction,new QName(method),event);
+      client.setProperty(org.codehaus.xfire.soap.SoapConstants.SOAP_ACTION,soapAction);
+    }
+    Object[] response=client.invoke(method,getArgs(event));
     UMOMessage result=null;
     if (response != null && response.length <= 1) {
       if (response.length == 1) {

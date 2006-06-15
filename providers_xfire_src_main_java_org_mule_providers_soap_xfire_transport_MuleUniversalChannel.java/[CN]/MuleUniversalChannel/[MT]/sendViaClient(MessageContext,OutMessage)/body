@@ -24,6 +24,19 @@
         throw new IOException(e.getMessage());
       }
     }
+    public Map getHeaders(    UMOEvent event){
+      Map headers=new HashMap();
+      headers.put(HttpConstants.HEADER_CONTENT_TYPE,getSoapMimeType(message));
+      headers.put(SoapConstants.SOAP_ACTION,message.getProperty(SoapConstants.SOAP_ACTION));
+      for (Iterator iterator=event.getMessage().getPropertyNames().iterator(); iterator.hasNext(); ) {
+        String headerName=(String)iterator.next();
+        Object headerValue=event.getMessage().getStringProperty(headerName,null);
+        if (HttpConstants.REQUEST_HEADER_NAMES.get(headerName) != null) {
+          headers.put(headerName,headerValue);
+        }
+      }
+      return headers;
+    }
   }
 ;
   StreamMessageAdapter sp=new StreamMessageAdapter(handler);

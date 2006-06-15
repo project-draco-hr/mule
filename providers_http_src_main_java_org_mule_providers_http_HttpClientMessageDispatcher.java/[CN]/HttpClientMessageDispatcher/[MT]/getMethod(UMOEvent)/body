@@ -20,6 +20,12 @@
       httpMethod=(HttpMethod)body;
     }
  else     if (body instanceof StreamMessageAdapter) {
+      StreamMessageAdapter sma=(StreamMessageAdapter)body;
+      Map headers=sma.getOutputHandler().getHeaders(event);
+      for (Iterator iterator=headers.entrySet().iterator(); iterator.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)iterator.next();
+        postMethod.addRequestHeader((String)entry.getKey(),(String)entry.getValue());
+      }
       postMethod.setRequestEntity(new StreamPayloadRequestEntity((StreamMessageAdapter)body,event));
       postMethod.setContentChunked(true);
       httpMethod=postMethod;
