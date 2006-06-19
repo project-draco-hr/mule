@@ -18,7 +18,13 @@
     httpAdaptor.setAuthenticationMethod(authenticationMethod);
   }
   if (socketFactoryProperties != null && !socketFactoryProperties.isEmpty()) {
-    SSLAdaptorServerSocketFactory factory=new SSLAdaptorServerSocketFactory();
+    SSLAdaptorServerSocketFactoryMBean factory;
+    if (SystemUtils.isIbmJDK()) {
+      factory=new IBMSslAdapterServerSocketFactory();
+    }
+ else {
+      factory=new SSLAdaptorServerSocketFactory();
+    }
     BeanUtils.populateWithoutFail(factory,socketFactoryProperties,true);
     httpAdaptor.setSocketFactory(factory);
   }
