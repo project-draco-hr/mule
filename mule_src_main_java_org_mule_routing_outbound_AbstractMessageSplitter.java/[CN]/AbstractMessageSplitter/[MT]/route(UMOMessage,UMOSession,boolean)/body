@@ -12,6 +12,9 @@
       logger.warn("Message part is null for endpoint: " + endpoint.getEndpointURI().toString());
     }
     while (message != null) {
+      if (honorSynchronisity) {
+        synchronous=endpoint.isSynchronous();
+      }
       try {
         if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
           boolean correlationSet=message.getCorrelationId() != null;
@@ -21,6 +24,9 @@
           final int groupSize=message.getCorrelationGroupSize();
           message.setCorrelationGroupSize(groupSize);
           message.setCorrelationSequence(correlationSequence++);
+        }
+        if (honorSynchronisity) {
+          message.setBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,endpoint.isRemoteSync());
         }
         if (synchronous) {
           result=send(session,message,endpoint);
