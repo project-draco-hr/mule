@@ -1,4 +1,55 @@
 {
-  threadFactory=new NamedThreadFactory(name,threadPriority);
-  return configurePool();
+  ThreadPoolExecutor pool;
+  if (maxBufferSize > 0) {
+    pool=new ThreadPoolExecutor(0,maxBufferSize,60L,TimeUnit.SECONDS,new ArrayBlockingQueue(maxBufferSize));
+  }
+ else {
+    pool=new ThreadPoolExecutor(0,Integer.MAX_VALUE,60L,TimeUnit.SECONDS,new SynchronousQueue());
+  }
+  if (maxThreadsActive < maxThreadsIdle) {
+    maxThreadsIdle=maxThreadsActive;
+  }
+  pool.setCorePoolSize(maxThreadsIdle);
+  pool.setMaximumPoolSize(maxThreadsActive);
+  pool.setKeepAliveTime(threadTTL,TimeUnit.MILLISECONDS);
+  if (rejectedExecutionHandler != null) {
+    pool.setRejectedExecutionHandler(rejectedExecutionHandler);
+  }
+  if (name != null) {
+    threadFactory=new NamedThreadFactory(name,threadPriority);
+    pool.setThreadFactory(threadFactory);
+  }
+switch (poolExhaustPolicy) {
+case WHEN_EXHAUSTED_DISCARD_OLDEST:
+{
+      pool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
+      break;
+    }
+case WHEN_EXHAUSTED_RUN:
+{
+    pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+    break;
+  }
+case WHEN_EXHAUSTED_ABORT:
+{
+  pool.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
+  break;
+}
+case WHEN_EXHAUSTED_DISCARD:
+{
+pool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+break;
+}
+case WHEN_EXHAUSTED_WAIT:
+{
+pool.setRejectedExecutionHandler(new WaitPolicy(threadWaitTimeout,TimeUnit.MILLISECONDS));
+break;
+}
+default :
+{
+pool.setRejectedExecutionHandler(new WaitPolicy(threadWaitTimeout,TimeUnit.MILLISECONDS));
+break;
+}
+}
+return pool;
 }
