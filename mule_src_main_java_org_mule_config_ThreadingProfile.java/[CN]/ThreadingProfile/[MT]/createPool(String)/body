@@ -1,17 +1,15 @@
 {
-  ThreadPoolExecutor pool;
+  BlockingQueue buffer;
   if (maxBufferSize > 0) {
-    pool=new ThreadPoolExecutor(0,maxBufferSize,60L,TimeUnit.SECONDS,new ArrayBlockingQueue(maxBufferSize));
+    buffer=new ArrayBlockingQueue(maxBufferSize);
   }
  else {
-    pool=new ThreadPoolExecutor(0,Integer.MAX_VALUE,60L,TimeUnit.SECONDS,new SynchronousQueue());
+    buffer=new SynchronousQueue();
   }
   if (maxThreadsActive < maxThreadsIdle) {
     maxThreadsIdle=maxThreadsActive;
   }
-  pool.setCorePoolSize(maxThreadsIdle);
-  pool.setMaximumPoolSize(maxThreadsActive);
-  pool.setKeepAliveTime(threadTTL,TimeUnit.MILLISECONDS);
+  ThreadPoolExecutor pool=new ThreadPoolExecutor(maxThreadsIdle,maxThreadsActive,threadTTL,TimeUnit.MILLISECONDS,buffer);
   if (rejectedExecutionHandler != null) {
     pool.setRejectedExecutionHandler(rejectedExecutionHandler);
   }
