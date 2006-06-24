@@ -1,5 +1,5 @@
 {
-  Properties envProps=new Properties();
+  Map env=new HashMap();
   Process process=null;
   try {
     boolean isUnix=true;
@@ -15,8 +15,10 @@
     BufferedReader br=new BufferedReader(new InputStreamReader(process.getInputStream()));
     String line;
     while ((line=br.readLine()) != null) {
-      if (line.startsWith("declare -") || line.startsWith("typeset -")) {
-        line=line.substring(11);
+      for (int prefix=0; prefix < UNIX_ENV_PREFIXES.length; prefix++) {
+        if (line.startsWith(UNIX_ENV_PREFIXES[prefix])) {
+          line=line.substring(UNIX_ENV_PREFIXES[prefix].length());
+        }
       }
       int index=-1;
       if ((index=line.indexOf('=')) > -1) {
@@ -25,10 +27,10 @@
         if (isUnix && value.length() > 1 && (value.startsWith("\"") || value.startsWith("'"))) {
           value=value.substring(1,value.length() - 1);
         }
-        envProps.setProperty(key,value);
+        env.put(key,value);
       }
  else {
-        envProps.setProperty(line,StringUtils.EMPTY);
+        env.put(line,StringUtils.EMPTY);
       }
     }
   }
@@ -40,5 +42,5 @@
       process.destroy();
     }
   }
-  return envProps;
+  return env;
 }
