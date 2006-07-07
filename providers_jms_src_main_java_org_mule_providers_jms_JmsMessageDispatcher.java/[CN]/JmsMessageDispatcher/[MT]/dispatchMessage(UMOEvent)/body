@@ -1,34 +1,36 @@
 {
-  if (logger.isDebugEnabled()) {
-    logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". Event id is: "+ event.getId());
-  }
-  Session txSession=null;
   Session session=null;
   MessageProducer producer=null;
   MessageConsumer consumer=null;
   Destination replyTo=null;
+  boolean transacted=false;
+  boolean cached=false;
+  boolean remoteSync=useRemoteSync(event);
+  if (logger.isDebugEnabled()) {
+    logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". Event id is: "+ event.getId());
+  }
   try {
-    txSession=connector.getCurrentSession();
-    cacheJmsSession=event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions());
-    if (txSession != null) {
-      cacheJmsSession=false;
-    }
-    if (cacheJmsSession) {
-      if (cachedSession == null) {
-        cachedSession=connector.getSession(event.getEndpoint());
+    session=connector.getSessionFromTransaction();
+    if (session != null) {
+      transacted=true;
+      if (remoteSync) {
+        throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
       }
-      session=cachedSession;
     }
- else     if (txSession != null) {
-      session=txSession;
+ else     if (event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions())) {
+      cached=true;
+      if (cachedSession != null) {
+        session=cachedSession;
+      }
+ else {
+        session=connector.getSession(event.getEndpoint());
+        cachedSession=session;
+      }
     }
  else {
       session=connector.getSession(event.getEndpoint());
     }
-    boolean remoteSync=useRemoteSync(event);
-    if (txSession != null && remoteSync) {
-      throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
-    }
+    event.getMessage().setProperty(MuleProperties.MULE_JMS_SESSION,session);
     UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
     boolean topic=false;
     String resourceInfo=endpointUri.getResourceInfo();
@@ -90,6 +92,7 @@
     if (persistentDeliveryString != null) {
       persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
     }
+    logger.debug("Sending message of type " + msg.getClass().getName());
     if (consumer != null && topic) {
       Latch l=new Latch();
       ReplyToListener listener=new ReplyToListener(l);
@@ -139,7 +142,7 @@
         connector.closeQuietly((TemporaryTopic)replyTo);
       }
     }
-    if (session != null && !cacheJmsSession && txSession == null) {
+    if (session != null && !cached && !transacted) {
       connector.closeQuietly(session);
     }
   }
