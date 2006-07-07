@@ -1,11 +1,16 @@
 {
   if (session != null) {
+    java.sql.Connection conn=((AQjmsSession)session).getDBConnection();
     try {
-      ((AQjmsSession)session).getDBConnection().close();
+      if (conn != null && conn.isClosed() == false) {
+        conn.commit();
+        conn.close();
+      }
     }
  catch (    SQLException e) {
-      throw new JMSException("Failed to close the Oracle JMS session's underlying JDBC connection: " + e.getMessage());
+      JMSException ex=new JMSException(e.getMessage());
+      ex.setLinkedException(e);
+      throw ex;
     }
   }
-  super.close(session);
 }
