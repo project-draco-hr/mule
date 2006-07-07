@@ -1,0 +1,26 @@
+{
+  if (session == null) {
+    throw new IllegalArgumentException("Session cannot be null when creating a destination");
+  }
+  if (name == null) {
+    throw new IllegalArgumentException("Destination name cannot be null when creating a destination");
+  }
+  if (jndiDestinations) {
+    if (context == null) {
+      throw new IllegalArgumentException("Jndi Context name cannot be null when looking up a destination");
+    }
+    Destination dest=getJndiDestination(name);
+    if (dest != null) {
+      return dest;
+    }
+ else     if (forceJndiDestinations) {
+      throw new JMSException("JNDI destination not found with name: " + name);
+    }
+  }
+  if (topic) {
+    return ((TopicSession)session).createTopic(name);
+  }
+ else {
+    return ((QueueSession)session).createQueue(name);
+  }
+}
