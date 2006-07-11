@@ -1,15 +1,26 @@
 {
   try {
-    Object o=null;
+    Object result;
     if (src instanceof String) {
       Document doc=DocumentHelper.parseText((String)src);
-      o=doc.valueOf(expression);
+      if (singleResult) {
+        result=doc.valueOf(expression);
+      }
+ else {
+        XPath xpath=doc.createXPath(expression);
+        List obj=(List)xpath.evaluate(doc);
+        result=new ArrayList(obj.size());
+        for (int i=0; i < obj.size(); i++) {
+          final Element e=(Element)obj.get(i);
+          ((List)result).add(e.getText());
+        }
+      }
     }
  else {
       JXPathContext context=JXPathContext.newContext(src);
-      o=context.getValue(expression);
+      result=context.getValue(expression);
     }
-    return o;
+    return result;
   }
  catch (  Exception e) {
     throw new TransformerException(this,e);
