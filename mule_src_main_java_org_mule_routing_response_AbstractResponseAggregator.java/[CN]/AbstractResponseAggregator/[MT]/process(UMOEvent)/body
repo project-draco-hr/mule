@@ -7,9 +7,8 @@
     Object id=eg.getGroupId();
     removeGroup(id);
     responseEvents.put(id,returnMessage);
-    Lock l=null;
     locksCollectionLock.lock();
-    l=(Lock)locks.get(id);
+    Latch l=(Latch)locks.get(id);
     if (l == null) {
       if (logger.isDebugEnabled()) {
         logger.debug("Creating latch for " + id + " in "+ this);
@@ -21,6 +20,6 @@
       locks.put(id,l);
     }
     locksCollectionLock.unlock();
-    l.unlock();
+    l.countDown();
   }
 }

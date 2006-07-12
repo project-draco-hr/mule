@@ -3,30 +3,35 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Waiting for response for message id: " + responseId + " in "+ this);
   }
-  Lock l=null;
   locksCollectionLock.lock();
-  l=(Lock)locks.get(responseId);
+  Latch l=(Latch)locks.get(responseId);
   if (l == null) {
-    logger.debug("Got response but no one is waiting for it yet. Creating latch for " + responseId + " in "+ this);
-    l=new Latch();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Got response but no one is waiting for it yet. Creating latch for " + responseId + " in "+ this);
+    }
     if (locks.get(responseId) != null) {
       throw new IllegalStateException("There is already a lock with ID: " + responseId);
     }
+    l=new Latch();
     locks.put(responseId,l);
   }
  else {
-    logger.debug("Got latch for message: " + responseId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Got latch for message: " + responseId);
+    }
   }
   locksCollectionLock.unlock();
   boolean b=false;
   try {
-    logger.debug("Waiting for response to message: " + responseId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Waiting for response to message: " + responseId);
+    }
     if (getTimeout() <= 0) {
-      l.lock();
+      l.await();
       b=true;
     }
  else {
-      b=l.tryLock(this.getTimeout(),TimeUnit.MILLISECONDS);
+      b=l.await(this.getTimeout(),TimeUnit.MILLISECONDS);
     }
   }
  catch (  InterruptedException e) {
