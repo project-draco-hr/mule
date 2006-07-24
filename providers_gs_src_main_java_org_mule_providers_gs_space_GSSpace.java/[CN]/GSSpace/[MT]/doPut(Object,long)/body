@@ -1,7 +1,12 @@
 {
   try {
-    if (value instanceof Entry) {
-      space.write((Entry)value,getTransaction(),lease);
+    Class valueClass=value.getClass();
+    if (Entry.class.isAssignableFrom(valueClass)) {
+      space.write((Entry)value,getTransaction(),Lease.FOREVER);
+    }
+ else     if (valueClass.isArray()) {
+      Entry[] entryArr=(Entry[])ArrayUtils.toArrayOfComponentType((Object[])value,Entry.class);
+      space.writeMultiple(entryArr,getTransaction(),Lease.FOREVER);
     }
  else {
       space.write(new ExternalEntry(name,new Object[]{value}),getTransaction(),lease);
