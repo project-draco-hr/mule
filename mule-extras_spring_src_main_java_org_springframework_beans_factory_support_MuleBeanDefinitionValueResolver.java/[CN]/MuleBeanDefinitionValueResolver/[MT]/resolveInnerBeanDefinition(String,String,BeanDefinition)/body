@@ -1,0 +1,16 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Resolving inner bean definition '" + innerBeanName + "' of bean '"+ this.beanName+ "'");
+  }
+  try {
+    RootBeanDefinition mergedInnerBd=this.beanFactory.getMergedBeanDefinition(innerBeanName,innerBd);
+    Object innerBean=this.beanFactory.createBean(innerBeanName,mergedInnerBd,null);
+    if (mergedInnerBd.isSingleton()) {
+      this.beanFactory.registerDependentBean(innerBeanName,this.beanName);
+    }
+    return this.beanFactory.getObjectForBeanInstance(innerBean,innerBeanName,mergedInnerBd);
+  }
+ catch (  BeansException ex) {
+    throw new BeanCreationException(this.beanDefinition.getResourceDescription(),this.beanName,"Cannot create inner bean '" + innerBeanName + "' while setting "+ argName,ex);
+  }
+}

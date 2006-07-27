@@ -1,0 +1,22 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Resolving reference from property '" + argName + "' in bean '"+ this.beanName+ "' to bean '"+ ref.getBeanName()+ "'");
+  }
+  try {
+    if (ref.isToParent()) {
+      if (this.beanFactory.getParentBeanFactory() == null) {
+        throw new BeanCreationException(this.beanDefinition.getResourceDescription(),this.beanName,"Can't resolve reference to bean '" + ref.getBeanName() + "' in parent factory: no parent factory available");
+      }
+      return this.beanFactory.getParentBeanFactory().getBean(ref.getBeanName());
+    }
+ else {
+      if (this.beanDefinition.isSingleton()) {
+        this.beanFactory.registerDependentBean(ref.getBeanName(),this.beanName);
+      }
+      return this.beanFactory.getBean(ref.getBeanName());
+    }
+  }
+ catch (  BeansException ex) {
+    throw new BeanCreationException(this.beanDefinition.getResourceDescription(),this.beanName,"Cannot resolve reference to bean '" + ref.getBeanName() + "' while setting "+ argName,ex);
+  }
+}
