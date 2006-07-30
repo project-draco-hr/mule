@@ -6,7 +6,14 @@
  catch (    IllegalArgumentException e) {
       throw new RoutingException(event.getMessage(),event.getEndpoint());
     }
-    return new UMOEvent[]{event};
+    String id=event.getMessage().getUniqueId();
+    try {
+      storeId(id);
+      return new UMOEvent[]{event};
+    }
+ catch (    IOException e) {
+      throw new RoutingException(new Message(Messages.FAILED_TO_WRITE_X_TO_STORE_X,id,idStore.getAbsolutePath()),event.getMessage(),event.getEndpoint(),e);
+    }
   }
  else {
     return null;
