@@ -28,13 +28,17 @@
   service.setOption(AxisConnector.SERVICE_PROPERTY_COMPONENT_NAME,serviceName);
   service.setName(serviceName);
   Map options=(Map)descriptor.getProperties().get("axisOptions");
-  if (options != null) {
-    Map.Entry entry;
-    for (Iterator iterator=options.entrySet().iterator(); iterator.hasNext(); ) {
-      entry=(Map.Entry)iterator.next();
-      service.setOption(entry.getKey().toString(),entry.getValue());
-      logger.debug("Adding Axis option: " + entry);
-    }
+  if (options == null) {
+    options=new HashMap(2);
+  }
+  if (options.get("wsdlServiceElement") == null) {
+    options.put("wsdlServiceElement",serviceName);
+  }
+  Map.Entry entry;
+  for (Iterator iterator=options.entrySet().iterator(); iterator.hasNext(); ) {
+    entry=(Map.Entry)iterator.next();
+    service.setOption(entry.getKey().toString(),entry.getValue());
+    logger.debug("Adding Axis option: " + entry);
   }
   Class[] interfaces=ServiceProxy.getInterfacesForComponent(component);
   if (interfaces.length == 0) {
