@@ -1,8 +1,8 @@
 {
   try {
-    String namespace=XFireConnector.DEFAULT_MULE_NAMESPACE_URI;
     Map props=new HashMap(component.getDescriptor().getProperties());
     props.putAll(endpoint.getProperties());
+    String namespace=MapUtils.getString(props,"namespace",XFireConnector.DEFAULT_MULE_NAMESPACE_URI);
     if (props.size() == 0) {
       props=null;
     }
@@ -18,7 +18,7 @@
     }
     service=connector.getServiceFactory().create(component.getDescriptor().getImplementationClass(),component.getDescriptor().getName(),namespace,props);
     boolean sync=endpoint.isSynchronous();
-    if (endpoint.getEndpointURI().getScheme().startsWith("http")) {
+    if (endpoint.getEndpointURI().getScheme().startsWith("http") || endpoint.getEndpointURI().getScheme().startsWith("servlet")) {
       sync=true;
     }
     service.setInvoker(new MuleInvoker(this,sync));

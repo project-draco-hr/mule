@@ -2,55 +2,17 @@
   OutStreamMessageAdapter response;
   UMOEndpointURI endpointURI=eventContext.getEndpointURI();
   String method;
-  if (eventContext.isStreaming()) {
-    StreamMessageAdapter sma=(StreamMessageAdapter)eventContext.getMessage().getPayload();
-    if (sma.getOutput() != null) {
-      response=new OutStreamMessageAdapter(sma.getOutput());
+{
+    logger.debug(eventContext);
+    String request=eventContext.getMessage().getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY,StringUtils.EMPTY);
+    if (request.toLowerCase().endsWith(org.mule.providers.soap.SoapConstants.WSDL_PROPERTY)) {
+      ByteArrayOutputStream out=new ByteArrayOutputStream();
+      getXfire().generateWSDL(getServiceName(eventContext),out);
+      return out.toString();
     }
  else {
-      response=new OutStreamMessageAdapter(new ByteArrayOutputStream());
+      MuleLocalChannel channel=(MuleLocalChannel)transport.createChannel(eventContext.getEndpointURI().getFullScheme());
+      return channel.onCall(eventContext);
     }
   }
- else {
-    response=new OutStreamMessageAdapter(new ByteArrayOutputStream());
-  }
-  UMOMessage eventMsg=eventContext.getMessage();
-  String endpointHeader=eventMsg.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
-  String request=eventMsg.getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY,null);
-  if (request != null) {
-    endpointURI=new MuleEndpointURI("soap:" + endpointURI.toString() + request);
-  }
-  method=endpointURI.getParams().getProperty(org.mule.providers.soap.SoapConstants.SOAP_METHOD_PROPERTY);
-  if (method == null) {
-    method=eventMsg.getStringProperty(org.mule.providers.soap.SoapConstants.SOAP_METHOD_PROPERTY,null);
-  }
-  if (method == null) {
-    if (endpointHeader != null) {
-      endpointURI=new MuleEndpointURI(endpointHeader);
-      method=endpointURI.getParams().getProperty(org.mule.providers.soap.SoapConstants.SOAP_METHOD_PROPERTY);
-    }
-  }
-  String serviceName=getService(eventContext);
-  if (request == null) {
-    request=endpointHeader;
-  }
-  String tempRequest=StringUtils.trimToEmpty(request).toLowerCase();
-  if (tempRequest.indexOf("?wsdl") > 0 || tempRequest.indexOf("&wsdl") > 0) {
-    generateWSDL(response,serviceName);
-  }
- else {
-    if (method == null) {
-      throw new MuleException(new Message(Messages.PROPERTIES_X_NOT_SET,"method"));
-    }
-    ServiceRegistry reg=getServiceRegistry();
-    if (serviceName == null || serviceName.length() == 0 || !reg.hasService(serviceName)) {
-      if (!reg.hasService(serviceName)) {
-        eventMsg.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_NOT_FOUND));
-      }
-      generateServices(response);
-      return response;
-    }
-    invoke(eventContext,endpointURI,response,serviceName,method);
-  }
-  return response.getPayloadAsBytes();
 }
