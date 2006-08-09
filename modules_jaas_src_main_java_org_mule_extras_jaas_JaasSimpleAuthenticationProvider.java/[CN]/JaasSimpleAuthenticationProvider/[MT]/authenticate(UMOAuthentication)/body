@@ -1,0 +1,25 @@
+{
+  LoginContext loginContext=null;
+  MuleAuthentication auth=(MuleAuthentication)authentication;
+  MuleCallbackHandler cbh=new MuleCallbackHandler(auth);
+  try {
+    loginContext=new LoginContext(loginContextName,cbh);
+  }
+ catch (  LoginException e) {
+    System.err.println("Cannot create LoginContext. " + e.getMessage());
+  }
+catch (  SecurityException se) {
+    System.err.println("Cannot create LoginContext. " + se.getMessage());
+  }
+  try {
+    loginContext.login();
+  }
+ catch (  LoginException le) {
+    System.err.println("Authentication failed:");
+    System.err.println("  " + le.getMessage());
+    throw new UnauthorisedException(new org.mule.config.i18n.Message(org.mule.config.i18n.Messages.AUTH_FAILED_FOR_USER_X,auth.getPrincipal()));
+  }
+  System.out.println("Authentication succeeded!");
+  auth.setAuthenticated(true);
+  return auth;
+}

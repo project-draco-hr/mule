@@ -1,0 +1,35 @@
+{
+  if (loginConfig == null) {
+    try {
+      AppConfigurationEntry entry=null;
+      JaasConfig.init();
+      HashMap options=new HashMap();
+      options.put("credentials",credentials);
+      AppConfigurationEntry appEntry=null;
+      if (loginModule != null) {
+        appEntry=new AppConfigurationEntry(loginModule,AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,options);
+      }
+ else {
+        appEntry=new AppConfigurationEntry(DefaultModule,AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,options);
+      }
+      JaasConfig.addApplicationConfigEntry(loginContextName,appEntry);
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(e,this);
+    }
+  }
+ else {
+    try {
+      configureJaas();
+    }
+ catch (    IOException e) {
+      throw new InitialisationException(e,this);
+    }
+  }
+  try {
+    factory=new JaasSecurityContextFactory();
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(new org.mule.config.i18n.Message(Messages.FAILED_TO_CREATE_X,"JaasProvider"),e);
+  }
+}
