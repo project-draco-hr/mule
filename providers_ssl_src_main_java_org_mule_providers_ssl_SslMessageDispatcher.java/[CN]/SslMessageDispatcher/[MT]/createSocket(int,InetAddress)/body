@@ -1,5 +1,17 @@
 {
-  SocketFactory factory=SSLSocketFactory.getDefault();
+  SslConnector conn=(SslConnector)getConnector();
+  SSLContext context;
+  try {
+    context=SSLContext.getInstance(conn.getProtocol());
+    context.init(conn.getKeyManagerFactory().getKeyManagers(),conn.getTrustManagerFactory().getTrustManagers(),null);
+  }
+ catch (  NoSuchAlgorithmException e) {
+    throw new IOException(e.getMessage());
+  }
+catch (  KeyManagementException e) {
+    throw new IOException(e.getMessage());
+  }
+  SocketFactory factory=context.getSocketFactory();
   SSLSocket socket=(SSLSocket)factory.createSocket(inetAddress,port);
   return socket;
 }

@@ -34,6 +34,27 @@
  catch (  Exception e) {
     throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Key Manager"),e,this);
   }
+  if (getTrustStore() != null) {
+    KeyStore truststore;
+    try {
+      truststore=KeyStore.getInstance(trustStoreType);
+      InputStream is=FileUtils.loadResource(getTrustStore(),getClass());
+      if (is == null) {
+        throw new FileNotFoundException("Failed to load truststore from classpath or local file: " + getTrustStore());
+      }
+      truststore.load(is,getTrustStorePassword().toCharArray());
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"TrustStore: " + getTrustStore()),e,this);
+    }
+    try {
+      trustManagerFactory=TrustManagerFactory.getInstance(getTrustManagerAlgorithm());
+      trustManagerFactory.init(truststore);
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Trust Manager (" + getTrustManagerAlgorithm() + ")"),e,this);
+    }
+  }
   super.doInitialise();
   if (protocolHandler != null) {
     System.setProperty("java.protocol.handler.pkgs",protocolHandler);
