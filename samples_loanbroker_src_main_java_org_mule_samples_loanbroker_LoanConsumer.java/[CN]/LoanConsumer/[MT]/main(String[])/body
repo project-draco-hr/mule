@@ -1,14 +1,17 @@
 {
   LoanConsumer loanConsumer=null;
   try {
-    if (args.length > 0) {
-      loanConsumer=new LoanConsumer(args[0]);
+    String config=SystemUtils.getCommandLineOption("-config",args);
+    if (StringUtils.isNotBlank(config)) {
+      loanConsumer=new LoanConsumer(config);
       int i=100;
-      if (args.length > 1) {
-        i=Integer.parseInt(args[1]);
+      String requests=SystemUtils.getCommandLineOption("-req",args);
+      if (requests != null) {
+        i=Integer.parseInt(requests);
       }
-      if (args.length > 2) {
-        synchronous=Boolean.valueOf(args[2]).booleanValue();
+      String sync=SystemUtils.getCommandLineOption("-sync",args);
+      if (sync != null) {
+        synchronous=Boolean.valueOf(sync).booleanValue();
       }
       if (synchronous) {
         long start=System.currentTimeMillis();
@@ -30,8 +33,7 @@
       }
     }
  else {
-      String config=getConfig();
-      loanConsumer=new LoanConsumer(config);
+      loanConsumer=new LoanConsumer(getInteractiveConfig());
       loanConsumer.run(synchronous);
     }
   }
