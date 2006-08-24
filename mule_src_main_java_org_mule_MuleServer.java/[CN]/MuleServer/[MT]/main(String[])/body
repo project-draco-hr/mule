@@ -1,29 +1,30 @@
 {
   MuleServer server=new MuleServer();
-  List opts=Arrays.asList(args);
-  String config=null;
-  if (opts.size() > 0) {
-    config=getOption("-config",opts);
-    if (config != null) {
-      server.setConfigurationResources(config);
-    }
+  if (args.length > 0) {
+    startupDirectory=args[0];
   }
- else {
+  String config=SystemUtils.getCommandLineOption("-config",args);
+  if (config == null) {
     logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
     URL configUrl=ClassUtils.getResource(DEFAULT_CONFIGURATION,MuleServer.class);
     if (configUrl != null) {
       config=configUrl.toExternalForm();
-      server.setConfigurationResources(config);
     }
   }
-  if (config == null) {
+  if (config != null) {
+    server.setConfigurationResources(config);
+  }
+ else {
     Message message=new Message(Messages.CONFIG_NOT_FOUND_USAGE);
     System.err.println(message.toString());
     System.exit(1);
   }
-  String cfgBuilderClassName=getOption("-builder",opts);
+  String cfgBuilderClassName=SystemUtils.getCommandLineOption("-builder",args);
   if (cfgBuilderClassName != null) {
     try {
+      if (cfgBuilderClassName.equalsIgnoreCase("spring")) {
+        cfgBuilderClassName="org.mule.extras.spring.config.SpringConfigurationBuilder";
+      }
       setConfigBuilderClassName(cfgBuilderClassName);
     }
  catch (    Exception e) {
@@ -32,6 +33,10 @@
       System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
       System.exit(1);
     }
+  }
+  String propertiesFile=SystemUtils.getCommandLineOption("-props",args);
+  if (propertiesFile != null) {
+    setStartupPropertiesFile(propertiesFile);
   }
   server.start(false);
 }
