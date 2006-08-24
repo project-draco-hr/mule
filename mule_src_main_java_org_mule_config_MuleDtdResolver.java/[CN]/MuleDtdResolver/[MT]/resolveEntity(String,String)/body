@@ -5,21 +5,20 @@
   if (delegate != null) {
     source=delegate.resolveEntity(publicId,systemId);
   }
-  if (source == null) {
-    if (systemId != null && systemId.indexOf(dtdName) > systemId.lastIndexOf("/")) {
-      String dtdFile=systemId.substring(systemId.indexOf(dtdName));
-      logger.debug("Looking on classpath for " + SEARCH_PATH + dtdFile);
-      InputStream is=ClassUtils.getResourceAsStream(SEARCH_PATH + dtdFile,getClass());
-      if (is != null) {
-        source=new InputSource(is);
-        source.setPublicId(publicId);
-        source.setSystemId(systemId);
-        logger.debug("Found on classpath mule DTD: " + systemId);
-        currentXsl=xsl;
-        return source;
-      }
-      logger.debug("Could not find dtd resource on classpath: " + SEARCH_PATH + dtdFile);
+  if ((source == null) && StringUtils.isNotBlank(systemId) && systemId.endsWith(".dtd")) {
+    String[] tokens=systemId.split("/");
+    String dtdFile=tokens[tokens.length - 1];
+    logger.debug("Looking on classpath for " + SEARCH_PATH + dtdFile);
+    InputStream is=ClassUtils.getResourceAsStream(SEARCH_PATH + dtdFile,getClass());
+    if (is != null) {
+      source=new InputSource(is);
+      source.setPublicId(publicId);
+      source.setSystemId(systemId);
+      logger.debug("Found on classpath mule DTD: " + systemId);
+      currentXsl=xsl;
+      return source;
     }
+    logger.debug("Could not find dtd resource on classpath: " + SEARCH_PATH + dtdFile);
   }
   return source;
 }
