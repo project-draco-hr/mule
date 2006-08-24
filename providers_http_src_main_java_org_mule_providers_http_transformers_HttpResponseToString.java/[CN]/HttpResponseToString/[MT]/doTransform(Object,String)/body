@@ -20,10 +20,10 @@
         if (transferenc.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
           outstream=new ChunkedOutputStream(outstream);
         }
-        IOUtils.copy(content,outstream);
-        if (outstream instanceof ChunkedOutputStream) {
-          ((ChunkedOutputStream)outstream).finish();
-        }
+      }
+      IOUtils.copy(content,outstream);
+      if (outstream instanceof ChunkedOutputStream) {
+        ((ChunkedOutputStream)outstream).finish();
       }
     }
     outstream.flush();
@@ -32,12 +32,14 @@
     outstream.close();
     writer.close();
     bos.close();
-    if (getReturnClass().equals(String.class)) {
-      return new String(result,encoding);
+    String output=null;
+    try {
+      output=new String(result,encoding);
     }
- else {
-      return result;
+ catch (    UnsupportedEncodingException uee) {
+      output=new String(result);
     }
+    return output;
   }
  catch (  IOException e) {
     throw new TransformerException(this,e);
