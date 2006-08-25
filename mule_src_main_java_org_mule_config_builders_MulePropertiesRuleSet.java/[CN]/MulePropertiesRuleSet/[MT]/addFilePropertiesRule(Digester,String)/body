@@ -5,22 +5,36 @@
       String location=attributes.getValue("location");
       String temp=attributes.getValue("override");
       boolean override="true".equalsIgnoreCase(temp);
-      InputStream is=FileUtils.loadResource(location,getClass());
+      InputStream is=ClassUtils.getResourceAsStream(location,getClass(),true,true);
       if (is == null) {
-        throw new FileNotFoundException(location);
+        throw new ConfigurationException(new Message(Messages.CANT_LOAD_X_FROM_CLASSPATH_FILE,location));
       }
-      Properties p=new Properties();
-      p.load(is);
-      Map props=(Map)digester.peek();
+      Properties fileProps=new Properties();
+      fileProps.load(is);
+      Map digesterProps=(Map)digester.peek();
       if (override) {
-        props.putAll(p);
+        digesterProps.putAll(fileProps);
       }
  else {
         String key;
-        for (Iterator iterator=p.keySet().iterator(); iterator.hasNext(); ) {
+        for (Iterator iterator=fileProps.keySet().iterator(); iterator.hasNext(); ) {
           key=(String)iterator.next();
-          if (!props.containsKey(key)) {
-            props.put(key,p.getProperty(key));
+          if (!digesterProps.containsKey(key)) {
+            digesterProps.put(key,fileProps.getProperty(key));
+          }
+        }
+      }
+      if (StringUtils.isNotBlank(MuleServer.getStartupPropertiesFile())) {
+        is=ClassUtils.getResourceAsStream(MuleServer.getStartupPropertiesFile(),getClass(),true,false);
+        if (is != null) {
+          Properties startupProps=new Properties();
+          startupProps.load(is);
+          String key;
+          for (Iterator iterator=startupProps.keySet().iterator(); iterator.hasNext(); ) {
+            key=(String)iterator.next();
+            if (digesterProps.containsKey(key)) {
+              digesterProps.put(key,startupProps.getProperty(key));
+            }
           }
         }
       }
