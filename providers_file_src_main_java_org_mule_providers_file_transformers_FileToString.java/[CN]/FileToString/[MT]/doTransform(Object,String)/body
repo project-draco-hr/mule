@@ -1,31 +1,23 @@
 {
-  if (src instanceof byte[]) {
-    if (encoding != null) {
-      try {
-        return new String((byte[])src,encoding);
-      }
- catch (      UnsupportedEncodingException ex) {
-        return new String((byte[])src);
-      }
-    }
- else {
-      return new String((byte[])src);
-    }
-  }
+  byte[] bytes;
   if (src instanceof String) {
-    return src.toString();
+    try {
+      return new String(((String)src).getBytes(),encoding);
+    }
+ catch (    UnsupportedEncodingException uee) {
+      return new String(((String)src).getBytes());
+    }
   }
-  FileInputStream fis=null;
-  InputStreamReader isr=null;
+ else   if (src instanceof byte[]) {
+    bytes=(byte[])src;
+  }
+ else {
+    bytes=(byte[])super.doTransform(src,encoding);
+  }
   try {
-    fis=new FileInputStream((File)src);
-    isr=(encoding != null ? new InputStreamReader(fis,encoding) : new InputStreamReader(fis));
-    return IOUtils.toString(isr);
+    return new String(bytes,encoding);
   }
- catch (  IOException e) {
-    throw new TransformerException(this,e);
-  }
- finally {
-    IOUtils.closeQuietly(isr);
+ catch (  UnsupportedEncodingException uee) {
+    return new String(bytes);
   }
 }
