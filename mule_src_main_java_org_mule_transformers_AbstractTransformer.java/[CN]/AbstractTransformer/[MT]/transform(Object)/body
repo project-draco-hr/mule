@@ -1,9 +1,14 @@
 {
-  Object result;
   String encoding=null;
   if (src instanceof UMOMessage && !isSourceTypeSupported(UMOMessage.class)) {
-    encoding=((UMOMessage)src).getEncoding();
     src=((UMOMessage)src).getPayload();
+    encoding=((UMOMessage)src).getEncoding();
+  }
+  if (encoding == null && endpoint != null) {
+    encoding=endpoint.getEncoding();
+  }
+  if (encoding == null) {
+    encoding=MuleManager.getConfiguration().getEncoding();
   }
   if (!isSourceTypeSupported(src.getClass())) {
     if (ignoreBadInput) {
@@ -14,29 +19,21 @@
       throw new TransformerException(new Message(Messages.TRANSFORM_X_UNSUPORTED_TYPE_X_ENDPOINT_X,getName(),src.getClass().getName(),endpoint.getEndpointURI()),this);
     }
   }
- else {
-    if (endpoint != null && endpoint.getEncoding() != null) {
-      encoding=endpoint.getEncoding();
-    }
-    if (encoding == null) {
-      encoding=MuleManager.getConfiguration().getEncoding();
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("Applying transformer " + getName() + " ("+ getClass().getName()+ ")");
-      logger.debug("Object before transform: " + StringMessageUtils.truncate(src.toString(),200,false));
-    }
-    result=doTransform(src,encoding);
-    if (result == null) {
-      result=new NullPayload();
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("Object after transform: " + StringMessageUtils.truncate(result.toString(),200,false));
-    }
-    result=checkReturnClass(result);
-    if (nextTransformer != null) {
-      logger.debug("Following transformer in the chain is " + nextTransformer.getName() + " ("+ nextTransformer.getClass().getName()+ ")");
-      result=nextTransformer.transform(result);
-    }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Applying transformer " + getName() + " ("+ getClass().getName()+ ")");
+    logger.debug("Object before transform: " + StringMessageUtils.truncate(src.toString(),200,false));
+  }
+  Object result=doTransform(src,encoding);
+  if (result == null) {
+    result=new NullPayload();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Object after transform: " + StringMessageUtils.truncate(result.toString(),200,false));
+  }
+  result=checkReturnClass(result);
+  if (nextTransformer != null) {
+    logger.debug("Following transformer in the chain is " + nextTransformer.getName() + " ("+ nextTransformer.getClass().getName()+ ")");
+    result=nextTransformer.transform(result);
   }
   return result;
 }
