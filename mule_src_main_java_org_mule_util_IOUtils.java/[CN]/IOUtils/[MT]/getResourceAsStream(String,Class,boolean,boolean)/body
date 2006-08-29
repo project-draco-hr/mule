@@ -20,17 +20,6 @@
       logger.debug("Unable to load resource from the file system: " + e.getMessage());
     }
   }
-  if (is == null) {
-    try {
-      is=getResourceAsStream(resourceName,callingClass);
-      if (is == null) {
-        logger.debug("Unable to load resource from the classpath");
-      }
-    }
- catch (    Exception e) {
-      logger.debug("Unable to load resource from the classpath: " + e.getMessage());
-    }
-  }
   if ((is == null) && tryAsUrl) {
     try {
       URL url=new URL(resourceName);
@@ -41,6 +30,28 @@
     }
  catch (    Exception e) {
       logger.debug("Unable to load resource as a URL: " + e.getMessage());
+    }
+  }
+  if (is == null) {
+    try {
+      is=(InputStream)AccessController.doPrivileged(new PrivilegedAction(){
+        public Object run(){
+          URL url=ClassUtils.getResource(resourceName,callingClass);
+          try {
+            return (url != null) ? url.openStream() : null;
+          }
+ catch (          IOException e) {
+            return null;
+          }
+        }
+      }
+);
+      if (is == null) {
+        logger.debug("Unable to load resource from the classpath");
+      }
+    }
+ catch (    Exception e) {
+      logger.debug("Unable to load resource from the classpath: " + e.getMessage());
     }
   }
   return is;
