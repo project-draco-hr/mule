@@ -1,0 +1,22 @@
+{
+  UMOEvent event=getEvent(new MuleMessage(message),url,true,true);
+  event.setTimeout(timeout);
+  try {
+    UMOMessage result=event.getSession().sendEvent(event);
+    if (result != null) {
+      if (result.getAdapter() instanceof UMOStreamMessageAdapter) {
+        return (UMOStreamMessageAdapter)result.getAdapter();
+      }
+ else {
+        throw new IllegalStateException("Mismatch of stream states. A stream was used for outbound channel, but a stream was not used for the response");
+      }
+    }
+  }
+ catch (  UMOException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new DispatchException(new Message("client",1),event.getMessage(),event.getEndpoint(),e);
+  }
+  return null;
+}

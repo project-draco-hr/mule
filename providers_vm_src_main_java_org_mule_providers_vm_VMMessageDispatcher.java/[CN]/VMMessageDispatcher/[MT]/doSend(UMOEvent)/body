@@ -15,15 +15,21 @@
     }
   }
   if (event.isStreaming()) {
-    StreamMessageAdapter sma=(StreamMessageAdapter)event.getMessage().getAdapter();
-    sma.setIn(new PipedInputStream());
-    PipedOutputStream out=new PipedOutputStream((PipedInputStream)sma.getInput());
-    sma.write(event,out);
+    PipedInputStream in=new PipedInputStream();
+    PipedOutputStream out=new PipedOutputStream(in);
+    UMOStreamMessageAdapter sma=connector.getStreamMessageAdapter(in,out);
+    sma.write(event);
   }
   retMessage=(UMOMessage)receiver.onCall(event);
   if (event.isStreaming() && retMessage != null) {
-    StreamMessageAdapter sma=(StreamMessageAdapter)event.getMessage().getAdapter();
-    sma.setResponse(new ByteArrayInputStream((byte[])objectToByteArray.transform(retMessage.getPayload())));
+    InputStream in;
+    if (retMessage.getPayload() instanceof InputStream) {
+      in=(InputStream)retMessage.getPayload();
+    }
+ else {
+      in=new ByteArrayInputStream((byte[])objectToByteArray.transform(retMessage.getPayload()));
+    }
+    UMOStreamMessageAdapter sma=connector.getStreamMessageAdapter(in,null);
     retMessage=new MuleMessage(sma,retMessage);
   }
   if (logger.isDebugEnabled()) {

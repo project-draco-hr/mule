@@ -39,18 +39,18 @@
     }
   }
 ;
-  StreamMessageAdapter sp=new StreamMessageAdapter(handler);
+  UMOStreamMessageAdapter sp=new StreamMessageAdapter(handler);
   sp.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
   UMOMessage msg=RequestContext.getEvent().getMessage();
   for (Iterator i=msg.getPropertyNames().iterator(); i.hasNext(); ) {
     String propertyName=(String)i.next();
     sp.setProperty(propertyName,msg.getProperty(propertyName));
   }
-  client.sendStream(getUri(),sp);
-  if (sp.hasResponse()) {
+  UMOStreamMessageAdapter result=client.sendStream(getUri(),sp);
+  if (result != null) {
     InMessage inMessage;
-    String ct=(String)sp.getProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
-    InputStream in=sp.getResponse();
+    String ct=sp.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+    InputStream in=result.getInputStream();
     if (ct.toLowerCase().indexOf("multipart/related") != -1) {
       try {
         Attachments atts=new JavaMailAttachments(in,ct);
@@ -67,4 +67,6 @@
     }
     getEndpoint().onReceive(context,inMessage);
   }
+  sp.release();
+  result.release();
 }
