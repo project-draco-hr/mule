@@ -1,18 +1,16 @@
 {
-  FutureMessageResult result=null;
-  UMOTransformer trans=null;
-  Callable callable=new Callable(){
+  Callable call=new Callable(){
     public Object call() throws Exception {
       return sendDirect(component,null,message);
     }
   }
 ;
-  if (transformers != null) {
-    trans=MuleObjectHelper.getTransformer(transformers,",");
-    result=new FutureMessageResult(callable,trans);
+  FutureMessageResult result=new FutureMessageResult(call);
+  if (executor != null) {
+    result.setExecutorService(executor);
   }
- else {
-    result=new FutureMessageResult(callable);
+  if (StringUtils.isNotBlank(transformers)) {
+    result.setTransformer(MuleObjectHelper.getTransformer(transformers,","));
   }
   result.execute();
   return result;
