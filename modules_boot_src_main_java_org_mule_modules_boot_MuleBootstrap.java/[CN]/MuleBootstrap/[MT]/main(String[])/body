@@ -1,7 +1,21 @@
 {
+  ClassLoader sys=ClassLoader.getSystemClassLoader();
+  if (!(sys instanceof URLClassLoader)) {
+    throw new IllegalArgumentException("PANIC: Mule has been started with an unsupported classloader: " + sys.getClass().getName() + ". "+ "Please report this error to user<at>mule<dot>codehaus<dot>org");
+  }
+  URLClassLoader sysCl=(URLClassLoader)ClassLoader.getSystemClassLoader();
+  DefaultMuleClassPathConfig classPath=new DefaultMuleClassPathConfig();
+  List urls=classPath.getURLs();
+  Class refClass=URLClassLoader.class;
+  Method methodAddUrl=refClass.getDeclaredMethod("addURL",new Class[]{URL.class});
+  methodAddUrl.setAccessible(true);
+  for (Iterator it=urls.iterator(); it.hasNext(); ) {
+    URL url=(URL)it.next();
+    methodAddUrl.invoke(sysCl,new Object[]{url});
+  }
   String mainClassName=SystemUtils.getCommandLineOption("-main",args);
   if (mainClassName == null) {
-    mainClassName=MuleServer.class.getName();
+    mainClassName="org.mule.MuleServer";
   }
   String[] appArgs=new String[args.length + 1];
   appArgs[0]=mainClassName;
