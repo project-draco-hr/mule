@@ -1,55 +1,17 @@
 {
-  if (resourceName == null) {
-    throw new IllegalArgumentException(new Message(Messages.X_IS_NULL,"Resource name").getMessage());
-  }
-  InputStream is=null;
-  if (tryAsFile) {
+  URL url=getResourceAsUrl(resourceName,callingClass,tryAsFile);
+  if ((url == null) && (tryAsUrl == true)) {
     try {
-      File file=new File(resourceName);
-      if (file.exists()) {
-        is=new FileInputStream(file);
-      }
+      url=new URL(resourceName);
+    }
+ catch (    MalformedURLException e) {
+      logger.debug("Unable to load resource as a URL: " + resourceName);
+    }
+  }
+  if (url == null) {
+    return null;
+  }
  else {
-        logger.debug("Unable to load resource from the file system: " + file.getAbsolutePath());
-      }
-    }
- catch (    Exception e) {
-      logger.debug("Unable to load resource from the file system: " + e.getMessage());
-    }
+    return url.openStream();
   }
-  if ((is == null) && tryAsUrl) {
-    try {
-      URL url=new URL(resourceName);
-      is=url.openStream();
-      if (is == null) {
-        logger.debug("Unable to load resource as a URL");
-      }
-    }
- catch (    Exception e) {
-      logger.debug("Unable to load resource as a URL: " + e.getMessage());
-    }
-  }
-  if (is == null) {
-    try {
-      is=(InputStream)AccessController.doPrivileged(new PrivilegedAction(){
-        public Object run(){
-          URL url=ClassUtils.getResource(resourceName,callingClass);
-          try {
-            return (url != null) ? url.openStream() : null;
-          }
- catch (          IOException e) {
-            return null;
-          }
-        }
-      }
-);
-      if (is == null) {
-        logger.debug("Unable to load resource from the classpath");
-      }
-    }
- catch (    Exception e) {
-      logger.debug("Unable to load resource from the classpath: " + e.getMessage());
-    }
-  }
-  return is;
 }

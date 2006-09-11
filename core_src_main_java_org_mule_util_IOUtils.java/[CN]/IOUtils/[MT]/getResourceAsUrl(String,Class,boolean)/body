@@ -1,0 +1,37 @@
+{
+  if (resourceName == null) {
+    throw new IllegalArgumentException(new Message(Messages.X_IS_NULL,"Resource name").getMessage());
+  }
+  URL url=null;
+  if (tryAsFile) {
+    try {
+      File file=new File(resourceName);
+      if (file.exists()) {
+        url=file.getAbsoluteFile().toURL();
+      }
+ else {
+        logger.debug("Unable to load resource from the file system: " + file.getAbsolutePath());
+      }
+    }
+ catch (    Exception e) {
+      logger.debug("Unable to load resource from the file system: " + e.getMessage());
+    }
+  }
+  if (url == null) {
+    try {
+      url=(URL)AccessController.doPrivileged(new PrivilegedAction(){
+        public Object run(){
+          return ClassUtils.getResource(resourceName,callingClass);
+        }
+      }
+);
+      if (url == null) {
+        logger.debug("Unable to load resource from the classpath");
+      }
+    }
+ catch (    Exception e) {
+      logger.debug("Unable to load resource from the classpath: " + e.getMessage());
+    }
+  }
+  return url;
+}
