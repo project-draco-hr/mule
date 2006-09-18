@@ -1,0 +1,28 @@
+{
+  try {
+    Source sourceDoc=getXmlSource(src);
+    if (sourceDoc == null)     return null;
+    ResultHolder holder=getResultHolder(returnClass);
+    if (holder == null)     holder=getResultHolder(src.getClass());
+    DefaultErrorListener errorListener=new DefaultErrorListener(this);
+    Transformer transformer=null;
+    Object result;
+    try {
+      transformer=(Transformer)transformerPool.borrowObject();
+      transformer.setErrorListener(errorListener);
+      transformer.setOutputProperty(OutputKeys.ENCODING,encoding);
+      transformer.transform(sourceDoc,holder.getResult());
+      result=holder.getResultObject();
+      if (errorListener.isError()) {
+        throw errorListener.getException();
+      }
+    }
+  finally {
+      if (transformer != null)       transformerPool.returnObject(transformer);
+    }
+    return result;
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

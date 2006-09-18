@@ -1,0 +1,31 @@
+{
+  List nodes=(List)FilteringXmlMessageSplitter.nodes.get();
+  if (nodes == null) {
+    logger.error("Error: nodes are null");
+    return null;
+  }
+  for (int i=0; i < nodes.size(); i++) {
+    Document doc=(Document)nodes.get(i);
+    try {
+      Map theProperties=(Map)properties.get();
+      UMOMessage result=new MuleMessage(doc,new HashMap(theProperties));
+      if (endpoint.getFilter() == null || endpoint.getFilter().accept(result)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Endpoint filter matched for node " + i + " of "+ nodes.size()+ ". Routing message over: "+ endpoint.getEndpointURI().toString());
+        }
+        nodes.remove(i);
+        return result;
+      }
+ else {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Endpoint filter did not match, returning null");
+        }
+      }
+    }
+ catch (    Exception e) {
+      logger.error("Unable to create message for node at position " + i,e);
+      return null;
+    }
+  }
+  return null;
+}
