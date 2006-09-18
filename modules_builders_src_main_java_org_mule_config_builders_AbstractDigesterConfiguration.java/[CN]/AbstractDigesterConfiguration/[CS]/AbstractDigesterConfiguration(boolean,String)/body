@@ -1,0 +1,27 @@
+{
+  digester=new Digester(){
+    public void warning(    SAXParseException e) throws SAXException {
+      if (errorHandler != null) {
+        errorHandler.warning(e);
+      }
+    }
+  }
+;
+  configEncoding=System.getProperty(MuleProperties.MULE_ENCODING_SYSTEM_PROPERTY,MuleManager.getConfiguration().getEncoding());
+  digester.setValidating(validate);
+  digester.setEntityResolver(new MuleDtdResolver(dtd));
+  digester.setErrorHandler(new ErrorHandler(){
+    public void error(    SAXParseException exception) throws SAXException {
+      logger.error(exception.getMessage(),exception);
+      throw new SAXException(exception);
+    }
+    public void fatalError(    SAXParseException exception) throws SAXException {
+      logger.fatal(exception.getMessage(),exception);
+      throw new SAXException(exception);
+    }
+    public void warning(    SAXParseException exception){
+      logger.warn(exception.getMessage());
+    }
+  }
+);
+}

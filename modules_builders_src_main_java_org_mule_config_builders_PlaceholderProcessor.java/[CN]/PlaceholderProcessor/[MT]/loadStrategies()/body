@@ -1,0 +1,23 @@
+{
+  String path=System.getProperty(MULE_ENCRYPTION_PROPERTIES,MuleManager.getConfiguration().getWorkingDirectory() + File.separator + DEFAULT_ENCRYPTION_PROPERTIES_FILE);
+  logger.info("Attempting to load encryption properties from: " + path);
+  Properties props=PropertiesUtils.loadProperties(path,getClass());
+  Map names=new HashMap();
+  PropertiesUtils.getPropertiesWithPrefix(props,"name",names);
+  String name;
+  for (Iterator iterator=names.values().iterator(); iterator.hasNext(); ) {
+    name=(String)iterator.next();
+    Map schemeConfig=new HashMap();
+    PropertiesUtils.getPropertiesWithPrefix(props,name + ".",schemeConfig);
+    schemeConfig=PropertiesUtils.removeNamespaces(schemeConfig);
+    String type=(String)schemeConfig.get("type");
+    String clazz=(String)types.get(type);
+    if (clazz == null) {
+      throw new IllegalArgumentException("Unknown encryption type: " + type);
+    }
+    logger.debug("Found Class: " + clazz + " for type: "+ type);
+    UMOEncryptionStrategy strat=(UMOEncryptionStrategy)ClassUtils.instanciateClass(clazz,ClassUtils.NO_ARGS,PlaceholderProcessor.class);
+    BeanUtils.populateWithoutFail(strat,schemeConfig,true);
+    schemes.put(name,strat);
+  }
+}

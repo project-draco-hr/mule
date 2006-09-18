@@ -1,0 +1,45 @@
+{
+  path+="/connector";
+  addObjectCreateOrGetFromContainer(path,CONNECTOR_INTERFACE,"className","ref",true);
+  addSetPropertiesRule(path,digester);
+  addMulePropertiesRule(path,digester);
+  digester.addRule(path + "/threading-profile",new Rule(){
+    private String id;
+    public void begin(    String s,    String s1,    Attributes attributes) throws Exception {
+      MuleConfiguration cfg=MuleManager.getConfiguration();
+      id=attributes.getValue("id");
+      if ("default".equals(id)) {
+        digester.push(cfg.getDefaultThreadingProfile());
+      }
+ else       if ("receiver".equals(id)) {
+        digester.push(cfg.getMessageReceiverThreadingProfile());
+      }
+ else       if ("dispatcher".equals(id)) {
+        digester.push(cfg.getMessageDispatcherThreadingProfile());
+      }
+    }
+    public void end(    String s,    String s1) throws Exception {
+      ThreadingProfile tp=(ThreadingProfile)digester.pop();
+      AbstractConnector cnn=(AbstractConnector)digester.peek();
+      if ("default".equals(id)) {
+        cnn.setReceiverThreadingProfile(tp);
+        cnn.setDispatcherThreadingProfile(tp);
+      }
+ else       if ("receiver".equals(id)) {
+        cnn.setReceiverThreadingProfile(tp);
+      }
+ else       if ("dispatcher".equals(id)) {
+        cnn.setDispatcherThreadingProfile(tp);
+      }
+    }
+  }
+);
+  SetPropertiesRule threadingRule=new SetPropertiesRule();
+  threadingRule.addAlias("setPoolExhaustedAction","setPoolExhaustedActionString");
+  digester.addRule(path + "/threading-profile",threadingRule);
+  digester.addObjectCreate(path + "/connection-strategy",CONNECTION_STRATEGY_INTERFACE,"className");
+  addMulePropertiesRule(path + "/connection-strategy",digester);
+  digester.addSetNext(path + "/connection-strategy","setConnectionStrategy");
+  addExceptionStrategyRules(digester,path);
+  digester.addSetRoot(path,"registerConnector");
+}
