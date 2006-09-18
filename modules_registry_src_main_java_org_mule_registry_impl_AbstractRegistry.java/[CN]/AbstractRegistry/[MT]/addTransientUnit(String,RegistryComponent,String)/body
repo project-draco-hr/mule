@@ -1,0 +1,28 @@
+{
+  Assembly a=getAssembly(suName);
+  if (a == null) {
+    Assembly assembly=createAssembly(suName);
+    assembly.setTransient(true);
+    assembly.setStateAtShutdown(Assembly.RUNNING);
+    Unit unit=createUnit(suName);
+    unit.setName(suName);
+    unit.setAssembly(assembly);
+    unit.setRegistryComponent(component);
+    try {
+      unit.setInstallRoot(new File(installDir).getAbsoluteFile().getCanonicalPath());
+    }
+ catch (    IOException e) {
+      throw new RegistryException(e);
+    }
+    this.assemblies.add(assembly);
+    this.assembliesMap.put(suName,assembly);
+    unit.deploy();
+    unit.start();
+    assembly.setCurrentState(Assembly.RUNNING);
+  }
+ else {
+    if (!a.isTransient()) {
+      throw new RegistryException("A non-transient or assembly is already deployed: " + suName);
+    }
+  }
+}
