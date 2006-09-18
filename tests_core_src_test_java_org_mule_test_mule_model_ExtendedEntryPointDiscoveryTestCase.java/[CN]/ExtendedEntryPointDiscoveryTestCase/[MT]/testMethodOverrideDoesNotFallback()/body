@@ -1,0 +1,20 @@
+{
+  UMOEntryPointResolver epd=getEntryPointResolver();
+  UMODescriptor descriptor=getDescriptorToResolve(FruitBowl.class.getName());
+  UMOEntryPoint ep=null;
+  ep=epd.resolveEntryPoint(descriptor);
+  assertNotNull(ep);
+  try {
+    RequestContext.setEvent(getTestEvent(new FruitLover("Yummy!")));
+    final String methodName="nosuchmethod";
+    final String propertyName=MuleProperties.MULE_METHOD_PROPERTY;
+    RequestContext.getEventContext().getMessage().setProperty(propertyName,methodName);
+    ep.invoke(new FruitBowl(),RequestContext.getEventContext());
+    fail("Should have failed to find an entrypoint.");
+  }
+ catch (  NoSuchMethodException itex) {
+  }
+ finally {
+    RequestContext.setEvent(null);
+  }
+}

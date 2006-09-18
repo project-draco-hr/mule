@@ -1,0 +1,39 @@
+{
+  final Latch latch=new Latch();
+  final UMOSpace space=getSpaceFactory().create("test");
+  try {
+    Thread t=new Thread(){
+      public void run(){
+        try {
+          latch.countDown();
+          Thread.sleep(200);
+          assertNull(space.takeNoWait());
+          space.beginTransaction();
+          space.put("String1");
+          space.rollbackTransaction();
+          space.beginTransaction();
+          space.put("String2");
+          space.commitTransaction();
+        }
+ catch (        Exception e) {
+          logger.warn(e);
+        }
+      }
+    }
+;
+    t.start();
+    latch.await();
+    long t0=System.currentTimeMillis();
+    assertNull(space.takeNoWait());
+    Object o=space.take();
+    long t1=System.currentTimeMillis();
+    t.join();
+    assertNotNull(o);
+    assertEquals("String2",o);
+    assertNull(space.takeNoWait());
+    assertTrue(t1 - t0 > 100);
+  }
+  finally {
+    space.dispose();
+  }
+}
