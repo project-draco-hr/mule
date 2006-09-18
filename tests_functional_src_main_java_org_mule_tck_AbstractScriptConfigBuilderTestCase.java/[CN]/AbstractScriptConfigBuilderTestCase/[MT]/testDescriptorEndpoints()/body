@@ -1,0 +1,28 @@
+{
+  UMODescriptor descriptor=MuleManager.getInstance().getModel().getDescriptor("orangeComponent");
+  assertEquals(1,descriptor.getOutboundRouter().getRouters().size());
+  UMOOutboundRouter router=(UMOOutboundRouter)descriptor.getOutboundRouter().getRouters().get(0);
+  assertEquals(1,router.getEndpoints().size());
+  UMOEndpoint endpoint=(UMOEndpoint)router.getEndpoints().get(0);
+  assertNotNull(endpoint);
+  assertEquals("appleInEndpoint",endpoint.getName());
+  assertNotNull(endpoint.getTransformer());
+  assertTrue(endpoint.getTransformer() instanceof TestCompressionTransformer);
+  endpoint=MuleManager.getInstance().lookupEndpoint("appleInEndpoint");
+  assertNotNull(endpoint);
+  assertNull(endpoint.getTransformer());
+  assertEquals(2,descriptor.getInboundRouter().getEndpoints().size());
+  assertNotNull(descriptor.getInboundRouter().getCatchAllStrategy());
+  assertTrue(descriptor.getInboundRouter().getCatchAllStrategy() instanceof ForwardingCatchAllStrategy);
+  assertNotNull(descriptor.getInboundRouter().getCatchAllStrategy().getEndpoint());
+  assertEquals("test://catch.all",descriptor.getInboundRouter().getCatchAllStrategy().getEndpoint().getEndpointURI().toString());
+  endpoint=descriptor.getInboundRouter().getEndpoint("orangeEndpoint");
+  assertNotNull(endpoint);
+  assertEquals("orangeEndpoint",endpoint.getName());
+  assertEquals("orangeQ",endpoint.getEndpointURI().getAddress());
+  assertNotNull(endpoint.getTransformer());
+  assertTrue(endpoint.getTransformer() instanceof TestCompressionTransformer);
+  endpoint=MuleManager.getInstance().lookupEndpoint("orangeEndpoint");
+  assertNotNull(endpoint);
+  assertNull(endpoint.getTransformer());
+}

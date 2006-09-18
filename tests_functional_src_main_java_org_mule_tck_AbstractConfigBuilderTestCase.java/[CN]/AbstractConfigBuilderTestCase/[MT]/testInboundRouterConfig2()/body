@@ -1,0 +1,16 @@
+{
+  UMODescriptor descriptor=MuleManager.getInstance().getModel().getDescriptor("appleComponent");
+  assertNotNull(descriptor.getInboundRouter());
+  UMOInboundMessageRouter messageRouter=descriptor.getInboundRouter();
+  assertNotNull(messageRouter.getCatchAllStrategy());
+  assertEquals(2,messageRouter.getRouters().size());
+  UMOInboundRouter router=(UMOInboundRouter)messageRouter.getRouters().get(0);
+  assertTrue(router instanceof SelectiveConsumer);
+  SelectiveConsumer sc=(SelectiveConsumer)router;
+  assertNotNull(sc.getFilter());
+  UMOFilter filter=sc.getFilter();
+  assertTrue(filter instanceof PayloadTypeFilter);
+  assertEquals(String.class,((PayloadTypeFilter)filter).getExpectedType());
+  UMOInboundRouter router2=(UMOInboundRouter)messageRouter.getRouters().get(1);
+  assertTrue(router2 instanceof IdempotentReceiver);
+}
