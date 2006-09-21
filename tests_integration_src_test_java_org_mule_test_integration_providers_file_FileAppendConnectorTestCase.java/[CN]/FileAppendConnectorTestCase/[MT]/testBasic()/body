@@ -1,7 +1,22 @@
 {
-  MuleClient client=new MuleClient();
-  (new File("myout/out.txt")).delete();
-  client.send("vm://fileappend","Hello1",null);
-  client.send("vm://fileappend","Hello2",null);
-  assertEquals("Hello1Hello2",IOUtils.toString(new FileInputStream("myout/out.txt")));
+  String myDirName="myout";
+  String myFileName="out.txt";
+  FileInputStream myFileStream=null;
+  File myDir=new File(myDirName);
+  if (myDir.isDirectory()) {
+    assertTrue(myDir.delete());
+  }
+  try {
+    assertFalse(new File(myDir,myFileName).exists());
+    MuleClient client=new MuleClient();
+    client.send("vm://fileappend","Hello1",null);
+    client.send("vm://fileappend","Hello2",null);
+    myFileStream=new FileInputStream(new File(myDir,myFileName));
+    assertEquals("Hello1Hello2",IOUtils.toString(myFileStream));
+  }
+  finally {
+    IOUtils.closeQuietly(myFileStream);
+    assertTrue(new File(myDir,myFileName).delete());
+    assertTrue(myDir.delete());
+  }
 }
