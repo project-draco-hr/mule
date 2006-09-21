@@ -1,0 +1,24 @@
+{
+  UMOComponent testComponent=getTestComponent(getTestDescriptor("test",Apple.class.getName()));
+  UMOSession session=getTestSession(testComponent);
+  UMOInboundMessageRouter messageRouter=new InboundMessageRouter();
+  SimpleEventAggregator router=new SimpleEventAggregator(3);
+  messageRouter.addRouter(router);
+  messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
+  UMOMessage message1=new MuleMessage("test event A");
+  UMOMessage message2=new MuleMessage("test event B");
+  UMOMessage message3=new MuleMessage("test event C");
+  UMOEndpoint endpoint=getTestEndpoint("Test1Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  UMOEvent event1=new MuleEvent(message1,endpoint,session,false);
+  UMOEvent event2=new MuleEvent(message2,endpoint,session,false);
+  UMOEvent event3=new MuleEvent(message3,endpoint,session,false);
+  assertTrue(router.isMatch(event1));
+  assertTrue(router.isMatch(event2));
+  assertTrue(router.isMatch(event3));
+  assertNull(router.process(event1));
+  assertNull(router.process(event2));
+  UMOEvent[] results=router.process(event3);
+  assertNotNull(results);
+  assertEquals(1,results.length);
+  assertEquals("test event A test event B test event C ",results[0].getMessageAsString());
+}

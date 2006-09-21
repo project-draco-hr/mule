@@ -1,0 +1,31 @@
+{
+  Mock mockSession=MuleTestUtils.getMockSession();
+  OutboundMessageRouter messageRouter=new OutboundMessageRouter();
+  messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
+  UMOEndpoint endpoint1=new MuleEndpoint("test://AlwaysFail",false);
+  UMOEndpoint endpoint2=new MuleEndpoint("test://AlwaysFail",false);
+  ExceptionBasedRouter router=new ExceptionBasedRouter();
+  RegExFilter filter=new RegExFilter("(.*) event");
+  router.setFilter(filter);
+  List endpoints=new ArrayList();
+  endpoints.add(endpoint1);
+  endpoints.add(endpoint2);
+  router.setEndpoints(endpoints);
+  assertEquals(filter,router.getFilter());
+  UMOMessage message=new MuleMessage("test event");
+  assertTrue(router.isMatch(message));
+  UMOException rex=new RoutingException(message,endpoint1);
+  mockSession.expectAndThrow("sendEvent",C.args(C.eq(message),C.eq(endpoint1)),rex);
+  mockSession.expectAndThrow("dispatchEvent",C.args(C.eq(message),C.eq(endpoint2)),rex);
+  UMOSession session=(UMOSession)mockSession.proxy();
+  UMOMessage result=null;
+  try {
+    result=router.route(message,session,false);
+    fail("Should have thrown exception as both endpoints would have failed");
+  }
+ catch (  CouldNotRouteOutboundMessageException e) {
+  }
+  assertNull("Async call should've returned null.",result);
+  mockSession.verify();
+  message=new MuleMessage("test event");
+}
