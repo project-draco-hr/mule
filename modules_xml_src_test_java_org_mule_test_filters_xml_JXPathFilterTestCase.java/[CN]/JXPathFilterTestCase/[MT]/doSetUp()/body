@@ -1,6 +1,21 @@
 {
-  InputStream is=IOUtils.getResourceAsStream("cdcatalog.xml",getClass());
-  assertNotNull("Test resource not found.",is);
-  xmlData=IOUtils.toString(is);
-  myFilter=new JXPathFilter();
+  final ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
+  InputStream is=currentClassLoader.getResourceAsStream("cdcatalog.xml");
+  assertNotNull("Test resource 'cdcatalog.xml' not found.",is);
+  xmlStringInput=IOUtils.toString(is);
+  dom4jDocumentInput=DocumentHelper.parseText(xmlStringInput);
+  w3cDocumentInput=DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(xmlStringInput)));
+  simpleFilter=new JXPathFilter();
+  is=currentClassLoader.getResourceAsStream("cdcatalogNS.xml");
+  assertNotNull("Test resource 'cdcatalogNS.xml' not found.",is);
+  xmlStringInputNS=IOUtils.toString(is);
+  dom4jDocumentInputNS=DocumentHelper.parseText(xmlStringInputNS);
+  DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
+  dbf.setNamespaceAware(true);
+  w3cDocumentInputNS=dbf.newDocumentBuilder().parse(new InputSource(new StringReader(xmlStringInputNS)));
+  nsAwareFilter=new JXPathFilter();
+  Map namespaces=new HashMap();
+  namespaces.put("nsone","http://one.org");
+  namespaces.put("nstwo","http://two.org");
+  nsAwareFilter.setNamespaces(namespaces);
 }
