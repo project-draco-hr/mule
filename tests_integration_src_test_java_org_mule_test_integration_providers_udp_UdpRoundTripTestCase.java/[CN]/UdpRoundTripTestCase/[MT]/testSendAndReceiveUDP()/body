@@ -1,0 +1,21 @@
+{
+  ByteArrayOutputStream bytesOut=new ByteArrayOutputStream();
+  DataOutputStream dataOut=new DataOutputStream(bytesOut);
+  dataOut.writeFloat(1.0f);
+  dataOut.writeFloat(2.0f);
+  int outPort=9001;
+  int inPort=9002;
+  DatagramSocket socket=new DatagramSocket(inPort,InetAddress.getLocalHost());
+  byte[] bytes=bytesOut.toByteArray();
+  DatagramPacket outboundPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getLocalHost(),outPort);
+  socket.send(outboundPacket);
+  log.info("sent bytes: " + Arrays.toString(outboundPacket.getData()));
+  byte[] buffer=new byte[bytes.length];
+  DatagramPacket inboundPacket=new DatagramPacket(buffer,buffer.length);
+  socket.receive(inboundPacket);
+  ByteArrayInputStream bytesIn=new ByteArrayInputStream(inboundPacket.getData());
+  log.info("recv bytes: " + Arrays.toString(inboundPacket.getData()));
+  DataInputStream dataIn=new DataInputStream(bytesIn);
+  log.info("float #1: " + dataIn.readFloat());
+  log.info("float #2: " + dataIn.readFloat());
+}
