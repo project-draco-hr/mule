@@ -1,12 +1,24 @@
 {
-  for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
-    Map.Entry entry=(Map.Entry)iterator.next();
+  if (ClassUtils.getMethod(SET_PROPERTIES_METHOD,new Class[]{Map.class},object.getClass()) != null) {
     try {
-      BeanUtils.setProperty(object,entry.getKey().toString(),entry.getValue());
+      BeanUtils.setProperty(object,"properties",props);
     }
  catch (    Exception e) {
       if (logWarnings) {
-        logger.warn("Property: " + entry.getKey() + "="+ entry.getValue()+ " not found on object: "+ object.getClass().getName());
+        logger.warn("Property: " + SET_PROPERTIES_METHOD + "="+ Map.class.getName()+ " not found on object: "+ object.getClass().getName());
+      }
+    }
+  }
+ else {
+    for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      try {
+        BeanUtils.setProperty(object,entry.getKey().toString(),entry.getValue());
+      }
+ catch (      Exception e) {
+        if (logWarnings) {
+          logger.warn("Property: " + entry.getKey() + "="+ entry.getValue()+ " not found on object: "+ object.getClass().getName());
+        }
       }
     }
   }
