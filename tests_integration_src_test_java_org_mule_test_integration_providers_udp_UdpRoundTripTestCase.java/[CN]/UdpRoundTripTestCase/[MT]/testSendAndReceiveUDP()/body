@@ -1,21 +1,20 @@
 {
+  int outPort=9001;
+  int inPort=9002;
+  DatagramSocket socket=new DatagramSocket(inPort,InetAddress.getLocalHost());
   ByteArrayOutputStream bytesOut=new ByteArrayOutputStream();
   DataOutputStream dataOut=new DataOutputStream(bytesOut);
   dataOut.writeFloat(1.0f);
   dataOut.writeFloat(2.0f);
-  int outPort=9001;
-  int inPort=9002;
-  DatagramSocket socket=new DatagramSocket(inPort,InetAddress.getLocalHost());
-  byte[] bytes=bytesOut.toByteArray();
-  DatagramPacket outboundPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getLocalHost(),outPort);
+  byte[] bytesToSend=bytesOut.toByteArray();
+  DatagramPacket outboundPacket=new DatagramPacket(bytesToSend,bytesToSend.length,InetAddress.getLocalHost(),outPort);
   socket.send(outboundPacket);
-  log.info("sent bytes: " + Arrays.toString(outboundPacket.getData()));
-  byte[] buffer=new byte[bytes.length];
-  DatagramPacket inboundPacket=new DatagramPacket(buffer,buffer.length);
+  byte[] receiveBuffer=new byte[bytesToSend.length];
+  DatagramPacket inboundPacket=new DatagramPacket(receiveBuffer,receiveBuffer.length);
   socket.receive(inboundPacket);
+  assertEquals(Arrays.toString(outboundPacket.getData()),Arrays.toString(inboundPacket.getData()));
   ByteArrayInputStream bytesIn=new ByteArrayInputStream(inboundPacket.getData());
-  log.info("recv bytes: " + Arrays.toString(inboundPacket.getData()));
   DataInputStream dataIn=new DataInputStream(bytesIn);
-  assertEquals(1.0f,dataIn.readFloat(),Float.POSITIVE_INFINITY);
-  assertEquals(2.0f,dataIn.readFloat(),Float.POSITIVE_INFINITY);
+  assertEquals(1.0f,dataIn.readFloat(),0.1f);
+  assertEquals(2.0f,dataIn.readFloat(),0.1f);
 }
