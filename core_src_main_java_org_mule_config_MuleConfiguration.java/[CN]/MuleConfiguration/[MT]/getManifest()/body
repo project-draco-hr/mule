@@ -3,15 +3,33 @@
     manifest=new Manifest();
     InputStream is=null;
     try {
-      is=IOUtils.getResourceAsStream("META-INF/Mule.mf",getClass(),false,false);
-      if (is == null) {
-        is=IOUtils.getResourceAsStream("meta-inf/Mule.mf",getClass(),false,false);
+      URL url=(URL)AccessController.doPrivileged(new PrivilegedAction(){
+        public Object run(){
+          try {
+            Enumeration e=MuleConfiguration.class.getClassLoader().getResources(("META-INF/MANIFEST.MF"));
+            while (e.hasMoreElements()) {
+              URL url=(URL)e.nextElement();
+              if (url.toExternalForm().indexOf("mule-core") > -1) {
+                return url;
+              }
+            }
+          }
+ catch (          IOException e1) {
+            e1.printStackTrace();
+          }
+          return null;
+        }
+      }
+);
+      if (url != null) {
+        is=url.openStream();
       }
       if (is != null) {
         manifest.read(is);
       }
     }
  catch (    IOException e) {
+      logger.warn("Failed to read manifest Info, Manifest information will not display correctly: " + e.getMessage());
     }
   }
   return manifest;
