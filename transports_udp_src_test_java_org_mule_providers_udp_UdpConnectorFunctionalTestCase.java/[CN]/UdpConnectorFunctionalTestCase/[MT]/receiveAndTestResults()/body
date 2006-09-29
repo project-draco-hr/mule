@@ -1,12 +1,16 @@
 {
   URI uri=getOutDest().getUri();
   InetAddress inet=InetAddress.getByName(uri.getHost());
+  Set receivedMessages=new HashSet(NUM_MESSAGES_TO_SEND);
   int receivedPackets;
-  for (receivedPackets=0; receivedPackets < sentPackets; receivedPackets++) {
+  for (receivedPackets=0; receivedPackets < NUM_MESSAGES_TO_SEND; receivedPackets++) {
     DatagramPacket packet=new DatagramPacket(new byte[32],32,inet,serverUri.getPort());
     s.receive(packet);
-    UdpMessageAdapter adapter=new UdpMessageAdapter(packet);
-    System.out.println("Received message: " + adapter.getPayloadAsString());
+    receivedMessages.add(new UdpMessageAdapter(packet).getPayloadAsString());
   }
-  assertEquals(sentPackets,receivedPackets);
+  assertEquals(NUM_MESSAGES_TO_SEND,receivedPackets);
+  for (int i=0; i < receivedMessages.size(); i++) {
+    String message=MESSAGE + i + " Received";
+    assertTrue("checking for received message '" + message + "'",receivedMessages.contains(message));
+  }
 }
