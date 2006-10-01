@@ -1,0 +1,31 @@
+{
+  UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  String methodName=MapUtils.getString(endpointUri.getParams(),RmiConnector.PARAM_SERVICE_METHOD,null);
+  if (null == methodName) {
+    methodName=(String)event.getMessage().removeProperty(RmiConnector.PARAM_SERVICE_METHOD);
+    if (null == methodName) {
+      throw new DispatchException(new org.mule.config.i18n.Message("rmi",RmiConnector.MSG_PARAM_SERVICE_METHOD_NOT_SET),event.getMessage(),event.getEndpoint());
+    }
+  }
+  Class[] argTypes;
+  String arguments=(String)event.getMessage().getProperty(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES);
+  if (null != arguments) {
+    String[] split=arguments.split(",");
+    argTypes=new Class[split.length];
+    for (int i=0; i < split.length; i++) {
+      argTypes[i]=ClassUtils.loadClass(split[i].trim(),getClass());
+    }
+  }
+ else {
+    argTypes=ClassUtils.getClassTypes(event.getTransformedMessage());
+  }
+  try {
+    return remoteObject.getClass().getMethod(methodName,argTypes);
+  }
+ catch (  NoSuchMethodException e) {
+    throw new NoSuchMethodException(new Message(Messages.METHOD_X_WITH_PARAMS_X_NOT_FOUND_ON_X,methodName,ArrayUtils.toString(argTypes),remoteObject.getClass().getName()).toString());
+  }
+catch (  SecurityException e) {
+    throw e;
+  }
+}

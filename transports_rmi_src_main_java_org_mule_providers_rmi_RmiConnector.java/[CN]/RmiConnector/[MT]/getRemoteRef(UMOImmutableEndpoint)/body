@@ -1,0 +1,24 @@
+{
+  UMOEndpointURI endpointUri=endpoint.getEndpointURI();
+  String serviceName=endpointUri.getPath();
+  try {
+    return (Remote)getJndiContext().lookup(serviceName);
+  }
+ catch (  NamingException e) {
+  }
+  try {
+    serviceName=serviceName.substring(1);
+    return (Remote)getJndiContext().lookup(serviceName);
+  }
+ catch (  NamingException e) {
+  }
+  int port=endpointUri.getPort();
+  if (port < 1) {
+    if (logger.isWarnEnabled()) {
+      logger.warn("RMI port not set on URI: " + endpointUri + ". Using default port: "+ RmiConnector.DEFAULT_RMI_REGISTRY_PORT);
+    }
+    port=RmiConnector.DEFAULT_RMI_REGISTRY_PORT;
+  }
+  InetAddress inetAddress=InetAddress.getByName(endpointUri.getHost());
+  return getJndiContext(inetAddress.getHostAddress() + ":" + port).lookup(serviceName);
+}
