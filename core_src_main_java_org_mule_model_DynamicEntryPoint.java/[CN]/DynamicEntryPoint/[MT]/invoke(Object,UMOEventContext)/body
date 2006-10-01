@@ -1,14 +1,18 @@
 {
   Object payload=null;
-  Object methodOverride=context.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
   Method method=null;
-  if (methodOverride instanceof Method) {
-    method=(Method)methodOverride;
-  }
- else   if (methodOverride != null) {
-    payload=context.getTransformedMessage();
-    method=ClassUtils.getMethod(methodOverride.toString(),ClassUtils.getClassTypes(payload),component.getClass());
-    validateMethod(component,method,methodOverride.toString());
+  Boolean ignoreMethod=(Boolean)context.getMessage().removeProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY);
+  boolean ignore=(ignoreMethod == null ? false : ignoreMethod.booleanValue());
+  if (!ignore) {
+    Object methodOverride=context.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
+    if (methodOverride instanceof Method) {
+      method=(Method)methodOverride;
+    }
+ else     if (methodOverride != null) {
+      payload=context.getTransformedMessage();
+      method=ClassUtils.getMethod(methodOverride.toString(),ClassUtils.getClassTypes(payload),component.getClass());
+      validateMethod(component,method,methodOverride.toString());
+    }
   }
   if (method == null) {
     if (component instanceof Callable) {
