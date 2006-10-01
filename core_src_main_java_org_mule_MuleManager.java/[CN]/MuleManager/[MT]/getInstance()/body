@@ -1,7 +1,14 @@
 {
   if (instance == null) {
-    logger.info("Manager instance is Null, creating new instance");
-    instance=createInstance();
+    logger.info("Creating new MuleManager instance");
+    Class clazz=SpiUtils.findService(UMOManager.class,MuleManager.class.getName(),MuleManager.class);
+    try {
+      instance=(UMOManager)clazz.newInstance();
+      instance.getModel();
+    }
+ catch (    Exception e) {
+      throw new MuleRuntimeException(new Message(Messages.FAILED_TO_CREATE_MANAGER_INSTANCE_X,clazz.getName()),e);
+    }
   }
   return instance;
 }
