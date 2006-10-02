@@ -1,25 +1,20 @@
 {
-  AtomicBoolean doAggregate=new AtomicBoolean(false);
   EventGroup eg=addEvent(event);
-  doAggregate.compareAndSet(false,shouldAggregate(eg));
-  if (doAggregate.get()) {
+  if (shouldAggregate(eg)) {
     UMOMessage returnMessage=aggregateEvents(eg);
     Object id=eg.getGroupId();
     removeGroup(id);
     responseEvents.put(id,returnMessage);
-    locksCollectionLock.lock();
-    Latch l=(Latch)locks.get(id);
-    if (l == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Creating latch for " + id + " in "+ this);
+synchronized (locks) {
+      Latch l=(Latch)locks.get(id);
+      if (l == null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Creating latch for " + id + " in "+ this);
+        }
+        l=new Latch();
+        locks.put(id,l);
       }
-      l=new Latch();
-      if (locks.get(id) != null) {
-        throw new IllegalStateException("There is already a lock with ID: " + id);
-      }
-      locks.put(id,l);
+      l.countDown();
     }
-    locksCollectionLock.unlock();
-    l.countDown();
   }
 }
