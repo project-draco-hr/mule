@@ -3,20 +3,21 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Waiting for response for message id: " + responseId + " in "+ this);
   }
-  Latch l;
-synchronized (locks) {
-    l=(Latch)locks.get(responseId);
-    if (l == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Got response but no one is waiting for it yet. Creating latch for " + responseId + " in "+ this);
-      }
-      l=new Latch();
-      locks.put(responseId,l);
+  Latch l=(Latch)locks.get(responseId);
+  if (l == null) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Got response but no one is waiting for it yet. Creating latch for " + responseId + " in "+ this);
+    }
+    l=new Latch();
+    Latch previous=(Latch)locks.putIfAbsent(responseId,l);
+    if (previous != null) {
+      l=previous;
     }
   }
   if (logger.isDebugEnabled()) {
     logger.debug("Got latch for message: " + responseId);
   }
+  UMOMessage result;
   boolean b=false;
   try {
     if (logger.isDebugEnabled()) {
@@ -33,21 +34,15 @@ synchronized (locks) {
  catch (  InterruptedException e) {
     logger.error(e.getMessage(),e);
   }
+ finally {
+    locks.remove(responseId);
+    result=(UMOMessage)responseEvents.remove(responseId);
+  }
   if (!b) {
     if (logger.isTraceEnabled()) {
-synchronized (responseEvents) {
-        logger.trace("Current responses are: \n" + PropertiesUtils.propertiesToString(responseEvents,true));
-      }
-    }
-    responseEvents.remove(responseId);
-synchronized (locks) {
-      locks.remove(responseId);
+      logger.trace("Current responses are: \n" + PropertiesUtils.propertiesToString(responseEvents,true));
     }
     throw new ResponseTimeoutException(new Message(Messages.RESPONSE_TIMED_OUT_X_WAITING_FOR_ID_X,String.valueOf(getTimeout()),responseId),message,null);
-  }
-  UMOMessage result=(UMOMessage)responseEvents.remove(responseId);
-synchronized (locks) {
-    locks.remove(responseId);
   }
   if (result == null) {
     throw new IllegalStateException("Response Message is null");
