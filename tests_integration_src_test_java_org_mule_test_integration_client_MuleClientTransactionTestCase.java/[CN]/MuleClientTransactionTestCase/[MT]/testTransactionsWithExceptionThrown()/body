@@ -8,12 +8,16 @@
   MuleTransactionConfig tc=new MuleTransactionConfig();
   tc.setFactory(new JmsTransactionFactory());
   tc.setAction(UMOTransactionConfig.ACTION_ALWAYS_BEGIN);
+  MuleEndpoint inboundEndpoint=(new MuleEndpoint("jms://test.queue",false));
+  inboundEndpoint.setTransactionConfig(tc);
+  inboundEndpoint.setName("TransactedTest.Queue");
+  client.getManager().registerEndpoint(inboundEndpoint);
   TransactionTemplate tt=new TransactionTemplate(tc,null);
   try {
     tt.execute(new TransactionCallback(){
       public Object doInTransaction() throws Exception {
         for (int i=0; i < 100; i++) {
-          client.send("jms://test.queue","Test Client Dispatch message " + i,props);
+          client.send("TransactedTest.Queue","Test Client Dispatch message " + i,props);
         }
         throw new Exception();
       }
