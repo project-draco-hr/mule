@@ -1,0 +1,22 @@
+{
+  QuickConfigurationBuilder builder=new QuickConfigurationBuilder(true);
+  builder.getManager().registerConnector(getTestConnector());
+  UMODescriptor d=builder.createDescriptor(Orange.class.getName(),"orangeComponent",builder.createEndpoint("test://in",null,true),null,null);
+  d.setInitialState(ImmutableMuleDescriptor.INITIAL_STATE_STOPPED);
+  builder.registerComponent(d);
+  UMOManager manager=builder.createStartedManager(true,"");
+  UMOSession session=MuleManager.getInstance().getModel().getComponentSession("orangeComponent");
+  final UMOComponent c=session.getComponent();
+  assertFalse(c.isStarted());
+  AbstractConnector connector=(AbstractConnector)manager.lookupConnector("testConnector");
+  assertTrue(connector.isStarted());
+  assertTrue(connector.getReceivers().isEmpty());
+  c.start();
+  assertTrue(connector.isStarted());
+  assertFalse(connector.getReceivers().isEmpty());
+  assertTrue(c.isStarted());
+  Iterator it=connector.getReceivers().values().iterator();
+  while (it.hasNext()) {
+    assertTrue(((UMOMessageReceiver)it.next()).isConnected());
+  }
+}
