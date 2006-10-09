@@ -1,0 +1,32 @@
+{
+  return parser.parse(new TemplateParser.TemplateCallback(){
+    public Object match(    String token){
+      if (token.equals("DATE")) {
+        return DateUtils.getTimeStamp(DEFAULT_DATE_FORMAT);
+      }
+ else       if (token.startsWith("DATE:")) {
+        token=token.substring(5);
+        return DateUtils.getTimeStamp(token);
+      }
+ else       if (token.startsWith("UUID")) {
+        return UUID.getUUID();
+      }
+ else       if (token.startsWith("SYSTIME")) {
+        return String.valueOf(System.currentTimeMillis());
+      }
+ else       if (token.startsWith("COUNT")) {
+        return String.valueOf(String.valueOf(count.getAndIncrement()));
+      }
+ else       if (adapter != null) {
+        if (token.startsWith("ORIGINALNAME")) {
+          return adapter.getStringProperty(FileConnector.PROPERTY_FILENAME,null);
+        }
+ else {
+          return adapter.getStringProperty(token,null);
+        }
+      }
+      return null;
+    }
+  }
+,pattern);
+}
