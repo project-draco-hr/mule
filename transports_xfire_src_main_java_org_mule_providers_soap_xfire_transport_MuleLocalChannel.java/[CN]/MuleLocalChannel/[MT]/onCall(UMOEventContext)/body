@@ -21,13 +21,18 @@
     InMessage in=new InMessage(reader,getUri());
     receive(context,in);
     Object result=null;
-    if (context.getExchange().hasOutMessage()) {
-      try {
-        result=resultStream.toString(context.getOutMessage().getEncoding());
+    try {
+      if (context.getExchange().hasFaultMessage()) {
+        result=resultStream.toString(context.getExchange().getFaultMessage().getEncoding());
+        ExceptionPayload exceptionPayload=new ExceptionPayload(new Exception(result.toString()));
+        ctx.getMessage().setExceptionPayload(exceptionPayload);
       }
- catch (      UnsupportedEncodingException e1) {
-        throw new MuleException(e1);
+ else       if (context.getExchange().hasOutMessage()) {
+        result=resultStream.toString(context.getExchange().getOutMessage().getEncoding());
       }
+    }
+ catch (    UnsupportedEncodingException e1) {
+      throw new MuleException(e1);
     }
     return result;
   }
