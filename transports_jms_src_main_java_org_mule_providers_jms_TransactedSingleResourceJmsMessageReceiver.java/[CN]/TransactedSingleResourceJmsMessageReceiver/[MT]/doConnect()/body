@@ -1,21 +1,35 @@
 {
-  int numberOfWorkers;
-  MessageReceiverWorker currentWorker=null;
-  useMultipleReceivers=connector.isCreateMultipleTransactedReceivers();
-  ThreadingProfile tp=connector.getReceiverThreadingProfile();
-  if (useMultipleReceivers && receiveMessagesInTransaction && tp.isDoThreading()) {
-    numberOfWorkers=tp.getMaxThreadsActive();
-    workers=new Vector(numberOfWorkers);
-    for (int i=0; i < numberOfWorkers; i++) {
-      workers.add(new MessageReceiverWorker(this.connector));
+  try {
+    JmsSupport jmsSupport=this.connector.getJmsSupport();
+    if (session == null) {
+      session=this.connector.getSession(endpoint);
     }
+    String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
+    boolean topic=(resourceInfo != null && JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(resourceInfo));
+    if (!topic) {
+      topic=MapUtils.getBooleanValue(endpoint.getProperties(),JmsConstants.TOPIC_PROPERTY,false);
+    }
+    Destination dest=jmsSupport.createDestination(session,endpoint.getEndpointURI().getAddress(),topic);
+    String selector=null;
+    if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {
+      selector=((JmsSelectorFilter)endpoint.getFilter()).getExpression();
+    }
+ else     if (endpoint.getProperties() != null) {
+      selector=(String)endpoint.getProperties().get(JmsConstants.JMS_SELECTOR_PROPERTY);
+    }
+    String tempDurable=(String)endpoint.getProperties().get(JmsConstants.DURABLE_PROPERTY);
+    boolean durable=connector.isDurable();
+    if (tempDurable != null) {
+      durable=Boolean.valueOf(tempDurable).booleanValue();
+    }
+    String durableName=(String)endpoint.getProperties().get(JmsConstants.DURABLE_NAME_PROPERTY);
+    if (durableName == null && durable && dest instanceof Topic) {
+      durableName="mule." + connector.getName() + "."+ endpoint.getEndpointURI().getAddress();
+      logger.debug("Jms Connector for this receiver is durable but no durable name has been specified. Defaulting to: " + durableName);
+    }
+    consumer=jmsSupport.createConsumer(session,dest,selector,connector.isNoLocal(),durableName,topic);
   }
- else {
-    workers=new Vector(0);
-    workers.add(new MessageReceiverWorker(this.connector));
-  }
-  for (int i=0; i < workers.size(); i++) {
-    currentWorker=(MessageReceiverWorker)workers.get(i);
-    currentWorker.doConnect();
+ catch (  JMSException e) {
+    throw new ConnectException(e,this);
   }
 }
