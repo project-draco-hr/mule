@@ -12,14 +12,12 @@
   message.expectAndReturn("getJMSExpiration",new Long(0));
   message.expectAndReturn("getJMSTimestamp",new Long(0));
   message.expectAndReturn("getJMSType",null);
-  message.expectAndReturn("getPropertyNames",new Enumeration(){
-    public boolean hasMoreElements(){
-      return false;
-    }
-    public Object nextElement(){
-      return null;
-    }
-  }
-);
+  message.expectAndReturn("toString","MockJMSMessage");
+  message.expectAndReturn("toString","MockJMSMessage");
+  message.expect("clearProperties");
+  message.expectAndReturn("getPropertyNames",IteratorUtils.asEnumeration(IteratorUtils.emptyIterator()));
+  message.expectAndReturn("getObjectProperty","JMS_CUSTOM_PROPERTY","customValue");
+  ConstraintMatcher setPropertyMatcher=new FullConstraintMatcher(new Constraint[]{new IsEqual("JMS_CUSTOM_PROPERTY"),new IsEqual("customValue")});
+  message.expect("setObjectProperty",setPropertyMatcher);
   return message.proxy();
 }
