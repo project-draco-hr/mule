@@ -1,20 +1,16 @@
 {
   RequestContext.setEvent(getTestEvent("test"));
-  logger.debug("testTransMApMessage()");
   Properties p=new Properties();
   p.setProperty("Key1","Value1");
   p.setProperty("Key2","Value2");
   p.setProperty("Key3","Value3");
-  AbstractJmsTransformer trans=new ObjectToJMSMessage();
+  AbstractJmsTransformer trans=new SessionEnabledObjectToJMSMessage(session);
   trans.setReturnClass(MapMessage.class);
-  Object result2=trans.transform(p,session);
-  logger.debug("transformed object is of type " + result2.getClass().getName());
+  Object result2=trans.transform(p);
   assertTrue("Transformed object should be a Map message",result2 instanceof MapMessage);
   MapMessage mMsg=(MapMessage)result2;
-  logger.debug("created Map Message: " + mMsg);
   AbstractJmsTransformer trans2=new JMSMessageToObject();
   trans2.setReturnClass(Map.class);
-  Object result=trans2.transform(mMsg,session);
-  logger.debug("transformed object is of type " + result.getClass().getName());
-  assertTrue("Transformed object should be a MAP",result instanceof Map);
+  Object result=trans2.transform(mMsg);
+  assertTrue("Transformed object should be a Map",result instanceof Map);
 }

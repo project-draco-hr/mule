@@ -1,17 +1,13 @@
 {
   RequestContext.setEvent(getTestEvent("test"));
   String text="This is a tests Text Message";
-  logger.debug("testTransTextMessage()");
   TextMessage tMsg=session.createTextMessage();
   tMsg.setText(text);
-  logger.debug("created Text Message: " + tMsg);
   AbstractJmsTransformer trans=new JMSMessageToObject();
-  Object result=trans.transform(tMsg,session);
-  logger.debug("transformed object is of type " + result.getClass().getName());
+  Object result=trans.transform(tMsg);
   assertTrue("Transformed object should be a string",text.equals(result.toString()));
-  AbstractJmsTransformer trans2=new ObjectToJMSMessage();
+  AbstractJmsTransformer trans2=new SessionEnabledObjectToJMSMessage(session);
   trans2.setReturnClass(TextMessage.class);
-  Object result2=trans2.transform(text,session);
-  logger.debug("transformed object is of type " + result2.getClass().getName());
+  Object result2=trans2.transform(text);
   assertTrue("Transformed object should be an Text message",result2 instanceof TextMessage);
 }

@@ -1,17 +1,13 @@
 {
   RequestContext.setEvent(getTestEvent("test"));
-  logger.debug("testTransObjectMessage()");
   ObjectMessage oMsg=session.createObjectMessage();
   File f=new File("C:/testdata/tests.txt");
   oMsg.setObject(f);
-  logger.debug("created object Message");
   AbstractJmsTransformer trans=new JMSMessageToObject();
-  Object result=trans.transform(oMsg,session);
-  logger.debug("transformed object is of type " + result.getClass().getName());
+  Object result=trans.transform(oMsg);
   assertTrue("Transformed object should be a file",result.getClass().equals(File.class));
-  AbstractJmsTransformer trans2=new ObjectToJMSMessage();
+  AbstractJmsTransformer trans2=new SessionEnabledObjectToJMSMessage(session);
   trans2.setReturnClass(ObjectMessage.class);
-  Object result2=trans2.transform(f,session);
-  logger.debug("transformed object is of type " + result2.getClass().getName());
+  Object result2=trans2.transform(f);
   assertTrue("Transformed object should be an object message",result2 instanceof ObjectMessage);
 }
