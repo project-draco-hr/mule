@@ -1,65 +1,39 @@
 {
-  Object result;
-  try {
-    if (source instanceof ObjectMessage) {
-      result=((ObjectMessage)source).getObject();
+  if (source instanceof ObjectMessage) {
+    return ((ObjectMessage)source).getObject();
+  }
+ else   if (source instanceof MapMessage) {
+    Hashtable map=new Hashtable();
+    MapMessage m=(MapMessage)source;
+    for (Enumeration e=m.getMapNames(); e.hasMoreElements(); ) {
+      String name=(String)e.nextElement();
+      Object obj=m.getObject(name);
+      map.put(name,obj);
     }
- else     if (source instanceof MapMessage) {
-      Hashtable map=new Hashtable();
-      MapMessage m=(MapMessage)source;
-      for (Enumeration e=m.getMapNames(); e.hasMoreElements(); ) {
-        String name=(String)e.nextElement();
-        Object obj=m.getObject(name);
-        map.put(name,obj);
+    return map;
+  }
+ else   if (source instanceof TextMessage) {
+    return ((TextMessage)source).getText();
+  }
+ else   if (source instanceof BytesMessage) {
+    byte[] bytes=getBytesFromMessage(source);
+    return CompressionHelper.getDefaultCompressionStrategy().uncompressByteArray(bytes);
+  }
+ else   if (source instanceof StreamMessage) {
+    try {
+      StreamMessage sMsg=(StreamMessage)source;
+      Vector result=new Vector();
+      Object obj;
+      while ((obj=sMsg.readObject()) != null) {
+        result.addElement(obj);
       }
-      result=map;
+      return result;
     }
- else     if (source instanceof BytesMessage) {
-      BytesMessage bm=(BytesMessage)source;
-      ByteArrayOutputStream baos=new ByteArrayOutputStream();
-      byte[] buffer=new byte[1024 * 4];
-      int len;
-      bm.reset();
-      while ((len=bm.readBytes(buffer)) != -1) {
-        baos.write(buffer,0,len);
-      }
-      baos.flush();
-      result=baos.toByteArray();
-      baos.close();
-      if (result != null) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("JMSToObject: extracted " + ((byte[])result).length + " bytes from JMS BytesMessage");
-        }
-      }
+ catch (    MessageEOFException eof) {
     }
- else     if (source instanceof TextMessage) {
-      result=((TextMessage)source).getText();
-    }
- else     if (source instanceof BytesMessage) {
-      byte[] bytes=getBytesFromMessage(source);
-      return CompressionHelper.getDefaultCompressionStrategy().uncompressByteArray(bytes);
-    }
- else     if (source instanceof StreamMessage) {
-      StreamMessage sm=(StreamMessage)source;
-      result=new Vector();
-      try {
-        Object obj;
-        while ((obj=sm.readObject()) != null) {
-          ((Vector)result).addElement(obj);
-        }
-      }
- catch (      MessageEOFException eof) {
-      }
-catch (      Exception e) {
-        throw new JMSException("Failed to extract information from JMS Stream Message: " + e);
-      }
-    }
- else {
-      result=source;
+catch (    Exception e) {
+      throw new JMSException("Failed to extract information from JMS Stream Message: " + e);
     }
   }
- catch (  Exception e) {
-    throw new JMSException("Failed to transform message: " + e.getMessage());
-  }
-  return result;
+  return source;
 }
