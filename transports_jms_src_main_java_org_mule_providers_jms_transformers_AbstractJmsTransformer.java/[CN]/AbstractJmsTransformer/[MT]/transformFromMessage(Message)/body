@@ -1,26 +1,32 @@
 {
   try {
-    Object result;
     if (logger.isDebugEnabled()) {
       logger.debug("Message type received is: " + source.getClass().getName());
     }
+    String jmsSpec=JmsConstants.JMS_SPECIFICATION_102B;
+    UMOImmutableEndpoint endpoint=this.getEndpoint();
+    if (endpoint != null) {
+      UMOConnector connector=endpoint.getConnector();
+      if (connector instanceof JmsConnector) {
+        jmsSpec=((JmsConnector)connector).getSpecification();
+      }
+    }
     if (source instanceof BytesMessage) {
-      byte[] bytes=JmsMessageUtils.getBytesFromMessage(source);
+      byte[] bytes=JmsMessageUtils.toByteArray(source,jmsSpec);
       CompressionStrategy strategy=CompressionHelper.getDefaultCompressionStrategy();
       if (strategy.isCompressed(bytes)) {
         if (logger.isDebugEnabled()) {
           logger.debug("Received Message is compressed");
         }
-        result=strategy.uncompressByteArray(bytes);
+        return strategy.uncompressByteArray(bytes);
       }
  else {
-        result=JmsMessageUtils.getObjectForMessage(source);
+        return JmsMessageUtils.toObject(source,jmsSpec);
       }
     }
  else {
-      result=JmsMessageUtils.getObjectForMessage(source);
+      return JmsMessageUtils.toObject(source,jmsSpec);
     }
-    return result;
   }
  catch (  Exception e) {
     throw new TransformerException(this,e);

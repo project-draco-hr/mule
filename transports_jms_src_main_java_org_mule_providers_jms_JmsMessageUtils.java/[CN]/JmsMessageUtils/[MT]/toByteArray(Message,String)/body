@@ -2,18 +2,39 @@
   if (message instanceof BytesMessage) {
     BytesMessage bMsg=(BytesMessage)message;
     bMsg.reset();
-    long bmBodyLength=bMsg.getBodyLength();
-    if (bmBodyLength > Integer.MAX_VALUE) {
-      throw new JMSException("Size of BytesMessage exceeds Integer.MAX_VALUE; " + "please consider using JMS StreamMessage instead");
+    if (JmsConstants.JMS_SPECIFICATION_11.equals(jmsSpec)) {
+      long bmBodyLength=bMsg.getBodyLength();
+      if (bmBodyLength > Integer.MAX_VALUE) {
+        throw new JMSException("Size of BytesMessage exceeds Integer.MAX_VALUE; " + "please consider using JMS StreamMessage instead");
+      }
+      if (bmBodyLength > 0) {
+        byte[] bytes=new byte[(int)bmBodyLength];
+        bMsg.readBytes(bytes);
+        return bytes;
+      }
+ else {
+        return ArrayUtils.EMPTY_BYTE_ARRAY;
+      }
     }
-    byte[] bytes=new byte[(int)bmBodyLength];
-    bMsg.readBytes(bytes);
-    return bytes;
+ else {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream(4096);
+      byte[] buffer=new byte[4096];
+      int len;
+      while ((len=bMsg.readBytes(buffer)) != -1) {
+        baos.write(buffer,0,len);
+      }
+      if (baos.size() > 0) {
+        return baos.toByteArray();
+      }
+ else {
+        return ArrayUtils.EMPTY_BYTE_ARRAY;
+      }
+    }
   }
  else   if (message instanceof StreamMessage) {
     StreamMessage sMsg=(StreamMessage)message;
     sMsg.reset();
-    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    ByteArrayOutputStream baos=new ByteArrayOutputStream(4096);
     byte[] buffer=new byte[4096];
     int len;
     while ((len=sMsg.readBytes(buffer)) != -1) {
