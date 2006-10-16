@@ -8,9 +8,18 @@
     }
  else {
       try {
-        UMOMessage msg=router.route(new MuleMessage(event.getTransformedMessage(),event.getMessage()),event.getSession(),event.isSynchronous());
-        if (msg != null) {
-          return new UMOEvent[]{new MuleEvent(msg,event)};
+        UMOMessage message=new MuleMessage(event.getTransformedMessage(),event.getMessage());
+        String originatingEndpoint=event.getMessage().getStringProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,null);
+        if (StringUtils.isEmpty(originatingEndpoint)) {
+          originatingEndpoint=event.getEndpoint().getEndpointURI().getEndpointName();
+          if (StringUtils.isEmpty(originatingEndpoint)) {
+            originatingEndpoint=event.getEndpoint().getEndpointURI().toString();
+          }
+        }
+        message.setStringProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,originatingEndpoint);
+        UMOMessage response=router.route(message,event.getSession(),event.isSynchronous());
+        if (response != null) {
+          return new UMOEvent[]{new MuleEvent(response,event)};
         }
  else {
           return null;
