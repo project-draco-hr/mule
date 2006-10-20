@@ -2,10 +2,21 @@
   StringBuffer buf=new StringBuffer(80);
   buf.append("Event Group Id=").append(groupId);
   buf.append(", expected size=").append(expectedSize);
-  buf.append(", current events (").append(events.size()).append(")");
-  for (Iterator iterator=events.iterator(); iterator.hasNext(); ) {
-    UMOEvent event=(UMOEvent)iterator.next();
-    buf.append(", ").append(event.getMessage().getUniqueId());
+synchronized (events) {
+    int currentSize=events.size();
+    buf.append(", current events=").append(currentSize);
+    if (currentSize > 0) {
+      buf.append(" [");
+      Iterator i=events.iterator();
+      while (i.hasNext()) {
+        UMOEvent event=(UMOEvent)i.next();
+        buf.append(event.getMessage().getUniqueId());
+        if (i.hasNext()) {
+          buf.append(", ");
+        }
+      }
+      buf.append(']');
+    }
+    return buf.toString();
   }
-  return buf.toString();
 }
