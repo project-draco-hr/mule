@@ -11,11 +11,9 @@
     if (content instanceof Multipart) {
       this.messagePart=((Multipart)content).getBodyPart(0);
       logger.debug("Received Multipart message");
-      Part part;
-      String name;
       for (int i=1; i < ((Multipart)content).getCount(); i++) {
-        part=((Multipart)content).getBodyPart(i);
-        name=part.getFileName();
+        Part part=((Multipart)content).getBodyPart(i);
+        String name=part.getFileName();
         if (name == null) {
           name=String.valueOf(i - 1);
         }
@@ -31,9 +29,13 @@
     setProperty(MailProperties.BCC_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(msg.getRecipients(Message.RecipientType.BCC)));
     setProperty(MailProperties.REPLY_TO_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(msg.getReplyTo()));
     setProperty(MailProperties.FROM_ADDRESS_PROPERTY,MailUtils.mailAddressesToString(msg.getFrom()));
-    setProperty(MailProperties.SUBJECT_PROPERTY,msg.getSubject());
-    setProperty(MailProperties.CONTENT_TYPE_PROPERTY,msg.getContentType());
-    setProperty(MailProperties.SENT_DATE_PROPERTY,msg.getSentDate());
+    setProperty(MailProperties.SUBJECT_PROPERTY,StringUtils.defaultIfEmpty(msg.getSubject(),"(no subject)"));
+    setProperty(MailProperties.CONTENT_TYPE_PROPERTY,StringUtils.defaultIfEmpty(msg.getContentType(),"text/plain"));
+    Date sentDate=msg.getSentDate();
+    if (sentDate == null) {
+      sentDate=new Date();
+    }
+    setProperty(MailProperties.SENT_DATE_PROPERTY,sentDate);
     for (Enumeration e=msg.getAllHeaders(); e.hasMoreElements(); ) {
       Header h=(Header)e.nextElement();
       setProperty(h.getName(),h.getValue());
