@@ -7,8 +7,8 @@
   String ackStmt=stmts[1];
   List readParams=new ArrayList();
   List ackParams=new ArrayList();
-  readStmt=JdbcUtils.parseStatement(readStmt,readParams);
-  ackStmt=JdbcUtils.parseStatement(ackStmt,ackParams);
+  readStmt=connector.parseStatement(readStmt,readParams);
+  ackStmt=connector.parseStatement(ackStmt,ackParams);
   Connection con=null;
   long t0=System.currentTimeMillis();
   try {
@@ -16,9 +16,9 @@
     if (timeout < 0) {
       timeout=Long.MAX_VALUE;
     }
-    Object result=null;
+    Object result;
     do {
-      result=connector.createQueryRunner().query(con,readStmt,JdbcUtils.getParams(endpoint,readParams,null),new MapHandler());
+      result=connector.createQueryRunner().query(con,readStmt,connector.getParams(endpoint,readParams,null),new MapHandler());
       if (result != null) {
         if (logger.isDebugEnabled()) {
           logger.debug("Received: " + result);
@@ -39,7 +39,7 @@
     }
  while (true);
     if (ackStmt != null) {
-      int nbRows=connector.createQueryRunner().update(con,ackStmt,JdbcUtils.getParams(endpoint,ackParams,result));
+      int nbRows=connector.createQueryRunner().update(con,ackStmt,connector.getParams(endpoint,ackParams,result));
       if (nbRows != 1) {
         logger.warn("Row count for ack should be 1 and not " + nbRows);
       }

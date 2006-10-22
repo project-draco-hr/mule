@@ -3,15 +3,15 @@
   UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
   try {
     con=this.connector.getConnection();
+    UMOMessageAdapter msgAdapter=this.connector.getMessageAdapter(message);
+    UMOMessage umoMessage=new MuleMessage(msgAdapter);
     if (this.ackStmt != null) {
-      Object[] ackParams=JdbcUtils.getParams(endpoint,this.ackParams,message);
+      Object[] ackParams=connector.getParams(endpoint,this.ackParams,umoMessage);
       int nbRows=connector.createQueryRunner().update(con,this.ackStmt,ackParams);
       if (nbRows != 1) {
         logger.warn("Row count for ack should be 1 and not " + nbRows);
       }
     }
-    UMOMessageAdapter msgAdapter=this.connector.getMessageAdapter(message);
-    UMOMessage umoMessage=new MuleMessage(msgAdapter);
     routeMessage(umoMessage,tx,tx != null || endpoint.isSynchronous());
   }
  catch (  Exception ex) {

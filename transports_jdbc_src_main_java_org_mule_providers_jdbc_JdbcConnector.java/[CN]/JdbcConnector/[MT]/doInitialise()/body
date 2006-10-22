@@ -5,6 +5,25 @@
       initJndiContext();
       createDataSource();
     }
+    if (queryValueExtractors == null) {
+      queryValueExtractors=new HashSet();
+      queryValueExtractors.add(MessagePropertyExtractor.class.getName());
+      queryValueExtractors.add(NowPropertyExtractor.class.getName());
+      queryValueExtractors.add(PayloadPropertyExtractor.class.getName());
+      queryValueExtractors.add(MapPropertyExtractor.class.getName());
+      queryValueExtractors.add(BeanPropertyExtractor.class.getName());
+      if (ClassUtils.isClassOnPath("org.mule.config.Dom4jPropertyExtractor",getClass())) {
+        queryValueExtractors.add("org.mule.config.Dom4jPropertyExtractor");
+      }
+      if (ClassUtils.isClassOnPath("org.mule.config.JDomPropertyExtractor",getClass())) {
+        queryValueExtractors.add("org.mule.config.JDomPropertyExtractor");
+      }
+    }
+    propertyExtractors=new HashSet();
+    for (Iterator iterator=queryValueExtractors.iterator(); iterator.hasNext(); ) {
+      String s=(String)iterator.next();
+      propertyExtractors.add(ClassUtils.instanciateClass(s,ClassUtils.NO_ARGS));
+    }
   }
  catch (  Exception e) {
     throw new InitialisationException(new Message(Messages.FAILED_TO_CREATE_X,"Jdbc Connector"),e,this);
