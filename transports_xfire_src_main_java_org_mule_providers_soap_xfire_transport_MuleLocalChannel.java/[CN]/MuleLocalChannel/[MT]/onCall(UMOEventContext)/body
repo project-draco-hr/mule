@@ -22,8 +22,9 @@
     receive(context,in);
     Object result=null;
     try {
-      if (context.getExchange().hasFaultMessage()) {
-        result=resultStream.toString(context.getExchange().getFaultMessage().getEncoding());
+      AbstractMessage fault=context.getExchange().getFaultMessage();
+      if (fault != null && fault.getBody() != null) {
+        result=resultStream.toString(fault.getEncoding());
         ExceptionPayload exceptionPayload=new ExceptionPayload(new Exception(result.toString()));
         ctx.getMessage().setExceptionPayload(exceptionPayload);
       }
