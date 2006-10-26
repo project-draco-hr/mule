@@ -6,10 +6,12 @@
     if (connector instanceof AbstractConnector) {
       for (Iterator iterator=((AbstractConnector)connector).getReceivers().values().iterator(); iterator.hasNext(); ) {
         EndpointServiceMBean mBean=new EndpointService((UMOMessageReceiver)iterator.next());
+        final String rawName=mBean.getName();
+        final String name=jmxSupport.escape(rawName);
         if (logger.isInfoEnabled()) {
-          logger.info("Attempting to register service with name: " + getDomainName() + ":type=org.mule.umo.UMOEndpoint,name="+ mBean.getName());
+          logger.info("Attempting to register service with name: " + jmxSupport.getDomainName() + ":type=org.mule.umo.UMOEndpoint,name="+ name);
         }
-        ObjectName on=ObjectName.getInstance(getDomainName() + ":type=org.mule.Endpoint,component=" + mBean.getComponentName()+ ",name="+ mBean.getName());
+        ObjectName on=jmxSupport.getInstance(jmxSupport.getDomainName() + ":type=org.mule.Endpoint,component=" + jmxSupport.escape(mBean.getComponentName())+ ",name="+ name);
         mBeanServer.registerMBean(mBean,on);
         registeredMBeans.add(on);
         logger.info("Registered Endpoint Service with name: " + on);

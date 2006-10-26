@@ -1,10 +1,11 @@
 {
   Iterator iter=MuleManager.getInstance().getModel().getComponentNames();
-  String name;
+  String rawName;
   while (iter.hasNext()) {
-    name=iter.next().toString();
-    ObjectName on=ObjectName.getInstance(getDomainName() + ":type=org.mule.Component,name=" + name);
-    ComponentServiceMBean serviceMBean=new ComponentService(name);
+    rawName=iter.next().toString();
+    final String name=jmxSupport.escape(rawName);
+    ObjectName on=jmxSupport.getInstance(jmxSupport.getDomainName() + ":type=org.mule.Component,name=" + name);
+    ComponentServiceMBean serviceMBean=new ComponentService(rawName);
     logger.debug("Registering component with name: " + on);
     mBeanServer.registerMBean(serviceMBean,on);
     registeredMBeans.add(on);

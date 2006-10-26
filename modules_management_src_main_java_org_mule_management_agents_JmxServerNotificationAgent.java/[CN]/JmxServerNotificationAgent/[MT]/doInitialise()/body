@@ -3,12 +3,13 @@
     setName("Jmx Notification Agent");
   }
   try {
+    jmxSupport=jmxSupportFactory.newJmxSupport();
     mBeanServer=(MBeanServer)MBeanServerFactory.findMBeanServer(null).get(0);
-    broadcasterObjectName=ObjectName.getInstance(getDomainName() + ":" + BROADCASTER_JMX_OBJECT_NAME);
+    broadcasterObjectName=ObjectName.getInstance(jmxSupport.getDomainName() + ":" + BROADCASTER_JMX_OBJECT_NAME);
     broadcastNotificationMbean=new BroadcastNotificationService();
     mBeanServer.registerMBean(broadcastNotificationMbean,broadcasterObjectName);
     if (registerListenerMbean) {
-      listenerObjectName=ObjectName.getInstance(getDomainName() + ":" + LISTENER_JMX_OBJECT_NAME);
+      listenerObjectName=ObjectName.getInstance(jmxSupport.getDomainName() + ":" + LISTENER_JMX_OBJECT_NAME);
       NotificationListener mbean=new NotificationListener();
       broadcastNotificationMbean.addNotificationListener(mbean,null,null);
       mBeanServer.registerMBean(mbean,listenerObjectName);
