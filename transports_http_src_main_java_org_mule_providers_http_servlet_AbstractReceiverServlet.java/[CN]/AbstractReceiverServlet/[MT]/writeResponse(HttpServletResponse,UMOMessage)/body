@@ -13,7 +13,11 @@
     }
  else {
       httpResponse=new HttpResponse();
-      httpResponse.setBodyString(message.getAdapter().getPayloadAsString());
+      httpResponse.setBody(new ByteArrayInputStream(message.getAdapter().getPayloadAsBytes()));
+      String ct=message.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
+      if (ct != null) {
+        httpResponse.setHeader(new Header(HttpConstants.HEADER_CONTENT_TYPE,ct));
+      }
     }
     String contentType=httpResponse.getFirstHeader(HttpConstants.HEADER_CONTENT_TYPE).getValue();
     if (contentType == null) {

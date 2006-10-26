@@ -1,10 +1,14 @@
 {
-  logger.debug(eventContext);
+  if (logger.isDebugEnabled()) {
+    logger.debug(eventContext);
+  }
   String request=eventContext.getMessage().getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY,StringUtils.EMPTY);
   if (request.toLowerCase().endsWith(org.mule.providers.soap.SoapConstants.WSDL_PROPERTY)) {
     ByteArrayOutputStream out=new ByteArrayOutputStream();
     getXfire().generateWSDL(getServiceName(eventContext),out);
-    return out.toString();
+    UMOMessage result=new MuleMessage(out.toString(eventContext.getEncoding()));
+    result.setProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+    return result;
   }
  else {
     MuleLocalChannel channel=(MuleLocalChannel)transport.createChannel(eventContext.getEndpointURI().getFullScheme());
