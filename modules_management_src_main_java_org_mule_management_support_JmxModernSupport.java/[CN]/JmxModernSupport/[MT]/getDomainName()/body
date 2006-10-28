@@ -1,8 +1,10 @@
 {
-  String instanceSubDomain=StringUtils.EMPTY;
+  StringBuffer domain=new StringBuffer(DEFAULT_JMX_DOMAIN_PREFIX);
   if (MuleManager.isInstanciated()) {
-    String instanceId=StringUtils.defaultIfEmpty(MuleManager.getInstance().getId(),"");
-    instanceSubDomain=instanceId.length() > 0 ? "." + instanceId : StringUtils.EMPTY;
+    String instanceId=StringUtils.defaultIfEmpty(MuleManager.getInstance().getId(),StringUtils.EMPTY);
+    if (instanceId.length() > 0) {
+      domain.append(".").append(instanceId);
+    }
   }
-  return JmxAgent.DEFAULT_JMX_DOMAIN_PREFIX + instanceSubDomain;
+  return resolveDomainClash(domain.toString());
 }
