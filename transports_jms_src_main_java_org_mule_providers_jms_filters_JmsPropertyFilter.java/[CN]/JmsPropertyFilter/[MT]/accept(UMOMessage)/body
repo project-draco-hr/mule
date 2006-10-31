@@ -3,7 +3,7 @@
     logger.warn("No property name was specified");
     return false;
   }
-  if (expression == null && pattern == null) {
+  if (StringUtils.isBlank(expression) && pattern == null) {
     logger.warn("Either no expression or pattern was specified");
     return false;
   }
@@ -18,7 +18,7 @@
           return pattern.matcher(value).find();
         }
  else {
-          return value.equals(expression.toString());
+          return value.equals(expression);
         }
       }
  else       if (propertyClass.equals("java.lang.String")) {
@@ -28,11 +28,24 @@
           return pattern.matcher(value).find();
         }
  else {
-          return value.equals(expression.toString());
+          return value.equals(expression);
         }
       }
+ else       if (propertyClass.equals("java.lang.Integer")) {
+        int value=m.getIntProperty(propertyName);
+        int match=Integer.parseInt(expression);
+        return (value == match);
+      }
+ else       if (propertyClass.equals("java.lang.Short")) {
+        short value=m.getShortProperty(propertyName);
+        short match=Short.parseShort(expression);
+        return (value == match);
+      }
     }
- catch (    Exception e) {
+ catch (    NumberFormatException nfe) {
+      logger.warn("Unable to convert expression " + expression + " to "+ propertyClass+ ": "+ nfe.toString());
+    }
+catch (    Exception e) {
       logger.warn("Error filtering on property " + propertyName + ": "+ e.toString());
     }
   }
