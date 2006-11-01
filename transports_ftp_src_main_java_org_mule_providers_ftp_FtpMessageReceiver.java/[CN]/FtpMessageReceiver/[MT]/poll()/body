@@ -1,25 +1,13 @@
 {
   FTPFile[] files=listFiles();
-  for (int i=0; i < files.length; i++) {
-    final FTPFile file=files[i];
-    if (!currentFiles.contains(file.getName())) {
-      getWorkManager().scheduleWork(new Work(){
-        public void run(){
-          try {
-            currentFiles.add(file.getName());
-            processFile(file);
-          }
- catch (          Exception e) {
-            connector.handleException(e);
-          }
- finally {
-            currentFiles.remove(file.getName());
-          }
-        }
-        public void release(){
-        }
+synchronized (scheduledFiles) {
+    for (int i=0; i < files.length; i++) {
+      final FTPFile file=files[i];
+      final String fileName=file.getName();
+      if (!scheduledFiles.contains(fileName) && !currentFiles.contains(fileName)) {
+        scheduledFiles.add(fileName);
+        getWorkManager().scheduleWork(new FtpWork(fileName,file));
       }
-);
     }
   }
 }
