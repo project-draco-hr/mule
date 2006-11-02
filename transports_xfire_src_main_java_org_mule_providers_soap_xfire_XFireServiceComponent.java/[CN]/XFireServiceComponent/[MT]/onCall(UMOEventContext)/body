@@ -2,8 +2,21 @@
   if (logger.isDebugEnabled()) {
     logger.debug(eventContext);
   }
+  boolean wsdlRequested=false;
   String request=eventContext.getMessage().getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY,StringUtils.EMPTY);
   if (request.toLowerCase().endsWith(org.mule.providers.soap.SoapConstants.WSDL_PROPERTY)) {
+    wsdlRequested=true;
+  }
+ else {
+    Enumeration keys=eventContext.getEndpointURI().getParams().keys();
+    while (keys.hasMoreElements()) {
+      if ((keys.nextElement()).toString().equalsIgnoreCase(SoapConstants.WSDL_PROPERTY)) {
+        wsdlRequested=true;
+        break;
+      }
+    }
+  }
+  if (wsdlRequested) {
     ByteArrayOutputStream out=new ByteArrayOutputStream();
     getXfire().generateWSDL(getServiceName(eventContext),out);
     UMOMessage result=new MuleMessage(out.toString(eventContext.getEncoding()));

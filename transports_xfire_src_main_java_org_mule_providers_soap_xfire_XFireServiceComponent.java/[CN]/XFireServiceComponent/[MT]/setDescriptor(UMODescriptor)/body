@@ -6,6 +6,29 @@
  catch (  UMOException e) {
     throw new MuleRuntimeException(new Message(Messages.FAILED_TO_START_X,"local channel work manager",e));
   }
-  transport=new MuleLocalTransport(wm);
+  if (transportClass == null) {
+    transport=new MuleLocalTransport(wm);
+  }
+ else {
+    try {
+      Class transportClazz=Class.forName(transportClass);
+      try {
+        Constructor constructor=transportClazz.getConstructor(new Class[]{UMOWorkManager.class});
+        transport=(Transport)constructor.newInstance(new Object[]{wm});
+      }
+ catch (      NoSuchMethodException ne) {
+        if (logger.isDebugEnabled()) {
+          logger.debug(ne.getCause());
+        }
+      }
+      if (transport == null) {
+        Constructor constructor=transportClazz.getConstructor(null);
+        transport=(Transport)constructor.newInstance(null);
+      }
+    }
+ catch (    Exception e) {
+      throw new MuleRuntimeException(new Message(Messages.FAILED_LOAD_X,"xfire service transport",e));
+    }
+  }
   getTransportManager().register(transport);
 }

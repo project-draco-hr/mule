@@ -9,6 +9,19 @@
   if (xfire == null) {
     xfire=new DefaultXFire();
   }
+  if (clientServices != null) {
+    ObjectServiceFactory factory=new ObjectServiceFactory();
+    for (int i=0; i < clientServices.size(); i++) {
+      try {
+        Class clazz=Class.forName(clientServices.get(i).toString());
+        Service service=factory.create(clazz);
+        xfire.getServiceRegistry().register(service);
+      }
+ catch (      ClassNotFoundException e) {
+        throw new InitialisationException(new Message("xfire",10,clientServices.get(i)),e,this);
+      }
+    }
+  }
   if (serviceFactory == null) {
     if (enableJSR181Annotations) {
       if (!SystemUtils.isJavaVersionAtLeast(150)) {

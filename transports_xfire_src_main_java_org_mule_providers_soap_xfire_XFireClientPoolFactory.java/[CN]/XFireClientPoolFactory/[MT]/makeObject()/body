@@ -1,8 +1,28 @@
 {
-  Client client=new Client(new MuleUniversalTransport(),service,uri.toString());
+  Class transportClazz;
+  if (connector.getClientTransport() == null)   transportClazz=MuleUniversalTransport.class;
+ else   transportClazz=Class.forName(connector.getClientTransport());
+  Transport transport=(Transport)transportClazz.getConstructor(null).newInstance(null);
+  Client client=new Client(transport,service,uri.toString());
   client.setXFire(xfire);
   client.setEndpointUri(uri.toString());
   client.addInHandler(new MuleHeadersInHandler());
   client.addOutHandler(new MuleHeadersOutHandler());
+  List inList=connector.getClientInHandlers();
+  if (inList != null) {
+    for (int i=0; i < inList.size(); i++) {
+      Class clazz=Class.forName(inList.get(i).toString());
+      Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+      client.addInHandler(handler);
+    }
+  }
+  List outList=connector.getClientOutHandlers();
+  if (outList != null) {
+    for (int i=0; i < outList.size(); i++) {
+      Class clazz=Class.forName(outList.get(i).toString());
+      Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+      client.addOutHandler(handler);
+    }
+  }
   return client;
 }
