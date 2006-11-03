@@ -1,15 +1,15 @@
 {
   UMOEndpoint endpoint=MuleEndpoint.getOrCreateEndpointForUri(uri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
-  if (!endpoint.getConnector().isStarted() && manager.isStarted()) {
-    endpoint.getConnector().startConnector();
+  UMOConnector connector=endpoint.getConnector();
+  if (!connector.isStarted() && manager.isStarted()) {
+    connector.startConnector();
   }
   try {
     UMOSession session=new MuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler());
     if (credentials != null) {
       message.setProperty(MuleProperties.MULE_USER_PROPERTY,"Plain " + credentials.getToken());
     }
-    MuleEvent event=new MuleEvent(message,endpoint,session,synchronous);
-    return event;
+    return new MuleEvent(message,endpoint,session,synchronous);
   }
  catch (  Exception e) {
     throw new DispatchException(new Message(Messages.FAILED_TO_CREATE_X,"Client event"),message,endpoint,e);
