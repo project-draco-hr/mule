@@ -1,6 +1,10 @@
 {
   httpServer=new Server();
   SocketListener socketListener=new SocketListener(new InetAddrPort(endpoint.getEndpointURI().getPort()));
+  ThreadingProfile tp=connector.getReceiverThreadingProfile();
+  socketListener.setMaxIdleTimeMs((int)tp.getThreadTTL());
+  socketListener.setMaxThreads(tp.getMaxThreadsActive());
+  socketListener.setThreadsPriority(tp.getThreadPriority());
   httpServer.addListener(socketListener);
   String path=endpoint.getEndpointURI().getPath();
   if (StringUtils.isEmpty(path)) {
@@ -9,7 +13,7 @@
   if (!path.endsWith("/")) {
     path+="/";
   }
-  HttpContext context=httpServer.getContext(path);
+  HttpContext context=httpServer.getContext("/");
   context.setRequestLog(null);
   ServletHandler handler=new ServletHandler();
   if ("rest".equals(endpoint.getEndpointURI().getScheme())) {

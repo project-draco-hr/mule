@@ -1,6 +1,15 @@
 {
-  connector=(ServletConnector)ConnectorFactory.getConnectorByProtocol("servlet");
-  if (connector == null) {
-    throw new ServletException("No servlet connector found using protocol: servlet");
+  String servletConnectorName=servletConfig.getInitParameter(SERVLET_CONNECTOR_NAME_PROPERTY);
+  if (servletConnectorName == null) {
+    connector=(ServletConnector)ConnectorFactory.getConnectorByProtocol("servlet");
+    if (connector == null) {
+      throw new ServletException(new Message("http",9).toString());
+    }
+  }
+ else {
+    connector=(ServletConnector)MuleManager.getInstance().lookupConnector(servletConnectorName);
+    if (connector == null) {
+      throw new ServletException(new Message("http",10,servletConnectorName).toString());
+    }
   }
 }
