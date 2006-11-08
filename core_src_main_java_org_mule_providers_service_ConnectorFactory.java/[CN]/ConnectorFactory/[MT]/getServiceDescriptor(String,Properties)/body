@@ -2,7 +2,13 @@
   ConnectorServiceDescriptor csd=(ConnectorServiceDescriptor)csdCache.get(new CSDKey(protocol,overrides));
   if (csd == null) {
     String location=SpiUtils.SERVICE_ROOT + PROVIDER_SERVICES_PATH;
-    InputStream is=SpiUtils.findServiceDescriptor(PROVIDER_SERVICES_PATH,protocol,ConnectorFactory.class);
+    InputStream is=SpiUtils.findServiceDescriptor(PROVIDER_SERVICES_PATH,protocol + ".properties",ConnectorFactory.class);
+    if (is == null) {
+      is=SpiUtils.findServiceDescriptor(PROVIDER_SERVICES_PATH,protocol,ConnectorFactory.class);
+      if (is == null) {
+        logger.warn("The transport " + protocol + " is using a legacy style of descriptor. This needs to be updated."+ " Future versions of Mule will not work with this connector descriptor.");
+      }
+    }
     try {
       if (is != null) {
         Properties props=new Properties();
