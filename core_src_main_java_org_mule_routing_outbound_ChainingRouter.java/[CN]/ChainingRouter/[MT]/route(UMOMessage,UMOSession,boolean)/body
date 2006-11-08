@@ -15,14 +15,11 @@
         logger.debug("Sending Chained message '" + i + "': "+ (intermediaryResult == null ? "null" : intermediaryResult.toString()));
       }
       if (!lastEndpointInChain) {
-        UMOMessage tempResult=send(session,intermediaryResult,endpoint);
-        if (tempResult != null && intermediaryResult != null) {
-          tempResult.setCorrelationId(intermediaryResult.getCorrelationId());
-          tempResult.setCorrelationSequence(intermediaryResult.getCorrelationSequence());
-          tempResult.setCorrelationGroupSize(intermediaryResult.getCorrelationGroupSize());
-          tempResult.setReplyTo(intermediaryResult.getReplyTo());
+        UMOMessage localResult=send(session,intermediaryResult,endpoint);
+        if (localResult != null && intermediaryResult != null) {
+          processIntermediaryResult(localResult,intermediaryResult);
         }
-        intermediaryResult=tempResult;
+        intermediaryResult=localResult;
         if (logger.isDebugEnabled()) {
           logger.debug("Received Chain result '" + i + "': "+ (intermediaryResult != null ? intermediaryResult.toString() : "null"));
         }
