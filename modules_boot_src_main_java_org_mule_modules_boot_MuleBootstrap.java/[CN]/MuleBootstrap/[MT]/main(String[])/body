@@ -1,17 +1,17 @@
 {
-  ClassLoader sys=ClassLoader.getSystemClassLoader();
-  if (!(sys instanceof URLClassLoader)) {
-    throw new IllegalArgumentException("PANIC: Mule has been started with an unsupported classloader: " + sys.getClass().getName() + ". "+ "Please report this error to user<at>mule<dot>codehaus<dot>org");
+  File muleHome=null;
+  String muleHomeVar=System.getProperty("mule.home");
+  if (muleHomeVar != null && !muleHomeVar.trim().equals("")) {
+    muleHome=new File(muleHomeVar);
   }
-  URLClassLoader sysCl=(URLClassLoader)sys;
-  DefaultMuleClassPathConfig classPath=new DefaultMuleClassPathConfig();
-  List urls=classPath.getURLs();
-  Class refClass=URLClassLoader.class;
-  Method methodAddUrl=refClass.getDeclaredMethod("addURL",new Class[]{URL.class});
-  methodAddUrl.setAccessible(true);
-  for (Iterator it=urls.iterator(); it.hasNext(); ) {
-    URL url=(URL)it.next();
-    methodAddUrl.invoke(sysCl,new Object[]{url});
+  if (muleHome == null || !muleHome.exists() || !muleHome.isDirectory()) {
+    throw new IllegalArgumentException("Either MULE_HOME is not set or does not contain a valid directory.");
+  }
+  DefaultMuleClassPathConfig classPath=new DefaultMuleClassPathConfig(muleHome);
+  addLibrariesToClasspath(classPath.getURLs());
+  if (!ClassUtils.isClassOnPath("javax.activation.DataSource",MuleBootstrap.class)) {
+    LibraryDownloader downloader=new LibraryDownloader(muleHome);
+    addLibrariesToClasspath(downloader.downloadLibraries());
   }
   String mainClassName=SystemUtils.getCommandLineOption("-main",args);
   if (mainClassName == null) {
