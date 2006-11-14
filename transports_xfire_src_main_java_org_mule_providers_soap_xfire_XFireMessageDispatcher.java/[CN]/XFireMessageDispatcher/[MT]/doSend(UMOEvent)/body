@@ -10,6 +10,22 @@
       soapAction=parseSoapAction(soapAction,new QName(method),event);
       client.setProperty(org.codehaus.xfire.soap.SoapConstants.SOAP_ACTION,soapAction);
     }
+    if (event.getMessage().getProperty(WSHandlerConstants.ACTION) != null) {
+      client.setProperty(WSHandlerConstants.ACTION,event.getMessage().getProperty(WSHandlerConstants.ACTION));
+      String passwordType;
+      if (event.getMessage().getProperty(WSConstants.PW_DIGEST) != null) {
+        passwordType=WSConstants.PW_DIGEST;
+      }
+ else {
+        passwordType=WSConstants.PW_TEXT;
+      }
+      client.setProperty(WSHandlerConstants.PASSWORD_TYPE,passwordType);
+      client.setProperty(WSHandlerConstants.USER,event.getMessage().getProperty(WSHandlerConstants.USER));
+      client.setProperty(WSHandlerConstants.PW_CALLBACK_CLASS,event.getMessage().getProperty(WSHandlerConstants.PW_CALLBACK_CLASS));
+      if (event.getMessage().getProperty(WSHandlerConstants.ENC_PROP_FILE) != null) {
+        client.setProperty(WSHandlerConstants.ENC_PROP_FILE,event.getMessage().getProperty(WSHandlerConstants.ENC_PROP_FILE));
+      }
+    }
     Object[] response=client.invoke(method,getArgs(event));
     UMOMessage result=null;
     if (response != null && response.length <= 1) {

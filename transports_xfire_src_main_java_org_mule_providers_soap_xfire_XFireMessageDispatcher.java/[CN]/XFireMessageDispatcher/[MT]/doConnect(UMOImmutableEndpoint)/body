@@ -6,6 +6,44 @@
     if (service == null) {
       throw new FatalConnectException(new Message("xfire",8,serviceName),this);
     }
+    if (connector.getWsSecurity() != null) {
+      if (connector.getWsSecurity().get("serviceInHandlers") != null) {
+        List inList=(List)connector.getWsSecurity().get("serviceInHandlers");
+        for (int i=0; i < inList.size(); i++) {
+          Class clazz=Class.forName(inList.get(i).toString());
+          Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+          service.addInHandler(handler);
+        }
+        if (!inList.contains("org.codehaus.xfire.security.wss4j.WSS4JInHandler")) {
+          Class clazz=Class.forName("org.codehaus.xfire.security.wss4j.WSS4JInHandler");
+          Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+          service.addInHandler(handler);
+        }
+        if (!inList.contains("org.codehaus.xfire.util.dom.DOMInHandler")) {
+          Class clazz=Class.forName("org.codehaus.xfire.util.dom.DOMInHandler");
+          Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+          service.addInHandler(handler);
+        }
+      }
+      if (connector.getWsSecurity().get("serviceOutHandlers") != null) {
+        List outList=(List)connector.getWsSecurity().get("serviceOutHandlers");
+        for (int i=0; i < outList.size(); i++) {
+          Class clazz=Class.forName(outList.get(i).toString());
+          Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+          service.addOutHandler(handler);
+        }
+        if (!outList.contains("org.codehaus.xfire.security.wss4j.WSS4JOutHandler")) {
+          Class clazz=Class.forName("org.codehaus.xfire.security.wss4j.WSS4JOutHandler");
+          Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+          service.addOutHandler(handler);
+        }
+        if (!outList.contains("org.codehaus.xfire.util.dom.DOMOutHandler")) {
+          Class clazz=Class.forName("org.codehaus.xfire.util.dom.DOMOutHandler");
+          Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+          service.addOutHandler(handler);
+        }
+      }
+    }
     try {
       clientPool=new StackObjectPool(new XFireClientPoolFactory(endpoint,service,xfire));
       clientPool.addObject();
