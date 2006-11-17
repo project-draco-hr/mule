@@ -7,14 +7,20 @@
   if (writeToDirectory != null) {
     address=connector.getFilenameParser().getFilename(message,writeToDirectory);
   }
-  String filename=message.getStringProperty(FileConnector.PROPERTY_FILENAME,null);
+  String filename=null;
+  String outPattern=message.getStringProperty(FileConnector.PROPERTY_OUTPUT_PATTERN,null);
+  if (outPattern == null) {
+    outPattern=connector.getOutputPattern();
+  }
   try {
-    if (filename == null) {
-      String outPattern=message.getStringProperty(FileConnector.PROPERTY_OUTPUT_PATTERN,null);
-      if (outPattern == null) {
-        outPattern=connector.getOutputPattern();
-      }
+    if (outPattern != null) {
       filename=generateFilename(message,outPattern);
+    }
+ else {
+      filename=message.getStringProperty(FileConnector.PROPERTY_FILENAME,null);
+      if (filename == null) {
+        filename=generateFilename(message,null);
+      }
     }
     if (filename == null) {
       throw new IOException("Filename is null");
