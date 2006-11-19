@@ -1,17 +1,29 @@
 {
+  XMLStreamReader parser=null;
   try {
     if (obj instanceof String) {
-      new SAXReader().read(new StringReader((String)obj));
+      parser=factory.createXMLStreamReader(new StringReader((String)obj));
     }
  else     if (obj instanceof byte[]) {
-      new SAXReader().read(new InputSource(new ByteArrayInputStream((byte[])obj)));
+      parser=factory.createXMLStreamReader(new ByteArrayInputStream((byte[])obj));
     }
  else {
-      throw new DocumentException("Object must be a String or byte array");
+      return false;
+    }
+    while (parser.next() != XMLStreamConstants.END_DOCUMENT) {
     }
     return true;
   }
- catch (  DocumentException e) {
+ catch (  XMLStreamException ex) {
     return false;
+  }
+ finally {
+    if (parser != null) {
+      try {
+        parser.close();
+      }
+ catch (      XMLStreamException ignored) {
+      }
+    }
   }
 }
