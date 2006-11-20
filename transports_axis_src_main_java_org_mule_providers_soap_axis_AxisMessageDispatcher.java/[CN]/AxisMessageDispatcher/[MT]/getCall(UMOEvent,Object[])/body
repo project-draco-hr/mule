@@ -8,10 +8,12 @@
     throw new DispatchException(new org.mule.config.i18n.Message("soap",4),event.getMessage(),event.getEndpoint());
   }
  else   if (method instanceof SoapMethod) {
-    if (callParameters == null) {
-      callParameters=new HashMap();
+synchronized (this) {
+      if (callParameters == null) {
+        callParameters=new HashMap();
+      }
+      callParameters.put(((SoapMethod)method).getName().getLocalPart(),method);
     }
-    callParameters.put(((SoapMethod)method).getName().getLocalPart(),method);
   }
   Call call=(Call)service.createCall();
   String style=event.getMessage().getStringProperty("style",null);

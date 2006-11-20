@@ -3,20 +3,22 @@
   UMOEndpointURI endpoint=new MuleEndpointURI(uri);
   UMOEndpoint ep;
   if (axis != null) {
-    ep=(UMOEndpoint)endpointsCache.get(endpoint.getAddress());
-    if (ep == null) {
-      updateEndpointCache(axis.getOutboundRouter());
+synchronized (endpointsCache) {
       ep=(UMOEndpoint)endpointsCache.get(endpoint.getAddress());
       if (ep == null) {
-        logger.debug("Dispatch Endpoint uri: " + uri + " not found on the cache. Creating the endpoint instead.");
-        ep=new MuleEndpoint(uri,false);
+        updateEndpointCache(axis.getOutboundRouter());
+        ep=(UMOEndpoint)endpointsCache.get(endpoint.getAddress());
+        if (ep == null) {
+          logger.debug("Dispatch Endpoint uri: " + uri + " not found on the cache. Creating the endpoint instead.");
+          ep=new MuleEndpoint(uri,false);
+        }
+ else {
+          logger.info("Found endpoint: " + uri + " on the Axis service component");
+        }
       }
  else {
         logger.info("Found endpoint: " + uri + " on the Axis service component");
       }
-    }
- else {
-      logger.info("Found endpoint: " + uri + " on the Axis service component");
     }
   }
  else {
