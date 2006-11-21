@@ -6,10 +6,14 @@
         }
         public void run(){
           try {
-            doConnect(connectable);
+synchronized (this) {
+              doConnect(connectable);
+            }
           }
  catch (          FatalConnectException e) {
-            resetState();
+synchronized (this) {
+              resetState();
+            }
             if (connectable instanceof AbstractMessageReceiver) {
               ((AbstractMessageReceiver)connectable).handleException(e);
             }
@@ -19,16 +23,22 @@
 );
     }
  catch (    WorkException e) {
-      resetState();
+synchronized (this) {
+        resetState();
+      }
       throw new FatalConnectException(e,connectable);
     }
   }
  else {
     try {
-      doConnect(connectable);
+synchronized (this) {
+        doConnect(connectable);
+      }
     }
   finally {
-      resetState();
+synchronized (this) {
+        resetState();
+      }
     }
   }
 }
