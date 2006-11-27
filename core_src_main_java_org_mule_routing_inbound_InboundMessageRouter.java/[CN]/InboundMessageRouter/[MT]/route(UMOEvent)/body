@@ -1,4 +1,9 @@
 {
+  String inboundEndpoint=event.getEndpoint().getName();
+  if (StringUtils.isBlank(inboundEndpoint)) {
+    inboundEndpoint=event.getEndpoint().getEndpointURI().getAddress();
+  }
+  event.getMessage().setProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,inboundEndpoint);
   if (endpoints.size() > 0 && routers.size() == 0) {
     addRouter(new InboundPassThroughRouter());
   }
@@ -50,6 +55,9 @@
         UMOMessage messageResult=null;
         if (eventsToRoute != null) {
           for (int i=0; i < eventsToRoute.length; i++) {
+            if (event.getMessage().getProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY) == null) {
+              event.getMessage().setProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,inboundEndpoint);
+            }
             if (event.isSynchronous()) {
               messageResult=send(eventsToRoute[i]);
             }
