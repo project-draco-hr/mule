@@ -1,0 +1,91 @@
+{
+  Object process=null;
+  Map processVariables=new HashMap();
+  if (event != null) {
+    String propertyName;
+    for (Iterator iterator=event.getMessage().getPropertyNames().iterator(); iterator.hasNext(); ) {
+      propertyName=(String)iterator.next();
+      processVariables.put(propertyName,event.getMessage().getProperty(propertyName));
+    }
+    Object payload=event.getTransformedMessage();
+    if (payload != null && !(payload instanceof NullPayload)) {
+      processVariables.put(ProcessConnector.PROCESS_VARIABLE_INCOMING,payload);
+      String originatingEndpoint=event.getMessage().getStringProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,null);
+      if (StringUtils.isNotEmpty(originatingEndpoint)) {
+        processVariables.put(ProcessConnector.PROCESS_VARIABLE_INCOMING_SOURCE,originatingEndpoint);
+      }
+    }
+  }
+  Object processType=event.getProperty(ProcessConnector.PROPERTY_PROCESS_TYPE,true);
+  processVariables.remove(ProcessConnector.PROPERTY_PROCESS_TYPE);
+  Object processId;
+  String processIdField=connector.getProcessIdField();
+  if (StringUtils.isNotEmpty(processIdField)) {
+    processId=event.getProperty(processIdField,false);
+  }
+  processId=event.getProperty(ProcessConnector.PROPERTY_PROCESS_ID,true);
+  processVariables.remove(ProcessConnector.PROPERTY_PROCESS_ID);
+  String action=event.getMessage().getStringProperty(ProcessConnector.PROPERTY_ACTION,ProcessConnector.ACTION_ADVANCE);
+  processVariables.remove(ProcessConnector.PROPERTY_ACTION);
+  Object transition=event.getMessage().getProperty(ProcessConnector.PROPERTY_TRANSITION);
+  processVariables.remove(ProcessConnector.PROPERTY_TRANSITION);
+  String temp;
+  temp=event.getEndpoint().getEndpointURI().getHost();
+  if (StringUtils.isNotEmpty(temp)) {
+    processType=temp;
+  }
+  temp=event.getEndpoint().getEndpointURI().getPath();
+  if (StringUtils.isNotEmpty(temp)) {
+    if (temp.startsWith("/")) {
+      temp=StringUtils.right(temp,temp.length() - 1);
+    }
+    if (temp.indexOf("/") != -1) {
+      throw new IllegalArgumentException("Unexpected format in the path of the URL: " + temp);
+    }
+    processId=temp;
+  }
+  if (processId == null || action.equals(ProcessConnector.ACTION_START)) {
+    if (processType != null) {
+      process=connector.getBpms().startProcess(processType,processVariables);
+      if ((process != null) && logger.isInfoEnabled()) {
+        logger.info("New process started, ID = " + connector.getBpms().getId(process));
+      }
+    }
+ else {
+      throw new IllegalArgumentException("Process type is missing, cannot start a new process.");
+    }
+  }
+ else   if (action.equals(ProcessConnector.ACTION_UPDATE)) {
+    if (processId != null) {
+      process=connector.getBpms().updateProcess(processId,processVariables);
+      if ((process != null) && logger.isInfoEnabled()) {
+        logger.info("Process variables updated, ID = " + connector.getBpms().getId(process));
+      }
+    }
+ else {
+      throw new IllegalArgumentException("Process ID is missing, cannot update process.");
+    }
+  }
+ else   if (action.equals(ProcessConnector.ACTION_ABORT)) {
+    if (processId != null) {
+      connector.getBpms().abortProcess(processId);
+      process=new NullPayload();
+      logger.info("Process aborted, ID = " + processId);
+    }
+ else {
+      throw new IllegalArgumentException("Process ID is missing, cannot abort process.");
+    }
+  }
+ else {
+    if (processId != null) {
+      process=connector.getBpms().advanceProcess(processId,transition,processVariables);
+      if ((process != null) && logger.isInfoEnabled()) {
+        logger.info("Process advanced, ID = " + connector.getBpms().getId(process) + ", new state = "+ connector.getBpms().getState(process));
+      }
+    }
+ else {
+      throw new IllegalArgumentException("Process ID is missing, cannot advance process.");
+    }
+  }
+  return process;
+}

@@ -1,16 +1,31 @@
 {
   File muleHome=null;
   String muleHomeVar=System.getProperty("mule.home");
-  if (muleHomeVar != null && !muleHomeVar.trim().equals("")) {
+  if (muleHomeVar != null && !muleHomeVar.trim().equals("") && !muleHomeVar.equals("%MULE_HOME%")) {
     muleHome=new File(muleHomeVar).getCanonicalFile();
   }
   if (muleHome == null || !muleHome.exists() || !muleHome.isDirectory()) {
     throw new IllegalArgumentException("Either MULE_HOME is not set or does not contain a valid directory.");
   }
-  DefaultMuleClassPathConfig classPath=new DefaultMuleClassPathConfig(muleHome);
+  File muleBase=null;
+  String muleBaseVar=System.getProperty("mule.base");
+  if (muleBaseVar != null && !muleBaseVar.trim().equals("") && !muleBaseVar.equals("%MULE_BASE%")) {
+    muleBase=new File(muleBaseVar).getCanonicalFile();
+  }
+ else {
+    muleBase=muleHome;
+  }
+  DefaultMuleClassPathConfig classPath=new DefaultMuleClassPathConfig(muleHome,muleBase);
   addLibrariesToClasspath(classPath.getURLs());
+  ClassLoader sys=ClassLoader.getSystemClassLoader();
+  if (ClassUtils.getResource("META-INF/mule/license.props",MuleBootstrap.class) == null) {
+    LicenseHandler licenseHandler=new LicenseHandler(muleHome,muleBase);
+    if (!licenseHandler.getAcceptance()) {
+      WrapperManager.stop(-1);
+    }
+  }
   if (!ClassUtils.isClassOnPath("javax.activation.DataSource",MuleBootstrap.class)) {
-    LibraryDownloader downloader=new LibraryDownloader(muleHome);
+    LibraryDownloader downloader=new LibraryDownloader(muleBase);
     addLibrariesToClasspath(downloader.downloadLibraries());
   }
   String mainClassName=SystemUtils.getCommandLineOption("-main",args);

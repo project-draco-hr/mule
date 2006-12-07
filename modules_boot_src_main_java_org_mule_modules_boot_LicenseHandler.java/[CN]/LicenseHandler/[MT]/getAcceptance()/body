@@ -1,0 +1,47 @@
+{
+  String licenseType="";
+  String licenseVersion="";
+  try {
+    File licenseFile=new File(muleHome,licenseFileName);
+    File muleLib=new File(muleHome,"lib/mule");
+    if (!licenseFile.exists() || !muleLib.exists()) {
+      System.out.println("\nYour Mule installation seems to be incomplete. Please try downloading it again from http://mule.mulesource.org/wiki/display/MULE/Download and start again.");
+      return false;
+    }
+    System.out.println("\n\nPlease read over the following license agreement carefully:\n\n");
+    int row=1;
+    String input="";
+    BufferedReader is=new BufferedReader(new InputStreamReader(System.in));
+    BufferedReader br=new BufferedReader(new FileReader(licenseFile));
+    while (br.ready()) {
+      String line=br.readLine();
+      if (row == 1)       licenseType=line;
+      if (row == 2 && line.startsWith("Version "))       licenseVersion=line.substring(8);
+      if ((row % maxRowsToDisplay) == 0) {
+        System.out.print("\nHit return to continue ... ");
+        input=is.readLine();
+      }
+      System.out.println(line);
+      row++;
+    }
+    System.out.print("\n\nDo you accept the terms and conditions of this license agreement [y/n]?");
+    input=is.readLine();
+    if (!input.toLowerCase().startsWith("y")) {
+      System.out.println("\nSorry, until you accept the terms and conditions of this EULA, you won't be able to start Mule");
+      return false;
+    }
+  }
+ catch (  Exception e) {
+    System.out.println("\nSorry, we encountered an error in processing your license agreement - please try again");
+    return false;
+  }
+  if (licenseType.equals(""))   licenseType=defaultLicenseType;
+  if (licenseVersion.equals(""))   licenseVersion=defaultLicenseVersion;
+  try {
+    saveLicenseAck(licenseType,licenseVersion);
+  }
+ catch (  Exception e) {
+    System.out.println(e);
+  }
+  return true;
+}

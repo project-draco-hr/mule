@@ -1,0 +1,15 @@
+{
+  String processName=(String)messageProperties.get(ProcessConnector.PROPERTY_PROCESS_TYPE);
+  Object processId=messageProperties.get(ProcessConnector.PROPERTY_PROCESS_ID);
+  ProcessMessageReceiver receiver=lookupReceiver(processName,processId);
+  if (receiver == null) {
+    throw new ConfigurationException(Message.createStaticMessage("No corresponding receiver found for processName = " + processName + ", processId = "+ processId));
+  }
+  if (synchronous) {
+    return receiver.generateSynchronousEvent(endpoint,payloadObject,messageProperties);
+  }
+ else {
+    receiver.generateAsynchronousEvent(endpoint,payloadObject,messageProperties);
+    return null;
+  }
+}

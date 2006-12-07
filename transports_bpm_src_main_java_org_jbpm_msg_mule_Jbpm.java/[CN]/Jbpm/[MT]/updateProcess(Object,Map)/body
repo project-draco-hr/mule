@@ -1,0 +1,19 @@
+{
+  ProcessInstance processInstance=null;
+  JbpmContext jbpmContext=jbpmConfiguration.createJbpmContext();
+  try {
+    processInstance=jbpmContext.getGraphSession().loadProcessInstance(NumberUtils.toLong(processId));
+    if (processVariables != null && !processVariables.isEmpty()) {
+      processInstance.getContextInstance().addVariables(processVariables);
+    }
+    jbpmContext.save(processInstance);
+  }
+ catch (  Exception e) {
+    jbpmContext.setRollbackOnly();
+    throw e;
+  }
+ finally {
+    jbpmContext.close();
+  }
+  return processInstance;
+}

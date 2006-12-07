@@ -1,0 +1,20 @@
+{
+  ((Jbpm)bpms).deployProcess("dummyProcess.xml");
+  UMOMessage response;
+  Object process;
+  BPMS bpms=connector.getBpms();
+  MuleClient client=new MuleClient();
+  try {
+    response=client.send("bpm://dummyProcess","data",null);
+    process=response.getPayload();
+    long processId=NumberUtils.toLong(bpms.getId(process));
+    assertFalse(processId == -1);
+    assertEquals("dummyState",bpms.getState(process));
+    response=client.send("bpm://dummyProcess/" + processId,null,null);
+    process=response.getPayload();
+    assertTrue(bpms.hasEnded(process));
+  }
+  finally {
+    client.dispose();
+  }
+}

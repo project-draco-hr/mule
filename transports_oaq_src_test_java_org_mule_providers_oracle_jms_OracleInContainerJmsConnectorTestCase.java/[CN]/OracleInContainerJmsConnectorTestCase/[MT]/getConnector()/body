@@ -1,0 +1,23 @@
+{
+  if (connector == null) {
+    connector=new OracleInContainerJmsConnector();
+    connector.setName("TestConnector");
+    OracleDataSource dataSource=new OracleDataSource();
+    dataSource.setDataSourceName("Mule Oracle AQ Provider");
+    dataSource.setURL("jdbc:oracle:oci:@TEST_DB");
+    dataSource.setUser("scott");
+    dataSource.setPassword("tiger");
+    connector.setDataSource(dataSource);
+    Mock connectionFactory=new Mock(ConnectionFactory.class);
+    Mock connection=new Mock(Connection.class);
+    connectionFactory.expectAndReturn("createConnection",connection.proxy());
+    connection.expect("close");
+    connection.expect("start");
+    connection.expect("stop");
+    connection.expect("stop");
+    connection.expect("setClientID","mule.TestConnector");
+    connector.setConnectionFactory((ConnectionFactory)connectionFactory.proxy());
+    connector.initialise();
+  }
+  return connector;
+}

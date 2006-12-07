@@ -1,10 +1,33 @@
 {
-  UMOAgent umoAgent;
   logger.info("Initialising agents...");
-  for (Iterator iterator=agents.values().iterator(); iterator.hasNext(); ) {
-    umoAgent=(UMOAgent)iterator.next();
-    logger.debug("Initialising agent: " + umoAgent.getName());
-    umoAgent.initialise();
+  Collection agentsSnapshot=agents.values();
+  CursorableLinkedList agentRegistrationQueue=new CursorableLinkedList(agentsSnapshot);
+  CursorableLinkedList.Cursor cursor=agentRegistrationQueue.cursor();
+  try {
+    while (cursor.hasNext()) {
+      UMOAgent umoAgent=(UMOAgent)cursor.next();
+      int originalSize=agentsSnapshot.size();
+      logger.debug("Initialising agent: " + umoAgent.getName());
+      umoAgent.initialise();
+      cursor.remove();
+      int newSize=agentsSnapshot.size();
+      int delta=newSize - originalSize;
+      if (delta > 0) {
+        Collection tail=CollectionUtils.retainAll(agentsSnapshot,agentRegistrationQueue);
+        Collection head=CollectionUtils.subtract(agentsSnapshot,tail);
+        agentRegistrationQueue.clear();
+        agentRegistrationQueue.addAll(head);
+        agentRegistrationQueue.addAll(tail);
+        this.agents.clear();
+        for (Iterator it=agentRegistrationQueue.iterator(); it.hasNext(); ) {
+          UMOAgent theAgent=(UMOAgent)it.next();
+          this.agents.put(theAgent.getName(),theAgent);
+        }
+      }
+    }
+  }
+  finally {
+    cursor.close();
   }
   logger.info("Agents Successfully Initialised");
 }
