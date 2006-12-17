@@ -2,11 +2,10 @@
   if (wireFormat == null) {
     wireFormat=new SerializationWireFormat();
   }
-  serverEndpoint=MuleManager.getConfiguration().getServerUrl();
   UMOManager manager=MuleManager.getInstance();
   try {
-    if (StringUtils.isEmpty(serverEndpoint)) {
-      logger.warn("No serverEndpointUrl specified, MuleAdminAgent will not start. E.g. use " + "<mule-environment-properties serverUrl=\"tcp://example.com:60504\"/> ");
+    if (StringUtils.isEmpty(serverUri)) {
+      logger.warn("No serverUriUrl specified, MuleAdminAgent will not start. E.g. use " + "<mule:admin-agent serverUri=\"tcp://example.com:60504\"/> ");
       manager.unregisterAgent(this.getName());
       return;
     }
@@ -17,15 +16,15 @@
       if (manager.lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
         throw new AlreadyInitialisedException("Server Components",this);
       }
-      serverEndpoint=MuleManager.getInstance().lookupEndpointIdentifier(serverEndpoint,serverEndpoint);
-      UMOEndpointURI endpointUri=new MuleEndpointURI(serverEndpoint);
+      serverUri=MuleManager.getInstance().lookupEndpointIdentifier(serverUri,serverUri);
+      UMOEndpointURI endpointUri=new MuleEndpointURI(serverUri);
       UMOConnector connector=ConnectorFactory.getOrCreateConnectorByProtocol(endpointUri);
       if (manager.lookupConnector(connector.getName()) == null) {
         connector.setName(DEFAULT_MANAGER_ENDPOINT);
         connector.initialise();
         manager.registerConnector(connector);
       }
-      logger.info("Registering Admin listener on: " + serverEndpoint);
+      logger.info("Registering Admin listener on: " + serverUri);
       UMODescriptor descriptor=MuleManagerComponent.getDescriptor(connector,endpointUri,wireFormat);
       manager.getModel().registerComponent(descriptor);
     }

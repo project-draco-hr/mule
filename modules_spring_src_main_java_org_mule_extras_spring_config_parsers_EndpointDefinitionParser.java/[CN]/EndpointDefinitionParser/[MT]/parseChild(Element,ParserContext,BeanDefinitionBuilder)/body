@@ -1,0 +1,25 @@
+{
+  registry=parserContext.getRegistry();
+  NamedNodeMap attributes=element.getAttributes();
+  for (int x=0; x < attributes.getLength(); x++) {
+    Attr attribute=(Attr)attributes.item(x);
+    String name=attribute.getName();
+    if (ID_ATTRIBUTE.equals(name)) {
+      continue;
+    }
+ else     if (ADDRESS_ATTRIBUTE.equals(name)) {
+      String address=element.getAttribute("address");
+      try {
+        builder.addPropertyValue("endpointURI",new MuleEndpointURI(address));
+      }
+ catch (      MalformedEndpointException e) {
+        throw new BeanCreationException(new Message(Messages.ENPOINT_X_IS_MALFORMED,address).getMessage(),e);
+      }
+      continue;
+    }
+    String propertyName=extractPropertyName(name);
+    Assert.state(org.springframework.util.StringUtils.hasText(propertyName),"Illegal property name returned from 'extractPropertyName(String)': cannot be null or empty.");
+    builder.addPropertyValue(propertyName,attribute.getValue());
+  }
+  postProcess(builder,element);
+}

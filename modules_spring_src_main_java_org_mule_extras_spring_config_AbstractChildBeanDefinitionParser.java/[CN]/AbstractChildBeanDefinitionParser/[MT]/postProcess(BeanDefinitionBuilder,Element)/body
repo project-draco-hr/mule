@@ -1,0 +1,23 @@
+{
+  String parentBean=((Element)element.getParentNode()).getAttribute("id");
+  if (StringUtils.isBlank(parentBean)) {
+    throw new RuntimeException();
+  }
+  String name=generateChildBeanName(element);
+  element.setAttribute("id",name);
+  element.setAttribute("name",name);
+  BeanDefinition parent=registry.getBeanDefinition(parentBean);
+  String propertyName=getPropertyName(element);
+  PropertyValue pv;
+  pv=parent.getPropertyValues().getPropertyValue(propertyName);
+  if (pv == null && isCollection(element)) {
+    ManagedList l=new ManagedList();
+    pv=new PropertyValue(propertyName + "s",l);
+    parent.getPropertyValues().addPropertyValue(pv);
+    ((List)pv.getValue()).add(builder.getBeanDefinition());
+  }
+ else {
+    pv=new PropertyValue(propertyName,builder.getBeanDefinition());
+  }
+  parent.getPropertyValues().addPropertyValue(pv);
+}
