@@ -2,8 +2,8 @@
   File muleLib=new File(muleHome,"lib/mule");
   File tempJar=createAckJarFile(licenseType,licenseVersion);
   if (!muleLib.canWrite()) {
-    if (muleHome != muleBase) {
-      muleLib=new File(muleBase,"lib/boot");
+    if (!muleHome.getCanonicalFile().equals(muleBase.getCanonicalFile())) {
+      muleLib=new File(muleBase,"lib/user");
       if (!muleLib.canWrite())       throw new Exception("No write permissions for " + ackJarName + " in either MULE_HOME or MULE_BASE");
     }
  else {
@@ -11,5 +11,6 @@
     }
   }
   File newJarFile=new File(muleLib,ackJarName);
+  if (newJarFile.exists())   throw new Exception("Unable to rename temporary jar to " + newJarFile.getAbsolutePath() + " a file with this name already exists!");
   if (!tempJar.renameTo(newJarFile))   throw new Exception("Unable to rename temporary jar to " + newJarFile.getAbsolutePath());
 }
