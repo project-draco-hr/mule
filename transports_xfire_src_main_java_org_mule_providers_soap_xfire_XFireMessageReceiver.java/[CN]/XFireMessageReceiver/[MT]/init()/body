@@ -2,7 +2,10 @@
   try {
     Map props=new HashMap(component.getDescriptor().getProperties());
     props.putAll(endpoint.getProperties());
-    String namespace=MapUtils.getString(props,"namespace",XFireConnector.DEFAULT_MULE_NAMESPACE_URI);
+    String namespace=(String)component.getDescriptor().getProperties().get(SoapConstants.SOAP_NAMESPACE_PROPERTY);
+    if (namespace == null) {
+      namespace=MapUtils.getString(props,"namespace",XFireConnector.DEFAULT_MULE_NAMESPACE_URI);
+    }
     if (props.size() == 0) {
       props=null;
     }
@@ -27,7 +30,13 @@
         logger.info("Only the first class was used to expose your method");
       }
     }
-    service=connector.getServiceFactory().create(exposedInterface,component.getDescriptor().getName(),namespace,props);
+    String wsdlUrl=(String)component.getDescriptor().getProperties().get(SoapConstants.WSDL_URL_PROPERTY);
+    if (StringUtils.isBlank(wsdlUrl)) {
+      service=connector.getServiceFactory().create(exposedInterface,component.getDescriptor().getName(),namespace,props);
+    }
+ else {
+      service=connector.getServiceFactory().create(exposedInterface,new QName(namespace,component.getDescriptor().getName()),new URL(wsdlUrl),props);
+    }
     boolean sync=endpoint.isSynchronous();
     if (endpoint.getEndpointURI().getScheme().startsWith("http") || endpoint.getEndpointURI().getScheme().startsWith("servlet")) {
       sync=true;
@@ -38,6 +47,9 @@
     throw new InitialisationException(e,this);
   }
 catch (  ClassNotFoundException e) {
+    throw new InitialisationException(e,this);
+  }
+catch (  MalformedURLException e) {
     throw new InitialisationException(e,this);
   }
 }

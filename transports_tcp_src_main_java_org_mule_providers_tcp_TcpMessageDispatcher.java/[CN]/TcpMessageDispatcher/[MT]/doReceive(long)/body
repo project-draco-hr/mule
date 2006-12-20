@@ -1,0 +1,22 @@
+{
+  Socket socket=null;
+  try {
+    socket=initSocket(endpoint.getEndpointURI().getAddress());
+    try {
+      Object result=receive(socket,(int)timeout);
+      if (result == null) {
+        return null;
+      }
+      return new MuleMessage(connector.getMessageAdapter(result));
+    }
+ catch (    SocketTimeoutException e) {
+      logger.info("Socket timed out normally while doing a synchronous receive on endpointUri: " + endpoint.getEndpointURI());
+      return null;
+    }
+  }
+  finally {
+    if (socket != null && !socket.isClosed()) {
+      socket.close();
+    }
+  }
+}

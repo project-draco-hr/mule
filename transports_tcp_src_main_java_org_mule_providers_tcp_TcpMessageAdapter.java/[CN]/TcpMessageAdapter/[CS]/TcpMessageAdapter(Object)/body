@@ -1,6 +1,16 @@
 {
-  if (message instanceof byte[]) {
-    this.message=(byte[])message;
+  if (message instanceof MuleMessage) {
+    MuleMessage muleMessage=(MuleMessage)message;
+    Set s=muleMessage.getPropertyNames();
+    Iterator i=s.iterator();
+    while (i.hasNext()) {
+      Object o=i.next();
+      this.properties.put(o,muleMessage.getProperty(o.toString()));
+    }
+    this.message=muleMessage.getPayload();
+  }
+ else   if (message instanceof Serializable) {
+    this.message=message;
   }
  else {
     throw new MessageTypeNotSupportedException(message,getClass());
