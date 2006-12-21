@@ -10,8 +10,12 @@
   txConfig.setAction(txBeginAction);
   UMOEndpoint outProvider=new MuleEndpoint("testOut",getOutDest(),connector,null,UMOEndpoint.ENDPOINT_TYPE_SENDER,0,null,null);
   endpoint.setTransactionConfig(txConfig);
-  descriptor.setOutboundEndpoint(outProvider);
-  descriptor.setInboundEndpoint(endpoint);
+  descriptor.setOutboundRouter(new OutboundMessageRouter());
+  OutboundPassThroughRouter router=new OutboundPassThroughRouter();
+  router.addEndpoint(outProvider);
+  descriptor.getOutboundRouter().addRouter(router);
+  descriptor.setInboundRouter(new InboundMessageRouter());
+  descriptor.getInboundRouter().addEndpoint(endpoint);
   HashMap props=new HashMap();
   props.put("eventCallback",callback);
   descriptor.setProperties(props);
