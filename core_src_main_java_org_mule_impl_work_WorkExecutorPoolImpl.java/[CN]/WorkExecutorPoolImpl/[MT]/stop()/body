@@ -1,9 +1,13 @@
 {
-  pooledExecutor.shutdownNow();
+  List outstanding=pooledExecutor.shutdownNow();
   try {
-    pooledExecutor.awaitTermination(SHUTDOWN_TIMEOUT,TimeUnit.MILLISECONDS);
+    if (!pooledExecutor.awaitTermination(SHUTDOWN_TIMEOUT,TimeUnit.MILLISECONDS)) {
+      logger.warn("Pool " + name + " did not terminate in time; "+ outstanding.size()+ " work items were cancelled.");
+    }
   }
- catch (  InterruptedException e) {
+ catch (  InterruptedException ie) {
+    pooledExecutor.shutdownNow();
+    Thread.currentThread().interrupt();
   }
   return new NullWorkExecutorPool(profile,name);
 }

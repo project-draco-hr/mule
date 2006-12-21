@@ -3,21 +3,24 @@
   if (!isStarted()) {
     if (!isConnected()) {
       startOnConnect.set(true);
-      getConnectionStrategy().connect(this);
+      this.getConnectionStrategy().connect(this);
       return;
     }
     if (logger.isInfoEnabled()) {
       logger.info("Starting Connector: " + getClass().getName());
     }
-    doStart();
+    if (scheduler == null || scheduler.isShutdown()) {
+      scheduler=this.getScheduler();
+    }
+    this.doStart();
     started.set(true);
     if (receivers != null) {
       for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
-        AbstractMessageReceiver amr=(AbstractMessageReceiver)iterator.next();
+        UMOMessageReceiver mr=(UMOMessageReceiver)iterator.next();
         if (logger.isDebugEnabled()) {
-          logger.debug("Starting receiver on endpoint: " + amr.getEndpoint().getEndpointURI());
+          logger.debug("Starting receiver on endpoint: " + mr.getEndpoint().getEndpointURI());
         }
-        amr.start();
+        mr.start();
       }
     }
     if (logger.isInfoEnabled()) {

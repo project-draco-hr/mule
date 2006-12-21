@@ -1,0 +1,79 @@
+{
+  Map properties=event.getSession().getComponent().getDescriptor().getProperties();
+  if (properties.containsKey("xfire")) {
+    XFire server=(XFire)properties.get("xfire");
+    String pathInfo=event.getEndpoint().getEndpointURI().getPath();
+    String serviceName;
+    int i=pathInfo.lastIndexOf('/');
+    if (i > -1) {
+      serviceName=pathInfo.substring(i + 1);
+    }
+ else {
+      serviceName=pathInfo;
+    }
+    Service service=server.getServiceRegistry().getService(serviceName);
+    Object[] connectorArray=MuleManager.getInstance().getConnectors().values().toArray();
+    XFireConnector connector=null;
+    for (i=0; i < connectorArray.length; i++) {
+      if (connectorArray[i] instanceof XFireConnector) {
+        connector=(XFireConnector)connectorArray[i];
+      }
+    }
+    Object[] outhandlers=service.getOutHandlers().toArray();
+    for (i=0; i < outhandlers.length; i++) {
+      if (outhandlers[i] instanceof DOMOutHandler) {
+        connector.getClientOutHandlers().remove(i);
+      }
+      if (outhandlers[i] instanceof WSS4JOutHandler) {
+        connector.getClientOutHandlers().remove(i);
+      }
+    }
+    Object[] handlers=service.getInHandlers().toArray();
+    boolean isDomInHandlerPresent=false;
+    boolean isWss4jInHandlerPresent=false;
+    for (i=0; i < handlers.length; i++) {
+      if (handlers[i] instanceof DOMInHandler) {
+        isDomInHandlerPresent=true;
+      }
+      if (handlers[i] instanceof MuleWSSInHandler) {
+        isWss4jInHandlerPresent=true;
+      }
+    }
+    if (!isDomInHandlerPresent) {
+      service.addInHandler(new DOMInHandler());
+    }
+    if (!isWss4jInHandlerPresent) {
+      service.addInHandler(new MuleWSSInHandler());
+    }
+    Properties props=new Properties();
+    if (event.getMessage().getProperty("action") != null) {
+      props.putAll(getProperties(event));
+    }
+    if (!props.isEmpty()) {
+      Object[] keys=props.keySet().toArray();
+      for (i=0; i < keys.length; i++) {
+        service.setProperty((String)keys[i],props.getProperty((String)keys[i]));
+      }
+    }
+  }
+ else   if (properties.containsKey("axisServer")) {
+    AxisServer server=(AxisServer)event.getSession().getComponent().getDescriptor().getProperties().get("axisServer");
+    MuleConfigProvider provider=(MuleConfigProvider)server.getConfig();
+    String prefix=event.getEndpoint().getProtocol() + ":";
+    String serviceName=event.getEndpoint().getName().substring(prefix.length());
+    SOAPService soapService=null;
+    try {
+      soapService=provider.getService(new QName(serviceName));
+      Hashtable options=new Hashtable();
+      if (event.getMessage().getProperty("action") != null) {
+        options.putAll(getProperties(event));
+        soapService.setPropertyParent(options);
+        Handler inHandler=new WSDoAllReceiver();
+        provider.setGlobalRequest(inHandler);
+      }
+    }
+ catch (    ConfigurationException e) {
+      e.printStackTrace();
+    }
+  }
+}

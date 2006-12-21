@@ -1,0 +1,20 @@
+{
+  Vector result=(Vector)context.getProperty(WSHandlerConstants.RECV_RESULTS);
+  for (int i=0; i < result.size(); i++) {
+    WSHandlerResult res=(WSHandlerResult)result.get(i);
+    for (int j=0; j < res.getResults().size(); j++) {
+      WSSecurityEngineResult secRes=(WSSecurityEngineResult)res.getResults().get(j);
+      int action=secRes.getAction();
+      if ((action & WSConstants.UT) > 0) {
+        WSUsernameTokenPrincipal principal=(WSUsernameTokenPrincipal)secRes.getPrincipal();
+        context.setProperty(WSHandlerConstants.ENCRYPTION_USER,principal.getName());
+        System.out.print("User : " + principal.getName() + " password : "+ principal.getPassword()+ "\n");
+      }
+      if ((action & WSConstants.SIGN) > 0) {
+        X509Certificate cert=secRes.getCertificate();
+        X500Name principal=(X500Name)secRes.getPrincipal();
+        System.out.print("Signature for : " + principal.getCommonName());
+      }
+    }
+  }
+}

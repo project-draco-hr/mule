@@ -8,7 +8,13 @@
       UMOEvent event=(UMOEvent)iterator.next();
       baos.write(event.getMessageAsBytes());
     }
-    UMOMessage message=new MuleMessage(baos.toByteArray(),firstEvent.getMessage());
+    UMOMessage message;
+    try {
+      message=new MuleMessage(SerializationUtils.deserialize(baos.toByteArray()),firstEvent.getMessage());
+    }
+ catch (    SerializationException e) {
+      message=new MuleMessage(baos.toByteArray(),firstEvent.getMessage());
+    }
     message.setCorrelationGroupSize(-1);
     message.setCorrelationSequence(-1);
     return message;

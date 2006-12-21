@@ -1,3 +1,22 @@
 {
-  return getDispatcher(endpoint,true);
+  this.checkDisposed();
+  if (endpoint == null) {
+    throw new IllegalArgumentException("Endpoint must not be null");
+  }
+  if (!supportsProtocol(endpoint.getConnector().getProtocol())) {
+    throw new IllegalArgumentException(new Message(Messages.CONNECTOR_SCHEME_X_INCOMPATIBLE_WITH_ENDPOINT_SCHEME_X,getProtocol(),endpoint.getEndpointURI().toString()).getMessage());
+  }
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("borrowing dispatcher for endpoint: " + endpoint.getEndpointURI());
+    }
+    UMOMessageDispatcher dispatcher=(UMOMessageDispatcher)dispatchers.borrowObject(endpoint);
+    if (logger.isDebugEnabled()) {
+      logger.warn("borrowed dispatcher for endpoint: " + endpoint.getEndpointURI() + " = "+ dispatcher.toString());
+    }
+    return dispatcher;
+  }
+ catch (  Exception ex) {
+    throw new ConnectorException(new Message(Messages.CONNECTOR_CAUSED_ERROR),this,ex);
+  }
 }

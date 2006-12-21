@@ -1,0 +1,35 @@
+{
+  if (event.getEndpoint().getConnector() instanceof XFireConnector) {
+    XFireConnector connector=(XFireConnector)event.getEndpoint().getConnector();
+    List clientHandlers=new ArrayList();
+    List existingOutHandlers=connector.getClientOutHandlers();
+    clientHandlers.add("org.codehaus.xfire.util.dom.DOMOutHandler");
+    clientHandlers.add("org.codehaus.xfire.security.wss4j.WSS4JOutHandler");
+    if (existingOutHandlers == null) {
+      connector.setClientOutHandlers(clientHandlers);
+    }
+ else     if (!existingOutHandlers.contains("org.codehaus.xfire.security.wss4j.WSS4JOutHandler")) {
+      connector.setClientOutHandlers(clientHandlers);
+    }
+  }
+ else   if (event.getEndpoint().getConnector() instanceof AxisConnector) {
+    AxisServer server=(AxisServer)event.getSession().getComponent().getDescriptor().getProperties().get("axisServer");
+    MuleConfigProvider provider=(MuleConfigProvider)server.getConfig();
+    String prefix=event.getEndpoint().getProtocol() + ":";
+    String serviceName=event.getEndpoint().getName().substring(prefix.length());
+    SOAPService soapService=null;
+    try {
+      soapService=provider.getService(new QName(serviceName));
+      Hashtable options=new Hashtable();
+      if (event.getMessage().getProperty("action") != null) {
+        options.putAll(getProperties(event));
+        soapService.setPropertyParent(options);
+      }
+      Handler outHandler=new WSDoAllSender();
+      provider.setGlobalResponse(outHandler);
+    }
+ catch (    ConfigurationException e) {
+      e.printStackTrace();
+    }
+  }
+}
