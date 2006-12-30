@@ -1,3 +1,17 @@
 {
-  workExecutorPool=workExecutorPool.stop();
+  if (workExecutorService != null) {
+    try {
+      List outstanding=workExecutorService.shutdownNow();
+      if (!workExecutorService.awaitTermination(SHUTDOWN_TIMEOUT,TimeUnit.MILLISECONDS)) {
+        logger.warn("Pool " + name + " did not terminate in time; "+ outstanding.size()+ " work items were cancelled.");
+      }
+    }
+ catch (    InterruptedException ie) {
+      workExecutorService.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
+ finally {
+      workExecutorService=null;
+    }
+  }
 }

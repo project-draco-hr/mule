@@ -18,17 +18,17 @@
     logger.debug("Got latch for message: " + responseId);
   }
   UMOMessage result;
-  boolean b=false;
+  boolean resultAvailable=false;
   try {
     if (logger.isDebugEnabled()) {
       logger.debug("Waiting for response to message: " + responseId);
     }
-    if (getTimeout() <= 0) {
+    if (this.getTimeout() <= 0) {
       l.await();
-      b=true;
+      resultAvailable=true;
     }
  else {
-      b=l.await(this.getTimeout(),TimeUnit.MILLISECONDS);
+      resultAvailable=l.await(this.getTimeout(),TimeUnit.MILLISECONDS);
     }
   }
  catch (  InterruptedException e) {
@@ -38,7 +38,7 @@
     locks.remove(responseId);
     result=(UMOMessage)responseEvents.remove(responseId);
   }
-  if (!b) {
+  if (!resultAvailable) {
     if (logger.isTraceEnabled()) {
       logger.trace("Current responses are: \n" + MapUtils.toString(responseEvents,true));
     }

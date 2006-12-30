@@ -1,0 +1,64 @@
+{
+  URLName url=(URLName)args;
+  if (url == null) {
+    throw new IllegalArgumentException(new org.mule.config.i18n.Message(Messages.X_IS_NULL,"URL").toString());
+  }
+  String protocol=this.getProtocol().toLowerCase();
+  boolean secure=false;
+  if (protocol.equals("smtps")) {
+    protocol="smtp";
+    secure=true;
+  }
+ else   if (protocol.equals("pop3s")) {
+    protocol="pop3";
+    secure=true;
+  }
+ else   if (protocol.equals("imaps")) {
+    protocol="imap";
+    secure=true;
+  }
+  Properties props=System.getProperties();
+  Session session;
+synchronized (props) {
+    props.put("mail." + protocol + ".host",url.getHost());
+    int port=url.getPort();
+    if (port == -1) {
+      port=this.getDefaultPort();
+    }
+    props.put("mail." + protocol + ".port",String.valueOf(port));
+    MailConnector connector=this;
+    if (secure) {
+      System.setProperty("mail." + protocol + ".socketFactory.port",String.valueOf(port));
+      if (protocol.equals("smtp")) {
+        props=(Properties)props.clone();
+        props.put("mail.smtp.ssl","true");
+        props.put("mail.smtp.socketFactory.class",((SmtpsConnector)connector).getSocketFactory());
+        props.put("mail.smtp.socketFactory.fallback",((SmtpsConnector)connector).getSocketFactoryFallback());
+        if (((SmtpsConnector)connector).getTrustStore() != null) {
+          System.setProperty("javax.net.ssl.trustStore",((SmtpsConnector)connector).getTrustStore());
+          if (((SmtpsConnector)connector).getTrustStorePassword() != null) {
+            System.setProperty("javax.net.ssl.trustStorePassword",((SmtpsConnector)connector).getTrustStorePassword());
+          }
+        }
+      }
+    }
+    props.setProperty("mail." + protocol + ".rsetbeforequit","true");
+    if (StringUtils.isNotBlank(url.getPassword())) {
+      props.put("mail." + protocol + ".auth","true");
+      Authenticator auth=connector.getAuthenticator();
+      if (auth == null) {
+        auth=new DefaultAuthenticator(url.getUsername(),url.getPassword());
+        logger.debug("No Authenticator set on Connector: " + connector.getName() + ". Using default.");
+      }
+      session=Session.getInstance(props,auth);
+    }
+ else {
+      props.put("mail." + protocol + ".auth","false");
+      session=Session.getInstance(props,null);
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Creating mail session: host = " + url.getHost() + ", port = "+ url.getPort()+ ", user = "+ url.getUsername()+ ", pass = "+ url.getPassword());
+  }
+  return session;
+}

@@ -1,20 +1,20 @@
 {
   String path=(String)message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
-  int i=path.indexOf("?");
+  int i=path.indexOf('?');
   if (i > -1) {
     path=path.substring(0,i);
   }
-  StringBuffer requestUri=new StringBuffer();
+  StringBuffer requestUri=new StringBuffer(80);
   requestUri.append(endpoint.getProtocol()).append("://");
   requestUri.append(endpoint.getEndpointURI().getHost());
-  requestUri.append(":").append(endpoint.getEndpointURI().getPort());
+  requestUri.append(':').append(endpoint.getEndpointURI().getPort());
   if (logger.isTraceEnabled()) {
     logger.trace("Looking up receiver on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
   }
-  AbstractMessageReceiver receiver=connector.getReceiver(requestUri.toString());
+  UMOMessageReceiver receiver=connector.lookupReceiver(requestUri.toString());
   if (receiver == null && !"/".equals(path)) {
-    int x=path.lastIndexOf("/");
-    if (x > 1 && path.indexOf(".") > x) {
+    int x=path.lastIndexOf('/');
+    if (x > 1 && path.indexOf('.') > x) {
       requestUri.append(path.substring(0,x));
     }
  else {
@@ -23,7 +23,7 @@
     if (logger.isTraceEnabled()) {
       logger.trace("Secondary lookup of receiver on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
     }
-    receiver=connector.getReceiver(requestUri.toString());
+    receiver=connector.lookupReceiver(requestUri.toString());
     if (receiver == null && logger.isWarnEnabled()) {
       logger.warn("No receiver found with secondary lookup on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
       logger.warn("Receivers on connector are: " + MapUtils.toString(connector.getReceivers(),true));
