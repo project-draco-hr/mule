@@ -1,0 +1,15 @@
+{
+  BeanDefinitionBuilder builder=BeanDefinitionBuilder.rootBeanDefinition(MapFactoryBean.class);
+  AbstractBeanDefinition beanDefinition=builder.getBeanDefinition();
+  Map parsedMap=parserContext.getDelegate().parseMapElement(element,beanDefinition);
+  builder.setSource(parserContext.extractSource(element));
+  builder.addPropertyValue("sourceMap",parsedMap);
+  String parentBean=((Element)element.getParentNode()).getAttribute("id");
+  if (StringUtils.isBlank(parentBean)) {
+    throw new RuntimeException();
+  }
+  BeanDefinition parent=parserContext.getRegistry().getBeanDefinition(parentBean);
+  PropertyValue pv=new PropertyValue(propertyName,builder.getBeanDefinition());
+  parent.getPropertyValues().addPropertyValue(pv);
+  return beanDefinition;
+}

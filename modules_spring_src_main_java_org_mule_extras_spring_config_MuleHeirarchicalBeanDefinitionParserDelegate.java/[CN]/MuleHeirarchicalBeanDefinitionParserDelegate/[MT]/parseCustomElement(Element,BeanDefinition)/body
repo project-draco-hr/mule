@@ -1,0 +1,25 @@
+{
+  BeanDefinition root;
+  String namespaceUri=ele.getNamespaceURI();
+  NamespaceHandler handler=getReaderContext().getNamespaceHandlerResolver().resolve(namespaceUri);
+  if (handler == null) {
+    getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",ele);
+    return null;
+  }
+  BeanDefinition bd=handler.parse(ele,new ParserContext(getReaderContext(),this,containingBd));
+  registerBean(ele,bd);
+  root=bd;
+  NodeList list=ele.getElementsByTagNameNS("*","*");
+  for (int i=0; i < list.getLength(); i++) {
+    Element element=(Element)list.item(i);
+    if (isDefaultNamespace(element.getNamespaceURI()) && (PROPERTY_ELEMENT.equals(element.getLocalName()))) {
+      parsePropertyElements(element,bd);
+      break;
+    }
+ else {
+      bd=parseCustomElement(element,bd);
+      registerBean(element,bd);
+    }
+  }
+  return root;
+}
