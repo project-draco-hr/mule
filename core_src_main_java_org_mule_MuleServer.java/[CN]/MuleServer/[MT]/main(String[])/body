@@ -1,6 +1,14 @@
 {
   MuleServer server=new MuleServer();
-  String config=SystemUtils.getCommandLineOption("-config",args,CLI_OPTIONS);
+  Map options=null;
+  try {
+    options=SystemUtils.getCommandLineOptions(args,CLI_OPTIONS);
+  }
+ catch (  MuleException me) {
+    System.err.println(me.toString());
+    System.exit(1);
+  }
+  String config=(String)options.get("config");
   if (config == null) {
     logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
     URL configUrl=IOUtils.getResourceAsUrl(DEFAULT_CONFIGURATION,MuleServer.class,true);
@@ -16,7 +24,7 @@
     System.err.println(message.toString());
     System.exit(1);
   }
-  String cfgBuilderClassName=SystemUtils.getCommandLineOption("-builder",args,CLI_OPTIONS);
+  String cfgBuilderClassName=(String)options.get("builder");
   if (cfgBuilderClassName != null) {
     try {
       if (cfgBuilderClassName.equalsIgnoreCase("spring")) {
@@ -31,7 +39,7 @@
       System.exit(1);
     }
   }
-  String propertiesFile=SystemUtils.getCommandLineOption("-props",args,CLI_OPTIONS);
+  String propertiesFile=(String)options.get("props");
   if (propertiesFile != null) {
     setStartupPropertiesFile(propertiesFile);
   }

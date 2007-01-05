@@ -1,55 +1,48 @@
 {
-  try {
-    if (isTransactionRollback()) {
+  if (isTransactionRollback()) {
+    return event.getMessage();
+  }
+  event.setSynchronous(true);
+  event.getMessage().setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+  RequestContext.setEvent(event);
+  UMOImmutableEndpoint endpoint=event.getEndpoint();
+  if (endpoint.getSecurityFilter() != null) {
+    try {
+      endpoint.getSecurityFilter().authenticate(event);
+    }
+ catch (    org.mule.umo.security.SecurityException e) {
+      logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+      connector.fireNotification(new SecurityNotification(e,SecurityNotification.SECURITY_AUTHENTICATION_FAILED));
+      connector.handleException(e);
       return event.getMessage();
     }
-    event.setSynchronous(true);
-    event.getMessage().setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
-    RequestContext.setEvent(event);
-    UMOImmutableEndpoint endpoint=event.getEndpoint();
-    if (endpoint.getSecurityFilter() != null) {
-      try {
-        endpoint.getSecurityFilter().authenticate(event);
-      }
- catch (      org.mule.umo.security.SecurityException e) {
-        logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
-        connector.fireNotification(new SecurityNotification(e,SecurityNotification.SECURITY_AUTHENTICATION_FAILED));
-        connector.handleException(e);
-        return event.getMessage();
-      }
-catch (      UMOException e) {
-        dispose();
-        throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
-      }
-    }
-    event=RequestContext.getEvent();
-    try {
-      connectionStrategy.connect(this);
-      UMOMessage result=doSend(event);
-      if (connector.isEnableMessageEvents()) {
-        String component=null;
-        if (event.getComponent() != null) {
-          component=event.getComponent().getDescriptor().getName();
-        }
-        connector.fireNotification(new MessageNotification(event.getMessage(),event.getEndpoint(),component,MessageNotification.MESSAGE_SENT));
-      }
-      if (result != null) {
-        result.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
-      }
-      return result;
-    }
- catch (    DispatchException e) {
-      dispose();
-      throw e;
-    }
-catch (    Exception e) {
+catch (    UMOException e) {
       dispose();
       throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
     }
   }
-  finally {
-    if (connector.isCreateDispatcherPerRequest()) {
-      dispose();
+  event=RequestContext.getEvent();
+  try {
+    connectionStrategy.connect(this);
+    UMOMessage result=doSend(event);
+    if (connector.isEnableMessageEvents()) {
+      String component=null;
+      if (event.getComponent() != null) {
+        component=event.getComponent().getDescriptor().getName();
+      }
+      connector.fireNotification(new MessageNotification(event.getMessage(),event.getEndpoint(),component,MessageNotification.MESSAGE_SENT));
     }
+    if (result != null) {
+      result.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
+    }
+    return result;
+  }
+ catch (  DispatchException e) {
+    dispose();
+    throw e;
+  }
+catch (  Exception e) {
+    dispose();
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }
 }

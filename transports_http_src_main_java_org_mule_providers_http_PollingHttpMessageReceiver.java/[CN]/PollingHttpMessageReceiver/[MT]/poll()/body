@@ -8,7 +8,7 @@
     contentLength=defaultBufferSize;
     contentLengthNotSet=true;
   }
-  byte[] buffer=new byte[contentLength];
+  byte[] buffer=new byte[defaultBufferSize];
   ByteArrayOutputStream baos=new ByteArrayOutputStream(contentLength);
   InputStream is=connection.getInputStream();
   while (bytesWritten != contentLength) {
@@ -29,8 +29,10 @@
   Iterator it=connection.getHeaderFields().entrySet().iterator();
   while (it.hasNext()) {
     Map.Entry msgHeader=(Map.Entry)it.next();
-    if (msgHeader.getValue() != null) {
-      respHeaders.put(msgHeader.getKey(),((List)msgHeader.getValue()).get(0));
+    Object key=msgHeader.getKey();
+    Object value=msgHeader.getValue();
+    if (key != null && value != null) {
+      respHeaders.put(key,((List)value).get(0));
     }
   }
   UMOMessageAdapter adapter=connector.getMessageAdapter(new Object[]{buffer,respHeaders});

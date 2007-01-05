@@ -1,16 +1,17 @@
 {
-  if (connected.get()) {
+  if (connected) {
     return;
   }
   if (disposed) {
     if (logger.isWarnEnabled()) {
-      logger.warn("Dispatcher has been disposed. Cannot connector resource");
+      logger.warn("Dispatcher has been disposed. Cannot connect to resource");
     }
   }
   if (logger.isDebugEnabled()) {
     logger.debug("Attempting to connect to: " + endpoint.getEndpointURI());
   }
-  if (connecting.compareAndSet(false,true)) {
+  if (!connecting) {
+    connecting=true;
     connectionStrategy.connect(this);
     logger.info("Successfully connected to: " + endpoint.getEndpointURI());
     return;
@@ -28,6 +29,6 @@
       throw new ConnectException(e,this);
     }
   }
-  connected.set(true);
-  connecting.set(false);
+  connected=true;
+  connecting=false;
 }
