@@ -1,7 +1,13 @@
 {
-  this(connector,component,endpoint,new Long(1000));
+  this(connector,component,endpoint,AbstractPollingMessageReceiver.DEFAULT_POLL_FREQUENCY);
   long pollingFrequency=MapUtils.getLongValue(endpoint.getProperties(),"pollingFrequency",-1);
   if (pollingFrequency > 0) {
     setFrequency(pollingFrequency);
+  }
+  if (endpoint.getEndpointURI().getUserInfo() != null) {
+    this.authenticator=new URLAuthenticator(endpoint.getEndpointURI().getUsername(),endpoint.getEndpointURI().getPassword());
+  }
+ else {
+    this.authenticator=new URLAuthenticator("","");
   }
 }

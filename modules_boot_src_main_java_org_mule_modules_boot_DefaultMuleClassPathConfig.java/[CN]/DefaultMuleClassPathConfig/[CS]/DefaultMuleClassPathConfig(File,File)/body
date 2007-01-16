@@ -1,38 +1,21 @@
 {
   try {
-    addURL(new URL("file://" + muleHome.getAbsolutePath() + FOLDER_USER+ "/"));
-    addURL(new URL("file://" + muleHome.getAbsolutePath() + FOLDER_MULE+ "/"));
-    addURL(new URL("file://" + muleHome.getAbsolutePath() + FOLDER_OPT+ "/"));
-    try {
-      if (!muleHome.getCanonicalFile().equals(muleBase.getCanonicalFile())) {
-        addURL(new URL("file://" + muleBase.getAbsolutePath() + FOLDER_USER+ "/"));
-        File[] muleJars=listJars(muleBase,FOLDER_USER);
-        for (int i=0; i < muleJars.length; i++) {
-          File jar=muleJars[i];
-          addURL(jar.toURL());
-        }
-      }
-    }
- catch (    IOException ioe) {
-      System.out.println("Unable to check to see if there are local jars to load: " + ioe.toString());
-    }
-    File[] muleJars=listJars(muleHome,FOLDER_USER);
-    for (int i=0; i < muleJars.length; i++) {
-      File jar=muleJars[i];
-      addURL(jar.toURL());
-    }
-    muleJars=listJars(muleHome,FOLDER_MULE);
-    for (int i=0; i < muleJars.length; i++) {
-      File jar=muleJars[i];
-      addURL(jar.toURL());
-    }
-    muleJars=listJars(muleHome,FOLDER_OPT);
-    for (int i=0; i < muleJars.length; i++) {
-      File jar=muleJars[i];
-      addURL(jar.toURL());
+    if (!muleHome.getCanonicalFile().equals(muleBase.getCanonicalFile())) {
+      File userOverrideDir=new File(muleBase,USER_DIR);
+      this.addFile(userOverrideDir);
+      this.addFiles(this.listJars(userOverrideDir));
     }
   }
- catch (  MalformedURLException e) {
-    throw new RuntimeException("Failed to construct a classpath URL",e);
+ catch (  IOException ioe) {
+    System.out.println("Unable to check to see if there are local jars to load: " + ioe.toString());
   }
+  File userDir=new File(muleHome,USER_DIR);
+  this.addFile(userDir);
+  this.addFiles(this.listJars(userDir));
+  File muleDir=new File(muleHome,MULE_DIR);
+  this.addFile(muleDir);
+  this.addFiles(this.listJars(muleDir));
+  File optDir=new File(muleHome,OPT_DIR);
+  this.addFile(optDir);
+  this.addFiles(this.listJars(optDir));
 }

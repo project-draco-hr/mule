@@ -1,0 +1,22 @@
+{
+  try {
+    serviceDescriptor=TransportFactory.getServiceDescriptor(getProtocol().toLowerCase(),serviceOverrides);
+    if (serviceDescriptor.getDispatcherFactory() != null) {
+      logger.debug("Loading DispatcherFactory: " + serviceDescriptor.getDispatcherFactory());
+      this.setDispatcherFactory(serviceDescriptor.createDispatcherFactory());
+    }
+    defaultInboundTransformer=serviceDescriptor.createInboundTransformer();
+    defaultOutboundTransformer=serviceDescriptor.createOutboundTransformer();
+    defaultResponseTransformer=serviceDescriptor.createResponseTransformer();
+    sessionHandler=serviceDescriptor.createSessionHandler();
+    Map props=new HashMap();
+    PropertiesUtils.getPropertiesWithPrefix(MuleManager.getInstance().getProperties(),getProtocol().toLowerCase(),props);
+    if (props.size() > 0) {
+      props=PropertiesUtils.removeNamespaces(props);
+      org.mule.util.BeanUtils.populateWithoutFail(this,props,true);
+    }
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+}

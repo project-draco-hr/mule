@@ -1,24 +1,52 @@
 {
-  EventGroup eg=addEvent(event);
-  if (shouldAggregate(eg)) {
-    UMOMessage returnMessage=aggregateEvents(eg);
-    Object id=eg.getGroupId();
-    removeEventGroup(id);
-    UMOMessage previousResult=(UMOMessage)responseEvents.putIfAbsent(id,returnMessage);
-    if (previousResult != null) {
-      throw new IllegalStateException("Detected duplicate aggregation result message with id: " + id);
+  final Object groupId=this.getReplyAggregateIdentifier(event.getMessage());
+  if (groupId == null || groupId.equals("-1")) {
+    throw new RoutingException(new Message(Messages.NO_CORRELATION_ID),event.getMessage(),event.getEndpoint());
+  }
+  boolean miss=false;
+  while (true) {
+    if (miss) {
+      try {
+        Thread.sleep(1);
+      }
+ catch (      InterruptedException interrupted) {
+        Thread.currentThread().interrupt();
+      }
     }
-    Latch l=(Latch)locks.get(id);
-    if (l == null) {
+    EventGroup group=this.getEventGroupWithId(groupId);
+    if (group == null) {
+      group=this.addEventGroup(this.createEventGroup(event,groupId));
+    }
+synchronized (group) {
+      if (group != this.getEventGroupWithId(groupId)) {
+        miss=true;
+        continue;
+      }
       if (logger.isDebugEnabled()) {
-        logger.debug("Creating latch for " + id + " in "+ this);
+        logger.debug("Adding event to response aggregator group: " + groupId);
       }
-      l=new Latch();
-      Latch previous=(Latch)locks.putIfAbsent(id,l);
-      if (previous != null) {
-        l=previous;
+      group.addEvent(event);
+      if (this.shouldAggregateEvents(group)) {
+        UMOMessage returnMessage=this.aggregateEvents(group);
+        this.removeEventGroup(group);
+        UMOMessage previousResult=(UMOMessage)responseMessages.putIfAbsent(groupId,returnMessage);
+        if (previousResult != null) {
+          throw new IllegalStateException("Detected duplicate aggregation result message with id: " + groupId);
+        }
+        Latch l=(Latch)locks.get(groupId);
+        if (l == null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Creating latch for " + groupId + " in "+ this);
+          }
+          l=new Latch();
+          Latch previous=(Latch)locks.putIfAbsent(groupId,l);
+          if (previous != null) {
+            l=previous;
+          }
+        }
+        l.countDown();
       }
+      break;
     }
-    l.countDown();
   }
 }

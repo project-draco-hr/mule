@@ -1,0 +1,30 @@
+{
+  UMOConnector connector;
+  if (getServiceError() != null) {
+    throw new TransportServiceException(Message.createStaticMessage(getServiceError()));
+  }
+  try {
+    if (getConnectorFactory() != null) {
+      ObjectFactory factory=(ObjectFactory)ClassUtils.loadClass(getConnectorFactory(),TransportFactory.class).newInstance();
+      connector=(UMOConnector)factory.create();
+    }
+ else {
+      if (getConnector() != null) {
+        connector=(UMOConnector)ClassUtils.loadClass(getConnector(),TransportFactory.class).newInstance();
+      }
+ else {
+        throw new TransportServiceException(new Message(Messages.X_NOT_SET_IN_SERVICE_X,"Connector",getProtocol()));
+      }
+    }
+  }
+ catch (  TransportServiceException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new TransportServiceException(new Message(Messages.FAILED_TO_CREATE_X_WITH_X,"Connector",getConnector()),e);
+  }
+  if (connector.getName() == null) {
+    connector.setName("_" + protocol + "Connector#"+ connector.hashCode());
+  }
+  return connector;
+}

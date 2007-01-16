@@ -15,5 +15,35 @@
   }
   File newJarFile=new File(muleLib,ackJarName);
   if (newJarFile.exists())   throw new Exception("Unable to rename temporary jar to " + newJarFile.getAbsolutePath() + " a file with this name already exists!");
-  if (!tempJar.renameTo(newJarFile))   throw new Exception("Unable to rename temporary jar to " + newJarFile.getAbsolutePath());
+  if (!tempJar.renameTo(newJarFile)) {
+    if (!tempJar.exists())     return;
+    FileChannel srcChannel=null;
+    FileChannel destChannel=null;
+    try {
+      srcChannel=new FileInputStream(tempJar.getAbsolutePath()).getChannel();
+      destChannel=new FileOutputStream(newJarFile).getChannel();
+      destChannel.transferFrom(srcChannel,0,srcChannel.size());
+    }
+ catch (    Exception e) {
+      throw new Exception("Unable to rename temporary jar to " + newJarFile.getAbsolutePath(),e);
+    }
+ finally {
+      try {
+        if (srcChannel != null)         srcChannel.close();
+      }
+ catch (      Exception e1) {
+      }
+      try {
+        if (destChannel != null)         destChannel.close();
+      }
+ catch (      Exception e2) {
+      }
+      try {
+        tempJar.delete();
+      }
+ catch (      Exception e3) {
+      }
+    }
+  }
+  if (!newJarFile.exists())   throw new Exception("Unable to rename temporary jar to " + newJarFile.getAbsolutePath());
 }

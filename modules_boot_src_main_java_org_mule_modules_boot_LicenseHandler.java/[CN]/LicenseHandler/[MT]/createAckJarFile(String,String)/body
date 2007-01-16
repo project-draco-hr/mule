@@ -1,12 +1,14 @@
 {
   File tempJar=File.createTempFile(ackJarName,null);
   File licenseFile=new File(muleHome,licenseFileName);
-  JarOutputStream newJar=null;
+  JarOutputStream newJar;
+  FileOutputStream fos;
   String ackData="LicenseType=" + licenseType + "\n";
   ackData+="LicenseVersion=" + licenseVersion + "\n";
   ackData+="LicenseDate=" + (new java.util.Date()).toString() + "\n";
   try {
-    newJar=new JarOutputStream(new FileOutputStream(tempJar));
+    fos=new FileOutputStream(tempJar);
+    newJar=new JarOutputStream(fos);
   }
  catch (  IOException ioe) {
     throw new Exception("Unable to create temporary jar file");
@@ -24,6 +26,8 @@
     while ((bytesRead=fis.read(buffer)) != -1) {
       newJar.write(buffer,0,bytesRead);
     }
+    newJar.flush();
+    fos.getFD().sync();
   }
  catch (  IOException ioe) {
     throw new Exception("Unable to write " + ackFileName + " to temporary jar file");

@@ -1,17 +1,17 @@
 {
   final AtomicInteger messagePartsCount=new AtomicInteger(0);
   final Latch chunkingReceiverLatch=new Latch();
-  final TestObject testObject=new TestObject("Test String",true,99);
-  final int parts=(int)Math.ceil((SerializationUtils.serialize(testObject).length / (double)2));
+  final SimpleSerializableObject simpleSerializableObject=new SimpleSerializableObject("Test String",true,99);
+  final int parts=(int)Math.ceil((SerializationUtils.serialize(simpleSerializableObject).length / (double)2));
   MuleManager.getInstance().registerListener(new FunctionalTestNotificationListener(){
     public void onNotification(    UMOServerNotification notification){
       assertEquals("ChunkingReceiver",notification.getResourceIdentifier());
       Object reply=((FunctionalTestNotification)notification).getEventContext().getMessage().getPayload();
-      assertTrue(reply instanceof TestObject);
-      TestObject replyTestObject=(TestObject)reply;
-      assertEquals(testObject.b,replyTestObject.b);
-      assertEquals(testObject.i,replyTestObject.i);
-      assertEquals(testObject.s,replyTestObject.s);
+      assertTrue(reply instanceof SimpleSerializableObject);
+      SimpleSerializableObject replySimpleSerializableObject=(SimpleSerializableObject)reply;
+      assertEquals(simpleSerializableObject.b,replySimpleSerializableObject.b);
+      assertEquals(simpleSerializableObject.i,replySimpleSerializableObject.i);
+      assertEquals(simpleSerializableObject.s,replySimpleSerializableObject.s);
       chunkingReceiverLatch.countDown();
     }
   }
@@ -26,7 +26,7 @@
   }
 ,"ChunkingReceiver");
   MuleClient client=new MuleClient();
-  client.dispatch("vm://inbound.channel",testObject,null);
+  client.dispatch("vm://inbound.channel",simpleSerializableObject,null);
   assertTrue(chunkingReceiverLatch.await(20L,TimeUnit.SECONDS));
   assertEquals(parts,messagePartsCount.get());
 }

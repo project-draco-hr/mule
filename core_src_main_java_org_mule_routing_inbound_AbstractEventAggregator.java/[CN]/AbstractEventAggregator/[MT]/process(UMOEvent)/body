@@ -1,20 +1,39 @@
 {
-  AtomicBoolean doAggregate=new AtomicBoolean(false);
-  EventGroup eg=null;
-  if (isMatch(event)) {
-    eg=addEvent(event);
-    doAggregate.compareAndSet(false,shouldAggregate(eg));
-  }
-  if (doAggregate.get()) {
-synchronized (lock) {
-      UMOMessage returnMessage=aggregateEvents(eg);
-      removeGroup(eg.getGroupId());
-      UMOEndpoint endpoint=new MuleEndpoint(event.getEndpoint());
-      endpoint.setTransformer(null);
-      endpoint.setName(getClass().getName());
-      UMOEvent returnEvent=new MuleEvent(returnMessage,endpoint,event.getComponent(),event);
-      return new UMOEvent[]{returnEvent};
+  UMOEvent[] result=null;
+  if (this.isMatch(event)) {
+    boolean miss=false;
+    final Object groupId=this.getEventGroupIdForEvent(event);
+    while (true) {
+      if (miss) {
+        try {
+          Thread.sleep(1);
+        }
+ catch (        InterruptedException interrupted) {
+          Thread.currentThread().interrupt();
+        }
+      }
+      EventGroup group=this.getEventGroupWithId(groupId);
+      if (group == null) {
+        group=this.addEventGroup(this.createEventGroup(event,groupId));
+      }
+synchronized (group) {
+        if (group != this.getEventGroupWithId(groupId)) {
+          miss=true;
+          continue;
+        }
+        group.addEvent(event);
+        if (this.shouldAggregateEvents(group)) {
+          UMOMessage returnMessage=this.aggregateEvents(group);
+          UMOEndpoint endpoint=new MuleEndpoint(event.getEndpoint());
+          endpoint.setTransformer(null);
+          endpoint.setName(this.getClass().getName());
+          UMOEvent returnEvent=new MuleEvent(returnMessage,endpoint,event.getComponent(),event);
+          result=new UMOEvent[]{returnEvent};
+          this.removeEventGroup(group);
+        }
+        break;
+      }
     }
   }
-  return null;
+  return result;
 }

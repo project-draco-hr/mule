@@ -1,0 +1,42 @@
+{
+  String scheme=url.getSchemeMetaInfo();
+  UMOConnector connector=null;
+  TransportServiceDescriptor csd=getServiceDescriptor(scheme);
+  if (csd.getServiceError() != null) {
+    throw new TransportServiceException(Message.createStaticMessage(csd.getServiceError()));
+  }
+  if (csd.getServiceFinder() != null) {
+    csd=csd.createServiceFinder().findService(scheme,csd);
+  }
+  try {
+    if (csd.getConnectorFactory() != null) {
+      ObjectFactory factory=(ObjectFactory)ClassUtils.loadClass(csd.getConnectorFactory(),TransportFactory.class).newInstance();
+      connector=(UMOConnector)factory.create();
+    }
+ else {
+      if (csd.getConnector() != null) {
+        connector=(UMOConnector)ClassUtils.loadClass(csd.getConnector(),TransportFactory.class).newInstance();
+        if (connector instanceof AbstractConnector) {
+          ((AbstractConnector)connector).initialiseFromUrl(url);
+        }
+      }
+ else {
+        throw new TransportFactoryException(new Message(Messages.X_NOT_SET_IN_SERVICE_X,"Connector",scheme));
+      }
+    }
+  }
+ catch (  TransportFactoryException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new TransportFactoryException(new Message(Messages.FAILED_TO_CREATE_X_WITH_X,"Endpoint",url),e);
+  }
+  connector.setName(ObjectNameHelper.getConnectorName(connector));
+  Map props=new HashMap();
+  PropertiesUtils.getPropertiesWithPrefix(MuleManager.getInstance().getProperties(),connector.getProtocol().toLowerCase(),props);
+  if (props.size() > 0) {
+    props=PropertiesUtils.removeNamespaces(props);
+    BeanUtils.populateWithoutFail(connector,props,true);
+  }
+  return connector;
+}
