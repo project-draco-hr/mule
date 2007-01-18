@@ -1,0 +1,19 @@
+{
+  try {
+    Class clazz=Class.forName("org.mule.registry.impl.MuleRegistry");
+    Object o=clazz.newInstance();
+    registry=(Registry)o;
+    registry.start();
+    registerListener(new RegistryNotificationListener(registry));
+    ComponentReference ref=registry.getComponentReferenceInstance();
+    ref.setParentId(null);
+    ref.setType("UMOManager");
+    ref.setComponent(this);
+    registryId=registry.registerComponent(ref);
+  }
+ catch (  Exception e) {
+    logger.warn("Couldn't create MuleRegistry: " + e.toString());
+    logger.warn("Creating dummy registry so that things will run");
+    registry=new DummyRegistry();
+  }
+}

@@ -1,45 +1,29 @@
 {
-  File muleHome=null;
-  String muleHomeVar=System.getProperty("mule.home");
-  if (muleHomeVar != null && !muleHomeVar.trim().equals("") && !muleHomeVar.equals("%MULE_HOME%")) {
-    muleHome=new File(muleHomeVar).getCanonicalFile();
+  if (args.length < 1) {
+    throw new IllegalArgumentException("Missing expected arguments from the Service Wrapper.");
   }
-  if (muleHome == null || !muleHome.exists() || !muleHome.isDirectory()) {
-    throw new IllegalArgumentException("Either MULE_HOME is not set or does not contain a valid directory.");
+  String wrapperCommand=args[args.length - 1];
+  String[] remainingArgs=new String[args.length - 1];
+  System.arraycopy(args,0,remainingArgs,0,args.length - 1);
+  CommandLine commandLine=parseCommandLine(remainingArgs);
+  remainingArgs=commandLine.getArgs();
+  String mainClassName=commandLine.getOptionValue("main");
+  if (commandLine.hasOption("osgi")) {
+    boolean startGui=wrapperCommand.startsWith("console") && !commandLine.hasOption("nogui");
+    System.out.println("Starting the OSGi Framework...");
+    WrapperManager.start(new OsgiFrameworkWrapper(startGui),remainingArgs);
   }
-  File muleBase;
-  String muleBaseVar=System.getProperty("mule.base");
-  if (muleBaseVar != null && !muleBaseVar.trim().equals("") && !muleBaseVar.equals("%MULE_BASE%")) {
-    muleBase=new File(muleBaseVar).getCanonicalFile();
+ else   if (mainClassName == null || mainClassName.equals(MAIN_CLASS_MULE_SERVER)) {
+    configureClasspath();
+    System.out.println("Starting the Mule Server...");
+    WrapperManager.start((WrapperListener)Class.forName(MAIN_CLASS_MULE_SERVER).newInstance(),remainingArgs);
   }
  else {
-    muleBase=muleHome;
+    String[] appArgs=new String[remainingArgs.length + 1];
+    appArgs[0]=mainClassName;
+    System.arraycopy(remainingArgs,0,appArgs,1,remainingArgs.length);
+    configureClasspath();
+    System.out.println("Starting class " + mainClassName + "...");
+    WrapperSimpleApp.main(appArgs);
   }
-  DefaultMuleClassPathConfig classPath=new DefaultMuleClassPathConfig(muleHome,muleBase);
-  addLibrariesToClasspath(classPath.getURLs());
-  if (ClassUtils.getResource("META-INF/mule/license.props",MuleBootstrap.class) == null) {
-    LicenseHandler licenseHandler=new LicenseHandler(muleHome,muleBase);
-    if (!licenseHandler.getAcceptance()) {
-      WrapperManager.stop(-1);
-    }
-  }
-  if (!ClassUtils.isClassOnPath("javax.activation.DataSource",MuleBootstrap.class)) {
-    LibraryDownloader downloader=new LibraryDownloader(muleBase);
-    addLibrariesToClasspath(downloader.downloadLibraries());
-  }
-  String mainClassName=null;
-  try {
-    mainClassName=SystemUtils.getCommandLineOption("main",args,MuleServer.CLI_OPTIONS);
-  }
- catch (  Exception e) {
-    System.out.println(e.toString());
-    WrapperManager.stop(-1);
-  }
-  if (mainClassName == null) {
-    mainClassName=MuleServer.class.getName();
-  }
-  String[] appArgs=new String[args.length + 1];
-  appArgs[0]=mainClassName;
-  System.arraycopy(args,0,appArgs,1,args.length);
-  WrapperSimpleApp.main(appArgs);
 }

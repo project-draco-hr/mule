@@ -1,0 +1,20 @@
+{
+  if (store == null)   return;
+  Object source=queue.peek();
+  while (source != null) {
+    try {
+      logger.info((new java.util.Date()).toString() + ": doing persistence");
+      store.store((Persistable)source,false);
+      queue.remove(source);
+      source=queue.peek();
+    }
+ catch (    Exception e) {
+      logger.info("Unknown error persisting: " + e.toString());
+      source=null;
+    }
+  }
+synchronized (this) {
+    this.lastRequest=0L;
+    this.requestCount=0;
+  }
+}

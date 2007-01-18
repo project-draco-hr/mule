@@ -1,0 +1,43 @@
+{
+  Map options;
+  try {
+    options=SystemUtils.getCommandLineOptions(args,CLI_OPTIONS);
+  }
+ catch (  MuleException me) {
+    throw new IllegalArgumentException(me.toString());
+  }
+  String config=(String)options.get("config");
+  if (config == null && !options.containsKey("idle")) {
+    logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
+    URL configUrl=IOUtils.getResourceAsUrl(DEFAULT_CONFIGURATION,MuleServer.class,true);
+    if (configUrl != null) {
+      config=configUrl.toExternalForm();
+    }
+  }
+  if (config != null) {
+    setConfigurationResources(config);
+  }
+ else   if (!options.containsKey("idle")) {
+    throw new IllegalArgumentException(new Message(Messages.CONFIG_NOT_FOUND_USAGE).toString());
+  }
+  String cfgBuilderClassName=(String)options.get("builder");
+  if (options.containsKey("idle")) {
+    setConfigurationResources("IDLE");
+    cfgBuilderClassName=CLASSNAME_DEFAULT_IDLE_CONFIG_BUILDER;
+  }
+  if (cfgBuilderClassName != null) {
+    try {
+      if (cfgBuilderClassName.equalsIgnoreCase("spring")) {
+        cfgBuilderClassName=CLASSNAME_SPRING_CONFIG_BUILDER;
+      }
+      setConfigBuilderClassName(cfgBuilderClassName);
+    }
+ catch (    Exception e) {
+      throw new IllegalArgumentException(new Message(Messages.FAILED_LOAD_X,"Builder: " + cfgBuilderClassName).toString());
+    }
+  }
+  String propertiesFile=(String)options.get("props");
+  if (propertiesFile != null) {
+    setStartupPropertiesFile(propertiesFile);
+  }
+}

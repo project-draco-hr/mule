@@ -1,0 +1,30 @@
+{
+  persistenceManager=new ObjectPersistenceManager();
+  registryStore=new InMemoryStore();
+  referenceFactory=new ComponentReferenceFactoryImpl();
+  PersistenceNotificationListener listener=new PersistenceNotificationListener(persistenceManager);
+  try {
+    persistenceManager.initialise();
+  }
+ catch (  Exception e) {
+    logger.info("Unable to initialize PersistenceManager: " + e.toString());
+  }
+  try {
+    registryStore.initialise();
+    registryStore.registerPersistenceRequestListener(listener);
+  }
+ catch (  Exception e) {
+    logger.info(e);
+  }
+  try {
+    ComponentReference ref=getComponentReferenceInstance();
+    ref.setParentId(null);
+    ref.setType("Registry");
+    ref.setComponent(this);
+    ref.setId("0");
+    registryStore.registerComponent(ref);
+  }
+ catch (  Exception e) {
+    logger.error("Unable to store the registry ComponentReference - no data can be persisted");
+  }
+}

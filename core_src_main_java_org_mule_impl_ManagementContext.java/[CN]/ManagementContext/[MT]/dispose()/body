@@ -1,0 +1,40 @@
+{
+  fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_DISPOSING));
+  if (disposed) {
+    return;
+  }
+  try {
+    if (started) {
+      stop();
+    }
+  }
+ catch (  UMOException e) {
+    logger.error("Failed to stop manager: " + e.getMessage(),e);
+  }
+  disposed=true;
+  containerContext.dispose();
+  containerContext=null;
+  fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_DISPOSED));
+  if (registry != null) {
+    registry.dispose();
+    registry=null;
+  }
+  initialised=false;
+  if (notificationManager != null) {
+    notificationManager.dispose();
+  }
+  if (workManager != null) {
+    workManager.dispose();
+  }
+  if (queueManager != null) {
+    queueManager.close();
+    queueManager=null;
+  }
+  if (logger.isInfoEnabled()) {
+    logger.info(getEndSplash());
+  }
+ else {
+    System.out.println(getEndSplash());
+  }
+  config=new MuleConfiguration();
+}

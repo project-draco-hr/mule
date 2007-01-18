@@ -4,6 +4,9 @@
   if (!initialised.get()) {
     initialising.set(true);
     startDate=System.currentTimeMillis();
+    if (registry == null) {
+      createRegistry();
+    }
     if (workManager == null) {
       ThreadingProfile tp=config.getDefaultThreadingProfile();
       logger.debug("Creating default work manager using default threading profile: " + tp);
@@ -11,7 +14,7 @@
       workManager.start();
     }
     notificationManager.start(workManager);
-    fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISNG));
+    fireSystemEvent(new ManagerNotification(id,null,null,ManagerNotification.MANAGER_INITIALISNG));
     if (id == null) {
       logger.warn("No unique id has been set on this manager");
     }
@@ -21,8 +24,6 @@
       }
       if (queueManager == null) {
         try {
-          TransactionalQueueManager queueMgr=new TransactionalQueueManager();
-          queueManager=queueMgr;
         }
  catch (        Exception e) {
           throw new InitialisationException(new Message(Messages.INITIALISATION_FAILURE_X,"QueueManager"),e);
@@ -32,13 +33,14 @@
       initialiseEndpoints();
       initialiseAgents();
       if (model != null) {
+        model.register();
         model.initialise();
       }
     }
   finally {
       initialised.set(true);
       initialising.set(false);
-      fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISED));
+      fireSystemEvent(new ManagerNotification(id,null,null,ManagerNotification.MANAGER_INITIALISED));
     }
   }
 }
