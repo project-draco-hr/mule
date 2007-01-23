@@ -1,7 +1,13 @@
 {
   persistenceManager=new ObjectPersistenceManager();
-  registryStore=new InMemoryStore();
-  referenceFactory=new ComponentReferenceFactoryImpl();
+  registryStore=new InMemoryStore(this);
+  metadata=new HashMap();
+  ObjectMetadata om=new ObjectMetadata();
+  om.setClassName("org.mule.providers.stream.SystemStreamConnector");
+  om.setIsPersistable();
+  om.setProperty(new PropertyMetadata("promptMessage",2));
+  om.setProperty(new PropertyMetadata("messageDelayTime",2));
+  registrationFactory=new RegistrationFactory();
   PersistenceNotificationListener listener=new PersistenceNotificationListener(persistenceManager);
   try {
     persistenceManager.initialise();
@@ -17,12 +23,11 @@
     logger.info(e);
   }
   try {
-    ComponentReference ref=getComponentReferenceInstance();
-    ref.setParentId(null);
-    ref.setType("Registry");
-    ref.setComponent(this);
-    ref.setId("0");
-    registryStore.registerComponent(ref);
+    Registration registration=registrationFactory.getInstance(RegistrationFactory.REF_MULE_COMPONENT);
+    registration.setId("0");
+    registration.setProperty("sourceObjectClassName",this.getClass().getName());
+    registration.setType("Registry");
+    registryStore.registerComponent(registration);
   }
  catch (  Exception e) {
     logger.error("Unable to store the registry ComponentReference - no data can be persisted");
