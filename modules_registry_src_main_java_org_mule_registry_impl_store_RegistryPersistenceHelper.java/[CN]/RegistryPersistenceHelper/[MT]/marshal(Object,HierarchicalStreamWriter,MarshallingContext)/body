@@ -1,0 +1,53 @@
+{
+  MuleRegistration ref=(MuleRegistration)value;
+  String className=(String)ref.getProperty("sourceObjectClassName");
+  ObjectMetadata metadata=null;
+  try {
+    metadata=MetadataStore.getObjectMetadata(className);
+  }
+ catch (  MissingMetadataException mme) {
+    logger.warn("No metadata found for " + className);
+  }
+  if (persistAll || (metadata != null && metadata.getIsPersistable())) {
+    writer.startNode("bean");
+    if (ref.getProperty("name") != null)     writer.addAttribute("id",(String)ref.getProperty("name"));
+    writer.addAttribute("class",className);
+    HashMap props=ref.getProperties();
+    Iterator iter=props.keySet().iterator();
+    while (iter.hasNext()) {
+      String key=(String)iter.next();
+      Object v=props.get(key);
+      if (metadata != null) {
+        PropertyMetadata p=metadata.getProperty(key);
+        if (v != null && p != null && p.getIsPersistable()) {
+          writer.startNode("property");
+          writer.addAttribute("name",key);
+          writer.startNode("value");
+          writer.setValue(v.toString());
+          writer.endNode();
+          writer.endNode();
+        }
+      }
+ else {
+        if (v != null) {
+          writer.startNode("property");
+          writer.addAttribute("name",key);
+          writer.startNode("value");
+          writer.setValue(v.toString());
+          writer.endNode();
+          writer.endNode();
+        }
+      }
+    }
+  }
+  HashMap children=ref.retrieveChildren();
+  Iterator iter=children.keySet().iterator();
+  while (iter.hasNext()) {
+    String id=(String)iter.next();
+    MuleRegistration child=(MuleRegistration)children.get(id);
+    context.convertAnother(child);
+  }
+  if (persistAll || (metadata != null && metadata.getIsPersistable())) {
+    writer.endNode();
+  }
+}
