@@ -1,10 +1,12 @@
 {
   Registry registry=MuleManager.getInstance().getRegistry();
   if (registry == null)   throw new RegistrationException("No registry available");
-  ComponentReference ref=registry.getComponentReferenceInstance();
-  if (endpoint != null)   ref.setParentId(endpoint.getRegistryId());
- else   ref.setParentId(MuleManager.getInstance().getRegistryId());
-  ref.setType("UMOTransformer");
-  ref.setComponent(this);
-  registryId=MuleManager.getInstance().getRegistry().registerComponent(ref);
+  Registerable parent=null;
+  if (endpoint != null) {
+    parent=endpoint;
+  }
+ else {
+    parent=MuleManager.getInstance();
+  }
+  registryId=MuleManager.getInstance().getRegistry().registerMuleObject(parent,this).getId();
 }
