@@ -10,10 +10,24 @@
   String propertyName=getPropertyName(element);
   PropertyValue pv;
   pv=parent.getPropertyValues().getPropertyValue(propertyName);
-  if (pv == null && isCollection(element)) {
-    ManagedList l=new ManagedList();
-    pv=new PropertyValue(propertyName + "s",l);
-    parent.getPropertyValues().addPropertyValue(pv);
+  if (isMap(element)) {
+    if (pv == null) {
+      ManagedMap m=new ManagedMap();
+      pv=new PropertyValue(propertyName,m);
+      parent.getPropertyValues().addPropertyValue(pv);
+    }
+    MapEntryDefinitionParser.KeyValuePair pair=(MapEntryDefinitionParser.KeyValuePair)builder.getBeanDefinition().getSource();
+    ((Map)pv.getValue()).put(pair.getKey(),pair.getValue());
+  }
+ else   if (isCollection(element)) {
+    if (pv == null) {
+      pv=parent.getPropertyValues().getPropertyValue(propertyName + "s");
+    }
+    if (pv == null) {
+      ManagedList l=new ManagedList();
+      pv=new PropertyValue(propertyName + "s",l);
+      parent.getPropertyValues().addPropertyValue(pv);
+    }
     ((List)pv.getValue()).add(builder.getBeanDefinition());
   }
  else {
