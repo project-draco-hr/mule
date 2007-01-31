@@ -1,7 +1,25 @@
 {
   try {
-    UMOMessageAdapter adapter=connector.getMessageAdapter(message);
-    routeMessage(new MuleMessage(adapter));
+    if (message.getJMSRedelivered()) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Message with correlationId: " + message.getJMSCorrelationID() + " has redelivered flag set, handing off to Exception Handler");
+      }
+      redeliveryHandler.handleRedelivery(message);
+    }
+  }
+ catch (  Exception e) {
+    getConnector().handleException(e);
+  }
+  TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig(),connector.getExceptionListener());
+  TransactionCallback cb=new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      UMOMessageAdapter adapter=connector.getMessageAdapter(message);
+      return routeMessage(new MuleMessage(adapter));
+    }
+  }
+;
+  try {
+    tt.execute(cb);
   }
  catch (  Exception e) {
     getConnector().handleException(e);

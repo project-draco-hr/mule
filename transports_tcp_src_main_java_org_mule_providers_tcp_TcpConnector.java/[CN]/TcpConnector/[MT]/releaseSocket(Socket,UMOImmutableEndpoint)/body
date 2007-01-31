@@ -1,0 +1,18 @@
+{
+  boolean keepSocketOpen=MapUtils.getBooleanValue(endpoint.getProperties(),KEEP_SEND_SOCKET_OPEN_PROPERTY,isKeepSendSocketOpen());
+  if (!keepSocketOpen) {
+    try {
+      if (socket != null) {
+        socket.close();
+      }
+    }
+ catch (    IOException e) {
+      logger.debug("Fialed to close socket after dispatch",e);
+    }
+  }
+ else   if (socket != null && !socket.isClosed()) {
+synchronized (dispatcherSockets) {
+      dispatcherSockets.put(endpoint.getEndpointURI().getAddress(),socket);
+    }
+  }
+}

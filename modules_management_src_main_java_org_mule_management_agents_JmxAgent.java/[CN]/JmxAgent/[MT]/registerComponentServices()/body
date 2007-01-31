@@ -1,13 +1,16 @@
 {
-  Iterator iter=MuleManager.getInstance().getModel().getComponentNames();
-  String rawName;
-  while (iter.hasNext()) {
-    rawName=iter.next().toString();
-    final String name=jmxSupport.escape(rawName);
-    ObjectName on=jmxSupport.getObjectName(jmxSupport.getDomainName() + ":type=org.mule.Component,name=" + name);
-    ComponentServiceMBean serviceMBean=new ComponentService(rawName);
-    logger.debug("Registering component with name: " + on);
-    mBeanServer.registerMBean(serviceMBean,on);
-    registeredMBeans.add(on);
+  for (Iterator iterator=MuleManager.getInstance().getModels().values().iterator(); iterator.hasNext(); ) {
+    UMOModel model=(UMOModel)iterator.next();
+    Iterator iter=model.getComponentNames();
+    String rawName;
+    while (iter.hasNext()) {
+      rawName=iter.next().toString();
+      final String name=jmxSupport.escape(rawName);
+      ObjectName on=jmxSupport.getObjectName(jmxSupport.getDomainName() + ":type=org.mule.Component,name=" + name);
+      ComponentServiceMBean serviceMBean=new ComponentService(rawName);
+      logger.debug("Registering component with name: " + on);
+      mBeanServer.registerMBean(serviceMBean,on);
+      registeredMBeans.add(on);
+    }
   }
 }

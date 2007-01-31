@@ -19,6 +19,7 @@
   }
   UMOMessage result;
   boolean resultAvailable=false;
+  boolean interruptedWhileWaiting=false;
   try {
     if (logger.isDebugEnabled()) {
       logger.debug("Waiting for response to message: " + responseId);
@@ -32,11 +33,14 @@
     }
   }
  catch (  InterruptedException e) {
-    logger.error(e.getMessage(),e);
+    interruptedWhileWaiting=true;
   }
  finally {
     locks.remove(responseId);
     result=(UMOMessage)responseMessages.remove(responseId);
+    if (interruptedWhileWaiting) {
+      Thread.currentThread().interrupt();
+    }
   }
   if (!resultAvailable) {
     if (logger.isTraceEnabled()) {

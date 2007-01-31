@@ -1,0 +1,25 @@
+{
+  if (streamingMethod == null) {
+    initialise(component);
+  }
+  StreamMessageAdapter adapter=(StreamMessageAdapter)context.getMessage().getAdapter();
+  OutputStream out=new DeferredOutputStream(context);
+  try {
+    if (component instanceof StreamingService) {
+      return streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out,context});
+    }
+ else     if (inAndOut) {
+      return streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out});
+    }
+ else {
+      return streamingMethod.invoke(component,new Object[]{adapter.getInputStream()});
+    }
+  }
+  finally {
+    try {
+      out.flush();
+    }
+ catch (    IOException e) {
+    }
+  }
+}

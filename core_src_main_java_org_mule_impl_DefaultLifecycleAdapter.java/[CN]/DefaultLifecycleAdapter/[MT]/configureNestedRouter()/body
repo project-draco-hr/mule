@@ -1,0 +1,34 @@
+{
+  if (descriptor.getNestedRouter() != null) {
+    Map bindings=new HashMap();
+    for (Iterator it=descriptor.getNestedRouter().getRouters().iterator(); it.hasNext(); ) {
+      UMONestedRouter nestedRouter=(UMONestedRouter)it.next();
+      Object proxy=bindings.get(nestedRouter.getInterface());
+      if (proxy == null) {
+        proxy=nestedRouter.createProxy(component);
+        bindings.put(nestedRouter.getInterface(),proxy);
+        Method setterMethod;
+        List methods=ClassUtils.getSatisfiableMethods(component.getClass(),new Class[]{nestedRouter.getInterface()},true,false,null);
+        if (methods.size() == 1) {
+          setterMethod=(Method)methods.get(0);
+        }
+ else         if (methods.size() > 1) {
+          throw new TooManySatisfiableMethodsException(component.getClass(),new Class[]{nestedRouter.getInterface()});
+        }
+ else {
+          throw new NoSatisfiableMethodsException(component.getClass(),nestedRouter.getInterface());
+        }
+        try {
+          setterMethod.invoke(component,new Object[]{proxy});
+        }
+ catch (        Exception e) {
+          throw new InitialisationException(new Message(Messages.FAILED_TO_SET_PROXY_X_ON_SERVICE_X,nestedRouter,component.getClass().getName()),this);
+        }
+      }
+ else {
+        NestedInvocationHandler handler=(NestedInvocationHandler)Proxy.getInvocationHandler(proxy);
+        handler.addRouterForInterface(nestedRouter);
+      }
+    }
+  }
+}

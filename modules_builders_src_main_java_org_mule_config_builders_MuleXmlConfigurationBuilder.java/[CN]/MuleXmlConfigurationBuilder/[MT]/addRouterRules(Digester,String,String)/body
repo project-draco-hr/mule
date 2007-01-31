@@ -1,12 +1,18 @@
 {
-  path+="/router";
-  if ("inbound".equals(type)) {
+  if ("nested".equals(type)) {
+    path+="/binding";
+    digester.addObjectCreate(path,DEFAULT_NESTED_ROUTER);
+  }
+ else   if ("inbound".equals(type)) {
+    path+="/router";
     digester.addObjectCreate(path,INBOUND_MESSAGE_ROUTER_INTERFACE,"className");
   }
  else   if ("response".equals(type)) {
+    path+="/router";
     digester.addObjectCreate(path,RESPONSE_MESSAGE_ROUTER_INTERFACE,"className");
   }
  else {
+    path+="/router";
     digester.addObjectCreate(path,OUTBOUND_MESSAGE_ROUTER_INTERFACE,"className");
   }
   addSetPropertiesRule(path,digester,new String[]{"enableCorrelation","propertyExtractor"},new String[]{"enableCorrelationAsString","propertyExtractorAsString"});
@@ -16,6 +22,10 @@
     addReplyToRules(digester,path);
     addGlobalReferenceEndpointRules(digester,path,"addEndpoint");
     addTransactionConfigRules(path,digester);
+  }
+ else   if ("nested".equals(type)) {
+    addEndpointRules(digester,path,"setEndpoint");
+    addGlobalReferenceEndpointRules(digester,path,"setEndpoint");
   }
   addFilterRules(digester,path);
   digester.addSetNext(path,"addRouter");

@@ -1,0 +1,40 @@
+{
+  String address=endpoint.getEndpointURI().getAddress();
+  String writeToDirectory=message.getStringProperty(FileConnector.PROPERTY_WRITE_TO_DIRECTORY,null);
+  if (writeToDirectory == null) {
+    writeToDirectory=getWriteToDirectory();
+  }
+  if (writeToDirectory != null) {
+    address=getFilenameParser().getFilename(message,writeToDirectory);
+  }
+  String filename;
+  String outPattern=(String)endpoint.getProperty(FileConnector.PROPERTY_OUTPUT_PATTERN);
+  if (outPattern == null) {
+    outPattern=message.getStringProperty(FileConnector.PROPERTY_OUTPUT_PATTERN,null);
+  }
+  if (outPattern == null) {
+    outPattern=getOutputPattern();
+  }
+  try {
+    if (outPattern != null) {
+      filename=generateFilename(message,outPattern);
+    }
+ else {
+      filename=message.getStringProperty(FileConnector.PROPERTY_FILENAME,null);
+      if (filename == null) {
+        filename=generateFilename(message,null);
+      }
+    }
+    if (filename == null) {
+      throw new IOException("Filename is null");
+    }
+    File file=FileUtils.createFile(address + "/" + filename);
+    if (logger.isInfoEnabled()) {
+      logger.info("Writing file to: " + file.getAbsolutePath());
+    }
+    return new FileOutputStream(file,MapUtils.getBooleanValue(endpoint.getProperties(),"outputAppend",isOutputAppend()));
+  }
+ catch (  IOException e) {
+    throw new DispatchException(new Message(Messages.STREAMING_FAILED_NO_STREAM),message,endpoint,e);
+  }
+}

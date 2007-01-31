@@ -1,19 +1,24 @@
 {
-  doInternalDispatch(event);
-  if (useRemoteSync(event)) {
-    try {
-      Object result=receive(connectedSocket,event.getTimeout());
-      if (result == null) {
+  Socket socket=dispatchToSocket(event);
+  try {
+    if (useRemoteSync(event)) {
+      try {
+        Object result=receive(socket,event.getTimeout());
+        if (result == null) {
+          return null;
+        }
+        return new MuleMessage(connector.getMessageAdapter(result));
+      }
+ catch (      SocketTimeoutException e) {
+        logger.info("Socket timed out normally while doing a synchronous receive on endpointUri: " + event.getEndpoint().getEndpointURI());
         return null;
       }
-      return new MuleMessage(connector.getMessageAdapter(result));
     }
- catch (    SocketTimeoutException e) {
-      logger.info("Socket timed out normally while doing a synchronous receive on endpointUri: " + event.getEndpoint().getEndpointURI());
-      return null;
+ else {
+      return event.getMessage();
     }
   }
- else {
-    return event.getMessage();
+  finally {
+    connector.releaseSocket(socket,event.getEndpoint());
   }
 }

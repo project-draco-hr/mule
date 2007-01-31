@@ -1,12 +1,13 @@
 {
   QuickConfigurationBuilder builder=new QuickConfigurationBuilder();
+  builder.registerModel("seda","main");
   VMConnector cnn=new VMConnector();
   cnn.setName("vmCnn");
   cnn.setQueueEvents(true);
   builder.getManager().registerConnector(cnn);
   DefaultComponentExceptionStrategy es=new DefaultComponentExceptionStrategy();
   es.addEndpoint(new MuleEndpoint("vm://error.queue",false));
-  builder.getManager().getModel().setExceptionListener(es);
+  builder.getManager().lookupModel("main").setExceptionListener(es);
   UMOEndpoint ep=new MuleEndpoint("vm://component1",true);
   ep.setTransformer(new FailingTransformer());
   builder.registerComponent(Object.class.getName(),"component1",ep,new MuleEndpoint("vm://component1.out",false),null);

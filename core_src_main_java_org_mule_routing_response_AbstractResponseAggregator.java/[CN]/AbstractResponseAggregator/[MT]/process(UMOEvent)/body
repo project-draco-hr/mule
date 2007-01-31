@@ -3,9 +3,9 @@
   if (groupId == null || groupId.equals("-1")) {
     throw new RoutingException(new Message(Messages.NO_CORRELATION_ID),event.getMessage(),event.getEndpoint());
   }
-  boolean miss=false;
+  boolean lookupMiss=false;
   while (true) {
-    if (miss) {
+    if (lookupMiss) {
       try {
         Thread.sleep(1);
       }
@@ -13,13 +13,13 @@
         Thread.currentThread().interrupt();
       }
     }
-    EventGroup group=this.getEventGroupWithId(groupId);
+    EventGroup group=this.getEventGroup(groupId);
     if (group == null) {
       group=this.addEventGroup(this.createEventGroup(event,groupId));
     }
 synchronized (group) {
-      if (group != this.getEventGroupWithId(groupId)) {
-        miss=true;
+      if (group != this.getEventGroup(groupId)) {
+        lookupMiss=true;
         continue;
       }
       if (logger.isDebugEnabled()) {

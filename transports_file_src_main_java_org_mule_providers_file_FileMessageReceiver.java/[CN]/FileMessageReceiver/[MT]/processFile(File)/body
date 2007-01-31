@@ -13,7 +13,19 @@
   }
   File destinationFile=null;
   String sourceFileOriginalName=sourceFile.getName();
-  UMOMessageAdapter msgAdapter=connector.getMessageAdapter(sourceFile);
+  UMOMessageAdapter msgAdapter;
+  if (endpoint.isStreaming()) {
+    try {
+      msgAdapter=connector.getStreamMessageAdapter(new FileInputStream(sourceFile),null);
+    }
+ catch (    FileNotFoundException e) {
+      logger.error("File being read disappeared!",e);
+      return;
+    }
+  }
+ else {
+    msgAdapter=connector.getMessageAdapter(sourceFile);
+  }
   msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
   if (moveDir != null) {
     String destinationFileName=sourceFileOriginalName;
@@ -32,7 +44,12 @@
       if (!fileWasMoved) {
         throw new MuleException(new Message("file",4,sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
       }
-      msgAdapter=connector.getMessageAdapter(destinationFile);
+      if (endpoint.isStreaming()) {
+        msgAdapter=connector.getStreamMessageAdapter(new FileInputStream(destinationFile),null);
+      }
+ else {
+        msgAdapter=connector.getMessageAdapter(destinationFile);
+      }
       msgAdapter.setProperty(FileConnector.PROPERTY_FILENAME,destinationFile.getName());
       msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
     }

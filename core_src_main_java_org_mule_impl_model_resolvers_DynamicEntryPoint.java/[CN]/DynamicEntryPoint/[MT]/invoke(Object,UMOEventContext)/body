@@ -1,0 +1,86 @@
+{
+  Method method=null;
+  Object payload=null;
+  boolean ignoreMethod=BooleanUtils.toBoolean((Boolean)context.getMessage().removeProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY));
+  if (!ignoreMethod) {
+    Object methodOverride=context.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
+    if (methodOverride instanceof Method) {
+      method=(Method)methodOverride;
+    }
+ else     if (methodOverride != null) {
+      payload=context.getTransformedMessage();
+      String payloadClassName=payload.getClass().getName();
+      String methodOverrideName=methodOverride.toString();
+      method=this.getMethodByName(methodOverrideName,payloadClassName);
+      if (method == null) {
+        List matchingMethods=ClassUtils.getSatisfiableMethods(component.getClass(),ClassUtils.getClassTypes(payload),true,true,IgnoredMethodNames);
+        for (Iterator i=matchingMethods.iterator(); i.hasNext(); ) {
+          Method candidate=(Method)i.next();
+          if (candidate.getName().equals(methodOverride)) {
+            method=candidate;
+            break;
+          }
+        }
+        this.validateMethod(component,method,methodOverrideName);
+        if (method != null) {
+          method=this.addMethodByName(method,payloadClassName);
+        }
+      }
+    }
+  }
+  if (method == null) {
+    if (component instanceof Callable) {
+      method=Callable.class.getMethods()[0];
+      payload=context;
+    }
+ else {
+      method=this.getMethodByArgumentType(context.getClass().getName());
+      if (method == null) {
+        payload=context.getTransformedMessage();
+        method=this.getMethodByArgumentType(payload.getClass().getName());
+        if (method != null) {
+          RequestContext.rewriteEvent(new MuleMessage(payload,context.getMessage()));
+        }
+      }
+ else {
+        payload=context;
+      }
+    }
+  }
+  if (method == null) {
+    List methods=ClassUtils.getSatisfiableMethods(component.getClass(),ClassUtils.getClassTypes(context),true,false,IgnoredMethodNames);
+    int numMethods=methods.size();
+    if (numMethods > 1) {
+      TooManySatisfiableMethodsException tmsmex=new TooManySatisfiableMethodsException(component.getClass(),methods);
+      throw new InvocationTargetException(tmsmex,"There must be only one method accepting " + context.getClass().getName() + " in component "+ component.getClass().getName());
+    }
+ else     if (numMethods == 1) {
+      payload=context;
+      method=this.addMethodByArgumentType((Method)methods.get(0),payload.getClass().getName());
+    }
+ else {
+      payload=context.getTransformedMessage();
+      RequestContext.rewriteEvent(new MuleMessage(payload,context.getMessage()));
+      methods=ClassUtils.getSatisfiableMethods(component.getClass(),ClassUtils.getClassTypes(payload),true,true,IgnoredMethodNames);
+      numMethods=methods.size();
+      if (numMethods > 1) {
+        throw new TooManySatisfiableMethodsException(component.getClass(),methods);
+      }
+ else       if (numMethods == 1) {
+        method=this.addMethodByArgumentType((Method)methods.get(0),payload.getClass().getName());
+      }
+ else {
+        throw new NoSatisfiableMethodsException(component.getClass(),ClassUtils.getClassTypes(payload));
+      }
+    }
+  }
+  currentMethod=method;
+  if (payload == null) {
+    payload=context.getTransformedMessage();
+    RequestContext.rewriteEvent(new MuleMessage(payload,context.getMessage()));
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Dynamic Entrypoint using method: " + component.getClass().getName() + "."+ method.getName()+ "("+ payload.getClass().getName()+ ")");
+  }
+  return this.invokeMethod(component,method,payload);
+}

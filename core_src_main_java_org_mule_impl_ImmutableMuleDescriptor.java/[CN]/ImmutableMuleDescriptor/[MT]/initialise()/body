@@ -3,9 +3,6 @@
   if (threadingProfile == null) {
     threadingProfile=config.getDefaultComponentThreadingProfile();
   }
-  if (exceptionListener == null) {
-    exceptionListener=MuleManager.getInstance().getModel().getExceptionListener();
-  }
  else   if (exceptionListener instanceof Initialisable) {
     ((Initialisable)exceptionListener).initialise();
   }
@@ -14,7 +11,7 @@
   }
   MuleEndpoint endpoint;
   if (inboundRouter == null) {
-    inboundRouter=new InboundMessageRouter();
+    inboundRouter=new InboundRouterCollection();
     inboundRouter.addRouter(new InboundPassThroughRouter());
   }
  else {
@@ -32,8 +29,16 @@
       endpoint.initialise();
     }
   }
+  if (nestedRouter != null) {
+    Iterator it=nestedRouter.getRouters().iterator();
+    while (it.hasNext()) {
+      UMONestedRouter nestedRouter=(UMONestedRouter)it.next();
+      endpoint=(MuleEndpoint)nestedRouter.getEndpoint();
+      endpoint.initialise();
+    }
+  }
   if (outboundRouter == null) {
-    outboundRouter=new OutboundMessageRouter();
+    outboundRouter=new OutboundRouterCollection();
     outboundRouter.addRouter(new OutboundPassThroughRouter());
   }
  else {

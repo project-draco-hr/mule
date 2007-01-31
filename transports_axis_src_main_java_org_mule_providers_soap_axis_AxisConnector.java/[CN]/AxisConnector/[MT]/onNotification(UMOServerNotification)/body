@@ -1,12 +1,13 @@
 {
   if (notification.getAction() == ModelNotification.MODEL_STARTED) {
-    if (!MuleManager.getInstance().getModel().isComponentRegistered(AXIS_SERVICE_COMPONENT_NAME)) {
+    UMOModel systemModel=MuleManager.getInstance().lookupModel(ModelHelper.SYSTEM_MODEL);
+    if (!systemModel.isComponentRegistered(AXIS_SERVICE_COMPONENT_NAME)) {
       try {
         if (axisDescriptor == null) {
           axisDescriptor=createAxisDescriptor();
         }
         axisDescriptor.addInterceptor(new MethodFixInterceptor());
-        MuleManager.getInstance().getModel().registerComponent(axisDescriptor);
+        MuleManager.getInstance().lookupModel(ModelHelper.SYSTEM_MODEL).registerComponent(axisDescriptor);
         for (Iterator iterator=servletServices.iterator(); iterator.hasNext(); ) {
           SOAPService service=(SOAPService)iterator.next();
           ServletConnector servletConnector=(ServletConnector)TransportFactory.getConnectorByProtocol("servlet");

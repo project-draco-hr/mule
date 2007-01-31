@@ -2,31 +2,41 @@
   path+="/model";
   digester.addRule(path,new Rule(){
     public void begin(    String string,    String string1,    Attributes attributes) throws Exception {
-      UMOModel model=manager.getModel();
-      if (MuleManager.DEFAULT_MODEL_NAME.equals(model.getName())) {
-        model=null;
+      UMOModel model;
+      String modelType=attributes.getValue("type");
+      String modelName=attributes.getValue("name");
+      if (modelType == null) {
+        logger.debug("Model type not set, defaulting to SEDA");
+        modelType="seda";
       }
-      if (model == null) {
-        String modelType=attributes.getValue("type");
-        if (modelType.equalsIgnoreCase("custom")) {
-          String className=attributes.getValue("className");
-          if (className == null) {
-            throw new IllegalArgumentException("Cannot use 'custom' model type without setting the 'className' for the model");
-          }
- else {
-            model=(UMOModel)ClassUtils.instanciateClass(className,ClassUtils.NO_ARGS,getClass());
-          }
+      if (modelType.equalsIgnoreCase("custom")) {
+        String className=attributes.getValue("className");
+        if (className == null) {
+          throw new IllegalArgumentException("Cannot use 'custom' model type without setting the 'className' for the model");
         }
  else {
-          model=ModelFactory.createModel(modelType);
+          model=(UMOModel)ClassUtils.instanciateClass(className,ClassUtils.NO_ARGS,getClass());
         }
+      }
+ else       if (modelType.equalsIgnoreCase("inherited")) {
+        Map models=MuleManager.getInstance().getModels();
+        if (models.size() == 0) {
+          throw new IllegalArgumentException("When using model inheritance there must be one model registered with Mule");
+        }
+        model=(UMOModel)models.get(modelName);
+        if (model == null) {
+          throw new IllegalArgumentException("Cannot inherit from model '" + modelName + "'. No such model registered");
+        }
+      }
+ else {
+        model=ModelFactory.createModel(modelType);
       }
       digester.push(model);
     }
   }
 );
   addSetPropertiesRule(path,digester);
-  digester.addSetRoot(path,"setModel");
+  digester.addSetRoot(path,"registerModel");
   digester.addObjectCreate(path + "/entry-point-resolver",DEFAULT_ENTRY_POINT_RESOLVER,"className");
   addSetPropertiesRule(path + "/entry-point-resolver",digester);
   digester.addSetNext(path + "/entry-point-resolver","setEntryPointResolver");

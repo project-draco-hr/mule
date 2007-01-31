@@ -1,5 +1,10 @@
 {
-  UMOModel model=MuleManager.getInstance().getModel();
+  UMOModel model=MuleManager.getInstance().lookupModel(ModelHelper.SYSTEM_MODEL);
+  if (model == null) {
+    model=new SedaModel();
+    model.setName(ModelHelper.SYSTEM_MODEL);
+    MuleManager.getInstance().registerModel(model);
+  }
   UMODescriptor descriptor=model.getDescriptor(EVENT_MULTICASTER_DESCRIPTOR_NAME);
   if (descriptor != null) {
     model.unregisterComponent(descriptor);
@@ -10,7 +15,7 @@
     descriptor.getInboundRouter().addEndpoint(new MuleEndpoint("vm://*",true));
   }
  else {
-    UMOInboundMessageRouter messageRouter=descriptor.getInboundRouter();
+    UMOInboundRouterCollection messageRouter=descriptor.getInboundRouter();
     for (int i=0; i < subscriptions.length; i++) {
       String subscription=subscriptions[i];
       UMOEndpointURI endpointUri=new MuleEndpointURI(subscription);

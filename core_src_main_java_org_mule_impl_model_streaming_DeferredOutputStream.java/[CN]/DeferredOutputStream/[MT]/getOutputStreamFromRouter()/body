@@ -1,0 +1,36 @@
+{
+  UMODescriptor descriptor=event.getComponentDescriptor();
+  UMOEndpointURI endpoint=event.getEndpointURI();
+  UMOOutboundRouterCollection messageRouter=descriptor.getOutboundRouter();
+  if (messageRouter.hasEndpoints()) {
+    for (Iterator iterator=messageRouter.getRouters().iterator(); iterator.hasNext(); ) {
+      UMOOutboundRouter router=(UMOOutboundRouter)iterator.next();
+      boolean match=false;
+      try {
+        match=router.isMatch(event.getMessage());
+      }
+ catch (      MessagingException e) {
+        throw new IOException(e.toString());
+      }
+      if (match) {
+        if (router.getEndpoints().size() != 1) {
+          throw new IOException(new Message(Messages.STREAMING_COMPONENT_X_MUST_HAVE_ONE_ENDPOINT,descriptor.getName()).toString());
+        }
+ else {
+          UMOEndpoint ep=(UMOEndpoint)router.getEndpoints().get(0);
+          try {
+            return ep.getConnector().getOutputStream(ep,event.getMessage());
+          }
+ catch (          UMOException e) {
+            throw new IOException(new Message(Messages.STREAMING_FAILED_FOR_ENDPOINT_X,endpoint.toString()).toString());
+          }
+        }
+      }
+    }
+    throw new IOException(new Message(Messages.STREAMING_COMPONENT_X_MUST_HAVE_ONE_ENDPOINT,descriptor.getName()).toString());
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("there are no outbound endpoints configured on this component, the otput stream provided from the message adapter will be used");
+  }
+  return null;
+}
