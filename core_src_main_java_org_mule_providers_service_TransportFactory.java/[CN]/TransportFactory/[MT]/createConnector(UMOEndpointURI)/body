@@ -1,28 +1,16 @@
 {
+  UMOConnector connector;
   String scheme=url.getSchemeMetaInfo();
-  UMOConnector connector=null;
-  TransportServiceDescriptor csd=getServiceDescriptor(scheme);
-  if (csd.getServiceError() != null) {
-    throw new TransportServiceException(Message.createStaticMessage(csd.getServiceError()));
-  }
-  if (csd.getServiceFinder() != null) {
-    csd=csd.createServiceFinder().findService(scheme,csd);
-  }
+  TransportServiceDescriptor sd=(TransportServiceDescriptor)MuleManager.getInstance().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,scheme,null);
   try {
-    if (csd.getConnectorFactory() != null) {
-      ObjectFactory factory=(ObjectFactory)ClassUtils.loadClass(csd.getConnectorFactory(),TransportFactory.class).newInstance();
-      connector=(UMOConnector)factory.create();
+    connector=sd.createConnector();
+    if (connector != null) {
+      if (connector instanceof AbstractConnector) {
+        ((AbstractConnector)connector).initialiseFromUrl(url);
+      }
     }
  else {
-      if (csd.getConnector() != null) {
-        connector=(UMOConnector)ClassUtils.loadClass(csd.getConnector(),TransportFactory.class).newInstance();
-        if (connector instanceof AbstractConnector) {
-          ((AbstractConnector)connector).initialiseFromUrl(url);
-        }
-      }
- else {
-        throw new TransportFactoryException(new Message(Messages.X_NOT_SET_IN_SERVICE_X,"Connector",scheme));
-      }
+      throw new TransportFactoryException(new Message(Messages.X_NOT_SET_IN_SERVICE_X,"Connector",scheme));
     }
   }
  catch (  TransportFactoryException e) {
