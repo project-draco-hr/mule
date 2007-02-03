@@ -1,0 +1,25 @@
+{
+  Dictionary headers=bc.getBundle().getHeaders();
+  String transportHeader=(String)headers.get(OSGI_HEADER_TRANSPORTS);
+  if (transportHeader == null) {
+    throw new ConfigurationException(Message.createStaticMessage("Transport must declare its protocol as an OSGi header."));
+  }
+  String[] transports=StringUtils.splitAndTrim(transportHeader,",");
+  String transport;
+  for (int i=0; i < transports.length; ++i) {
+    transport=transports[i];
+    String descriptorPath="/" + SpiUtils.SERVICE_ROOT + SpiUtils.PROVIDER_SERVICE_PATH+ transport+ ".properties";
+    URL descriptorUrl=bc.getBundle().getEntry(descriptorPath);
+    if (descriptorUrl == null) {
+      throw new ConfigurationException(Message.createStaticMessage("TESTING: Unable to locate service descriptor file: " + descriptorPath));
+    }
+    Properties props=new Properties();
+    props.load(descriptorUrl.openStream());
+    ServiceDescriptor descriptor=ServiceDescriptorFactory.create(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,transport,props,null);
+    Hashtable osgiProps=new Hashtable();
+    osgiProps.put(Constants.SERVICE_PID,headers.get(Constants.BUNDLE_SYMBOLICNAME) + "." + transport);
+    osgiProps.put(Constants.SERVICE_DESCRIPTION,headers.get(Constants.BUNDLE_DESCRIPTION));
+    osgiProps.put(Constants.SERVICE_VENDOR,headers.get(Constants.BUNDLE_VENDOR));
+    bc.registerService(TransportServiceDescriptor.class.getName(),descriptor,osgiProps);
+  }
+}
