@@ -1,6 +1,12 @@
 {
   try {
     serviceDescriptor=(TransportServiceDescriptor)MuleManager.getInstance().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,getProtocol().toLowerCase(),serviceOverrides);
+    if (serviceDescriptor == null) {
+      throw new ServiceException(Message.createStaticMessage("No service descriptor found for transport: " + getProtocol() + ".  This transport does not appear to be installed."));
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Loading DispatcherFactory for connector: " + getName() + " ("+ getClass().getName()+ ")");
+    }
     this.setDispatcherFactory(serviceDescriptor.createDispatcherFactory());
     defaultInboundTransformer=serviceDescriptor.createInboundTransformer();
     defaultOutboundTransformer=serviceDescriptor.createOutboundTransformer();

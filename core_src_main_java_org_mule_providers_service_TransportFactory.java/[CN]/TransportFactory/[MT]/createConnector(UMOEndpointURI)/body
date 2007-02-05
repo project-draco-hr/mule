@@ -1,8 +1,11 @@
 {
-  UMOConnector connector;
-  String scheme=url.getSchemeMetaInfo();
-  TransportServiceDescriptor sd=(TransportServiceDescriptor)MuleManager.getInstance().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,scheme,null);
   try {
+    UMOConnector connector;
+    String scheme=url.getSchemeMetaInfo();
+    TransportServiceDescriptor sd=(TransportServiceDescriptor)MuleManager.getInstance().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,scheme,null);
+    if (sd == null) {
+      throw new ServiceException(Message.createStaticMessage("No service descriptor found for transport: " + scheme + ".  This transport does not appear to be installed."));
+    }
     connector=sd.createConnector();
     if (connector != null) {
       if (connector instanceof AbstractConnector) {
@@ -12,19 +15,16 @@
  else {
       throw new TransportFactoryException(new Message(Messages.X_NOT_SET_IN_SERVICE_X,"Connector",scheme));
     }
+    connector.setName(ObjectNameHelper.getConnectorName(connector));
+    Map props=new HashMap();
+    PropertiesUtils.getPropertiesWithPrefix(MuleManager.getInstance().getProperties(),connector.getProtocol().toLowerCase(),props);
+    if (props.size() > 0) {
+      props=PropertiesUtils.removeNamespaces(props);
+      BeanUtils.populateWithoutFail(connector,props,true);
+    }
+    return connector;
   }
- catch (  TransportFactoryException e) {
-    throw e;
-  }
-catch (  Exception e) {
+ catch (  Exception e) {
     throw new TransportFactoryException(new Message(Messages.FAILED_TO_CREATE_X_WITH_X,"Endpoint",url),e);
   }
-  connector.setName(ObjectNameHelper.getConnectorName(connector));
-  Map props=new HashMap();
-  PropertiesUtils.getPropertiesWithPrefix(MuleManager.getInstance().getProperties(),connector.getProtocol().toLowerCase(),props);
-  if (props.size() > 0) {
-    props=PropertiesUtils.removeNamespaces(props);
-    BeanUtils.populateWithoutFail(connector,props,true);
-  }
-  return connector;
 }
