@@ -5,7 +5,8 @@
     jobDetail.setName(endpoint.getEndpointURI().toString());
     jobDetail.setJobClass(MuleReceiverJob.class);
     JobDataMap jobDataMap=new JobDataMap();
-    jobDataMap.put(QUARTZ_RECEIVER_PROPERTY,this);
+    jobDataMap.put(QUARTZ_RECEIVER_PROPERTY,this.getReceiverKey());
+    jobDataMap.put(QUARTZ_CONNECTOR_PROPERTY,this.connector.getName());
     jobDataMap.putAll(endpoint.getProperties());
     jobDetail.setJobDataMap(jobDataMap);
     Trigger trigger=null;
@@ -50,7 +51,11 @@
     trigger.setGroup(groupName);
     trigger.setJobName(endpoint.getEndpointURI().toString());
     trigger.setJobGroup(jobGroupName);
-    scheduler.scheduleJob(jobDetail,trigger);
+    try {
+      scheduler.scheduleJob(jobDetail,trigger);
+    }
+ catch (    ObjectAlreadyExistsException oaee) {
+    }
     scheduler.start();
   }
  catch (  Exception e) {
