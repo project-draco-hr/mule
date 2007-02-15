@@ -1,0 +1,32 @@
+{
+  context=(AbstractApplicationContext)applicationContext;
+  try {
+    Map temp=context.getBeansOfType(MuleConfiguration.class,true,true);
+    if (temp.size() > 0) {
+      MuleManager.setConfiguration((MuleConfiguration)temp.values().iterator().next());
+    }
+    Map connectors=context.getBeansOfType(UMOConnector.class,true,true);
+    setConnectors(connectors.values());
+    temp=context.getBeansOfType(UMOTransactionManagerFactory.class,true,true);
+    if (temp.size() > 0) {
+      manager.setTransactionManager(((UMOTransactionManagerFactory)temp.values().iterator().next()).create());
+    }
+    temp=context.getBeansOfType(UMOSecurityManager.class,true,true);
+    if (temp.size() > 0) {
+      manager.setSecurityManager((UMOSecurityManager)temp.values().iterator().next());
+    }
+    Map transformers=context.getBeansOfType(UMOTransformer.class,true,true);
+    setTransformers(transformers.values());
+    Map endpoints=context.getBeansOfType(UMOEndpoint.class,true,true);
+    setEndpoints(endpoints.values());
+    Map agents=context.getBeansOfType(UMOAgent.class,true,true);
+    setAgents(agents.values());
+    Map containers=context.getBeansOfType(UMOContainerContext.class,true,true);
+    setContainerContext(containers);
+    Map models=context.getBeansOfType(UMOModel.class,true,true);
+    setModels(models);
+  }
+ catch (  Exception e) {
+    throw new BeanInitializationException("Failed to wire MuleManager together: " + e.getMessage(),e);
+  }
+}

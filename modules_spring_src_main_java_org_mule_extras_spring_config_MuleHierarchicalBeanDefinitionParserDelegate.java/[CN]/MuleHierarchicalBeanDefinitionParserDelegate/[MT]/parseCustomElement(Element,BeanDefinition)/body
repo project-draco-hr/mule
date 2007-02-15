@@ -1,4 +1,5 @@
 {
+  System.out.println("" + writeNode(ele));
   BeanDefinition root;
   String namespaceUri=ele.getNamespaceURI();
   NamespaceHandler handler=getReaderContext().getNamespaceHandlerResolver().resolve(namespaceUri);
@@ -9,18 +10,31 @@
   BeanDefinition bd=handler.parse(ele,new ParserContext(getReaderContext(),this,containingBd));
   registerBean(ele,bd);
   root=bd;
-  NodeList list=ele.getElementsByTagNameNS("*","*");
+  NodeList list=ele.getChildNodes();
   for (int i=0; i < list.getLength(); i++) {
-    Element element=(Element)list.item(i);
-    if (logger.isDebugEnabled()) {
-      logger.debug(element.toString());
-    }
-    if (isDefaultNamespace(element.getNamespaceURI()) && (PROPERTY_ELEMENT.equals(element.getLocalName()))) {
-      parsePropertyElements(element,bd);
-      break;
-    }
+    if (list.item(i) instanceof Element) {
+      Element element=(Element)list.item(i);
+      System.out.println("-- " + writeNode(element));
+      if (logger.isDebugEnabled()) {
+        logger.debug("parsing: " + writeNode(element));
+      }
+      if (isDefaultNamespace(element.getNamespaceURI())) {
+        if (PROPERTY_ELEMENT.equals(element.getLocalName())) {
+          parsePropertyElement(element,root);
+        }
+ else         if (MAP_ELEMENT.equals(element.getLocalName())) {
+          parseMapElement(element,root);
+        }
+ else         if (LIST_ELEMENT.equals(element.getLocalName())) {
+          parseListElement(element,root);
+        }
+ else         if (SET_ELEMENT.equals(element.getLocalName())) {
+          parseSetElement(element,root);
+        }
+      }
  else {
-      bd=parseCustomElement(element,bd);
+        bd=parseCustomElement(element,bd);
+      }
     }
   }
   return root;

@@ -1,25 +1,7 @@
 {
-  registry=parserContext.getRegistry();
-  NamedNodeMap attributes=element.getAttributes();
-  for (int x=0; x < attributes.getLength(); x++) {
-    Attr attribute=(Attr)attributes.item(x);
-    String name=attribute.getName();
-    if (ATTRIBUTE_IDREF.equals(name)) {
-      continue;
-    }
- else     if (ADDRESS_ATTRIBUTE.equals(name)) {
-      String address=element.getAttribute("address");
-      try {
-        builder.addPropertyValue("endpointURI",new MuleEndpointURI(address));
-      }
- catch (      EndpointException e) {
-        throw new BeanCreationException(new Message(Messages.ENPOINT_X_IS_MALFORMED,address).getMessage(),e);
-      }
-      continue;
-    }
-    String propertyName=extractPropertyName(name);
-    Assert.state(org.springframework.util.StringUtils.hasText(propertyName),"Illegal property name returned from 'extractPropertyName(String)': cannot be null or empty.");
-    builder.addPropertyValue(propertyName,attribute.getValue());
+  Element parent=(Element)element.getParentNode();
+  if (parent.getNodeName().equals("beans")) {
+    builder.addPropertyValue("type",UMOImmutableEndpoint.ENDPOINT_TYPE_GLOBAL);
   }
-  postProcess(builder,element);
+  super.parseChild(element,parserContext,builder);
 }
