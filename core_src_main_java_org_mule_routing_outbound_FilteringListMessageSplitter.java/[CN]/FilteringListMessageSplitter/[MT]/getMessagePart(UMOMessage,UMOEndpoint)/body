@@ -1,13 +1,13 @@
 {
-  CopyOnWriteArrayList payload=(CopyOnWriteArrayList)payloads.get();
-  for (int i=0; i < payload.size(); i++) {
-    Object object=payload.get(i);
-    UMOMessage result=new MuleMessage(object,(Map)properties.get());
+  List payloads=(List)payloadContext.get();
+  for (Iterator i=payloads.iterator(); i.hasNext(); ) {
+    Object payload=i.next();
+    UMOMessage result=new MuleMessage(payload,(Map)propertiesContext.get());
     if (endpoint.getFilter() == null || endpoint.getFilter().accept(result)) {
       if (logger.isDebugEnabled()) {
         logger.debug("Endpoint filter matched. Routing message over: " + endpoint.getEndpointURI().toString());
       }
-      payload.remove(i);
+      i.remove();
       return result;
     }
   }

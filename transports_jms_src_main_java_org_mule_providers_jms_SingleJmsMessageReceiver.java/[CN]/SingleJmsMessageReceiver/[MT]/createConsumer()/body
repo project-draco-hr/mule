@@ -4,11 +4,7 @@
     if (session == null) {
       session=this.connector.getSession(endpoint);
     }
-    String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
-    boolean topic=(resourceInfo != null && JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(resourceInfo));
-    if (!topic) {
-      topic=MapUtils.getBooleanValue(endpoint.getProperties(),JmsConstants.TOPIC_PROPERTY,false);
-    }
+    boolean topic=connector.getTopicResolver().isTopic(endpoint,true);
     Destination dest=jmsSupport.createDestination(session,endpoint.getEndpointURI().getAddress(),topic);
     String selector=null;
     if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {

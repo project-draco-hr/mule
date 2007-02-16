@@ -2,14 +2,13 @@
   if (!isConnected()) {
     throw new JMSException("Not connected");
   }
-  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
   Session session=getSessionFromTransaction();
   if (session != null) {
-    logger.debug("Retrieving jms session from current transaction");
     return session;
   }
+  UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
   if (logger.isDebugEnabled()) {
-    logger.debug("Retrieving new jms session from connection: topic=" + topic + ", transacted="+ (transacted || tx != null)+ ", ack mode="+ acknowledgementMode+ ", nolocal="+ noLocal);
+    logger.debug(MessageFormat.format("Retrieving new jms session from connection: " + "topic={0}, transacted={1}, ack mode={2}, nolocal={3}",new Object[]{Boolean.valueOf(topic),Boolean.valueOf(transacted || tx != null),new Integer(acknowledgementMode),Boolean.valueOf(noLocal)}));
   }
   session=jmsSupport.createSession(connection,topic,transacted || tx != null,acknowledgementMode,noLocal);
   if (tx != null) {

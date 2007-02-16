@@ -24,13 +24,17 @@
       if (connectorServerProperties == null) {
         connectorServerProperties=new HashMap(DEFAULT_CONNECTOR_SERVER_PROPERTIES);
       }
+      if (!credentials.isEmpty()) {
+        JMXAuthenticator jmxAuthenticator=(JMXAuthenticator)ClassUtils.instanciateClass(DEFAULT_JMX_AUTHENTICATOR,ClassUtils.NO_ARGS);
+        ((SimplePasswordJmxAuthenticator)jmxAuthenticator).setCredentials(credentials);
+        connectorServerProperties.put(JMXConnectorServer.AUTHENTICATOR,jmxAuthenticator);
+      }
       connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,connectorServerProperties,mBeanServer);
     }
  catch (    Exception e) {
       throw new InitialisationException(new Message(Messages.FAILED_TO_CREATE_X,"Jmx Connector"),e,this);
     }
   }
-  jmxSupport=jmxSupportFactory.newJmxSupport();
   ManagerNotificationListener l=new ManagerNotificationListener(){
     public void onNotification(    UMOServerNotification notification){
       if (notification.getAction() == ManagerNotification.MANAGER_STARTED_MODELS) {
@@ -43,7 +47,6 @@
           registerComponentServices();
           registerEndpointServices();
           registerConnectorServices();
-          registerRegistryService();
         }
  catch (        Exception e) {
           throw new MuleRuntimeException(new Message(Messages.X_FAILED_TO_INITIALISE,"MBeans"),e);
