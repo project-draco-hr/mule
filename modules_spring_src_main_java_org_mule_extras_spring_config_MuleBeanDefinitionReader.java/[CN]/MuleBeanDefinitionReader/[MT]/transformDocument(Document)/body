@@ -1,9 +1,19 @@
 {
   if (getXslResource() != null) {
-    Transformer transformer=createTransformer(createXslSource());
-    DOMResult result=new DOMResult();
-    transformer.setParameter("firstContext",Boolean.valueOf(isFirstContext()));
-    transformer.transform(new DOMSource(document),result);
+    DOMResult result;
+    try {
+      Transformer transformer=createTransformer(createXslSource());
+      result=new DOMResult();
+      transformer.setParameter("firstContext",Boolean.valueOf(isFirstContext()));
+      transformer.transform(new DOMSource(document),result);
+    }
+  finally {
+      if (XslHelper.hasErrorReport()) {
+        String report=XslHelper.getErrorReport();
+        XslHelper.clearErrors();
+        throw new IOException(report);
+      }
+    }
     if (logger.isDebugEnabled()) {
       try {
         String xml=new DOMReader().read((Document)result.getNode()).asXML();
