@@ -19,40 +19,37 @@
         connector=(XFireConnector)connectorArray[i];
       }
     }
-    Object[] outhandlers=service.getOutHandlers().toArray();
-    for (i=0; i < outhandlers.length; i++) {
-      if (outhandlers[i] instanceof DOMOutHandler) {
+    if (connector != null) {
+      Object[] outhandlers=service.getOutHandlers().toArray();
+      for (i=0; i < outhandlers.length; i++) {
         connector.getClientOutHandlers().remove(i);
       }
-      if (outhandlers[i] instanceof WSS4JOutHandler) {
-        connector.getClientOutHandlers().remove(i);
+      Object[] handlers=service.getInHandlers().toArray();
+      boolean isDomInHandlerPresent=false;
+      boolean isWss4jInHandlerPresent=false;
+      for (i=0; i < handlers.length; i++) {
+        if (handlers[i] instanceof DOMInHandler) {
+          isDomInHandlerPresent=true;
+        }
+        if (handlers[i] instanceof MuleWSSInHandler) {
+          isWss4jInHandlerPresent=true;
+        }
       }
-    }
-    Object[] handlers=service.getInHandlers().toArray();
-    boolean isDomInHandlerPresent=false;
-    boolean isWss4jInHandlerPresent=false;
-    for (i=0; i < handlers.length; i++) {
-      if (handlers[i] instanceof DOMInHandler) {
-        isDomInHandlerPresent=true;
+      if (!isDomInHandlerPresent) {
+        service.addInHandler(new DOMInHandler());
       }
-      if (handlers[i] instanceof MuleWSSInHandler) {
-        isWss4jInHandlerPresent=true;
+      if (!isWss4jInHandlerPresent) {
+        service.addInHandler(new MuleWSSInHandler());
       }
-    }
-    if (!isDomInHandlerPresent) {
-      service.addInHandler(new DOMInHandler());
-    }
-    if (!isWss4jInHandlerPresent) {
-      service.addInHandler(new MuleWSSInHandler());
-    }
-    Properties props=new Properties();
-    if (event.getMessage().getProperty("action") != null) {
-      props.putAll(getProperties(event));
-    }
-    if (!props.isEmpty()) {
-      Object[] keys=props.keySet().toArray();
-      for (i=0; i < keys.length; i++) {
-        service.setProperty((String)keys[i],props.getProperty((String)keys[i]));
+      Properties props=new Properties();
+      if (event.getMessage().getProperty("action") != null) {
+        props.putAll(getProperties(event));
+      }
+      if (!props.isEmpty()) {
+        Object[] keys=props.keySet().toArray();
+        for (i=0; i < keys.length; i++) {
+          service.setProperty((String)keys[i],props.getProperty((String)keys[i]));
+        }
       }
     }
   }
@@ -73,7 +70,7 @@
       }
     }
  catch (    ConfigurationException e) {
-      e.printStackTrace();
+      throw new UnsupportedAuthenticationSchemeException(Message.createStaticMessage("A Configurtation Exception occured while configuring WS-Security on Axis "),new MuleMessage(e.getMessage()));
     }
   }
 }
