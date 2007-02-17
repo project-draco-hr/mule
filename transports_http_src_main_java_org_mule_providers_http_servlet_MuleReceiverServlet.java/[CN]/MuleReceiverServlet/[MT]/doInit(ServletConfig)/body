@@ -1,15 +1,20 @@
 {
-  String servletConnectorName=servletConfig.getInitParameter(SERVLET_CONNECTOR_NAME_PROPERTY);
-  if (servletConnectorName == null) {
-    connector=(ServletConnector)TransportFactory.getConnectorByProtocol("servlet");
-    if (connector == null) {
-      throw new ServletException(new Message("http",9).toString());
+  try {
+    String servletConnectorName=servletConfig.getInitParameter(SERVLET_CONNECTOR_NAME_PROPERTY);
+    if (servletConnectorName == null) {
+      connector=(ServletConnector)TransportFactory.getConnectorByProtocol("servlet");
+      if (connector == null) {
+        throw new ServletException(new Message("http",9).toString());
+      }
+    }
+ else {
+      connector=(ServletConnector)MuleManager.getRegistry().lookupConnector(servletConnectorName);
+      if (connector == null) {
+        throw new ServletException(new Message("http",10,servletConnectorName).toString());
+      }
     }
   }
- else {
-    connector=(ServletConnector)MuleManager.getInstance().lookupConnector(servletConnectorName);
-    if (connector == null) {
-      throw new ServletException(new Message("http",10,servletConnectorName).toString());
-    }
+ catch (  RegistryException e) {
+    throw new ServletException(e);
   }
 }
