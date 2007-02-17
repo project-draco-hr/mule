@@ -3,13 +3,13 @@
   MuleDescriptor descriptor=getTestDescriptor(descriptorName,"java.lang.Object");
   MuleDescriptor duplicateDescriptor=getTestDescriptor(descriptorName,"java.lang.Object");
   final UMOModel model=getDefaultModel();
-  model.registerComponent(descriptor);
+  MuleManager.getRegistry().registerComponent(descriptor,model.getName());
   try {
-    model.registerComponent(duplicateDescriptor);
+    MuleManager.getRegistry().registerComponent(duplicateDescriptor,model.getName());
     fail("Trying to register a component descriptor with the same name " + "must have thrown an exception.");
   }
- catch (  ModelException mex) {
-    final String message=mex.getMessage();
+ catch (  RegistryException e) {
+    final String message=e.getMessage();
     assertTrue("Exception message should contain our descriptor name.",(message.indexOf("\"" + descriptorName + "\"") > -1));
   }
   int componentCount=0;
