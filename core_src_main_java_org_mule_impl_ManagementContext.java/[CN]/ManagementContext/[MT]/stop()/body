@@ -1,10 +1,15 @@
 {
-  started=false;
-  stopping=true;
-  fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_STOPPING));
-  if (queueManager != null) {
-    queueManager.stop();
+  try {
+    started=false;
+    stopping=true;
+    fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_STOPPING));
+    if (queueManager != null) {
+      queueManager.stop();
+    }
+    stopping=false;
+    fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_STOPPED));
   }
-  stopping=false;
-  fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_STOPPED));
+ catch (  UMOException e) {
+    throw new LifecycleException(e,this);
+  }
 }

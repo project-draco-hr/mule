@@ -1,7 +1,13 @@
 {
   if (key instanceof DescriptorContainerKeyPair) {
     DescriptorContainerKeyPair dckp=(DescriptorContainerKeyPair)key;
-    UMODescriptor d=ModelHelper.getDescriptor(dckp.getDescriptorName());
+    UMODescriptor d;
+    try {
+      d=MuleManager.getRegistry().lookupComponent(dckp.getDescriptorName()).getDescriptor();
+    }
+ catch (    RegistryException e) {
+      throw new ObjectNotFoundException(key.toString(),new ContainerException(new Message(Messages.FAILED_LOAD_X,"descriptor: " + dckp.getDescriptorName())));
+    }
     if (d == null) {
       throw new ObjectNotFoundException(key.toString(),new ContainerException(new Message(Messages.FAILED_LOAD_X,"descriptor: " + dckp.getDescriptorName())));
     }

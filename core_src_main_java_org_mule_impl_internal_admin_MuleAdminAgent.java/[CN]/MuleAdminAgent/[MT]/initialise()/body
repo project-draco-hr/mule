@@ -2,31 +2,31 @@
   if (wireFormat == null) {
     wireFormat=new SerializationWireFormat();
   }
-  UMOManager manager=MuleManager.getInstance();
+  UMORegistry registry=MuleManager.getRegistry();
   try {
     if (StringUtils.isEmpty(serverUri)) {
       logger.warn("No serverUriUrl specified, MuleAdminAgent will not start. E.g. use " + "<mule:admin-agent serverUri=\"tcp://example.com:60504\"/> ");
-      manager.unregisterAgent(this.getName());
+      registry.unregisterAgent(this.getName());
       return;
     }
-    if (ModelHelper.isComponentRegistered(MuleManagerComponent.MANAGER_COMPONENT_NAME)) {
+    if (MuleManager.getRegistry().lookupComponent(MuleManagerComponent.MANAGER_COMPONENT_NAME) != null) {
       logger.info("Mule manager component has already been initialised, ignoring server url");
     }
  else {
-      if (manager.lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
+      if (registry.lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
         throw new AlreadyInitialisedException("Server Components",this);
       }
-      serverUri=MuleManager.getInstance().lookupEndpointIdentifier(serverUri,serverUri);
+      serverUri=registry.lookupEndpointIdentifier(serverUri,serverUri);
       UMOEndpointURI endpointUri=new MuleEndpointURI(serverUri);
       UMOConnector connector=TransportFactory.getOrCreateConnectorByProtocol(endpointUri);
-      if (manager.lookupConnector(connector.getName()) == null) {
+      if (registry.lookupConnector(connector.getName()) == null) {
         connector.setName(DEFAULT_MANAGER_ENDPOINT);
         connector.initialise();
-        manager.registerConnector(connector);
+        registry.registerConnector(connector);
       }
       logger.info("Registering Admin listener on: " + serverUri);
       UMODescriptor descriptor=MuleManagerComponent.getDescriptor(connector,endpointUri,wireFormat);
-      ModelHelper.registerSystemComponent(descriptor);
+      MuleManager.getRegistry().registerSystemComponent(descriptor);
     }
   }
  catch (  UMOException e) {
