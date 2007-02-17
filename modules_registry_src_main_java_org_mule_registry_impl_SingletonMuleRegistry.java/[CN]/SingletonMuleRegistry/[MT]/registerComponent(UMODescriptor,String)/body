@@ -1,0 +1,30 @@
+{
+  try {
+    UMOModel model=lookupModel(modelName);
+    if (model == null) {
+      throw new RegistryException(Message.createStaticMessage("Unable to look up model: " + modelName));
+    }
+    if (descriptor == null) {
+      throw new ModelException(new Message(Messages.X_IS_NULL,"UMO Descriptor"));
+    }
+    if (descriptor.getExceptionListener() == null) {
+      descriptor.setExceptionListener(model.getExceptionListener());
+    }
+    descriptor.initialise();
+    if (model.getDescriptor(descriptor.getName()) != null) {
+      throw new ModelException(new Message(Messages.DESCRIPTOR_X_ALREADY_EXISTS,descriptor.getName()));
+    }
+    UMOComponent component=(UMOComponent)model.getComponent(descriptor.getName());
+    if (component == null) {
+      component=model.createComponent(descriptor);
+      model.addComponent(descriptor,component);
+    }
+    logger.debug("Added Mule UMO: " + descriptor.getName());
+    logger.info("Initialising component: " + descriptor.getName());
+    component.initialise();
+    return component;
+  }
+ catch (  UMOException e) {
+    throw new RegistryException(Message.createStaticMessage("Unable to register component"),e);
+  }
+}
