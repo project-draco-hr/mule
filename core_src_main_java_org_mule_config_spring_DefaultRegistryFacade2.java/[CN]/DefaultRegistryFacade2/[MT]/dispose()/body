@@ -1,0 +1,25 @@
+{
+  if (disposed.get()) {
+    return;
+  }
+  try {
+    if (started.get()) {
+      stop();
+    }
+  }
+ catch (  UMOException e) {
+    logger.error("Failed to stop manager: " + e.getMessage(),e);
+  }
+  disposed.set(true);
+  disposeObjectsOfType(UMOConnector.class,ManagerNotification.MANAGER_DISPOSING_CONNECTORS,ManagerNotification.MANAGER_DISPOSED_CONNECTORS);
+  disposeObjectsOfType(UMOModel.class,-1,-1);
+  disposeObjectsOfType(UMOAgent.class,-1,-1);
+  containerContext.dispose();
+  containerContext=null;
+  fireSystemEvent(new ManagerNotification(id,null,null,ManagerNotification.MANAGER_DISPOSED));
+  initialised.set(false);
+  if (notificationManager != null) {
+    notificationManager.dispose();
+  }
+  config=new MuleConfiguration();
+}

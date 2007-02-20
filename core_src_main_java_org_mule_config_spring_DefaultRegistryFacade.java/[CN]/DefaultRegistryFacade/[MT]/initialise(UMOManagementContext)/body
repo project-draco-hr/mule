@@ -1,0 +1,40 @@
+{
+  this.managementContext=managementContext;
+  if (!initialised.get()) {
+    initialising.set(true);
+    fireSystemEvent(new ManagerNotification(id,null,null,ManagerNotification.MANAGER_INITIALISNG));
+    if (id == null) {
+      logger.warn("No unique id has been set on this manager");
+    }
+    try {
+      try {
+        TransactionalQueueManager queueMgr=new TransactionalQueueManager();
+        QueuePersistenceStrategy ps=new CachingPersistenceStrategy(new MemoryPersistenceStrategy());
+        queueMgr.setPersistenceStrategy(ps);
+      }
+ catch (      Exception e) {
+        throw new InitialisationException(new Message(Messages.INITIALISATION_FAILURE_X,"QueueManager"),e);
+      }
+      getContainerContext().initialise(managementContext);
+      initialiseConnectors();
+      initialiseEndpoints();
+      initialiseAgents();
+      for (Iterator i=models.values().iterator(); i.hasNext(); ) {
+        UMOModel model=(UMOModel)i.next();
+        model.initialise(managementContext);
+        model.register();
+      }
+    }
+ catch (    InitialisationException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new InitialisationException(e,this);
+    }
+ finally {
+      initialised.set(true);
+      initialising.set(false);
+      fireSystemEvent(new ManagerNotification(id,null,null,ManagerNotification.MANAGER_INITIALISED));
+    }
+  }
+}

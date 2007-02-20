@@ -1,5 +1,7 @@
 {
+  config=getRegistry().getConfiguration();
   validateEncoding();
+  validateOSEncoding();
   directories=new Directories(new File(config.getWorkingDirectory()));
   if (!initialised) {
     initialising=true;
@@ -18,13 +20,17 @@
     notificationManager.registerEventType(AdminNotification.class,AdminNotificationListener.class);
     notificationManager.registerEventType(CustomNotification.class,CustomNotificationListener.class);
     notificationManager.registerEventType(ConnectionNotification.class,ConnectionNotificationListener.class);
+    notificationManager.start(workManager);
     fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_INITIALISNG));
+    id=config.getId();
+    clusterId=config.getClusterId();
+    domain=config.getDomainId();
     if (id == null) {
       logger.warn("No unique id has been set on this manager");
     }
     try {
       if (securityManager != null) {
-        securityManager.initialise();
+        securityManager.initialise(this);
       }
       if (queueManager == null) {
         try {
@@ -38,8 +44,6 @@
         }
       }
       directories.createDirectories();
-      MuleManager.getInstance().setTransactionManager(getTransactionManager());
-      ((MuleManager)MuleManager.getInstance()).initialise();
       if (id == null) {
         throw new InitialisationException(new Message(Messages.X_IS_NULL,"Instance ID"),this);
       }
@@ -63,5 +67,6 @@ catch (    Exception e) {
       fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_INITIALISED));
     }
   }
+  registry.initialise(this);
   initialised=true;
 }

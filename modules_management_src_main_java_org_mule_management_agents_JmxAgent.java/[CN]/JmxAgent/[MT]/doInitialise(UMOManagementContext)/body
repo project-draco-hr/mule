@@ -1,0 +1,68 @@
+{
+  if (initialized.get()) {
+    return;
+  }
+  if (mBeanServer == null && !locateServer && !createServer) {
+    throw new InitialisationException(new Message(Messages.JMX_CREATE_OR_LOCATE_SHOULD_BE_SET),this);
+  }
+  if (mBeanServer == null && locateServer) {
+    List l=MBeanServerFactory.findMBeanServer(null);
+    if (l != null && l.size() > 0) {
+      mBeanServer=(MBeanServer)l.get(0);
+    }
+  }
+  if (mBeanServer == null && createServer) {
+    mBeanServer=MBeanServerFactory.createMBeanServer();
+    serverCreated.set(true);
+  }
+  if (mBeanServer == null) {
+    throw new InitialisationException(new Message(Messages.JMX_CANT_LOCATE_CREATE_SERVER),this);
+  }
+  if (connectorServerUrl != null) {
+    try {
+      JMXServiceURL url=new JMXServiceURL(connectorServerUrl);
+      if (connectorServerProperties == null) {
+        connectorServerProperties=new HashMap(DEFAULT_CONNECTOR_SERVER_PROPERTIES);
+      }
+      if (!credentials.isEmpty()) {
+        JMXAuthenticator jmxAuthenticator=(JMXAuthenticator)ClassUtils.instanciateClass(DEFAULT_JMX_AUTHENTICATOR,ClassUtils.NO_ARGS);
+        ((SimplePasswordJmxAuthenticator)jmxAuthenticator).setCredentials(credentials);
+        connectorServerProperties.put(JMXConnectorServer.AUTHENTICATOR,jmxAuthenticator);
+      }
+      connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,connectorServerProperties,mBeanServer);
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(new Message(Messages.FAILED_TO_CREATE_X,"Jmx Connector"),e,this);
+    }
+  }
+  ManagerNotificationListener l=new ManagerNotificationListener(){
+    public void onNotification(    UMOServerNotification notification){
+      if (notification.getAction() == ManagerNotification.MANAGER_STARTED_MODELS) {
+        try {
+          registerWrapperService();
+          registerStatisticsService();
+          registerMuleService();
+          registerConfigurationService();
+          registerModelServices();
+          registerComponentServices();
+          registerEndpointServices();
+          registerConnectorServices();
+        }
+ catch (        Exception e) {
+          throw new MuleRuntimeException(new Message(Messages.X_FAILED_TO_INITIALISE,"MBeans"),e);
+        }
+      }
+    }
+  }
+;
+  try {
+    if (StringUtils.isBlank(managementContext.getId())) {
+      throw new IllegalArgumentException("Manager ID is mandatory when running with JmxAgent. Give your Mule configuration a valid ID.");
+    }
+    managementContext.registerListener(l);
+  }
+ catch (  NotificationException e) {
+    throw new InitialisationException(e,this);
+  }
+  initialized.compareAndSet(false,true);
+}

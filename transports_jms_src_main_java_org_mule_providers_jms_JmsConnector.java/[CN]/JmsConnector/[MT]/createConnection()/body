@@ -4,8 +4,8 @@
     connectionFactory=createConnectionFactory();
   }
   if (connectionFactory != null && connectionFactory instanceof XAConnectionFactory) {
-    if (MuleManager.getInstance().getTransactionManager() != null) {
-      connectionFactory=new ConnectionFactoryWrapper(connectionFactory,MuleManager.getInstance().getTransactionManager());
+    if (managementContext.getTransactionManager() != null) {
+      connectionFactory=new ConnectionFactoryWrapper(connectionFactory,managementContext.getTransactionManager());
     }
   }
   if (username != null) {
@@ -24,7 +24,7 @@
         logger.debug("About to recycle myself due to remote JMS connection shutdown.");
         final JmsConnector jmsConnector=JmsConnector.this;
         try {
-          jmsConnector.stopConnector();
+          jmsConnector.stop();
           jmsConnector.initialised.set(false);
         }
  catch (        UMOException e) {
@@ -32,8 +32,8 @@
         }
         try {
           connectionStrategy.connect(jmsConnector);
-          jmsConnector.initialise();
-          jmsConnector.startConnector();
+          jmsConnector.initialise(managementContext);
+          jmsConnector.start();
         }
  catch (        FatalConnectException fcex) {
           logger.fatal("Failed to reconnect to JMS server. I'm giving up.");

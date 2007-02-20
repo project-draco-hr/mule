@@ -1,7 +1,7 @@
 {
   MuleEvent event=null;
   MuleProxy proxy=null;
-  QueueSession queueSession=MuleManager.getInstance().getQueueManager().getQueueSession();
+  QueueSession queueSession=managementContext.getQueueManager().getQueueSession();
   while (!stopped.get()) {
     try {
       paused.whenFalse(null);
@@ -36,6 +36,9 @@
       }
     }
  catch (    Exception e) {
+      if (isStopped() || isStopping()) {
+        break;
+      }
       if (proxy != null && proxyPool != null) {
         try {
           proxyPool.returnObject(proxy);

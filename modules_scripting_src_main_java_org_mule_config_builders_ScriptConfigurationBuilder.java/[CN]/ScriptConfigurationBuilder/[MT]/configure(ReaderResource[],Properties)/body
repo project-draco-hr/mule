@@ -1,25 +1,25 @@
 {
   if (startupProperties != null) {
-    ((MuleManager)MuleManager.getInstance()).addProperties(startupProperties);
+    managementContext.getRegistry().addProperties(startupProperties);
   }
   try {
     for (int i=0; i < configResources.length; i++) {
       ReaderResource configResource=configResources[i];
       setScriptFile(configResource.getDescription());
-      initialise();
+      initialise(managementContext);
       Bindings ns=getScriptEngine().createBindings();
       populateBindings(ns);
       CompiledScript script=compileScript(configResource.getReader());
       script.eval(ns);
     }
     if (System.getProperty(MuleProperties.MULE_START_AFTER_CONFIG_SYSTEM_PROPERTY,"true").equalsIgnoreCase("true")) {
-      if (!manager.isStarted()) {
-        manager.start();
+      if (!managementContext.isStarted()) {
+        managementContext.start();
       }
     }
   }
  catch (  Exception e) {
     throw new ConfigurationException(e);
   }
-  return manager;
+  return managementContext;
 }

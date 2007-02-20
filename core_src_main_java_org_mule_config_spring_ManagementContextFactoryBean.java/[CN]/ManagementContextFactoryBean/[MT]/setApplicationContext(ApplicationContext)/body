@@ -1,32 +1,13 @@
 {
-  context=(AbstractApplicationContext)applicationContext;
+  this.context=applicationContext;
+  SpringContainerContext container=new SpringContainerContext();
+  container.setBeanFactory(context);
+  managementContext.setRegistry(registry);
   try {
-    Map temp=context.getBeansOfType(MuleConfiguration.class,true,false);
-    if (temp.size() > 0) {
-      MuleManager.setConfiguration((MuleConfiguration)temp.values().iterator().next());
-    }
-    Map containers=context.getBeansOfType(UMOContainerContext.class,true,false);
-    setContainerContext(containers);
-    Map connectors=context.getBeansOfType(UMOConnector.class,true,false);
-    setConnectors(connectors.values());
-    temp=context.getBeansOfType(UMOTransactionManagerFactory.class,true,false);
-    if (temp.size() > 0) {
-      manager.setTransactionManager(((UMOTransactionManagerFactory)temp.values().iterator().next()).create());
-    }
-    temp=context.getBeansOfType(UMOSecurityManager.class,true,false);
-    if (temp.size() > 0) {
-      manager.setSecurityManager((UMOSecurityManager)temp.values().iterator().next());
-    }
-    Map transformers=context.getBeansOfType(UMOTransformer.class,true,false);
-    setTransformers(transformers.values());
-    Map endpoints=context.getBeansOfType(UMOEndpoint.class,true,false);
-    setEndpoints(endpoints.values());
-    Map agents=context.getBeansOfType(UMOAgent.class,true,false);
-    setAgents(agents.values());
-    Map models=context.getBeansOfType(UMOModel.class,true,false);
-    setModels(models);
+    registry.registerContainerContext(container);
   }
- catch (  Exception e) {
-    throw new BeanInitializationException("Failed to wire MuleManager together: " + e.getMessage(),e);
+ catch (  UMOException e) {
+    throw new BeanCreationException("failed to register default spring container",e);
   }
+  RegistryContext.setRegistry(registry);
 }

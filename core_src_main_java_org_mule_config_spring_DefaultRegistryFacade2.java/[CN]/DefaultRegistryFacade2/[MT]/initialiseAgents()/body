@@ -1,0 +1,32 @@
+{
+  logger.info("Initialising agents...");
+  Collection agentsSnapshot=registryContext.getBeansOfType(UMOAgent.class).values();
+  CursorableLinkedList agentRegistrationQueue=new CursorableLinkedList(agentsSnapshot);
+  CursorableLinkedList.Cursor cursor=agentRegistrationQueue.cursor();
+  try {
+    while (cursor.hasNext()) {
+      UMOAgent umoAgent=(UMOAgent)cursor.next();
+      int originalSize=agentsSnapshot.size();
+      logger.debug("Initialising agent: " + umoAgent.getName());
+      umoAgent.initialise(managementContext);
+      cursor.remove();
+      int newSize=agentsSnapshot.size();
+      int delta=newSize - originalSize;
+      if (delta > 0) {
+        Collection tail=CollectionUtils.retainAll(agentsSnapshot,agentRegistrationQueue);
+        Collection head=CollectionUtils.subtract(agentsSnapshot,tail);
+        agentRegistrationQueue.clear();
+        agentRegistrationQueue.addAll(head);
+        agentRegistrationQueue.addAll(tail);
+        for (Iterator it=agentRegistrationQueue.iterator(); it.hasNext(); ) {
+          UMOAgent theAgent=(UMOAgent)it.next();
+          theAgent.initialise(managementContext);
+        }
+      }
+    }
+  }
+  finally {
+    cursor.close();
+  }
+  logger.info("Agents Successfully Initialised");
+}

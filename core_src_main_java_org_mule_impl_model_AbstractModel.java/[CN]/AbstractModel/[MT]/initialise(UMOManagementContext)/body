@@ -1,0 +1,26 @@
+{
+  if (!initialised.get()) {
+    this.managementContext=managementContext;
+    fireNotification(new ModelNotification(this,ModelNotification.MODEL_INITIALISING));
+    try {
+      register();
+    }
+ catch (    RegistrationException e) {
+      throw new InitialisationException(e,this);
+    }
+    if (exceptionListener instanceof Initialisable) {
+      ((Initialisable)exceptionListener).initialise(managementContext);
+    }
+    UMOComponent component=null;
+    for (Iterator i=components.values().iterator(); i.hasNext(); ) {
+      component=(UMOComponent)i.next();
+      component.initialise(managementContext);
+      logger.info("Component " + component.getDescriptor().getName() + " has been started successfully");
+    }
+    initialised.set(true);
+    fireNotification(new ModelNotification(this,ModelNotification.MODEL_INITIALISED));
+  }
+ else {
+    logger.debug("Model already initialised");
+  }
+}

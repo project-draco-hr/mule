@@ -9,13 +9,9 @@
  catch (    UMOException e) {
       logger.error("Unable to register descriptor " + descriptor.getName() + " with the registry");
     }
-    descriptor.initialise();
   }
   if (descriptor.getExceptionListener() == null) {
     descriptor.setExceptionListener(exceptionListener);
-  }
-  if (initialised.get()) {
-    descriptor.initialise();
   }
   if (descriptors.get(descriptor.getName()) != null) {
     throw new ModelException(new Message(Messages.DESCRIPTOR_X_ALREADY_EXISTS,descriptor.getName()));
@@ -29,11 +25,10 @@
   logger.debug("Added Mule UMO: " + descriptor.getName());
   if (initialised.get()) {
     logger.info("Initialising component: " + descriptor.getName());
-    component.initialise();
+    component.initialise(managementContext);
   }
   if (started.get()) {
-    logger.info("Starting component: " + descriptor.getName());
-    component.start();
+    startComponent(descriptor.getName());
   }
   return component;
 }

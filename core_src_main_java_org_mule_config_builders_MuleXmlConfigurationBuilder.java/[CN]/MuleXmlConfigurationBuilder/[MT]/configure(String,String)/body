@@ -1,0 +1,27 @@
+{
+  if (StringUtils.isNotBlank(startupPropertiesFile)) {
+    try {
+      startupPropertiesFile=StringUtils.trimToEmpty(startupPropertiesFile);
+      Properties startupProperties=PropertiesUtils.loadProperties(startupPropertiesFile,getClass());
+    }
+ catch (    IOException e) {
+      throw new ConfigurationException(new Message(Messages.FAILED_TO_START_X,"Mule server from builder"),e);
+    }
+  }
+  if (configResource == null) {
+    throw new ConfigurationException(new Message(Messages.X_IS_NULL,"Configuration Resource"));
+  }
+  String[] resources=org.springframework.util.StringUtils.tokenizeToStringArray(configResource,",;",true,true);
+  used=true;
+  RegistryContext.setRegistry(new DefaultRegistryFacade());
+  MuleApplicationContext context=new MuleApplicationContext(resources);
+  try {
+    UMOManagementContext mc=context.getManagementContext();
+    mc.start();
+    RegistryContext.getConfiguration().setConfigResources(resources);
+    return mc;
+  }
+ catch (  Exception e) {
+    throw new ConfigurationException(new Message(Messages.FAILED_TO_START_X,"Mule server from builder"),e);
+  }
+}

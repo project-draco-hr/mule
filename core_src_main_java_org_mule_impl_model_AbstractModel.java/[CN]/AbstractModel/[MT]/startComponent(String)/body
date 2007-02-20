@@ -1,10 +1,23 @@
 {
-  UMOComponent component=(UMOComponent)components.get(name);
+  AbstractComponent component=(AbstractComponent)components.get(name);
   if (component == null) {
     throw new ModelException(new Message(Messages.COMPONENT_X_NOT_REGISTERED,name));
   }
  else {
-    component.start();
+    if (component.isStarted()) {
+      logger.info("Component is already started: " + component);
+    }
+ else     if (component.getDescriptor().getInitialState().equals(ImmutableMuleDescriptor.INITIAL_STATE_STARTED)) {
+      component.start();
+      logger.info("Component " + component + " has been started successfully");
+    }
+ else     if (component.getDescriptor().getInitialState().equals(ImmutableMuleDescriptor.INITIAL_STATE_PAUSED)) {
+      component.start(true);
+      logger.info("Component " + component + " has been started and paused (initial state = 'paused')");
+    }
+ else {
+      logger.info("Component " + component + " has not been started (initial state = 'stopped')");
+    }
     logger.info("Mule " + component.toString() + " has been started successfully");
   }
 }

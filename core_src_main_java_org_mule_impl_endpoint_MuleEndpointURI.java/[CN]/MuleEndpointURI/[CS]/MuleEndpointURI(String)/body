@@ -1,9 +1,4 @@
 {
-  String uriIdentifier=MuleManager.getInstance().lookupEndpointIdentifier(uri,uri);
-  if (!uriIdentifier.equals(uri)) {
-    endpointName=uri;
-    uri=uriIdentifier;
-  }
   uri=uri.trim().replaceAll(" ","%20");
   if (!validateUrl(uri)) {
     throw new MalformedEndpointException(uri);
@@ -21,7 +16,8 @@
   }
   try {
     String scheme=(schemeMetaInfo == null ? this.uri.getScheme() : schemeMetaInfo);
-    TransportServiceDescriptor sd=(TransportServiceDescriptor)MuleManager.getInstance().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,scheme,null);
+    TransportServiceDescriptor sd;
+    sd=(TransportServiceDescriptor)RegistryContext.getRegistry().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,scheme,null);
     if (sd == null) {
       throw new ServiceException(Message.createStaticMessage("No service descriptor found for transport: " + scheme + ".  This transport does not appear to be installed."));
     }

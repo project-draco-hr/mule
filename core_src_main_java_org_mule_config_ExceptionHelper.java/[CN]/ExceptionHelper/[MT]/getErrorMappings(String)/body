@@ -11,18 +11,23 @@
  else {
     TransportServiceDescriptor sd;
     try {
-      sd=(TransportServiceDescriptor)MuleManager.getInstance().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,protocol,null);
+      sd=(TransportServiceDescriptor)RegistryContext.getRegistry().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,protocol,null);
       if (sd == null) {
         throw new ServiceException(Message.createStaticMessage("No service descriptor found for transport: " + protocol + ".  This transport does not appear to be installed."));
       }
       Properties p=sd.getExceptionMappings();
-      errorMappings.put(protocol,p);
-      String applyTo=p.getProperty(APPLY_TO_PROPERTY,null);
-      if (applyTo != null) {
-        String[] protocols=StringUtils.splitAndTrim(applyTo,",");
-        for (int i=0; i < protocols.length; i++) {
-          errorMappings.put(protocols[i],p);
+      if (p != null) {
+        errorMappings.put(protocol,p);
+        String applyTo=p.getProperty(APPLY_TO_PROPERTY,null);
+        if (applyTo != null) {
+          String[] protocols=StringUtils.splitAndTrim(applyTo,",");
+          for (int i=0; i < protocols.length; i++) {
+            errorMappings.put(protocols[i],p);
+          }
         }
+      }
+ else {
+        p=new Properties();
       }
       return p;
     }

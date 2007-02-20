@@ -15,12 +15,11 @@
   }
 ;
   initialiseComponent(descriptor,UMOTransactionConfig.ACTION_ALWAYS_BEGIN,callback);
-  UMOManager manager=MuleManager.getInstance();
   addResultListener(getDLDest().getAddress(),countDown);
-  JmsConnector umoCnn=(JmsConnector)manager.lookupConnector(CONNECTOR_NAME);
+  JmsConnector umoCnn=(JmsConnector)managementContext.getRegistry().lookupConnector(CONNECTOR_NAME);
   umoCnn.setMaxRedelivery(1);
   umoCnn.setExceptionListener(new RollbackExceptionListener(countDown,getDLDest()));
-  manager.start();
+  managementContext.start();
   send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
   afterInitialise();
   countDown.await(LOCK_WAIT,TimeUnit.MILLISECONDS);
