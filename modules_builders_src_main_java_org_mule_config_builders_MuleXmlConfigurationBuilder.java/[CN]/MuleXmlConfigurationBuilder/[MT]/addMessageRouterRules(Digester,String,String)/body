@@ -1,0 +1,38 @@
+{
+  String defaultRouter;
+  String setMethod;
+  if ("inbound".equals(type)) {
+    defaultRouter=DEFAULT_INBOUND_ROUTER_COLLECTION;
+    setMethod="setInboundRouter";
+    path+="/inbound-router";
+    addEndpointRules(digester,path,"addEndpoint");
+    addGlobalReferenceEndpointRules(digester,path,"addEndpoint");
+  }
+ else   if ("response".equals(type)) {
+    defaultRouter=DEFAULT_RESPONSE_ROUTER_COLLECTION;
+    setMethod="setResponseRouter";
+    path+="/response-router";
+    addEndpointRules(digester,path,"addEndpoint");
+    addGlobalReferenceEndpointRules(digester,path,"addEndpoint");
+  }
+ else   if ("nested".equals(type)) {
+    defaultRouter=DEFAULT_NESTED_ROUTER_COLLECTION;
+    setMethod="setNestedRouter";
+    path+="/nested-router";
+  }
+ else {
+    defaultRouter=DEFAULT_OUTBOUND_ROUTER_COLLECTION;
+    setMethod="setOutboundRouter";
+    path+="/outbound-router";
+  }
+  digester.addObjectCreate(path,defaultRouter,"className");
+  addSetPropertiesRule(path,digester);
+  digester.addObjectCreate(path + "/catch-all-strategy",DEFAULT_CATCH_ALL_STRATEGY,"className");
+  addSetPropertiesRule(path + "/catch-all-strategy",digester);
+  addEndpointRules(digester,path + "/catch-all-strategy","setEndpoint");
+  addGlobalReferenceEndpointRules(digester,path + "/catch-all-strategy","setEndpoint");
+  addMulePropertiesRule(path + "/catch-all-strategy",digester);
+  digester.addSetNext(path + "/catch-all-strategy","setCatchAllStrategy");
+  addRouterRules(digester,path,type);
+  digester.addSetNext(path,setMethod);
+}

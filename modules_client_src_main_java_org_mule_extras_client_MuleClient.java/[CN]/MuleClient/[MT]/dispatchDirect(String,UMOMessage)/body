@@ -1,13 +1,13 @@
 {
-  UMOComponent component=MuleManager.getRegistry().lookupComponent(componentName);
-  if (component == null) {
-    throw new MessagingException(new Message(Messages.X_NOT_REGISTERED_WITH_MANAGER,"Component '" + componentName + "'"),message,null);
+  boolean compregistered=ModelHelper.isComponentRegistered(component);
+  if (!compregistered) {
+    throw new MessagingException(new Message(Messages.X_NOT_REGISTERED_WITH_MANAGER,"Component '" + component + "'"),message,null);
   }
-  UMOSession session=new MuleSession(component);
+  UMOSession session=new MuleSession(ModelHelper.getComponent(component));
   UMOEndpoint endpoint=getDefaultClientEndpoint(session.getComponent().getDescriptor(),message.getPayload());
   UMOEvent event=new MuleEvent(message,endpoint,session,true);
   if (logger.isDebugEnabled()) {
-    logger.debug("MuleClient dispatching event direct to: " + componentName + ". Event is: "+ event);
+    logger.debug("MuleClient dispatching event direct to: " + component + ". Event is: "+ event);
   }
   event.getComponent().dispatchEvent(event);
 }

@@ -2,6 +2,12 @@
   if (initialised.get()) {
     throw new InitialisationException(new Message(Messages.OBJECT_X_ALREADY_INITIALISED,"Component '" + descriptor.getName() + "'"),this);
   }
+  try {
+    descriptor.register();
+  }
+ catch (  UMOException e) {
+    logger.error("Unable to register descriptor " + descriptor.getName() + " with the registry");
+  }
   descriptor.initialise();
   this.exceptionListener=descriptor.getExceptionListener();
   doInitialise();
@@ -11,5 +17,5 @@
   stats.setOutboundRouterStat(getDescriptor().getOutboundRouter().getStatistics());
   stats.setInboundRouterStat(getDescriptor().getInboundRouter().getStatistics());
   initialised.set(true);
-  MuleManager.getInstance().fireNotification(getNotificationInitialised());
+  fireComponentNotification(ComponentNotification.COMPONENT_INITIALISED);
 }

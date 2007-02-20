@@ -11,6 +11,15 @@
     logger.error("Failed to stop manager: " + e.getMessage(),e);
   }
   disposed.set(true);
+  disposeConnectors();
+  for (Iterator i=models.values().iterator(); i.hasNext(); ) {
+    UMOModel model=(UMOModel)i.next();
+    model.dispose();
+  }
+  disposeAgents();
+  transformers.clear();
+  endpoints.clear();
+  endpointIdentifiers.clear();
   containerContext.dispose();
   containerContext=null;
   fireSystemEvent(new ManagerNotification(id,null,null,ManagerNotification.MANAGER_DISPOSED));
@@ -18,6 +27,9 @@
     registry.dispose();
     registry=null;
   }
+  transformers=null;
+  endpoints=null;
+  endpointIdentifiers=null;
   initialised.set(false);
   if (notificationManager != null) {
     notificationManager.dispose();

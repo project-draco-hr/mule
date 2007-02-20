@@ -1,8 +1,13 @@
 {
-  try {
-    MuleManager.getRegistry().unregisterComponent(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+  UMOModel model=MuleManager.getInstance().lookupModel(ModelHelper.SYSTEM_MODEL);
+  if (model == null) {
+    model=new SedaModel();
+    model.setName(ModelHelper.SYSTEM_MODEL);
+    MuleManager.getInstance().registerModel(model);
   }
- catch (  RegistryException e) {
+  UMODescriptor descriptor=model.getDescriptor(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+  if (descriptor != null) {
+    model.unregisterComponent(descriptor);
   }
   descriptor=new MuleDescriptor(EVENT_MULTICASTER_DESCRIPTOR_NAME);
   if (subscriptions == null) {

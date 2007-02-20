@@ -1,10 +1,12 @@
 {
-  registerListener(new RegistryNotificationListener(registry));
   validateEncoding();
   validateOSEncoding();
   if (!initialised.get()) {
     initialising.set(true);
     startDate=System.currentTimeMillis();
+    if (registry == null) {
+      createRegistry();
+    }
     if (workManager == null) {
       ThreadingProfile tp=config.getDefaultThreadingProfile();
       logger.debug("Creating default work manager using default threading profile: " + tp);
@@ -30,6 +32,14 @@
  catch (        Exception e) {
           throw new InitialisationException(new Message(Messages.INITIALISATION_FAILURE_X,"QueueManager"),e);
         }
+      }
+      initialiseConnectors();
+      initialiseEndpoints();
+      initialiseAgents();
+      for (Iterator i=models.values().iterator(); i.hasNext(); ) {
+        UMOModel model=(UMOModel)i.next();
+        model.initialise();
+        model.register();
       }
     }
   finally {
