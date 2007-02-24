@@ -4,17 +4,22 @@
   }
   if (connecting.compareAndSet(false,true)) {
     if (logger.isDebugEnabled()) {
-      logger.debug(this + " Attempting to connect to: " + endpoint.getEndpointURI());
+      logger.debug("Connecting: " + this);
     }
     connectionStrategy.connect(this);
-    logger.info("Successfully connected to: " + endpoint.getEndpointURI());
+    logger.info("Connected: " + this);
     return;
   }
   try {
-    doConnect();
+    connectionStrategy.connect(connector);
+    this.doConnect();
+    connected.set(true);
+    connecting.set(false);
     connector.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_CONNECTED));
   }
  catch (  Exception e) {
+    connected.set(false);
+    connecting.set(false);
     connector.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_FAILED));
     if (e instanceof ConnectException) {
       throw (ConnectException)e;
@@ -23,6 +28,4 @@
       throw new ConnectException(e,this);
     }
   }
-  connected.set(true);
-  connecting.set(false);
 }

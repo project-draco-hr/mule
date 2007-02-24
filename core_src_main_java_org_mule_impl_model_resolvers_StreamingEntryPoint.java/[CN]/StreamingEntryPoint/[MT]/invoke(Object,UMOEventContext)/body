@@ -5,15 +5,20 @@
   StreamMessageAdapter adapter=(StreamMessageAdapter)context.getMessage().getAdapter();
   OutputStream out=new DeferredOutputStream(context);
   try {
+    Object result;
     if (component instanceof StreamingService) {
-      return streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out,context});
+      result=streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out,context});
     }
  else     if (inAndOut) {
-      return streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out});
+      result=streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out});
     }
  else {
-      return streamingMethod.invoke(component,new Object[]{adapter.getInputStream()});
+      result=streamingMethod.invoke(component,new Object[]{adapter.getInputStream()});
     }
+    if (streamingMethod.getReturnType().equals(Void.TYPE)) {
+      result=VoidResult.getInstance();
+    }
+    return result;
   }
   finally {
     try {

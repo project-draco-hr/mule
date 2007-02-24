@@ -1,10 +1,13 @@
 {
-  config=getRegistry().getConfiguration();
-  validateEncoding();
-  validateOSEncoding();
-  directories=new Directories(new File(config.getWorkingDirectory()));
   if (!initialised) {
     initialising=true;
+    config=getRegistry().getConfiguration();
+    validateEncoding();
+    validateOSEncoding();
+    directories=new Directories(new File(config.getWorkingDirectory()));
+    UMOModel system=ModelFactory.createModel(getRegistry().getConfiguration().getSystemModelType());
+    system.setName(ModelHelper.SYSTEM_MODEL);
+    getRegistry().registerModel(system);
     if (workManager == null) {
       ThreadingProfile tp=config.getDefaultThreadingProfile();
       logger.debug("Creating default work manager using default threading profile: " + tp);
@@ -67,6 +70,6 @@ catch (    Exception e) {
       fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_INITIALISED));
     }
   }
-  registry.initialise(this);
+  getRegistry().initialise(this);
   initialised=true;
 }

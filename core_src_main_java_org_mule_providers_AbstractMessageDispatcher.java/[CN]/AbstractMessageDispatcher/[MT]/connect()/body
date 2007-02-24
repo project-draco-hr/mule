@@ -1,24 +1,29 @@
 {
-  if (connected) {
-    return;
-  }
   if (disposed) {
     throw new IllegalStateException("Dispatcher has been disposed; cannot connect to resource");
   }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Attempting to connect to: " + endpoint.getEndpointURI());
+  if (connected) {
+    return;
   }
   if (!connecting) {
     connecting=true;
+    if (logger.isDebugEnabled()) {
+      logger.debug("Connecting: " + this);
+    }
     connectionStrategy.connect(this);
-    logger.info("Successfully connected to: " + endpoint.getEndpointURI());
+    logger.info("Connected: " + this);
     return;
   }
   try {
-    doConnect();
+    connectionStrategy.connect(connector);
+    this.doConnect();
+    connected=true;
+    connecting=false;
     connector.fireNotification(new ConnectionNotification(this,getConnectEventId(endpoint),ConnectionNotification.CONNECTION_CONNECTED));
   }
  catch (  Exception e) {
+    connected=false;
+    connecting=false;
     connector.fireNotification(new ConnectionNotification(this,getConnectEventId(endpoint),ConnectionNotification.CONNECTION_FAILED));
     if (e instanceof ConnectException) {
       throw (ConnectException)e;
@@ -27,6 +32,4 @@
       throw new ConnectException(e,this);
     }
   }
-  connected=true;
-  connecting=false;
 }

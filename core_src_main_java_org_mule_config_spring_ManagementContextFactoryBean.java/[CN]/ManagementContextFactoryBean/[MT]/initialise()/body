@@ -1,12 +1,16 @@
 {
   try {
+    boolean legacy=false;
     Map temp=context.getBeansOfType(MuleConfiguration.class,true,false);
     if (temp.size() > 0) {
       registry.setConfiguration((MuleConfiguration)temp.values().iterator().next());
     }
-    UMOModel system=ModelFactory.createModel(registry.getConfiguration().getSystemModelType());
-    system.setName(ModelHelper.SYSTEM_MODEL);
-    managementContext.getRegistry().registerModel(system);
+    temp=context.getBeansOfType(AutowireUMOManagerFactoryBean.LegacyManager.class);
+    if (temp.size() > 0) {
+      legacy=true;
+      registry.getConfiguration().setId(((AutowireUMOManagerFactoryBean.LegacyManager)temp.values().iterator().next()).getManagerId());
+      setLegacyProperties((Map)context.getBean("muleEnvironmentProperties",Map.class));
+    }
     Map containers=context.getBeansOfType(UMOContainerContext.class,true,false);
     setContainerContext(containers);
     Map connectors=context.getBeansOfType(UMOConnector.class,true,false);
@@ -28,11 +32,21 @@
     Map transformers=context.getBeansOfType(UMOTransformer.class,true,false);
     setTransformers(transformers.values());
     Map endpoints=context.getBeansOfType(UMOEndpoint.class,true,false);
-    setEndpoints(endpoints.values());
+    if (legacy) {
+      setLegacyEndpoints(endpoints.values());
+    }
+ else {
+      setEndpoints(endpoints.values());
+    }
     Map agents=context.getBeansOfType(UMOAgent.class,true,false);
     setAgents(agents.values());
     Map models=context.getBeansOfType(UMOModel.class,true,false);
-    setModels(models);
+    if (legacy) {
+      setLegacyModels(models);
+    }
+ else {
+      setModels(models);
+    }
     managementContext.initialise();
   }
  catch (  Exception e) {

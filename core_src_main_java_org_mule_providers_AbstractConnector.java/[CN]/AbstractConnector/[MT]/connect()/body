@@ -1,19 +1,18 @@
 {
-  if (connected.get()) {
-    return;
-  }
   this.checkDisposed();
-  if (connecting.compareAndSet(false,true)) {
-    connectionStrategy.connect(this);
-    logger.info("Connected: " + getConnectionDescription());
+  if (connected.get()) {
     return;
   }
   try {
     this.doConnect();
-    fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_CONNECTED));
+    connected.set(true);
+    connecting.set(false);
+    this.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_CONNECTED));
   }
  catch (  Exception e) {
-    fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_FAILED));
+    connected.set(false);
+    connecting.set(false);
+    this.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_FAILED));
     if (e instanceof ConnectException) {
       throw (ConnectException)e;
     }
@@ -21,18 +20,7 @@
       throw new ConnectException(e,this);
     }
   }
-  connected.set(true);
-  connecting.set(false);
   if (startOnConnect.get()) {
     this.start();
-  }
- else {
-    for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
-      AbstractMessageReceiver amr=(AbstractMessageReceiver)iterator.next();
-      if (logger.isDebugEnabled()) {
-        logger.debug("Connecting receiver on endpoint: " + amr.getEndpoint().getEndpointURI());
-      }
-      amr.connect();
-    }
   }
 }
