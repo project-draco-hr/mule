@@ -24,7 +24,13 @@ synchronized (group) {
         group.addEvent(event);
         if (this.shouldAggregateEvents(group)) {
           UMOMessage returnMessage=this.aggregateEvents(group);
-          UMOEndpoint endpoint=new MuleEndpoint(event.getEndpoint());
+          UMOEndpoint endpoint;
+          try {
+            endpoint=new MuleEndpoint(event.getEndpoint());
+          }
+ catch (          UMOException e) {
+            throw new MessagingException(e.getI18nMessage(),returnMessage,e);
+          }
           endpoint.setTransformer(null);
           endpoint.setName(this.getClass().getName());
           UMOEvent returnEvent=new MuleEvent(returnMessage,endpoint,event.getComponent(),event);

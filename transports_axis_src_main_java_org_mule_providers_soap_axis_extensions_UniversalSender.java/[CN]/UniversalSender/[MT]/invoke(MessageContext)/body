@@ -9,9 +9,11 @@
   }
   String uri=msgContext.getStrProp(MessageContext.TRANS_URL);
   UMOImmutableEndpoint requestEndpoint=(UMOImmutableEndpoint)call.getProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
-  UMOImmutableEndpoint endpoint=null;
+  UMOManagementContext context=requestEndpoint.getManagementContext();
+  assert(context != null);
+  UMOImmutableEndpoint endpoint;
   try {
-    endpoint=lookupEndpoint(uri);
+    endpoint=lookupEndpoint(uri,context);
   }
  catch (  UMOException e) {
     requestEndpoint.getConnector().handleException(e);
@@ -60,16 +62,14 @@
     }
     UMOMessage message=new MuleMessage(payload,props);
     UMOSession session=new MuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler());
-    UMOEvent dispatchEvent=new MuleEvent(message,endpoint,session,sync);
     logger.info("Making Axis soap request on: " + uri);
     if (logger.isDebugEnabled()) {
       logger.debug("Soap request is:\n" + payload.toString());
     }
     if (sync) {
-      MuleEndpoint syncEndpoint=new MuleEndpoint(dispatchEvent.getEndpoint());
-      syncEndpoint.setRemoteSync(true);
-      dispatchEvent=new MuleEvent(dispatchEvent.getMessage(),syncEndpoint,dispatchEvent.getSession(),dispatchEvent.isSynchronous());
-      UMOMessage result=session.sendEvent(dispatchEvent);
+      endpoint=new MuleEndpoint(endpoint);
+      UMOEvent dispatchEvent=new MuleEvent(message,endpoint,session,sync);
+      UMOMessage result=endpoint.send(dispatchEvent);
       if (result != null) {
         byte[] response=result.getPayloadAsBytes();
         Message responseMessage=new Message(response);
@@ -83,7 +83,8 @@
       }
     }
  else {
-      session.dispatchEvent(dispatchEvent);
+      UMOEvent dispatchEvent=new MuleEvent(message,endpoint,session,sync);
+      endpoint.dispatch(dispatchEvent);
     }
   }
  catch (  AxisFault axisFault) {
