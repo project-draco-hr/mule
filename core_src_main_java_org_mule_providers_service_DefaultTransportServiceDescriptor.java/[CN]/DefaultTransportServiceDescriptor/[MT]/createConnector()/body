@@ -1,13 +1,13 @@
 {
   UMOConnector newConnector;
   try {
-    if (connectorFactory != null) {
-      ObjectFactory factory=(ObjectFactory)ClassUtils.loadClass(connectorFactory,TransportFactory.class).newInstance();
+    if (context.containsBean(MuleProperties.CONNECTOR_FACTORY)) {
+      ObjectFactory factory=(ObjectFactory)context.getBean(MuleProperties.CONNECTOR_FACTORY);
       newConnector=(UMOConnector)factory.create();
     }
  else {
-      if (connector != null) {
-        newConnector=(UMOConnector)ClassUtils.loadClass(connector,TransportFactory.class).newInstance();
+      if (context.containsBean(MuleProperties.CONNECTOR_CLASS)) {
+        newConnector=(UMOConnector)context.getBean(MuleProperties.CONNECTOR_CLASS);
       }
  else {
         throw new TransportServiceException(new Message(Messages.X_NOT_SET_IN_SERVICE_X,"Connector",getService()));
@@ -21,7 +21,7 @@ catch (  Exception e) {
     throw new TransportServiceException(new Message(Messages.FAILED_TO_CREATE_X_WITH_X,"Connector",connector),e);
   }
   if (newConnector.getName() == null) {
-    newConnector.setName("_" + newConnector.getProtocol() + "Connector#"+ connector.hashCode());
+    newConnector.setName("_" + newConnector.getProtocol() + "Connector#"+ newConnector.hashCode());
   }
   return newConnector;
 }

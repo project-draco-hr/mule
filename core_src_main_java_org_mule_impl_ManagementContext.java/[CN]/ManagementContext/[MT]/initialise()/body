@@ -5,10 +5,16 @@
     validateEncoding();
     validateOSEncoding();
     directories=new Directories(new File(config.getWorkingDirectory()));
-    if (getRegistry().lookupModel(ModelHelper.SYSTEM_MODEL) == null) {
-      UMOModel system=ModelFactory.createModel(getRegistry().getConfiguration().getSystemModelType());
-      system.setName(ModelHelper.SYSTEM_MODEL);
-      getRegistry().registerModel(system);
+    if (queueManager == null) {
+      try {
+        TransactionalQueueManager queueMgr=new TransactionalQueueManager();
+        QueuePersistenceStrategy ps=new CachingPersistenceStrategy(new MemoryPersistenceStrategy());
+        queueMgr.setPersistenceStrategy(ps);
+        queueManager=queueMgr;
+      }
+ catch (      Exception e) {
+        throw new InitialisationException(new Message(Messages.INITIALISATION_FAILURE_X,"QueueManager"),e);
+      }
     }
     if (workManager == null) {
       ThreadingProfile tp=config.getDefaultThreadingProfile();
@@ -35,18 +41,7 @@
     }
     try {
       if (securityManager != null) {
-        securityManager.initialise(this);
-      }
-      if (queueManager == null) {
-        try {
-          TransactionalQueueManager queueMgr=new TransactionalQueueManager();
-          QueuePersistenceStrategy ps=new CachingPersistenceStrategy(new MemoryPersistenceStrategy());
-          queueMgr.setPersistenceStrategy(ps);
-          queueManager=queueMgr;
-        }
- catch (        Exception e) {
-          throw new InitialisationException(new Message(Messages.INITIALISATION_FAILURE_X,"QueueManager"),e);
-        }
+        securityManager.initialise();
       }
       directories.createDirectories();
       if (id == null) {
@@ -68,10 +63,7 @@ catch (    Exception e) {
       initialising=false;
       throw new LifecycleException(e,this);
     }
- finally {
-      fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_INITIALISED));
-    }
+    initialised=true;
+    fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_INITIALISED));
   }
-  getRegistry().initialise(this);
-  initialised=true;
 }

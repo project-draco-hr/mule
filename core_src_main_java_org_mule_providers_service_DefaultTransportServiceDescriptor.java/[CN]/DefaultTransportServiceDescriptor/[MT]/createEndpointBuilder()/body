@@ -1,15 +1,10 @@
 {
-  if (endpointBuilder == null) {
-    logger.debug("Endpoint resolver not set, Loading default resolver: " + UrlEndpointBuilder.class.getName());
-    return new UrlEndpointBuilder();
+  EndpointBuilder epb=null;
+  if (context.containsBean(MuleProperties.CONNECTOR_ENDPOINT_BUILDER)) {
+    epb=(EndpointBuilder)context.getBean(MuleProperties.CONNECTOR_ENDPOINT_BUILDER);
   }
- else {
-    logger.debug("Loading endpointUri resolver: " + endpointBuilder);
-    try {
-      return (EndpointBuilder)ClassUtils.instanciateClass(endpointBuilder,ClassUtils.NO_ARGS);
-    }
- catch (    Exception e) {
-      throw new TransportFactoryException(new Message(Messages.FAILED_LOAD_X,"Endpoint Builder: " + endpointBuilder),e);
-    }
+  if (epb == null) {
+    throw new TransportFactoryException(new Message(Messages.FAILED_LOAD_X,"Endpointbuilder for: " + getService()));
   }
+  return epb;
 }

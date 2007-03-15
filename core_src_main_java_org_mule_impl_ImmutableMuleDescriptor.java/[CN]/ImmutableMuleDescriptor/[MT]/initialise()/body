@@ -1,0 +1,67 @@
+{
+  MuleConfiguration config=RegistryContext.getConfiguration();
+  if (threadingProfile == null) {
+    threadingProfile=config.getDefaultComponentThreadingProfile();
+  }
+ else   if (exceptionListener instanceof Initialisable) {
+    ((Initialisable)exceptionListener).initialise();
+  }
+  if (exceptionListener instanceof Initialisable) {
+    ((Initialisable)exceptionListener).initialise();
+  }
+  MuleEndpoint endpoint;
+  if (inboundRouter == null) {
+    inboundRouter=new InboundRouterCollection();
+    inboundRouter.addRouter(new InboundPassThroughRouter());
+  }
+ else {
+    if (inboundRouter.getCatchAllStrategy() != null && inboundRouter.getCatchAllStrategy().getEndpoint() != null) {
+      inboundRouter.getCatchAllStrategy().getEndpoint().initialise();
+    }
+    for (Iterator iterator=inboundRouter.getEndpoints().iterator(); iterator.hasNext(); ) {
+      endpoint=(MuleEndpoint)iterator.next();
+      endpoint.initialise();
+    }
+  }
+  if (responseRouter != null) {
+    for (Iterator iterator=responseRouter.getEndpoints().iterator(); iterator.hasNext(); ) {
+      endpoint=(MuleEndpoint)iterator.next();
+      endpoint.initialise();
+    }
+  }
+  if (nestedRouter != null) {
+    for (Iterator it=nestedRouter.getRouters().iterator(); it.hasNext(); ) {
+      UMONestedRouter nestedRouter=(UMONestedRouter)it.next();
+      endpoint=(MuleEndpoint)nestedRouter.getEndpoint();
+      endpoint.initialise();
+    }
+  }
+  if (outboundRouter == null) {
+    outboundRouter=new OutboundRouterCollection();
+    outboundRouter.addRouter(new OutboundPassThroughRouter());
+  }
+ else {
+    if (outboundRouter.getCatchAllStrategy() != null && outboundRouter.getCatchAllStrategy().getEndpoint() != null) {
+      outboundRouter.getCatchAllStrategy().getEndpoint().initialise();
+    }
+    UMOOutboundRouter router;
+    for (Iterator iterator=outboundRouter.getRouters().iterator(); iterator.hasNext(); ) {
+      router=(UMOOutboundRouter)iterator.next();
+      for (Iterator iterator1=router.getEndpoints().iterator(); iterator1.hasNext(); ) {
+        endpoint=(MuleEndpoint)iterator1.next();
+        endpoint.initialise();
+      }
+    }
+  }
+  if (implementationReference instanceof String) {
+    implementationReference=new ContainerKeyPair(container,implementationReference);
+  }
+  inboundRouter.initialise();
+  outboundRouter.initialise();
+  if (responseRouter != null) {
+    responseRouter.initialise();
+  }
+  if (nestedRouter != null) {
+    nestedRouter.initialise();
+  }
+}

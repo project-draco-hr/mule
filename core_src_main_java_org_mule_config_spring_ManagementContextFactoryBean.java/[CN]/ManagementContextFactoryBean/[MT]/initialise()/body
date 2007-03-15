@@ -1,11 +1,7 @@
 {
   try {
     boolean legacy=false;
-    Map temp=context.getBeansOfType(MuleConfiguration.class,true,false);
-    if (temp.size() > 0) {
-      registry.setConfiguration((MuleConfiguration)temp.values().iterator().next());
-    }
-    temp=context.getBeansOfType(AutowireUMOManagerFactoryBean.LegacyManager.class);
+    Map temp=context.getBeansOfType(AutowireUMOManagerFactoryBean.LegacyManager.class);
     if (temp.size() > 0) {
       legacy=true;
       registry.getConfiguration().setId(((AutowireUMOManagerFactoryBean.LegacyManager)temp.values().iterator().next()).getManagerId());
@@ -13,8 +9,6 @@
     }
     Map containers=context.getBeansOfType(UMOContainerContext.class,true,false);
     setContainerContext(containers);
-    Map connectors=context.getBeansOfType(UMOConnector.class,true,false);
-    setConnectors(connectors.values());
     temp=context.getBeansOfType(UMOTransactionManagerFactory.class,true,false);
     if (temp.size() > 0) {
       managementContext.setTransactionManager(((UMOTransactionManagerFactory)temp.values().iterator().next()).create());
@@ -29,25 +23,6 @@
     if (temp.size() > 0) {
       managementContext.setSecurityManager((UMOSecurityManager)temp.values().iterator().next());
     }
-    Map transformers=context.getBeansOfType(UMOTransformer.class,true,false);
-    setTransformers(transformers.values());
-    Map endpoints=context.getBeansOfType(UMOEndpoint.class,true,false);
-    if (legacy) {
-      setLegacyEndpoints(endpoints.values());
-    }
- else {
-      setEndpoints(endpoints.values());
-    }
-    Map agents=context.getBeansOfType(UMOAgent.class,true,false);
-    setAgents(agents.values());
-    Map models=context.getBeansOfType(UMOModel.class,true,false);
-    if (legacy) {
-      setLegacyModels(models);
-    }
- else {
-      setModels(models);
-    }
-    managementContext.initialise();
   }
  catch (  Exception e) {
     throw new BeanInitializationException("Failed to wire MuleManager together: " + e.getMessage(),e);

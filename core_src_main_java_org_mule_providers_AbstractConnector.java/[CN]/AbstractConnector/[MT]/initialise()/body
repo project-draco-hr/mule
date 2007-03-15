@@ -1,0 +1,21 @@
+{
+  if (initialised.get()) {
+    throw new AlreadyInitialisedException("Connector '" + getName() + "'",this);
+  }
+  if (logger.isInfoEnabled()) {
+    logger.info("Initialising: " + this);
+  }
+  this.initFromServiceDescriptor();
+  this.disposeDispatchers();
+  this.disposeReceivers();
+  this.doInitialise();
+  if (exceptionListener instanceof Initialisable) {
+    ((Initialisable)exceptionListener).initialise();
+  }
+  initialised.set(true);
+  try {
+    register();
+  }
+ catch (  RegistrationException re) {
+  }
+}

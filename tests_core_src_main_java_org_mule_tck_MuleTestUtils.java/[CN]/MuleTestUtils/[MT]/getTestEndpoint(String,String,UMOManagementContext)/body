@@ -1,13 +1,21 @@
 {
-  UMOEndpoint endpoint=new MuleEndpoint();
-  UMOConnector connector=null;
-  connector=(UMOConnector)ClassUtils.loadClass("org.mule.tck.testmodels.mule.TestConnector",AbstractMuleTestCase.class).newInstance();
+  StaticApplicationContext factory=getStaticApplicationContext(context);
+  Map props=new HashMap();
+  props.put("name",name);
+  props.put("type",type);
+  props.put("endpointURI",new MuleEndpointURI("test://test"));
+  props.put("connector","testConnector");
+  MuleEndpoint endpoint=new MuleEndpoint();
+  AbstractConnector connector=null;
+  connector=(AbstractConnector)ClassUtils.loadClass("org.mule.tck.testmodels.mule.TestConnector",AbstractMuleTestCase.class).newInstance();
   connector.setName("testConnector");
-  connector.initialise(context);
+  connector.setManagementContext(context);
+  connector.initialise();
   endpoint.setConnector(connector);
   endpoint.setEndpointURI(new MuleEndpointURI("test://test"));
   endpoint.setName(name);
   endpoint.setType(type);
-  endpoint.initialise(context);
+  endpoint.setManagementContext(context);
+  endpoint.initialise();
   return endpoint;
 }

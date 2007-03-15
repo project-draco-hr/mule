@@ -12,8 +12,16 @@
     throw new ConfigurationException(new Message(Messages.X_IS_NULL,"Configuration Resource"));
   }
   String[] resources=org.springframework.util.StringUtils.tokenizeToStringArray(configResource,",;",true,true);
+  MuleApplicationContext root=null;
+  if (defaultConfigResource != null) {
+    new MuleApplicationContext(defaultConfigResource);
+  }
+  String[] all=new String[resources.length + 1];
+  all[0]=defaultConfigResource;
+  System.arraycopy(resources,0,all,1,resources.length);
   used=true;
-  MuleApplicationContext context=new MuleApplicationContext(resources);
+  MuleApplicationContext context;
+  context=new MuleApplicationContext(all);
   try {
     UMOManagementContext mc=context.getManagementContext();
     mc.start();
