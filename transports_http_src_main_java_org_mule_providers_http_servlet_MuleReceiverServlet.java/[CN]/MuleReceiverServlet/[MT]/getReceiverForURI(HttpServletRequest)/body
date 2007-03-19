@@ -7,8 +7,22 @@
   if (receiver == null) {
     int i=uri.lastIndexOf("/");
     if (i > -1) {
-      uri=uri.substring(i + 1);
-      receiver=(AbstractMessageReceiver)getReceivers().get(uri);
+      String tempUri=uri.substring(i + 1);
+      receiver=(AbstractMessageReceiver)getReceivers().get(tempUri);
+    }
+    if (receiver == null) {
+      Map receivers=getReceivers();
+      Iterator iter=receivers.keySet().iterator();
+      while (iter.hasNext()) {
+        String key=iter.next().toString();
+        i=key.lastIndexOf("/");
+        if (i > -1) {
+          if (key.substring(i + 1).equals(uri)) {
+            receiver=(AbstractMessageReceiver)receivers.get(key);
+            break;
+          }
+        }
+      }
     }
     if (receiver == null) {
       throw new NoReceiverForEndpointException("No receiver found for endpointUri: " + uri);

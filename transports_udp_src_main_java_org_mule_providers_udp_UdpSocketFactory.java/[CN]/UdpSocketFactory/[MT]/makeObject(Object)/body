@@ -1,0 +1,34 @@
+{
+  UMOImmutableEndpoint ep=(UMOImmutableEndpoint)key;
+  DatagramSocket socket;
+  if (ep.getType() == UMOImmutableEndpoint.ENDPOINT_TYPE_RECEIVER) {
+    int port=ep.getEndpointURI().getPort();
+    String host=ep.getEndpointURI().getHost();
+    if (port > 0) {
+      if ("null".equalsIgnoreCase(host)) {
+        socket=createSocket(port);
+      }
+ else {
+        socket=createSocket(port,InetAddress.getByName(host));
+      }
+    }
+ else {
+      socket=createSocket();
+    }
+  }
+ else {
+    socket=createSocket();
+  }
+  UdpConnector connector=(UdpConnector)ep.getConnector();
+  if (connector.getReceiveBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getReceiveBufferSize() != connector.getReceiveBufferSize()) {
+    socket.setReceiveBufferSize(connector.getReceiveBufferSize());
+  }
+  if (connector.getSendBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getSendBufferSize() != connector.getSendBufferSize()) {
+    socket.setSendBufferSize(connector.getSendBufferSize());
+  }
+  if (connector.getReceiveTimeout() != UMOConnector.INT_VALUE_NOT_SET && socket.getSoTimeout() != connector.getReceiveTimeout()) {
+    socket.setSoTimeout(connector.getSendTimeout());
+  }
+  socket.setBroadcast(connector.isBroadcast());
+  return socket;
+}

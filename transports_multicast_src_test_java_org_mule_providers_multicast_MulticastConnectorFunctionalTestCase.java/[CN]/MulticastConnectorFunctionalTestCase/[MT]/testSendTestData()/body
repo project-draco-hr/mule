@@ -1,0 +1,19 @@
+{
+  final int numberOfMessages=100;
+  MuleClient client=new MuleClient();
+  for (int sentPackets=0; sentPackets < numberOfMessages; sentPackets++) {
+    String msg=MESSAGE + sentPackets;
+    client.dispatch("serverEndpoint",msg,null);
+  }
+  int broadcastMessages=numberOfMessages * 3;
+  Set receivedMessages=new HashSet(broadcastMessages);
+  int receivedPackets=0;
+  for (; receivedPackets < broadcastMessages; receivedPackets++) {
+    receivedMessages.add(client.receive("vm://foo",2000).getPayloadAsString());
+  }
+  assertEquals(broadcastMessages,receivedPackets);
+  checkBroadcastMessagesForComponent(receivedMessages,"Component1");
+  checkBroadcastMessagesForComponent(receivedMessages,"Component2");
+  checkBroadcastMessagesForComponent(receivedMessages,"Component3");
+  assertEquals(0,receivedMessages.size());
+}

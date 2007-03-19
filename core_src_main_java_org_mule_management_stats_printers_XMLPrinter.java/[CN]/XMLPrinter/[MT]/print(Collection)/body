@@ -3,6 +3,7 @@
   println("<Components>");
   String[][] table=getTable(stats);
   boolean router=false;
+  boolean providers=false;
   int indentLevel=1;
   for (int i=1; i < table.length; i++) {
     println("<Component name=\"" + table[i][0] + "\">",indentLevel);
@@ -20,8 +21,31 @@
           router=false;
         }
       }
+ else       if (StringUtils.equals(table[0][j],"Providers")) {
+        if (StringUtils.isEmpty(table[i][j + 1]) && StringUtils.equals(table[0][j + 2],"Providers")) {
+          println("<Providers/>",indentLevel);
+          j+=2;
+        }
  else {
-        println("<Statistic name=\"" + table[0][j] + "\" value=\""+ table[i][j]+ "\"/>",indentLevel);
+          if (!providers) {
+            println("<Providers>",indentLevel);
+            indentLevel++;
+            providers=true;
+          }
+ else {
+            indentLevel--;
+            println("</Providers>",indentLevel);
+            providers=false;
+          }
+        }
+      }
+ else {
+        if (providers) {
+          printProviderStatsXml(table[i][j],indentLevel);
+        }
+ else {
+          println("<Statistic name=\"" + table[0][j] + "\" value=\""+ table[i][j]+ "\"/>",indentLevel);
+        }
       }
     }
     indentLevel--;

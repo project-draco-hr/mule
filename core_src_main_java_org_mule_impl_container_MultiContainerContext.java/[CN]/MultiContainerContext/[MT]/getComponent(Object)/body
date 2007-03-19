@@ -1,6 +1,7 @@
 {
   ContainerKeyPair realKey=null;
-  String cause=null;
+  StringBuffer cause=new StringBuffer();
+  Throwable finalCause=null;
   if (key instanceof String) {
     realKey=new ContainerKeyPair(null,key);
   }
@@ -24,12 +25,22 @@
       component=container.getComponent(realKey);
     }
  catch (    ObjectNotFoundException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Object: '" + realKey + "' not found in container: "+ container.getName()+ ": "+ e.getMessage());
-      }
       if (e.getCause() != null) {
-        cause=cause + " " + e.getCause().toString();
+        finalCause=e.getCause();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Object: '" + realKey + "' not found in container: "+ container.getName());
+        }
       }
+ else {
+        finalCause=e;
+        if (logger.isDebugEnabled()) {
+          logger.debug("Object: '" + realKey + "' not found in container: "+ container.getName());
+        }
+      }
+      if (cause.length() > 0) {
+        cause.append("; ");
+      }
+      cause.append(finalCause.toString());
     }
     if (component != null) {
       if (logger.isDebugEnabled()) {
@@ -40,7 +51,7 @@
   }
   if (component == null) {
     if (realKey.isRequired()) {
-      throw new ObjectNotFoundException(realKey.toString() + " " + cause);
+      throw new ObjectNotFoundException(realKey.toString() + " " + cause,finalCause);
     }
  else     if (logger.isDebugEnabled()) {
       logger.debug("Component reference not found: " + realKey.toFullString());

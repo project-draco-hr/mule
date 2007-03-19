@@ -1,0 +1,23 @@
+{
+  LoanBrokerQuoteRequest bqr=super.getLoanQuote(request);
+  UMOEventContext context=RequestContext.getEventContext();
+  UMOMessage result;
+  try {
+    result=context.sendEvent(bqr);
+  }
+ catch (  UMOException e) {
+    throw new LoanBrokerException(e);
+  }
+  if ((result == null) || !(result.getPayload() instanceof CreditProfile)) {
+    throw new LoanBrokerException("No credit profile returned by the credit agency.");
+  }
+  bqr.setCreditProfile((CreditProfile)result.getPayload());
+  try {
+    context.dispatchEvent(bqr);
+  }
+ catch (  UMOException e) {
+    throw new LoanBrokerException(e);
+  }
+  context.setStopFurtherProcessing(true);
+  return bqr;
+}

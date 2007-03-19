@@ -1,5 +1,15 @@
 {
   JmxAgent agent=new JmxAgent();
-  agent.setConnectorServerUrl(JmxAgent.DEFAULT_REMOTING_URI);
+  String remotingUri;
+  if (StringUtils.isBlank(host) && StringUtils.isBlank(port)) {
+    remotingUri=JmxAgent.DEFAULT_REMOTING_URI;
+  }
+ else {
+    remotingUri=MessageFormat.format("service:jmx:rmi:///jndi/rmi://{0}:{1}/server",new Object[]{StringUtils.defaultString(host,DEFAULT_HOST),StringUtils.defaultString(port,DEFAULT_PORT)});
+  }
+  if (credentials != null && !credentials.isEmpty()) {
+    agent.setCredentials(credentials);
+  }
+  agent.setConnectorServerUrl(remotingUri);
   return agent;
 }

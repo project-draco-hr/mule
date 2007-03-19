@@ -1,6 +1,6 @@
 {
   while (true) {
-    int currentCount=retryCounter.countRetry();
+    retryCounter.countRetry();
     try {
       connectable.connect();
       if (logger.isDebugEnabled()) {
@@ -12,7 +12,10 @@
       throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),getDescription(connectable)),ie,connectable);
     }
 catch (    Exception e) {
-      if (currentCount == retryCount) {
+      if (e instanceof FatalConnectException) {
+        throw (FatalConnectException)e;
+      }
+      if (retryCounter.current().get() >= retryCount) {
         throw new FatalConnectException(new Message(Messages.RECONNECT_STRATEGY_X_FAILED_ENDPOINT_X,getClass().getName(),getDescription(connectable)),e,connectable);
       }
       if (logger.isErrorEnabled()) {
@@ -23,7 +26,7 @@ catch (    Exception e) {
         logger.error(msg.toString(),e);
       }
       if (logger.isInfoEnabled()) {
-        logger.info("Waiting for " + frequency + "ms before reconnecting. Failed attempt "+ currentCount+ " of "+ retryCount);
+        logger.info("Waiting for " + frequency + "ms before reconnecting. Failed attempt "+ retryCounter.current().get()+ " of "+ retryCount);
       }
       try {
         Thread.sleep(frequency);

@@ -6,15 +6,18 @@
         }
         public void run(){
           try {
-synchronized (this) {
+synchronized (reconnectLock) {
               doConnect(connectable);
             }
           }
  catch (          FatalConnectException e) {
-synchronized (this) {
+synchronized (reconnectLock) {
               resetState();
             }
-            if (connectable instanceof AbstractMessageReceiver) {
+            if (connectable instanceof UMOConnector) {
+              ((UMOConnector)connectable).handleException(e);
+            }
+ else             if (connectable instanceof AbstractMessageReceiver) {
               ((AbstractMessageReceiver)connectable).handleException(e);
             }
           }
@@ -23,7 +26,7 @@ synchronized (this) {
 );
     }
  catch (    WorkException e) {
-synchronized (this) {
+synchronized (reconnectLock) {
         resetState();
       }
       throw new FatalConnectException(e,connectable);
@@ -31,12 +34,12 @@ synchronized (this) {
   }
  else {
     try {
-synchronized (this) {
+synchronized (reconnectLock) {
         doConnect(connectable);
       }
     }
   finally {
-synchronized (this) {
+synchronized (reconnectLock) {
         resetState();
       }
     }

@@ -1,17 +1,12 @@
 {
-  String soapAction=null;
+  String soapAction;
+  Message responseMsg;
   AxisEngine engine=getAxisServer();
   if (engine == null) {
-    ServletException se=new ServletException(Messages.getMessage("noEngine00"));
-    logger.debug("No Engine!",se);
-    throw se;
+    throw new MessagingException(new org.mule.config.i18n.Message(org.mule.config.i18n.Messages.X_IS_NULL,"Axis Engine"),context.getMessage());
   }
   MessageContext msgContext=new MessageContext(engine);
-  if (logger.isDebugEnabled()) {
-    logger.debug("Enter: doPost()");
-  }
-  Message responseMsg=null;
-  String contentType=null;
+  String contentType;
   try {
     UMOEndpointURI endpointUri=getEndpoint(context);
     populateMessageContext(msgContext,context,endpointUri);
@@ -39,6 +34,7 @@
       msgContext.setUseSOAPAction(true);
       msgContext.setSOAPActionURI(soapAction);
     }
+    msgContext.setSession(new AxisMuleSession(context.getSession()));
     if (logger.isDebugEnabled()) {
       logger.debug("Invoking Axis Engine.");
     }
@@ -72,9 +68,8 @@ catch (  Exception e) {
     responseMsg=convertExceptionToAxisFault(e,responseMsg);
   }
   contentType=responseMsg.getContentType(msgContext.getSOAPConstants());
-  sendResponse(context.getMessage().getStringProperty(HttpConnector.HTTP_STATUS_PROPERTY,null),contentType,response,responseMsg);
+  sendResponse(contentType,response,responseMsg);
   if (logger.isDebugEnabled()) {
     logger.debug("Response sent.");
-    logger.debug("Exit: doPost()");
   }
 }

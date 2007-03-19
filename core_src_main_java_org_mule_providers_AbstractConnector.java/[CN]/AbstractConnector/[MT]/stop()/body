@@ -6,6 +6,7 @@
     if (logger.isInfoEnabled()) {
       logger.info("Stopping: " + this);
     }
+    ((ScheduledExecutorService)scheduler.get()).shutdown();
     this.doStop();
     started.set(false);
     if (receivers != null) {
@@ -17,8 +18,6 @@
         mr.stop();
       }
     }
-    scheduler.shutdown();
-    scheduler=null;
   }
   if (this.isConnected()) {
     try {
@@ -28,6 +27,7 @@
       logger.error("Failed to disconnect: " + e.getMessage(),e);
     }
   }
+  scheduler.set(null);
   if (logger.isInfoEnabled()) {
     logger.info("Stopped: " + this);
   }

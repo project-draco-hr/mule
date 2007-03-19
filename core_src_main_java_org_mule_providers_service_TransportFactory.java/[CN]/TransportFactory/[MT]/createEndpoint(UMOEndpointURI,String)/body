@@ -1,6 +1,6 @@
 {
   String scheme=uri.getFullScheme();
-  UMOConnector connector=null;
+  UMOConnector connector;
   try {
     if (uri.getCreateConnector() == ALWAYS_CREATE_CONNECTOR) {
       connector=createConnector(uri);
@@ -37,8 +37,6 @@
   if (uri.getEndpointName() != null) {
     endpoint.setName(uri.getEndpointName());
   }
-  String name=ObjectNameHelper.getEndpointName(endpoint);
-  endpoint.setName(name);
   if (type != null) {
     endpoint.setType(type);
     UMOTransformer trans=getTransformer(uri,connector,(UMOEndpoint.ENDPOINT_TYPE_RECEIVER.equals(type) ? 0 : 1));
@@ -47,6 +45,12 @@
       trans=getTransformer(uri,connector,2);
       endpoint.setResponseTransformer(trans);
     }
+  }
+  try {
+    endpoint.initialise();
+  }
+ catch (  InitialisationException e) {
+    throw new TransportFactoryException(e);
   }
   return endpoint;
 }

@@ -1,0 +1,18 @@
+{
+  final int numberOfMessages=100;
+  MuleClient client=new MuleClient();
+  for (int sentPackets=0; sentPackets < numberOfMessages; sentPackets++) {
+    String msg=MESSAGE + sentPackets;
+    client.dispatch("serverEndpoint",msg,null);
+  }
+  Set receivedMessages=new HashSet(numberOfMessages);
+  int receivedPackets=0;
+  for (; receivedPackets < numberOfMessages; receivedPackets++) {
+    receivedMessages.add(client.receive("vm://foo",2000).getPayloadAsString());
+  }
+  assertEquals(numberOfMessages,receivedPackets);
+  for (int x=0; numberOfMessages < receivedMessages.size(); x++) {
+    String message=MESSAGE + x + " Received";
+    assertTrue("checking for received message '" + message + "'",receivedMessages.contains(message));
+  }
+}

@@ -1,10 +1,12 @@
 {
-  if (scheduler == null) {
+  if (scheduler.get() == null) {
     ThreadFactory threadFactory=new NamedThreadFactory(this.getName() + ".scheduler");
-    ScheduledThreadPoolExecutor threadExecutor=new ScheduledThreadPoolExecutor(1,threadFactory);
-    threadExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-    threadExecutor.setKeepAliveTime(this.getReceiverThreadingProfile().getThreadTTL(),TimeUnit.MILLISECONDS);
-    scheduler=threadExecutor;
+    ScheduledThreadPoolExecutor newExecutor=new ScheduledThreadPoolExecutor(1,threadFactory);
+    newExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+    newExecutor.setKeepAliveTime(this.getReceiverThreadingProfile().getThreadTTL(),TimeUnit.MILLISECONDS);
+    if (!scheduler.compareAndSet(null,newExecutor)) {
+      newExecutor.shutdown();
+    }
   }
-  return scheduler;
+  return (ScheduledExecutorService)scheduler.get();
 }

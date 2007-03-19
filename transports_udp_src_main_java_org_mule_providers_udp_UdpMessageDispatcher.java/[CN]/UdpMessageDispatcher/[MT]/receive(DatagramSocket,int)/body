@@ -1,12 +1,16 @@
 {
   int origTimeout=socket.getSoTimeout();
   try {
-    DatagramPacket packet=new DatagramPacket(new byte[connector.getBufferSize()],connector.getBufferSize());
-    socket.setSoTimeout(timeout);
+    DatagramPacket packet=new DatagramPacket(new byte[connector.getReceiveBufferSize()],connector.getReceiveBufferSize());
+    if (timeout > 0 && timeout != socket.getSoTimeout()) {
+      socket.setSoTimeout(timeout);
+    }
     socket.receive(packet);
     return packet;
   }
   finally {
-    socket.setSoTimeout(origTimeout);
+    if (socket.getSoTimeout() != origTimeout) {
+      socket.setSoTimeout(origTimeout);
+    }
   }
 }

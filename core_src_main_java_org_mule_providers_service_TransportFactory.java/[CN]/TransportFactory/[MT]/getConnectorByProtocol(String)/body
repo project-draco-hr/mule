@@ -1,11 +1,17 @@
 {
   UMOConnector connector;
+  UMOConnector resultConnector=null;
   Map connectors=RegistryContext.getRegistry().getConnectors();
   for (Iterator iterator=connectors.values().iterator(); iterator.hasNext(); ) {
     connector=(UMOConnector)iterator.next();
     if (connector.supportsProtocol(protocol)) {
-      return connector;
+      if (resultConnector == null) {
+        resultConnector=connector;
+      }
+ else {
+        throw new IllegalStateException(new Message(Messages.MORE_THAN_ONE_CONNECTOR_WITH_PROTOCOL_X,protocol).getMessage());
+      }
     }
   }
-  return null;
+  return resultConnector;
 }

@@ -1,0 +1,20 @@
+{
+  UMOImmutableEndpoint ep=(UMOImmutableEndpoint)key;
+  int port=ep.getEndpointURI().getPort();
+  InetAddress inetAddress=InetAddress.getByName(ep.getEndpointURI().getHost());
+  Socket socket=createSocket(port,inetAddress);
+  socket.setReuseAddress(true);
+  TcpConnector connector=(TcpConnector)ep.getConnector();
+  if (connector.getReceiveBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getReceiveBufferSize() != connector.getReceiveBufferSize()) {
+    socket.setReceiveBufferSize(connector.getReceiveBufferSize());
+  }
+  if (connector.getSendBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getSendBufferSize() != connector.getSendBufferSize()) {
+    socket.setSendBufferSize(connector.getSendBufferSize());
+  }
+  if (connector.getReceiveTimeout() != UMOConnector.INT_VALUE_NOT_SET && socket.getSoTimeout() != connector.getReceiveTimeout()) {
+    socket.setSoTimeout(connector.getSendTimeout());
+  }
+  socket.setTcpNoDelay(connector.isSendTcpNoDelay());
+  socket.setKeepAlive(connector.isKeepAlive());
+  return socket;
+}

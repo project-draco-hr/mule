@@ -1,11 +1,17 @@
 {
   this.checkDisposed();
   if (!this.isStarted()) {
+    if (!this.isConnected()) {
+      startOnConnect.set(true);
+      connectionStrategy.connect(this);
+      return;
+    }
     if (logger.isInfoEnabled()) {
       logger.info("Starting: " + this);
     }
-    if (scheduler == null || scheduler.isShutdown()) {
-      scheduler=this.getScheduler();
+    ScheduledExecutorService currentScheduler=(ScheduledExecutorService)scheduler.get();
+    if (currentScheduler == null || currentScheduler.isShutdown()) {
+      scheduler.set(this.getScheduler());
     }
     this.doStart();
     started.set(true);

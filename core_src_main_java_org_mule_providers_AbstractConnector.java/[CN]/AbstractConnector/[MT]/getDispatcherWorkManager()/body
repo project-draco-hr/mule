@@ -1,7 +1,9 @@
 {
-  if (dispatcherWorkManager == null) {
-    dispatcherWorkManager=this.getDispatcherThreadingProfile().createWorkManager(getName() + ".dispatcher");
-    dispatcherWorkManager.start();
+  if (dispatcherWorkManager.get() == null) {
+    UMOWorkManager newWorkManager=this.getDispatcherThreadingProfile().createWorkManager(getName() + ".dispatcher");
+    if (dispatcherWorkManager.compareAndSet(null,newWorkManager)) {
+      newWorkManager.start();
+    }
   }
-  return dispatcherWorkManager;
+  return (UMOWorkManager)dispatcherWorkManager.get();
 }

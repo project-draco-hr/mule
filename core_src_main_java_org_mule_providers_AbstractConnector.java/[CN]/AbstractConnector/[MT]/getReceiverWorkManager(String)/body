@@ -1,7 +1,9 @@
 {
-  if (receiverWorkManager == null) {
-    receiverWorkManager=this.getReceiverThreadingProfile().createWorkManager(this.getName() + '.' + receiverName);
-    receiverWorkManager.start();
+  if (receiverWorkManager.get() == null) {
+    UMOWorkManager newWorkManager=this.getReceiverThreadingProfile().createWorkManager(this.getName() + '.' + receiverName);
+    if (receiverWorkManager.compareAndSet(null,newWorkManager)) {
+      newWorkManager.start();
+    }
   }
-  return receiverWorkManager;
+  return (UMOWorkManager)receiverWorkManager.get();
 }

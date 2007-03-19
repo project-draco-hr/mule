@@ -4,7 +4,17 @@
     return;
   }
   try {
-    this.doConnect();
+    if (connecting.get()) {
+      this.doConnect();
+    }
+    if (connecting.compareAndSet(false,true)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Connecting: " + this);
+      }
+      connectionStrategy.connect(this);
+      logger.info("Connected: " + getConnectionDescription());
+      return;
+    }
     connected.set(true);
     connecting.set(false);
     this.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_CONNECTED));
@@ -13,8 +23,8 @@
     connected.set(false);
     connecting.set(false);
     this.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_FAILED));
-    if (e instanceof ConnectException) {
-      throw (ConnectException)e;
+    if (e instanceof ConnectException || e instanceof FatalConnectException) {
+      throw e;
     }
  else {
       throw new ConnectException(e,this);
