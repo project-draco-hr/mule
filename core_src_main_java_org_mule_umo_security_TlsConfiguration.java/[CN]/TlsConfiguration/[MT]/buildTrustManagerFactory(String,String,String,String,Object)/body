@@ -1,0 +1,24 @@
+{
+  password=null == password ? "" : password;
+  KeyStore trustStore;
+  try {
+    trustStore=KeyStore.getInstance(type);
+    InputStream is=IOUtils.getResourceAsStream(name,component.getClass());
+    if (null == is) {
+      throw new FileNotFoundException("Failed to load truststore from classpath or local file: " + name);
+    }
+    trustStore.load(is,password.toCharArray());
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"TrustStore: " + name),e,component);
+  }
+  TrustManagerFactory trustFactory;
+  try {
+    trustFactory=TrustManagerFactory.getInstance(algorithm);
+    trustFactory.init(trustStore);
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Trust Manager (" + algorithm + ")"),e,component);
+  }
+  return trustFactory;
+}

@@ -1,22 +1,19 @@
 {
-  Socket socket=null;
+  Socket socket=connector.getSocket(endpoint);
   try {
-    socket=connector.getSocket(endpoint);
-    try {
-      Object result=receive(socket,(int)timeout);
-      if (result == null) {
-        return null;
-      }
-      return new MuleMessage(connector.getMessageAdapter(result));
-    }
- catch (    SocketTimeoutException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Socket timed out normally while doing a synchronous receive on endpointUri: " + endpoint.getEndpointURI());
-      }
+    Object result=receiveFromSocket(socket,(int)timeout);
+    if (result == null) {
       return null;
     }
+    return new MuleMessage(connector.getMessageAdapter(result));
   }
-  finally {
+ catch (  SocketTimeoutException e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Socket timed out normally while doing a synchronous receive on endpointUri: " + endpoint.getEndpointURI());
+    }
+    return null;
+  }
+ finally {
     connector.releaseSocket(socket,endpoint);
   }
 }
