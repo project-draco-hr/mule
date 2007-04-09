@@ -1,16 +1,11 @@
 {
   TestAllEventBean bean=(TestAllEventBean)context.getBean("testAllEventBean");
   assertNotNull(bean);
-  EventCallback callback=new EventCallback(){
-    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
-      eventCount++;
-    }
-  }
-;
-  bean.setEventCallback(callback);
+  Latch whenFinished=new Latch();
+  bean.setEventCallback(new CountingEventCallback(eventCounter1,2,whenFinished));
   MuleClient client=new MuleClient();
   client.send("vm://event.multicaster","Test Spring Event",null);
-  context.publishEvent(new ContextRefreshedEvent(context));
-  afterPublishEvent();
-  assertEquals(2,eventCount);
+  context.publishEvent(new TestApplicationEvent(context));
+  whenFinished.await(3000,TimeUnit.MILLISECONDS);
+  assertEquals(2,eventCounter1.get());
 }

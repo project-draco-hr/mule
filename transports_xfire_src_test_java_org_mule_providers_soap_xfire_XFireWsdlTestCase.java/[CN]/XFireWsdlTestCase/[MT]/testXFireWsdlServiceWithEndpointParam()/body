@@ -1,0 +1,12 @@
+{
+  UMOEndpoint endpoint=managementContext.getRegistry().getOrCreateEndpointForUri(STOCKQUOTE_URL_NOWSDL,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  endpoint.setProperty("wsdlUrl",STOCKQUOTE_URL_WSDL);
+  UMOMessage message=new MuleMessage(STOCK_SYMBOL);
+  UMOSession session=new MuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler());
+  MuleEvent event=new MuleEvent(message,endpoint,session,true);
+  UMOMessage reply=session.sendEvent(event);
+  assertNotNull(reply);
+  String response=reply.getPayloadAsString();
+  assertNotNull(response);
+  XMLAssert.assertXpathEvaluatesTo(STOCK_SYMBOL,"//StockQuotes/Stock/Symbol",response);
+}

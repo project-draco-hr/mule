@@ -1,0 +1,29 @@
+{
+  setProperty(MailProperties.TO_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getRecipients(Message.RecipientType.TO)));
+  setProperty(MailProperties.CC_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getRecipients(Message.RecipientType.CC)));
+  setProperty(MailProperties.BCC_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getRecipients(Message.RecipientType.BCC)));
+  setProperty(MailProperties.REPLY_TO_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getReplyTo()));
+  setProperty(MailProperties.FROM_ADDRESS_PROPERTY,MailUtils.mailAddressesToString(message.getFrom()));
+  setProperty(MailProperties.SUBJECT_PROPERTY,StringUtils.defaultIfEmpty(message.getSubject(),"(no subject)"));
+  setProperty(MailProperties.CONTENT_TYPE_PROPERTY,StringUtils.defaultIfEmpty(message.getContentType(),"text/plain"));
+  Date sentDate=message.getSentDate();
+  if (sentDate == null) {
+    sentDate=new Date();
+  }
+  setProperty(MailProperties.SENT_DATE_PROPERTY,sentDate);
+  for (Enumeration e=message.getAllHeaders(); e.hasMoreElements(); ) {
+    Header header=(Header)e.nextElement();
+    String name=header.getName();
+    String listName=toListHeader(name);
+    String value=header.getValue();
+    if (null == getProperty(name)) {
+      setProperty(name,value);
+    }
+    if (null == getProperty(listName)) {
+      setProperty(listName,new LinkedList());
+    }
+    if (getProperty(listName) instanceof List) {
+      ((List)getProperty(listName)).add(header.getValue());
+    }
+  }
+}

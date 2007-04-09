@@ -1,0 +1,34 @@
+{
+  Element outboundRouter=currentElement.getChild(MuleTag.ELEMENT_OUTBOUND_ROUTER);
+  if (outboundRouter != null) {
+    String componentName=parent.getInfo().getHeader();
+    List routers=outboundRouter.getChildren(MuleTag.ELEMENT_ROUTER);
+    ExceptionStrategyProcessor processor=new ExceptionStrategyProcessor(getEnvironment());
+    processor.process(graph,outboundRouter,parent);
+    for (Iterator iterator=routers.iterator(); iterator.hasNext(); ) {
+      Element router=(Element)iterator.next();
+      if (router != null) {
+        GraphNode routerNode=graph.addNode();
+        routerNode.getInfo().setHeader(router.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME));
+        routerNode.getInfo().setFillColor(ColorRegistry.COLOR_ROUTER);
+        addRelation(graph,parent,routerNode,"outbound router");
+        OutBoundRouterEndpointsHandler processor2=new OutBoundRouterEndpointsHandler(getEnvironment(),componentName);
+        processor2.process(graph,router,routerNode);
+        processReplyTOasElement(graph,router,routerNode,componentName);
+        processReplyTOasProperty(graph,router,routerNode,componentName);
+        GraphNode[] virtual=getEnvironment().getEndpointRegistry().getVirtualEndpoint(componentName + "." + router.getAttributeValue(MuleTag.ATTRIBUTE_CLASS_NAME));
+        if (virtual.length > 0) {
+          for (int i=0; i < virtual.length; i++) {
+            addRelation(graph,routerNode,virtual[i],"out (dynamic)");
+          }
+        }
+      }
+    }
+    GraphNode[] virtual=getEnvironment().getEndpointRegistry().getVirtualEndpoint(componentName);
+    if (virtual.length > 0) {
+      for (int i=0; i < virtual.length; i++) {
+        addRelation(graph,parent,virtual[i],"out (dynamic)");
+      }
+    }
+  }
+}

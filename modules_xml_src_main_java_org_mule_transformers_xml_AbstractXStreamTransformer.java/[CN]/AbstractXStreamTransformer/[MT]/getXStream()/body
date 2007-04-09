@@ -1,11 +1,15 @@
 {
-  if (xstream == null) {
+  XStream instance=(XStream)xstream.get();
+  if (instance == null) {
     try {
-      xstream=new XStreamFactory(driverClassName,aliases,converters).getInstance();
+      instance=new XStreamFactory(driverClassName,aliases,converters).getInstance();
+      if (!xstream.compareAndSet(null,instance)) {
+        instance=(XStream)xstream.get();
+      }
     }
  catch (    Exception e) {
       throw new TransformerException(Message.createStaticMessage("Unable to initialize XStream"),e);
     }
   }
-  return xstream;
+  return instance;
 }

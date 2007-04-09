@@ -1,0 +1,22 @@
+{
+  UMOEntryPointResolver epd=this.getEntryPointResolver();
+  UMODescriptor descriptor=this.getDescriptorToResolve(FruitBowl.class.getName());
+  UMOEntryPoint ep=epd.resolveEntryPoint(descriptor);
+  assertNotNull(ep);
+  try {
+    Object payload=Arrays.asList(new Fruit[]{new Apple(),new Banana()});
+    RequestContext.setEvent(getTestEvent(payload));
+    final String methodName="setFruit";
+    final String propertyName=MuleProperties.MULE_METHOD_PROPERTY;
+    RequestContext.getEventContext().getMessage().setProperty(propertyName,methodName);
+    FruitBowl bowl=new FruitBowl();
+    assertFalse(bowl.hasApple());
+    assertFalse(bowl.hasBanana());
+    ep.invoke(bowl,RequestContext.getEventContext());
+    assertTrue(bowl.hasApple());
+    assertTrue(bowl.hasBanana());
+  }
+  finally {
+    RequestContext.setEvent(null);
+  }
+}

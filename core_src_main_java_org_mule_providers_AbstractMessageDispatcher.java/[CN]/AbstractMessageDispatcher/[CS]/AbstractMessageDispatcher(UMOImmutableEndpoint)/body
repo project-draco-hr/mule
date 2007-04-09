@@ -3,11 +3,15 @@
   this.connector=(AbstractConnector)endpoint.getConnector();
   connectionStrategy=endpoint.getConnectionStrategy();
   if (connectionStrategy instanceof AbstractConnectionStrategy) {
-    ((AbstractConnectionStrategy)connectionStrategy).setDoThreading(false);
+    final AbstractConnectionStrategy connStrategy=(AbstractConnectionStrategy)connectionStrategy;
+    if (connStrategy.isDoThreading()) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Overriding doThreading to false on " + connStrategy);
+      }
+      connStrategy.setDoThreading(false);
+    }
   }
-  ThreadingProfile profile=connector.getDispatcherThreadingProfile();
-  doThreading=profile.isDoThreading();
-  if (doThreading) {
+  if (isDoThreading()) {
     try {
       workManager=connector.getDispatcherWorkManager();
     }

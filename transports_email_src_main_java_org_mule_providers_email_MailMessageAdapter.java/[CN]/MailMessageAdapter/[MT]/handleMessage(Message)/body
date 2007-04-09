@@ -1,0 +1,19 @@
+{
+  Object content=message.getContent();
+  if (content instanceof Multipart) {
+    setMessage(((Multipart)content).getBodyPart(0));
+    logger.debug("Received Multipart message");
+    for (int i=1; i < ((Multipart)content).getCount(); i++) {
+      Part part=((Multipart)content).getBodyPart(i);
+      String name=part.getFileName();
+      if (name == null) {
+        name=String.valueOf(i - 1);
+      }
+      addAttachment(name,part.getDataHandler());
+      addAttachmentHeaders(name,part);
+    }
+  }
+ else {
+    setMessage(message);
+  }
+}

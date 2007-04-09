@@ -1,0 +1,24 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("initialising key manager factory from keystore data");
+  }
+  KeyStore tempKeyStore;
+  try {
+    tempKeyStore=KeyStore.getInstance(keystoreType);
+    InputStream is=IOUtils.getResourceAsStream(keyStoreName,getClass());
+    if (null == is) {
+      throw new FileNotFoundException(new Message(Messages.CANT_LOAD_X_FROM_CLASSPATH_FILE,"Keystore: " + keyStoreName).getMessage());
+    }
+    tempKeyStore.load(is,keyStorePassword.toCharArray());
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"KeyStore: " + keyStoreName),e,this);
+  }
+  try {
+    keyManagerFactory=KeyManagerFactory.getInstance(getKeyManagerAlgorithm());
+    keyManagerFactory.init(tempKeyStore,keyPassword.toCharArray());
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(new Message(Messages.FAILED_LOAD_X,"Key Manager"),e,this);
+  }
+}

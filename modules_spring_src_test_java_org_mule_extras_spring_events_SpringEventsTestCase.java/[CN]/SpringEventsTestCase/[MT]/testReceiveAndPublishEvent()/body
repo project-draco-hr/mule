@@ -1,37 +1,26 @@
 {
   TestSubscriptionEventBean bean1=(TestSubscriptionEventBean)context.getBean("testSubscribingEventBean1");
   assertNotNull(bean1);
+  final Latch whenFinished1=new Latch();
   EventCallback callback=new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
-      eventCount++;
       MuleApplicationEvent returnEvent=new MuleApplicationEvent("Event from a spring bean","vm://testBean2");
       MuleApplicationEvent e=(MuleApplicationEvent)o;
       e.getApplicationContext().publishEvent(returnEvent);
+      if (eventCounter1.incrementAndGet() == NUMBER_OF_MESSAGES) {
+        whenFinished1.countDown();
+      }
     }
   }
 ;
   bean1.setEventCallback(callback);
   TestSubscriptionEventBean bean2=(TestSubscriptionEventBean)context.getBean("testSubscribingEventBean2");
   assertNotNull(bean2);
-  EventCallback callback2=new EventCallback(){
-    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
-      eventCount2++;
-      if (eventCount2 == NUMBER_OF_MESSAGES) {
-synchronized (lock) {
-          lock.notifyAll();
-        }
-      }
-    }
-  }
-;
-  bean2.setEventCallback(callback2);
-  MuleClient client=new MuleClient();
-  for (int i=0; i < NUMBER_OF_MESSAGES; i++) {
-    client.send("vm://event.multicaster","Test Spring Event",null);
-  }
-synchronized (lock) {
-    lock.wait(3000);
-  }
-  assertEquals(NUMBER_OF_MESSAGES,eventCount);
-  assertEquals(NUMBER_OF_MESSAGES,eventCount2);
+  Latch whenFinished2=new Latch();
+  bean2.setEventCallback(new CountingEventCallback(eventCounter2,NUMBER_OF_MESSAGES,whenFinished2));
+  this.doSend("vm://event.multicaster","Test Spring Event",NUMBER_OF_MESSAGES);
+  whenFinished1.await(3000,TimeUnit.MILLISECONDS);
+  whenFinished2.await(3000,TimeUnit.MILLISECONDS);
+  assertEquals(NUMBER_OF_MESSAGES,eventCounter1.get());
+  assertEquals(NUMBER_OF_MESSAGES,eventCounter2.get());
 }

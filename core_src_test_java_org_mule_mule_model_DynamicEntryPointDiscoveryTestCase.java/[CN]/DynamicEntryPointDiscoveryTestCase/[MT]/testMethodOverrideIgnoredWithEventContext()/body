@@ -1,0 +1,21 @@
+{
+  UMOEntryPointResolver epd=getEntryPointResolver();
+  UMODescriptor descriptor=getDescriptorToResolve(Kiwi.class.getName());
+  UMOEntryPoint ep=epd.resolveEntryPoint(descriptor);
+  assertNotNull(ep);
+  try {
+    RequestContext.setEvent(getTestEvent(new FruitLover("Yummy!")));
+    final String methodName="nosuchmethod";
+    final String propertyName=MuleProperties.MULE_METHOD_PROPERTY;
+    RequestContext.getEventContext().getMessage().setProperty(propertyName,methodName);
+    try {
+      ep.invoke(new Kiwi(),RequestContext.getEventContext());
+      fail("no such method on component");
+    }
+ catch (    NoSuchMethodException e) {
+    }
+  }
+  finally {
+    RequestContext.setEvent(null);
+  }
+}

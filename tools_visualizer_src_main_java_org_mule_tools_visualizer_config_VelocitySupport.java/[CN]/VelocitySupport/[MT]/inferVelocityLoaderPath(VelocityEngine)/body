@@ -1,0 +1,29 @@
+{
+  String defaultPath=(String)ve.getProperty(VelocityEngine.FILE_RESOURCE_LOADER_PATH);
+  if (null == defaultPath || StringUtils.isEmpty(defaultPath)) {
+    URL url=IOUtils.getResourceAsUrl(MuleDocPostRenderer.DEFAULT_MULE_TEMPLATE,getClass());
+    if (FILE.equals(url.getProtocol())) {
+      String path=FileUtils.getResourcePath(MuleDocPostRenderer.DEFAULT_MULE_TEMPLATE,getClass());
+      if (!StringUtils.isEmpty(path)) {
+        File fullPath=new File(path);
+        File target=new File(MuleDocPostRenderer.DEFAULT_MULE_TEMPLATE);
+        while (null != target && !StringUtils.isEmpty(target.getPath())) {
+          env.log(fullPath.getPath() + " - " + target.getPath());
+          target=target.getParentFile();
+          fullPath=fullPath.getParentFile();
+        }
+        path=fullPath.getPath();
+        if (path.endsWith("!")) {
+          path=path + File.separator;
+        }
+        getEnv().log(VelocityEngine.FILE_RESOURCE_LOADER_PATH + " = " + path);
+        ve.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_PATH,path);
+      }
+    }
+ else     if (JAR.equals(url.getProtocol())) {
+      env.log(url.toString());
+      ve.setProperty(VelocityEngine.RESOURCE_LOADER,"class");
+      ve.setProperty(MAGIC_VELOCITY_RESOURCE_LOADER,ClasspathResourceLoader.class.getName());
+    }
+  }
+}

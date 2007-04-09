@@ -1,0 +1,16 @@
+{
+  if (events.size() != this.eventThreshold) {
+    throw new IllegalStateException("eventThreshold not yet reached?");
+  }
+  StringBuffer newPayload=new StringBuffer(80);
+  for (Iterator iterator=events.iterator(); iterator.hasNext(); ) {
+    UMOEvent event=(UMOEvent)iterator.next();
+    try {
+      newPayload.append(event.getMessageAsString()).append(" ");
+    }
+ catch (    UMOException e) {
+      throw new AggregationException(events,event.getEndpoint(),e);
+    }
+  }
+  return new MuleMessage(newPayload.toString(),(Map)null);
+}

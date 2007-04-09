@@ -1,0 +1,19 @@
+{
+  Element endpointIdentifiers=currentElement.getChild("endpoint-identifiers");
+  if (endpointIdentifiers == null) {
+    getEnvironment().log("no endpoint-identifiers tag");
+    return;
+  }
+  List namedChildren=endpointIdentifiers.getChildren("endpoint-identifier");
+  for (Iterator iter=namedChildren.iterator(); iter.hasNext(); ) {
+    Element endpoint=(Element)iter.next();
+    GraphNode node=graph.addNode();
+    node.getInfo().setFillColor(ColorRegistry.COLOR_DEFINED_ENDPOINTS);
+    String name=endpoint.getAttributeValue("name");
+    String value=lookupPropertyTemplate(endpoint.getAttributeValue("value"));
+    node.getInfo().setHeader(name);
+    node.getInfo().setCaption(value);
+    getEnvironment().getEndpointRegistry().addEndpoint(name,node);
+    getEnvironment().getProperties().setProperty(name,value);
+  }
+}

@@ -1,0 +1,34 @@
+{
+  if (StringUtils.isBlank(bindingProvider)) {
+    bindingProvider=DEFAULT_BINDING_PROVIDER_CLASS;
+  }
+  if (StringUtils.isBlank(typeMappingRegistry)) {
+    typeMappingRegistry=DEFAULT_TYPE_MAPPING_REGISTRY_CLASS;
+  }
+  try {
+    Class clazz=ClassUtils.loadClass(bindingProvider,this.getClass());
+    BindingProvider provider=(BindingProvider)ClassUtils.instanciateClass(clazz,new Object[]{});
+    if (bindingProvider.equals(DEFAULT_BINDING_PROVIDER_CLASS) && !typeMappingRegistry.equals(DEFAULT_TYPE_MAPPING_REGISTRY_CLASS)) {
+      Class registryClazz=ClassUtils.loadClass(typeMappingRegistry,this.getClass());
+      TypeMappingRegistry registry=(TypeMappingRegistry)ClassUtils.instanciateClass(registryClazz,new Object[]{});
+      ((AegisBindingProvider)provider).setTypeMappingRegistry(registry);
+    }
+    factory.setBindingProvider(provider);
+    String wsdlBuilderFactoryClass=null;
+    if (bindingProvider.equals("org.codehaus.xfire.service.binding.MessageBindingProvider")) {
+      factory.setStyle(SoapConstants.STYLE_MESSAGE);
+    }
+    if (bindingProvider.equals("org.codehaus.xfire.service.binding.MessageBindingProvider")) {
+      factory.setStyle(SoapConstants.STYLE_DOCUMENT);
+      wsdlBuilderFactoryClass="org.codehaus.xfire.xmlbeans.XmlBeansWSDLBuilderFactory";
+    }
+    if (wsdlBuilderFactoryClass != null) {
+      Class wsdlBuilderFactoryClazz=ClassUtils.loadClass(wsdlBuilderFactoryClass,this.getClass());
+      WSDLBuilderFactory wsdlBuilderFactory=(WSDLBuilderFactory)ClassUtils.instanciateClass(wsdlBuilderFactoryClazz,new Object[]{});
+      factory.setWsdlBuilderFactory(wsdlBuilderFactory);
+    }
+  }
+ catch (  Exception ex) {
+    throw new InitialisationException(new Message("xfire",11,bindingProvider),ex,this);
+  }
+}

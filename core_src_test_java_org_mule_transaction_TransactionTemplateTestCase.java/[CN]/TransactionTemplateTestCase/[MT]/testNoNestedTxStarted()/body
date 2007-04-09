@@ -1,0 +1,29 @@
+{
+  Mock mockTx=new Mock(Transaction.class);
+  mockTm.expect("begin");
+  mockTm.expectAndReturn("getTransaction",mockTx.proxy());
+  mockTx.expectAndReturn("getStatus",UMOTransaction.STATUS_ACTIVE);
+  mockTx.expectAndReturn("getStatus",UMOTransaction.STATUS_ACTIVE);
+  mockTx.expect("commit");
+  UMOTransactionConfig config=new MuleTransactionConfig();
+  config.setFactory(new XaTransactionFactory());
+  config.setAction(UMOTransactionConfig.ACTION_ALWAYS_BEGIN);
+  TransactionTemplate template=new TransactionTemplate(config,new DefaultExceptionStrategy(),managementContext);
+  final UMOTransactionConfig nestedConfig=new MuleTransactionConfig();
+  nestedConfig.setFactory(new XaTransactionFactory());
+  nestedConfig.setAction(UMOTransactionConfig.ACTION_BEGIN_OR_JOIN);
+  template.execute(new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      TransactionTemplate nestedTemplate=new TransactionTemplate(nestedConfig,new DefaultExceptionStrategy(),managementContext);
+      return nestedTemplate.execute(new TransactionCallback(){
+        public Object doInTransaction() throws Exception {
+          return null;
+        }
+      }
+);
+    }
+  }
+);
+  mockTm.verify();
+  mockTx.verify();
+}

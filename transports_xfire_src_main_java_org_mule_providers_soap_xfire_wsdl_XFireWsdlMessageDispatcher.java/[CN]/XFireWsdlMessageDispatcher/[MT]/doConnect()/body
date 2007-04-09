@@ -2,7 +2,13 @@
   try {
     XFire xfire=connector.getXfire();
     String wsdlUrl=endpoint.getEndpointURI().getAddress();
-    String serviceName=wsdlUrl.substring(0,wsdlUrl.lastIndexOf('?'));
+    String serviceName=endpoint.getEndpointURI().getAddress();
+    if (endpoint.getProperty("wsdlUrl") != null && StringUtils.isNotBlank(endpoint.getProperty("wsdlUrl").toString())) {
+      wsdlUrl=(String)endpoint.getProperty("wsdlUrl");
+    }
+    if (serviceName.indexOf("?") > -1) {
+      serviceName=serviceName.substring(0,serviceName.lastIndexOf('?'));
+    }
     Service service=xfire.getServiceRegistry().getService(new QName(serviceName));
     if (service == null) {
       service=new Client(new URL(wsdlUrl)).getService();
@@ -10,9 +16,7 @@
       xfire.getServiceRegistry().register(service);
     }
     try {
-      this.client=new Client(new URL(endpoint.getEndpointURI().getAddress()));
-      this.client.setXFire(xfire);
-      this.client.setEndpointUri(endpoint.getEndpointURI().toString());
+      this.client=createXFireClient(endpoint,service,xfire,DEFAULT_WSDL_TRANSPORT);
     }
  catch (    Exception ex) {
       disconnect();

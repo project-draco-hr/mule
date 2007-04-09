@@ -3,27 +3,20 @@
   assertNotNull(subscriptionBean);
   MuleEventMulticaster multicaster=(MuleEventMulticaster)context.getBean(AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME);
   assertNotNull(multicaster);
-  EventCallback callback=new EventCallback(){
-    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
-      eventCount++;
-    }
-  }
-;
-  subscriptionBean.setEventCallback(callback);
+  Latch whenFinished=new Latch();
+  subscriptionBean.setEventCallback(new CountingEventCallback(eventCounter1,1,whenFinished));
   multicaster.removeApplicationListener(subscriptionBean);
   MuleClient client=new MuleClient();
   client.send("vm://event.multicaster","Test Spring Event",null);
-  afterPublishEvent();
-  assertEquals(0,eventCount);
+  assertEquals(0,eventCounter1.get());
   multicaster.addApplicationListener(subscriptionBean);
   client.send("vm://event.multicaster","Test Spring Event",null);
-  afterPublishEvent();
-  assertEquals(1,eventCount);
-  eventCount=0;
+  assertTrue(whenFinished.await(3000,TimeUnit.MILLISECONDS));
+  assertEquals(1,eventCounter1.get());
+  eventCounter1.set(0);
   multicaster.removeAllListeners();
   client.send("vm://event.multicaster","Test Spring Event",null);
-  afterPublishEvent();
-  assertEquals(0,eventCount);
+  assertEquals(0,eventCounter1.get());
   multicaster.addApplicationListener(subscriptionBean);
   context.refresh();
   subscriptionBean.setEventCallback(null);
