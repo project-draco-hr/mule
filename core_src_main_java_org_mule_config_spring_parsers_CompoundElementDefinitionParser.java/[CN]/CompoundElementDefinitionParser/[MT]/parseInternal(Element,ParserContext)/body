@@ -1,0 +1,17 @@
+{
+  parserContext.getContainingBeanDefinition();
+  this.parserContext=parserContext;
+  Class beanClass=getBeanClass(element);
+  Assert.state(beanClass != null,"Class returned from getBeanClass(Element) must not be null, element is: " + element.getNodeName());
+  BeanDefinitionBuilder builder=createBeanDefinitionBuilder(element,beanClass);
+  builder.setSource(parserContext.extractSource(element));
+  if (parserContext.isNested()) {
+    builder.setSingleton(parserContext.getContainingBeanDefinition().isSingleton());
+  }
+  doParse(element,parserContext,builder);
+  AbstractBeanDefinition bd=(AbstractBeanDefinition)parserContext.getContainingBeanDefinition();
+  for (int i=0; i < builder.getBeanDefinition().getPropertyValues().getPropertyValues().length; i++) {
+    bd.getPropertyValues().addPropertyValue(builder.getBeanDefinition().getPropertyValues().getPropertyValues()[i]);
+  }
+  return bd;
+}
