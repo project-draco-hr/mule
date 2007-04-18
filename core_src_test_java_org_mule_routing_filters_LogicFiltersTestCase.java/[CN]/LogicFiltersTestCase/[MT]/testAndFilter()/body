@@ -1,26 +1,23 @@
 {
   AndFilter filter=new AndFilter();
-  assertNull(filter.getLeftFilter());
-  assertNull(filter.getRightFilter());
+  assertEquals(0,filter.getFilters().size());
   assertFalse(filter.accept(new MuleMessage("foo")));
-  filter.setLeftFilter(new EqualsFilter("foo"));
-  assertFalse(filter.accept(new MuleMessage("foo")));
-  filter.setRightFilter(new EqualsFilter("foo"));
+  filter.getFilters().add(new EqualsFilter("foo"));
+  assertTrue(filter.accept(new MuleMessage("foo")));
+  filter.getFilters().add(new EqualsFilter("foo"));
   assertFalse(filter.accept(new MuleMessage("bar")));
-  filter.setRightFilter(new EqualsFilter("foo"));
   assertTrue(filter.accept(new MuleMessage("foo")));
   WildcardFilter left=new WildcardFilter("blah.blah.*");
   WildcardFilter right=new WildcardFilter("blah.*");
   filter=new AndFilter(left,right);
-  assertNotNull(filter.getLeftFilter());
-  assertNotNull(filter.getRightFilter());
+  assertEquals(2,filter.getFilters().size());
   assertTrue(filter.accept(new MuleMessage("blah.blah.blah")));
   assertTrue(right.accept(new MuleMessage("blah.blah")));
   assertTrue(!left.accept(new MuleMessage("blah.blah")));
   assertTrue(!filter.accept(new MuleMessage("blah.blah")));
   filter=new AndFilter();
-  filter.setLeftFilter(left);
-  filter.setRightFilter(right);
+  filter.getFilters().add(left);
+  filter.getFilters().add(right);
   assertTrue(filter.accept(new MuleMessage("blah.blah.blah")));
   assertTrue(!filter.accept(new MuleMessage("blah.blah")));
 }
