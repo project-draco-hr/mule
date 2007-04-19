@@ -7,11 +7,7 @@
     message=new MuleMessage(connector.getMessageAdapter(payload));
   }
   message.addProperties(messageProperties);
-  if (connector.isLocalEndpointsOnly()) {
-    message.setStringProperty(ProcessConnector.PROPERTY_ENDPOINT,endpoint);
-    return routeMessage(message,synchronous);
-  }
- else {
+  if (connector.isAllowGlobalDispatcher()) {
     if (synchronous) {
       return connector.getMuleClient().send(endpoint,message);
     }
@@ -19,5 +15,9 @@
       connector.getMuleClient().dispatch(endpoint,message);
       return null;
     }
+  }
+ else {
+    message.setStringProperty(ProcessConnector.PROPERTY_ENDPOINT,endpoint);
+    return routeMessage(message,synchronous);
   }
 }

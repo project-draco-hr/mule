@@ -1,40 +1,37 @@
 {
   PushbackInputStream pbis=(PushbackInputStream)pbMap.get(is);
-  if (pbis == null) {
+  if (null == pbis) {
     pbis=new PushbackInputStream(is,PUSHBACK_BUFFER_SIZE);
-    pbMap.put(is,pbis);
+    PushbackInputStream prev=(PushbackInputStream)pbMap.putIfAbsent(is,pbis);
+    pbis=null == prev ? pbis : prev;
   }
-  byte[] buffer=new byte[READ_BUFFER_SIZE];
-  int len=0;
+  int len=-1;
   try {
-    while ((len=pbis.read(buffer)) == 0) {
+    byte[] buffer=new byte[READ_BUFFER_SIZE];
+    StringBuffer message=new StringBuffer(READ_BUFFER_SIZE);
+    int patternIndex=-1;
+    boolean repeat;
+    do {
+      len=safeRead(pbis,buffer);
+      if (len >= 0) {
+        message.append(new String(buffer,0,len));
+        patternIndex=message.toString().indexOf(XML_PATTERN,1);
+        repeat=isRepeat(patternIndex,len,pbis.available());
+      }
+ else {
+        repeat=false;
+      }
     }
+ while (repeat);
+    if (patternIndex > 0) {
+      pbis.unread(message.substring(patternIndex,message.length()).getBytes());
+      message.setLength(patternIndex);
+    }
+    return nullEmptyArray(message.toString().getBytes());
   }
- catch (  SocketException e) {
-    return null;
-  }
-catch (  SocketTimeoutException e) {
-    return null;
-  }
- finally {
-    if (len <= 0) {
+  finally {
+    if (len < 0) {
       pbMap.remove(is);
-      return null;
     }
   }
-  StringBuffer out=new StringBuffer(READ_BUFFER_SIZE);
-  int patternIndex=-1;
-  do {
-    out.append(new String(buffer,0,len));
-    patternIndex=out.toString().indexOf(XML_PATTERN,1);
-    if (patternIndex > 0 || len < buffer.length || pbis.available() == 0) {
-      break;
-    }
-  }
- while ((len=pbis.read(buffer)) > 0);
-  if (patternIndex > 0) {
-    pbis.unread(out.substring(patternIndex,out.length()).getBytes());
-    out.setLength(patternIndex);
-  }
-  return out.toString().getBytes();
 }
