@@ -1,6 +1,6 @@
 {
   managementContext.setId("GroovyScriptTestCase");
-  managementContext.getRegistry().setProperty("doCompression","true");
+  managementContext.getRegistry().registerProperty("doCompression","true");
   managementContext.setTransactionManager(new TestTransactionManagerFactory().create());
   RmiRegistryAgent rmiAgent=new RmiRegistryAgent();
   rmiAgent.setName("rmiAgent");
@@ -59,7 +59,7 @@
   d.setExceptionListener(dces);
   UMOInboundRouterCollection inRouter=new InboundRouterCollection();
   inRouter.setCatchAllStrategy(new ForwardingCatchAllStrategy());
-  inRouter.getCatchAllStrategy().setEndpoint(new MuleEndpoint("test://catch.all",false));
+  inRouter.getCatchAllStrategy().setEndpoint(new MuleEndpoint("test2://catch.all",false));
   UMOEndpoint ep2=builder.createEndpoint("test://orange/","Orange",true,"TestCompressionTransformer");
   ep2.setResponseTransformer(managementContext.getRegistry().lookupTransformer("TestCompressionTransformer"));
   inRouter.addEndpoint(ep2);
@@ -90,7 +90,6 @@
   responseRouter.setTimeout(10001);
   d.setResponseRouter(responseRouter);
   Map cprops=new HashMap();
-  cprops.put("orange",new Orange());
   cprops.put("brand","Juicy Baby!");
   cprops.put("segments","9");
   cprops.put("radius","4.21");
@@ -109,5 +108,6 @@
   nested3.add("prop6");
   cprops.put("arrayProperties",nested3);
   d.setProperties(cprops);
-  managementContext.getRegistry().lookupModel("main").registerComponent(d);
+  d.setModelName("main");
+  managementContext.getRegistry().registerService(d);
 }

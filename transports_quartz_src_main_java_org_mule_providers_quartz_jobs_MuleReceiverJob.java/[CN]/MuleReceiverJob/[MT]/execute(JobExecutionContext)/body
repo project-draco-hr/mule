@@ -15,15 +15,13 @@
       if (ref == null) {
         ref=jobExecutionContext.getJobDetail().getJobDataMap().getString(QuartzConnector.PROPERTY_PAYLOAD_CLASS_NAME);
       }
-      try {
-        if (ref == null) {
-          payload=NullPayload.getInstance();
-        }
- else {
-          payload=RegistryContext.getRegistry().getContainerContext().getComponent(ref);
-        }
+      if (ref == null) {
+        payload=NullPayload.getInstance();
       }
- catch (      ObjectNotFoundException e) {
+ else {
+        payload=RegistryContext.getRegistry().lookupObject(ref);
+      }
+      if (payload == null) {
         logger.warn("There is no payload attached to this quartz job. Sending Null payload");
         payload=NullPayload.getInstance();
       }

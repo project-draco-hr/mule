@@ -5,12 +5,15 @@
   BeanDefinitionBuilder builder=createBeanDefinitionBuilder(element,beanClass);
   builder.setSource(parserContext.extractSource(element));
   builder.setSingleton(isSingleton());
-  builder.addDependsOn("_registry");
-  if (getInitMethodName() != null) {
-    builder.setInitMethodName(getInitMethodName());
-  }
-  if (getDisposeMethodName() != null) {
-    builder.setDestroyMethodName(getDisposeMethodName());
+  builder.addDependsOn("_muleRegistry");
+  List interfaces=ClassUtils.getAllInterfaces(beanClass);
+  if (interfaces != null) {
+    if (interfaces.contains(Initialisable.class)) {
+      builder.setInitMethodName(Initialisable.PHASE_NAME);
+    }
+    if (interfaces.contains(Disposable.class)) {
+      builder.setDestroyMethodName(Disposable.PHASE_NAME);
+    }
   }
   if (parserContext.isNested()) {
     builder.setSingleton(parserContext.getContainingBeanDefinition().isSingleton());

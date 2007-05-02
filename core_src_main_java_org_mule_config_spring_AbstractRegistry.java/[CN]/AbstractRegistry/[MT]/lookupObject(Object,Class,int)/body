@@ -1,0 +1,33 @@
+{
+  Object o=null;
+  try {
+    o=doLookupObject(key,returntype);
+    if (returntype.isAssignableFrom(o.getClass())) {
+      return o;
+    }
+ else {
+      throw new IllegalArgumentException("Object was found in registry with key: " + key + ". But object was of type: "+ o.getClass().getName()+ ", not of expected type: "+ returntype);
+    }
+  }
+ catch (  ObjectNotFoundException e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Failed to find object in Registry ID: " + getRegistryId());
+    }
+    if (getParent() != null && scope > SCOPE_IMMEDIATE) {
+      if (getParent().isRemote() && scope == SCOPE_REMOTE) {
+        o=getParent().lookupObject(key,returntype);
+      }
+ else       if (!getParent().isRemote() && scope >= SCOPE_LOCAL) {
+        o=getParent().lookupObject(key,returntype);
+      }
+    }
+    if (o == null && key.toString().indexOf(".") > 0) {
+      try {
+        o=ClassUtils.instanciateClass(key.toString(),ClassUtils.NO_ARGS,getClass());
+      }
+ catch (      Exception e1) {
+      }
+    }
+    return o;
+  }
+}

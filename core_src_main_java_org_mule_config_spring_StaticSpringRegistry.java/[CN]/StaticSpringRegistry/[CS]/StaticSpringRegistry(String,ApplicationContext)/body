@@ -1,0 +1,29 @@
+{
+  super(id);
+  if (applicationContext == null) {
+    registryContext=new StaticApplicationContext();
+  }
+ else {
+    registryContext=new StaticApplicationContext(applicationContext);
+  }
+  registryContext.getBeanFactory().addBeanPostProcessor(new BeanPostProcessor(){
+    public Object postProcessBeforeInitialization(    Object bean,    String beanName) throws BeansException {
+      return bean;
+    }
+    public Object postProcessAfterInitialization(    Object bean,    String beanName) throws BeansException {
+      if (isInitialised() || isInitialising()) {
+        if (bean instanceof Initialisable) {
+          try {
+            ((Initialisable)bean).initialise();
+          }
+ catch (          InitialisationException e) {
+            throw new BeanCreationException("Failed to initialise Bean: " + e.getMessage(),e);
+          }
+        }
+      }
+      return bean;
+    }
+  }
+);
+  setApplicationContext(registryContext);
+}

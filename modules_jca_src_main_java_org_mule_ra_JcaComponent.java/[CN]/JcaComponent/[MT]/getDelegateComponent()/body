@@ -1,19 +1,17 @@
 {
   Object impl=descriptor.getImplementation();
   Object component;
-  try {
-    if (impl instanceof ContainerKeyPair) {
-      component=RegistryContext.getRegistry().getContainerContext().getComponent(impl);
-      if (descriptor.isSingleton()) {
-        descriptor.setImplementation(component);
-      }
+  if (impl instanceof ContainerKeyPair) {
+    component=RegistryContext.getRegistry().lookupObject(impl);
+    if (component == null) {
+      throw new InitialisationException(new Message(Messages.X_NOT_REGISTERED_WITH_MANAGER,impl),this);
     }
- else {
-      component=impl;
+    if (descriptor.isSingleton()) {
+      descriptor.setImplementation(component);
     }
   }
- catch (  ObjectNotFoundException e) {
-    throw new InitialisationException(e,this);
+ else {
+    component=impl;
   }
   descriptor.fireInitialisationCallbacks(component);
   return component;

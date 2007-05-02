@@ -3,8 +3,9 @@
   try {
     builder=new QuickConfigurationBuilder();
     RegistryFacade registry=builder.getManagementContext().getRegistry();
-    registry.setProperty("doCompression","true");
-    registry.setTransactionManager(new TestTransactionManagerFactory().create());
+    managementContext=builder.getManagementContext();
+    registry.registerProperty("doCompression","true");
+    managementContext.setTransactionManager(new TestTransactionManagerFactory().create());
     UMOAgent agent=new JmxAgent();
     agent.setName("jmxAgent");
     registry.registerAgent(agent);
@@ -18,9 +19,9 @@
     t.setContainerProperty("");
     t.setBeanProperty1("this was set from the manager properties!");
     registry.registerTransformer(t);
-    NoActionTransformer t2=new NoActionTransformer();
-    t2.setReturnClass(byte[].class);
-    registry.registerTransformer(t2);
+    NoActionTransformer nat=new NoActionTransformer();
+    nat.setReturnClass(byte[].class);
+    registry.registerTransformer(nat);
     JXPathFilter filter=new JXPathFilter("name");
     filter.setExpectedValue("bar");
     Map ns=new HashMap();
@@ -33,7 +34,7 @@
     Map props=new HashMap();
     props.put("testGlobal","value1");
     builder.registerEndpoint("test://orangeQ","orangeEndpoint",false,props);
-    UMOEndpoint ep=managementContext.getRegistry().getOrCreateEndpointForUri("test://test.queue2",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+    UMOEndpoint ep=builder.getManagementContext().getRegistry().getOrCreateEndpointForUri("test://test.queue2",UMOEndpoint.ENDPOINT_TYPE_SENDER);
     ep.setName("testEPWithCS");
     SimpleRetryConnectionStrategy cs=new SimpleRetryConnectionStrategy();
     cs.setRetryCount(4);
@@ -44,7 +45,7 @@
     UMOModel model=new SedaModel();
     model.setName("main");
     TestExceptionStrategy es=new TestExceptionStrategy();
-    es.addEndpoint(managementContext.getRegistry().getOrCreateEndpointForUri("test://component.exceptions",UMOEndpoint.ENDPOINT_TYPE_SENDER));
+    es.addEndpoint(builder.getManagementContext().getRegistry().getOrCreateEndpointForUri("test://component.exceptions",UMOEndpoint.ENDPOINT_TYPE_SENDER));
     model.setExceptionListener(es);
     model.setLifecycleAdapterFactory(new TestDefaultLifecycleAdapterFactory());
     model.setEntryPointResolver(new TestEntryPointResolver());
@@ -52,13 +53,12 @@
     UMOEndpoint ep1=registry.lookupEndpoint("appleInEndpoint");
     ep1.setTransformer(registry.lookupTransformer("TestCompressionTransformer"));
     UMODescriptor d=builder.createDescriptor("orange","orangeComponent",null,ep1,props);
-    d.setContainer("descriptor");
     DefaultComponentExceptionStrategy dces=new DefaultComponentExceptionStrategy();
-    dces.addEndpoint(managementContext.getRegistry().getOrCreateEndpointForUri("test://orange.exceptions",UMOEndpoint.ENDPOINT_TYPE_SENDER));
+    dces.addEndpoint(builder.getManagementContext().getRegistry().getOrCreateEndpointForUri("test://orange.exceptions",UMOEndpoint.ENDPOINT_TYPE_SENDER));
     d.setExceptionListener(dces);
     UMOInboundRouterCollection inRouter=new InboundRouterCollection();
     inRouter.setCatchAllStrategy(new ForwardingCatchAllStrategy());
-    inRouter.getCatchAllStrategy().setEndpoint(managementContext.getRegistry().getOrCreateEndpointForUri("test://catch.all",UMOEndpoint.ENDPOINT_TYPE_SENDER));
+    inRouter.getCatchAllStrategy().setEndpoint(builder.getManagementContext().getRegistry().getOrCreateEndpointForUri("test2://catch.all",UMOEndpoint.ENDPOINT_TYPE_SENDER));
     UMOEndpoint ep2=builder.createEndpoint("test://orange/","Orange",true,"TestCompressionTransformer");
     ep2.setResponseTransformer(registry.lookupTransformer("TestCompressionTransformer"));
     inRouter.addEndpoint(ep2);
@@ -72,24 +72,23 @@
     d.setInboundRouter(inRouter);
     UMONestedRouterCollection nestedRouter=new NestedRouterCollection();
     NestedRouter nr1=new NestedRouter();
-    nr1.setEndpoint(managementContext.getRegistry().getOrCreateEndpointForUri("test://do.wash",UMOEndpoint.ENDPOINT_TYPE_SENDER));
+    nr1.setEndpoint(builder.getManagementContext().getRegistry().getOrCreateEndpointForUri("test://do.wash",UMOEndpoint.ENDPOINT_TYPE_SENDER));
     nr1.setInterface(FruitCleaner.class);
     nr1.setMethod("wash");
     nestedRouter.addRouter(nr1);
     NestedRouter nr2=new NestedRouter();
-    nr2.setEndpoint(managementContext.getRegistry().getOrCreateEndpointForUri("test://do.polish",UMOEndpoint.ENDPOINT_TYPE_SENDER));
+    nr2.setEndpoint(builder.getManagementContext().getRegistry().getOrCreateEndpointForUri("test://do.polish",UMOEndpoint.ENDPOINT_TYPE_SENDER));
     nr2.setInterface(FruitCleaner.class);
     nr2.setMethod("polish");
     nestedRouter.addRouter(nr2);
     d.setNestedRouter(nestedRouter);
     UMOResponseRouterCollection responseRouter=new ResponseRouterCollection();
-    responseRouter.addEndpoint(managementContext.getRegistry().getOrCreateEndpointForUri("test://response1",UMOEndpoint.ENDPOINT_TYPE_RECEIVER));
+    responseRouter.addEndpoint(builder.getManagementContext().getRegistry().getOrCreateEndpointForUri("test://response1",UMOEndpoint.ENDPOINT_TYPE_RECEIVER));
     responseRouter.addEndpoint(registry.lookupEndpoint("appleResponseEndpoint"));
     responseRouter.addRouter(new TestResponseAggregator());
     responseRouter.setTimeout(10001);
     d.setResponseRouter(responseRouter);
     Map cprops=new HashMap();
-    cprops.put("orange",new Orange());
     cprops.put("brand","Juicy Baby!");
     cprops.put("segments","9");
     cprops.put("radius","4.21");
@@ -108,11 +107,12 @@
     nested3.add("prop6");
     cprops.put("arrayProperties",nested3);
     d.setProperties(cprops);
-    registry.lookupModel("main").registerComponent(d);
+    registry.registerObject("orange",new Orange());
+    d.setModelName("main");
+    registry.registerService(d);
     if (StringUtils.isBlank(builder.getManagementContext().getId())) {
       builder.getManagementContext().setId("" + System.currentTimeMillis());
     }
-    registry.start();
   }
  catch (  Exception e) {
     e.printStackTrace();

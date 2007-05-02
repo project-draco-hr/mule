@@ -15,7 +15,8 @@
       if (managementContext.getRegistry().lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
         throw new AlreadyInitialisedException("Server Components",this);
       }
-      UMOEndpoint endpoint=managementContext.getRegistry().lookupEndpoint(serverUri);
+      MuleEndpoint writableEndpoint;
+      UMOImmutableEndpoint endpoint=managementContext.getRegistry().lookupEndpoint(serverUri);
       if (endpoint == null) {
         UMOEndpointURI endpointUri=new MuleEndpointURI(serverUri);
         UMOConnector connector=TransportFactory.getOrCreateConnectorByProtocol(endpointUri);
@@ -24,12 +25,15 @@
           connector.initialise();
           managementContext.getRegistry().registerConnector(connector);
         }
-        endpoint=new MuleEndpoint();
-        endpoint.setConnector(connector);
-        endpoint.setEndpointURI(endpointUri);
+        writableEndpoint=new MuleEndpoint();
+        writableEndpoint.setConnector(connector);
+        writableEndpoint.setEndpointURI(endpointUri);
+      }
+ else {
+        writableEndpoint=new MuleEndpoint(endpoint);
       }
       logger.info("Registering Admin listener on: " + serverUri);
-      UMODescriptor descriptor=MuleManagerComponent.getDescriptor(endpoint,wireFormat,RegistryContext.getConfiguration().getDefaultEncoding(),RegistryContext.getConfiguration().getDefaultSynchronousEventTimeout());
+      UMODescriptor descriptor=MuleManagerComponent.getDescriptor(writableEndpoint,wireFormat,RegistryContext.getConfiguration().getDefaultEncoding(),RegistryContext.getConfiguration().getDefaultSynchronousEventTimeout());
       ModelHelper.registerSystemComponent(descriptor);
     }
   }

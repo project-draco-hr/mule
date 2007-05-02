@@ -1,31 +1,25 @@
 {
-  fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_DISPOSING));
-  if (disposed) {
+  fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_DISPOSING));
+  if (isDisposed()) {
     return;
   }
   try {
-    if (started) {
+    if (isStarted()) {
       stop();
     }
   }
  catch (  UMOException e) {
     logger.error("Failed to stop manager: " + e.getMessage(),e);
   }
-  disposed=true;
-  fireSystemEvent(new ManagerNotification(id,clusterId,domain,ManagerNotification.MANAGER_DISPOSED));
+  try {
+    lifecycleManager.firePhase(this,Disposable.PHASE_NAME);
+  }
+ catch (  UMOException e) {
+    logger.debug("Failed to cleanly dispose Mule: " + e.getMessage(),e);
+  }
+  fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_DISPOSED));
   if (getRegistry() != null) {
     getRegistry().dispose();
-  }
-  initialised=false;
-  if (notificationManager != null) {
-    notificationManager.dispose();
-  }
-  if (workManager != null) {
-    workManager.dispose();
-  }
-  if (queueManager != null) {
-    queueManager.close();
-    queueManager=null;
   }
   if (logger.isInfoEnabled()) {
     logger.info(getEndSplash());
@@ -33,7 +27,5 @@
  else {
     System.out.println(getEndSplash());
   }
-  getRegistry().dispose();
-  setRegistry(null);
-  config=new MuleConfiguration();
+  lifecycleManager.reset();
 }
