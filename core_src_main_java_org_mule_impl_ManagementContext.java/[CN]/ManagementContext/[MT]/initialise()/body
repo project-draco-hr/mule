@@ -1,22 +1,23 @@
 {
-  if (!isInitialised()) {
-    if (securityManager == null) {
-      throw new NullPointerException(new Message(Messages.X_IS_NULL,"securityManager").getMessage());
-    }
-    if (notificationManager == null) {
-      throw new NullPointerException(new Message(Messages.X_IS_NULL,"notificationManager").getMessage());
-    }
-    if (queueManager == null) {
-      throw new NullPointerException(new Message(Messages.X_IS_NULL,"queueManager").getMessage());
-    }
-    if (workManager == null) {
-      throw new NullPointerException(new Message(Messages.X_IS_NULL,"workManager").getMessage());
-    }
-    config=getRegistry().getConfiguration();
-    if (config == null) {
-      logger.info("A mule configuration object was not registered. Using defualt configuration");
-      config=new MuleConfiguration();
-    }
+  lifecycleManager.checkPhase(Initialisable.PHASE_NAME);
+  if (securityManager == null) {
+    throw new NullPointerException(new Message(Messages.X_IS_NULL,"securityManager").getMessage());
+  }
+  if (notificationManager == null) {
+    throw new NullPointerException(new Message(Messages.X_IS_NULL,"notificationManager").getMessage());
+  }
+  if (queueManager == null) {
+    throw new NullPointerException(new Message(Messages.X_IS_NULL,"queueManager").getMessage());
+  }
+  if (workManager == null) {
+    throw new NullPointerException(new Message(Messages.X_IS_NULL,"workManager").getMessage());
+  }
+  config=getRegistry().getConfiguration();
+  if (config == null) {
+    logger.info("A mule configuration object was not registered. Using defualt configuration");
+    config=new MuleConfiguration();
+  }
+  try {
     setupIds();
     validateEncoding();
     validateOSEncoding();
@@ -24,13 +25,11 @@
     workManager.start();
     notificationManager.start(workManager);
     fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISING));
-    try {
-      directories.createDirectories();
-    }
- catch (    Exception e) {
-      throw new LifecycleException(e,this);
-    }
+    directories.createDirectories();
     lifecycleManager.firePhase(this,Initialisable.PHASE_NAME);
     fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISED));
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
   }
 }

@@ -1,9 +1,8 @@
 {
   UMOLifecycleManager lifecycleManager=new GenericLifecycleManager();
-  Class[] ignorredObjects=new Class[]{Registry.class,UMOManagementContext.class};
   lifecycleManager.registerLifecycle(new ContainerManagedLifecyclePhase(Initialisable.PHASE_NAME,Initialisable.class));
-  lifecycleManager.registerLifecycle(new StartPhase(ignorredObjects));
-  lifecycleManager.registerLifecycle(new StopPhase(ignorredObjects));
+  lifecycleManager.registerLifecycle(new ManagementContextStartPhase());
+  lifecycleManager.registerLifecycle(new ManagementContextStopPhase());
   lifecycleManager.registerLifecycle(new ContainerManagedLifecyclePhase(Disposable.PHASE_NAME,Disposable.class));
   TransientRegistry registry=new TransientRegistry();
   RegistryContext.setRegistry(registry);
@@ -26,9 +25,8 @@
   UMOSecurityManager securityManager=new MuleSecurityManager();
   UMOManagementContext context=new ManagementContext(lifecycleManager);
   context.setId(UUID.getUUID());
-  registry.registerObject(MuleProperties.OBJECT_MANAGMENT_CONTEXT,context);
+  registry.registerObject(UMOManagementContext.class,MuleProperties.OBJECT_MANAGMENT_CONTEXT,context);
   registry.registerObject(ObjectProcessor.class,MuleProperties.OBJECT_MANAGMENT_CONTEXT_PROCESSOR,new ManagementContextDependencyProcessor(context));
-  registry.registerObject(MuleProperties.OBJECT_MANAGMENT_CONTEXT,context);
   registry.registerObject(MuleProperties.OBJECT_SECURITY_MANAGER,securityManager);
   registry.registerObject(MuleProperties.OBJECT_WORK_MANAGER,workManager);
   registry.registerObject(MuleProperties.OBJECT_NOTIFICATION_MANAGER,notificationManager);
@@ -41,5 +39,6 @@
   UMOModel model=sd.createModel();
   model.setName(MuleProperties.OBJECT_SYSTEM_MODEL);
   registry.registerModel(model);
+  registry.initialise();
   return registry;
 }
