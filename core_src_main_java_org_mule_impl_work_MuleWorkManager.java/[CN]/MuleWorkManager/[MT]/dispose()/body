@@ -1,8 +1,19 @@
 {
-  try {
-    stop();
-  }
- catch (  UMOException e) {
-    logger.warn("Error while disposing Work Manager: " + e.getMessage(),e);
+  if (workExecutorService != null) {
+    try {
+      List outstanding=workExecutorService.shutdownNow();
+      if (!workExecutorService.awaitTermination(SHUTDOWN_TIMEOUT,TimeUnit.MILLISECONDS)) {
+        if (logger.isWarnEnabled()) {
+          logger.warn(MessageFormat.format("Pool {0} did not terminate in time; {1} work items were cancelled.",new Object[]{name,outstanding.isEmpty() ? "No" : Integer.toString(outstanding.size())}));
+        }
+      }
+    }
+ catch (    InterruptedException ie) {
+      workExecutorService.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
+ finally {
+      workExecutorService=null;
+    }
   }
 }
