@@ -1,8 +1,8 @@
 {
-  if (chunkSize == 0 && numberOfMessages < 2) {
+  if (messageSize == 0 && numberOfMessages < 2) {
     return super.route(message,session,synchronous);
   }
- else   if (chunkSize > 0) {
+ else   if (messageSize > 0) {
     byte[] data=new byte[0];
     try {
       data=message.getPayloadAsBytes();
@@ -10,11 +10,11 @@
  catch (    Exception e) {
       throw new RoutingException(new Message(Messages.FAILED_TO_READ_PAYLOAD),message,getEndpoint(0,message),e);
     }
-    int parts=data.length / chunkSize;
-    if ((parts * chunkSize) < data.length) {
+    int parts=data.length / messageSize;
+    if ((parts * messageSize) < data.length) {
       parts++;
     }
-    int len=chunkSize;
+    int len=messageSize;
     UMOMessage part=null;
     int count=0;
     int pos=0;
@@ -31,7 +31,13 @@
         part.setCorrelationId(message.getUniqueId());
         part.setCorrelationGroupSize(parts);
         part.setCorrelationSequence(count);
+        if (logger.isInfoEnabled()) {
+          logger.info("sending part " + count + " of "+ parts);
+        }
         super.route(part,session,synchronous);
+        if (logger.isInfoEnabled()) {
+          logger.info("sent");
+        }
       }
     }
  catch (    RoutingException e) {
