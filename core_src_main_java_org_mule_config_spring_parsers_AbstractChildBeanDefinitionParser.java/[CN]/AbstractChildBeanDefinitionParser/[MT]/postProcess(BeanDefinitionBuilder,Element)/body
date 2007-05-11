@@ -1,37 +1,29 @@
 {
-  String parentBean=getParentBeanName(element);
-  if (StringUtils.isBlank(parentBean)) {
-    logger.info("Bean: " + element.getNodeName() + " has no parent");
-    return;
-  }
   String name=generateChildBeanName(element);
   element.setAttribute(ATTRIBUTE_NAME,name);
-  BeanDefinition parent=registry.getBeanDefinition(parentBean);
-  String propertyName=getPropertyName(element);
   PropertyValue pv;
-  pv=parent.getPropertyValues().getPropertyValue(propertyName);
+  try {
+    pv=getParentPropertyValue(element);
+  }
+ catch (  Exception e) {
+    logger.warn("Skipping process for " + element,e);
+    return;
+  }
   if (isMap(element)) {
     if (pv == null) {
-      ManagedMap m=new ManagedMap();
-      pv=new PropertyValue(propertyName,m);
-      parent.getPropertyValues().addPropertyValue(pv);
+      pv=newParentPropertyValue(element,new ManagedMap());
     }
     MapEntryDefinitionParser.KeyValuePair pair=(MapEntryDefinitionParser.KeyValuePair)builder.getBeanDefinition().getSource();
     ((Map)pv.getValue()).put(pair.getKey(),pair.getValue());
   }
  else   if (isCollection(element)) {
     if (pv == null) {
-      pv=parent.getPropertyValues().getPropertyValue(propertyName + "s");
-    }
-    if (pv == null) {
-      ManagedList l=new ManagedList();
-      pv=new PropertyValue(propertyName + "s",l);
-      parent.getPropertyValues().addPropertyValue(pv);
+      pv=newParentPropertyValue(element,new ManagedList());
     }
     ((List)pv.getValue()).add(builder.getBeanDefinition());
   }
  else {
-    pv=new PropertyValue(propertyName,builder.getBeanDefinition());
+    pv=newParentPropertyValue(element,builder.getBeanDefinition());
   }
-  parent.getPropertyValues().addPropertyValue(pv);
+  addParentPropertyValue(element,pv);
 }
