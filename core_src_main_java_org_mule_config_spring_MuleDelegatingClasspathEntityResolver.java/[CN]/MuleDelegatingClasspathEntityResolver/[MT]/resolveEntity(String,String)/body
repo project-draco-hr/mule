@@ -1,16 +1,20 @@
 {
+  String resourcePath=systemId;
   if (systemId.indexOf(BASE_RESOURCE_PATH) > 0) {
-    String resourcePath=systemId.substring(systemId.lastIndexOf(BASE_RESOURCE_PATH));
-    Resource resource=this.resourceLoader.getResource(resourcePath);
-    if (resource != null) {
-      InputSource source=new InputSource(resource.getInputStream());
-      source.setPublicId(publicId);
-      source.setSystemId(systemId);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Found XML entity [" + systemId + "]: "+ resource);
-      }
-      return source;
-    }
+    resourcePath=systemId.substring(systemId.lastIndexOf(BASE_RESOURCE_PATH));
   }
-  return super.resolveEntity(publicId,systemId);
+ else {
+    resourcePath=BASE_RESOURCE_PATH + resourcePath.substring(resourcePath.lastIndexOf("/"));
+  }
+  URL resource=this.resourceLoader.getResource(resourcePath);
+  if (resource != null) {
+    InputSource source=new InputSource(resource.openStream());
+    source.setPublicId(publicId);
+    source.setSystemId(resourcePath);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Found XML entity [" + systemId + "]: "+ resource);
+    }
+    return source;
+  }
+  return null;
 }
