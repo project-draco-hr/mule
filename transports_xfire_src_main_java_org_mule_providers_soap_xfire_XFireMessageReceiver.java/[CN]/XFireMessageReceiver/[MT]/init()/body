@@ -37,6 +37,14 @@
  else {
       service=connector.getServiceFactory().create(exposedInterface,new QName(namespace,component.getDescriptor().getName()),new URL(wsdlUrl),props);
     }
+    List inList=connector.getServerInHandlers();
+    if (inList != null) {
+      for (int i=0; i < inList.size(); i++) {
+        Class clazz=ClassUtils.loadClass(inList.get(i).toString(),this.getClass());
+        Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
+        service.addInHandler(handler);
+      }
+    }
     boolean sync=endpoint.isSynchronous();
     if (endpoint.getEndpointURI().getScheme().startsWith("http") || endpoint.getEndpointURI().getScheme().startsWith("servlet")) {
       sync=true;
@@ -50,6 +58,9 @@ catch (  ClassNotFoundException e) {
     throw new InitialisationException(e,this);
   }
 catch (  MalformedURLException e) {
+    throw new InitialisationException(e,this);
+  }
+catch (  Exception e) {
     throw new InitialisationException(e,this);
   }
 }

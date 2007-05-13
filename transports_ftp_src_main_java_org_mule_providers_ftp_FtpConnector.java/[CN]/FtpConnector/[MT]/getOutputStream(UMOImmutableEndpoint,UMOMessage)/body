@@ -1,28 +1,38 @@
 {
-  FTPClient client=null;
-  UMOEndpointURI uri=endpoint.getEndpointURI();
-  String filename=(String)message.getProperty(FtpConnector.PROPERTY_FILENAME);
   try {
-    if (filename == null) {
-      String outPattern=(String)endpoint.getProperty(FtpConnector.PROPERTY_OUTPUT_PATTERN);
-      if (outPattern == null) {
-        outPattern=message.getStringProperty(FtpConnector.PROPERTY_OUTPUT_PATTERN,getOutputPattern());
+    final UMOEndpointURI uri=endpoint.getEndpointURI();
+    String filename=getFilename(endpoint,message);
+    final FTPClient client=getFtp(uri);
+    try {
+      enterActiveOrPassiveMode(client,endpoint);
+      setupFileType(client,endpoint);
+      if (!client.changeWorkingDirectory(uri.getPath())) {
+        throw new IOException("Ftp error: " + client.getReplyCode());
       }
-      filename=generateFilename(message,outPattern);
+      OutputStream out=client.storeFileStream(filename);
+      return new CallbackOutputStream(out,new CallbackOutputStream.Callback(){
+        public void onClose() throws Exception {
+          try {
+            if (!client.completePendingCommand()) {
+              client.logout();
+              client.disconnect();
+              throw new IOException("FTP Stream failed to complete pending request");
+            }
+          }
+  finally {
+            releaseFtp(uri,client);
+          }
+        }
+      }
+);
     }
-    if (filename == null) {
-      throw new IOException("Filename is null");
+ catch (    Exception e) {
+      logger.debug("Error getting output stream: ",e);
+      releaseFtp(uri,client);
+      throw e;
     }
-    client=getFtp(uri);
-    enterActiveOrPassiveMode(client,endpoint);
-    setupFileType(client,endpoint);
-    if (!client.changeWorkingDirectory(uri.getPath())) {
-      throw new IOException("Ftp error: " + client.getReplyCode());
-    }
-    OutputStream out=client.storeFileStream(filename);
-    return new FtpOutputStreamWrapper(client,out);
   }
  catch (  Exception e) {
-    throw new DispatchException(new Message(Messages.STREAMING_FAILED_NO_STREAM),message,endpoint,e);
+    throw new DispatchException(CoreMessages.streamingFailedNoStream(),message,endpoint,e);
   }
 }

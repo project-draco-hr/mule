@@ -1,0 +1,15 @@
+{
+  MuleClient client=new MuleClient();
+  try {
+    client.send("xfire:http://localhost:10181/services/XFireWithExceptionStrategy?method=testXFireException","TEST",null);
+  }
+ catch (  org.mule.umo.provider.DispatchException ex) {
+    final Throwable t=ex.getCause();
+    assertNotNull("Cause should've been filled in.",t);
+    assertTrue(t instanceof XFireEnabledFaultMessage);
+    XFireEnabledFaultMessage xfireMsg=(XFireEnabledFaultMessage)t;
+    CustomFault fault=xfireMsg.getFaultInfo();
+    assertNotNull(fault);
+    assertEquals("Custom Exception Message",fault.getDescription());
+  }
+}

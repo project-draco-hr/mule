@@ -1,10 +1,19 @@
 {
+  if (logger.isDebugEnabled()) {
+    logger.debug("=== get pool for " + uri);
+  }
   String key=uri.getUsername() + ":" + uri.getPassword()+ "@"+ uri.getHost()+ ":"+ uri.getPort();
   ObjectPool pool=(ObjectPool)pools.get(key);
   if (pool == null) {
-    pool=new GenericObjectPool(new FtpConnectionFactory(uri));
-    ((GenericObjectPool)pool).setTestOnBorrow(this.validateConnections);
-    pools.put(key,pool);
+    try {
+      FtpConnectionFactory connectionFactory=(FtpConnectionFactory)ClassUtils.instanciateClass(getConnectionFactoryClass(),new Object[]{uri},getClass());
+      pool=new GenericObjectPool(connectionFactory);
+      ((GenericObjectPool)pool).setTestOnBorrow(this.validateConnections);
+      pools.put(key,pool);
+    }
+ catch (    Exception ex) {
+      throw new MuleRuntimeException(MessageFactory.createStaticMessage("Hmm, couldn't instanciate FTP connection factory."),ex);
+    }
   }
   return pool;
 }

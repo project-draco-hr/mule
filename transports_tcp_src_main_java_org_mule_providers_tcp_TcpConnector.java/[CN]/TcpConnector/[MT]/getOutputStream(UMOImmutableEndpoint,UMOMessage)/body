@@ -1,18 +1,23 @@
 {
-  Socket socket;
+  final Socket socket;
   try {
     socket=getSocket(endpoint);
   }
  catch (  Exception e) {
-    throw new MessagingException(new Message(Messages.FAILED_TO_GET_OUTPUT_STREAM),message,e);
+    throw new MessagingException(CoreMessages.failedToGetOutputStream(),message,e);
   }
   if (socket == null) {
     throw new IllegalStateException("could not get socket for endpoint: " + endpoint.getEndpointURI().getAddress());
   }
   try {
-    return new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+    return new CallbackOutputStream(new DataOutputStream(new BufferedOutputStream(socket.getOutputStream())),new CallbackOutputStream.Callback(){
+      public void onClose() throws Exception {
+        releaseSocket(socket,endpoint);
+      }
+    }
+);
   }
  catch (  IOException e) {
-    throw new MessagingException(new Message(Messages.FAILED_TO_GET_OUTPUT_STREAM),message,e);
+    throw new MessagingException(CoreMessages.failedToGetOutputStream(),message,e);
   }
 }

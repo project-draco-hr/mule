@@ -1,0 +1,28 @@
+{
+  ProcessInstance processInstance=null;
+  JbpmContext jbpmContext=jbpmConfiguration.createJbpmContext();
+  try {
+    processInstance=jbpmContext.getGraphSession().loadProcessInstance(NumberUtils.toLong(processId));
+    if (processInstance.hasEnded()) {
+      throw new IllegalStateException("Process cannot be advanced because it has already terminated, processId = " + processId);
+    }
+    if (processVariables != null && !processVariables.isEmpty()) {
+      processInstance.getContextInstance().addVariables(processVariables);
+    }
+    if (transition != null) {
+      processInstance.signal((String)transition);
+    }
+ else {
+      processInstance.signal();
+    }
+    jbpmContext.save(processInstance);
+    return processInstance;
+  }
+ catch (  Exception e) {
+    jbpmContext.setRollbackOnly();
+    throw e;
+  }
+ finally {
+    jbpmContext.close();
+  }
+}

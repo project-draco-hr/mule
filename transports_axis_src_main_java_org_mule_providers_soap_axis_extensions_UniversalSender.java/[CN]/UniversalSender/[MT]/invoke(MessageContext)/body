@@ -12,12 +12,26 @@
   UMOManagementContext context=requestEndpoint.getManagementContext();
   assert(context != null);
   UMOImmutableEndpoint endpoint;
-  try {
-    endpoint=lookupEndpoint(uri,context);
+  if (msgContext.getUsername() != null) {
+    String[] tempEndpoint=uri.split("//");
+    String credentialString=msgContext.getUsername() + ":" + msgContext.getPassword();
+    uri=tempEndpoint[0] + "//" + credentialString+ "@"+ tempEndpoint[1];
+    try {
+      endpoint=lookupEndpoint(uri);
+    }
+ catch (    UMOException e) {
+      requestEndpoint.getConnector().handleException(e);
+      return;
+    }
   }
- catch (  UMOException e) {
-    requestEndpoint.getConnector().handleException(e);
-    return;
+ else {
+    try {
+      endpoint=lookupEndpoint(uri);
+    }
+ catch (    UMOException e) {
+      requestEndpoint.getConnector().handleException(e);
+      return;
+    }
   }
   try {
     if (requestEndpoint.getConnector() instanceof AxisConnector) {

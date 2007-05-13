@@ -1,0 +1,23 @@
+{
+  StringBuffer result=new StringBuffer("Received stream");
+  result.append("; length: ");
+  result.append(streamLength);
+  result.append("; '");
+  for (int i=0; i < startDataSize; ++i) {
+    result.append((char)startData[i]);
+  }
+  int endSize=Math.min(endDataSize,STREAM_SAMPLE_SIZE);
+  if (endSize > 0) {
+    result.append("...");
+    for (int i=0; i < endSize; ++i) {
+      result.append((char)endData[(endRingPointer + i) % STREAM_SAMPLE_SIZE]);
+    }
+  }
+  result.append("'");
+  summary=result.toString();
+  String msg=StringMessageUtils.getBoilerPlate("Message Received in component: " + context.getComponentDescriptor().getName() + ". "+ summary+ "\n callback: "+ eventCallback,'*',80);
+  logger.info(msg);
+  if (eventCallback != null) {
+    eventCallback.eventReceived(context,this);
+  }
+}

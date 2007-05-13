@@ -2,6 +2,11 @@
   MuleClient client=new MuleClient();
   Customer c=new Customer("Ross Mason",1234);
   CustomerQuoteRequest request=new CustomerQuoteRequest(c,100000,48);
-  client.dispatch("vm://customer.requests",request,null);
-  Thread.sleep(getDelay());
+  client.dispatch("CustomerRequests",request,null);
+  UMOMessage result=client.receive("CustomerResponses",getDelay());
+  assertNotNull("Result is null",result);
+  assertFalse("Result is null",result.getPayload() instanceof NullPayload);
+  assertTrue("Result should be LoanQuote but is " + result.getPayload().getClass().getName(),result.getPayload() instanceof LoanQuote);
+  LoanQuote quote=(LoanQuote)result.getPayload();
+  assertTrue(quote.getInterestRate() > 0);
 }

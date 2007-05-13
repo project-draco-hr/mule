@@ -1,0 +1,23 @@
+{
+  ProcessInstance processInstance=null;
+  JbpmContext jbpmContext=jbpmConfiguration.createJbpmContext();
+  try {
+    ProcessDefinition processDefinition=jbpmContext.getGraphSession().findLatestProcessDefinition((String)processType);
+    if (processDefinition == null)     throw new IllegalArgumentException("No process definition found for process " + processType);
+    processInstance=new ProcessInstance(processDefinition);
+    if (processVariables != null && !processVariables.isEmpty()) {
+      processInstance.getContextInstance().addVariables(processVariables);
+    }
+    processInstance.getContextInstance().addVariables(processVariables);
+    processInstance.signal();
+    jbpmContext.save(processInstance);
+    return processInstance;
+  }
+ catch (  Exception e) {
+    jbpmContext.setRollbackOnly();
+    throw e;
+  }
+ finally {
+    jbpmContext.close();
+  }
+}

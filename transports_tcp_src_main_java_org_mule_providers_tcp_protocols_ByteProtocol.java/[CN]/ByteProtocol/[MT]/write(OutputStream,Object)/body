@@ -1,8 +1,18 @@
 {
-  if (data instanceof UMOMessageAdapter) {
-    data=((UMOMessageAdapter)data).getPayload();
+  if (data instanceof UMOStreamMessageAdapter) {
+    if (streamOk) {
+      IOUtils.copy(((UMOStreamMessageAdapter)data).getInputStream(),os);
+      os.flush();
+      os.close();
+    }
+ else {
+      throw new IOException("TCP protocol " + ClassUtils.getSimpleName(getClass()) + " cannot handle streaming");
+    }
   }
-  if (data instanceof byte[]) {
+ else   if (data instanceof UMOMessageAdapter) {
+    write(os,((UMOMessageAdapter)data).getPayload());
+  }
+ else   if (data instanceof byte[]) {
     writeByteArray(os,(byte[])data);
   }
  else   if (data instanceof String) {

@@ -37,12 +37,12 @@
   boolean fileWasMoved=false;
   try {
     if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
-      throw new MuleException(new Message(Messages.FILE_X_DOES_NOT_EXIST,sourceFileOriginalName));
+      throw new MuleException(FileMessages.fileDoesNotExist(sourceFileOriginalName));
     }
     if (destinationFile != null) {
       fileWasMoved=this.moveFile(sourceFile,destinationFile);
       if (!fileWasMoved) {
-        throw new MuleException(new Message("file",4,sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
+        throw new MuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
       }
       if (endpoint.isStreaming()) {
         msgAdapter=connector.getStreamMessageAdapter(new FileInputStream(destinationFile),null);
@@ -57,7 +57,7 @@
     if (((FileConnector)connector).isAutoDelete()) {
       if (destinationFile == null) {
         if (!sourceFile.delete()) {
-          throw new MuleException(new Message("file",3,sourceFile.getAbsolutePath()));
+          throw new MuleException(FileMessages.failedToDeleteFile(sourceFile.getAbsolutePath()));
         }
       }
  else {
@@ -69,7 +69,7 @@
     if (fileWasMoved) {
       fileWasRolledBack=this.rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
     }
-    Exception ex=new RoutingException(new Message("file",2,sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new MuleMessage(msgAdapter),endpoint,e);
+    Exception ex=new RoutingException(FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new MuleMessage(msgAdapter),endpoint,e);
     this.handleException(ex);
   }
 }

@@ -25,15 +25,24 @@
         }
       }
       MuleMessage message=new MuleMessage(connector.getMessageAdapter(result));
+      File destinationFile=null;
       if (connector.getMoveToDirectory() != null) {
 {
-          File destinationFile=new File(connector.getMoveToDirectory(),result.getName());
+          destinationFile=new File(connector.getMoveToDirectory(),result.getName());
           if (!result.renameTo(destinationFile)) {
             logger.error("Failed to move file: " + result.getAbsolutePath() + " to "+ destinationFile.getAbsolutePath());
           }
         }
       }
-      result.delete();
+      if (((FileConnector)connector).isAutoDelete()) {
+        if (destinationFile == null) {
+          if (!result.delete()) {
+            throw new MuleException(FileMessages.failedToDeleteFile(result.getAbsolutePath()));
+          }
+        }
+ else {
+        }
+      }
       return message;
     }
   }

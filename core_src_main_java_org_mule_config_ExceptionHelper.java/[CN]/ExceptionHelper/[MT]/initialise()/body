@@ -1,18 +1,23 @@
 {
-  if (initialised) {
-    return;
+  try {
+    if (initialised) {
+      return;
+    }
+    registerExceptionReader(new UMOExceptionReader());
+    registerExceptionReader(new NamingExceptionReader());
+    J2SE_VERSION=System.getProperty("java.specification.version");
+    errorCodes=SpiUtils.findServiceDescriptor("org/mule/config","mule-exception-codes.properties",ExceptionHelper.class);
+    if (errorCodes == null) {
+      throw new IllegalArgumentException("Failed to load resource: META_INF/services/org/mule/config/mule-exception-codes.properties");
+    }
+    reverseErrorCodes=MapUtils.invertMap(errorCodes);
+    errorDocs=SpiUtils.findServiceDescriptor("org/mule/config","mule-exception-config.properties",ExceptionHelper.class);
+    if (errorDocs == null) {
+      throw new IllegalArgumentException("Failed to load resource: META_INF/services/org/mule/config/mule-exception-config.properties");
+    }
+    initialised=true;
   }
-  registerExceptionReader(new UMOExceptionReader());
-  registerExceptionReader(new NamingExceptionReader());
-  J2SE_VERSION=System.getProperty("java.specification.version");
-  errorCodes=SpiUtils.findServiceDescriptor("org/mule/config","mule-exception-codes.properties",ExceptionHelper.class);
-  if (errorCodes == null) {
-    throw new NullPointerException("Failed to load resource: META_INF/services/org/mule/config/mule-exception-codes.properties");
+ catch (  Exception e) {
+    throw new MuleRuntimeException(CoreMessages.failedToLoad("Exception resources"),e);
   }
-  reverseErrorCodes=MapUtils.invertMap(errorCodes);
-  errorDocs=SpiUtils.findServiceDescriptor("org/mule/config","mule-exception-config.properties",ExceptionHelper.class);
-  if (errorDocs == null) {
-    throw new NullPointerException("Failed to load resource: META_INF/services/org/mule/config/mule-exception-config.properties");
-  }
-  initialised=true;
 }

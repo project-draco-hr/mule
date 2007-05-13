@@ -18,21 +18,22 @@
         xfire.getServiceRegistry().register(service);
       }
  catch (      ClassNotFoundException e) {
-        throw new InitialisationException(new Message("xfire",10,clientServices.get(i)),e,this);
+        throw new InitialisationException(XFireMessages.couldNotInitAnnotationProcessor(clientServices.get(i)),e,this);
       }
     }
   }
   if (serviceFactory == null) {
     if (enableJSR181Annotations) {
       if (!SystemUtils.isJavaVersionAtLeast(150)) {
-        throw new InitialisationException(new Message("xfire",9),this);
+        throw new InitialisationException(XFireMessages.annotationsRequireJava5(),this);
       }
       try {
         WebAnnotations wa=(WebAnnotations)ClassUtils.instanciateClass(CLASSNAME_ANNOTATIONS,null,this.getClass());
         serviceFactory=new AnnotationServiceFactory(wa,xfire.getTransportManager());
+        configureBindingProvider((ObjectServiceFactory)serviceFactory);
       }
  catch (      Exception ex) {
-        throw new InitialisationException(new Message("xfire",10,CLASSNAME_ANNOTATIONS),ex,this);
+        throw new InitialisationException(XFireMessages.couldNotInitAnnotationProcessor(CLASSNAME_ANNOTATIONS),ex,this);
       }
     }
  else {

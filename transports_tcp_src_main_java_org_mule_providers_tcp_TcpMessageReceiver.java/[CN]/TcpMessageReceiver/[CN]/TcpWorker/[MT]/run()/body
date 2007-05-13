@@ -2,13 +2,23 @@
   try {
     dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
     dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-    while (!socket.isClosed() && !disposing.get()) {
-      try {
-        if (endpoint.isStreaming()) {
-          UMOMessageAdapter adapter=connector.getStreamMessageAdapter(dataIn,dataOut);
-          routeMessage(new MuleMessage(adapter),endpoint.isSynchronous(),null);
-        }
+    if (endpoint.isStreaming()) {
+      CountDownLatch latch;
+      if (endpoint.isSynchronous()) {
+        latch=new CountDownLatch(2);
+        dataOut=new CloseCountDownOutputStream(dataOut,latch);
+      }
  else {
+        latch=new CountDownLatch(2);
+      }
+      dataIn=new CloseCountDownInputStream(dataIn,latch);
+      UMOMessageAdapter adapter=connector.getStreamMessageAdapter(dataIn,dataOut);
+      routeMessage(new MuleMessage(adapter),endpoint.isSynchronous(),null);
+      latch.await();
+    }
+ else {
+      while (!socket.isClosed() && !disposing.get()) {
+        try {
           Object readMsg=protocol.read(dataIn);
           if (readMsg == null) {
             break;
@@ -19,10 +29,10 @@
           }
           dataOut.flush();
         }
-      }
- catch (      SocketTimeoutException e) {
-        if (!socket.getKeepAlive()) {
-          break;
+ catch (        SocketTimeoutException e) {
+          if (!socket.getKeepAlive()) {
+            break;
+          }
         }
       }
     }

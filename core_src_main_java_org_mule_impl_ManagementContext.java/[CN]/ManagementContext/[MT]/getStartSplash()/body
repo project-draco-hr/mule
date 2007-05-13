@@ -1,19 +1,19 @@
 {
-  String notset=new Message(Messages.NOT_SET).getMessage();
+  String notset=CoreMessages.notSet().getMessage();
   List message=new ArrayList();
   Manifest mf=config.getManifest();
   Map att=mf.getMainAttributes();
   if (att.values().size() > 0) {
-    message.add(StringUtils.defaultString(config.getProductDescription(),notset) + " " + new Message(Messages.VERSION).getMessage()+ " "+ StringUtils.defaultString(config.getProductVersion(),notset));
+    message.add(StringUtils.defaultString(config.getProductDescription(),notset) + " " + CoreMessages.version().getMessage()+ " "+ StringUtils.defaultString(config.getProductVersion(),notset));
     message.add(StringUtils.defaultString(config.getVendorName(),notset));
     message.add(StringUtils.defaultString(config.getProductMoreInfo(),notset));
   }
  else {
-    message.add(new Message(Messages.VERSION_INFO_NOT_SET).getMessage());
+    message.add(CoreMessages.versionNotSet().getMessage());
   }
   message.add(" ");
   DateFormat df=DateFormat.getDateTimeInstance(DateFormat.FULL,DateFormat.FULL);
-  message.add(new Message(Messages.SERVER_STARTED_AT_X,df.format(new Date(getStartDate()))).getMessage());
+  message.add(CoreMessages.serverStartedAt(getStartDate()).getMessage());
   message.add("Server ID: " + id);
   message.add("JDK: " + System.getProperty("java.version") + " ("+ System.getProperty("java.vm.info")+ ")");
   String patch=System.getProperty("sun.os.patch.level",null);
@@ -25,5 +25,17 @@
  catch (  UnknownHostException e) {
   }
   message.add(" ");
+  Map agents=getRegistry().getAgents();
+  if (agents.size() == 0) {
+    message.add(CoreMessages.agentsRunning().getMessage() + " " + CoreMessages.none().getMessage());
+  }
+ else {
+    message.add(CoreMessages.agentsRunning().getMessage());
+    UMOAgent umoAgent;
+    for (Iterator iterator=agents.values().iterator(); iterator.hasNext(); ) {
+      umoAgent=(UMOAgent)iterator.next();
+      message.add("  " + umoAgent.getDescription());
+    }
+  }
   return StringMessageUtils.getBoilerPlate(message,'*',70);
 }

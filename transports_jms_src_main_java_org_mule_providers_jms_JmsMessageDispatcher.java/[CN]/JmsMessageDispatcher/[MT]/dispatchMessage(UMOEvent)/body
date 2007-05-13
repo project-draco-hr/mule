@@ -14,7 +14,7 @@
     if (session != null) {
       transacted=true;
       if (remoteSync) {
-        throw new IllegalTransactionStateException(new org.mule.config.i18n.Message("jms",2));
+        throw new IllegalTransactionStateException(JmsMessages.connectorDoesNotSupportSyncReceiveWhenTransacted());
       }
     }
  else     if (event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions())) {
@@ -44,7 +44,7 @@
     producer=connector.getJmsSupport().createProducer(session,dest,topic);
     Object message=event.getTransformedMessage();
     if (!(message instanceof Message)) {
-      throw new DispatchException(new org.mule.config.i18n.Message(Messages.MESSAGE_NOT_X_IT_IS_TYPE_X_CHECK_TRANSFORMER_ON_X,"JMS message",message.getClass().getName(),connector.getName()),event.getMessage(),event.getEndpoint());
+      throw new DispatchException(JmsMessages.checkTransformer("JMS message",message.getClass(),connector.getName()),event.getMessage(),event.getEndpoint());
     }
     Message msg=(Message)message;
     if (event.getMessage().getCorrelationId() != null) {
@@ -95,7 +95,7 @@
       persistent=Boolean.valueOf(persistentDeliveryString).booleanValue();
     }
     if (logger.isDebugEnabled()) {
-      logger.debug("Sending message of type " + msg.getClass().getName());
+      logger.debug("Sending message of type " + ClassUtils.getSimpleName(msg.getClass()));
     }
     if (consumer != null && topic) {
       Latch l=new Latch();
