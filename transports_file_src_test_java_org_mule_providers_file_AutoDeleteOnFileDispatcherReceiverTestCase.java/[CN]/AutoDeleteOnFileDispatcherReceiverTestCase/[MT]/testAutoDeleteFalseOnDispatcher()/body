@@ -1,0 +1,13 @@
+{
+  ((FileConnector)connector).setAutoDelete(false);
+  UMOEvent event=getTestEvent("TestData");
+  RequestContext.setEvent(event);
+  UMOMessage message=RequestContext.getEventContext().receiveEvent(getTestEndpointURI() + "/" + tempDirName+ "?connector=FileConnector",50000);
+  assertNotNull(message.getPayload());
+  File[] files=tempDir.listFiles();
+  assertTrue(files.length > 0);
+  for (int i=0; i < files.length; i++) {
+    assertTrue(files[i].getName().equals(message.getProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME)));
+    files[i].delete();
+  }
+}
