@@ -4,5 +4,15 @@
   builder.addPropertyValue("modelName",modelName);
   builder.setSingleton(true);
   builder.addDependsOn(modelName);
+  String implClass=element.getAttribute("implementation");
+  if (StringUtils.isNotBlank(implClass)) {
+    BeanDefinitionBuilder serviceBean=BeanDefinitionBuilder.rootBeanDefinition(implClass);
+    String serviceName=element.getAttribute("name") + "-impl";
+    serviceBean.setScope(BeanDefinition.SCOPE_PROTOTYPE);
+    builder.addPropertyReference("service",serviceName);
+    BeanDefinitionHolder holder=new BeanDefinitionHolder(serviceBean.getBeanDefinition(),serviceName);
+    registerBeanDefinition(holder,parserContext.getRegistry());
+    element.removeAttribute("implementation");
+  }
   super.doParse(element,parserContext,builder);
 }
