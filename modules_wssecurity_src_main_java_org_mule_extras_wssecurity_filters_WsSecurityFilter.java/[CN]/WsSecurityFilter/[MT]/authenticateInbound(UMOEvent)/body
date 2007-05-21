@@ -22,7 +22,12 @@
     if (connector != null) {
       Object[] outhandlers=service.getOutHandlers().toArray();
       for (i=0; i < outhandlers.length; i++) {
-        connector.getClientOutHandlers().remove(i);
+        if (outhandlers[i] instanceof DOMOutHandler) {
+          connector.getClientOutHandlers().remove(i);
+        }
+        if (outhandlers[i] instanceof WSS4JOutHandler) {
+          connector.getClientOutHandlers().remove(i);
+        }
       }
       Object[] handlers=service.getInHandlers().toArray();
       boolean isDomInHandlerPresent=false;
@@ -58,7 +63,7 @@
     MuleConfigProvider provider=(MuleConfigProvider)server.getConfig();
     String prefix=event.getEndpoint().getProtocol() + ":";
     String serviceName=event.getEndpoint().getName().substring(prefix.length());
-    SOAPService soapService=null;
+    SOAPService soapService;
     try {
       soapService=provider.getService(new QName(serviceName));
       Hashtable options=new Hashtable();
