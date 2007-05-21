@@ -1,0 +1,16 @@
+{
+  Object msg;
+  if (isMimeMessage) {
+    msg=GreenMailUtilities.toMessage(message,email);
+  }
+ else {
+    msg=message;
+  }
+  MuleClient client=new MuleClient();
+  client.send("vm://send",msg,null);
+  server.waitForIncomingEmail(DELIVERY_DELAY_MS,1);
+  MimeMessage[] messages=server.getReceivedMessages();
+  assertNotNull("did not receive any messages",messages);
+  assertEquals("did not receive 1 mail",1,messages.length);
+  verifyMessage(messages[0]);
+}

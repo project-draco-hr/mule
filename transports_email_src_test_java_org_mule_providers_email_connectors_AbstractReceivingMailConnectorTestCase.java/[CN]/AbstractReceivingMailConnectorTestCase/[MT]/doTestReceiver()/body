@@ -1,0 +1,24 @@
+{
+  final CountDownLatch countDown=new CountDownLatch(1);
+  HashMap props=new HashMap();
+  props.put("eventCallback",new EventCallback(){
+    public synchronized void eventReceived(    UMOEventContext context,    Object component){
+      try {
+        logger.debug("woot - event received");
+        logger.debug("context: " + context);
+        logger.debug("component: " + component);
+        assertMessageOk(context.getMessage().getPayload());
+        countDown.countDown();
+      }
+ catch (      Exception e) {
+        logger.error(e.getMessage(),e);
+      }
+    }
+  }
+);
+  QuickConfigurationBuilder builder=new QuickConfigurationBuilder(false);
+  managementContext.getRegistry().registerConnector(getConnector(false));
+  builder.registerComponent(FunctionalTestComponent.class.getName(),"testComponent",getTestEndpointURI(),null,props);
+  logger.debug("waiting for count down");
+  assertTrue(countDown.await(WAIT_PERIOD_MS,TimeUnit.MILLISECONDS));
+}
