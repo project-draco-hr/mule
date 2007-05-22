@@ -1,5 +1,16 @@
 {
-  XmlBeanDefinitionReader beanDefinitionReader=new MuleBeanDefinitionReader(beanFactory,configLocations.length);
+  XmlBeanDefinitionReader beanDefinitionReader=null;
+  if (ClassUtils.isClassOnPath(LEGACY_BEAN_READER_CLASS,getClass())) {
+    try {
+      beanDefinitionReader=(XmlBeanDefinitionReader)ClassUtils.instanciateClass(LEGACY_BEAN_READER_CLASS,new Object[]{beanFactory,configLocations});
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+  }
+ else {
+    beanDefinitionReader=new XmlBeanDefinitionReader(beanFactory);
+  }
   beanDefinitionReader.setDocumentReaderClass(MuleBeanDefinitionDocumentReader.class);
   beanDefinitionReader.loadBeanDefinitions(configLocations);
 }
