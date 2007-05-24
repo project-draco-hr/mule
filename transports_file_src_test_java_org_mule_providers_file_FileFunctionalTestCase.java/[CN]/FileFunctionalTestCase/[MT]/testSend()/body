@@ -1,0 +1,15 @@
+{
+  File target=File.createTempFile("mule-file-test-",".txt");
+  target.deleteOnExit();
+  FileConnector connector=(FileConnector)managementContext.getRegistry().getConnectors().get("sendConnector");
+  connector.setWriteToDirectory(target.getParent());
+  logger.debug("Directory is " + connector.getWriteToDirectory());
+  Map props=new HashMap();
+  props.put(TARGET_FILE,target.getName());
+  logger.debug("File is " + props.get(TARGET_FILE));
+  MuleClient client=new MuleClient();
+  client.dispatch("send",TEST_MESSAGE,props);
+  waitForFileSystem();
+  String result=new BufferedReader(new FileReader(target)).readLine();
+  assertEquals(TEST_MESSAGE,result);
+}
