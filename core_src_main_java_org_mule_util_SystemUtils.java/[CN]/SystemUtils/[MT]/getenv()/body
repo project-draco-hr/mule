@@ -1,17 +1,19 @@
 {
-  Map env=Collections.EMPTY_MAP;
-  try {
-    if (SystemUtils.IS_JAVA_1_4) {
-      env=getenvJDK14();
-    }
+  if (environment == null) {
+    try {
+      if (SystemUtils.IS_JAVA_1_4) {
+        environment=Collections.unmodifiableMap(getenvJDK14());
+      }
  else {
-      Class target=System.class;
-      Method envMethod=target.getMethod("getenv",ArrayUtils.EMPTY_CLASS_ARRAY);
-      env=(Map)envMethod.invoke(target,(Class[])null);
+        Class target=System.class;
+        Method envMethod=target.getMethod("getenv",ArrayUtils.EMPTY_CLASS_ARRAY);
+        environment=Collections.unmodifiableMap((Map)envMethod.invoke(target,(Class[])null));
+      }
+    }
+ catch (    Exception ex) {
+      logger.error("Could not access OS environment: ",ex);
+      environment=Collections.EMPTY_MAP;
     }
   }
- catch (  Exception ex) {
-    logger.error("Could not access OS environment: ",ex);
-  }
-  return env;
+  return environment;
 }
