@@ -3,14 +3,14 @@
     logger.warn("Applying JXPathFilter to null object.");
     return false;
   }
-  if (expression == null) {
+  if (pattern == null) {
     logger.warn("Expression for JXPathFilter is not set.");
     return false;
   }
   if (expectedValue == null) {
-    if (expression.endsWith("= null") || expression.endsWith("=null")) {
+    if (pattern.endsWith("= null") || pattern.endsWith("=null")) {
       expectedValue="null";
-      expression=expression.substring(0,expression.lastIndexOf("="));
+      pattern=pattern.substring(0,pattern.lastIndexOf("="));
     }
  else {
       if (logger.isInfoEnabled()) {
@@ -23,10 +23,10 @@
   boolean accept=false;
   if (obj instanceof Document) {
     if (namespaces == null) {
-      xpathResult=((Document)obj).valueOf(expression);
+      xpathResult=((Document)obj).valueOf(pattern);
     }
  else {
-      XPath xpath=DocumentHelper.createXPath(expression);
+      XPath xpath=DocumentHelper.createXPath(pattern);
       xpath.setNamespaceURIs(namespaces);
       xpathResult=xpath.valueOf(obj);
     }
@@ -47,7 +47,7 @@
     }
     JXPathContext context=JXPathContext.newContext(obj);
     initialise(context);
-    xpathResult=context.getValue(expression);
+    xpathResult=context.getValue(pattern);
   }
   if (logger.isDebugEnabled()) {
     logger.debug("JXPathFilter Expression result = '" + xpathResult + "' -  Expected value = '"+ expectedValue+ "'");
@@ -60,7 +60,7 @@
       accept=true;
     }
  else {
-      logger.warn("JXPathFilter expression evaluates to null: " + expression);
+      logger.warn("JXPathFilter expression evaluates to null: " + pattern);
     }
   }
   if (logger.isDebugEnabled()) {
