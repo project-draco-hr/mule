@@ -5,24 +5,26 @@
   try {
     connector.enterActiveOrPassiveMode(client,endpoint);
     connector.setupFileType(client,endpoint);
-    if (!client.changeWorkingDirectory(endpoint.getEndpointURI().getPath())) {
-      throw new IOException("Ftp error: " + client.getReplyCode());
+    final String fileName=file.getName();
+    final String path=uri.getPath();
+    if (!client.changeWorkingDirectory(path)) {
+      throw new IOException(MessageFormat.format("Failed to change working directory to {0}. Ftp error: {1}",new Object[]{path,new Integer(client.getReplyCode())}));
     }
     UMOMessage message;
     if (endpoint.isStreaming()) {
-      message=new MuleMessage(connector.getStreamMessageAdapter(client.retrieveFileStream(file.getName()),null));
+      message=new MuleMessage(connector.getStreamMessageAdapter(client.retrieveFileStream(fileName),null));
     }
  else {
       ByteArrayOutputStream baos=new ByteArrayOutputStream();
-      if (!client.retrieveFile(file.getName(),baos)) {
-        throw new IOException("Ftp error: " + client.getReplyCode());
+      if (!client.retrieveFile(fileName,baos)) {
+        throw new IOException(MessageFormat.format("Failed to retrieve file {0}. Ftp error: {1}",new Object[]{fileName,new Integer(client.getReplyCode())}));
       }
       message=new MuleMessage(connector.getMessageAdapter(baos.toByteArray()));
     }
-    message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,file.getName());
+    message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,fileName);
     routeMessage(message);
-    if (!client.deleteFile(file.getName())) {
-      throw new IOException("Ftp error: " + client.getReplyCode());
+    if (!client.deleteFile(fileName)) {
+      throw new IOException(MessageFormat.format("Failed to delete file {0}. Ftp error: {1}",new Object[]{fileName,new Integer(client.getReplyCode())}));
     }
   }
   finally {
