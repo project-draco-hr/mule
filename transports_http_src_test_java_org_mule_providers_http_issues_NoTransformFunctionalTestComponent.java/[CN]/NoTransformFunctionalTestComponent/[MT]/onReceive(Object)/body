@@ -1,5 +1,6 @@
 {
-  String contents=context.getTransformedMessageAsString();
+  UMOEventContext context=RequestContext.getEventContext();
+  String contents=data.toString();
   String msg=StringMessageUtils.getBoilerPlate("Message Received in component: " + context.getComponentDescriptor().getName() + ". Content is: "+ StringMessageUtils.truncate(contents,100,true),'*',80);
   logger.info(msg);
   if (eventCallback != null) {
@@ -10,11 +11,16 @@
     replyMessage=returnMessage;
   }
  else {
-    replyMessage=received(contents) + (appendComponentName ? " " + context.getComponentDescriptor().getName() : "");
+    replyMessage=contents + " Received";
   }
   context.getManagementContext().fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
   if (throwException) {
-    throw new MuleException(MessageFactory.createStaticMessage("Functional Test Component Exception"));
+    if (returnMessage != null && returnMessage instanceof Exception) {
+      throw (Exception)returnMessage;
+    }
+ else {
+      throw new MuleException(MessageFactory.createStaticMessage("Functional Test Component Exception"));
+    }
   }
   return replyMessage;
 }
