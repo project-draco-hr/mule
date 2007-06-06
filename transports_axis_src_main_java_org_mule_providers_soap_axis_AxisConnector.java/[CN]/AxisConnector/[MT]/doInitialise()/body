@@ -1,26 +1,38 @@
 {
-  axisTransportProtocols=new HashMap();
-  try {
-    for (Iterator iterator=supportedSchemes.iterator(); iterator.hasNext(); ) {
-      String s=(String)iterator.next();
-      axisTransportProtocols.put(s,MuleTransport.getTransportClass(s));
-      registerSupportedProtocol(s);
+  if (axisTransportProtocols == null) {
+    axisTransportProtocols=new HashMap();
+    try {
+      for (Iterator iterator=supportedSchemes.iterator(); iterator.hasNext(); ) {
+        String s=(String)iterator.next();
+        axisTransportProtocols.put(s,MuleTransport.getTransportClass(s));
+        registerSupportedProtocol(s);
+      }
+      managementContext.registerListener(this);
     }
-    managementContext.registerListener(this);
+ catch (    Exception e) {
+      throw new InitialisationException(e,this);
+    }
   }
- catch (  Exception e) {
-    throw new InitialisationException(e,this);
+  if (clientProvider == null) {
+    clientProvider=createAxisProvider(clientConfig);
   }
-  if (serverConfig == null) {
-    serverConfig=DEFAULT_MULE_AXIS_SERVER_CONFIG;
+ else {
+    if (clientConfig.equals(DEFAULT_MULE_AXIS_CLIENT_CONFIG) == false) {
+      logger.warn(AxisMessages.clientProviderAndClientConfigConfigured());
+    }
   }
-  if (clientConfig == null) {
-    clientConfig=DEFAULT_MULE_AXIS_CLIENT_CONFIG;
+  if (axisServer == null) {
+    if (serverProvider == null) {
+      serverProvider=this.createAxisProvider(serverConfig);
+    }
+ else {
+      if (serverConfig.equals(DEFAULT_MULE_AXIS_SERVER_CONFIG) == false) {
+        logger.warn(AxisMessages.serverProviderAndServerConfigConfigured());
+      }
+    }
+    axisServer=new AxisServer(serverProvider);
+    axisServer.setOption("axis.doAutoTypes",Boolean.valueOf(doAutoTypes));
   }
-  serverProvider=createAxisProvider(serverConfig);
-  clientProvider=createAxisProvider(clientConfig);
-  axisServer=new AxisServer(serverProvider);
-  axisServer.setOption("axis.doAutoTypes",Boolean.valueOf(doAutoTypes));
   WSDDProvider.registerProvider(QNAME_MULE_PROVIDER,new WSDDJavaMuleProvider(this));
   try {
     registerTransportTypes();
