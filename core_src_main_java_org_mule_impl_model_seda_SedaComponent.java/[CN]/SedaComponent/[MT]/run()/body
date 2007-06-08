@@ -19,17 +19,7 @@
         if (logger.isDebugEnabled()) {
           logger.debug("Component: " + descriptor.getName() + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
         }
-        if (proxyPool != null) {
-          proxy=(MuleProxy)proxyPool.borrowObject();
-          ((SedaComponentStatistics)getStatistics()).setComponentPoolSize(proxyPool.getSize());
-        }
- else         if (componentPerRequest) {
-          proxy=createComponentProxy();
-        }
- else {
-          proxy=componentProxy;
-        }
-        proxy.setStatistics(getStatistics());
+        proxy=getProxy();
         proxy.start();
         proxy.onEvent(queueSession,event);
         workManager.scheduleWork(proxy,WorkManager.INDEFINITE,null,this);

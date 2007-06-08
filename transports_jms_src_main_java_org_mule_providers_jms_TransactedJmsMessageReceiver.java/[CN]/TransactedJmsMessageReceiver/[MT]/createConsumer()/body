@@ -5,8 +5,7 @@
     if (ctx.session == null) {
       ctx.session=this.connector.getSession(endpoint);
     }
-    String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
-    boolean topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
+    final boolean topic=connector.getTopicResolver().isTopic(endpoint);
     Destination dest=jmsSupport.createDestination(ctx.session,endpoint.getEndpointURI().getAddress(),topic);
     String selector=null;
     if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {
@@ -21,7 +20,7 @@
       durable=Boolean.valueOf(tempDurable).booleanValue();
     }
     String durableName=(String)endpoint.getProperties().get("durableName");
-    if (durableName == null && durable && dest instanceof Topic) {
+    if (durableName == null && durable && topic) {
       durableName="mule." + connector.getName() + "."+ endpoint.getEndpointURI().getAddress();
       logger.debug("Jms Connector for this receiver is durable but no durable name has been specified. Defaulting to: " + durableName);
     }

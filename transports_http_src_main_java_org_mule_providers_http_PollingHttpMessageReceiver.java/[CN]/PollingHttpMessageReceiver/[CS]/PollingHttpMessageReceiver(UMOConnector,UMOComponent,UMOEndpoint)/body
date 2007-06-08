@@ -1,7 +1,13 @@
 {
-  this(connector,component,endpoint,AbstractPollingMessageReceiver.DEFAULT_POLL_FREQUENCY);
+  super(connector,component,endpoint);
   long pollingFrequency=MapUtils.getLongValue(endpoint.getProperties(),"pollingFrequency",-1);
   if (pollingFrequency > 0) {
-    setFrequency(pollingFrequency);
+    this.setFrequency(pollingFrequency);
+  }
+  try {
+    pollUrl=new URL(endpoint.getEndpointURI().getAddress());
+  }
+ catch (  MalformedURLException e) {
+    throw new InitialisationException(CoreMessages.valueIsInvalidFor(endpoint.getEndpointURI().getAddress(),"uri"),e,this);
   }
 }

@@ -1,12 +1,11 @@
 {
-  useMultipleReceivers=connector.isCreateMultipleTransactedReceivers();
+  this.setUseMultipleTransactedReceivers(connector.isCreateMultipleTransactedReceivers());
   ThreadingProfile tp=connector.getReceiverThreadingProfile();
-  if (useMultipleReceivers && receiveMessagesInTransaction && tp.isDoThreading()) {
-    for (int i=0; i < connector.getNumberOfConcurrentTransactedReceivers(); i++) {
-      super.doStart();
-    }
+  int numReceiversToStart=1;
+  if (this.isReceiveMessagesInTransaction() && this.isUseMultipleTransactedReceivers() && tp.isDoThreading()) {
+    numReceiversToStart=connector.getNumberOfConcurrentTransactedReceivers();
   }
- else {
+  for (int i=0; i < numReceiversToStart; i++) {
     super.doStart();
   }
 }

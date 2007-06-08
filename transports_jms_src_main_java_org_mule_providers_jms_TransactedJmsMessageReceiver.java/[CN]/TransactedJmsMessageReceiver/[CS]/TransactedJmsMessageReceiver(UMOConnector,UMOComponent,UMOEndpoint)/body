@@ -1,6 +1,6 @@
 {
-  super(connector,component,endpoint,0);
-  this.connector=(JmsConnector)connector;
+  super(umoConnector,component,endpoint);
+  this.connector=(JmsConnector)umoConnector;
   this.timeout=endpoint.getTransactionConfig().getTimeout();
   if (this.connectionStrategy instanceof SingleAttemptConnectionStrategy) {
     this.reuseConsumer=true;
@@ -8,9 +8,8 @@
   }
   this.reuseConsumer=MapUtils.getBooleanValue(endpoint.getProperties(),"reuseConsumer",this.reuseConsumer);
   this.reuseSession=MapUtils.getBooleanValue(endpoint.getProperties(),"reuseSession",this.reuseSession);
-  String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
-  boolean topic=(resourceInfo != null && "topic".equalsIgnoreCase(resourceInfo));
-  useMultipleReceivers=!topic;
+  final boolean topic=connector.getTopicResolver().isTopic(endpoint);
+  this.setUseMultipleTransactedReceivers(!topic);
   try {
     redeliveryHandler=this.connector.createRedeliveryHandler();
     redeliveryHandler.setConnector(this.connector);
