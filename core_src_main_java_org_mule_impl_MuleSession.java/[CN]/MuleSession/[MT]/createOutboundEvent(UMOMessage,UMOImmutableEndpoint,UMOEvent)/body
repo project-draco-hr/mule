@@ -5,6 +5,12 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Creating event with data: " + message.getPayload().getClass().getName() + ", for endpoint: "+ endpoint);
   }
+  if (endpoint.getTransformer() == null && endpoint instanceof UMOEndpoint) {
+    if (endpoint.getConnector() instanceof AbstractConnector) {
+      ((UMOEndpoint)endpoint).setTransformer(((AbstractConnector)endpoint.getConnector()).getDefaultOutboundTransformer());
+      logger.debug("Using default connector outbound transformer: " + endpoint.getTransformer());
+    }
+  }
   try {
     UMOEvent event;
     if (previousEvent != null) {
