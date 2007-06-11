@@ -1,3 +1,15 @@
 {
-  return ClassUtils.getClassName(this.getClass()) + "{hash=" + hashCode()+ ", endpointUri="+ endpointUri+ ", transformer="+ transformer+ ", name='"+ name+ "'"+ ", type='"+ type+ "'"+ ", properties="+ properties+ ", transactionConfig="+ transactionConfig+ ", filter="+ filter+ ", deleteUnacceptedMessages="+ deleteUnacceptedMessages+ ", initialised="+ initialised+ ", securityFilter="+ securityFilter+ ", synchronous="+ synchronous+ ", initialState="+ initialState+ ", createConnector="+ createConnector+ ", remoteSync="+ remoteSync+ ", remoteSyncTimeout="+ remoteSyncTimeout+ ", endpointEncoding="+ endpointEncoding+ ", connector="+ connector+ "}";
+  String sanitizedEndPointUri=endpointUri.toString();
+  URI uri=endpointUri.getUri();
+  if (uri != null && (uri.getRawUserInfo() != null) && (uri.getScheme() != null) && (uri.getHost() != null) && (uri.getRawPath() != null)) {
+    Pattern sanitizerPattern=Pattern.compile("(.*):.*");
+    Matcher sanitizerMatcher=sanitizerPattern.matcher(uri.getRawUserInfo());
+    if (sanitizerMatcher.matches()) {
+      sanitizedEndPointUri=new StringBuffer(uri.getScheme()).append("://").append(sanitizerMatcher.group(1)).append(":<password>").append("@").append(uri.getHost()).append(uri.getRawPath()).toString();
+    }
+    if (uri.getRawQuery() != null) {
+      sanitizedEndPointUri=sanitizedEndPointUri + "?" + uri.getRawQuery();
+    }
+  }
+  return ClassUtils.getClassName(this.getClass()) + "{connector=" + connector+ ", endpointUri="+ sanitizedEndPointUri+ ", transformer="+ transformer+ ", name='"+ name+ "'"+ ", type='"+ type+ "'"+ ", properties="+ properties+ ", transactionConfig="+ transactionConfig+ ", filter="+ filter+ ", deleteUnacceptedMessages="+ deleteUnacceptedMessages+ ", initialised="+ initialised+ ", securityFilter="+ securityFilter+ ", synchronous="+ synchronous+ ", initialState="+ initialState+ ", createConnector="+ createConnector+ ", remoteSync="+ remoteSync+ ", remoteSyncTimeout="+ remoteSyncTimeout+ ", endpointEncoding="+ endpointEncoding+ "}";
 }

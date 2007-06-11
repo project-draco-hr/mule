@@ -19,7 +19,7 @@ catch (    Exception e) {
       if (e instanceof FatalConnectException) {
         throw (FatalConnectException)e;
       }
-      if (retryCounter.current().get() >= retryCount) {
+      if (retryCount != RETRY_COUNT_FOREVER && retryCounter.current().get() >= retryCount) {
         throw new FatalConnectException(CoreMessages.reconnectStrategyFailed(this.getClass(),this.getDescription(connectable)),e,connectable);
       }
       if (logger.isErrorEnabled()) {
@@ -30,7 +30,7 @@ catch (    Exception e) {
         logger.error(msg.toString(),e);
       }
       if (logger.isInfoEnabled()) {
-        logger.info("Waiting for " + retryFrequency + "ms before reconnecting. Failed attempt "+ retryCounter.current().get()+ " of "+ retryCount);
+        logger.info("Waiting for " + retryFrequency + "ms before reconnecting. Failed attempt "+ retryCounter.current().get()+ " of "+ (retryCount != RETRY_COUNT_FOREVER ? String.valueOf(retryCount) : "unlimited"));
       }
       try {
         Thread.sleep(retryFrequency);
