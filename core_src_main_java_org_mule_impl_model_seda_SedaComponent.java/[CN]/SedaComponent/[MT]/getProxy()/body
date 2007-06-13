@@ -1,7 +1,12 @@
 {
   MuleProxy proxy;
   if (proxyPool != null) {
-    proxy=(MuleProxy)proxyPool.borrowObject();
+    try {
+      proxy=(MuleProxy)proxyPool.borrowObject();
+    }
+ catch (    Exception e) {
+      throw new ComponentException(MessageFactory.createStaticMessage("Unable to retrieve component proxy from pool"),null,null,e);
+    }
     ((SedaComponentStatistics)getStatistics()).setComponentPoolSize(proxyPool.getSize());
   }
  else   if (componentPerRequest) {
