@@ -6,11 +6,14 @@
     assertEquals(TEST_MESSAGE + " Received",result.getPayloadAsString());
   }
   UMOModel model=managementContext.getRegistry().lookupModel("main");
-  SedaComponent seda=(SedaComponent)model.getComponent("testComponent2");
-  assertNotNull("Null service",seda);
-  FunctionalTestComponent ftc=(FunctionalTestComponent)seda.getInstance();
-  assertNotNull("Null FTC",ftc);
-  CounterCallback cc=(CounterCallback)ftc.getEventCallback();
-  assertNotNull("Null CounterCallback",cc);
-  assertEquals(NUM_MESSAGES,cc.getCallbackCount());
+  UMOComponent c=model.getComponent("testComponent2");
+  assertTrue("Component should be a TestSedaComponent",c instanceof TestSedaComponent);
+  MuleProxy proxy=((TestSedaComponent)c).getProxy();
+  Object ftc=((TestMuleProxy)proxy).getComponent();
+  assertNotNull("Functional Test Component not found in the model.",ftc);
+  assertTrue("Service should be a FunctionalTestComponent",ftc instanceof FunctionalTestComponent);
+  EventCallback cc=((FunctionalTestComponent)ftc).getEventCallback();
+  assertNotNull("EventCallback is null",cc);
+  assertTrue("EventCallback should be a CounterCallback",cc instanceof CounterCallback);
+  assertEquals(NUM_MESSAGES,((CounterCallback)cc).getCallbackCount());
 }
