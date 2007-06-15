@@ -15,17 +15,19 @@
     PropertyValue newPropertyValue=builder.getBeanDefinition().getPropertyValues().getPropertyValues()[i];
     String name=newPropertyValue.getName();
     Object value=newPropertyValue.getValue();
-    if (propertyToolkit.isCollection(name)) {
-      Collection values=new HashSet();
-      if (parentProperties.contains(name)) {
-        values=(Collection)parentProperties.getPropertyValue(name).getValue();
-        parentProperties.removePropertyValue(name);
+    if (!propertyToolkit.isIgnored(name)) {
+      if (propertyToolkit.isCollection(name)) {
+        Collection values=new HashSet();
+        if (parentProperties.contains(name)) {
+          values=(Collection)parentProperties.getPropertyValue(name).getValue();
+          parentProperties.removePropertyValue(name);
+        }
+        values.add(value);
+        parentProperties.addPropertyValue(name,values);
       }
-      values.add(value);
-      parentProperties.addPropertyValue(name,values);
-    }
  else {
-      parentProperties.addPropertyValue(name,value);
+        parentProperties.addPropertyValue(name,value);
+      }
     }
   }
   AbstractBeanDefinition bd=(AbstractBeanDefinition)parserContext.getContainingBeanDefinition();
