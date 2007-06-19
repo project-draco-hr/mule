@@ -1,7 +1,18 @@
 {
   try {
     if (null == remoteObject) {
-      initialize(getEndpoint());
+      try {
+        InetAddress inetAddress=InetAddress.getByName(endpoint.getEndpointURI().getHost());
+        bindName=endpoint.getEndpointURI().getPath();
+        remoteObject=getRmiObject();
+        Method theMethod=remoteObject.getClass().getMethod("setReceiver",new Class[]{RmiCallbackMessageReceiver.class});
+        theMethod.invoke(remoteObject,new Object[]{this});
+        jndi=connector.getJndiContext(inetAddress.getHostAddress() + ":" + port);
+        jndi.rebind(bindName,remoteObject);
+      }
+ catch (      Exception e) {
+        throw new ConnectException(e,this);
+      }
     }
   }
  catch (  Exception e) {
