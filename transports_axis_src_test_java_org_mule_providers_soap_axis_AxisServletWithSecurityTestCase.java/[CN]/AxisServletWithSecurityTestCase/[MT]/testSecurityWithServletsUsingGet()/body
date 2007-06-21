@@ -3,6 +3,10 @@
   props.put(HttpConnector.HTTP_METHOD_PROPERTY,"GET");
   MuleClient client=new MuleClient();
   UMOMessage result=client.send("http://ross:ross@localhost:" + HTTP_PORT + "/services/mycomponent?method=echo","test",props);
-  assertNotNull(result);
-  assertTrue(result.getPayload() instanceof byte[]);
+  ExceptionListener exceptionListener=managementContext.getRegistry().lookupConnector("servletConnector").getExceptionListener();
+  Assert.assertTrue(exceptionListener instanceof UnitTestExceptionStrategy);
+  UnitTestExceptionStrategy utExStrat=(UnitTestExceptionStrategy)exceptionListener;
+  Assert.assertEquals(1,utExStrat.getMessagingExceptions().size());
+  Assert.assertNotNull(result);
+  Assert.assertTrue(result.getPayload() instanceof byte[]);
 }
