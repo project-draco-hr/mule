@@ -1,0 +1,32 @@
+{
+  assertTargetPresent();
+  String newName=targetConfig.bestGuessName(oldName,target.getBeanClassName());
+  Object source=bean.getBeanDefinition().getSource();
+  PropertyValue pv=target.getPropertyValues().getPropertyValue(newName);
+  if (!targetConfig.isIgnored(oldName)) {
+    if (source instanceof ChildMapEntryDefinitionParser.KeyValuePair) {
+      if (pv == null) {
+        pv=new PropertyValue(newName,new ManagedMap());
+      }
+      ChildMapEntryDefinitionParser.KeyValuePair pair=(ChildMapEntryDefinitionParser.KeyValuePair)source;
+      ((Map)pv.getValue()).put(pair.getKey(),pair.getValue());
+    }
+ else     if (targetConfig.isCollection(newName) || source instanceof ChildListEntryDefinitionParser.ListEntry) {
+      if (pv == null) {
+        pv=new PropertyValue(newName,new ManagedList());
+      }
+      List list=(List)pv.getValue();
+      if (source instanceof ChildListEntryDefinitionParser.ListEntry) {
+        ChildListEntryDefinitionParser.ListEntry entry=(ChildListEntryDefinitionParser.ListEntry)source;
+        list.add(entry.getProxiedObject());
+      }
+ else {
+        list.add(bean.getBeanDefinition());
+      }
+    }
+ else {
+      pv=new PropertyValue(newName,bean.getBeanDefinition());
+    }
+    target.getPropertyValues().addPropertyValue(pv);
+  }
+}

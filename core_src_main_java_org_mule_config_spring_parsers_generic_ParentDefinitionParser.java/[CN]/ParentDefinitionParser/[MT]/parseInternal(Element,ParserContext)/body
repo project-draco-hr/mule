@@ -1,6 +1,5 @@
 {
   setRegistry(parserContext.getRegistry());
-  parserContext.getContainingBeanDefinition();
   this.parserContext=parserContext;
   Class beanClass=getBeanClass(element);
   Assert.state(beanClass != null,"Class returned from getBeanClass(Element) must not be null, element is: " + element.getNodeName());
@@ -10,27 +9,8 @@
     builder.setSingleton(parserContext.getContainingBeanDefinition().isSingleton());
   }
   doParse(element,parserContext,builder);
-  BeanDefinition bd=getParentBeanDefinition(element);
-  MutablePropertyValues parentProperties=bd.getPropertyValues();
-  for (int i=0; i < builder.getBeanDefinition().getPropertyValues().getPropertyValues().length; i++) {
-    PropertyValue newPropertyValue=builder.getBeanDefinition().getPropertyValues().getPropertyValues()[i];
-    String name=newPropertyValue.getName();
-    Object value=newPropertyValue.getValue();
-    if (!propertyToolkit.isIgnored(name)) {
-      if (propertyToolkit.isCollection(name)) {
-        Collection values=new ManagedList();
-        if (parentProperties.contains(name)) {
-          values=(Collection)parentProperties.getPropertyValue(name).getValue();
-          parentProperties.removePropertyValue(name);
-        }
-        values.add(value);
-        parentProperties.addPropertyValue(name,values);
-      }
- else {
-        parentProperties.addPropertyValue(name,value);
-      }
-    }
-  }
-  bd.setAttribute(COMPOUND_ELEMENT,Boolean.TRUE);
-  return (AbstractBeanDefinition)bd;
+  BeanAssembler beanAssembler=getBeanAssembly(element,builder);
+  beanAssembler.copyBeanToTarget();
+  beanAssembler.getTarget().setAttribute(COMPOUND_ELEMENT,Boolean.TRUE);
+  return (AbstractBeanDefinition)beanAssembler.getTarget();
 }

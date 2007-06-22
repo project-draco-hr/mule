@@ -1,0 +1,36 @@
+{
+  assertTargetPresent();
+  MutablePropertyValues targetProperties=target.getPropertyValues();
+  MutablePropertyValues beanProperties=bean.getBeanDefinition().getPropertyValues();
+  for (int i=0; i < beanProperties.size(); i++) {
+    PropertyValue propertyValue=beanProperties.getPropertyValues()[i];
+    String name=propertyValue.getName();
+    Object value=propertyValue.getValue();
+    Object oldValue=null;
+    if (targetProperties.contains(name)) {
+      oldValue=targetProperties.getPropertyValue(name).getValue();
+    }
+    if (targetConfig.isCollection(name) || oldValue instanceof Collection || value instanceof Collection) {
+      Collection values=new ManagedList();
+      if (null != oldValue) {
+        targetProperties.removePropertyValue(name);
+        if (oldValue instanceof Collection) {
+          values.addAll((Collection)oldValue);
+        }
+ else {
+          values.add(oldValue);
+        }
+      }
+      if (value instanceof Collection) {
+        values.addAll((Collection)value);
+      }
+ else {
+        values.add(value);
+      }
+      targetProperties.addPropertyValue(name,values);
+    }
+ else {
+      targetProperties.addPropertyValue(name,value);
+    }
+  }
+}
