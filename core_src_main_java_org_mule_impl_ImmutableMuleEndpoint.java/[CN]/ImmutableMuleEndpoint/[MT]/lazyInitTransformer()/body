@@ -1,18 +1,18 @@
 {
-  if (transformer == null) {
+  if (UninitialisedTransformer.NULL == transformer.get()) {
+    UMOTransformer newTransformer=null;
     if (connector instanceof AbstractConnector) {
       if (UMOEndpoint.ENDPOINT_TYPE_SENDER.equals(type)) {
-        transformer=((AbstractConnector)connector).getDefaultOutboundTransformer();
+        newTransformer=((AbstractConnector)connector).getDefaultOutboundTransformer();
       }
  else       if (UMOEndpoint.ENDPOINT_TYPE_SENDER_AND_RECEIVER.equals(type)) {
-        transformer=((AbstractConnector)connector).getDefaultInboundTransformer();
+        newTransformer=((AbstractConnector)connector).getDefaultInboundTransformer();
       }
  else {
-        transformer=((AbstractConnector)connector).getDefaultInboundTransformer();
+        newTransformer=((AbstractConnector)connector).getDefaultInboundTransformer();
       }
     }
-    if (transformer != null) {
-      transformer.setEndpoint(this);
-    }
+    transformer.compareAndSet(UninitialisedTransformer.NULL,newTransformer);
+    updateTransformerEndpoint();
   }
 }

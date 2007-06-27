@@ -38,11 +38,12 @@
     properties.putAll(endpointUri.getParams());
   }
   if (!(this instanceof MuleEndpoint)) {
-    this.properties=Collections.unmodifiableMap(this.properties);
+    properties=Collections.unmodifiableMap(properties);
   }
   if (endpointUri.getTransformers() != null) {
     try {
-      transformer=MuleObjectHelper.getTransformer(endpointUri.getTransformers(),",");
+      UMOTransformer newTransformer=MuleObjectHelper.getTransformer(endpointUri.getTransformers(),",");
+      initTransformerIfNotNull(newTransformer);
     }
  catch (    MuleException e) {
       throw new InitialisationException(e,this);
@@ -82,7 +83,8 @@
   initialised.set(true);
   try {
     register();
-    if (transformer != null && transformer.getRegistryId() == null)     transformer.register();
+    UMOTransformer transformerValue=getTransformerValue();
+    if (transformerValue != null && transformerValue.getRegistryId() == null)     transformerValue.register();
     if (responseTransformer != null && responseTransformer.getRegistryId() == null)     responseTransformer.register();
   }
  catch (  RegistrationException re) {
