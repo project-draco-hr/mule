@@ -1,0 +1,12 @@
+{
+  MuleClient muleClient=new MuleClient();
+  UMOMessage result=muleClient.send("vm://incomingFirstFail",new MuleMessage("thePayload"));
+  assertNotNull("Should be a NullPayload instead.",result);
+  assertEquals("Should be a NullPayload instead.",NullPayload.getInstance(),result.getPayload());
+  assertNotNull("Should've contained an exception payload",result.getExceptionPayload());
+  Throwable exception=result.getExceptionPayload().getException();
+  assertNotNull("Exception required",exception);
+  assertTrue("Wrong exception",exception instanceof ComponentException);
+  String compName=((ComponentException)exception).getComponent().getDescriptor().getName();
+  assertEquals("Exception raised in wrong component","component1Fail",compName);
+}

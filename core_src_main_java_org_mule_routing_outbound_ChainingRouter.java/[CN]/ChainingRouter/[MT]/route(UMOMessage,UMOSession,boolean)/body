@@ -18,14 +18,15 @@
       }
       if (!lastEndpointInChain) {
         UMOMessage localResult=send(session,intermediaryResult,endpoint);
-        if (localResult != null && intermediaryResult != null) {
+        if (localResult != null && localResult.getPayload() != NullPayload.getInstance() && intermediaryResult != null) {
           processIntermediaryResult(localResult,intermediaryResult);
         }
         intermediaryResult=localResult;
         if (logger.isDebugEnabled()) {
           logger.debug("Received Chain result '" + i + "': "+ (intermediaryResult != null ? intermediaryResult.toString() : "null"));
         }
-        if (intermediaryResult == null) {
+        if (intermediaryResult == null || intermediaryResult.getPayload() == NullPayload.getInstance()) {
+          resultToReturn=intermediaryResult;
           logger.warn("Chaining router cannot process any further endpoints. " + "There was no result returned from endpoint invocation: " + endpoint);
           break;
         }
