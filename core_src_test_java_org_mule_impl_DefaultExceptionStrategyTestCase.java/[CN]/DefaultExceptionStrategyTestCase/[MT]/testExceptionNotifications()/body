@@ -1,0 +1,19 @@
+{
+  final CountDownLatch latch=new CountDownLatch(1);
+  final AtomicInteger notificationCount=new AtomicInteger(0);
+  managementContext.registerListener(new ExceptionNotificationListener(){
+    public void onNotification(    UMOServerNotification notification){
+      if (notification.getAction() == ExceptionNotification.EXCEPTION_ACTION) {
+        assertEquals("exception",notification.getActionName());
+        assertEquals("Wrong info type",UMOServerNotification.TYPE_ERROR,notification.getType());
+        notificationCount.incrementAndGet();
+      }
+    }
+  }
+);
+  DefaultExceptionStrategy strategy=new DefaultExceptionStrategy();
+  strategy.setManagementContext(managementContext);
+  strategy.exceptionThrown(new IllegalArgumentException("boom"));
+  latch.await(2000,TimeUnit.MILLISECONDS);
+  assertEquals(1,notificationCount.get());
+}
