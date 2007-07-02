@@ -1,0 +1,22 @@
+{
+  UMOEndpoint endpoint=null;
+  try {
+    if (recipient instanceof UMOEndpointURI) {
+      endpoint=getRecipientEndpointFromUri((UMOEndpointURI)recipient);
+    }
+ else     if (recipient instanceof String) {
+      endpoint=getRecipientEndpointFromString(message,(String)recipient);
+    }
+    if (null == endpoint) {
+      throw new RegistrationException("Failed to create endpoint for: " + recipient);
+    }
+    UMOEndpoint existingEndpoint=(UMOEndpoint)recipientCache.putIfAbsent(recipient,endpoint);
+    if (existingEndpoint != null) {
+      endpoint=existingEndpoint;
+    }
+  }
+ catch (  UMOException e) {
+    throw new RoutingException(message,endpoint,e);
+  }
+  return endpoint;
+}
