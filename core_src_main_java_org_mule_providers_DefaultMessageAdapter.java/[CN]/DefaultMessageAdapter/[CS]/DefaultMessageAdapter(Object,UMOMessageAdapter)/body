@@ -10,7 +10,13 @@
     for (Iterator iterator=previous.getAttachmentNames().iterator(); iterator.hasNext(); ) {
       String name=(String)iterator.next();
       try {
-        addAttachment(name,previous.getAttachment(name));
+        DataHandler dh=previous.getAttachment(name);
+        if (null == dh) {
+          logger.warn("Detected concurrent access to attachment " + name + " for "+ previous);
+        }
+ else {
+          addAttachment(name,dh);
+        }
       }
  catch (      Exception e) {
         throw new MuleRuntimeException(CoreMessages.failedToReadPayload(),e);
@@ -19,7 +25,13 @@
     for (Iterator iterator=previous.getPropertyNames().iterator(); iterator.hasNext(); ) {
       String name=(String)iterator.next();
       try {
-        setProperty(name,previous.getProperty(name));
+        Object value=previous.getProperty(name);
+        if (null == value) {
+          logger.warn("Detected concurrent access to property " + name + " for "+ previous);
+        }
+ else {
+          setProperty(name,value);
+        }
       }
  catch (      Exception e) {
         throw new MuleRuntimeException(CoreMessages.failedToReadPayload(),e);
