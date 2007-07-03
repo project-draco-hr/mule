@@ -23,11 +23,12 @@
           if (readMsg == null) {
             break;
           }
+          boolean remoteSync=endpoint.isRemoteSync();
           Object result=processData(readMsg);
-          if (result != null) {
+          if (result != null && (remoteSync || !component.getDescriptor().getOutboundRouter().hasEndpoints())) {
             protocol.write(dataOut,result);
+            dataOut.flush();
           }
-          dataOut.flush();
         }
  catch (        SocketTimeoutException e) {
           if (!socket.getKeepAlive()) {
