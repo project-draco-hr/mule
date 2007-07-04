@@ -13,7 +13,7 @@
   if (!isSourceTypeSupported(src.getClass())) {
     if (ignoreBadInput) {
       logger.debug("Source type is incompatible with this transformer and property 'ignoreBadInput' is set to true, so the transformer chain will continue.");
-      return src;
+      return nextTransform(src);
     }
  else {
       throw new TransformerException(CoreMessages.transformOnObjectUnsupportedTypeOfEndpoint(this.getName(),src.getClass(),endpoint),this);
@@ -31,9 +31,6 @@
     logger.debug("Object after transform: " + StringMessageUtils.truncate(StringMessageUtils.toString(result),DEFAULT_TRUNCATE_LENGTH,false));
   }
   result=checkReturnClass(result);
-  if (nextTransformer != null) {
-    logger.debug("Following transformer in the chain is " + nextTransformer.getName() + " ("+ nextTransformer.getClass().getName()+ ")");
-    result=nextTransformer.transform(result);
-  }
+  result=nextTransform(result);
   return result;
 }

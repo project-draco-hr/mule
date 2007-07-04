@@ -1,0 +1,18 @@
+{
+  AbstractTransformer transformer=(AbstractTransformer)this.getTransformer();
+  assertNotNull(transformer);
+  transformer.setIgnoreBadInput(true);
+  final AtomicBoolean nextCalled=new AtomicBoolean(false);
+  final Object marker=new Object();
+  transformer.setNextTransformer(new AbstractTransformer(){
+    protected Object doTransform(    Object src,    String encoding) throws TransformerException {
+      nextCalled.set(true);
+      return marker;
+    }
+  }
+);
+  Object result=transformer.transform(this);
+  assertNotNull(result);
+  assertSame(marker,result);
+  assertTrue("Next transformer not called.",nextCalled.get());
+}
