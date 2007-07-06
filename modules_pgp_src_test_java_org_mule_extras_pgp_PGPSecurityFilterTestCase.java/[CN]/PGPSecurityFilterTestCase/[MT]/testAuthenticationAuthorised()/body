@@ -5,6 +5,18 @@
   FileInputStream in=new FileInputStream(url.getFile());
   in.read(msg);
   in.close();
+  Map props=new HashMap();
+  props.put("TARGET_FILE",TARGET);
   MuleClient client=new MuleClient();
-  client.send("vm://echo",new String(msg),null);
+  UMOMessage reply=client.send("vm://echo",new String(msg),props);
+  assertNull(reply.getExceptionPayload());
+  try {
+    FileReader outputFile=new FileReader(DIRECTORY + TARGET);
+    outputFile.close();
+    File f=new File(DIRECTORY + TARGET);
+    f.delete();
+  }
+ catch (  FileNotFoundException fileNotFound) {
+    fail("File not successfully created");
+  }
 }
