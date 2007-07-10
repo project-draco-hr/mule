@@ -1,31 +1,22 @@
 {
-  final int countDownInitialCount=2;
-  final CountDownLatch countDown=new CountDownLatch(countDownInitialCount);
-  UMODescriptor descriptor=getTestDescriptor("testComponent",FunctionalTestComponent.class.getName());
   EventCallback callback=new EventCallback(){
     public synchronized void eventReceived(    UMOEventContext context,    Object component) throws Exception {
-      callbackCalled=true;
       currentTx=context.getCurrentTransaction();
       assertNotNull(currentTx);
       assertTrue(currentTx.isBegun());
-      logger.debug("@@@@ Rolling back transaction @@@@");
+      logger.info("@@@@ Rolling back transaction @@@@");
       currentTx.setRollbackOnly();
-      countDown.countDown();
+      callbackCalled.countDown();
     }
   }
 ;
-  initialiseComponent(descriptor,UMOTransactionConfig.ACTION_ALWAYS_BEGIN,callback);
-  addResultListener(getOutDest().getAddress(),countDown);
-  UMOConnector umoCnn=managementContext.getRegistry().lookupConnector(CONNECTOR_NAME);
-  umoCnn.setExceptionListener(new RollbackExceptionListener(countDown));
-  managementContext.start();
-  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
-  afterInitialise();
-  countDown.await(LOCK_WAIT,TimeUnit.MILLISECONDS);
-  assertTrue("Only " + (countDownInitialCount - countDown.getCount()) + " of "+ countDownInitialCount+ " checkpoints hit",countDown.getCount() == 0);
-  afterInitialise();
-  assertNull(currentMsg);
-  assertTrue(callbackCalled);
+  FunctionalTestComponent ftc=lookupTestComponent("transactionTestModel","component2");
+  ftc.setEventCallback(callback);
+  send(TEST_MESSAGE,"component2In");
+  assertTrue(callbackCalled.await(LOCK_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertEquals(TEST_MESSAGE,ftc.getLastReceivedMessage());
+  assertTrue(currentTx.isBegun());
+  Thread.sleep(1000);
   assertTrue(currentTx.isRolledBack());
-  assertNull(receive(getInDest().getAddress(),2000));
+  assertNull("Transaction was rolled back, but message got delivered anyways.",receive("component2Out",1000));
 }

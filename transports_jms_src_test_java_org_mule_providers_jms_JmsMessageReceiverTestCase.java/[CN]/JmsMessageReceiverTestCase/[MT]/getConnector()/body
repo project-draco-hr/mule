@@ -6,10 +6,11 @@
     Mock connectionFactory=new Mock(ConnectionFactory.class);
     Mock connection=new Mock(Connection.class);
     connectionFactory.expectAndReturn("createConnection",connection.proxy());
+    connection.expect("setExceptionListener",new AnyConstraintMatcher());
     connection.expect("close");
     connection.expect("start");
     connection.expect("stop");
-    connector.setConnectionFactory((ConnectionFactory)connectionFactory.proxy());
+    connector.setConnectionFactory(new SingletonObjectFactory(connectionFactory.proxy()));
   }
   return connector;
 }

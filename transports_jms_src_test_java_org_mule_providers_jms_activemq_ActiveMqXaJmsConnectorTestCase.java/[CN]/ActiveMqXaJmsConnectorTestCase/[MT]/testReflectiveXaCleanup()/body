@@ -1,0 +1,29 @@
+{
+  JmsConnector c=(JmsConnector)managementContext.getRegistry().lookupConnector("jmsConnector");
+  assertNotNull(c);
+  Object cf=c.getConnectionFactory().create();
+  assertTrue(cf instanceof ActiveMQXAConnectionFactory);
+  ConnectionFactoryWrapper wrapper=new ConnectionFactoryWrapper(cf,new TestTransactionManagerFactory().create());
+  Connection connection=wrapper.createConnection();
+  assertNotNull(connection);
+  assertTrue(Proxy.isProxyClass(connection.getClass()));
+  try {
+    final Class clazz=connection.getClass();
+    Method cleanupMethod;
+    if (Proxy.isProxyClass(clazz)) {
+      ConnectionFactoryWrapper.ConnectionInvocationHandler handler=(ConnectionFactoryWrapper.ConnectionInvocationHandler)Proxy.getInvocationHandler(connection);
+      connection=(Connection)handler.getTargetObject();
+      Class realConnectionClass=connection.getClass();
+      cleanupMethod=realConnectionClass.getMethod("cleanup",null);
+    }
+ else {
+      cleanupMethod=clazz.getMethod("cleanup",null);
+    }
+    if (cleanupMethod != null) {
+      cleanupMethod.invoke(connection,null);
+    }
+  }
+  finally {
+    connection.close();
+  }
+}

@@ -1,25 +1,17 @@
 {
-  UMODescriptor descriptor=getTestDescriptor("testComponent",FunctionalTestComponent.class.getName());
-  final int countDownInitialCount=2;
-  final CountDownLatch countDown=new CountDownLatch(countDownInitialCount);
   EventCallback callback=new EventCallback(){
-    public synchronized void eventReceived(    UMOEventContext context,    Object component){
-      callbackCalled=true;
-      assertNull(context.getCurrentTransaction());
-      countDown.countDown();
+    public synchronized void eventReceived(    UMOEventContext context,    Object component) throws Exception {
+      currentTx=context.getCurrentTransaction();
+      assertNull(currentTx);
+      callbackCalled.countDown();
     }
   }
 ;
-  initialiseComponent(descriptor,UMOTransactionConfig.ACTION_NONE,callback);
-  addResultListener(getOutDest().getAddress(),countDown);
-  managementContext.start();
-  afterInitialise();
-  send(DEFAULT_MESSAGE,false,Session.AUTO_ACKNOWLEDGE);
-  countDown.await(LOCK_WAIT,TimeUnit.MILLISECONDS);
-  assertTrue("Only " + (countDownInitialCount - countDown.getCount()) + " of "+ countDownInitialCount+ " checkpoints hit",countDown.getCount() == 0);
-  assertNotNull(currentMsg);
-  assertTrue(currentMsg instanceof TextMessage);
-  assertEquals(DEFAULT_MESSAGE + " Received",((TextMessage)currentMsg).getText());
-  assertTrue(callbackCalled);
+  FunctionalTestComponent ftc=lookupTestComponent("transactionTestModel","component1");
+  ftc.setEventCallback(callback);
+  send(TEST_MESSAGE,"component1In");
+  assertTrue(callbackCalled.await(LOCK_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertEquals(TEST_MESSAGE,ftc.getLastReceivedMessage());
   assertNull(currentTx);
+  assertEquals(TEST_MESSAGE_RESPONSE,receiveTextMessage("component1Out"));
 }

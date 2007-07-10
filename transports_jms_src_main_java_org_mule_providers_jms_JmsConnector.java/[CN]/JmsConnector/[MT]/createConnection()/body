@@ -1,18 +1,25 @@
 {
+  ConnectionFactory cf;
   Connection connection;
-  if (connectionFactory == null) {
-    connectionFactory=createConnectionFactory();
+  try {
+    cf=(ConnectionFactory)connectionFactory.create();
   }
-  if (connectionFactory != null && connectionFactory instanceof XAConnectionFactory) {
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+  if (cf == null) {
+    throw new InitialisationException(CoreMessages.failedToCreate("ConnectionFactory"),this);
+  }
+  if (cf instanceof XAConnectionFactory) {
     if (managementContext.getTransactionManager() != null) {
-      connectionFactory=new ConnectionFactoryWrapper(connectionFactory,managementContext.getTransactionManager());
+      cf=new ConnectionFactoryWrapper(cf,managementContext.getTransactionManager());
     }
   }
   if (username != null) {
-    connection=jmsSupport.createConnection(connectionFactory,username,password);
+    connection=jmsSupport.createConnection(cf,username,password);
   }
  else {
-    connection=jmsSupport.createConnection(connectionFactory);
+    connection=jmsSupport.createConnection(cf);
   }
   if (clientId != null) {
     connection.setClientID(getClientId());
