@@ -1,12 +1,30 @@
 {
-  String endpointName=uri.getEndpointName();
-  if (endpointName != null) {
-    UMOEndpoint endpoint=lookupEndpoint(endpointName);
-    if (endpoint != null) {
-      if (StringUtils.isNotEmpty(uri.getAddress())) {
+  UMOEndpoint endpoint=getEndpointFromUri(uri.getEndpointName());
+  if (null == endpoint) {
+    String address=uri.getAddress();
+    if (null != address) {
+      Map endpoints=getEndpoints();
+      if (endpoints.containsKey(uri.getEndpointName())) {
+        throw new IllegalStateException("Endpoint present, but direct lookup failed");
+      }
+      Iterator keys=endpoints.keySet().iterator();
+      while (keys.hasNext()) {
+        Object key=keys.next();
+        Object value=endpoints.get(key);
+        if (value instanceof UMOEndpoint) {
+          UMOEndpoint candidate=(UMOEndpoint)value;
+          String candidateAddress=candidate.getEndpointURI().getAddress();
+          if (null != candidateAddress && address.equals(candidateAddress)) {
+            if (null == endpoint) {
+              endpoint=candidate;
+            }
+ else {
+              throw new IllegalStateException("Duplicate endpoint URI");
+            }
+          }
+        }
       }
     }
-    return endpoint;
   }
-  return null;
+  return endpoint;
 }
