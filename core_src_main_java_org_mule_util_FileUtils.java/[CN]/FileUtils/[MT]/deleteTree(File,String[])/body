@@ -1,0 +1,29 @@
+{
+  if (dir == null || !dir.exists()) {
+    return true;
+  }
+  File[] files=dir.listFiles();
+  if (files != null) {
+    for (int i=0; i < files.length; i++) {
+      OUTER:       if (files[i].isDirectory()) {
+        if (topLevelDirsToIgnore != null) {
+          for (int j=0; j < topLevelDirsToIgnore.length; j++) {
+            String ignored=topLevelDirsToIgnore[j];
+            if (ignored.equals(FilenameUtils.getBaseName(files[i].getName()))) {
+              break OUTER;
+            }
+          }
+        }
+        if (!deleteTree(files[i])) {
+          return false;
+        }
+      }
+ else {
+        if (!files[i].delete()) {
+          return false;
+        }
+      }
+    }
+  }
+  return dir.delete();
+}
