@@ -1,0 +1,45 @@
+{
+  UMOManagementContext managementContext=RegistryContext.getRegistry().getManagementContext();
+  TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig(),endpoint.getConnector().getExceptionListener(),managementContext);
+  TransactionCallback cb=new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+      if (tx != null) {
+        bindTransaction(tx);
+      }
+      List results=new ArrayList(messages.size());
+      for (Iterator iterator=messages.iterator(); iterator.hasNext(); ) {
+        Object o=iterator.next();
+        o=preProcessMessage(o);
+        if (o != null) {
+          UMOMessageAdapter adapter;
+          if (o instanceof UMOMessageAdapter) {
+            adapter=(UMOMessageAdapter)o;
+          }
+ else {
+            adapter=endpoint.getConnector().getMessageAdapter(o);
+          }
+          UMOMessage result=receiver.routeMessage(new MuleMessage(adapter),tx,endpoint.isSynchronous(),out);
+          if (result != null) {
+            o=postProcessMessage(result);
+            if (o != null) {
+              results.add(o);
+            }
+          }
+        }
+      }
+      return results;
+    }
+  }
+;
+  try {
+    List results=(List)tt.execute(cb);
+    handleResults(results);
+  }
+ catch (  Exception e) {
+    handleException(e);
+  }
+ finally {
+    messages.clear();
+  }
+}

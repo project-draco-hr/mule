@@ -1,16 +1,21 @@
 {
   Object content=message.getContent();
   if (content instanceof Multipart) {
-    setMessage(((Multipart)content).getBodyPart(0));
+    TreeMap attachments=new TreeMap();
+    MailUtils.getAttachments((Multipart)content,attachments);
     logger.debug("Received Multipart message");
-    for (int i=1; i < ((Multipart)content).getCount(); i++) {
-      Part part=((Multipart)content).getBodyPart(i);
-      String name=part.getFileName();
-      if (name == null) {
-        name=String.valueOf(i - 1);
+    int i=0;
+    for (Iterator iterator=attachments.entrySet().iterator(); iterator.hasNext(); i++) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      Part part=(Part)entry.getValue();
+      String name=entry.getKey().toString();
+      if (i == 0) {
+        setMessage(part);
       }
-      addAttachment(name,part.getDataHandler());
-      addAttachmentHeaders(name,part);
+ else {
+        addAttachment(name,part.getDataHandler());
+        addAttachmentHeaders(name,part);
+      }
     }
   }
  else {

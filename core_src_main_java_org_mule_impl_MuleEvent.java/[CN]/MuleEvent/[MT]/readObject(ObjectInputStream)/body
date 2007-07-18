@@ -1,8 +1,13 @@
 {
+  logger=LogFactory.getLog(getClass());
   in.defaultReadObject();
   String uri=(String)in.readObject();
+  UMOTransformer trans=unmarshallTransformers(in);
   try {
     endpoint=getManagementContext().getRegistry().getOrCreateEndpointForUri(uri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+    if (endpoint.getTransformer() == null) {
+      ((UMOEndpoint)endpoint).setTransformer(trans);
+    }
   }
  catch (  UMOException e) {
     throw (IOException)new IOException(e.getMessage()).initCause(e);

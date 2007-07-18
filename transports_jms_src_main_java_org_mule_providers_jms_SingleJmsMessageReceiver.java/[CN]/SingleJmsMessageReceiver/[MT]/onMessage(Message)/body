@@ -1,24 +1,7 @@
 {
   try {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Message received it is of type: " + ClassUtils.getSimpleName(message.getClass()));
-      if (message.getJMSDestination() != null) {
-        logger.debug("Message received on " + message.getJMSDestination() + " ("+ message.getJMSDestination().getClass().getName()+ ")");
-      }
- else {
-        logger.debug("Message received on unknown destination");
-      }
-      logger.debug("Message CorrelationId is: " + message.getJMSCorrelationID());
-      logger.debug("Jms Message Id is: " + message.getJMSMessageID());
-    }
-    if (message.getJMSRedelivered()) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Message with correlationId: " + message.getJMSCorrelationID() + " is redelivered. handing off to Exception Handler");
-      }
-      redeliveryHandler.handleRedelivery(message);
-    }
-    UMOMessageAdapter adapter=connector.getMessageAdapter(message);
-    routeMessage(new MuleMessage(adapter));
+    JmsWorker worker=new JmsWorker(message,this);
+    worker.run();
   }
  catch (  Exception e) {
     handleException(e);

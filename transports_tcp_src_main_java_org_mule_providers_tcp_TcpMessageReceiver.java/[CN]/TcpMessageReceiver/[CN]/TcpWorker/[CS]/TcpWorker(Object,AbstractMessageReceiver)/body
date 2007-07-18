@@ -1,0 +1,21 @@
+{
+  super(resource,receiver,new ResponseOutputStream((Socket)resource));
+  this.socket=(Socket)resource;
+  final TcpConnector tcpConnector=((TcpConnector)connector);
+  this.protocol=tcpConnector.getTcpProtocol();
+  try {
+    if (tcpConnector.getReceiveBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getReceiveBufferSize() != tcpConnector.getReceiveBufferSize()) {
+      socket.setReceiveBufferSize(tcpConnector.getReceiveBufferSize());
+    }
+    if (tcpConnector.getSendBufferSize() != UMOConnector.INT_VALUE_NOT_SET && socket.getSendBufferSize() != tcpConnector.getSendBufferSize()) {
+      socket.setSendBufferSize(tcpConnector.getSendBufferSize());
+    }
+    socket.setTcpNoDelay(tcpConnector.isSendTcpNoDelay());
+    socket.setKeepAlive(tcpConnector.isKeepAlive());
+    dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+    dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+  }
+ catch (  IOException e) {
+    logger.error("Failed to set Socket properties: " + e.getMessage(),e);
+  }
+}
