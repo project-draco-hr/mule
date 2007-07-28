@@ -1,7 +1,7 @@
 {
   String tempUrl;
   Object request=eventContext.getTransformedMessage();
-  Object requestBody=request;
+  Object requestBody;
   if (urlFromMessage) {
     tempUrl=eventContext.getMessage().getStringProperty(REST_SERVICE_URL,null);
     if (tempUrl == null) {
@@ -12,18 +12,22 @@
     tempUrl=serviceUrl;
   }
   StringBuffer urlBuffer=new StringBuffer(tempUrl);
-  if (payloadParameterName != null) {
+  if (this.httpMethod.compareToIgnoreCase(GET) == 0) {
     requestBody=NullPayload.getInstance();
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,requiredParams,false,null);
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,optionalParams,true,null);
   }
- else   if (request instanceof Map) {
-    requestBody=NullPayload.getInstance();
+ else {
+    StringBuffer requestBodyBuffer=new StringBuffer();
+    eventContext.getMessage().setProperty(CONTENT_TYPE,CONTENT_TYPE_VALUE);
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,requiredParams,false,requestBodyBuffer);
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,optionalParams,true,requestBodyBuffer);
+    requestBody=requestBodyBuffer.toString();
   }
-  setRESTParams(urlBuffer,eventContext.getMessage(),request,requiredParams,false);
-  setRESTParams(urlBuffer,eventContext.getMessage(),request,optionalParams,true);
   tempUrl=urlBuffer.toString();
   logger.info("Invoking REST service: " + tempUrl);
   UMOEndpointURI endpointURI=new MuleEndpointURI(tempUrl);
-  eventContext.getMessage().setProperty("http.method",httpMethod);
+  eventContext.getMessage().setProperty(HTTP_METHOD,httpMethod);
   UMOMessage result=eventContext.sendEvent(new MuleMessage(requestBody,eventContext.getMessage()),endpointURI);
   if (isErrorPayload(result)) {
     handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),result),result);
