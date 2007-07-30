@@ -1,0 +1,18 @@
+{
+  Object method=event.getMessage().getProperty(MuleProperties.MULE_METHOD_PROPERTY);
+  if (method == null) {
+    method=event.getEndpoint().getEndpointURI().getParams().getProperty(MuleProperties.MULE_METHOD_PROPERTY);
+  }
+  if (method == null) {
+    throw new DispatchException(SoapMessages.cannotInvokeCallWithoutOperation(),event.getMessage(),event.getEndpoint());
+  }
+ else   if (method instanceof SoapMethod) {
+synchronized (this) {
+      if (callParameters == null) {
+        callParameters=new HashMap();
+      }
+      callParameters.put(((SoapMethod)method).getName().getLocalPart(),method);
+    }
+  }
+  return method;
+}

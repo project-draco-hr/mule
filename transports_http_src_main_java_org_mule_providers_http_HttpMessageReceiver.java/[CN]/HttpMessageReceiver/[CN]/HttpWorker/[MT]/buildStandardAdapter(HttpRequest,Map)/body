@@ -1,0 +1,19 @@
+{
+  RequestLine requestLine=request.getRequestLine();
+  if (HttpConstants.HTTP11.equals(headers.get(HttpConnector.HTTP_VERSION_PROPERTY))) {
+    String expectHeaderValue=ObjectUtils.toString(headers.get(HttpConstants.HEADER_EXPECT)).toLowerCase();
+    if (HttpConstants.HEADER_EXPECT_CONTINUE_REQUEST_VALUE.equals(expectHeaderValue)) {
+      HttpResponse expected=new HttpResponse();
+      expected.setStatusLine(requestLine.getHttpVersion(),HttpConstants.SC_CONTINUE);
+      final MuleEvent event=new MuleEvent(new MuleMessage(expected),endpoint,new MuleSession(component),true);
+      RequestContext.safeSetEvent(event);
+      expected=(HttpResponse)connector.getDefaultResponseTransformer().transform(expected);
+      conn.writeResponse(expected);
+    }
+  }
+  Object body=request.getBodyBytes();
+  if (body == null) {
+    body=requestLine.getUri();
+  }
+  return connector.getMessageAdapter(new Object[]{body,headers});
+}

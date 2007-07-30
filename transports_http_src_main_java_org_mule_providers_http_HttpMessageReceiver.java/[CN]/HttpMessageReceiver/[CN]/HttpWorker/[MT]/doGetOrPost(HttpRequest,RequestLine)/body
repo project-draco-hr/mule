@@ -1,0 +1,37 @@
+{
+  Map headers=parseHeaders(request);
+  UMOMessageAdapter adapter;
+  if (endpoint.isStreaming() && request.getBody() != null) {
+    adapter=buildStreamingAdapter(request,headers);
+  }
+ else {
+    adapter=buildStandardAdapter(request,headers);
+  }
+  UMOMessage message=new MuleMessage(adapter);
+  if (logger.isDebugEnabled()) {
+    logger.debug(message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
+  }
+  UMOMessageReceiver receiver=getTargetReceiver(message,endpoint);
+  HttpResponse response;
+  if (receiver != null) {
+    UMOMessage returnMessage=receiver.routeMessage(message,endpoint.isSynchronous(),null);
+    Object tempResponse;
+    if (returnMessage != null) {
+      tempResponse=returnMessage.getPayload();
+    }
+ else {
+      tempResponse=NullPayload.getInstance();
+    }
+    if (tempResponse instanceof HttpResponse) {
+      response=(HttpResponse)tempResponse;
+    }
+ else {
+      response=(HttpResponse)connector.getDefaultResponseTransformer().transform(tempResponse);
+    }
+    response.disableKeepAlive(!((HttpConnector)connector).isKeepAlive());
+  }
+ else {
+    response=buildFailureResponse(requestLine,message);
+  }
+  return response;
+}

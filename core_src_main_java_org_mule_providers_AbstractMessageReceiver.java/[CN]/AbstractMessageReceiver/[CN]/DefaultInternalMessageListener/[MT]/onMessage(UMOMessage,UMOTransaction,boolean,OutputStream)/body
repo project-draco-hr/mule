@@ -11,7 +11,8 @@
   }
   UMOSession session=new MuleSession(message,connector.getSessionHandler(),component);
   UMOEvent muleEvent=new MuleEvent(message,endpoint,session,synchronous,ros);
-  RequestContext.setEvent(muleEvent);
+  muleEvent=RequestContext.unsafeSetEvent(muleEvent);
+  message=muleEvent.getMessage();
   boolean authorised=false;
   if (endpoint.getSecurityFilter() != null) {
     try {
@@ -39,10 +40,10 @@
     }
   }
   if (resultMessage != null) {
-    RequestContext.rewriteEvent(resultMessage);
     if (resultMessage.getExceptionPayload() != null) {
       setExceptionDetails(resultMessage,resultMessage.getExceptionPayload().getException());
     }
+    RequestContext.unsafeRewriteEvent(resultMessage);
   }
   return applyResponseTransformer(resultMessage);
 }

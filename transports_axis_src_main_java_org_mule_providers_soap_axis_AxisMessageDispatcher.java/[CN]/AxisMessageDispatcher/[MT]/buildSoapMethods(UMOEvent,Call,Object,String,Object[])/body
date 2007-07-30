@@ -1,0 +1,35 @@
+{
+  List params=new ArrayList();
+  for (int i=0; i < args.length; i++) {
+    if (args[i] == null) {
+      QName qname=call.getTypeMapping().getTypeQName(Object.class);
+      params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+    }
+ else     if (args[i] instanceof DataHandler[]) {
+      params.add("attachments;qname{DataHandler:http://xml.apache.org/xml-soap};in");
+    }
+ else     if (args[i] instanceof Map && connector.isTreatMapAsNamedParams()) {
+      for (Iterator iterator=((Map)args[i]).entrySet().iterator(); iterator.hasNext(); ) {
+        Map.Entry entry=(Map.Entry)iterator.next();
+        if (call.getTypeMapping().getTypeQName(entry.getValue().getClass()) != null) {
+          QName type=call.getTypeMapping().getTypeQName(entry.getValue().getClass());
+          params.add("qname{" + entry.getKey().toString() + (methodNamespace == null ? "" : ":" + methodNamespace)+ "};qname{"+ type.getPrefix()+ ":"+ type.getLocalPart()+ ":"+ type.getNamespaceURI()+ "};in");
+        }
+ else {
+          params.add("value" + i + ";qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+          params.add("qname{" + entry.getKey().toString() + (methodNamespace == null ? "" : ":" + methodNamespace)+ "};qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+        }
+      }
+    }
+ else     if (call.getTypeMapping().getTypeQName(args[i].getClass()) != null) {
+      QName qname=call.getTypeMapping().getTypeQName(args[i].getClass());
+      params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+    }
+ else {
+      params.add("value" + i + ";qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+    }
+  }
+  HashMap map=new HashMap();
+  map.put(method,params);
+  event.getMessage().setProperty("soapMethods",map);
+}
