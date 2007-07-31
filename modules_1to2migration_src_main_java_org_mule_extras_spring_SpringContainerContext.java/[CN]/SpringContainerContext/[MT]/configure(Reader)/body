@@ -1,4 +1,11 @@
 {
-  BeanFactory bf=new XmlBeanFactory(new InputStreamResource(new ReaderInputStream(configuration)));
-  setExternalBeanFactory(bf);
+  Resource[] resources;
+  try {
+    final String encoding=managementContext.getRegistry().getConfiguration().getDefaultEncoding();
+    resources=new Resource[]{new CachedResource(reader,encoding)};
+  }
+ catch (  IOException e) {
+    throw new ContainerException(MessageFactory.createStaticMessage("Unable to read resource"),e);
+  }
+  setExternalBeanFactory(new MuleApplicationContext(resources));
 }

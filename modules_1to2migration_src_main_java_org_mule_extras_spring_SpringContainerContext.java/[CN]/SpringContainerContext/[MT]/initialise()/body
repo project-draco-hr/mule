@@ -1,29 +1,20 @@
 {
-  if (configFile == null) {
-    if (configuration != null) {
-      try {
-        configure(configuration);
-        return;
-      }
- catch (      ContainerException e) {
-        throw new InitialisationException(e,this);
-      }
+  if (configXml != null) {
+    final String encoding=managementContext.getRegistry().getConfiguration().getDefaultEncoding();
+    Resource[] resources;
+    try {
+      resources=new Resource[]{new CachedResource(configXml,encoding)};
     }
- else {
-      return;
+ catch (    UnsupportedEncodingException e) {
+      throw new InitialisationException(CoreMessages.failedToConvertStringUsingEncoding(encoding),e,this);
     }
+    setExternalBeanFactory(new MuleApplicationContext(resources));
   }
-  try {
-    if (ClassUtils.getResource(configFile,getClass()) == null) {
-      logger.warn("Spring config resource: " + configFile + " not found on class path, attempting to load it from local file");
-      setExternalBeanFactory(new FileSystemXmlApplicationContext(configFile));
+ else   if (configResources != null) {
+    String[] resources=StringUtils.splitAndTrim(configResources,",");
+    if (logger.isDebugEnabled()) {
+      logger.debug("There is/are " + resources.length + " configuration resource(s): "+ ArrayUtils.toString(resources));
     }
- else {
-      logger.info("Loading Spring config from classpath, resource is: " + configFile);
-      setExternalBeanFactory(new ClassPathXmlApplicationContext(configFile));
-    }
-  }
- catch (  BeansException e) {
-    throw new InitialisationException(new ConfigurationException(CoreMessages.failedToLoad("Application Context: " + configFile),e),this);
+    setExternalBeanFactory(new MuleApplicationContext(resources));
   }
 }
