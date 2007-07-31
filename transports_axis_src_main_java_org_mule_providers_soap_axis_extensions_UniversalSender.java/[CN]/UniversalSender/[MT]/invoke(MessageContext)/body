@@ -66,10 +66,13 @@
     if ((RequestContext.getEvent() != null) && (RequestContext.getEvent().getMessage() != null)) {
       props=AxisCleanAndAddProperties.cleanAndAdd(RequestContext.getEventContext());
     }
-    if (call.useSOAPAction()) {
-      uri=call.getSOAPActionURI();
+    String scheme=requestEndpoint.getEndpointURI().getScheme();
+    if (!("vm".equalsIgnoreCase(scheme) || "jms".equalsIgnoreCase(scheme))) {
+      if (call.useSOAPAction()) {
+        uri=call.getSOAPActionURI();
+      }
+      props.put("SOAPAction",uri);
     }
-    props.put("SOAPAction",uri);
     if (contentLength > 0) {
       props.put(HttpConstants.HEADER_CONTENT_LENGTH,Integer.toString(contentLength));
     }

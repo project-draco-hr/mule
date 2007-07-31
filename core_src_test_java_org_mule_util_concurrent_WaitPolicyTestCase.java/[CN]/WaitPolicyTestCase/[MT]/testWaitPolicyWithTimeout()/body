@@ -1,12 +1,15 @@
 {
   assertEquals(0,SleepyTask.activeTasks.get());
   LastRejectedWaitPolicy policy=new LastRejectedWaitPolicy(2500,TimeUnit.MILLISECONDS);
-  _executor.setRejectedExecutionHandler(policy);
-  this.execute(new SleepyTask("hans",1000));
-  this.execute(new SleepyTask("franz",1000));
-  Runnable s3=new SleepyTask("tweety",1000);
-  this.execute(s3);
-  assertFalse(_executor.awaitTermination(5000,TimeUnit.MILLISECONDS));
-  assertEquals(s3,policy.lastRejectedRunnable());
+  executor.setRejectedExecutionHandler(policy);
+  List tasks=new ArrayList();
+  tasks.add(new SleepyTask("hans",1000));
+  tasks.add(new SleepyTask("franz",1000));
+  Runnable t3=new SleepyTask("tweety",1000);
+  tasks.add(t3);
+  LinkedList submitters=this.execute(tasks);
+  assertFalse(submitters.isEmpty());
+  assertFalse(executor.awaitTermination(5000,TimeUnit.MILLISECONDS));
+  assertSame(t3,policy.lastRejectedRunnable());
   assertEquals(0,SleepyTask.activeTasks.get());
 }
