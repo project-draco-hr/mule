@@ -1,0 +1,17 @@
+{
+  UMOModel model=managementContext.getRegistry().lookupModel("xml filter test");
+  UMOComponent component=model.getComponent("filter xml for content");
+  UMODescriptor descriptor=component.getDescriptor();
+  List routers=descriptor.getOutboundRouter().getRouters();
+  assertEquals(1,routers.size());
+  assertTrue(routers.get(0).getClass().getName(),routers.get(0) instanceof FilteringOutboundRouter);
+  assertTrue(((FilteringOutboundRouter)routers.get(0)).getFilter() instanceof JXPathFilter);
+  JXPathFilter filter=(JXPathFilter)((FilteringOutboundRouter)routers.get(0)).getFilter();
+  assertEquals("filter xml for content",filter.getExpectedValue());
+  assertEquals("/spring:beans/mule:model-seda/mule:service[2]/@name",filter.getPattern());
+  assertNotNull(filter.getNamespaces());
+  Map namespaces=filter.getNamespaces();
+  assertEquals(2,namespaces.size());
+  assertEquals("http://www.springframework.org/schema/beans",namespaces.get("spring"));
+  assertEquals("http://www.mulesource.org/schema/mule/core/2.0",namespaces.get("mule"));
+}
