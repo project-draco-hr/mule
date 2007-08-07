@@ -3,7 +3,10 @@
   UMOMessage msg=context.getMessage();
   int status=msg.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_OK);
   String version=msg.getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
-  String date=format.format(new Date());
+  String date;
+synchronized (format) {
+    date=format.format(new Date());
+  }
   String contentType=msg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,HttpConstants.DEFAULT_CONTENT_TYPE);
   response.setStatusLine(HttpVersion.parse(version),status);
   response.setHeader(new Header(HttpConstants.HEADER_CONTENT_TYPE,contentType));
