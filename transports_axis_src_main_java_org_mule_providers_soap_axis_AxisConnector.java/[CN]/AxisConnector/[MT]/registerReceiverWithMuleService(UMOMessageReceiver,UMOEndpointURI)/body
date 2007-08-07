@@ -1,18 +1,21 @@
 {
   if (axisDescriptor == null) {
-    axisDescriptor=(MuleDescriptor)managementContext.getRegistry().lookupService(AXIS_SERVICE_COMPONENT_NAME);
+    axisDescriptor=getAxisDescriptorFromSystemModel();
     if (axisDescriptor == null) {
       axisDescriptor=createAxisDescriptor();
     }
  else {
       managementContext.getRegistry().lookupModel(ModelHelper.SYSTEM_MODEL).unregisterComponent(axisDescriptor);
+      if (AXIS_SERVICE_COMPONENT_NAME.equals(axisDescriptor.getName())) {
+        axisDescriptor.setName(specificAxisServiceComponentName);
+      }
     }
     if (axisDescriptor.getProperties().get("axisServer") == null) {
       axisDescriptor.getProperties().put("axisServer",axisServer);
     }
   }
   String serviceName=receiver.getComponent().getDescriptor().getName();
-  String endpoint=null;
+  String endpoint;
   String scheme=ep.getScheme().toLowerCase();
   if (scheme.equals("jms") || scheme.equals("vm")) {
     endpoint=ep.toString();
