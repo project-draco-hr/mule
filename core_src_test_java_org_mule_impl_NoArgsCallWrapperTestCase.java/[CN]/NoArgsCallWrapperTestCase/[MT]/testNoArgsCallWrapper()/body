@@ -1,13 +1,14 @@
 {
-  QuickConfigurationBuilder builder=new QuickConfigurationBuilder(true);
   Map properties=new HashMap();
   properties.put("delegateClass",Apple.class.getName());
   properties.put("delegateMethod","toString");
-  builder.registerComponent(NoArgsCallWrapper.class.getName(),"WrapperUMO","test://in",null,properties);
-  managementContext.start();
-  MuleDescriptor desc=(MuleDescriptor)managementContext.getRegistry().lookupService("WrapperUMO");
-  UMOEvent event=getTestEvent("Test",desc,new MuleEndpoint("test://in",true));
-  UMOMessage reply=event.getComponent().sendEvent(event);
+  QuickConfigurationBuilder builder=new QuickConfigurationBuilder(true);
+  UMOEndpoint endpoint=builder.createEndpoint("test://in",null,true);
+  MuleDescriptor desc=(MuleDescriptor)builder.createDescriptor(NoArgsCallWrapper.class.getName(),"WrapperUMO",endpoint,null,properties);
+  builder.registerComponent(desc);
+  UMOComponent component=builder.getModel().getComponent("WrapperUMO");
+  UMOEvent event=getTestEvent("Test",desc,endpoint);
+  UMOMessage reply=component.sendEvent(event);
   assertNotNull(reply);
   assertNull(reply.getExceptionPayload());
   assertEquals("Just an apple.",reply.getPayload());

@@ -2,5 +2,13 @@
   QuickConfigurationBuilder builder=new QuickConfigurationBuilder(true);
   Map properties=new HashMap();
   properties.put("delegateInstance",new Apple());
-  builder.registerComponent(NoArgsCallWrapper.class.getName(),"WrapperUMO","test://in",null,properties);
+  try {
+    builder.registerComponent(NoArgsCallWrapper.class.getName(),"WrapperUMO","test://in",null,properties);
+  }
+ catch (  UMOException e) {
+    Throwable t=ExceptionUtils.getRootCause(e);
+    assertNotNull(t);
+    assertTrue(t instanceof InitialisationException);
+    assertTrue("Wrong exception?",t.getMessage().indexOf("The required object/property") > -1);
+  }
 }
