@@ -1,27 +1,27 @@
 {
   try {
-    if (dataSource == null) {
-      initJndiContext();
-      createDataSource();
+    if (dataSourceFactory != null) {
+      dataSource=(DataSource)dataSourceFactory.create();
     }
-    if (queryValueExtractors == null) {
+ else {
+      if (dataSource == null) {
+        initJndiContext();
+        createDataSource();
+      }
+    }
+    if (queryValueExtractors.isEmpty()) {
       queryValueExtractors=new HashSet();
-      queryValueExtractors.add(MessagePropertyExtractor.class.getName());
-      queryValueExtractors.add(NowPropertyExtractor.class.getName());
-      queryValueExtractors.add(PayloadPropertyExtractor.class.getName());
-      queryValueExtractors.add(MapPropertyExtractor.class.getName());
-      queryValueExtractors.add(BeanPropertyExtractor.class.getName());
+      queryValueExtractors.add(new SimpleObjectFactory(MessagePropertyExtractor.class));
+      queryValueExtractors.add(new SimpleObjectFactory(NowPropertyExtractor.class));
+      queryValueExtractors.add(new SimpleObjectFactory(PayloadPropertyExtractor.class));
+      queryValueExtractors.add(new SimpleObjectFactory(MapPropertyExtractor.class));
+      queryValueExtractors.add(new SimpleObjectFactory(BeanPropertyExtractor.class));
       if (ClassUtils.isClassOnPath("org.mule.util.properties.Dom4jPropertyExtractor",getClass())) {
-        queryValueExtractors.add("org.mule.util.properties.Dom4jPropertyExtractor");
+        queryValueExtractors.add(new SimpleObjectFactory("org.mule.util.properties.Dom4jPropertyExtractor"));
       }
       if (ClassUtils.isClassOnPath("org.mule.util.properties.JDomPropertyExtractor",getClass())) {
-        queryValueExtractors.add("org.mule.util.properties.JDomPropertyExtractor");
+        queryValueExtractors.add(new SimpleObjectFactory("org.mule.util.properties.JDomPropertyExtractor"));
       }
-    }
-    propertyExtractors=new HashSet();
-    for (Iterator iterator=queryValueExtractors.iterator(); iterator.hasNext(); ) {
-      String s=(String)iterator.next();
-      propertyExtractors.add(ClassUtils.instanciateClass(s,ClassUtils.NO_ARGS));
     }
   }
  catch (  Exception e) {

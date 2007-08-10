@@ -1,9 +1,14 @@
 {
   JdbcConnector c=(JdbcConnector)managementContext.getRegistry().lookupConnector("jdbcConnector1");
   assertNotNull(c);
-  DataSource ds=c.getDataSource();
+  ObjectFactory dsf=c.getDataSourceFactory();
+  assertNotNull(dsf);
+  Object ds=dsf.create();
   assertNotNull(ds);
   assertEquals(TestDataSource.class,ds.getClass());
-  assertTrue(c.isConnected());
-  assertTrue(c.isStarted());
+  assertTrue(c.getQueryValueExtractors().size() >= 5);
+  assertTrue(c.getQueryValueExtractors().size() <= 7);
+  assertTrue(ObjectFactory.class.isAssignableFrom((c.getQueryValueExtractors().toArray()[0]).getClass()));
+  assertTrue(((ObjectFactory)c.getQueryValueExtractors().toArray()[0]).create() instanceof PropertyExtractor);
+  assertNull(c.getQueries());
 }
