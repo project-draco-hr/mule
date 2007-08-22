@@ -1,0 +1,13 @@
+{
+  MuleClient client=new MuleClient();
+  Book book=new Book(1,"testBook","testAuthor");
+  client.sendNoReceive("jms://my.queue",book,null);
+  UMOMessage result=client.receive("vm://output",RECEIVE_TIMEOUT);
+  assertNotNull(result);
+  assertNotNull(result.getPayload());
+  assertTrue(((Boolean)result.getPayload()).booleanValue());
+  int res=execSqlUpdate("UPDATE BOOK SET TITLE = 'My Test' WHERE TITLE='testBook'");
+  if (res < 0) {
+    fail();
+  }
+}
