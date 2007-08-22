@@ -1,0 +1,31 @@
+{
+  managementContext.getRegistry().getConfiguration().setDefaultSynchronousEndpoints(false);
+  descriptor=getTestDescriptor("testComponent",FunctionalTestComponent.class.getName());
+  initialiseComponent(descriptor,new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object component) throws Exception {
+      callbackCount++;
+      String result="Received Async event: " + context.getMessageAsString();
+      assertNotNull(context.getOutputStream());
+      assertNotNull(context.getMessage().getProperty(SslConnector.LOCAL_CERTIFICATES));
+      if (!((ResponseOutputStream)context.getOutputStream()).getSocket().isClosed()) {
+        context.getOutputStream().write(result.getBytes());
+        context.getOutputStream().flush();
+      }
+      callbackCalled=true;
+    }
+  }
+);
+  managementContext.start();
+  URI uri=getInDest().getUri();
+  s=createSocket(uri);
+  DataOutputStream dos=new DataOutputStream((s.getOutputStream()));
+  dos.write("Hello".getBytes());
+  dos.flush();
+  afterInitialise();
+  DataInputStream dis=new DataInputStream(new BufferedInputStream(s.getInputStream()));
+  byte[] buf=new byte[32];
+  int x=dis.read(buf);
+  assertTrue(x > -1);
+  assertTrue(new String(buf,0,x).startsWith("Received Async event"));
+  assertEquals(1,callbackCount);
+}

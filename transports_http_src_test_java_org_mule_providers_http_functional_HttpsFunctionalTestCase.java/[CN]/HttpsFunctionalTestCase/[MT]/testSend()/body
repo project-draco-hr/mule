@@ -1,0 +1,24 @@
+{
+  UMOModel model=managementContext.getRegistry().lookupModel("main");
+  final TestSedaComponent testSedaComponent=(TestSedaComponent)model.getComponent("testComponent");
+  TestMuleProxy proxy=(TestMuleProxy)testSedaComponent.getProxy();
+  FunctionalTestComponent testComponent=(FunctionalTestComponent)proxy.getComponent();
+  assertNotNull(testComponent);
+  final AtomicBoolean callbackMade=new AtomicBoolean(false);
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    final UMOEventContext context,    final Object component) throws Exception {
+      UMOMessage msg=context.getMessage();
+      assertTrue(callbackMade.compareAndSet(false,true));
+      assertNotNull(msg.getProperty(HttpsConnector.LOCAL_CERTIFICATES));
+    }
+  }
+;
+  testComponent.setEventCallback(callback);
+  MuleClient client=new MuleClient();
+  Map props=new HashMap();
+  props.put(HttpConstants.HEADER_CONTENT_TYPE,"text/plain;charset=UTF-8");
+  UMOMessage result=client.send("clientEndpoint",TEST_MESSAGE,props);
+  assertNotNull(result);
+  assertEquals(TEST_MESSAGE + " Received",result.getPayloadAsString());
+  assertTrue("Callback never fired",callbackMade.get());
+}
