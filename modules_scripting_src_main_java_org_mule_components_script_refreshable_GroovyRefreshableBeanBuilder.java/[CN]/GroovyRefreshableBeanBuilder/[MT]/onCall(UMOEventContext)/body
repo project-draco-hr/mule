@@ -1,13 +1,16 @@
 {
-  if (refreshableBean instanceof Callable) {
-    return ((Callable)refreshableBean).onCall(eventContext);
-  }
   if (refreshableBean instanceof GroovyObject) {
-    if (StringUtils.isEmpty(methodName)) {
-      throw new MuleException(CoreMessages.propertiesNotSet("methodName"));
-    }
     GroovyObject script=(GroovyObject)refreshableBean;
-    return script.invokeMethod(methodName,eventContext.getTransformedMessage());
+    MetaMethod onCall=script.getMetaClass().pickMethod("onCall",UMOEVENTCONTEXT);
+    if (onCall != null) {
+      return script.invokeMethod(ON_CALL,eventContext);
+    }
+ else {
+      if (StringUtils.isEmpty(methodName)) {
+        throw new MuleException(CoreMessages.propertiesNotSet("methodName"));
+      }
+      return script.invokeMethod(methodName,eventContext.getTransformedMessage());
+    }
   }
   throw new Exception(new MuleException("script engine not supported"));
 }
