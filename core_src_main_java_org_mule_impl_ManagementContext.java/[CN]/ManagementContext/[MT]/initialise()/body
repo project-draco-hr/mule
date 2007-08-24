@@ -12,9 +12,9 @@
   if (workManager == null) {
     throw new NullPointerException(CoreMessages.objectIsNull("workManager").getMessage());
   }
-  config=getRegistry().getConfiguration();
+  config=RegistryContext.getConfiguration();
   if (config == null) {
-    logger.info("A mule configuration object was not registered. Using defualt configuration");
+    logger.info("A mule configuration object was not registered. Using default configuration");
     config=new MuleConfiguration();
   }
   try {
@@ -24,10 +24,10 @@
     directories=new Directories(FileUtils.newFile(config.getWorkingDirectory()));
     workManager.start();
     notificationManager.start(workManager);
-    fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISING));
+    fireNotification(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISING));
     directories.createDirectories();
     lifecycleManager.firePhase(this,Initialisable.PHASE_NAME);
-    fireSystemEvent(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISED));
+    fireNotification(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISED));
   }
  catch (  Exception e) {
     throw new InitialisationException(e,this);
