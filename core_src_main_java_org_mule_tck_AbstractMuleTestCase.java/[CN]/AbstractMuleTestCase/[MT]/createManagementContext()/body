@@ -1,6 +1,11 @@
 {
-  ApplicationContext ctx=new MuleApplicationContext(new String[]{"default-mule-config.xml"});
-  UMOManagementContext managementContext=(UMOManagementContext)ctx.getBean(MuleProperties.OBJECT_MANAGMENT_CONTEXT);
-  managementContext.getRegistry().registerModel(getDefaultModel(managementContext));
-  return managementContext;
+  UMOManagementContext context;
+  if (getTestInfo().isDisposeManagerPerSuite() && managementContext != null) {
+    context=managementContext;
+  }
+ else {
+    ConfigurationBuilder builder=getBuilder();
+    context=builder.configure(getConfigResources());
+  }
+  return context;
 }
