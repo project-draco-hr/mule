@@ -12,12 +12,14 @@
       serviceName=pathInfo;
     }
     Service service=server.getServiceRegistry().getService(serviceName);
-    Object[] connectorArray=RegistryContext.getRegistry().getConnectors().values().toArray();
     XFireConnector connector=null;
-    for (i=0; i < connectorArray.length; i++) {
-      if (connectorArray[i] instanceof XFireConnector) {
-        connector=(XFireConnector)connectorArray[i];
-      }
+    Collection objs=RegistryContext.getRegistry().lookupObjects(XFireConnector.class);
+    Iterator it=objs.iterator();
+    if (it.hasNext()) {
+      connector=(XFireConnector)it.next();
+    }
+    if (it.hasNext()) {
+      logger.warn("More than one XFire connector found, only one expected");
     }
     if (connector != null) {
       Object[] outhandlers=service.getOutHandlers().toArray();

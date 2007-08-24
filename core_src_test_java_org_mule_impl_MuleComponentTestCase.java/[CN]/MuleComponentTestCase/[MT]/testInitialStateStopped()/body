@@ -1,11 +1,9 @@
 {
-  builder.getManagementContext().getRegistry().registerConnector(getTestConnector());
-  UMODescriptor d=builder.createDescriptor(Orange.class.getName(),"orangeComponent",builder.createEndpoint("test://in",null,true),null,null);
+  managementContext.getRegistry().registerConnector(getTestConnector(),managementContext);
+  UMODescriptor d=MuleTestUtils.createDescriptor(Orange.class.getName(),"orangeComponent","test://in","test://out",null,managementContext);
   d.setInitialState(ImmutableMuleDescriptor.INITIAL_STATE_STOPPED);
-  builder.registerComponent(d);
-  UMOModel model=builder.getModel();
-  UMOSession session=new MuleSession(model.getComponent("orangeComponent"));
-  final UMOComponent c=session.getComponent();
+  managementContext.getRegistry().registerService(d,managementContext);
+  final UMOComponent c=managementContext.getRegistry().lookupSystemModel().getComponent("orangeComponent");
   assertFalse(c.isStarted());
   AbstractConnector connector=(AbstractConnector)managementContext.getRegistry().lookupConnector("testConnector");
   assertTrue(connector.isStarted());

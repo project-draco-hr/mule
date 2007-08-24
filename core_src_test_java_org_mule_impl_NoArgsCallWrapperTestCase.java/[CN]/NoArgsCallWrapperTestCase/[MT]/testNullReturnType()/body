@@ -2,11 +2,10 @@
   Map properties=new HashMap();
   properties.put("delegateClass",Apple.class.getName());
   properties.put("delegateMethod","methodReturningNull");
-  QuickConfigurationBuilder builder=new QuickConfigurationBuilder(true);
-  UMOEndpoint endpoint=builder.createEndpoint("test://in",null,true);
-  MuleDescriptor desc=(MuleDescriptor)builder.createDescriptor(NoArgsCallWrapper.class.getName(),"WrapperUMO",endpoint,null,properties);
-  builder.registerComponent(desc);
-  UMOComponent component=builder.getModel().getComponent("WrapperUMO");
+  UMOEndpoint endpoint=managementContext.getRegistry().createEndpointFromUri("test://in",UMOEndpoint.ENDPOINT_TYPE_RECEIVER,managementContext);
+  MuleDescriptor desc=(MuleDescriptor)MuleTestUtils.createDescriptor(NoArgsCallWrapper.class.getName(),"WrapperUMO",endpoint,null,properties);
+  managementContext.getRegistry().registerService(desc,managementContext);
+  UMOComponent component=managementContext.getRegistry().lookupSystemModel().getComponent("WrapperUMO");
   UMOEvent event=getTestEvent("Test",desc,endpoint);
   UMOMessage reply=component.sendEvent(event);
   assertNull(reply);
