@@ -27,12 +27,12 @@
   UMOSecurityManager securityManager=new MuleSecurityManager();
   UMOManagementContext context=new ManagementContext(lifecycleManager);
   context.setId(UUID.getUUID());
-  registry.registerObject(UMOManagementContext.class,MuleProperties.OBJECT_MANAGMENT_CONTEXT,context);
-  registry.registerObject(ObjectProcessor.class,MuleProperties.OBJECT_MANAGMENT_CONTEXT_PROCESSOR,new ManagementContextDependencyProcessor(context));
-  registry.registerObject(MuleProperties.OBJECT_SECURITY_MANAGER,securityManager);
-  registry.registerObject(MuleProperties.OBJECT_WORK_MANAGER,workManager);
-  registry.registerObject(MuleProperties.OBJECT_NOTIFICATION_MANAGER,notificationManager);
-  registry.registerObject(MuleProperties.OBJECT_QUEUE_MANAGER,queueManager);
+  MuleServer.setManagementContext(context);
+  registry.registerObject(MuleProperties.OBJECT_MANAGEMENT_CONTEXT,context,context);
+  registry.registerObject(MuleProperties.OBJECT_SECURITY_MANAGER,securityManager,context);
+  registry.registerObject(MuleProperties.OBJECT_WORK_MANAGER,workManager,context);
+  registry.registerObject(MuleProperties.OBJECT_NOTIFICATION_MANAGER,notificationManager,context);
+  registry.registerObject(MuleProperties.OBJECT_QUEUE_MANAGER,queueManager,context);
   context.setWorkManager(workManager);
   context.setSecurityManager(securityManager);
   context.setNotificationManager(notificationManager);
@@ -41,6 +41,7 @@
   UMOModel model=sd.createModel();
   model.setName(MuleProperties.OBJECT_SYSTEM_MODEL);
   registry.registerModel(model);
+  context.initialise();
   registry.initialise();
   return registry;
 }
