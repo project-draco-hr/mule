@@ -1,31 +1,28 @@
 {
-  managementContext.getRegistry().getConfiguration().setDefaultSynchronousEndpoints(false);
-  descriptor=getTestDescriptor("testComponent",FunctionalTestComponent.class.getName());
-  initialiseComponent(descriptor,new EventCallback(){
+  final CountDownLatch callbackCount=new CountDownLatch(1);
+  FunctionalTestComponent ftc=lookupTestComponent("main","testComponent");
+  ftc.setEventCallback(new EventCallback(){
     public void eventReceived(    UMOEventContext context,    Object component) throws Exception {
-      callbackCount++;
-      String result="Received Async event: " + context.getMessageAsString();
+      callbackCount.countDown();
+      String result=FunctionalTestComponent.received(context.getMessageAsString());
       assertNotNull(context.getOutputStream());
       assertNotNull(context.getMessage().getProperty(SslConnector.LOCAL_CERTIFICATES));
       if (!((ResponseOutputStream)context.getOutputStream()).getSocket().isClosed()) {
         context.getOutputStream().write(result.getBytes());
         context.getOutputStream().flush();
       }
-      callbackCalled=true;
     }
   }
 );
-  managementContext.start();
-  URI uri=getInDest().getUri();
-  s=createSocket(uri);
-  DataOutputStream dos=new DataOutputStream((s.getOutputStream()));
-  dos.write("Hello".getBytes());
+  URI uri=getUri();
+  socket=createSocket(uri);
+  DataOutputStream dos=new DataOutputStream((socket.getOutputStream()));
+  dos.write(TEST_MESSAGE.getBytes());
   dos.flush();
-  afterInitialise();
-  DataInputStream dis=new DataInputStream(new BufferedInputStream(s.getInputStream()));
+  DataInputStream dis=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
   byte[] buf=new byte[32];
   int x=dis.read(buf);
   assertTrue(x > -1);
-  assertTrue(new String(buf,0,x).startsWith("Received Async event"));
-  assertEquals(1,callbackCount);
+  assertEquals(new String(buf,0,x),TEST_MESSAGE_RESPONSE);
+  assertEquals(0,callbackCount.getCount());
 }

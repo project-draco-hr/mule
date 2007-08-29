@@ -1,0 +1,14 @@
+{
+  final CountDownLatch callbackCount=new CountDownLatch(100);
+  FunctionalTestComponent ftc=lookupTestComponent("main","testComponent");
+  ftc.setEventCallback(new EventCallback(){
+    public void eventReceived(    UMOEventContext context,    Object component){
+      callbackCount.countDown();
+      assertNull(context.getCurrentTransaction());
+    }
+  }
+);
+  sendTestData(100);
+  callbackCount.await(3000,TimeUnit.MILLISECONDS);
+  assertEquals(0,callbackCount.getCount());
+}
