@@ -1,35 +1,27 @@
 {
-  BeanDefinition root;
-  BeanDefinition bd=containingBd;
   if (logger.isDebugEnabled()) {
-    logger.debug("parsing: " + writeNode(ele));
+    logger.debug("parsing: " + elementToString(element));
   }
-  if (!tryParsingSpringPropertyElements(ele,bd)) {
-    String namespaceUri=ele.getNamespaceURI();
+  if (delegateSpringElements(element,parent)) {
+    return parent;
+  }
+ else {
+    String namespaceUri=element.getNamespaceURI();
     NamespaceHandler handler=getReaderContext().getNamespaceHandlerResolver().resolve(namespaceUri);
     if (handler == null) {
-      getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",ele);
+      getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",element);
       return null;
     }
-    bd=handler.parse(ele,new ParserContext(getReaderContext(),this,containingBd));
-    registerBean(ele,bd);
-  }
-  root=bd;
-  String ns=ele.getNamespaceURI();
-  if (ns != null && ns.startsWith(MULE_NAMESPACE_PREFIX)) {
-    NodeList list=ele.getChildNodes();
-    for (int i=0; i < list.getLength(); i++) {
-      if (list.item(i) instanceof Element) {
-        Element element=(Element)list.item(i);
-        if (logger.isDebugEnabled()) {
-          logger.debug("parsing: " + writeNode(element));
-        }
-        if (!tryParsingSpringPropertyElements(element,bd)) {
-          bd=parseCustomElement(element,bd);
-          registerBean(element,bd);
+    BeanDefinition child=handler.parse(element,new ParserContext(getReaderContext(),this,parent));
+    registerBean(element,child);
+    if (isMuleNamespace(element)) {
+      NodeList list=element.getChildNodes();
+      for (int i=0; i < list.getLength(); i++) {
+        if (list.item(i) instanceof Element) {
+          parseCustomElement((Element)list.item(i),child);
         }
       }
     }
+    return child;
   }
-  return root;
 }
