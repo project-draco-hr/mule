@@ -12,8 +12,11 @@
       getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",element);
       return null;
     }
-    BeanDefinition child=handler.parse(element,new ParserContext(getReaderContext(),this,parent));
-    registerBean(element,child);
+    ParserContext parserContext=new ParserContext(getReaderContext(),this,parent);
+    BeanDefinition child=handler.parse(element,parserContext);
+    if (parserContext.isNested()) {
+      registerBean(element,child);
+    }
     boolean isFactory=null != child && null != child.getBeanClassName() && (child.getBeanClassName().equals(MapFactoryBean.class.getName()) || child.getBeanClassName().equals(PropertiesFactoryBean.class.getName()));
     if (isMuleNamespace(element) && !isFactory) {
       NodeList list=element.getChildNodes();
