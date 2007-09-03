@@ -7,7 +7,7 @@
       entry=(Map.Entry)iterator.next();
       value=entry.getValue().toString();
       value=templateParser.parse(systemProperties,value);
-      value=templateParser.parse(managementContext.getRegistry().lookupProperties(),value);
+      value=templateParser.parse((Map)managementContext.getRegistry().lookupObject(MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES),value);
       System.setProperty(entry.getKey().toString(),value);
     }
   }
@@ -16,9 +16,9 @@
     for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
       entry=(Map.Entry)iterator.next();
       value=entry.getValue().toString();
-      value=templateParser.parse(managementContext.getRegistry().lookupProperties(),value.toString());
+      value=templateParser.parse((Map)managementContext.getRegistry().lookupObject(MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES),value.toString());
       try {
-        managementContext.getRegistry().registerProperty((String)entry.getKey(),value);
+        managementContext.getRegistry().registerObject((String)entry.getKey(),value,MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES,managementContext);
       }
  catch (      RegistrationException e) {
         logger.error(e);
