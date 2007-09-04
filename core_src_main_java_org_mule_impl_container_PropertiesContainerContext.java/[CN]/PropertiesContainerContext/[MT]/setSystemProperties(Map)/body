@@ -18,7 +18,15 @@
       value=entry.getValue().toString();
       value=templateParser.parse((Map)managementContext.getRegistry().lookupObject(MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES),value.toString());
       try {
-        managementContext.getRegistry().registerObject((String)entry.getKey(),value,MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES,managementContext);
+        Map muleProps=((Map)managementContext.getRegistry().lookupObject(MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES));
+        if (muleProps == null) {
+          muleProps=new HashMap();
+          muleProps.put(entry.getKey(),value);
+          managementContext.getRegistry().registerObject(MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES,muleProps,managementContext);
+        }
+ else {
+          muleProps.put(entry.getKey(),value);
+        }
       }
  catch (      RegistrationException e) {
         logger.error(e);

@@ -4,7 +4,15 @@
       Registry registry=managementContext.getRegistry();
       for (Iterator iterator=startupProperties.entrySet().iterator(); iterator.hasNext(); ) {
         Map.Entry e=(Map.Entry)iterator.next();
-        registry.registerObject((String)e.getKey(),e.getValue(),MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES,managementContext);
+        Map props=((Map)registry.lookupObject(MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES));
+        if (props == null) {
+          props=new HashMap();
+          props.put(e.getKey(),e.getValue());
+          registry.registerObject(MuleProperties.OBJECT_MULE_APPLICATION_PROPERTIES,props,managementContext);
+        }
+ else {
+          props.put(e.getKey(),e.getValue());
+        }
       }
     }
     for (int i=0; i < configResources.length; i++) {
