@@ -12,20 +12,26 @@
       getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",element);
       return null;
     }
-    ParserContext parserContext=new ParserContext(getReaderContext(),this,parent);
-    BeanDefinition child=handler.parse(element,parserContext);
-    if (parserContext.isNested()) {
-      registerBean(element,child);
+    boolean atLeastOneChildNotFactory=false;
+    BeanDefinition finalChild;
+    do {
+      ParserContext parserContext=new ParserContext(getReaderContext(),this,parent);
+      finalChild=handler.parse(element,parserContext);
+      if (parserContext.isNested()) {
+        registerBean(element,finalChild);
+      }
+      boolean isFactory=null != finalChild && null != finalChild.getBeanClassName() && (finalChild.getBeanClassName().equals(MapFactoryBean.class.getName()) || finalChild.getBeanClassName().equals(PropertiesFactoryBean.class.getName()));
+      atLeastOneChildNotFactory=atLeastOneChildNotFactory || (!isFactory);
     }
-    boolean isFactory=null != child && null != child.getBeanClassName() && (child.getBeanClassName().equals(MapFactoryBean.class.getName()) || child.getBeanClassName().equals(PropertiesFactoryBean.class.getName()));
-    if (isMuleNamespace(element) && !isFactory) {
+ while (null != finalChild && finalChild.hasAttribute(MULE_REPEAT_PARSE));
+    if (isMuleNamespace(element) && atLeastOneChildNotFactory) {
       NodeList list=element.getChildNodes();
       for (int i=0; i < list.getLength(); i++) {
         if (list.item(i) instanceof Element) {
-          parseCustomElement((Element)list.item(i),child);
+          parseCustomElement((Element)list.item(i),finalChild);
         }
       }
     }
-    return child;
+    return finalChild;
   }
 }
