@@ -1,12 +1,20 @@
 {
-  UMOEndpoint endpoint=getEndpointFromName(uriIdentifier);
+  UMOEndpoint endpoint=lookupEndpoint(uriIdentifier);
   if (endpoint == null) {
-    endpoint=createEndpointFromUri(new MuleEndpointURI(uriIdentifier),type,managementContext);
+    return createEndpointFromUri(uriIdentifier,type,managementContext);
   }
  else {
-    if (!endpoint.getType().equals(type) && !endpoint.getType().equals(UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER_AND_RECEIVER)) {
-      throw new IllegalArgumentException("Endpoint matching: " + uriIdentifier + " is not of type: "+ type+ ". It is of type: "+ endpoint.getType());
+    if (UMOEndpoint.ENDPOINT_TYPE_SENDER.equals(type)) {
+      return new OutboundEndpoint(endpoint);
+    }
+ else     if (UMOEndpoint.ENDPOINT_TYPE_RECEIVER.equals(type)) {
+      return new InboundEndpoint(endpoint);
+    }
+ else     if (UMOEndpoint.ENDPOINT_TYPE_RESPONSE.equals(type)) {
+      return new ResponseEndpoint(endpoint);
+    }
+ else {
+      throw new IllegalArgumentException("Endpoint matching: " + uriIdentifier + " is not of a recognized type: "+ type+ ". It is of type: "+ endpoint.getType());
     }
   }
-  return endpoint;
 }
