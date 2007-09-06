@@ -12,7 +12,7 @@
       getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",element);
       return null;
     }
-    boolean atLeastOneChildNotFactory=false;
+    boolean isRecurse=false;
     BeanDefinition finalChild;
     do {
       ParserContext parserContext=new ParserContext(getReaderContext(),this,parent);
@@ -20,11 +20,10 @@
       if (parserContext.isNested()) {
         registerBean(element,finalChild);
       }
-      boolean isFactory=null != finalChild && null != finalChild.getBeanClassName() && (finalChild.getBeanClassName().equals(MapFactoryBean.class.getName()) || finalChild.getBeanClassName().equals(PropertiesFactoryBean.class.getName()));
-      atLeastOneChildNotFactory=atLeastOneChildNotFactory || (!isFactory);
+      isRecurse=isRecurse || !testFlag(finalChild,MULE_NO_RECURSE);
     }
- while (null != finalChild && finalChild.hasAttribute(MULE_REPEAT_PARSE));
-    if (isMuleNamespace(element) && atLeastOneChildNotFactory) {
+ while (null != finalChild && testFlag(finalChild,MULE_REPEAT_PARSE));
+    if (isMuleNamespace(element) && isRecurse) {
       NodeList list=element.getChildNodes();
       for (int i=0; i < list.getLength(); i++) {
         if (list.item(i) instanceof Element) {
