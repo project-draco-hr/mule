@@ -1,0 +1,20 @@
+{
+  enableAttributes(delegate,LazyEndpointURI.ATTRIBUTES,false);
+  delegate.registerPreProcessor(new PreProcessor(){
+    public void preProcess(    PropertyConfiguration config,    Element element){
+      AutoIdUtils.ensureUniqueId(element,"endpoint");
+    }
+  }
+);
+  delegate.registerPostProcessor(new PostProcessor(){
+    public void postProcess(    BeanAssembler assembler,    Element element){
+      if (null != addressId) {
+        logger.debug("Injecting " + addressId + " in "+ XmlUtils.elementToString(element));
+        assembler.extendBean(EndpointUtils.ENDPOINT_URI_ATTRIBUTE,addressId,true);
+        addressId=null;
+      }
+    }
+  }
+);
+  addDelegate(delegate);
+}
