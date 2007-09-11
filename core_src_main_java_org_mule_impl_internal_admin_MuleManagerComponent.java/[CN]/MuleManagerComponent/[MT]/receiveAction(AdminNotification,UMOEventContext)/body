@@ -1,11 +1,9 @@
 {
   UMOMessage result=null;
   try {
-    UMOEndpointURI endpointUri=new MuleEndpointURI(action.getResourceIdentifier());
-    UMOEndpoint endpoint=context.getManagementContext().getRegistry().getOrCreateEndpointForUri(endpointUri,UMOEndpoint.ENDPOINT_TYPE_SENDER);
+    UMOImmutableEndpoint endpoint=context.getManagementContext().getRegistry().lookupOutboundEndpoint(action.getResourceIdentifier(),MuleServer.getManagementContext());
     long timeout=MapUtils.getLongValue(action.getProperties(),MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,getSynchronousEventTimeout());
-    UMOEndpointURI ep=new MuleEndpointURI(action.getResourceIdentifier());
-    result=endpoint.getConnector().receive(ep,timeout);
+    result=endpoint.getConnector().receive(action.getResourceIdentifier(),timeout);
     if (result != null) {
       UMOTransformer trans=((AbstractConnector)endpoint.getConnector()).getDefaultInboundTransformer();
       if (trans != null) {

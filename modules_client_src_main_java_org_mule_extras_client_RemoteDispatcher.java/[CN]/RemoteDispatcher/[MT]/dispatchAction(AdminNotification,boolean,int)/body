@@ -1,7 +1,6 @@
 {
-  UMOEndpoint endpoint=TransportFactory.createEndpoint(serverEndpoint.getEndpointURI(),UMOEndpoint.ENDPOINT_TYPE_SENDER,MuleServer.getManagementContext());
-  endpoint.setRemoteSync(synchronous);
-  updateContext(new MuleMessage(action),endpoint,synchronous);
+  ((UMOEndpoint)serverEndpoint).setRemoteSync(synchronous);
+  updateContext(new MuleMessage(action),serverEndpoint,synchronous);
   ByteArrayOutputStream out=new ByteArrayOutputStream();
   wireFormat.write(out,action,serverEndpoint.getEncoding());
   byte[] payload=out.toByteArray();
@@ -13,8 +12,8 @@
     message=new MuleMessage(payload,message);
   }
   message.addProperties(action.getProperties());
-  MuleSession session=new MuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler());
-  UMOEvent event=new MuleEvent(message,endpoint,session,true);
+  MuleSession session=new MuleSession(message,((AbstractConnector)serverEndpoint.getConnector()).getSessionHandler());
+  UMOEvent event=new MuleEvent(message,serverEndpoint,session,true);
   event.setTimeout(timeout);
   if (logger.isDebugEnabled()) {
     logger.debug("MuleClient sending remote call to: " + action.getResourceIdentifier() + ". At "+ serverEndpoint.toString()+ " . Event is: "+ event);
@@ -22,10 +21,10 @@
   UMOMessage result;
   try {
     if (synchronous) {
-      result=endpoint.send(event);
+      result=serverEndpoint.send(event);
     }
  else {
-      endpoint.dispatch(event);
+      serverEndpoint.dispatch(event);
       return null;
     }
     if (result != null) {

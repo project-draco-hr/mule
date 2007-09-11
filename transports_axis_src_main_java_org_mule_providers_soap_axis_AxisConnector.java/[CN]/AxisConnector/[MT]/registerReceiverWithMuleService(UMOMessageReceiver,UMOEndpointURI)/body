@@ -26,31 +26,32 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Modified endpoint with " + scheme + " scheme to "+ endpoint);
   }
+  UMOEndpoint receiverEndpoint=(UMOEndpoint)receiver.getEndpoint();
   boolean sync=false;
-  if (!receiver.getEndpoint().isSynchronousSet()) {
+  if (!receiverEndpoint.isSynchronousSet()) {
     if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")) {
       sync=true;
     }
   }
  else {
-    sync=receiver.getEndpoint().isSynchronous();
+    sync=receiverEndpoint.isSynchronous();
   }
   UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
   ((MuleEndpoint)serviceEndpoint).setManagementContext(managementContext);
   serviceEndpoint.setSynchronous(sync);
   serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
   serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
-  receiver.getEndpoint().setFilter(null);
-  serviceEndpoint.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
-  receiver.getEndpoint().setSecurityFilter(null);
-  if (receiver.getEndpoint().getTransformer() != null) {
-    serviceEndpoint.setTransformer(receiver.getEndpoint().getTransformer());
-    receiver.getEndpoint().setTransformer(null);
+  receiverEndpoint.setFilter(null);
+  serviceEndpoint.setSecurityFilter(receiverEndpoint.getSecurityFilter());
+  receiverEndpoint.setSecurityFilter(null);
+  if (receiverEndpoint.getTransformer() != null) {
+    serviceEndpoint.setTransformer(receiverEndpoint.getTransformer());
+    receiverEndpoint.setTransformer(null);
   }
-  if (receiver.getEndpoint().getTransactionConfig() != null) {
-    serviceEndpoint.setTransactionConfig(receiver.getEndpoint().getTransactionConfig());
-    receiver.getEndpoint().setTransactionConfig(null);
+  if (receiverEndpoint.getTransactionConfig() != null) {
+    serviceEndpoint.setTransactionConfig(receiverEndpoint.getTransactionConfig());
+    receiverEndpoint.setTransactionConfig(null);
   }
-  serviceEndpoint.getProperties().putAll(receiver.getEndpoint().getProperties());
+  serviceEndpoint.getProperties().putAll(receiverEndpoint.getProperties());
   axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
 }
