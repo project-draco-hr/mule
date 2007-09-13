@@ -9,10 +9,16 @@
   AbstractBeanDefinition bean=null;
   while (null == bean && index < size()) {
     try {
-      bean=getDelegate(index++).parseDelegate(element,parserContext);
+      MuleDefinitionParser parser=getDelegate(index);
+      bean=doSingleBean(index++,parser,element,parserContext);
     }
- catch (    DisableByAttribute.DisableByAttributeException e) {
-      bean=null;
+ catch (    RuntimeException e) {
+      if (handledExceptions.contains(e.getClass())) {
+        bean=null;
+      }
+ else {
+        throw e;
+      }
     }
   }
   if (null != bean) {
