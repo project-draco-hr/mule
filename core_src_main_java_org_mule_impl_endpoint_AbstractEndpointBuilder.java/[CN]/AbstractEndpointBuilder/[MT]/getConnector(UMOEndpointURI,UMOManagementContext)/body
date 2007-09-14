@@ -1,0 +1,33 @@
+{
+  String scheme=endpointURI.getFullScheme();
+  UMOConnector connector;
+  try {
+    if (endpointURI.getCreateConnector() == ALWAYS_CREATE_CONNECTOR) {
+      connector=TransportFactory.createConnector(endpointURI,managementContext);
+    }
+ else     if (endpointURI.getCreateConnector() == NEVER_CREATE_CONNECTOR) {
+      connector=TransportFactory.getConnectorByProtocol(scheme);
+    }
+ else     if (endpointURI.getConnectorName() != null) {
+      connector=managementContext.getRegistry().lookupConnector(endpointURI.getConnectorName());
+      if (connector == null) {
+        throw new TransportFactoryException(CoreMessages.objectNotRegistered("Connector",endpointURI.getConnectorName()));
+      }
+    }
+ else {
+      connector=TransportFactory.getConnectorByProtocol(scheme);
+      if (connector == null) {
+        connector=TransportFactory.createConnector(endpointURI,managementContext);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new TransportFactoryException(e);
+  }
+  if (connector == null) {
+    Message m=CoreMessages.failedToCreateObjectWith("Endpoint","endpointURI: " + endpointURI);
+    m.setNextMessage(CoreMessages.objectIsNull("connector"));
+    throw new TransportFactoryException(m);
+  }
+  return connector;
+}
