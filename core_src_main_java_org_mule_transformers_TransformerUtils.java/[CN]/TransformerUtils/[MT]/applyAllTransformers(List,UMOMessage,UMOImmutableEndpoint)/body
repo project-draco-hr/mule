@@ -1,0 +1,44 @@
+{
+  if (isUndefined(transformers) || 0 == transformers.size()) {
+    return message;
+  }
+  UMOMessage iteratedMessage=message;
+  Iterator iterator=transformers.iterator();
+  while (iterator.hasNext()) {
+    UMOTransformer transformer=(UMOTransformer)iterator.next();
+    if (iteratedMessage == null) {
+      if (transformer.isAcceptNull()) {
+        iteratedMessage=new MuleMessage(NullPayload.getInstance(),RequestContext.getEventContext().getMessage());
+      }
+ else {
+        return null;
+      }
+    }
+    Object payload=iteratedMessage.getPayload();
+    if (transformer.isSourceTypeSupported(payload.getClass())) {
+      if (null != endpoint) {
+        transformer.setEndpoint(endpoint);
+      }
+      Object result=transformer.transform(payload);
+      if (result instanceof UMOMessage) {
+        iteratedMessage=(UMOMessage)result;
+      }
+ else {
+        if (null != RequestContext.getEvent()) {
+          iteratedMessage=new MuleMessage(result,RequestContext.getEvent().getMessage());
+        }
+ else {
+          iteratedMessage=new MuleMessage(result);
+        }
+      }
+      RequestContext.writeResponse(iteratedMessage);
+    }
+ else {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Transformer: " + iterator + " doesn't support the result payload: "+ payload.getClass());
+      }
+      break;
+    }
+  }
+  return iteratedMessage;
+}

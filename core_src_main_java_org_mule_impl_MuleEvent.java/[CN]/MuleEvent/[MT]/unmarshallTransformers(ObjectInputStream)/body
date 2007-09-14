@@ -1,14 +1,15 @@
 {
-  UMOTransformer trans=null;
+  List transformers=new LinkedList();
   try {
-    String transformerName=(String)in.readObject();
-    trans=RegistryContext.getRegistry().lookupTransformer(transformerName);
-    trans.setNextTransformer(unmarshallTransformers(in));
+    while (true) {
+      String transformerName=(String)in.readObject();
+      transformers.add(RegistryContext.getRegistry().lookupTransformer(transformerName));
+    }
   }
  catch (  OptionalDataException e) {
     if (logger.isDebugEnabled()) {
       logger.debug("Failed to load transformers from stream",e);
     }
   }
-  return trans;
+  return transformers;
 }

@@ -43,30 +43,15 @@
   if (!(this instanceof MuleEndpoint)) {
     properties=Collections.unmodifiableMap(properties);
   }
-  if (endpointUri.getTransformers() != null) {
-    try {
-      UMOTransformer newTransformer=MuleObjectHelper.getTransformer(endpointUri.getTransformers(),",");
-      initTransformerIfNotNull(newTransformer);
-    }
- catch (    MuleException e) {
-      throw new InitialisationException(e,this);
-    }
+  try {
+    setTransformersIfUndefined(transformers,MuleObjectHelper.getTransformers(endpointUri.getTransformers(),","));
+    setTransformersIfUndefined(responseTransformers,MuleObjectHelper.getTransformers(endpointUri.getResponseTransformers(),","));
   }
-  if (endpointUri.getResponseTransformers() != null) {
-    try {
-      responseTransformer=MuleObjectHelper.getTransformer(endpointUri.getResponseTransformers(),",");
-    }
- catch (    MuleException e) {
-      throw new InitialisationException(e,this);
-    }
+ catch (  MuleException e) {
+    throw new InitialisationException(e,this);
   }
-  if (responseTransformer == null) {
-    if (connector instanceof AbstractConnector) {
-      responseTransformer=((AbstractConnector)connector).getDefaultResponseTransformer();
-    }
-  }
-  if (responseTransformer != null) {
-    responseTransformer.setEndpoint(this);
+  if (connector instanceof AbstractConnector) {
+    setTransformersIfUndefined(responseTransformers,((AbstractConnector)connector).getDefaultResponseTransformers());
   }
   if (securityFilter != null) {
     securityFilter.setEndpoint(this);

@@ -5,10 +5,9 @@
     long timeout=MapUtils.getLongValue(action.getProperties(),MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,getSynchronousEventTimeout());
     result=endpoint.getConnector().receive(action.getResourceIdentifier(),timeout);
     if (result != null) {
-      UMOTransformer trans=((AbstractConnector)endpoint.getConnector()).getDefaultInboundTransformer();
-      if (trans != null) {
-        Object payload=trans.transform(result.getPayload());
-        result=new MuleMessage(payload,result);
+      List transformers=((AbstractConnector)endpoint.getConnector()).getDefaultInboundTransformers();
+      if (transformers != null) {
+        result=TransformerUtils.applyAllTransformers(transformers,result);
       }
       ByteArrayOutputStream out=new ByteArrayOutputStream();
       wireFormat.write(out,result,getEncoding());

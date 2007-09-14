@@ -3,9 +3,9 @@
   if (!compregistered) {
     throw new MessagingException(CoreMessages.objectNotRegistered("Component",component),message,null);
   }
-  UMOTransformer trans=null;
+  List trans=null;
   if (transformers != null) {
-    trans=MuleObjectHelper.getTransformer(transformers,",");
+    trans=MuleObjectHelper.getTransformers(transformers,",");
   }
   if (!RegistryContext.getConfiguration().isDefaultSynchronousEndpoints()) {
     logger.warn("The mule managementContext is running synchronously, a null message payload will be returned");
@@ -21,7 +21,7 @@
     logger.debug("Result of MuleClient sendDirect is: " + (result == null ? "null" : result.getPayload()));
   }
   if (result != null && trans != null) {
-    return new MuleMessage(trans.transform(result.getPayload()));
+    return TransformerUtils.applyAllTransformers(trans,result);
   }
  else {
     return result;
