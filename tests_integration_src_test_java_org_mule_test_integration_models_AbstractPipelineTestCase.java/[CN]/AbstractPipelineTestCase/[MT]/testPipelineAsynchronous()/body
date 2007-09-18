@@ -1,24 +1,11 @@
 {
-  QuickConfigurationBuilder builder=new QuickConfigurationBuilder();
-  VMConnector c=new VMConnector();
-  c.setName("queuingConnector");
-  c.setQueueEvents(true);
-  builder.getManagementContext().getRegistry().registerConnector(c);
-  VMConnector c2=new VMConnector();
-  c2.setName("vmNoQueue");
-  builder.getManagementContext().getRegistry().registerConnector(c2);
-  builder.registerComponent(EchoComponent.class.getName(),"component1","vm://component1?connector=vmNoQueue","vm://component2?connector=vmNoQueue",null);
-  builder.registerComponent(EchoComponent.class.getName(),"component2","vm://component2?connector=vmNoQueue","vm://component3?connector=vmNoQueue",null);
-  Map props=new HashMap();
-  props.put("data","request received by component 3");
-  builder.registerComponent(StaticComponent.class.getName(),"component3","vm://component3?connector=vmNoQueue","vm://results?connector=queuingConnector",props);
   MuleClient client=new MuleClient();
   List results=new ArrayList();
   for (int i=0; i < getNumberOfMessages(); i++) {
-    client.dispatch("vm://component1","test",null);
+    client.dispatch("component1.endpoint","test",null);
   }
   for (int i=0; i < getNumberOfMessages(); i++) {
-    UMOMessage result=client.receive("vm://results?connector=queuingConnector",100000);
+    UMOMessage result=client.receive("results.endpoint",1000);
     assertNotNull(result);
     results.add(result);
   }
