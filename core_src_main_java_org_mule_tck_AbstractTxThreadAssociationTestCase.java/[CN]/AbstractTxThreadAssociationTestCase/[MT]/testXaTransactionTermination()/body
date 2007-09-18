@@ -1,0 +1,14 @@
+{
+  managementContext.setTransactionManager(tm);
+  assertNull("There sould be no current transaction associated.",tm.getTransaction());
+  tm.setTransactionTimeout(TRANSACTION_TIMEOUT_SECONDS);
+  XaTransaction muleTx=new XaTransaction(tm);
+  assertFalse(muleTx.isBegun());
+  assertEquals(Status.STATUS_NO_TRANSACTION,muleTx.getStatus());
+  muleTx.begin();
+  assertTrue(muleTx.isBegun());
+  muleTx.commit();
+  Transaction jtaTx=tm.getTransaction();
+  assertNull("Committing via TX Manager should have disassociate TX from the current thread.",jtaTx);
+  assertEquals(Status.STATUS_NO_TRANSACTION,muleTx.getStatus());
+}

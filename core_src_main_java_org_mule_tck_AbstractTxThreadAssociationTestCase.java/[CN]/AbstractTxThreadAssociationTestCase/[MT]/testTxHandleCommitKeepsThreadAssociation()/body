@@ -1,0 +1,16 @@
+{
+  tm.setTransactionTimeout(TRANSACTION_TIMEOUT_SECONDS);
+  tm.begin();
+  Transaction tx=tm.getTransaction();
+  assertNotNull("Transaction should have started.",tx);
+  assertEquals("TX should have been active",Status.STATUS_ACTIVE,tx.getStatus());
+  tx.commit();
+  tx=tm.getTransaction();
+  assertNotNull("Committing via TX handle should NOT disassociate TX from the current thread.",tx);
+  assertEquals("TX status should have been COMMITTED.",Status.STATUS_COMMITTED,tx.getStatus());
+  Transaction suspended=tm.suspend();
+  assertTrue("Wron TX suspended?.",suspended.equals(tx));
+  assertNull("TX should've been disassociated from the thread.",tm.getTransaction());
+  tm.resume(null);
+  assertNull(tm.getTransaction());
+}
