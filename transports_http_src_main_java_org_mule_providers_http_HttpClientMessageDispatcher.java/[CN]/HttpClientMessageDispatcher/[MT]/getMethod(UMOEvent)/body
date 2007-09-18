@@ -10,28 +10,28 @@
  else   if (HttpConstants.METHOD_GET.equalsIgnoreCase(method)) {
     httpMethod=new GetMethod(uri.toString());
   }
- else {
+ else   if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
+    PutMethod postMethod=new PutMethod(uri.toString());
+    httpMethod=createEntityMethod(event,body,postMethod);
+  }
+ else   if (HttpConstants.METHOD_POST.equalsIgnoreCase(method)) {
     PostMethod postMethod=new PostMethod(uri.toString());
-    if (body instanceof String) {
-      ObjectToHttpClientMethodRequest trans=new ObjectToHttpClientMethodRequest();
-      httpMethod=(HttpMethod)trans.transform(body.toString());
-    }
- else     if (body instanceof UMOStreamMessageAdapter) {
-      UMOStreamMessageAdapter sma=(UMOStreamMessageAdapter)body;
-      Map headers=sma.getOutputHandler().getHeaders(event);
-      for (Iterator iterator=headers.entrySet().iterator(); iterator.hasNext(); ) {
-        Map.Entry entry=(Map.Entry)iterator.next();
-        postMethod.addRequestHeader((String)entry.getKey(),(String)entry.getValue());
-      }
-      postMethod.setRequestEntity(new StreamPayloadRequestEntity((StreamMessageAdapter)body,event));
-      postMethod.setContentChunked(true);
-      httpMethod=postMethod;
-    }
+    httpMethod=createEntityMethod(event,body,postMethod);
+  }
+ else   if (HttpConstants.METHOD_DELETE.equalsIgnoreCase(method)) {
+    httpMethod=new DeleteMethod(uri.toString());
+  }
+ else   if (HttpConstants.METHOD_HEAD.equalsIgnoreCase(method)) {
+    httpMethod=new HeadMethod(uri.toString());
+  }
+ else   if (HttpConstants.METHOD_OPTIONS.equalsIgnoreCase(method)) {
+    httpMethod=new OptionsMethod(uri.toString());
+  }
+ else   if (HttpConstants.METHOD_TRACE.equalsIgnoreCase(method)) {
+    httpMethod=new TraceMethod(uri.toString());
+  }
  else {
-      byte[] buffer=event.getTransformedMessageAsBytes();
-      postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer,event.getEncoding()));
-      httpMethod=postMethod;
-    }
+    throw new TransformerException(HttpMessages.unsupportedMethod(method));
   }
   httpMethod.setDoAuthentication(true);
   if (event.getCredentials() != null) {

@@ -1,0 +1,21 @@
+{
+  this.name=test.getClass().getName();
+  try {
+    URL fileUrl=IOUtils.getResourceAsUrl("mule-test-exclusions.txt",this.getClass());
+    if (fileUrl != null) {
+      Iterator lines=FileUtils.lineIterator(FileUtils.newFile(fileUrl.getFile()));
+      Iterator filtered=IteratorUtils.filteredIterator(lines,new Predicate(){
+        public boolean evaluate(        Object object){
+          String line=StringUtils.trimToEmpty((String)object);
+          return (StringUtils.isNotEmpty(line) && line.charAt(0) != '#');
+        }
+      }
+);
+      Set valid=new HashSet();
+      CollectionUtils.addAll(valid,filtered);
+      excluded=valid.contains(ClassUtils.getShortClassName(test.getClass()));
+    }
+  }
+ catch (  IOException ioex) {
+  }
+}

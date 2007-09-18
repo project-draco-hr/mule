@@ -7,10 +7,9 @@
   String method=msg.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
   try {
     URI uri=new URI(endpoint);
-    HttpMethod httpMethod=null;
+    HttpMethod httpMethod;
     if (HttpConstants.METHOD_GET.equals(method)) {
       httpMethod=new GetMethod(uri.toString());
-      setHeaders(httpMethod,context);
       String paramName=msg.getStringProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY);
       String query=uri.getQuery();
       if (!(src instanceof NullPayload) && !StringUtils.EMPTY.equals(src)) {
@@ -23,39 +22,37 @@
       }
       httpMethod.setQueryString(query);
     }
- else {
+ else     if (HttpConstants.METHOD_POST.equalsIgnoreCase(method)) {
       PostMethod postMethod=new PostMethod(uri.toString());
-      setHeaders(postMethod,context);
       String paramName=msg.getStringProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY,null);
       if (paramName == null) {
         addParameters(uri.getQuery(),postMethod);
-        if (!(context.getMessage().getPayload() instanceof NullPayload)) {
-          String mimeType=msg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
-          if (src instanceof String) {
-            if (mimeType != null) {
-              int parameterIndex=mimeType.indexOf(";");
-              if (parameterIndex > 0) {
-                mimeType=mimeType.substring(0,parameterIndex);
-              }
-            }
-            if (mimeType == null)             mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
-            postMethod.setRequestEntity(new StringRequestEntity(src.toString(),mimeType,encoding));
-          }
- else           if (src instanceof InputStream) {
-            if (mimeType == null)             mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
-            postMethod.setRequestEntity(new InputStreamRequestEntity((InputStream)src,mimeType));
-          }
- else {
-            if (mimeType == null)             mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
-            byte[] buffer=(byte[])serializableToByteArray.doTransform(src,encoding);
-            postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer,mimeType));
-          }
-        }
+        setupEntityMethod(src,encoding,context,msg,uri,postMethod);
       }
  else {
         postMethod.addParameter(paramName,src.toString());
       }
       httpMethod=postMethod;
+    }
+ else     if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
+      PutMethod putMethod=new PutMethod(uri.toString());
+      setupEntityMethod(src,encoding,context,msg,uri,putMethod);
+      httpMethod=putMethod;
+    }
+ else     if (HttpConstants.METHOD_DELETE.equalsIgnoreCase(method)) {
+      httpMethod=new DeleteMethod(uri.toString());
+    }
+ else     if (HttpConstants.METHOD_HEAD.equalsIgnoreCase(method)) {
+      httpMethod=new HeadMethod(uri.toString());
+    }
+ else     if (HttpConstants.METHOD_OPTIONS.equalsIgnoreCase(method)) {
+      httpMethod=new OptionsMethod(uri.toString());
+    }
+ else     if (HttpConstants.METHOD_TRACE.equalsIgnoreCase(method)) {
+      httpMethod=new TraceMethod(uri.toString());
+    }
+ else {
+      throw new TransformerException(HttpMessages.unsupportedMethod(method));
     }
     HttpMethodParams params=(HttpMethodParams)msg.removeProperty(HttpConnector.HTTP_PARAMS_PROPERTY);
     if (params != null) {
@@ -70,6 +67,7 @@
         httpMethod.getParams().setVersion(HttpVersion.HTTP_1_1);
       }
     }
+    setHeaders(httpMethod,context);
     return httpMethod;
   }
  catch (  Exception e) {

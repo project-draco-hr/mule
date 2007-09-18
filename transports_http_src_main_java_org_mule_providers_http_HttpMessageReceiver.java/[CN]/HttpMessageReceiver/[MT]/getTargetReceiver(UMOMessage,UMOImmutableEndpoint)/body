@@ -20,10 +20,14 @@
  else {
       requestUri.append(path);
     }
-    if (logger.isTraceEnabled()) {
-      logger.trace("Secondary lookup of receiver on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
+    if (logger.isDebugEnabled()) {
+      logger.debug("Secondary lookup of receiver on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
     }
-    receiver=connector.lookupReceiver(requestUri.toString());
+    String uriStr=requestUri.toString();
+    receiver=connector.lookupReceiver(uriStr);
+    if (receiver == null) {
+      receiver=findReceiverByStem(connector.getReceivers(),uriStr);
+    }
     if (receiver == null && logger.isWarnEnabled()) {
       logger.warn("No receiver found with secondary lookup on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
       logger.warn("Receivers on connector are: " + MapUtils.toString(connector.getReceivers(),true));
