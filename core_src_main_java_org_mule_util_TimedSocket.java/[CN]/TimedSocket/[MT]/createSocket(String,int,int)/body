@@ -1,0 +1,21 @@
+{
+  SocketConnector connector=new SocketConnector(host,port);
+  connector.start();
+  int timer=0;
+  while (!connector.isConnected()) {
+    if (connector.hasException()) {
+      throw (connector.getException());
+    }
+    try {
+      Thread.sleep(WATCHDOG_FREQUENCY);
+    }
+ catch (    InterruptedException unexpectedInterruption) {
+      throw new InterruptedIOException("Connection interruption: " + unexpectedInterruption.getMessage());
+    }
+    timer+=WATCHDOG_FREQUENCY;
+    if (timer >= timeout) {
+      throw new InterruptedIOException("Connection timeout on " + host + ":"+ port+ " after "+ timer+ " milliseconds");
+    }
+  }
+  return connector.getSocket();
+}
