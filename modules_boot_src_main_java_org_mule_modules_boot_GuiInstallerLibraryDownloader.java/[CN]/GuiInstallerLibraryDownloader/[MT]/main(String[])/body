@@ -1,21 +1,14 @@
 {
   File muleHome=new File(args[0]);
-  DefaultMuleClassPathConfig classPath=new DefaultMuleClassPathConfig(muleHome,muleHome);
-  addLibrariesToClasspath(classPath.getURLs());
-  if (!ClassUtils.isClassOnPath("javax.activation.DataSource",GuiInstallerLibraryDownloader.class)) {
-    if (args.length > 1) {
-      proxyHost=args[1];
-    }
-    if (args.length > 2) {
-      proxyPort=args[2];
-    }
-    if (args.length > 3) {
-      proxyUsername=args[3];
-    }
-    if (args.length > 4) {
-      proxyPassword=args[4];
-    }
-    LibraryDownloader downloader=new LibraryDownloader(muleHome,proxyHost,proxyPort,proxyUsername,proxyPassword);
-    addLibrariesToClasspath(downloader.downloadLibraries());
+  MuleBootstrapUtils.ProxyInfo proxyInfo=new MuleBootstrapUtils.ProxyInfo();
+  if (args.length > 2) {
+    proxyInfo.host=args[1];
+    proxyInfo.port=args[2];
   }
+  if (args.length > 4) {
+    proxyInfo.username=args[3];
+    proxyInfo.password=args[4];
+  }
+  MuleBootstrapUtils.addLocalJarFilesToClasspath(muleHome,muleHome);
+  MuleBootstrapUtils.addExternalJarFilesToClasspath(muleHome,proxyInfo);
 }

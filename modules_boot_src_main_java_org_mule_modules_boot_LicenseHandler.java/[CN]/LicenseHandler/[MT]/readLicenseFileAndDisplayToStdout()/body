@@ -1,0 +1,40 @@
+{
+  String licenseType=null;
+  String licenseVersion=null;
+  BufferedReader stdin=null;
+  BufferedReader fileReader=null;
+  try {
+    stdin=new BufferedReader(new InputStreamReader(System.in));
+    fileReader=new BufferedReader(new FileReader(getLicenseFile()));
+    int row=1;
+    while (fileReader.ready()) {
+      String line=fileReader.readLine();
+      if (row == 1 && line.length() > 0) {
+        licenseType=line;
+      }
+      if (row == 2 && line.startsWith(VERSION_TEXT_PREFIX)) {
+        licenseVersion=line.substring(VERSION_TEXT_PREFIX.length());
+      }
+      if ((row % MAX_ROWS_TO_DISPLAY) == 0) {
+        System.out.print("\nHit return to continue ... ");
+        stdin.readLine();
+      }
+      System.out.println(line);
+      row++;
+    }
+  }
+ catch (  IOException ioe) {
+    throw ioe;
+  }
+ finally {
+    if (fileReader != null) {
+      try {
+        fileReader.close();
+      }
+ catch (      Exception ignore) {
+        logger.debug("Error closing fileReader: " + ignore.getMessage());
+      }
+    }
+  }
+  return new LicenseInfo(licenseType,licenseVersion);
+}
