@@ -1,13 +1,7 @@
 {
-  final UMOEndpointURI uri=endpoint.getEndpointURI();
-  FTPClient client=connector.getFtp(uri);
+  FTPClient client=null;
   try {
-    connector.enterActiveOrPassiveMode(client,endpoint);
-    connector.setupFileType(client,endpoint);
-    final String path=uri.getPath();
-    if (!client.changeWorkingDirectory(path)) {
-      throw new IOException(MessageFormat.format("Failed to change working directory to {0}. Ftp error: {1}",new Object[]{path,new Integer(client.getReplyCode())}));
-    }
+    client=connector.createFtpClient(endpoint);
     FTPFile[] files=client.listFiles();
     if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
       throw new IOException("Failed to list files. Ftp error: " + client.getReplyCode());
@@ -26,6 +20,8 @@
     return (FTPFile[])v.toArray(new FTPFile[v.size()]);
   }
   finally {
-    connector.releaseFtp(uri,client);
+    if (client != null) {
+      connector.releaseFtp(endpoint.getEndpointURI(),client);
+    }
   }
 }

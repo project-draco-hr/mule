@@ -2,13 +2,8 @@
   try {
     final UMOEndpointURI uri=endpoint.getEndpointURI();
     String filename=getFilename(endpoint,message);
-    final FTPClient client=getFtp(uri);
+    final FTPClient client=this.createFtpClient(endpoint);
     try {
-      enterActiveOrPassiveMode(client,endpoint);
-      setupFileType(client,endpoint);
-      if (!client.changeWorkingDirectory(uri.getPath())) {
-        throw new IOException("Ftp error: " + client.getReplyCode());
-      }
       OutputStream out=client.storeFileStream(filename);
       return new CallbackOutputStream(out,new CallbackOutputStream.Callback(){
         public void onClose() throws Exception {
