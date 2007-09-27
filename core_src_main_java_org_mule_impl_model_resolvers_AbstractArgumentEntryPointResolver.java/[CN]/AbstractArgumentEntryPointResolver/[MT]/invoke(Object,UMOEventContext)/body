@@ -1,0 +1,43 @@
+{
+  Method method=null;
+  Object[] payload=getPayloadFromMessage(context);
+  if (payload == null) {
+    return new InvocationResult(InvocationResult.STATE_INVOKE_NOT_SUPPORTED);
+  }
+  for (Iterator iterator=methods.iterator(); iterator.hasNext(); ) {
+    String methodName=(String)iterator.next();
+    method=getMethodByName(methodName,context);
+    if (method == null) {
+      method=ClassUtils.getMethod(component.getClass(),methodName,getMethodArgumentTypes(payload));
+    }
+    if (method != null) {
+      addMethodByName(method,context);
+      break;
+    }
+  }
+  if (method == null) {
+    if (isEnableDiscovery()) {
+      Class[] argTypes=getMethodArgumentTypes(payload);
+      List methods=ClassUtils.getSatisfiableMethods(component.getClass(),argTypes,isAcceptVoidMethods(),false,getIgnorredMethods(),filter);
+      if (methods.size() > 1) {
+        InvocationResult result=new InvocationResult(InvocationResult.STATE_INVOKED_FAILED);
+        result.setErrorTooManyMatchingMethods(component,argTypes,this);
+        return result;
+      }
+ else       if (methods.size() == 1) {
+        method=this.addMethodByArguments(component,(Method)methods.get(0),getPayloadFromMessage(context));
+      }
+ else {
+        InvocationResult result=new InvocationResult(InvocationResult.STATE_INVOKED_FAILED);
+        result.setErrorNoMatchingMethods(component,ClassUtils.NO_ARGS_TYPE,this);
+        return result;
+      }
+    }
+ else {
+      InvocationResult result=new InvocationResult(InvocationResult.STATE_INVOKED_FAILED);
+      result.setErrorNoMatchingMethodsCalled(component,StringMessageUtils.toString(methods),this);
+      return result;
+    }
+  }
+  return invokeMethod(component,method,getPayloadFromMessage(context));
+}
