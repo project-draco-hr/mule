@@ -1,9 +1,14 @@
 {
   LoginContext loginContext;
-  MuleAuthentication auth=(MuleAuthentication)authentication;
+  JaasAuthentication auth=(JaasAuthentication)authentication;
   MuleCallbackHandler cbh=new MuleCallbackHandler(auth);
   try {
-    loginContext=new LoginContext(loginContextName,cbh);
+    if (auth.getSubject() != null) {
+      loginContext=new LoginContext(loginContextName,auth.getSubject(),cbh);
+    }
+ else {
+      loginContext=new LoginContext(loginContextName,cbh);
+    }
   }
  catch (  LoginException e) {
     throw new org.mule.umo.security.UnauthorisedException(CoreMessages.cannotLoadFromClasspath(loginContextName));
@@ -12,8 +17,11 @@
     loginContext.login();
   }
  catch (  LoginException le) {
+    le.fillInStackTrace();
     throw new UnauthorisedException(CoreMessages.authFailedForUser(auth.getPrincipal()));
   }
-  auth.setAuthenticated(true);
-  return auth;
+  Subject subject=loginContext.getSubject();
+  JaasAuthentication finalAuth=new JaasAuthentication(auth.getPrincipal(),auth.getCredentials(),subject);
+  finalAuth.setAuthenticated(true);
+  return finalAuth;
 }

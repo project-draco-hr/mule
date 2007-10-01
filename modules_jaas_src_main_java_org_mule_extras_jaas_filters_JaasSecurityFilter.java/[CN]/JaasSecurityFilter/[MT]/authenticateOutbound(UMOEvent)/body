@@ -1,0 +1,19 @@
+{
+  if (event.getSession().getSecurityContext() == null) {
+    if (isAuthenticate()) {
+      throw new UnauthorisedException(event.getMessage(),event.getSession().getSecurityContext(),event.getEndpoint(),this);
+    }
+ else {
+      return;
+    }
+  }
+  UMOAuthentication auth=event.getSession().getSecurityContext().getAuthentication();
+  if (isAuthenticate()) {
+    auth=getSecurityManager().authenticate(auth);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Authentication success: " + auth.toString());
+    }
+  }
+  String token=auth.getCredentials().toString();
+  getCredentialsAccessor().setCredentials(event,token);
+}
