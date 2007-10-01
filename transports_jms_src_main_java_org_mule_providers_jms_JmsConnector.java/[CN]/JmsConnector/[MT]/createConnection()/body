@@ -3,17 +3,15 @@
   Connection connection;
   try {
     cf=(ConnectionFactory)connectionFactory.create();
+    if (cf instanceof XAConnectionFactory && managementContext.getTransactionManager() != null) {
+      cf=new ConnectionFactoryWrapper(cf);
+    }
   }
  catch (  Exception e) {
     throw new InitialisationException(e,this);
   }
   if (cf == null) {
-    throw new InitialisationException(CoreMessages.failedToCreate("ConnectionFactory"),this);
-  }
-  if (cf instanceof XAConnectionFactory) {
-    if (managementContext.getTransactionManager() != null) {
-      cf=new ConnectionFactoryWrapper(cf,managementContext.getTransactionManager());
-    }
+    throw new InitialisationException(JmsMessages.noConnectionFactorySet(),this);
   }
   if (username != null) {
     connection=jmsSupport.createConnection(cf,username,password);

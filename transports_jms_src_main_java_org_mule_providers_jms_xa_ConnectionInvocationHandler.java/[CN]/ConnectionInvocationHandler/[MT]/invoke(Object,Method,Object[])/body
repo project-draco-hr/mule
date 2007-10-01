@@ -1,0 +1,20 @@
+{
+  if (ConnectionFactoryWrapper.logger.isDebugEnabled()) {
+    ConnectionFactoryWrapper.logger.debug("Invoking " + method);
+  }
+  if (method.getName().equals("createSession")) {
+    XASession xas=((XAConnection)xaConnection).createXASession();
+    return Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{Session.class},new SessionInvocationHandler(xas));
+  }
+ else   if (method.getName().equals("createQueueSession")) {
+    XAQueueSession xaqs=((XAQueueConnection)xaConnection).createXAQueueSession();
+    return Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{QueueSession.class},new SessionInvocationHandler(xaqs));
+  }
+ else   if (method.getName().equals("createTopicSession")) {
+    XATopicSession xats=((XATopicConnection)xaConnection).createXATopicSession();
+    return Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{TopicSession.class},new SessionInvocationHandler(xats));
+  }
+ else {
+    return method.invoke(xaConnection,args);
+  }
+}
