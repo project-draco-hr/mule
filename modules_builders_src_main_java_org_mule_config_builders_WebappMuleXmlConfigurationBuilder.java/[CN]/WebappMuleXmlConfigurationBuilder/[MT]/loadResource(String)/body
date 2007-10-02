@@ -1,7 +1,16 @@
 {
-  String resourcePath=FileUtils.newFile(webappClasspath,resource).getPath();
-  logger.debug("Searching for resource " + resourcePath + " in Servlet Context.");
-  InputStream is=context.getResourceAsStream(resourcePath);
+  String resourcePath=resource;
+  InputStream is=null;
+  if (webappClasspath != null) {
+    resourcePath=new File(webappClasspath,resource).getPath();
+    is=context.getResourceAsStream(resourcePath);
+  }
+  if (is == null) {
+    is=Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath);
+  }
+  if (logger.isDebugEnabled() && is != null) {
+    logger.debug("Resource " + resourcePath + " is found in Servlet Context.");
+  }
   if (is == null) {
     try {
       logger.debug("Resource " + resourcePath + " not found in Servlet Context, loading from classpath");
