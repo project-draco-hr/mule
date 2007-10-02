@@ -1,15 +1,12 @@
 {
   Socket socket=connector.getSocket(event.getEndpoint());
-  dispatchToSocket(socket,event);
   try {
+    dispatchToSocket(socket,event);
     if (useRemoteSync(event)) {
       try {
         Object result=receiveFromSocket(socket,event.getTimeout());
         if (result == null) {
           return null;
-        }
-        if (result instanceof UMOMessage) {
-          return (UMOMessage)result;
         }
         return new MuleMessage(connector.getMessageAdapter(result));
       }
@@ -23,8 +20,6 @@
     }
   }
   finally {
-    if (!useRemoteSync(event)) {
-      connector.releaseSocket(socket,endpoint);
-    }
+    connector.releaseSocket(socket,event.getEndpoint());
   }
 }

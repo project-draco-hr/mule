@@ -1,0 +1,34 @@
+{
+  if (streamingMethod == null) {
+    initialise(component);
+  }
+  StreamMessageAdapter adapter=(StreamMessageAdapter)context.getMessage().getAdapter();
+  OutputStream out=new DeferredOutputStream(context);
+  try {
+    Object result;
+    if (component instanceof StreamingService) {
+      result=streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out,context});
+    }
+ else     if (inAndOut) {
+      result=streamingMethod.invoke(component,new Object[]{adapter.getInputStream(),out});
+    }
+ else {
+      result=streamingMethod.invoke(component,new Object[]{adapter.getInputStream()});
+    }
+    if (streamingMethod.getReturnType().equals(Void.TYPE)) {
+      result=VoidResult.getInstance();
+    }
+    return result;
+  }
+ catch (  Exception e) {
+    logger.warn("Failed to route streaming event via " + component + ": "+ e.getMessage(),e);
+    throw e;
+  }
+ finally {
+    try {
+      out.flush();
+    }
+ catch (    IOException e) {
+    }
+  }
+}

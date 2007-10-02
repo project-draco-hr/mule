@@ -1,7 +1,6 @@
 {
   OutputHandler handler=new OutputHandler(){
     public void write(    UMOEvent event,    OutputStream out) throws IOException {
-      writeHeaders(message,event);
       try {
         Attachments atts=message.getAttachments();
         if (atts != null && atts.size() > 0) {
@@ -24,35 +23,57 @@
         throw new IOException(e.getMessage());
       }
     }
+    public Map getHeaders(    UMOEvent event){
+      Map headers=new HashMap();
+      headers.put(HttpConstants.HEADER_CONTENT_TYPE,getSoapMimeType(message));
+      headers.put(SoapConstants.SOAP_ACTION,message.getProperty(SoapConstants.SOAP_ACTION));
+      UMOMessage msg=event.getMessage();
+      for (Iterator iterator=msg.getPropertyNames().iterator(); iterator.hasNext(); ) {
+        String headerName=(String)iterator.next();
+        Object headerValue=msg.getStringProperty(headerName,null);
+        if ((!headerName.startsWith(MuleProperties.PROPERTY_PREFIX) || (MuleProperties.MULE_USER_PROPERTY.compareTo(headerName) == 0)) && (!HttpConstants.HEADER_CONTENT_TYPE.equalsIgnoreCase(headerName)) && (!HttpConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(headerName))) {
+          headers.put(headerName,headerValue);
+        }
+      }
+      return headers;
+    }
   }
 ;
-  DefaultMessageAdapter sp=new DefaultMessageAdapter(handler);
+  UMOStreamMessageAdapter sp=new StreamMessageAdapter(handler);
   sp.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
   UMOMessage msg=RequestContext.getEvent().getMessage();
   for (Iterator i=msg.getPropertyNames().iterator(); i.hasNext(); ) {
     String propertyName=(String)i.next();
     sp.setProperty(propertyName,msg.getProperty(propertyName));
   }
-  UMOMessageAdapter result=null;
-  result=sendStream(getUri(),sp);
-  if (result != null) {
-    InMessage inMessage;
-    String contentType=sp.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
-    InputStream in=(InputStream)result.getPayload(InputStream.class);
-    if (contentType.toLowerCase().indexOf("multipart/related") != -1) {
-      try {
-        Attachments atts=new JavaMailAttachments(in,contentType);
-        InputStream msgIs=atts.getSoapMessage().getDataHandler().getInputStream();
-        inMessage=new InMessage(STAXUtils.createXMLStreamReader(msgIs,message.getEncoding(),context),getUri());
-        inMessage.setAttachments(atts);
+  UMOStreamMessageAdapter result=null;
+  try {
+    result=sendStream(getUri(),sp);
+    if (result != null) {
+      InMessage inMessage;
+      String contentType=sp.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+      InputStream in=result.getInputStream();
+      if (contentType.toLowerCase().indexOf("multipart/related") != -1) {
+        try {
+          Attachments atts=new JavaMailAttachments(in,contentType);
+          InputStream msgIs=atts.getSoapMessage().getDataHandler().getInputStream();
+          inMessage=new InMessage(STAXUtils.createXMLStreamReader(msgIs,message.getEncoding(),context),getUri());
+          inMessage.setAttachments(atts);
+        }
+ catch (        MessagingException e) {
+          throw new IOException(e.getMessage());
+        }
       }
- catch (      MessagingException e) {
-        throw new IOException(e.getMessage());
-      }
-    }
  else {
-      inMessage=new InMessage(STAXUtils.createXMLStreamReader(in,message.getEncoding(),context),getUri());
+        inMessage=new InMessage(STAXUtils.createXMLStreamReader(in,message.getEncoding(),context),getUri());
+      }
+      getEndpoint().onReceive(context,inMessage);
     }
-    getEndpoint().onReceive(context,inMessage);
+  }
+  finally {
+    sp.release();
+    if (result != null) {
+      result.release();
+    }
   }
 }

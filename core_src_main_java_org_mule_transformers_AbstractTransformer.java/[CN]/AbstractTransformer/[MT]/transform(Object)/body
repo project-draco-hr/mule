@@ -1,10 +1,8 @@
 {
   String encoding=null;
-  UMOMessageAdapter adapter=null;
-  if (src instanceof UMOMessageAdapter && !isSourceTypeSupported(UMOMessageAdapter.class,true) && !isSourceTypeSupported(UMOMessage.class,true)) {
-    encoding=((UMOMessageAdapter)src).getEncoding();
-    adapter=(UMOMessageAdapter)src;
-    src=((UMOMessageAdapter)src).getPayload();
+  if (src instanceof UMOMessage && !isSourceTypeSupported(UMOMessage.class)) {
+    encoding=((UMOMessage)src).getEncoding();
+    src=((UMOMessage)src).getPayload();
   }
   if (encoding == null && endpoint != null) {
     encoding=endpoint.getEncoding();
@@ -12,8 +10,7 @@
  else   if (encoding == null) {
     encoding=FileUtils.DEFAULT_ENCODING;
   }
-  Class srcCls=src.getClass();
-  if (!isSourceTypeSupported(srcCls)) {
+  if (!isSourceTypeSupported(src.getClass())) {
     if (ignoreBadInput) {
       logger.debug("Source type is incompatible with this transformer and property 'ignoreBadInput' is set to true, so the transformer chain will continue.");
       return src;
@@ -34,8 +31,5 @@
     logger.debug("Object after transform: " + StringMessageUtils.truncate(StringMessageUtils.toString(result),DEFAULT_TRUNCATE_LENGTH,false));
   }
   result=checkReturnClass(result);
-  if (adapter != null && isConsumed(srcCls)) {
-    adapter.setPayload(result);
-  }
   return result;
 }

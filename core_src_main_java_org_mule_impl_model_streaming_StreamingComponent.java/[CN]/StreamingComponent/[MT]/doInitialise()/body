@@ -1,0 +1,23 @@
+{
+  try {
+    component=ComponentFactory.createService(getDescriptor());
+  }
+ catch (  UMOException e) {
+    throw new InitialisationException(e,this);
+  }
+  for (Iterator iterator=descriptor.getInboundRouter().getEndpoints().iterator(); iterator.hasNext(); ) {
+    UMOEndpoint ep=(UMOEndpoint)iterator.next();
+    if (!ep.isStreaming()) {
+      throw new InitialisationException(CoreMessages.streamingEndpointsMustBeUsedWithStreamingModel(),this);
+    }
+    if (TransformerUtils.isDefined(ep.getTransformers())) {
+      throw new InitialisationException(CoreMessages.streamingEndpointsDoNotSupportTransformers(),this);
+    }
+  }
+  if (component instanceof Initialisable) {
+    ((Initialisable)component).initialise();
+  }
+  if (entryPointResolverSet == null) {
+    entryPointResolverSet=model.getEntryPointResolverSet();
+  }
+}

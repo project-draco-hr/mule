@@ -1,3 +1,25 @@
 {
-  return (byte[])getTransformedMessage(byte[].class);
+  Object msg=getTransformedMessage();
+  if (msg instanceof byte[]) {
+    return (byte[])msg;
+  }
+ else   if (msg instanceof String) {
+    try {
+      return msg.toString().getBytes(getEncoding());
+    }
+ catch (    UnsupportedEncodingException e) {
+      throw new TransformerException(CoreMessages.transformFailedFrom(msg.getClass()),e);
+    }
+  }
+ else   if (msg instanceof Serializable) {
+    try {
+      return SerializationUtils.serialize((Serializable)msg);
+    }
+ catch (    Exception e) {
+      throw new TransformerException(CoreMessages.transformFailed(msg.getClass().getName(),"byte[]"),e);
+    }
+  }
+ else {
+    throw new TransformerException(CoreMessages.transformOnObjectNotOfSpecifiedType(msg.getClass().getName(),"byte[] or " + Serializable.class.getName()));
+  }
 }

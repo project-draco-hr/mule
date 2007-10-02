@@ -14,6 +14,12 @@
       logger.warn("No receiver for endpointUri: " + event.getEndpoint().getEndpointURI());
       return;
     }
+    if (event.isStreaming()) {
+      PipedInputStream in=new PipedInputStream();
+      PipedOutputStream out=new PipedOutputStream(in);
+      UMOStreamMessageAdapter sma=connector.getStreamMessageAdapter(in,out);
+      sma.write(event);
+    }
     receiver.onEvent(event);
   }
   if (logger.isDebugEnabled()) {

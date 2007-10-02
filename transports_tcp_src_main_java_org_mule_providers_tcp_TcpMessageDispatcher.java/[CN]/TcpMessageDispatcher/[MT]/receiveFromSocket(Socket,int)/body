@@ -1,31 +1,7 @@
 {
-  final UMOImmutableEndpoint endpoint=getEndpoint();
-  DataInputStream underlyingIs=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-  TcpInputStream tis=new TcpInputStream(underlyingIs){
-    public void close() throws IOException {
-      try {
-        connector.releaseSocket(socket,endpoint);
-      }
- catch (      IOException e) {
-        throw ((IOException)e);
-      }
-catch (      Exception e) {
-        IOException e2=new IOException();
-        e2.initCause(e);
-        throw e2;
-      }
-    }
-  }
-;
+  DataInputStream dis=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
   if (timeout >= 0) {
     socket.setSoTimeout(timeout);
   }
-  try {
-    return connector.getTcpProtocol().read(tis);
-  }
-  finally {
-    if (!tis.isStreaming()) {
-      tis.close();
-    }
-  }
+  return connector.getTcpProtocol().read(dis);
 }

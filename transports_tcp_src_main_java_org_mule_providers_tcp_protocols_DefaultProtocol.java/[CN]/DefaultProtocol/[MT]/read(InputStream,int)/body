@@ -1,7 +1,19 @@
 {
   ByteArrayOutputStream baos=new ByteArrayOutputStream(bufferSize);
   try {
-    copy(is,baos,limit);
+    byte[] buffer=new byte[bufferSize];
+    int len;
+    int remain=remaining(limit,limit,0);
+    boolean repeat;
+    do {
+      len=copy(is,buffer,baos,remain);
+      remain=remaining(limit,remain,len);
+      repeat=EOF != len && remain > 0 && isRepeat(len,is.available());
+      if (logger.isDebugEnabled()) {
+        logger.debug(MessageFormat.format("len/limit/repeat: {0}/{1}/{2}",new Object[]{new Integer(len),new Integer(limit),Boolean.valueOf(repeat)}));
+      }
+    }
+ while (repeat);
   }
   finally {
     baos.flush();

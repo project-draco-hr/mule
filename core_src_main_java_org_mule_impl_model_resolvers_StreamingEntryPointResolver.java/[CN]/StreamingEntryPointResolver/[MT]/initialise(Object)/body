@@ -1,0 +1,22 @@
+{
+  if (component instanceof StreamingService) {
+    streamingMethod=StreamingService.class.getMethods()[0];
+  }
+ else {
+    inAndOut=true;
+    List methods=ClassUtils.getSatisfiableMethods(component.getClass(),new Class[]{InputStream.class,OutputStream.class},true,false,null);
+    if (methods.size() == 0) {
+      inAndOut=false;
+      methods=ClassUtils.getSatisfiableMethods(component.getClass(),new Class[]{InputStream.class},true,false,null);
+    }
+    if (methods.size() == 0) {
+      throw new NoSatisfiableMethodsException(component,new Class[]{InputStream.class});
+    }
+ else     if (methods.size() > 1) {
+      throw new TooManySatisfiableMethodsException(component,new Class[]{InputStream.class,OutputStream.class});
+    }
+ else {
+      streamingMethod=(Method)methods.get(0);
+    }
+  }
+}

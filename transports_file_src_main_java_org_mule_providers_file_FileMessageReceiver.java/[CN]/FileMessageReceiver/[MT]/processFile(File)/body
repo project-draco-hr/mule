@@ -17,14 +17,18 @@
   }
   File destinationFile=null;
   String sourceFileOriginalName=sourceFile.getName();
-  UMOMessageAdapter msgAdapter=null;
-  try {
-    Object payload=getPayload(sourceFile,false);
-    connector.getMessageAdapter(payload);
+  UMOMessageAdapter msgAdapter;
+  if (endpoint.isStreaming()) {
+    try {
+      msgAdapter=connector.getStreamMessageAdapter(new FileInputStream(sourceFile),null);
+    }
+ catch (    FileNotFoundException e) {
+      logger.error("File being read disappeared!",e);
+      return;
+    }
   }
- catch (  FileNotFoundException e) {
-    logger.error("File being read disappeared!",e);
-    return;
+ else {
+    msgAdapter=connector.getMessageAdapter(sourceFile);
   }
   msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
   if (moveDir != null) {
@@ -44,16 +48,24 @@
       if (!fileWasMoved) {
         throw new MuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
       }
-      Object payload=getPayload(destinationFile,true);
-      msgAdapter=connector.getMessageAdapter(payload);
+      if (endpoint.isStreaming()) {
+        msgAdapter=connector.getStreamMessageAdapter(new FileInputStream(destinationFile),null);
+      }
+ else {
+        msgAdapter=connector.getMessageAdapter(destinationFile);
+      }
       msgAdapter.setProperty(FileConnector.PROPERTY_FILENAME,destinationFile.getName());
       msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
     }
     this.routeMessage(new MuleMessage(msgAdapter),endpoint.isSynchronous());
-    if (!((FileConnector)connector).isStreamFiles()) {
-      boolean moveTo=destinationFile != null;
-      File current=moveTo ? destinationFile : sourceFile;
-      delete(current,moveTo);
+    if (((FileConnector)connector).isAutoDelete()) {
+      if (destinationFile == null) {
+        if (!sourceFile.delete()) {
+          throw new MuleException(FileMessages.failedToDeleteFile(sourceFile.getAbsolutePath()));
+        }
+      }
+ else {
+      }
     }
   }
  catch (  Exception e) {

@@ -1,7 +1,8 @@
 {
   MuleClient client=new MuleClient();
-  UMOMessage message=client.send("tcp://localhost:65432",new MuleMessage(new DefaultMessageAdapter(new ByteArrayInputStream(TEST_MESSAGE.getBytes()))));
+  UMOStreamMessageAdapter message=client.sendStream("tcp://localhost:65432",new StreamMessageAdapter(new ByteArrayInputStream(TEST_MESSAGE.getBytes())));
   assertNotNull(message);
-  Object payload=message.getPayload();
-  assertTrue(payload instanceof InputStream);
+  String response=new BufferedReader(new InputStreamReader(message.getInputStream())).readLine();
+  assertNotNull(response);
+  assertEquals(response,TEST_MESSAGE);
 }
