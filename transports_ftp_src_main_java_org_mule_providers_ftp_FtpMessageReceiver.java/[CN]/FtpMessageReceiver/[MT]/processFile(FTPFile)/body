@@ -5,16 +5,11 @@
     client=connector.createFtpClient(endpoint);
     final String fileName=file.getName();
     UMOMessage message;
-    if (endpoint.isStreaming()) {
-      message=new MuleMessage(connector.getStreamMessageAdapter(client.retrieveFileStream(fileName),null));
+    InputStream stream=client.retrieveFileStream(fileName);
+    if (stream == null) {
+      throw new IOException(MessageFormat.format("Failed to retrieve file {0}. Ftp error: {1}",new Object[]{fileName,new Integer(client.getReplyCode())}));
     }
- else {
-      ByteArrayOutputStream baos=new ByteArrayOutputStream();
-      if (!client.retrieveFile(fileName,baos)) {
-        throw new IOException(MessageFormat.format("Failed to retrieve file {0}. Ftp error: {1}",new Object[]{fileName,new Integer(client.getReplyCode())}));
-      }
-      message=new MuleMessage(connector.getMessageAdapter(baos.toByteArray()));
-    }
+    message=new MuleMessage(connector.getMessageAdapter(stream));
     message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,fileName);
     routeMessage(message);
     if (!client.deleteFile(fileName)) {

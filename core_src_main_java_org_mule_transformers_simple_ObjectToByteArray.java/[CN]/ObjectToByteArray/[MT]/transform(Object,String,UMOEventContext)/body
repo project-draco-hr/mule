@@ -1,13 +1,22 @@
 {
-  if (src instanceof String) {
-    try {
+  try {
+    if (src instanceof String) {
       return src.toString().getBytes(encoding);
     }
- catch (    Exception e) {
-      throw new TransformerException(this,e);
+ else     if (src instanceof InputStream) {
+      InputStream is=(InputStream)src;
+      ByteArrayOutputStream byteOut=new ByteArrayOutputStream();
+      try {
+        IOUtils.copy(is,byteOut);
+      }
+  finally {
+        is.close();
+      }
+      return byteOut.toByteArray();
     }
   }
- else {
-    return super.transform(src,encoding,context);
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
   }
+  return super.transform(src,encoding,context);
 }

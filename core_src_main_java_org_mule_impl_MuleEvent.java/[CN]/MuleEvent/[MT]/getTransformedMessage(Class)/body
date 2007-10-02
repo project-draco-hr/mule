@@ -1,0 +1,20 @@
+{
+  if (transformedMessage == null) {
+    List transformers=endpoint.getTransformers();
+    if (null != transformers) {
+      transformedMessage=TransformerUtils.applyAllTransformers(transformers,message).getPayload(outputType);
+    }
+ else {
+      transformedMessage=message.getPayload(outputType);
+    }
+  }
+ else   if (outputType != null && !transformedMessage.getClass().isAssignableFrom(outputType)) {
+    Class inputCls=transformedMessage.getClass();
+    UMOTransformer transformer=RegistryContext.getRegistry().lookupTransformer(inputCls,outputType);
+    if (transformer == null) {
+      throw new TransformerException(CoreMessages.noTransformerFoundForMessage(inputCls,outputType));
+    }
+    transformedMessage=transformer.transform(transformedMessage);
+  }
+  return transformedMessage;
+}

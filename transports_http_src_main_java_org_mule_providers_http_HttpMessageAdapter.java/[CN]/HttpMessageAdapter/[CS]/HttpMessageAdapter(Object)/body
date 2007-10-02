@@ -2,26 +2,32 @@
   if (message instanceof Object[]) {
     this.message=((Object[])message)[0];
     if (((Object[])message).length > 1) {
-      Map props=(Map)((Object[])message)[1];
-      for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
-        Map.Entry e=(Map.Entry)iterator.next();
-        String key=(String)e.getKey();
-        Object value=e.getValue();
-        if (value != null) {
-          setProperty(key,value);
+      Object second=((Object[])message)[1];
+      if (second instanceof Map) {
+        Map props=(Map)second;
+        for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
+          Map.Entry e=(Map.Entry)iterator.next();
+          String key=(String)e.getKey();
+          Object value=e.getValue();
+          if (value != null) {
+            setProperty(key,value);
+          }
+        }
+      }
+ else       if (second instanceof Header[]) {
+        Header[] headers=(Header[])second;
+        for (int i=0; i < headers.length; i++) {
+          setProperty(headers[i].getName(),headers[i].getValue());
         }
       }
     }
-  }
- else   if (message instanceof byte[]) {
-    this.message=message;
   }
  else   if (message instanceof HttpResponse) {
     this.message=message;
     return;
   }
  else {
-    throw new MessageTypeNotSupportedException(message,getClass());
+    this.message=message;
   }
   String temp=getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,null);
   if (HttpConstants.HTTP10.equalsIgnoreCase(temp)) {

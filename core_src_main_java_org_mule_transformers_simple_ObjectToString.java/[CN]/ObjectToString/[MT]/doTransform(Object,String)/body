@@ -1,6 +1,25 @@
 {
   String output="";
-  if (src instanceof Map) {
+  if (src instanceof InputStream) {
+    InputStream is=(InputStream)src;
+    try {
+      ByteArrayOutputStream byteOut=new ByteArrayOutputStream();
+      IOUtils.copy(is,byteOut);
+      output=new String(byteOut.toByteArray(),encoding);
+    }
+ catch (    IOException e) {
+      throw new TransformerException(CoreMessages.errorReadingStream(),e);
+    }
+ finally {
+      try {
+        is.close();
+      }
+ catch (      IOException e) {
+        logger.warn("Could not close stream: " + e.getMessage());
+      }
+    }
+  }
+ else   if (src instanceof Map) {
     Iterator iter=((Map)src).entrySet().iterator();
     if (iter.hasNext()) {
       StringBuffer b=new StringBuffer(DEFAULT_BUFFER_SIZE);

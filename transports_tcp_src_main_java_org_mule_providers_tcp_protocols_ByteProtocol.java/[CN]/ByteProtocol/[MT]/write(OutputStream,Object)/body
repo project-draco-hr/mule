@@ -1,9 +1,7 @@
 {
-  if (data instanceof UMOStreamMessageAdapter) {
+  if (data instanceof InputStream) {
     if (streamOk) {
-      IOUtils.copy(((UMOStreamMessageAdapter)data).getInputStream(),os);
-      os.flush();
-      os.close();
+      copyStream((InputStream)data,os);
     }
  else {
       throw new IOException("TCP protocol " + ClassUtils.getSimpleName(getClass()) + " cannot handle streaming");
@@ -16,7 +14,8 @@
     writeByteArray(os,(byte[])data);
   }
  else   if (data instanceof String) {
-    writeByteArray(os,((String)data).getBytes());
+    String s=(String)data;
+    writeByteArray(os,s.getBytes(getStringEncoding(s)));
   }
  else   if (data instanceof Serializable) {
     writeByteArray(os,SerializationUtils.serialize((Serializable)data));
