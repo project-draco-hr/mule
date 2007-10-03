@@ -1,10 +1,26 @@
 {
-  UMOImmutableEndpoint endpoint=null;
+  logger.debug("EndpointFactory request for endpoint of type: " + type + ", for uri: "+ uri);
+  UMOEndpointBuilder endpointBuilder=null;
   if (uri.getEndpointName() != null) {
-    endpoint=lookupEndpoint(uri.getEndpointName());
+    endpointBuilder=lookupEndpointBuilder(uri.getEndpointName());
+    if (endpointBuilder == null) {
+      throw new IllegalArgumentException("The endpoint with name: " + uri.getEndpointName() + "was not found.");
+    }
   }
-  if (endpoint == null) {
-    endpoint=buidNewEndpoint(uri,type,managementContext);
+ else {
+    logger.debug("Named EndpointBuilder not found, creating endpoint from uri");
+    endpointBuilder=new EndpointURIEndpointBuilder(uri,managementContext);
   }
-  return endpoint;
+  if (UMOImmutableEndpoint.ENDPOINT_TYPE_RECEIVER.equals(type)) {
+    return endpointBuilder.buildInboundEndpoint();
+  }
+ else   if (UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER.equals(type)) {
+    return endpointBuilder.buildOutboundEndpoint();
+  }
+ else   if (UMOImmutableEndpoint.ENDPOINT_TYPE_RESPONSE.equals(type)) {
+    return endpointBuilder.buildResponseEndpoint();
+  }
+ else {
+    throw new IllegalArgumentException("The endpoint type: " + type + "is not recognized.");
+  }
 }

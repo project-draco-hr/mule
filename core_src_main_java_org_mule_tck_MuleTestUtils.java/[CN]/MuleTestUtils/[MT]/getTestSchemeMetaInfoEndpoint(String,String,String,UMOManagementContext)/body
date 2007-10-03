@@ -1,14 +1,23 @@
 {
-  UMOEndpoint endpoint=new MuleEndpoint();
   AbstractConnector connector=null;
   connector=(AbstractConnector)ClassUtils.loadClass("org.mule.tck.testmodels.mule.TestConnector",AbstractMuleTestCase.class).newInstance();
   connector.setName("testConnector");
   connector.setManagementContext(context);
   connector.initialise();
   connector.registerSupportedProtocol(protocol);
-  endpoint.setConnector(connector);
-  endpoint.setEndpointURI(new MuleEndpointURI("test:" + protocol + "://test"));
-  endpoint.setName(name);
-  endpoint.setType(type);
-  return endpoint;
+  UMOEndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(new MuleEndpointURI("test:" + protocol + "://test"),context);
+  endpointBuilder.setConnector(connector);
+  endpointBuilder.setName(name);
+  if (UMOImmutableEndpoint.ENDPOINT_TYPE_RECEIVER.equals(type)) {
+    return (UMOEndpoint)endpointBuilder.buildInboundEndpoint();
+  }
+ else   if (UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER.equals(type)) {
+    return (UMOEndpoint)endpointBuilder.buildOutboundEndpoint();
+  }
+ else   if (UMOImmutableEndpoint.ENDPOINT_TYPE_RESPONSE.equals(type)) {
+    return (UMOEndpoint)endpointBuilder.buildResponseEndpoint();
+  }
+ else {
+    throw new IllegalArgumentException("The endpoint type: " + type + "is not recognized.");
+  }
 }

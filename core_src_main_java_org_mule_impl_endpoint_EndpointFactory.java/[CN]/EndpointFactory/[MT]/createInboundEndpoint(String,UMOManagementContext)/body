@@ -1,12 +1,9 @@
 {
-  UMOImmutableEndpoint globalEndpoint=lookupEndpoint(uri);
-  UMOImmutableEndpoint endpoint=null;
-  if (globalEndpoint != null) {
-    endpoint=new InboundEndpoint(globalEndpoint);
+  logger.debug("EndpointFactory request for inbound endpoint for uri: " + uri);
+  UMOEndpointBuilder endpointBuilder=lookupEndpointBuilder(uri);
+  if (endpointBuilder == null) {
+    logger.debug("Named EndpointBuilder not found, creating endpoint from uri");
+    endpointBuilder=new EndpointURIEndpointBuilder(new MuleEndpointURI(uri),managementContext);
   }
- else {
-    UMOEndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(new MuleEndpointURI(uri),managementContext);
-    return endpointBuilder.buildInboundEndpoint();
-  }
-  return endpoint;
+  return endpointBuilder.buildInboundEndpoint();
 }

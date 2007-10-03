@@ -1,5 +1,5 @@
 {
-  UMOEndpoint endpoint=(UMOEndpoint)descriptor.getInboundRouter().getEndpoints().get(0);
+  UMOImmutableEndpoint endpoint=(UMOEndpoint)descriptor.getInboundRouter().getEndpoints().get(0);
   if (endpoint != null) {
     if (endpoint.getTransformers() != null) {
       if (TransformerUtils.isSourceTypeSupportedByFirst(endpoint.getTransformers(),payload.getClass())) {
@@ -7,7 +7,7 @@
       }
  else {
         endpoint=new MuleEndpoint(endpoint);
-        endpoint.setTransformers(new LinkedList());
+        ((UMOEndpoint)endpoint).setTransformers(new LinkedList());
         return endpoint;
       }
     }
@@ -21,7 +21,9 @@
     connector=TransportFactory.createConnector(defaultEndpointUri,managementContext);
     managementContext.getRegistry().registerConnector(connector);
     connector.start();
-    endpoint=new MuleEndpoint("muleClientProvider",defaultEndpointUri,connector,TransformerUtils.UNDEFINED,UMOEndpoint.ENDPOINT_TYPE_RECEIVER,0,null,null);
+    UMOEndpointBuilder builder=new EndpointURIEndpointBuilder(defaultEndpointUri,managementContext);
+    builder.setName("muleClientProvider");
+    endpoint=builder.buildInboundEndpoint();
   }
   managementContext.getRegistry().registerEndpoint(endpoint);
   return endpoint;

@@ -15,25 +15,20 @@
       if (managementContext.getRegistry().lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
         throw new AlreadyInitialisedException("Server Components",this);
       }
-      MuleEndpoint writableEndpoint;
-      UMOImmutableEndpoint endpoint=managementContext.getRegistry().lookupEndpoint(serverUri,managementContext);
-      if (endpoint == null) {
-        UMOEndpointURI endpointUri=new MuleEndpointURI(serverUri);
-        UMOConnector connector=TransportFactory.getOrCreateConnectorByProtocol(endpointUri,managementContext);
+      UMOEndpointBuilder endpointBuilder=managementContext.getRegistry().lookupEndpointBuilder(serverUri);
+      if (endpointBuilder == null) {
+        UMOEndpointURI uri=new MuleEndpointURI(serverUri);
+        endpointBuilder=new EndpointURIEndpointBuilder(uri,managementContext);
+        UMOConnector connector=TransportFactory.getOrCreateConnectorByProtocol(uri,managementContext);
         if (managementContext.getRegistry().lookupConnector(connector.getName()) == null) {
           connector.setName(DEFAULT_MANAGER_ENDPOINT);
           connector.initialise();
           managementContext.getRegistry().registerConnector(connector,managementContext);
         }
-        writableEndpoint=new MuleEndpoint();
-        writableEndpoint.setConnector(connector);
-        writableEndpoint.setEndpointURI(endpointUri);
-      }
- else {
-        writableEndpoint=new MuleEndpoint(endpoint);
+        endpointBuilder.setConnector(connector);
       }
       logger.info("Registering Admin listener on: " + serverUri);
-      UMODescriptor descriptor=MuleManagerComponent.getDescriptor(writableEndpoint,wireFormat,RegistryContext.getConfiguration().getDefaultEncoding(),RegistryContext.getConfiguration().getDefaultSynchronousEventTimeout());
+      UMODescriptor descriptor=MuleManagerComponent.getDescriptor(endpointBuilder,wireFormat,RegistryContext.getConfiguration().getDefaultEncoding(),RegistryContext.getConfiguration().getDefaultSynchronousEventTimeout());
       managementContext.getRegistry().registerService(descriptor,managementContext);
     }
   }

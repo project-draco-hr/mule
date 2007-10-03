@@ -32,6 +32,75 @@
     connectionStrategy=source.getConnectionStrategy();
   }
   if (source.getManagementContext() != null) {
-    initialise();
+    if (initialised.get()) {
+      logger.debug("Already initialised: " + toString());
+      return;
+    }
+    endpointUri.initialise();
+    if (endpointUri.getParams().getProperty(UMOEndpointURI.PROPERTY_CREATE_CONNECTOR) != null) {
+      createConnector=endpointUri.getCreateConnector();
+    }
+    if (endpointEncoding == null) {
+      endpointEncoding=RegistryContext.getConfiguration().getDefaultEncoding();
+    }
+    if (connector == null) {
+      if (endpointUri.getConnectorName() != null) {
+        connector=managementContext.getRegistry().lookupConnector(endpointUri.getConnectorName());
+        if (connector == null) {
+          throw new IllegalArgumentException("Connector not found: " + endpointUri.getConnectorName());
+        }
+      }
+ else {
+        try {
+          connector=TransportFactory.getOrCreateConnectorByProtocol(this,managementContext);
+          if (connector == null) {
+            throw new InitialisationException(CoreMessages.connectorWithProtocolNotRegistered(endpointUri.getScheme()),this);
+          }
+        }
+ catch (        TransportFactoryException e) {
+          throw new InitialisationException(CoreMessages.failedToCreateConnectorFromUri(endpointUri),e,this);
+        }
+      }
+      if (endpointUri.getEndpointName() != null && name == null) {
+        name=endpointUri.getEndpointName();
+      }
+    }
+    name=ObjectNameHelper.getEndpointName(this);
+    String sync=endpointUri.getParams().getProperty("synchronous",null);
+    if (sync != null) {
+      synchronous=Boolean.valueOf(sync);
+    }
+    if (properties != null && endpointUri.getParams() != null) {
+      properties.putAll(endpointUri.getParams());
+    }
+    if (!(this instanceof MuleEndpoint)) {
+      properties=Collections.unmodifiableMap(properties);
+    }
+    try {
+      setTransformersIfUndefined(transformers,MuleObjectHelper.getTransformers(endpointUri.getTransformers(),","));
+      setTransformersIfUndefined(responseTransformers,MuleObjectHelper.getTransformers(endpointUri.getResponseTransformers(),","));
+    }
+ catch (    MuleException e) {
+      throw new InitialisationException(e,this);
+    }
+    if (connector instanceof AbstractConnector) {
+      setTransformersIfUndefined(responseTransformers,((AbstractConnector)connector).getDefaultResponseTransformers());
+    }
+    if (securityFilter != null) {
+      securityFilter.setEndpoint(this);
+      securityFilter.initialise();
+    }
+    String rs=(String)endpointUri.getParams().remove("remoteSync");
+    if (rs != null) {
+      remoteSync=Boolean.valueOf(rs);
+    }
+    String rsTimeout=(String)endpointUri.getParams().remove("remoteSyncTimeout");
+    if (rsTimeout != null) {
+      remoteSyncTimeout=Integer.valueOf(rsTimeout);
+    }
+    if (connectionStrategy == null) {
+      connectionStrategy=new SingleAttemptConnectionStrategy();
+    }
+    initialised.set(true);
   }
 }
