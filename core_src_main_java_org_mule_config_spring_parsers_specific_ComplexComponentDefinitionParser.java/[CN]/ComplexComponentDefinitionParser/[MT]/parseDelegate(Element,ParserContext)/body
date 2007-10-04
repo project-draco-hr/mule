@@ -5,12 +5,16 @@ case START:
   componentParser.forceParent(objectFactoryDefn);
 AbstractBeanDefinition componentDefn1=componentParser.parseDelegate(element,parserContext);
 state=POST_CHILDREN;
+currentElement=element;
 return componentDefn1;
 case POST_CHILDREN:
+if (!currentElement.equals(element)) {
+throw new IllegalStateException("Cannot nest " + ClassUtils.getSimpleName(getClass()));
+}
 AbstractBeanDefinition componentDefn2=componentParser.parseDelegate(element,parserContext);
-state=COMPLETE;
+state=START;
 return componentDefn2;
 default :
-throw new IllegalStateException("Statefil definition parser cannot be resued");
+throw new IllegalStateException("Unexpected state in " + ClassUtils.getSimpleName(getClass()));
 }
 }
