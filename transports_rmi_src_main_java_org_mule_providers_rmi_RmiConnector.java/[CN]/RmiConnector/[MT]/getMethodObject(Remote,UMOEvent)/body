@@ -9,20 +9,11 @@
   }
   Class[] argTypes;
   Object args=event.getMessage().getProperty(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES);
-  String argumentString=null;
   if (args instanceof List) {
-    List arguments=(List)args;
-    argumentString=(String)arguments.get(0);
+    argTypes=stringsToClasses((List)args);
   }
  else   if (args instanceof String) {
-    argumentString=(String)args;
-  }
-  if (null != argumentString) {
-    String[] split=argumentString.split(",");
-    argTypes=new Class[split.length];
-    for (int i=0; i < split.length; i++) {
-      argTypes[i]=ClassUtils.loadClass(split[i].trim(),getClass());
-    }
+    argTypes=stringsToClasses(Arrays.asList(((String)args).split(",")));
   }
  else {
     argTypes=ClassUtils.getClassTypes(event.getTransformedMessage());
