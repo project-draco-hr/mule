@@ -1,19 +1,25 @@
 {
   assertTargetPresent();
-  String newName=bestGuessName(getTargetConfig(),oldName,getTarget().getBeanClassName());
-  if (!getTargetConfig().isIgnored(oldName)) {
-    Map map;
-    if (null != getTarget().getPropertyValues().getPropertyValue(newName)) {
-      map=(Map)getTarget().getPropertyValues().getPropertyValue(newName).getValue();
-    }
+  if (MuleHierarchicalBeanDefinitionParserDelegate.testFlag(getBean().getBeanDefinition(),MuleHierarchicalBeanDefinitionParserDelegate.MULE_POST_CHILDREN)) {
+    String newName=bestGuessName(getTargetConfig(),oldName,getTarget().getBeanClassName());
+    if (!getTargetConfig().isIgnored(oldName)) {
+      Map map;
+      if (null != getTarget().getPropertyValues().getPropertyValue(newName)) {
+        map=(Map)getTarget().getPropertyValues().getPropertyValue(newName).getValue();
+      }
  else {
-      map=new ManagedMap();
+        map=new ManagedMap();
+      }
+      Iterator pvs=getBean().getBeanDefinition().getPropertyValues().getPropertyValueList().iterator();
+      while (pvs.hasNext()) {
+        PropertyValue pv=(PropertyValue)pvs.next();
+        map.put(pv.getName(),pv.getValue());
+      }
+      getTarget().getPropertyValues().addPropertyValue(newName,map);
     }
-    Iterator pvs=getBean().getBeanDefinition().getPropertyValues().getPropertyValueList().iterator();
-    while (pvs.hasNext()) {
-      PropertyValue pv=(PropertyValue)pvs.next();
-      map.put(pv.getName(),pv.getValue());
-    }
-    getTarget().getPropertyValues().addPropertyValue(newName,map);
+  }
+ else {
+    MuleHierarchicalBeanDefinitionParserDelegate.setFlag(getBean().getBeanDefinition(),MuleHierarchicalBeanDefinitionParserDelegate.MULE_POST_CHILDREN);
+    store.saveBeanAssembler(this);
   }
 }
