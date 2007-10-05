@@ -26,16 +26,17 @@
       sync=true;
     }
   }
-  UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
-  serviceEndpoint.setSynchronous(sync);
-  serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
-  serviceEndpoint.setTransformers(receiver.getEndpoint().getTransformers());
+  UMOEndpointBuilder builder=new EndpointURIEndpointBuilder(endpoint,managementContext);
+  builder.setSynchronous(sync);
+  builder.setName(ep.getScheme() + ":" + serviceName);
+  builder.setTransformers(receiver.getEndpoint().getTransformers());
   ((MuleEndpoint)receiver.getEndpoint()).setTransformers(new LinkedList());
-  serviceEndpoint.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
+  builder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
   ((MuleEndpoint)receiver.getEndpoint()).setResponseTransformers(new LinkedList());
-  serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
+  builder.setFilter(receiver.getEndpoint().getFilter());
   ((MuleEndpoint)receiver.getEndpoint()).setFilter(null);
-  serviceEndpoint.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  builder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
   ((MuleEndpoint)receiver.getEndpoint()).setSecurityFilter(null);
+  UMOImmutableEndpoint serviceEndpoint=managementContext.getRegistry().lookupEndpointFactory().createInboundEndpoint(builder,managementContext);
   xfireDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
 }

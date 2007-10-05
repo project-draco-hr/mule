@@ -24,15 +24,17 @@ synchronized (group) {
         group.addEvent(event);
         if (this.shouldAggregateEvents(group)) {
           UMOMessage returnMessage=this.aggregateEvents(group);
-          UMOEndpoint endpoint;
+          UMOImmutableEndpoint endpoint;
           try {
-            endpoint=new MuleEndpoint(event.getEndpoint());
+            UMOManagementContext managementContext=MuleServer.getManagementContext();
+            UMOEndpointBuilder builder=new EndpointURIEndpointBuilder(event.getEndpoint(),managementContext);
+            builder.setTransformers(new LinkedList());
+            builder.setName(this.getClass().getName());
+            endpoint=managementContext.getRegistry().lookupEndpointFactory().createInboundEndpoint(builder,managementContext);
           }
  catch (          UMOException e) {
             throw new MessagingException(e.getI18nMessage(),returnMessage,e);
           }
-          endpoint.setTransformers(new LinkedList());
-          endpoint.setName(this.getClass().getName());
           UMOEvent returnEvent=new MuleEvent(returnMessage,endpoint,event.getComponent(),event);
           result=new UMOEvent[]{returnEvent};
           this.removeEventGroup(group);

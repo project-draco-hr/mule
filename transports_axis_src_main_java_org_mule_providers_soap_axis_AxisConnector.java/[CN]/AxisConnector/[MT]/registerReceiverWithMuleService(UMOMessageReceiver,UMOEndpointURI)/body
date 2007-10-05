@@ -36,22 +36,18 @@
  else {
     sync=receiverEndpoint.isSynchronous();
   }
-  UMOEndpoint serviceEndpoint=new MuleEndpoint(endpoint,true);
-  ((MuleEndpoint)serviceEndpoint).setManagementContext(managementContext);
-  serviceEndpoint.setSynchronous(sync);
-  serviceEndpoint.setName(ep.getScheme() + ":" + serviceName);
-  serviceEndpoint.setFilter(receiver.getEndpoint().getFilter());
-  receiverEndpoint.setFilter(null);
-  serviceEndpoint.setSecurityFilter(receiverEndpoint.getSecurityFilter());
-  receiverEndpoint.setSecurityFilter(null);
-  if (!CollectionUtils.isEmpty(receiverEndpoint.getTransformers())) {
-    serviceEndpoint.setTransformers(receiverEndpoint.getTransformers());
-    receiverEndpoint.setTransformers(new LinkedList());
-  }
-  if (receiverEndpoint.getTransactionConfig() != null) {
-    serviceEndpoint.setTransactionConfig(receiverEndpoint.getTransactionConfig());
-    receiverEndpoint.setTransactionConfig(null);
-  }
-  serviceEndpoint.getProperties().putAll(receiverEndpoint.getProperties());
+  UMOEndpointBuilder builder=new EndpointURIEndpointBuilder(endpoint,managementContext);
+  builder.setSynchronous(sync);
+  builder.setName(ep.getScheme() + ":" + serviceName);
+  builder.setTransformers(receiver.getEndpoint().getTransformers());
+  ((MuleEndpoint)receiver.getEndpoint()).setTransformers(new LinkedList());
+  builder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
+  ((MuleEndpoint)receiver.getEndpoint()).setResponseTransformers(new LinkedList());
+  builder.setFilter(receiver.getEndpoint().getFilter());
+  ((MuleEndpoint)receiver.getEndpoint()).setFilter(null);
+  builder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  ((MuleEndpoint)receiver.getEndpoint()).setSecurityFilter(null);
+  builder.setProperties(receiverEndpoint.getProperties());
+  UMOImmutableEndpoint serviceEndpoint=managementContext.getRegistry().lookupEndpointFactory().createInboundEndpoint(builder,managementContext);
   axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
 }
