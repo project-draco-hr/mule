@@ -1,21 +1,19 @@
 {
-  if (isMatch(event)) {
-    try {
-      checkComponentName(event.getComponent().getDescriptor().getName());
-    }
- catch (    IllegalArgumentException e) {
-      throw new RoutingException(event.getMessage(),event.getEndpoint(),e);
-    }
-    Object id=this.getIdForEvent(event);
-    try {
-      this.storeId(id);
+  String eventComponentName=event.getComponent().getDescriptor().getName();
+  if (!assignedComponentName.equals(eventComponentName)) {
+    IllegalArgumentException iex=new IllegalArgumentException("This receiver is assigned to component: " + assignedComponentName + " but has received an event for component: "+ eventComponentName+ ". Please check your config to make sure each component"+ "has its own instance of IdempotentReceiver.");
+    throw new RoutingException(event.getMessage(),event.getEndpoint(),iex);
+  }
+  Object id=this.getIdForEvent(event);
+  try {
+    if (idStore.storeId(id)) {
       return new UMOEvent[]{event};
     }
- catch (    IOException e) {
-      throw new RoutingException(CoreMessages.failedToWriteMessageToStore(id,idStore.getAbsolutePath()),event.getMessage(),event.getEndpoint(),e);
+ else {
+      return null;
     }
   }
- else {
-    return null;
+ catch (  Exception e) {
+    throw new RoutingException(CoreMessages.failedToWriteMessageToStore(id,assignedComponentName),event.getMessage(),event.getEndpoint(),e);
   }
 }

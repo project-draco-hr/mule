@@ -1,6 +1,13 @@
 {
   if (idStore == null) {
-    this.load(event);
+synchronized (this) {
+      this.initialize(event);
+    }
   }
-  return !messageIds.contains(this.getIdForEvent(event));
+  try {
+    return !idStore.containsId(this.getIdForEvent(event));
+  }
+ catch (  Exception ex) {
+    throw new RoutingException(event.getMessage(),event.getEndpoint(),ex);
+  }
 }

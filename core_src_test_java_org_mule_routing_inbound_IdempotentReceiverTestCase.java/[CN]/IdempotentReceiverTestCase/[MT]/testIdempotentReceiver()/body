@@ -1,0 +1,33 @@
+{
+  IdempotentReceiver router=new IdempotentReceiver();
+  Mock session=MuleTestUtils.getMockSession();
+  UMOComponent testComponent=getTestComponent(getTestDescriptor("test",Apple.class.getName()));
+  UMOInboundRouterCollection messageRouter=new InboundRouterCollection();
+  messageRouter.addRouter(router);
+  messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
+  UMOMessage message=new MuleMessage("test event");
+  UMOEndpoint endpoint=getTestEndpoint("Test1Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  UMOEvent event=new MuleEvent(message,endpoint,(UMOSession)session.proxy(),false);
+  session.expectAndReturn("getComponent",testComponent);
+  assertTrue(router.isMatch(event));
+  session.expect("dispatchEvent",C.eq(event));
+  session.expectAndReturn("getComponent",testComponent);
+  session.expectAndReturn("getComponent",testComponent);
+  messageRouter.route(event);
+  session.verify();
+  message=new MuleMessage("test event");
+  event=new MuleEvent(message,endpoint,(UMOSession)session.proxy(),true);
+  session.expectAndReturn("sendEvent",C.eq(event),message);
+  session.expectAndReturn("getComponent",testComponent);
+  session.expectAndReturn("getComponent",testComponent);
+  UMOMessage result=messageRouter.route(event);
+  assertNotNull(result);
+  assertEquals(message,result);
+  session.verify();
+  session.expect("toString");
+  session.expectAndReturn("getComponent",testComponent);
+  event=new MuleEvent(message,endpoint,(UMOSession)session.proxy(),false);
+  assertTrue(!router.isMatch(event));
+  messageRouter.route(event);
+  session.verify();
+}
