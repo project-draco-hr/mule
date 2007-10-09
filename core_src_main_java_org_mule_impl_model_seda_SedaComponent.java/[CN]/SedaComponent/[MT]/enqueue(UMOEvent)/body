@@ -1,4 +1,11 @@
 {
   QueueSession session=managementContext.getQueueManager().getQueueSession();
-  session.getQueue(descriptorQueueName).put(event);
+  Queue queue=session.getQueue(name);
+  if (queue == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Queue " + name + " not created for component "+ name),this);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Component " + name + " putting event on queue "+ name+ ": "+ event);
+  }
+  queue.put(event);
 }

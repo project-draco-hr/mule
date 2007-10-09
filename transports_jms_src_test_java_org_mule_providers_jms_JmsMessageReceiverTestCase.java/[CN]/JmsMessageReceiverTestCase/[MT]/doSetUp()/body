@@ -1,4 +1,17 @@
 {
-  managementContext.getRegistry().registerConnector(getConnector());
+  connector=new JmsConnector();
+  connector.setName("TestConnector");
+  connector.setSpecification("1.1");
+  Mock connectionFactory=new Mock(ConnectionFactory.class);
+  Mock connection=new Mock(Connection.class);
+  connectionFactory.expectAndReturn("createConnection",connection.proxy());
+  connection.expect("setExceptionListener",new AnyConstraintMatcher());
+  connection.expect("close");
+  connection.expect("start");
+  connection.expect("stop");
+  connector.setConnectionFactory(new SingletonObjectFactory(connectionFactory.proxy()));
+  connector.setManagementContext(managementContext);
+  managementContext.applyLifecycle(connector);
+  managementContext.getRegistry().registerConnector(connector,managementContext);
   super.doSetUp();
 }

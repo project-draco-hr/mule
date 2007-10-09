@@ -1,20 +1,16 @@
 {
-  if (axisDescriptor == null) {
-    axisDescriptor=getAxisDescriptorFromSystemModel();
-    if (axisDescriptor == null) {
-      axisDescriptor=createAxisDescriptor();
+  if (axisComponent == null) {
+    if (axisComponent == null) {
+      axisComponent=getOrCreateAxisComponent();
     }
  else {
-      managementContext.getRegistry().lookupModel(ModelHelper.SYSTEM_MODEL).unregisterComponent(axisDescriptor);
-      if (AXIS_SERVICE_COMPONENT_NAME.equals(axisDescriptor.getName())) {
-        axisDescriptor.setName(specificAxisServiceComponentName);
-      }
+      managementContext.getRegistry().unregisterComponent(AXIS_SERVICE_PROPERTY + getName());
     }
-    if (axisDescriptor.getProperties().get("axisServer") == null) {
-      axisDescriptor.getProperties().put("axisServer",axisServer);
+    if (axisComponent.getProperties().get("axis") == null) {
+      axisComponent.getProperties().put("axis",axis);
     }
   }
-  String serviceName=receiver.getComponent().getDescriptor().getName();
+  String serviceName=receiver.getComponent().getName();
   String endpoint;
   String scheme=ep.getScheme().toLowerCase();
   if (scheme.equals("jms") || scheme.equals("vm")) {
@@ -49,5 +45,5 @@
   ((MuleEndpoint)receiver.getEndpoint()).setSecurityFilter(null);
   builder.setProperties(receiverEndpoint.getProperties());
   UMOImmutableEndpoint serviceEndpoint=managementContext.getRegistry().lookupEndpointFactory().createInboundEndpoint(builder,managementContext);
-  axisDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
+  axisComponent.getInboundRouter().addEndpoint(serviceEndpoint);
 }

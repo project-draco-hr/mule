@@ -16,8 +16,17 @@
     }
   }
 );
-  managementContext.getRegistry().registerConnector(createConnector(false),managementContext);
-  managementContext.getRegistry().registerService(MuleTestUtils.createDescriptor(FunctionalTestComponent.class.getName(),uniqueName("testComponent"),getTestEndpointURI(),null,props,managementContext),managementContext);
+  UMOComponent component=MuleTestUtils.getTestComponent(uniqueName("testComponent"),FunctionalTestComponent.class,props,managementContext,false);
+  UMOImmutableEndpoint ep=managementContext.getRegistry().lookupEndpointFactory().createInboundEndpoint(getTestEndpointURI(),managementContext);
+  ep.initialise();
+  UMOInboundRouterCollection inboundRouter=new InboundRouterCollection();
+  inboundRouter.addEndpoint(ep);
+  component.setInboundRouter(inboundRouter);
+  managementContext.getRegistry().registerComponent(component,managementContext);
+  managementContext.applyLifecycle(component);
+  if (managementContext.isStarted() == false) {
+    managementContext.start();
+  }
   logger.debug("waiting for count down");
   assertTrue(countDown.await(WAIT_PERIOD_MS,TimeUnit.MILLISECONDS));
 }

@@ -1,0 +1,25 @@
+{
+  super.parseChild(element,parserContext,builder);
+  try {
+    MutablePropertyValues beanProperties=builder.getBeanDefinition().getPropertyValues();
+    Class objectClass=null;
+    if (beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS) != null) {
+      objectClass=(Class)beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS).getValue();
+    }
+    if (objectClass == null) {
+      if (beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS_NAME) != null) {
+        String objectClassName=(String)beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS_NAME).getValue();
+        objectClass=ClassUtils.getClass(objectClassName);
+      }
+    }
+    if (UMOComponentAware.class.isAssignableFrom(objectClass)) {
+      logger.debug("Injecting UMOComponent into class " + objectClass + " which implements the UMOComponentAware interface.");
+      Element parent=(Element)element.getParentNode();
+      String componentName=parent.getAttribute(ATTRIBUTE_NAME);
+      builder.addPropertyReference("component",componentName);
+    }
+  }
+ catch (  Exception e) {
+    logger.warn(e);
+  }
+}

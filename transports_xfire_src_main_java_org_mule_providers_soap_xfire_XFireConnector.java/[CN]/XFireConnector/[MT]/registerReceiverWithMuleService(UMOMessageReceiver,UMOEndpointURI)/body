@@ -1,20 +1,24 @@
 {
-  if (xfireDescriptor == null) {
-    xfireDescriptor=(MuleDescriptor)managementContext.getRegistry().lookupService(XFIRE_SERVICE_COMPONENT_NAME + getName());
-    if (xfireDescriptor == null) {
-      xfireDescriptor=createxfireDescriptor();
-    }
- else {
-      managementContext.getRegistry().lookupModel(ModelHelper.SYSTEM_MODEL).unregisterComponent(xfireDescriptor);
-    }
-    if (xfireDescriptor.getProperties().get(XFIRE_PROPERTY) == null) {
-      xfireDescriptor.getProperties().put(XFIRE_PROPERTY,xfire);
-    }
-    if (serviceTransport != null && xfireDescriptor.getProperties().get(XFIRE_TRANSPORT) == null) {
-      xfireDescriptor.getProperties().put(XFIRE_TRANSPORT,serviceTransport);
-    }
+  SedaComponent c=new SedaComponent();
+  c.setName(XFIRE_SERVICE_COMPONENT_NAME + receiver.getComponent().getName());
+  c.setModel(managementContext.getRegistry().lookupSystemModel());
+  c.setManagementContext(managementContext);
+  c.initialise();
+  XFireServiceComponent svcComponent=new XFireServiceComponent(((XFireMessageReceiver)receiver));
+  svcComponent.setXfire(xfire);
+  svcComponent.setTransport(transport);
+  svcComponent.initialise();
+  SingletonObjectFactory of=new SingletonObjectFactory(svcComponent);
+  of.setComponent(c);
+  of.initialise();
+  c.setServiceFactory(of);
+  if (c.getProperties().get(XFIRE_PROPERTY) == null) {
+    c.getProperties().put(XFIRE_PROPERTY,xfire);
   }
-  String serviceName=receiver.getComponent().getDescriptor().getName();
+  if (serviceTransport != null && c.getProperties().get(XFIRE_TRANSPORT) == null) {
+    c.getProperties().put(XFIRE_TRANSPORT,serviceTransport);
+  }
+  String serviceName=receiver.getComponent().getName();
   String endpoint=receiver.getEndpointURI().getAddress();
   String scheme=ep.getScheme().toLowerCase();
   boolean sync=receiver.getEndpoint().isSynchronous();
@@ -38,5 +42,6 @@
   builder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
   ((MuleEndpoint)receiver.getEndpoint()).setSecurityFilter(null);
   UMOImmutableEndpoint serviceEndpoint=managementContext.getRegistry().lookupEndpointFactory().createInboundEndpoint(builder,managementContext);
-  xfireDescriptor.getInboundRouter().addEndpoint(serviceEndpoint);
+  c.getInboundRouter().addEndpoint(serviceEndpoint);
+  components.add(c);
 }

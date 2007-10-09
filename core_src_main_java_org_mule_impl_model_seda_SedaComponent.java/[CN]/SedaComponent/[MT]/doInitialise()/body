@@ -1,17 +1,17 @@
 {
-  ThreadingProfile tp=descriptor.getThreadingProfile();
-  workManager=tp.createWorkManager(descriptor.getName());
-  queueProfile=descriptor.getQueueProfile();
+  MuleConfiguration config=RegistryContext.getConfiguration();
+  if (threadingProfile == null) {
+    threadingProfile=config.getDefaultComponentThreadingProfile();
+  }
+  workManager=threadingProfile.createWorkManager(getName());
   if (queueProfile == null) {
     queueProfile=((SedaModel)model).getQueueProfile();
   }
-  poolingProfile=descriptor.getPoolingProfile();
-  if (poolingProfile == null) {
-    poolingProfile=((SedaModel)model).getPoolingProfile();
-  }
-  queueManager=managementContext.getQueueManager();
   try {
-    queueProfile.configureQueue(descriptor.getName(),managementContext.getQueueManager());
+    if (name == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Component has no name to identify it"),this);
+    }
+    queueProfile.configureQueue(name,managementContext.getQueueManager());
   }
  catch (  InitialisationException e) {
     throw e;

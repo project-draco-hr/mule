@@ -1,28 +1,33 @@
 {
   if (logger.isTraceEnabled()) {
-    logger.trace("MuleProxy: async onEvent for Mule UMO " + descriptor.getName());
+    logger.trace("MuleProxy: async onEvent for Mule UMO " + component.getName());
   }
   try {
     if (event.getEndpoint().canReceive()) {
       event=OptimizedRequestContext.criticalSetEvent(event);
       Object replyTo=event.getMessage().getReplyTo();
       ReplyToHandler replyToHandler=getReplyToHandler(event.getMessage(),event.getEndpoint());
-      InterceptorsInvoker invoker=new InterceptorsInvoker(interceptorList,descriptor,event.getMessage());
       long startTime=0;
       if (stat.isEnabled()) {
         startTime=System.currentTimeMillis();
       }
-      UMOMessage result=invoker.execute();
+      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+        event.getMessage().setBooleanProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY,true);
+      }
+      UMOMessage result=umo.intercept(null);
+      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+        result.removeProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY);
+      }
       if (stat.isEnabled()) {
         stat.addExecutionTime(System.currentTimeMillis() - startTime);
       }
       event=RequestContext.getEvent();
       if (result != null && !event.isStopFurtherProcessing()) {
-        descriptor.getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
+        component.getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
       }
       if (result != null && replyToHandler != null) {
         String requestor=(String)result.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
-        if ((requestor != null && !requestor.equals(descriptor.getName())) || requestor == null) {
+        if ((requestor != null && !requestor.equals(component.getName())) || requestor == null) {
           replyToHandler.processReplyTo(event,result,replyTo);
         }
       }
@@ -40,18 +45,7 @@
       handleException(e);
     }
  else {
-      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(descriptor.getName()),event.getMessage(),e));
-    }
-  }
- finally {
-    try {
-      proxyPool.returnObject(this);
-    }
- catch (    Exception e2) {
-      logger.error("Failed to return proxy: " + e2.getMessage(),e2);
-    }
-    if (getStatistics() instanceof SedaComponentStatistics) {
-      ((SedaComponentStatistics)getStatistics()).setComponentPoolSize(proxyPool.getSize());
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(component.getName()),event.getMessage(),e));
     }
   }
 }

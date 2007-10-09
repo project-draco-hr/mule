@@ -1,11 +1,18 @@
 {
-  Node node=element;
-  while (null != node && node instanceof Element) {
-    String name=super.getParentBeanName((Element)node);
-    if (!StringUtils.isBlank(name)) {
-      return name;
-    }
-    node=element.getParentNode();
+  Node parent=element.getParentNode();
+  if (parent == null) {
+    logger.error("No parent node found for element " + element);
+    return null;
   }
-  throw new IllegalStateException("Bean: " + element.getNodeName() + " has no grandparent");
+  Node grandparent=parent.getParentNode();
+  if (grandparent == null) {
+    logger.error("No parent node found for element " + element);
+    return null;
+  }
+  Node grandparentNameAttribute=grandparent.getAttributes().getNamedItem("name");
+  if (grandparentNameAttribute == null) {
+    logger.error("Grandparent node has no 'name' attribute: " + grandparent);
+    return null;
+  }
+  return grandparentNameAttribute.getNodeValue();
 }

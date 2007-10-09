@@ -1,0 +1,22 @@
+{
+  try {
+    UMOManagementContext managementContext=MuleServer.getManagementContext();
+    UMOComponent component=new SedaComponent();
+    component.setName(MANAGER_COMPONENT_NAME);
+    component.setModel(managementContext.getRegistry().lookupSystemModel());
+    Map props=new HashMap();
+    props.put("wireFormat",wireFormat);
+    props.put("encoding",encoding);
+    props.put("synchronousEventTimeout",new Integer(eventTimeout));
+    component.setServiceFactory(new SimpleObjectFactory(MuleManagerComponent.class,props));
+    component.setManagementContext(managementContext);
+    component.initialise();
+    endpointBuilder.setName(MANAGER_ENDPOINT_NAME);
+    UMOImmutableEndpoint endpoint=managementContext.getRegistry().lookupEndpointFactory().createInboundEndpoint(endpointBuilder,managementContext);
+    component.getInboundRouter().addEndpoint(endpoint);
+    return component;
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,null);
+  }
+}

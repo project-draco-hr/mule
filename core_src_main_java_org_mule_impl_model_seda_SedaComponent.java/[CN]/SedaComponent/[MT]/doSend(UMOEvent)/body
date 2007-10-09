@@ -1,8 +1,10 @@
 {
   UMOMessage result=null;
+  Object pojoService=null;
   MuleProxy proxy=null;
   try {
-    proxy=getProxy();
+    pojoService=getOrCreateService();
+    proxy=createComponentProxy(pojoService);
     if (logger.isDebugEnabled()) {
       logger.debug(this + " : got proxy for " + event.getId()+ " = "+ proxy);
     }
@@ -16,20 +18,10 @@ catch (  Exception e) {
   }
  finally {
     try {
-      if (proxy != null) {
-        if (proxyPool != null) {
-          proxyPool.returnObject(proxy);
-        }
- else         if (componentPerRequest) {
-          proxy.dispose();
-        }
-      }
+      serviceFactory.release(pojoService);
     }
  catch (    Exception e) {
       throw new ComponentException(event.getMessage(),this,e);
-    }
-    if (proxyPool != null) {
-      ((SedaComponentStatistics)getStatistics()).setComponentPoolSize(proxyPool.getSize());
     }
   }
   return result;

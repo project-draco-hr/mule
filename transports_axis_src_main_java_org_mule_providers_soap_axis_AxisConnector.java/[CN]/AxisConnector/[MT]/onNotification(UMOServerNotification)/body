@@ -1,14 +1,12 @@
 {
-  if (notification.getAction() == ManagerNotification.MANAGER_STARTED_MODELS) {
-    UMOModel systemModel=managementContext.getRegistry().lookupModel(ModelHelper.SYSTEM_MODEL);
-    if (!systemModel.isComponentRegistered(specificAxisServiceComponentName)) {
+  if (notification.getAction() == ManagerNotification.MANAGER_STARTED) {
+    if (managementContext.getRegistry().lookupComponent(AXIS_SERVICE_PROPERTY + getName()) == null) {
       try {
-        if (axisDescriptor == null) {
-          axisDescriptor=createAxisDescriptor();
+        if (axisComponent == null) {
+          axisComponent=getOrCreateAxisComponent();
         }
-        axisDescriptor.addInterceptor(new MethodFixInterceptor());
-        axisDescriptor.setModelName(MuleProperties.OBJECT_SYSTEM_MODEL);
-        managementContext.getRegistry().registerService(axisDescriptor);
+        managementContext.getRegistry().registerComponent(axisComponent,managementContext);
+        axisComponent.start();
         for (Iterator iterator=servletServices.iterator(); iterator.hasNext(); ) {
           SOAPService service=(SOAPService)iterator.next();
           ServletConnector servletConnector=(ServletConnector)TransportFactory.getConnectorByProtocol("servlet");
@@ -21,7 +19,6 @@
           }
         }
         servletServices.clear();
-        servletServices=null;
       }
  catch (      UMOException e) {
         handleException(e);

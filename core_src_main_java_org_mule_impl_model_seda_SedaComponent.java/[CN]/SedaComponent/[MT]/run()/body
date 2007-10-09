@@ -1,12 +1,13 @@
 {
   MuleEvent event=null;
+  Object pojoService=null;
   MuleProxy proxy=null;
   QueueSession queueSession=managementContext.getQueueManager().getQueueSession();
   while (!stopped.get()) {
     try {
       paused.whenFalse(null);
       if (stopping.get()) {
-        if (queueSession == null || queueSession.getQueue(descriptorQueueName).size() == 0) {
+        if (queueSession == null || getQueueSize() <= 0) {
           stopping.set(false);
           break;
         }
@@ -17,10 +18,10 @@
           stats.decQueuedEvent();
         }
         if (logger.isDebugEnabled()) {
-          logger.debug("Component: " + descriptor.getName() + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
+          logger.debug("Component: " + name + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
         }
-        proxy=getProxy();
-        proxy.start();
+        pojoService=getOrCreateService();
+        proxy=createComponentProxy(pojoService);
         proxy.onEvent(queueSession,event);
         workManager.scheduleWork(proxy,WorkManager.INDEFINITE,null,this);
       }
@@ -29,13 +30,13 @@
       if (isStopped() || isStopping()) {
         break;
       }
-      if (proxy != null && proxyPool != null) {
-        try {
-          proxyPool.returnObject(proxy);
+      try {
+        if (serviceFactory != null) {
+          serviceFactory.release(pojoService);
         }
- catch (        Exception e2) {
-          logger.info("Failed to return proxy to pool",e2);
-        }
+      }
+ catch (      Exception e2) {
+        logger.warn(e2);
       }
       if (e instanceof InterruptedException) {
         stopping.set(false);
@@ -48,7 +49,7 @@
         handleException(e);
       }
  else       if (e instanceof WorkException) {
-        handleException(new ComponentException(CoreMessages.eventProcessingFailedFor(descriptor.getName()),(event == null ? null : event.getMessage()),this,e));
+        handleException(new ComponentException(CoreMessages.eventProcessingFailedFor(name),(event == null ? null : event.getMessage()),this,e));
       }
  else {
         handleException(new ComponentException(CoreMessages.failedToGetPooledObject(),(event == null ? null : event.getMessage()),this,e));
@@ -56,9 +57,6 @@
     }
  finally {
       stopping.set(false);
-      if (proxy != null && componentPerRequest) {
-        proxy.dispose();
-      }
     }
   }
 }

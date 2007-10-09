@@ -1,12 +1,11 @@
 {
   AxisProperties.setProperty("axis.doAutoTypes",String.valueOf(connector.isDoAutoTypes()));
-  MuleDescriptor descriptor=(MuleDescriptor)component.getDescriptor();
   String style=(String)endpoint.getProperties().get("style");
   String use=(String)endpoint.getProperties().get("use");
   String doc=(String)endpoint.getProperties().get("documentation");
   UMOEndpointURI uri=endpoint.getEndpointURI();
-  String serviceName=component.getDescriptor().getName();
-  SOAPService existing=this.connector.getAxisServer().getService(serviceName);
+  String serviceName=component.getName();
+  SOAPService existing=this.connector.getAxis().getService(serviceName);
   if (existing != null) {
     service=existing;
     logger.debug("Using existing service for " + serviceName);
@@ -20,7 +19,7 @@
       logger.debug("Creating RPC Provider");
       service=new SOAPService(new MuleRPCProvider(connector));
     }
-    service.setEngine(connector.getAxisServer());
+    service.setEngine(connector.getAxis());
   }
   String servicePath=uri.getPath();
   service.setOption(serviceName,this);
@@ -47,7 +46,7 @@
   String methodNames="*";
   Map methods=(Map)endpoint.getProperties().get("soapMethods");
   if (methods == null) {
-    methods=(Map)descriptor.getProperties().get("soapMethods");
+    methods=(Map)component.getProperties().get("soapMethods");
   }
   if (methods != null) {
     Iterator i=methods.keySet().iterator();
@@ -131,7 +130,7 @@
   }
   service.getServiceDescription().setDocumentation(doc);
   service.setName(serviceName);
-  descriptor.addInitialisationCallback(new AxisInitialisationCallback(service));
+  component.addInitialisationCallback(new AxisInitialisationCallback(service));
   if (uri.getScheme().equalsIgnoreCase("servlet")) {
     connector.addServletService(service);
     String endpointUrl=uri.getAddress() + "/" + serviceName;

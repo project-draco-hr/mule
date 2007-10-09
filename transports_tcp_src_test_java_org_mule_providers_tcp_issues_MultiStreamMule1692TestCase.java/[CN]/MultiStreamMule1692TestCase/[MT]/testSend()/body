@@ -1,7 +1,9 @@
 {
   MuleClient client=new MuleClient();
-  UMOModel model=managementContext.getRegistry().lookupModel("echoModel");
-  FunctionalStreamingTestComponent ftc=(FunctionalStreamingTestComponent)model.getComponent("testComponent").getInstance();
+  UMOComponent component=managementContext.getRegistry().lookupComponent("testComponent");
+  assertTrue(component instanceof TestStreamingComponent);
+  FunctionalStreamingTestComponent ftc=(FunctionalStreamingTestComponent)((TestStreamingComponent)component).getOrCreateService();
+  assertNotNull(ftc);
   final CountDownLatch latch=new CountDownLatch(1);
   final AtomicReference message=new AtomicReference();
   ftc.setEventCallback(newCallback(latch,message),TEST_MESSAGE.length());
