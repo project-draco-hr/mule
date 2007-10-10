@@ -1,0 +1,43 @@
+{
+  TopicConnection connection=null;
+  try {
+    TopicConnectionFactory factory=new ActiveMQConnectionFactory(scenario.getBrokerUrl());
+    connection=factory.createTopicConnection();
+    connection.setClientID(getClientId());
+    connection.start();
+    TopicSession session=null;
+    try {
+      session=connection.createTopicSession(scenario.isTransacted(),scenario.getAcknowledge());
+      ActiveMQTopic destination=new ActiveMQTopic(scenario.getOutputQueue());
+      MessageConsumer consumer=null;
+      try {
+        consumer=session.createDurableSubscriber(destination,getClientId());
+        return scenario.receive(session,consumer);
+      }
+ catch (      Exception e) {
+        throw e;
+      }
+ finally {
+        if (consumer != null) {
+          consumer.close();
+        }
+      }
+    }
+ catch (    Exception e) {
+      throw e;
+    }
+ finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw e;
+  }
+ finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+}

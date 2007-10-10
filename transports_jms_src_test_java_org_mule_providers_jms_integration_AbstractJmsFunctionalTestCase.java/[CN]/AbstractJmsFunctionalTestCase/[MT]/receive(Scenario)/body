@@ -1,0 +1,42 @@
+{
+  Connection connection=null;
+  try {
+    ConnectionFactory factory=new ActiveMQConnectionFactory(scenario.getBrokerUrl());
+    connection=factory.createConnection();
+    connection.start();
+    Session session=null;
+    try {
+      session=connection.createSession(scenario.isTransacted(),scenario.getAcknowledge());
+      ActiveMQQueue destination=new ActiveMQQueue(scenario.getOutputQueue());
+      MessageConsumer consumer=null;
+      try {
+        consumer=session.createConsumer(destination);
+        return scenario.receive(session,consumer);
+      }
+ catch (      Exception e) {
+        throw e;
+      }
+ finally {
+        if (consumer != null) {
+          consumer.close();
+        }
+      }
+    }
+ catch (    Exception e) {
+      throw e;
+    }
+ finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw e;
+  }
+ finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+}
