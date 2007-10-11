@@ -8,8 +8,22 @@
   if (is == null) {
     is=Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
   }
-  if (logger.isDebugEnabled() && is != null) {
-    logger.debug("Resource " + resource + " is found in Servlet Context.");
+  if (logger.isDebugEnabled()) {
+    if (is != null) {
+      logger.debug("Resource " + resource + " is found in Servlet Context.");
+    }
+ else {
+      logger.debug("Resource " + resourcePath + " is not found in Servlet Context, loading from classpath or as external file");
+    }
+  }
+  if (is == null && webappClasspath != null) {
+    resourcePath=FileUtils.newFile(webappClasspath,resource).getPath();
+    try {
+      is=IOUtils.getResourceAsStream(resourcePath,getClass());
+    }
+ catch (    IOException ex) {
+      logger.debug("Resource " + resourcePath + " is not found in filesystem "+ ex);
+    }
   }
   if (is == null) {
     try {
