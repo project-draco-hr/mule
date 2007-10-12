@@ -4,13 +4,14 @@
   final UMOConnector connector=getTestConnector();
   connector.setName("TEST_CONNECTOR");
   final JmxAgent jmxAgent=new JmxAgent();
-  RegistryContext.getRegistry().registerConnector(connector,managementContext);
-  RegistryContext.getRegistry().registerAgent(jmxAgent,managementContext);
+  managementContext.getRegistry().registerConnector(connector,managementContext);
+  managementContext.getRegistry().registerAgent(jmxAgent,managementContext);
+  managementContext.applyLifecycle(jmxAgent);
   managementContext.start();
   final String query=jmxSupport.getDomainName(managementContext) + ":*";
   final ObjectName objectName=jmxSupport.getObjectName(query);
   Set mbeans=mBeanServer.queryMBeans(objectName,null);
-  assertEquals("Unexpected number of components registered in the domain.",NUMBER_OF_COMPONENTS,mbeans.size());
+  assertEquals("Unexpected number of components registered in the domain.",5,mbeans.size());
   managementContext.dispose();
   jmxAgent.dispose();
   mbeans=mBeanServer.queryMBeans(objectName,null);
