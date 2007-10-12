@@ -1,15 +1,12 @@
 {
   BlockingQueue buffer;
-  if (maxBufferSize > 0 && maxThreadsActive > 1) {
-    buffer=new LinkedBlockingDeque(maxBufferSize);
+  if (getMaxBufferSize() > 0 && getMaxThreadsActive() > 1) {
+    buffer=new LinkedBlockingDeque(getMaxBufferSize());
   }
  else {
     buffer=new SynchronousQueue();
   }
-  if (maxThreadsIdle > maxThreadsActive) {
-    maxThreadsIdle=maxThreadsActive;
-  }
-  ThreadPoolExecutor pool=new ThreadPoolExecutor(maxThreadsIdle,maxThreadsActive,threadTTL,TimeUnit.MILLISECONDS,buffer);
+  ThreadPoolExecutor pool=new ThreadPoolExecutor(Math.max(getMaxThreadsIdle(),getMaxThreadsActive()),getMaxThreadsActive(),getThreadTTL(),TimeUnit.MILLISECONDS,buffer);
   ThreadFactory tf=threadFactory;
   if (name != null) {
     tf=new NamedThreadFactory(name);
@@ -21,7 +18,7 @@
     pool.setRejectedExecutionHandler(rejectedExecutionHandler);
   }
  else {
-switch (poolExhaustPolicy) {
+switch (getPoolExhaustedAction()) {
 case WHEN_EXHAUSTED_DISCARD_OLDEST:
       pool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
     break;
@@ -35,7 +32,7 @@ case WHEN_EXHAUSTED_DISCARD:
 pool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
 break;
 default :
-pool.setRejectedExecutionHandler(new WaitPolicy(threadWaitTimeout,TimeUnit.MILLISECONDS));
+pool.setRejectedExecutionHandler(new WaitPolicy(getThreadWaitTimeout(),TimeUnit.MILLISECONDS));
 break;
 }
 }
