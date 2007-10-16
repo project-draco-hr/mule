@@ -1,16 +1,10 @@
 {
   logger.info("Trying to find XMPP connection for uri: " + endpointURI);
-  XMPPConnection xmppConnection=null;
   String username=endpointURI.getUsername();
   String hostname=endpointURI.getHost();
   String password=endpointURI.getPassword();
   String resource=(String)endpointURI.getParams().get("resource");
-  if (endpointURI.getPort() != -1) {
-    xmppConnection=new XMPPConnection(endpointURI.getHost(),endpointURI.getPort());
-  }
- else {
-    xmppConnection=new XMPPConnection(endpointURI.getHost());
-  }
+  XMPPConnection xmppConnection=this.doCreateXmppConnection(endpointURI);
   if (!xmppConnection.isAuthenticated()) {
     try {
       AccountManager accManager=new AccountManager(xmppConnection);
@@ -33,7 +27,9 @@
     }
   }
  else {
-    if (logger.isDebugEnabled())     logger.debug("Already authenticated on this connection, no need to log in again.");
+    if (logger.isDebugEnabled()) {
+      logger.debug("Already authenticated on this connection, no need to log in again.");
+    }
   }
   return xmppConnection;
 }
