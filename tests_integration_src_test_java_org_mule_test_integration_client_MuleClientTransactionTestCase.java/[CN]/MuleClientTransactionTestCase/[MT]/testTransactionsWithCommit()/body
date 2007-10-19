@@ -9,9 +9,10 @@
   MuleTransactionConfig tc=new MuleTransactionConfig();
   tc.setFactory(new JmsTransactionFactory());
   tc.setAction(UMOTransactionConfig.ACTION_ALWAYS_BEGIN);
-  MuleEndpoint inboundEndpoint=(new MuleEndpoint("jms://test.queue",false));
-  inboundEndpoint.setTransactionConfig(tc);
-  inboundEndpoint.setName("TransactedTest.Queue");
+  UMOEndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder("jms://test.queue",managementContext);
+  endpointBuilder.setTransactionConfig(tc);
+  endpointBuilder.setName("TransactedTest.Queue");
+  UMOImmutableEndpoint inboundEndpoint=managementContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder,managementContext);
   client.getManagementContext().getRegistry().registerEndpoint(inboundEndpoint);
   TransactionTemplate tt=new TransactionTemplate(tc,null,managementContext);
   tt.execute(new TransactionCallback(){
