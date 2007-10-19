@@ -1,0 +1,33 @@
+{
+  try {
+    Connection connection=getConnection();
+    if (connection == null) {
+      return;
+    }
+    final Class clazz=connection.getClass();
+    Method cleanupMethod;
+    if (Proxy.isProxyClass(clazz)) {
+      ConnectionInvocationHandler handler=(ConnectionInvocationHandler)Proxy.getInvocationHandler(connection);
+      connection=(Connection)handler.getTargetObject();
+      Class realConnectionClass=connection.getClass();
+      cleanupMethod=realConnectionClass.getMethod("cleanup",null);
+    }
+ else {
+      cleanupMethod=clazz.getMethod("cleanup",null);
+    }
+    try {
+      if (cleanupMethod != null) {
+        cleanupMethod.invoke(connection,null);
+      }
+    }
+  finally {
+      connection.close();
+    }
+  }
+ catch (  Exception e) {
+    throw new ConnectException(e,this);
+  }
+ finally {
+    setConnection(null);
+  }
+}
