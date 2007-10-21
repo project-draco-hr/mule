@@ -1,8 +1,8 @@
 {
-  UMODescriptor descriptor=new MuleDescriptor();
-  descriptor.setExceptionListener(new DefaultExceptionStrategy());
-  descriptor.setName("testComponent");
-  descriptor.setServiceFactory(new SimpleObjectFactory(JdbcFunctionalTestComponent.class));
+  UMOComponent component=new SedaComponent();
+  component.setExceptionListener(new DefaultExceptionStrategy());
+  component.setName("testComponent");
+  component.setServiceFactory(new SimpleObjectFactory(JdbcFunctionalTestComponent.class));
   UMOTransactionFactory tf=getTransactionFactory();
   UMOTransactionConfig txConfig=new MuleTransactionConfig();
   txConfig.setFactory(tf);
@@ -16,17 +16,16 @@
   endpointBuilder2.setName("testOut");
   endpointBuilder2.setConnector(connector);
   UMOImmutableEndpoint outProvider=managementContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder2,managementContext);
-  descriptor.setOutboundRouter(new OutboundRouterCollection());
+  component.setOutboundRouter(new OutboundRouterCollection());
   OutboundPassThroughRouter router=new OutboundPassThroughRouter();
   router.addEndpoint(outProvider);
-  descriptor.getOutboundRouter().addRouter(router);
-  descriptor.setInboundRouter(new InboundRouterCollection());
-  descriptor.getInboundRouter().addEndpoint(endpoint);
+  component.getOutboundRouter().addRouter(router);
+  component.setInboundRouter(new InboundRouterCollection());
+  component.getInboundRouter().addEndpoint(endpoint);
   HashMap props=new HashMap();
   props.put("eventCallback",callback);
-  descriptor.setProperties(props);
-  descriptor.setModelName(model.getName());
-  managementContext.getRegistry().registerService(descriptor);
-  UMOComponent component=model.getComponent(descriptor.getName());
+  component.setProperties(props);
+  component.setModel(model);
+  managementContext.getRegistry().registerComponent(component,managementContext);
   return component;
 }

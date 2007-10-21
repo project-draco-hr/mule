@@ -1,6 +1,21 @@
 {
-  QuickConfigurationBuilder builder=new QuickConfigurationBuilder();
+  UMOComponent component=new SedaComponent();
   HashMap props=new HashMap();
   props.put("eventCallback",callback);
-  builder.registerComponent(JdbcFunctionalTestComponent.class.getName(),"testComponent",getInDest(),getOutDest(),props);
+  component.setProperties(props);
+  component.setName("testComponent");
+  UMOImmutableEndpoint in=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(getInDest(),managementContext);
+  UMOImmutableEndpoint out=managementContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(getOutDest(),managementContext);
+  UMOInboundRouterCollection inboundRouterCollection=new InboundRouterCollection();
+  inboundRouterCollection.addEndpoint(in);
+  component.setInboundRouter(inboundRouterCollection);
+  UMOOutboundRouterCollection outboundRouterCollection=new OutboundRouterCollection();
+  UMOOutboundRouter outboundRouter=new FilteringOutboundRouter();
+  List endpoints=new ArrayList();
+  endpoints.add(out);
+  outboundRouter.setEndpoints(endpoints);
+  outboundRouterCollection.addRouter(outboundRouter);
+  component.setInboundRouter(inboundRouterCollection);
+  component.setOutboundRouter(outboundRouterCollection);
+  managementContext.getRegistry().registerComponent(component,managementContext);
 }
