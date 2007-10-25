@@ -1,8 +1,13 @@
 {
-  try {
-    ((Session)resource).rollback();
+  if (resource != null) {
+    try {
+      ((Session)resource).rollback();
+    }
+ catch (    JMSException e) {
+      throw new TransactionException(CoreMessages.transactionRollbackFailed(),e);
+    }
   }
- catch (  JMSException e) {
-    throw new TransactionException(CoreMessages.transactionRollbackFailed(),e);
+ else {
+    throw new TransactionException(MessageFactory.createStaticMessage("No resource has been bound to this transaction"));
   }
 }
