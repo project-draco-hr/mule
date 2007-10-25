@@ -12,7 +12,12 @@
  else {
     replyMessage=(addReceived ? received(contents) : contents) + (appendComponentName ? " " + context.getComponent().getName() : "");
   }
-  context.getManagementContext().fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
+  UMOManagementContext managementContext=context.getManagementContext();
+  if (managementContext == null) {
+    logger.warn("No ManagementContext available from EventContext");
+    managementContext=MuleServer.getManagementContext();
+  }
+  managementContext.fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
   if (throwException) {
     throw new MuleException(MessageFactory.createStaticMessage("Functional Test Component Exception"));
   }
