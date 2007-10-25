@@ -5,6 +5,9 @@
   String contents=context.getTransformedMessageAsString();
   String msg=StringMessageUtils.getBoilerPlate("Message Received in component: " + context.getComponent().getName() + ". Content is: "+ StringMessageUtils.truncate(contents,100,true),'*',80);
   logger.info(msg);
+  if (eventCallback != null) {
+    eventCallback.eventReceived(context,this);
+  }
   Object replyMessage;
   if (returnMessage != null) {
     replyMessage=returnMessage;
@@ -20,9 +23,6 @@
   managementContext.fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
   if (throwException) {
     throw new MuleException(MessageFactory.createStaticMessage("Functional Test Component Exception"));
-  }
-  if (eventCallback != null) {
-    eventCallback.eventReceived(context,this);
   }
   return replyMessage;
 }

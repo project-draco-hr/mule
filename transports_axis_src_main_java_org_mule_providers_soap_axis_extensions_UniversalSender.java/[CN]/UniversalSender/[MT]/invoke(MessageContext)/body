@@ -84,8 +84,9 @@
     if (sync) {
       UMOManagementContext managementContext=MuleServer.getManagementContext();
       UMOEndpointBuilder builder=new EndpointURIEndpointBuilder(endpoint,managementContext);
-      endpoint=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(builder,managementContext);
-      UMOEvent dispatchEvent=new MuleEvent(message,endpoint,session,sync);
+      builder.setRemoteSync(true);
+      UMOImmutableEndpoint syncEndpoint=managementContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(builder,managementContext);
+      UMOEvent dispatchEvent=new MuleEvent(message,syncEndpoint,session,sync);
       UMOMessage result=endpoint.send(dispatchEvent);
       if (result != null) {
         byte[] response=result.getPayloadAsBytes();
