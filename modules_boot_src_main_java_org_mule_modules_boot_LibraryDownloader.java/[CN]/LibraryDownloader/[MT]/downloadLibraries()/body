@@ -1,20 +1,24 @@
 {
   List libraries=new ArrayList();
+  Exception proxyException=null;
   try {
-    libraries.add(getLibrary(REPO_CENTRAL,"/javax/activation/activation/1.1/activation-1.1.jar","activation-1.1.jar"));
-    libraries.add(getLibrary(REPO_CENTRAL,"/javax/mail/mail/1.4/mail-1.4.jar","mail-1.4.jar"));
-    return libraries;
+    for (int externalLibraryPos=0; externalLibraryPos < EXTERNAL_LIBRARIES.length; externalLibraryPos++) {
+      downloadLibrary(libraries,externalLibraryPos);
+    }
   }
  catch (  UnknownHostException uhe) {
-    System.err.println();
-    IOException ex=new IOException("Unable to reach a remote repository, this is most likely because you are behind a firewall and have not configured your HTTP proxy settings in $MULE_HOME/conf/wrapper.conf.");
-    ex.initCause(uhe);
-    throw ex;
+    proxyException=uhe;
   }
-catch (  ConnectTimeoutException e) {
-    System.err.println();
-    IOException ex=new IOException("Unable to reach a remote repository, this is most likely because you are behind a firewall and have not configured your HTTP proxy settings in $MULE_HOME/conf/wrapper.conf.");
-    ex.initCause(e);
-    throw ex;
+catch (  ConnectTimeoutException cte) {
+    proxyException=cte;
   }
+ finally {
+    if (proxyException != null) {
+      System.err.println();
+      IOException ex=new IOException("Unable to reach a remote repository, this is most likely because you are behind a firewall and have not configured your HTTP proxy settings in $MULE_HOME/conf/wrapper.conf.");
+      ex.initCause(proxyException);
+      throw ex;
+    }
+  }
+  return libraries;
 }
