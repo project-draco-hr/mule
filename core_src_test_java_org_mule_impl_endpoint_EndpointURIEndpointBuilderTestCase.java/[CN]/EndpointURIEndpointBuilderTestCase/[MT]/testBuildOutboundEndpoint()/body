@@ -3,8 +3,13 @@
   UMOEndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(uri,MuleServer.getManagementContext());
   try {
     UMOImmutableEndpoint ep=endpointBuilder.buildOutboundEndpoint();
-    assertEquals(ep.getEndpointURI().getUri().toString(),"test://address");
     assertEquals(UMOImmutableEndpoint.ENDPOINT_TYPE_SENDER,ep.getType());
+    assertTrue(ep.canSend());
+    assertFalse(ep.canReceive());
+    assertTrue(TransformerUtils.isDefined(ep.getTransformers()));
+    assertTrue(ep.getTransformers().get(0) instanceof TestOutboundTransformer);
+    assertFalse(TransformerUtils.isDefined(ep.getResponseTransformers()));
+    testDefaultCommonEndpointAttributes(ep);
   }
  catch (  Exception e) {
     fail("Unexpected exception: " + e.getStackTrace());
