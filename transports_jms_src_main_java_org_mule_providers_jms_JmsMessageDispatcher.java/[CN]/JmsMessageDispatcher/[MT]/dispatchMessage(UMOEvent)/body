@@ -7,7 +7,7 @@
   boolean cached=false;
   boolean remoteSync=useRemoteSync(event);
   if (logger.isDebugEnabled()) {
-    logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". Event id is: "+ event.getId()+ ". outbound transformer is: "+ event.getEndpoint().getTransformers());
+    logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". Event id is: "+ event.getId()+ ". Outbound transformers are: "+ event.getEndpoint().getTransformers());
   }
   try {
     session=connector.getSessionFromTransaction();
@@ -34,12 +34,7 @@
       }
     }
     UMOEndpointURI endpointUri=event.getEndpoint().getEndpointURI();
-    boolean topic=false;
-    String resourceInfo=endpointUri.getResourceInfo();
-    topic=(resourceInfo != null && JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(resourceInfo));
-    if (!topic) {
-      topic=MapUtils.getBooleanValue(event.getEndpoint().getProperties(),JmsConstants.TOPIC_PROPERTY,false);
-    }
+    boolean topic=connector.getTopicResolver().isTopic(event.getEndpoint(),true);
     Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
     producer=connector.getJmsSupport().createProducer(session,dest,topic);
     Object message=event.getTransformedMessage();
@@ -63,7 +58,7 @@
           int i=reply.indexOf(":");
           if (i > -1) {
             String qtype=reply.substring(0,i);
-            replyToTopic="topic".equalsIgnoreCase(qtype);
+            replyToTopic=JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(qtype);
             reply=reply.substring(i + 1);
           }
           replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);

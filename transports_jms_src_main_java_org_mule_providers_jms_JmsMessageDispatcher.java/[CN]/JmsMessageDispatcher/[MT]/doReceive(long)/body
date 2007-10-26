@@ -2,14 +2,13 @@
   Session session=null;
   MessageConsumer consumer=null;
   try {
-    String resourceInfo=endpoint.getEndpointURI().getResourceInfo();
-    boolean topic=(resourceInfo != null && JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(resourceInfo));
+    final boolean topic=connector.getTopicResolver().isTopic(endpoint);
     JmsSupport support=connector.getJmsSupport();
     session=connector.getSession(false,topic);
     Destination dest=support.createDestination(session,endpoint.getEndpointURI().getAddress(),topic);
     consumer=support.createConsumer(session,dest,topic);
     try {
-      Message message=null;
+      Message message;
       if (timeout == RECEIVE_NO_WAIT) {
         message=consumer.receiveNoWait();
       }
