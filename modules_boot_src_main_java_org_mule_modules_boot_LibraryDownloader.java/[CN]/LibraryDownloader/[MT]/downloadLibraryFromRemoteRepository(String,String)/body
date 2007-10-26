@@ -1,14 +1,14 @@
 {
-  String url=repository + path;
-  HttpMethod httpMethod=new GetMethod(url);
+  URL libraryUrl=null;
+  HttpMethod httpMethod=new GetMethod(REPO_CENTRAL + path + '/'+ destinationFileName);
   try {
-    System.out.print("Downloading " + url + " ...");
+    System.out.print("Downloading " + httpMethod.getURI() + " ...");
     client.executeMethod(hostConfig,httpMethod,httpState);
     if (httpMethod.getStatusCode() == HttpStatus.SC_OK) {
       File destinationFile=new File(new File(muleHome,DefaultMuleClassPathConfig.USER_DIR),destinationFileName);
       FileUtils.copyStreamToFile(httpMethod.getResponseBodyAsStream(),destinationFile);
       System.out.println("done");
-      return destinationFile.toURL();
+      libraryUrl=destinationFile.toURL();
     }
  else {
       System.out.println();
@@ -18,4 +18,5 @@
   finally {
     httpMethod.releaseConnection();
   }
+  return libraryUrl;
 }

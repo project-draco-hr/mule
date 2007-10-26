@@ -1,9 +1,13 @@
 {
-  List libraries=new ArrayList();
+  List libraryUrls=new ArrayList();
   Exception proxyException=null;
   try {
-    for (int externalLibraryPos=0; externalLibraryPos < EXTERNAL_LIBRARIES.length; externalLibraryPos++) {
-      downloadLibrary(libraries,externalLibraryPos);
+    Iterator iter=libraryDownloadDescriptions.iterator();
+    while (iter.hasNext()) {
+      URL libraryUrl=downloadLibrary((Library)iter.next());
+      if (libraryUrl != null) {
+        libraryUrls.add(libraryUrl);
+      }
     }
   }
  catch (  UnknownHostException uhe) {
@@ -15,10 +19,10 @@ catch (  ConnectTimeoutException cte) {
  finally {
     if (proxyException != null) {
       System.err.println();
-      IOException ex=new IOException("Unable to reach a remote repository, this is most likely because you are behind a firewall and have not configured your HTTP proxy settings in $MULE_HOME/conf/wrapper.conf.");
+      IOException ex=new IOException(PROXY_ERROR_MESSAGE);
       ex.initCause(proxyException);
       throw ex;
     }
   }
-  return libraries;
+  return libraryUrls;
 }
