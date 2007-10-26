@@ -15,6 +15,13 @@
       transformer=(Transformer)transformerPool.borrowObject();
       transformer.setErrorListener(errorListener);
       transformer.setOutputProperty(OutputKeys.ENCODING,encoding);
+      if (transformParameters != null) {
+        for (Iterator i=transformParameters.entrySet().iterator(); i.hasNext(); ) {
+          Map.Entry parameter=(Entry)i.next();
+          String key=(String)parameter.getKey();
+          transformer.setParameter(key,evaluateTransformParameter(key,parameter.getValue()));
+        }
+      }
       transformer.transform(sourceDoc,holder.getResult());
       result=holder.getResultObject();
       if (errorListener.isError()) {
@@ -23,6 +30,7 @@
     }
   finally {
       if (transformer != null) {
+        transformer.clearParameters();
         transformerPool.returnObject(transformer);
       }
     }

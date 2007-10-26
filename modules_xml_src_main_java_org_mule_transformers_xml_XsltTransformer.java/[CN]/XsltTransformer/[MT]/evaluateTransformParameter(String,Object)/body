@@ -1,0 +1,20 @@
+{
+  if (value instanceof String) {
+    String stringValue=(String)value;
+    if (!stringValue.startsWith(PARAM_EVAL_TOKEN)) {
+      return stringValue;
+    }
+ else     if (stringValue.startsWith(PARAM_EVAL_TOKEN + PARAM_EVAL_TOKEN)) {
+      return stringValue.substring(1);
+    }
+ else {
+      UMOEventContext context=RequestContext.getEventContext();
+      if (context == null) {
+        throw new TransformerException(CoreMessages.noCurrentEventForTransformer(),this);
+      }
+      JXPathContext jxpathContext=JXPathContext.newContext(context);
+      return jxpathContext.getValue(stringValue.substring(1));
+    }
+  }
+  return value;
+}
