@@ -14,14 +14,16 @@
   }
   UMOMessage resultMessage=null;
   if (result instanceof VoidResult) {
-    resultMessage=new MuleMessage(event.getTransformedMessage(),RequestContext.getEventContext().getMessage());
+    event.getTransformedMessage();
+    resultMessage=event.getMessage();
   }
  else   if (result != null) {
     if (result instanceof UMOMessage) {
       resultMessage=(UMOMessage)result;
     }
  else {
-      resultMessage=new MuleMessage(result,event.getMessage());
+      event.getMessage().applyTransformer(new TransformerTemplate(new TransformerTemplate.OverwitePayloadCallback(result)));
+      resultMessage=event.getMessage();
     }
   }
   return resultMessage;

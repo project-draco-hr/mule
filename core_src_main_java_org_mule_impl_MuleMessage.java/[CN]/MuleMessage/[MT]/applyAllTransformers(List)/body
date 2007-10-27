@@ -1,0 +1,37 @@
+{
+  if (TransformerUtils.isUndefined(transformers) || 0 == transformers.size()) {
+    return;
+  }
+  Iterator iterator=transformers.iterator();
+  while (iterator.hasNext()) {
+    UMOTransformer transformer=(UMOTransformer)iterator.next();
+    if (getPayload() == null) {
+      if (transformer.isAcceptNull()) {
+        setPayload(NullPayload.getInstance());
+      }
+ else {
+        break;
+      }
+    }
+    Class srcCls=getPayload().getClass();
+    if (transformer.isSourceTypeSupported(srcCls)) {
+      Object result=transformer.transform(this);
+      if (originalAdapter == null && DebugOptions.isCacheMessageOriginalPayload()) {
+        originalAdapter=adapter;
+      }
+      if (result instanceof UMOMessage) {
+synchronized (adapter) {
+          this.adapter=((UMOMessage)result).getAdapter();
+        }
+        return;
+      }
+      setPayload(result);
+    }
+ else     if (!transformer.isIgnoreBadInput()) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Transformer: " + iterator + " doesn't support the result payload: "+ getPayload().getClass());
+      }
+      break;
+    }
+  }
+}

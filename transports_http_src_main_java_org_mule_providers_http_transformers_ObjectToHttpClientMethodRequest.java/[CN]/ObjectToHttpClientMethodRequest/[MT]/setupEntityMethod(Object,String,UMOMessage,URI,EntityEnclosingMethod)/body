@@ -1,0 +1,30 @@
+{
+  if (!(msg.getPayload() instanceof NullPayload)) {
+    String mimeType=msg.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
+    if (src instanceof String) {
+      if (mimeType != null) {
+        int parameterIndex=mimeType.indexOf(";");
+        if (parameterIndex > 0) {
+          mimeType=mimeType.substring(0,parameterIndex);
+        }
+      }
+      if (mimeType == null)       mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
+      postMethod.setRequestEntity(new StringRequestEntity(src.toString(),mimeType,encoding));
+    }
+ else     if (src instanceof InputStream) {
+      if (mimeType == null)       mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
+      postMethod.setRequestEntity(new InputStreamRequestEntity((InputStream)src,mimeType));
+    }
+ else     if (src instanceof byte[]) {
+      if (mimeType == null)       mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
+      postMethod.setRequestEntity(new ByteArrayRequestEntity((byte[])src,mimeType));
+    }
+ else     if (src instanceof OutputHandler) {
+      UMOEvent event=RequestContext.getEvent();
+      postMethod.setRequestEntity(new StreamPayloadRequestEntity((OutputHandler)src,event));
+    }
+ else {
+      throw new IllegalArgumentException("this should never happen");
+    }
+  }
+}

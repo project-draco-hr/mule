@@ -1,20 +1,21 @@
 {
   Object msg;
   HttpMethod httpMethod=(HttpMethod)src;
-  Header contentType=httpMethod.getResponseHeader(HttpConstants.HEADER_CONTENT_TYPE);
+  InputStream is;
   try {
-    if (contentType != null && !contentType.getValue().startsWith("text/")) {
-      msg=IOUtils.toByteArray(httpMethod.getResponseBodyAsStream());
-    }
- else {
-      msg=httpMethod.getResponseBodyAsString();
-    }
+    is=httpMethod.getResponseBodyAsStream();
   }
  catch (  IOException e) {
     throw new TransformerException(this,e);
   }
+  if (is == null) {
+    msg=NullPayload.getInstance();
+  }
+ else {
+    msg=new ReleasingInputStream(is,httpMethod);
+  }
   Map headerProps=new HashMap();
-  Header[] headers=httpMethod.getRequestHeaders();
+  Header[] headers=httpMethod.getResponseHeaders();
   String name;
   for (int i=0; i < headers.length; i++) {
     name=headers[i].getName();

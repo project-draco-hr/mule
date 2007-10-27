@@ -1,6 +1,6 @@
 {
   UMOMessage requestMessage=new MuleMessage(eventContext.getTransformedMessage(),eventContext.getMessage());
-  UMOMessage responseMessage=requestMessage;
+  UMOMessage responseMessage=null;
   Object builtMessage;
   if (component.getOutboundRouter().hasEndpoints()) {
     List endpoints=new ArrayList();
@@ -10,6 +10,7 @@
     }
     for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
       UMOEndpoint endpoint=(UMOEndpoint)iterator.next();
+      Object request=requestMessage.getPayload();
       boolean rsync=eventContext.getMessage().getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,endpoint.isRemoteSync());
       if (!rsync) {
         logger.info("Endpoint: " + endpoint + " is not remoteSync enabled. Message builder finishing");
@@ -34,9 +35,9 @@
  catch (          Exception e) {
           }
         }
-        builtMessage=buildMessage(requestMessage,responseMessage);
+        builtMessage=buildMessage(new MuleMessage(request,requestMessage),responseMessage);
         responseMessage=new MuleMessage(builtMessage,responseMessage);
-        requestMessage=responseMessage;
+        requestMessage=new MuleMessage(responseMessage.getPayload(),responseMessage);
       }
     }
   }

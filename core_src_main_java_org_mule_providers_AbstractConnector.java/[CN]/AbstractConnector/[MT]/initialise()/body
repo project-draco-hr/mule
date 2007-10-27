@@ -7,14 +7,17 @@
     logger.info("Initialising: " + this);
   }
   this.initFromServiceDescriptor();
-  this.disposeDispatchers();
-  this.disposeReceivers();
   this.doInitialise();
-  if (exceptionListener instanceof ManagementContextAware) {
-    ((ManagementContextAware)exceptionListener).setManagementContext(managementContext);
+  if (exceptionListener == null) {
+    exceptionListener=new DefaultExceptionStrategy();
+    ((DefaultExceptionStrategy)exceptionListener).setManagementContext(managementContext);
+    ((DefaultExceptionStrategy)exceptionListener).initialise();
   }
-  if (exceptionListener instanceof Initialisable) {
-    ((Initialisable)exceptionListener).initialise();
+  try {
+    initWorkManagers();
+  }
+ catch (  UMOException e) {
+    throw new InitialisationException(e,this);
   }
   initialised.set(true);
 }

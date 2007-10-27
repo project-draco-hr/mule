@@ -1,0 +1,28 @@
+{
+  int i=1;
+  String transString=props.getProperty(TRANSFORMER_PREFIX + i);
+  while (transString != null) {
+    Class returnClass=null;
+    int pos=transString.indexOf('(');
+    if (pos == -1) {
+      pos=transString.length();
+    }
+    String clazz=transString.substring(0,pos);
+    if (pos != transString.length()) {
+      String returnClassString=transString.substring(pos + 1,transString.length() - 1);
+      if (returnClassString.equals("byte[]")) {
+        returnClass=byte[].class;
+      }
+ else {
+        returnClass=ClassUtils.loadClass(returnClassString,getClass());
+      }
+    }
+    UMOTransformer trans=(UMOTransformer)ClassUtils.instanciateClass(clazz,ClassUtils.NO_ARGS);
+    if (returnClass != null) {
+      trans.setReturnClass(returnClass);
+    }
+    registry.registerTransformer(trans);
+    props.remove(TRANSFORMER_PREFIX + i++);
+    transString=props.getProperty(TRANSFORMER_PREFIX + i);
+  }
+}

@@ -1,3 +1,16 @@
 {
-  return getTransformerFromContex(MuleProperties.CONNECTOR_RESPONSE_TRANSFORMER,"response");
+  if (responseTransformer != null) {
+    return CollectionUtils.singletonList(responseTransformer);
+  }
+  if (defaultResponseTransformer != null) {
+    logger.info("Loading default response transformer: " + defaultResponseTransformer);
+    try {
+      responseTransformer=(UMOTransformer)ClassUtils.instanciateClass(defaultResponseTransformer,ClassUtils.NO_ARGS);
+      return CollectionUtils.singletonList(responseTransformer);
+    }
+ catch (    Exception e) {
+      throw new TransportFactoryException(CoreMessages.failedToLoadTransformer("response",defaultResponseTransformer),e);
+    }
+  }
+  return TransformerUtils.UNDEFINED;
 }

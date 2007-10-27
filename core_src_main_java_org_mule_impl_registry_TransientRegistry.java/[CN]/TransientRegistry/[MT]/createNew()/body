@@ -4,10 +4,7 @@
   lifecycleManager.registerLifecycle(new ManagementContextStartPhase());
   lifecycleManager.registerLifecycle(new ManagementContextStopPhase());
   lifecycleManager.registerLifecycle(new ContainerManagedLifecyclePhase(Disposable.PHASE_NAME,Disposable.class,Initialisable.PHASE_NAME));
-  TransientRegistry registry=new TransientRegistry();
-  RegistryContext.setRegistry(registry);
   MuleConfiguration config=new MuleConfiguration();
-  registry.setConfiguration(config);
   QueueManager queueManager=new TransactionalQueueManager();
   queueManager.setPersistenceStrategy(new CachingPersistenceStrategy(new MemoryPersistenceStrategy()));
   ThreadingProfile tp=config.getDefaultThreadingProfile();
@@ -26,6 +23,10 @@
   notificationManager.registerEventType(TransactionNotificationListener.class,TransactionNotification.class);
   UMOSecurityManager securityManager=new MuleSecurityManager();
   UMOManagementContext context=new ManagementContext(lifecycleManager);
+  TransientRegistry registry=new TransientRegistry();
+  registry.setConfiguration(config);
+  RegistryContext.setRegistry(registry);
+  registry.getObjectTypeMap(ObjectProcessor.class).put(MuleProperties.OBJECT_MANAGMENT_CONTEXT_PROCESSOR,new ManagementContextDependencyProcessor(context));
   context.setId(UUID.getUUID());
   MuleServer.setManagementContext(context);
   registry.registerObject(MuleProperties.OBJECT_MANAGEMENT_CONTEXT,context,context);
@@ -33,6 +34,7 @@
   registry.registerObject(MuleProperties.OBJECT_WORK_MANAGER,workManager,context);
   registry.registerObject(MuleProperties.OBJECT_NOTIFICATION_MANAGER,notificationManager,context);
   registry.registerObject(MuleProperties.OBJECT_QUEUE_MANAGER,queueManager,context);
+  registry.registerObject(MuleProperties.OBJECT_MULE_SIMPLE_REGISTRY_BOOTSTRAP,new SimpleRegistryBootstrap(),context);
   context.setWorkManager(workManager);
   context.setSecurityManager(securityManager);
   context.setNotificationManager(notificationManager);

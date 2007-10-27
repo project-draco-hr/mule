@@ -28,13 +28,20 @@
           return null;
         }
       }
-      MuleMessage message=new MuleMessage(connector.getMessageAdapter(result));
+      MuleMessage message;
       File destinationFile=null;
       if (connector.getMoveToDirectory() != null) {
         destinationFile=FileUtils.newFile(connector.getMoveToDirectory(),result.getName());
         if (!result.renameTo(destinationFile)) {
           logger.error("Failed to move file: " + result.getAbsolutePath() + " to "+ destinationFile.getAbsolutePath());
+          message=new MuleMessage(connector.getMessageAdapter(result));
         }
+ else {
+          message=new MuleMessage(connector.getMessageAdapter(destinationFile));
+        }
+      }
+ else {
+        message=new MuleMessage(connector.getMessageAdapter(result));
       }
       if (connector.isAutoDelete()) {
         if (destinationFile == null) {

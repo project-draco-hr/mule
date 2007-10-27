@@ -1,0 +1,20 @@
+{
+  UMOMessage message;
+  if (src instanceof UMOMessage) {
+    message=(UMOMessage)src;
+  }
+ else   if (DebugOptions.isAutoWrapMessageAwareTransform()) {
+    message=new MuleMessage(src);
+  }
+ else {
+    UMOEventContext event=RequestContext.getEventContext();
+    if (event == null) {
+      throw new TransformerException(CoreMessages.noCurrentEventForTransformer(),this);
+    }
+    message=event.getMessage();
+    if (!message.getPayload().equals(src)) {
+      throw new IllegalStateException("Transform payload does not match current EventContext payload");
+    }
+  }
+  return transform(message,encoding);
+}

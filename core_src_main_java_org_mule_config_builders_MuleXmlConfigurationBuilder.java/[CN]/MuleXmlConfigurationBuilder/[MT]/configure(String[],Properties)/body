@@ -1,0 +1,34 @@
+{
+  if (configResources == null) {
+    throw new ConfigurationException(CoreMessages.objectIsNull("Configuration Resource"));
+  }
+  Registry registry=RegistryContext.getOrCreateRegistry();
+  try {
+    registry.registerObjects(startupProperties);
+  }
+ catch (  RegistrationException e) {
+    throw new ConfigurationException(e);
+  }
+  String[] all=new String[configResources.length + 1];
+  all[0]=defaultConfigResource;
+  System.arraycopy(configResources,0,all,1,configResources.length);
+  MuleApplicationContext context;
+  if (parentContext != null) {
+    context=new MuleApplicationContext(all,parentContext);
+  }
+ else {
+    context=new MuleApplicationContext(all);
+  }
+  try {
+    UMOManagementContext mc=context.getManagementContext();
+    MuleServer.setManagementContext(mc);
+    if (startContext) {
+      mc.start();
+    }
+    registry.getConfiguration().setConfigResources(configResources);
+    return mc;
+  }
+ catch (  Exception e) {
+    throw new ConfigurationException(CoreMessages.failedToInvokeLifecycle("start","Mule"),e);
+  }
+}

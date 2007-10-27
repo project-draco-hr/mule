@@ -6,25 +6,8 @@
     Object value=null;
     boolean foundValue=false;
     if (message != null) {
-      PropertyExtractor pe=(PropertyExtractor)propertyExtractorCache.get(query + param);
-      if (pe == null) {
-        for (Iterator iterator=propertyExtractors.iterator(); iterator.hasNext(); ) {
-          pe=(PropertyExtractor)iterator.next();
-          value=pe.getProperty(name,message);
-          if (value != null) {
-            foundValue=true;
-            propertyExtractorCache.putIfAbsent(query + param,pe);
-            break;
-          }
-        }
-      }
- else {
-        value=pe.getProperty(name,message);
-        foundValue=true;
-      }
-      if (StringUtils.EMPTY.equals(value) && pe instanceof BeanPropertyExtractor) {
-        value=null;
-      }
+      value=PropertyExtractorManager.processExpression(name,message);
+      foundValue=value != null;
     }
     if (!foundValue) {
       value=endpoint.getProperty(name);

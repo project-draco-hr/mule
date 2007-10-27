@@ -1,0 +1,41 @@
+{
+  String serviceFinderClass=null;
+  if (overrides != null) {
+    serviceFinderClass=(String)props.remove(MuleProperties.SERVICE_FINDER);
+    props.putAll(overrides);
+  }
+  ServiceDescriptor sd=null;
+  if (type.equals(PROVIDER_SERVICE_TYPE)) {
+    try {
+      sd=new DefaultTransportServiceDescriptor(name,props,registry);
+    }
+ catch (    Exception e) {
+      throw (IllegalStateException)new IllegalStateException("Cannot create transport " + name).initCause(e);
+    }
+    props=SpiUtils.findServiceDescriptor(EXCEPTION_SERVICE_TYPE,name + "-exception-mappings");
+    ((TransportServiceDescriptor)sd).setExceptionMappings(props);
+  }
+ else   if (type.equals(MODEL_SERVICE_TYPE)) {
+    sd=new DefaultModelServiceDescriptor(name,props);
+  }
+ else {
+    throw new ServiceException(CoreMessages.unrecognisedServiceType(type));
+  }
+  if (StringUtils.isNotBlank(serviceFinderClass)) {
+    ServiceFinder finder;
+    try {
+      finder=(ServiceFinder)ClassUtils.instanciateClass(serviceFinderClass,ClassUtils.NO_ARGS);
+    }
+ catch (    Exception e) {
+      throw new ServiceException(CoreMessages.cannotInstanciateFinder(serviceFinderClass),e);
+    }
+    String realService=finder.findService(name,sd,props);
+    if (realService != null) {
+      return RegistryContext.getRegistry().lookupServiceDescriptor(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,realService,overrides);
+    }
+ else {
+      throw new ServiceException(CoreMessages.serviceFinderCantFindService(name));
+    }
+  }
+  return sd;
+}

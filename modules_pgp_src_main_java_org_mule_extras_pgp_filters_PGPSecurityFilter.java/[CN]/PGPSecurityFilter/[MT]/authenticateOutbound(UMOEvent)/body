@@ -5,21 +5,11 @@
   }
   UMOMessage message=event.getMessage();
   KeyBundle userKeyBundle=keyManager.getKeyBundle((String)getCredentialsAccessor().getCredentials(event));
-  PGPCryptInfo cryptInfo=new PGPCryptInfo(userKeyBundle,signRequired);
-  byte[] msg=null;
+  final PGPCryptInfo cryptInfo=new PGPCryptInfo(userKeyBundle,signRequired);
   try {
-    msg=message.getPayloadAsBytes();
-    msg=strategy.encrypt(msg,cryptInfo);
+    updatePayload(event.getMessage(),strategy.encrypt(message.getPayloadAsBytes(),cryptInfo));
   }
  catch (  Exception e1) {
     throw new UnauthorisedException(CoreMessages.failedToReadPayload(),event.getMessage(),e1);
-  }
-  try {
-    String mesg=new String(msg);
-    RequestContext.rewriteEvent(new MuleMessage(mesg));
-    logger.debug("Message:" + mesg);
-  }
- catch (  Exception e2) {
-    throw new UnauthorisedException(event.getMessage(),event.getSession().getSecurityContext(),event.getEndpoint(),this);
   }
 }

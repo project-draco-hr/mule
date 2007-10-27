@@ -1,0 +1,15 @@
+{
+  if (message.getAttachmentNames().size() > 0) {
+    MimeMultipart multipart=new MimeMultipart("mixed");
+    multipart.addBodyPart(getPayloadBodyPart(message.getPayload(),contentType));
+    for (Iterator it=message.getAttachmentNames().iterator(); it.hasNext(); ) {
+      String name=(String)it.next();
+      BodyPart part=getBodyPartForAttachment(message.getAttachment(name),name);
+      addBodyPartHeaders(part,name,message);
+      multipart.addBodyPart(part);
+    }
+    payload=multipart;
+    contentType=multipart.getContentType();
+  }
+  super.setContent(payload,msg,contentType,message);
+}

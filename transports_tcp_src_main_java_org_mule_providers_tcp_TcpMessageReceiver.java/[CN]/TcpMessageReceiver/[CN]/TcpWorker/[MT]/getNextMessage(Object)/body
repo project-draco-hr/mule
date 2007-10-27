@@ -1,18 +1,20 @@
 {
-  while (!socket.isClosed() && !disposing.get()) {
-    try {
-      Object readMsg=protocol.read(dataIn);
-      if (readMsg == null) {
-        return null;
-      }
- else {
-        return readMsg;
-      }
+  Object readMsg=null;
+  try {
+    readMsg=protocol.read(dataIn);
+    if (dataIn.isStreaming()) {
+      moreMessages=false;
     }
- catch (    SocketTimeoutException e) {
-      if (!socket.getKeepAlive()) {
-        return null;
-      }
+    return readMsg;
+  }
+ catch (  SocketTimeoutException e) {
+    if (!socket.getKeepAlive()) {
+      return null;
+    }
+  }
+ finally {
+    if (readMsg == null) {
+      dataIn.close();
     }
   }
   return null;

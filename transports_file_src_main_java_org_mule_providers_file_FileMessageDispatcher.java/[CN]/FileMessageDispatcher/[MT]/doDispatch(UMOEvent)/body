@@ -1,19 +1,25 @@
 {
   Object data=event.getTransformedMessage();
   UMOMessage message=new MuleMessage(data,event.getMessage());
-  byte[] buf;
-  if (data instanceof byte[]) {
-    buf=(byte[])data;
-  }
- else {
-    buf=data.toString().getBytes(event.getEncoding());
-  }
   FileOutputStream fos=(FileOutputStream)connector.getOutputStream(event.getEndpoint(),message);
-  if (event.getMessage().getStringProperty(FileConnector.PROPERTY_FILENAME,null) == null) {
-    event.getMessage().setStringProperty(FileConnector.PROPERTY_FILENAME,message.getStringProperty(FileConnector.PROPERTY_FILENAME,""));
-  }
   try {
-    fos.write(buf);
+    if (event.getMessage().getStringProperty(FileConnector.PROPERTY_FILENAME,null) == null) {
+      event.getMessage().setStringProperty(FileConnector.PROPERTY_FILENAME,message.getStringProperty(FileConnector.PROPERTY_FILENAME,""));
+    }
+    if (data instanceof byte[]) {
+      fos.write((byte[])data);
+    }
+ else     if (data instanceof String) {
+      fos.write(data.toString().getBytes(event.getEncoding()));
+    }
+ else     if (data instanceof OutputHandler) {
+      ((OutputHandler)data).write(event,fos);
+    }
+ else {
+      InputStream is=(InputStream)event.getTransformedMessage(InputStream.class);
+      IOUtils.copyLarge(is,fos);
+      is.close();
+    }
   }
   finally {
     logger.debug("Closing file");

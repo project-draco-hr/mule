@@ -5,7 +5,17 @@
   this.protocol=tcpConnector.getTcpProtocol();
   try {
     tcpConnector.configureSocket(TcpConnector.SERVER,socket);
-    dataIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+    underlyingIn=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+    dataIn=new TcpInputStream(underlyingIn){
+      public void close() throws IOException {
+        dataInWorkFinished=true;
+        moreMessages=false;
+synchronized (notify) {
+          notify.notifyAll();
+        }
+      }
+    }
+;
     dataOut=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
   }
  catch (  IOException e) {

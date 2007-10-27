@@ -1,0 +1,34 @@
+{
+  int i=0;
+  try {
+    Thread.sleep(2000);
+    MuleClient client=new MuleClient();
+    UMOMessage result=null;
+    for (i=0; i < numberOfRequests; i++) {
+      try {
+        result=client.receive("CustomerResponses",600);
+      }
+ catch (      UMOException e) {
+        exListener.exceptionThrown(e);
+        break;
+      }
+      assertNotNull("Result is null",result);
+      assertFalse("Result is null",result.getPayload() instanceof NullPayload);
+      assertTrue("Result should be LoanQuote but is " + result.getPayload().getClass().getName(),result.getPayload() instanceof LoanQuote);
+      LoanQuote quote=(LoanQuote)result.getPayload();
+      assertTrue(quote.getInterestRate() > 0);
+    }
+  }
+ catch (  Throwable e) {
+    System.out.println(StringMessageUtils.getBoilerPlate("Processed Messages=" + i));
+    if (e instanceof Error) {
+      exListener.exceptionThrown(new Exception(e));
+    }
+ else {
+      exListener.exceptionThrown((Exception)e);
+    }
+  }
+ finally {
+    latch.countDown();
+  }
+}

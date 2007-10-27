@@ -1,7 +1,14 @@
 {
   boolean registered=false;
-  for (Iterator router=component.getInboundRouter().getRouters().iterator(); router.hasNext(); ) {
-    registered=registered || ((UMOInboundRouter)router.next()) instanceof ForwardingConsumer;
+  if (component.getInboundRouter() == null) {
+    component.setInboundRouter(new InboundRouterCollection());
+  }
+  for (Iterator routers=component.getInboundRouter().getRouters().iterator(); routers.hasNext(); ) {
+    UMOInboundRouter router=(UMOInboundRouter)routers.next();
+    if (router instanceof InboundPassThroughRouter) {
+      component.getInboundRouter().removeRouter(router);
+    }
+    registered=registered || router instanceof ForwardingConsumer;
   }
   if (!registered) {
     component.getInboundRouter().addRouter(new ForwardingConsumer());

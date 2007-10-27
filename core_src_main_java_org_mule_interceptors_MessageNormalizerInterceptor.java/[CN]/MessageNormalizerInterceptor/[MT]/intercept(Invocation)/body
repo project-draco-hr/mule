@@ -2,9 +2,8 @@
   originalPayload=invocation.getEvent().getTransformedMessage();
   UMOMessage bMessage=before(invocation);
   if (bMessage != null) {
-    RequestContext.rewriteEvent(bMessage);
-    invocation.setMessage(bMessage);
-    invocation.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
+    UMOTransformer trans=new TransformerTemplate(new TransformerTemplate.OverwitePayloadCallback(bMessage));
+    invocation.getMessage().applyTransformers(Arrays.asList(new Object[]{trans}));
   }
   UMOMessage message=invocation.execute();
   invocation.setMessage(message);

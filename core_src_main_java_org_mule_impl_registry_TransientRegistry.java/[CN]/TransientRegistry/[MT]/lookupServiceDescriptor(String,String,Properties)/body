@@ -1,14 +1,14 @@
 {
   AbstractServiceDescriptor.Key key=new AbstractServiceDescriptor.Key(name,overrides);
-  ServiceDescriptor sd=(ServiceDescriptor)sdCache.get(key);
+  ServiceDescriptor sd=(ServiceDescriptor)lookupObject(String.valueOf(key.hashCode()));
 synchronized (this) {
     if (sd == null) {
-      if (getParent() != null) {
-        sd=getParent().lookupServiceDescriptor(type,name,overrides);
-        sdCache.put(key,sd);
+      sd=createServiceDescriptor(type,name,overrides);
+      try {
+        registerObject(String.valueOf(key.hashCode()),sd,ServiceDescriptor.class);
       }
- else {
-        sd=createServiceDescriptor(type,name,overrides);
+ catch (      RegistrationException e) {
+        throw new ServiceException(e.getI18nMessage(),e);
       }
     }
   }

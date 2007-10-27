@@ -1,36 +1,34 @@
 {
   String output="";
-  if (src instanceof Map) {
-    Iterator iter=((Map)src).entrySet().iterator();
-    if (iter.hasNext()) {
-      StringBuffer b=new StringBuffer(DEFAULT_BUFFER_SIZE);
-      while (iter.hasNext()) {
-        Map.Entry e=(Map.Entry)iter.next();
-        Object key=e.getKey();
-        Object value=e.getValue();
-        b.append(key.toString()).append(':').append(value.toString());
-        if (iter.hasNext()) {
-          b.append('|');
-        }
+  if (src instanceof InputStream) {
+    InputStream is=(InputStream)src;
+    try {
+      ByteArrayOutputStream byteOut=new ByteArrayOutputStream();
+      IOUtils.copy(is,byteOut);
+      output=new String(byteOut.toByteArray(),encoding);
+    }
+ catch (    IOException e) {
+      throw new TransformerException(CoreMessages.errorReadingStream(),e);
+    }
+ finally {
+      try {
+        is.close();
       }
-      output=b.toString();
+ catch (      IOException e) {
+        logger.warn("Could not close stream",e);
+      }
     }
   }
- else   if (src instanceof Collection) {
-    Iterator iter=((Collection)src).iterator();
-    if (iter.hasNext()) {
-      StringBuffer b=new StringBuffer(DEFAULT_BUFFER_SIZE);
-      while (iter.hasNext()) {
-        b.append(iter.next().toString());
-        if (iter.hasNext()) {
-          b.append('|');
-        }
-      }
-      output=b.toString();
+ else   if (src instanceof byte[]) {
+    try {
+      output=new String((byte[])src,encoding);
+    }
+ catch (    UnsupportedEncodingException e) {
+      throw new TransformerException(this,e);
     }
   }
  else {
-    output=src.toString();
+    output=StringMessageUtils.toString(src);
   }
   return output;
 }

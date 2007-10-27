@@ -1,0 +1,60 @@
+{
+  if (outputType == null) {
+    return getPayload();
+  }
+  Class inputCls=getPayload().getClass();
+  if (Proxy.isProxyClass(inputCls)) {
+    inputCls=inputCls.getInterfaces()[0];
+  }
+  if (outputType.isAssignableFrom(inputCls)) {
+    return getPayload();
+  }
+  List transformers=RegistryContext.getRegistry().lookupTransformers(inputCls,outputType);
+  UMOTransformer transformer=null;
+  UMOTransformer secondPass=null;
+  if (transformers.size() == 0) {
+    if (outputType.equals(String.class)) {
+      secondPass=objectToString;
+    }
+ else     if (outputType.equals(byte[].class)) {
+      secondPass=objectToByteArray;
+    }
+ else {
+      throw new TransformerException(CoreMessages.noTransformerFoundForMessage(inputCls,outputType));
+    }
+    transformers=RegistryContext.getRegistry().lookupTransformers(inputCls,Object.class);
+  }
+  if (transformers.size() == 0) {
+    throw new TransformerException(CoreMessages.noTransformerFoundForMessage(inputCls,outputType));
+  }
+ else   if (transformers.size() == 1) {
+    transformer=(UMOTransformer)transformers.get(0);
+  }
+ else {
+    for (Iterator iterator=transformers.iterator(); iterator.hasNext(); ) {
+      transformer=(UMOTransformer)transformers.get(0);
+      UMOTransformer umoTransformer=(UMOTransformer)iterator.next();
+      if (umoTransformer.getClass().getPackage().getName().startsWith(adapter.getClass().getPackage().getName())) {
+        transformer=umoTransformer;
+        if (outputType.equals(umoTransformer.getReturnClass())) {
+          break;
+        }
+      }
+    }
+    if (transformer == null) {
+      transformer=(UMOTransformer)transformers.get(0);
+      logger.warn("No exact match transformer was found to convert from: " + inputCls + " to "+ outputType+ ". Defaulting to: "+ transformer);
+    }
+  }
+  Object result=transformer.transform(this);
+  if (secondPass != null) {
+    result=secondPass.transform(result);
+  }
+  if (!outputType.isAssignableFrom(result.getClass())) {
+    throw new TransformerException(CoreMessages.transformOnObjectNotOfSpecifiedType(outputType.getName(),result.getClass()));
+  }
+  if (isPayloadConsumed(inputCls)) {
+    setPayload(result);
+  }
+  return result;
+}

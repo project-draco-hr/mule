@@ -1,0 +1,34 @@
+{
+  try {
+    MuleApplicationContext context=new MuleApplicationContext(new String[]{getDefaultConfigResource()});
+    managementContext=context.getManagementContext();
+    MuleServer.setManagementContext(managementContext);
+    Registry registry=RegistryContext.getOrCreateRegistry();
+    try {
+      registry.registerObjects(startupProperties);
+    }
+ catch (    RegistrationException e) {
+      throw new ConfigurationException(e);
+    }
+    for (int i=0; i < configResources.length; i++) {
+      String configResource=configResources[i];
+      scriptComponent.setScriptFile(configResource);
+      scriptComponent.initialise();
+      Bindings ns=scriptComponent.getScriptEngine().createBindings();
+      populateBindings(ns);
+      scriptComponent.runScript(ns);
+    }
+    if (!managementContext.isInitialised() && !managementContext.isInitialising()) {
+      managementContext.initialise();
+    }
+    if (System.getProperty(MuleProperties.MULE_START_AFTER_CONFIG_SYSTEM_PROPERTY,"true").equalsIgnoreCase("true") && isStartContext()) {
+      if (!managementContext.isStarted()) {
+        managementContext.start();
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new ConfigurationException(e);
+  }
+  return managementContext;
+}

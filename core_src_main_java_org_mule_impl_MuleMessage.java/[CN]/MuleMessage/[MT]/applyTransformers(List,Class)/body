@@ -1,0 +1,26 @@
+{
+  if (TransformerUtils.isUndefined(transformers) || transformers.size() == 0) {
+    if (outputType != null) {
+      Object object=getPayload(outputType);
+      setPayload(object);
+      return;
+    }
+    return;
+  }
+  Object transformedMessage=null;
+  if (previousTransformHashCode.contains(new Integer(transformers.hashCode()))) {
+    transformers=null;
+    transformedMessage=getPayload();
+  }
+  if (null != transformers) {
+    applyAllTransformers(transformers);
+    transformedMessage=getPayload(outputType);
+    previousTransformHashCode.add(new Integer(transformers.hashCode()));
+  }
+ else   if (outputType != null && !transformedMessage.getClass().isAssignableFrom(outputType)) {
+    transformedMessage=getPayload(outputType);
+  }
+  if (transformedMessage != null) {
+    setPayload(transformedMessage);
+  }
+}

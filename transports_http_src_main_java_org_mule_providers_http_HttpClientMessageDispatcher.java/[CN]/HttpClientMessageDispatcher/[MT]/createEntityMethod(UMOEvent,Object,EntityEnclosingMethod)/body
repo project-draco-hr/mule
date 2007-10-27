@@ -4,20 +4,18 @@
     ObjectToHttpClientMethodRequest trans=new ObjectToHttpClientMethodRequest();
     httpMethod=(HttpMethod)trans.transform(body.toString());
   }
- else   if (body instanceof UMOStreamMessageAdapter) {
-    UMOStreamMessageAdapter sma=(UMOStreamMessageAdapter)body;
-    Map headers=sma.getOutputHandler().getHeaders(event);
-    for (Iterator iterator=headers.entrySet().iterator(); iterator.hasNext(); ) {
-      Map.Entry entry=(Map.Entry)iterator.next();
-      postMethod.addRequestHeader((String)entry.getKey(),(String)entry.getValue());
-    }
-    postMethod.setRequestEntity(new StreamPayloadRequestEntity((StreamMessageAdapter)body,event));
-    postMethod.setContentChunked(true);
+ else   if (body instanceof byte[]) {
+    byte[] buffer=event.getTransformedMessageAsBytes();
+    postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer,event.getEncoding()));
     httpMethod=postMethod;
   }
  else {
-    byte[] buffer=event.getTransformedMessageAsBytes();
-    postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer,event.getEncoding()));
+    if (!(body instanceof OutputHandler)) {
+      body=event.getTransformedMessage(OutputHandler.class);
+    }
+    OutputHandler outputHandler=(OutputHandler)body;
+    postMethod.setRequestEntity(new StreamPayloadRequestEntity(outputHandler,event));
+    postMethod.setContentChunked(true);
     httpMethod=postMethod;
   }
   return httpMethod;
