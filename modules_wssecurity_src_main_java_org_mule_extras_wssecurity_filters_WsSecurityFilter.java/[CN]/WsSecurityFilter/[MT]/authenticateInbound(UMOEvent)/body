@@ -13,13 +13,18 @@
     }
     Service service=server.getServiceRegistry().getService(serviceName);
     XFireConnector connector=null;
-    Collection objs=RegistryContext.getRegistry().lookupObjects(XFireConnector.class);
+    Collection objs=RegistryContext.getRegistry().lookupObjects(UMOConnector.class);
     Iterator it=objs.iterator();
-    if (it.hasNext()) {
-      connector=(XFireConnector)it.next();
-    }
-    if (it.hasNext()) {
-      logger.warn("More than one XFire connector found, only one expected");
+    while (it.hasNext()) {
+      Object obj=it.next();
+      if (obj instanceof XFireConnector) {
+        if (connector == null) {
+          connector=(XFireConnector)obj;
+        }
+ else {
+          logger.warn("More than one XFire connector found, only one expected");
+        }
+      }
     }
     if (connector != null) {
       Object[] outhandlers=service.getOutHandlers().toArray();
