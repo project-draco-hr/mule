@@ -1,0 +1,18 @@
+{
+  SedaModel model=new SedaModel();
+  model.setManagementContext(managementContext);
+  managementContext.applyLifecycle(model);
+  UMOComponent c=new SedaComponent();
+  c.setName("test");
+  UMOPooledObjectFactory of=createObjectFactory(Orange.class,getDefaultPoolingProfile());
+  c.setServiceFactory(of);
+  c.setModel(model);
+  c.setManagementContext(managementContext);
+  managementContext.applyLifecycle(c);
+  assertTrue(c.getServiceFactory() instanceof UMOPooledObjectFactory);
+  assertEquals(0,((UMOPooledObjectFactory)c.getServiceFactory()).getPoolSize());
+  assertTrue(c.getServiceFactory().getOrCreate() instanceof Orange);
+  assertEquals(1,((UMOPooledObjectFactory)c.getServiceFactory()).getPoolSize());
+  c.dispose();
+  assertEquals(0,((UMOPooledObjectFactory)c.getServiceFactory()).getPoolSize());
+}
