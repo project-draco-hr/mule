@@ -1,0 +1,25 @@
+{
+  try {
+    Bus cxfBus=connector.getCxfBus();
+    String wsdlUrl=endpoint.getEndpointURI().getAddress();
+    String serviceName=endpoint.getEndpointURI().getAddress();
+    if (endpoint.getProperty("wsdlUrl") != null && StringUtils.isNotBlank(endpoint.getProperty("wsdlUrl").toString())) {
+      wsdlUrl=(String)endpoint.getProperty("wsdlUrl");
+    }
+    if (serviceName.indexOf("?") > -1) {
+      serviceName=serviceName.substring(0,serviceName.lastIndexOf('?'));
+    }
+    try {
+      DynamicClientFactory cf=DynamicClientFactory.newInstance(cxfBus);
+      this.client=cf.createClient(wsdlUrl,new QName(serviceName));
+    }
+ catch (    Exception ex) {
+      disconnect();
+      throw ex;
+    }
+  }
+ catch (  Exception ex) {
+    disconnect();
+    throw ex;
+  }
+}

@@ -1,0 +1,18 @@
+{
+  Object payload=new Object[]{"Test String"};
+  String myProperty="myProperty";
+  HashMap<String,String> props=new HashMap<String,String>();
+  props.put(MuleProperties.MULE_USER_PROPERTY,"alan");
+  props.put(MuleProperties.MULE_METHOD_PROPERTY,"sayHello");
+  props.put(myProperty,myProperty);
+  MuleClient client=new MuleClient();
+  UMOMessage reply=client.send("cxf:" + endpointAddress,payload,props);
+  assertNotNull(reply);
+  assertNotNull(reply.getPayload());
+  assertEquals("Test String Received",reply.getPayloadAsString());
+  Thread.sleep(3000);
+  assertNotNull(notificationMsg);
+  assertEquals("alan",notificationMsg.getProperty(MuleProperties.MULE_USER_PROPERTY));
+  assertNull(notificationMsg.getProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY));
+  assertEquals(myProperty,notificationMsg.getProperty(myProperty));
+}

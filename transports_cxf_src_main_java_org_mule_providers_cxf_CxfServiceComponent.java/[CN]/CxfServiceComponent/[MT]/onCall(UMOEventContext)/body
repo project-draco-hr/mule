@@ -1,0 +1,14 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug(eventContext);
+  }
+  String request=eventContext.getMessage().getStringProperty(HttpConnector.HTTP_REQUEST_PROPERTY,StringUtils.EMPTY);
+  Properties params=eventContext.getEndpointURI().getParams();
+  if (params.size() > 0 || request.toLowerCase().endsWith(org.mule.providers.soap.SoapConstants.WSDL_PROPERTY)) {
+    return generateWSDLOrXSD(eventContext,request,params);
+  }
+ else {
+    String uri=eventContext.getEndpointURI().toString();
+    return sendToDestination(eventContext,uri);
+  }
+}
