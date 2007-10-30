@@ -1,0 +1,22 @@
+{
+  logger.info("Generating " + normalizedPath);
+  logger.debug("prefix: " + prefix);
+  logger.debug("postfix: " + postfix);
+  File normalized=new File(normalizedPath);
+  backup(normalized);
+  InputStream xslSource=IOUtils.getResourceAsStream(XSL_FILE,getClass());
+  if (null == xslSource) {
+    throw new IllegalStateException("Cannot open " + XSL_FILE);
+  }
+  logger.debug("creating output file for " + normalized);
+  normalized.createNewFile();
+  OutputStream out=new FileOutputStream(normalized);
+  logger.debug("out: " + out);
+  OutputStreamWriter outWriter=new OutputStreamWriter(out);
+  IOUtils.copy(IOUtils.getResourceAsStream(prefix,getClass()),outWriter);
+  outWriter.flush();
+  processSchema(xslSource,out);
+  out.flush();
+  IOUtils.copy(IOUtils.getResourceAsStream(postfix,getClass()),outWriter);
+  outWriter.close();
+}
