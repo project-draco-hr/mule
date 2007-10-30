@@ -18,9 +18,10 @@
   File destinationFile=null;
   String sourceFileOriginalName=sourceFile.getName();
   UMOMessageAdapter msgAdapter=null;
+  FileInputStream fileIn=null;
   try {
-    Object payload=new ReceiverFileInputStream(sourceFile,moveDir != null);
-    msgAdapter=connector.getMessageAdapter(payload);
+    fileIn=new ReceiverFileInputStream(sourceFile,moveDir != null);
+    msgAdapter=connector.getMessageAdapter(fileIn);
   }
  catch (  FileNotFoundException e) {
     logger.error("File being read disappeared!",e);
@@ -40,6 +41,9 @@
       throw new MuleException(FileMessages.fileDoesNotExist(sourceFileOriginalName));
     }
     if (destinationFile != null) {
+      if (fileIn != null) {
+        fileIn.close();
+      }
       fileWasMoved=this.moveFile(sourceFile,destinationFile);
       if (!fileWasMoved) {
         throw new MuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
