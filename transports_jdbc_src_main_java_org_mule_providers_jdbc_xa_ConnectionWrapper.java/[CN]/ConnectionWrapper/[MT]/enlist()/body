@@ -7,12 +7,12 @@
   }
   UMOTransaction transaction=TransactionCoordination.getInstance().getTransaction();
   if (transaction == null) {
-    logger.warn("Mule transaction is null, but enlist method is called");
+    throw new IllegalStateException(CoreMessages.notMuleTransactionAvailable().toString());
   }
-  if (transaction != null && !(transaction instanceof XaTransaction)) {
-    throw new IllegalStateException("Can't enlist resource, Mule transaction is not instance of XaTransaction " + transaction);
+  if (!(transaction instanceof XaTransaction)) {
+    throw new IllegalStateException(CoreMessages.notMuleXaTransaction(transaction).toString());
   }
-  if (transaction != null && !isEnlisted()) {
+  if (!isEnlisted()) {
     enlisted=((XaTransaction)transaction).enlistResource(xaConnection.getXAResource());
   }
 }
