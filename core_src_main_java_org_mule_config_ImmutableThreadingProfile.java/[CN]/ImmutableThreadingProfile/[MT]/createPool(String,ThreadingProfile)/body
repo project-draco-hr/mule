@@ -7,12 +7,15 @@
     buffer=new SynchronousQueue();
   }
   ThreadPoolExecutor pool=new ThreadPoolExecutor(Math.max(tp.getMaxThreadsIdle(),tp.getMaxThreadsActive()),tp.getMaxThreadsActive(),tp.getThreadTTL(),TimeUnit.MILLISECONDS,buffer);
-  ThreadFactory tf=tp.getThreadFactory();
-  if (name != null) {
-    tf=new NamedThreadFactory(name);
+  if (tp.getThreadFactory() != null) {
+    pool.setThreadFactory(tp.getThreadFactory());
   }
-  if (tf != null) {
-    pool.setThreadFactory(tf);
+ else {
+    if (name != null) {
+      pool.setThreadFactory(new NamedThreadFactory(name));
+    }
+ else {
+    }
   }
   if (tp.getRejectedExecutionHandler() != null) {
     pool.setRejectedExecutionHandler(tp.getRejectedExecutionHandler());
