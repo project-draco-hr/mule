@@ -1,7 +1,7 @@
 {
   try {
     MessageImpl m=new MessageImpl();
-    Object payload=ctx.getMessage().getPayload();
+    Object payload=ctx.getTransformedMessage();
     if (payload instanceof InputStream) {
       m.put(Message.ENCODING,ctx.getEncoding());
       m.setContent(InputStream.class,(InputStream)payload);
@@ -13,9 +13,9 @@
       m.setContent(InputStream.class,new ByteArrayInputStream((byte[])payload));
     }
  else {
-      String text=ctx.getTransformedMessageAsString(ctx.getEncoding());
-      StringReader strReader=new StringReader(text);
-      m.setContent(XMLStreamReader.class,StaxUtils.createXMLStreamReader(strReader));
+      InputStream is=(InputStream)ctx.getTransformedMessage(InputStream.class);
+      m.put(Message.ENCODING,ctx.getEncoding());
+      m.setContent(InputStream.class,is);
     }
     String soapAction=getSoapAction(ctx.getMessage());
     m.put("SOAPAction",soapAction);

@@ -28,44 +28,11 @@
     return;
   }
   msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-  if (moveDir != null) {
-    String destinationFileName=sourceFileOriginalName;
-    if (moveToPattern != null) {
-      destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(msgAdapter,moveToPattern);
-    }
-    destinationFile=FileUtils.newFile(moveDir,destinationFileName);
+  FileConnector fc=((FileConnector)connector);
+  if (!fc.isStreamFiles() || (fc.isStreamFiles() && !fc.isAutoDelete())) {
+    moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,msgAdapter,fileIn);
   }
-  boolean fileWasMoved=false;
-  try {
-    if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
-      throw new MuleException(FileMessages.fileDoesNotExist(sourceFileOriginalName));
-    }
-    if (destinationFile != null) {
-      if (fileIn != null) {
-        fileIn.close();
-      }
-      fileWasMoved=this.moveFile(sourceFile,destinationFile);
-      if (!fileWasMoved) {
-        throw new MuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
-      }
-      Object payload=getPayload(destinationFile,true);
-      msgAdapter=connector.getMessageAdapter(payload);
-      msgAdapter.setProperty(FileConnector.PROPERTY_FILENAME,destinationFile.getName());
-      msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-    }
+ else {
     this.routeMessage(new MuleMessage(msgAdapter),endpoint.isSynchronous());
-    if (!((FileConnector)connector).isStreamFiles()) {
-      boolean moveTo=destinationFile != null;
-      File current=moveTo ? destinationFile : sourceFile;
-      delete(current,moveTo);
-    }
-  }
- catch (  Exception e) {
-    boolean fileWasRolledBack=false;
-    if (fileWasMoved) {
-      fileWasRolledBack=this.rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
-    }
-    Exception ex=new RoutingException(FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new MuleMessage(msgAdapter),endpoint,e);
-    this.handleException(ex);
   }
 }
