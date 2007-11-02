@@ -1,13 +1,18 @@
 {
   UMOMessage result=null;
+  UMOImmutableEndpoint endpoint=null;
+  UMOManagementContext managementContext=context.getManagementContext();
   try {
-    UMOImmutableEndpoint endpoint=context.getManagementContext().getRegistry().lookupEndpointFactory().getOutboundEndpoint(action.getResourceIdentifier(),MuleServer.getManagementContext());
     if (AdminNotification.ACTION_DISPATCH == action.getAction()) {
+      endpoint=managementContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(action.getResourceIdentifier(),managementContext);
       context.dispatchEvent(action.getMessage(),endpoint);
       return null;
     }
  else {
-      ((UMOEndpoint)endpoint).setRemoteSync(true);
+      UMOEndpointFactory endpointFactory=managementContext.getRegistry().lookupEndpointFactory();
+      UMOEndpointBuilder endpointBuilder=endpointFactory.getEndpointBuilder(action.getResourceIdentifier(),managementContext);
+      endpointBuilder.setRemoteSync(true);
+      endpoint=managementContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder,managementContext);
       result=context.sendEvent(action.getMessage(),endpoint);
       if (result == null) {
         return null;

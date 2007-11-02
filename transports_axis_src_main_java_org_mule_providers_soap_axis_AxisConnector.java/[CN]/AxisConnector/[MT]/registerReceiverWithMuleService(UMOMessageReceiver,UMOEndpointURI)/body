@@ -20,28 +20,21 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Modified endpoint with " + scheme + " scheme to "+ endpoint);
   }
-  UMOEndpoint receiverEndpoint=(UMOEndpoint)receiver.getEndpoint();
-  boolean sync=false;
-  if (!receiverEndpoint.isSynchronousSet()) {
-    if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")) {
-      sync=true;
-    }
-  }
- else {
-    sync=receiverEndpoint.isSynchronous();
-  }
-  UMOEndpointBuilder builder=new EndpointURIEndpointBuilder(endpoint,managementContext);
-  builder.setSynchronous(sync);
-  builder.setName(ep.getScheme() + ":" + serviceName);
-  builder.setTransformers(receiver.getEndpoint().getTransformers());
-  ((MuleEndpoint)receiver.getEndpoint()).setTransformers(new LinkedList());
-  builder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
-  ((MuleEndpoint)receiver.getEndpoint()).setResponseTransformers(new LinkedList());
-  builder.setFilter(receiver.getEndpoint().getFilter());
-  ((MuleEndpoint)receiver.getEndpoint()).setFilter(null);
-  builder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
-  ((MuleEndpoint)receiver.getEndpoint()).setSecurityFilter(null);
-  builder.setProperties(receiverEndpoint.getProperties());
-  UMOImmutableEndpoint serviceEndpoint=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(builder,managementContext);
+  boolean sync=receiver.getEndpoint().isSynchronous();
+  UMOEndpointBuilder serviceEndpointbuilder=new EndpointURIEndpointBuilder(endpoint,managementContext);
+  serviceEndpointbuilder.setSynchronous(sync);
+  serviceEndpointbuilder.setName(ep.getScheme() + ":" + serviceName);
+  serviceEndpointbuilder.setTransformers(receiver.getEndpoint().getTransformers());
+  serviceEndpointbuilder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
+  serviceEndpointbuilder.setFilter(receiver.getEndpoint().getFilter());
+  serviceEndpointbuilder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  UMOEndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(receiver.getEndpoint(),managementContext);
+  receiverEndpointBuilder.setTransformers(TransformerUtils.UNDEFINED);
+  receiverEndpointBuilder.setResponseTransformers(TransformerUtils.UNDEFINED);
+  receiverEndpointBuilder.setFilter(null);
+  receiverEndpointBuilder.setSecurityFilter(null);
+  UMOImmutableEndpoint serviceEndpoint=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(serviceEndpointbuilder,managementContext);
+  UMOImmutableEndpoint receiverEndpoint=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder,managementContext);
+  receiver.setEndpoint(receiverEndpoint);
   axisComponent.getInboundRouter().addEndpoint(serviceEndpoint);
 }

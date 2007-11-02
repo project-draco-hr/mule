@@ -19,10 +19,10 @@
     UMOInboundRouterCollection messageRouter=component.getInboundRouter();
     for (int i=0; i < subscriptions.length; i++) {
       String subscription=subscriptions[i];
-      UMOImmutableEndpoint endpoint=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(subscription,managementContext);
-      if (!asynchronous) {
-        ((UMOEndpoint)endpoint).setSynchronous(true);
-      }
+      UMOEndpointFactory endpointFactory=managementContext.getRegistry().lookupEndpointFactory();
+      UMOEndpointBuilder endpointBuilder=endpointFactory.getEndpointBuilder(subscription,managementContext);
+      endpointBuilder.setSynchronous(!asynchronous);
+      UMOImmutableEndpoint endpoint=endpointFactory.getInboundEndpoint(endpointBuilder,managementContext);
       messageRouter.addEndpoint(endpoint);
     }
   }

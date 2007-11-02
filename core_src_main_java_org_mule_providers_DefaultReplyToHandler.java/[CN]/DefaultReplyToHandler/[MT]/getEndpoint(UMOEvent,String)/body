@@ -1,7 +1,15 @@
 {
   UMOImmutableEndpoint endpoint=(UMOImmutableEndpoint)endpointCache.get(endpointUri);
   if (endpoint == null) {
-    endpoint=RegistryContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointUri,event.getManagementContext());
+    UMOEndpointFactory endpointFactory=RegistryContext.getRegistry().lookupEndpointFactory();
+    UMOEndpointBuilder endpointBuilder=endpointFactory.getEndpointBuilder(endpointUri,event.getManagementContext());
+    if (transformers == null) {
+      transformers=event.getEndpoint().getResponseTransformers();
+    }
+    if (transformers != null) {
+      endpointBuilder.setTransformers(transformers);
+    }
+    endpoint=endpointFactory.getOutboundEndpoint(endpointBuilder,event.getManagementContext());
     endpointCache.put(endpointUri,endpoint);
   }
   return endpoint;
