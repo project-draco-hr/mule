@@ -1,7 +1,13 @@
 {
   Object src=message.getPayload();
   if (src instanceof byte[]) {
-    return getXStream().fromXML(new ByteArrayInputStream((byte[])src));
+    try {
+      Reader xml=new InputStreamReader(new ByteArrayInputStream((byte[])src),outputEncoding);
+      return getXStream().fromXML(xml);
+    }
+ catch (    UnsupportedEncodingException uee) {
+      throw new TransformerException(this,uee);
+    }
   }
  else   if (src instanceof String) {
     return getXStream().fromXML(src.toString());
