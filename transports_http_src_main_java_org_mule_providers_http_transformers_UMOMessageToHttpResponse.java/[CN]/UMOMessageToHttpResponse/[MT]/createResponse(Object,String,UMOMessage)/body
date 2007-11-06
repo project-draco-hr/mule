@@ -2,6 +2,7 @@
   HttpResponse response=new HttpResponse();
   int status=msg.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_OK);
   String version=msg.getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+  String etag=msg.getStringProperty(HttpConstants.HEADER_ETAG,null);
   String date;
 synchronized (format) {
     date=format.format(new Date());
@@ -13,6 +14,9 @@ synchronized (format) {
   response.setHeader(new Header(HttpConstants.HEADER_SERVER,server));
   if (msg.getProperty(HttpConstants.HEADER_EXPIRES) == null) {
     response.setHeader(new Header(HttpConstants.HEADER_EXPIRES,date));
+  }
+  if (etag != null) {
+    response.setHeader(new Header(HttpConstants.HEADER_ETAG,etag));
   }
   response.setFallbackCharset(encoding);
   Collection headerNames=HttpConstants.RESPONSE_HEADER_NAMES.values();
