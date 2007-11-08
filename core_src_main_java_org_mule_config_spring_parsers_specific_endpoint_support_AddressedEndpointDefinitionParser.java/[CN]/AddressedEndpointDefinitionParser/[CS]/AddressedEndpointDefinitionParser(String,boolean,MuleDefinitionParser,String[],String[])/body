@@ -1,0 +1,19 @@
+{
+  disableAttributes(endpointParser,LazyEndpointURI.ALL_ATTRIBUTES);
+  disableAttributes(endpointParser,propertyAttributes);
+  addDelegate(endpointParser);
+  MuleChildDefinitionParser addressParser=new ChildAddressDefinitionParser(metaOrProtocol,isMeta);
+  MuleChildDefinitionParser propertiesParser=new AttributePropertiesDefinitionParser("properties");
+  addressParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
+  propertiesParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
+  addHandledException(BlockAttribute.BlockAttributeException.class);
+  enableAttributes(addressParser,LazyEndpointURI.ALL_ATTRIBUTES);
+  String[][] addressAttributeSets=new String[][]{new String[]{LazyEndpointURI.ADDRESS},new String[]{AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF},requiredAddressAttributes};
+  addressParser.registerPreProcessor(new CheckRequiredAttributes(addressAttributeSets));
+  addressParser.registerPreProcessor(new CheckExclusiveAttributes(addressAttributeSets));
+  addChildDelegate(addressParser);
+  enableAttributes(propertiesParser,propertyAttributes);
+  enableAttribute(propertiesParser,AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF);
+  propertiesParser.registerPreProcessor(new CheckExclusiveAttributes(new String[][]{propertyAttributes,new String[]{AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF}}));
+  addChildDelegate(propertiesParser);
+}
