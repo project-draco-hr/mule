@@ -1,3 +1,18 @@
 {
-  start(false);
+  if (isStarted()) {
+    logger.info("Component is already started: " + name);
+    return;
+  }
+  if (!beyondInitialState.get() && initialState.equals(ImmutableMuleDescriptor.INITIAL_STATE_STOPPED)) {
+    logger.info("Component " + name + " has not been started (initial state = 'stopped')");
+  }
+ else   if (!beyondInitialState.get() && initialState.equals(ImmutableMuleDescriptor.INITIAL_STATE_PAUSED)) {
+    start(true);
+    logger.info("Component " + name + " has been started and paused (initial state = 'paused')");
+  }
+ else {
+    start(false);
+    logger.info("Component " + name + " has been started successfully");
+  }
+  beyondInitialState.set(true);
 }

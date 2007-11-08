@@ -1,9 +1,8 @@
 {
-  UMOComponent c=MuleTestUtils.getTestComponent("orangeComponent",Orange.class,null,managementContext,false);
-  managementContext.getRegistry().registerComponent(c,managementContext);
-  final UMOComponent comp=managementContext.getRegistry().lookupComponent("orangeComponent");
-  assertTrue(comp.isStarted());
-  comp.pause();
+  final UMOComponent c=managementContext.getRegistry().lookupComponent("startedComponent");
+  assertTrue(c.isStarted());
+  c.pause();
+  assertTrue(c.isPaused());
   new Thread(new Runnable(){
     public void run(){
       try {
@@ -14,7 +13,7 @@
         throw new RuntimeException(e);
       }
       try {
-        comp.resume();
+        c.resume();
       }
  catch (      UMOException e) {
         fail(e.getMessage());
@@ -23,7 +22,7 @@
   }
 ).start();
   long t0=System.currentTimeMillis();
-  comp.sendEvent(getTestEvent("hello"));
+  c.sendEvent(getTestEvent("hello"));
   long t1=System.currentTimeMillis();
   assertTrue(t1 - t0 > 1000);
 }
