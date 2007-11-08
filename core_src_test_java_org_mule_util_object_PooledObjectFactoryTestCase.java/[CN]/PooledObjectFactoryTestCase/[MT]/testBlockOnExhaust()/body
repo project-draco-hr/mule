@@ -1,0 +1,21 @@
+{
+  PoolingProfile pp=getDefaultPoolingProfile();
+  pp.setExhaustedAction(PoolingProfile.WHEN_EXHAUSTED_BLOCK);
+  PooledObjectFactory of=new PooledObjectFactory(Orange.class,pp);
+  of.initialise();
+  Object borrowed=null;
+  assertEquals(0,of.getPoolSize());
+  borrowed=of.getOrCreate();
+  borrowed=of.getOrCreate();
+  assertEquals(2,of.getPoolSize());
+  long borrowerWait=500;
+  Borrower borrower=new Borrower(of,borrowerWait);
+  borrower.start();
+  try {
+    Thread.sleep(200);
+  }
+ catch (  InterruptedException e) {
+  }
+  borrowed=of.getOrCreate();
+  assertNotNull(borrowed);
+}
