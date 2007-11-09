@@ -1,0 +1,27 @@
+{
+  MuleClient client=new MuleClient();
+  if (!canSendWithoutReceiver) {
+    try {
+      client.send(endpoint,"Test Client Send message",null);
+      fail("There is no receiver for this endpointUri");
+    }
+ catch (    Exception e) {
+      assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+    }
+  }
+  UMOComponent c=managementContext.getRegistry().lookupComponent(component);
+  c.start();
+  UMOMessage message=client.send(endpoint,"Test Client Send message",null);
+  assertNotNull(message);
+  assertEquals("Received: Test Client Send message",message.getPayloadAsString());
+  c.stop();
+  if (!canSendWithoutReceiver) {
+    try {
+      message=client.send(endpoint,"Test Client Send message",null);
+      fail("There is no receiver for this endpointUri");
+    }
+ catch (    Exception e) {
+      assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+    }
+  }
+}
