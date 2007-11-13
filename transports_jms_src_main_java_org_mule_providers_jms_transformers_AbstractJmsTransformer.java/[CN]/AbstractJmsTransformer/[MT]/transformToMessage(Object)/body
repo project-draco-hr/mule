@@ -1,4 +1,5 @@
 {
+  Session session=null;
   try {
     Message result;
     if (src instanceof Message) {
@@ -6,7 +7,8 @@
       result.clearProperties();
     }
  else {
-      result=JmsMessageUtils.toMessage(src,this.getSession());
+      session=this.getSession();
+      result=JmsMessageUtils.toMessage(src,session);
     }
     UMOEventContext ctx=RequestContext.getEventContext();
     if (ctx == null) {
@@ -21,5 +23,24 @@
   }
 catch (  Exception e) {
     throw new TransformerException(this,e);
+  }
+ finally {
+    if (session != null && endpoint != null) {
+      UMOTransaction muleTx=TransactionCoordination.getInstance().getTransaction();
+      final JmsConnector connector=(JmsConnector)endpoint.getConnector();
+      if (muleTx == null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Closing non-transacted jms session: " + session);
+        }
+        connector.closeQuietly(session);
+      }
+ else       if (!muleTx.hasResource(connector.getConnection())) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Closing an orphaned, but transacted jms session: " + session + ", transaction: "+ muleTx);
+        }
+        connector.closeQuietly(session);
+      }
+    }
+    session=null;
   }
 }
