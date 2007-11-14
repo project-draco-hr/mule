@@ -1,0 +1,17 @@
+{
+  System.out.println("Base Dir is: " + getBasedir());
+  MavenEmbedder maven=new MavenEmbedder();
+  ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
+  maven.setClassLoader(classLoader);
+  maven.setLogger(new MavenEmbedderConsoleLogger());
+  maven.setOffline(true);
+  maven.setLocalRepositoryDirectory(getTestFile("target/local-repo"));
+  maven.start();
+  File itbasedir=new File(getBasedir(),"tools/mule-project-archetype");
+  MavenProject pom=maven.readProjectWithDependencies(new File(itbasedir,"pom.xml"));
+  EventMonitor eventMonitor=new DefaultEventMonitor(new PlexusLoggerAdapter(new MavenEmbedderConsoleLogger()));
+  System.setProperty("artifactId","xxx");
+  System.setProperty("muleVersion",pom.getVersion());
+  maven.execute(pom,Collections.singletonList("org.mule.tools:mule-project-archetype:" + pom.getVersion() + ":create"),eventMonitor,new ConsoleDownloadMonitor(),null,itbasedir);
+  maven.stop();
+}
