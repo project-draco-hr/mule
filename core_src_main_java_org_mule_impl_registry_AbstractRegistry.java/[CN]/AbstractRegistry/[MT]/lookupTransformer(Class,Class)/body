@@ -1,6 +1,10 @@
 {
+  UMOTransformer result=(UMOTransformer)exactTransformerCache.get(inputType.getName() + outputType.getName());
+  if (result != null) {
+    return result;
+  }
   List trans=lookupTransformers(inputType,outputType);
-  UMOTransformer result=getNearestTransformerMatch(trans,inputType,outputType);
+  result=getNearestTransformerMatch(trans,inputType,outputType);
   UMOTransformer secondPass=null;
   if (result == null) {
     if (outputType.equals(String.class)) {
@@ -17,6 +21,9 @@
     if (result != null) {
       result=new TransformerCollection(new UMOTransformer[]{result,secondPass});
     }
+  }
+  if (result != null) {
+    exactTransformerCache.put(inputType.getName() + outputType.getName(),result);
   }
   return result;
 }
