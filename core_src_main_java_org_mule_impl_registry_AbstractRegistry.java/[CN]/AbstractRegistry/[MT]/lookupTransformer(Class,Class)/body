@@ -1,0 +1,22 @@
+{
+  List trans=lookupTransformers(inputType,outputType);
+  UMOTransformer result=getNearestTransformerMatch(trans,inputType,outputType);
+  UMOTransformer secondPass=null;
+  if (result == null) {
+    if (outputType.equals(String.class)) {
+      secondPass=objectToString;
+    }
+ else     if (outputType.equals(byte[].class)) {
+      secondPass=objectToByteArray;
+    }
+ else {
+      throw new TransformerException(CoreMessages.noTransformerFoundForMessage(inputType,outputType));
+    }
+    trans=lookupTransformers(inputType,Object.class);
+    result=getNearestTransformerMatch(trans,inputType,outputType);
+    if (result != null) {
+      result=new TransformerCollection(new UMOTransformer[]{result,secondPass});
+    }
+  }
+  return result;
+}

@@ -1,0 +1,30 @@
+{
+  if (trans.size() > 1) {
+    TransformerWeighting weighting=null;
+    for (Iterator iterator=trans.iterator(); iterator.hasNext(); ) {
+      UMOTransformer transformer=(UMOTransformer)iterator.next();
+      TransformerWeighting current=new TransformerWeighting(input,output,transformer);
+      if (weighting == null) {
+        weighting=current;
+      }
+ else {
+        int compare=current.compareTo(weighting);
+        if (compare == 1) {
+          weighting=current;
+        }
+ else         if (compare == 0) {
+          if (!weighting.getTransformer().getClass().equals(current.getTransformer().getClass())) {
+            throw new RegistrationException("There is more than one transformer that is an exact match for input: " + input + ", output: "+ output+ ". Transformers are: "+ current.getTransformer().getName()+ "("+ current.getTransformer().getClass()+ "), "+ weighting.getTransformer().getName()+ "("+ weighting.getTransformer().getClass()+ ")");
+          }
+        }
+      }
+    }
+    return weighting.getTransformer();
+  }
+ else   if (trans.size() == 0) {
+    return null;
+  }
+ else {
+    return (UMOTransformer)trans.get(0);
+  }
+}
