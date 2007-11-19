@@ -2,8 +2,18 @@
   setProperty(MailProperties.INBOUND_TO_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getRecipients(Message.RecipientType.TO)));
   setProperty(MailProperties.INBOUND_CC_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getRecipients(Message.RecipientType.CC)));
   setProperty(MailProperties.INBOUND_BCC_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getRecipients(Message.RecipientType.BCC)));
-  setProperty(MailProperties.INBOUND_REPLY_TO_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getReplyTo()));
-  setProperty(MailProperties.INBOUND_FROM_ADDRESS_PROPERTY,MailUtils.mailAddressesToString(message.getFrom()));
+  try {
+    setProperty(MailProperties.INBOUND_REPLY_TO_ADDRESSES_PROPERTY,MailUtils.mailAddressesToString(message.getReplyTo()));
+  }
+ catch (  javax.mail.MessagingException me) {
+    logger.warn("Invalid address found in ReplyTo header:",me);
+  }
+  try {
+    setProperty(MailProperties.INBOUND_FROM_ADDRESS_PROPERTY,MailUtils.mailAddressesToString(message.getFrom()));
+  }
+ catch (  javax.mail.MessagingException me) {
+    logger.warn("Invalid address found in From header:",me);
+  }
   setProperty(MailProperties.INBOUND_SUBJECT_PROPERTY,StringUtils.defaultIfEmpty(message.getSubject(),"(no subject)"));
   setProperty(MailProperties.INBOUND_CONTENT_TYPE_PROPERTY,StringUtils.defaultIfEmpty(message.getContentType(),"text/plain"));
   Date sentDate=message.getSentDate();
