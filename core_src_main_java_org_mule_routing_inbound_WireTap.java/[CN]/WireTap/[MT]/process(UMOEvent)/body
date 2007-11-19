@@ -1,9 +1,14 @@
 {
+  RequestContext.setEvent(null);
   try {
-    event.getSession().dispatchEvent(event.getMessage(),tap);
+    UMOSession session=new MuleSession(event.getMessage(),new NullSessionHandler());
+    tap.dispatch(new MuleEvent(event.getMessage(),tap,session,false));
   }
- catch (  UMOException e) {
-    logger.error(e.getMessage(),e);
+ catch (  MessagingException e) {
+    throw e;
+  }
+catch (  UMOException e) {
+    throw new DispatchException(event.getMessage(),tap,e);
   }
   return super.process(event);
 }
