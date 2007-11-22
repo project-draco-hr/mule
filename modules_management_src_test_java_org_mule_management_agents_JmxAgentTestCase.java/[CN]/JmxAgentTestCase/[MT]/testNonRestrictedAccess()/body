@@ -3,8 +3,16 @@
   jmxAgent.setCredentials(null);
   managementContext.getRegistry().registerAgent(jmxAgent);
   managementContext.start();
-  JMXServiceURL serviceUrl=new JMXServiceURL(JmxAgent.DEFAULT_REMOTING_URI);
-  JMXConnector connector=JMXConnectorFactory.connect(serviceUrl);
-  MBeanServerConnection connection=connector.getMBeanServerConnection();
-  assertTrue(Arrays.asList(connection.getDomains()).contains("Mule." + DOMAIN));
+  JMXConnector connector=null;
+  try {
+    JMXServiceURL serviceUrl=new JMXServiceURL(JmxAgent.DEFAULT_REMOTING_URI);
+    connector=JMXConnectorFactory.connect(serviceUrl);
+    MBeanServerConnection connection=connector.getMBeanServerConnection();
+    assertTrue(Arrays.asList(connection.getDomains()).contains("Mule." + DOMAIN));
+  }
+  finally {
+    if (connector != null) {
+      connector.close();
+    }
+  }
 }
