@@ -1,20 +1,11 @@
 {
   super.parseChild(element,parserContext,builder);
-  MutablePropertyValues beanProperties=builder.getBeanDefinition().getPropertyValues();
-  Class objectClass=null;
-  if (beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS) != null) {
-    objectClass=(Class)beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS).getValue();
+  Class objectClass;
+  try {
+    objectClass=getPojoClass(builder);
   }
-  if (objectClass == null) {
-    if (beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS_NAME) != null) {
-      String objectClassName=(String)beanProperties.getPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS_NAME).getValue();
-      try {
-        objectClass=ClassUtils.getClass(objectClassName);
-      }
- catch (      ClassNotFoundException e) {
-        throw new RuntimeException(e);
-      }
-    }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeException(e);
   }
   if (objectClass != null && UMOComponentAware.class.isAssignableFrom(objectClass)) {
     logger.debug("Injecting UMOComponent into class " + objectClass + " which implements the UMOComponentAware interface.");
