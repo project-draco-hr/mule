@@ -1,13 +1,14 @@
 {
   Registry r=managementContext.getRegistry();
-  r.registerObject("myNamedConcreateEndpoint",r.lookupEndpointFactory().getInboundEndpoint("test://test",managementContext),managementContext);
-  r.registerObject("&myNamedConcreateEndpoint",new EndpointURIEndpointBuilder("test://address",managementContext),managementContext);
-  String uri="myNamedConcreateEndpoint";
+  r.registerObject("&myNamedConcreateEndpoint",new EndpointURIEndpointBuilder("test://address",managementContext));
+  String uri="&myNamedConcreateEndpoint";
   UMOEndpointFactory endpointFactory=new EndpointFactory();
+  endpointFactory.setManagementContext(managementContext);
   try {
-    UMOImmutableEndpoint ep=endpointFactory.getInboundEndpoint(uri,managementContext);
-    fail("Expected exception.  Cannot create endpoints from named conrete endpoints.");
+    UMOImmutableEndpoint ep=endpointFactory.getInboundEndpoint(uri);
+    assertEquals(ep.getEndpointURI().getUri().toString(),"test://address");
   }
  catch (  Exception e) {
+    fail("Unexpected exception: " + e.getMessage());
   }
 }
