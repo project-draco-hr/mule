@@ -8,11 +8,12 @@
     }
   }
 ;
-  FunctionalTestComponent ftc=lookupTestComponent("transactionTestModel","component2");
-  ftc.setEventCallback(callback);
+  Object ftc=getPojoServiceForComponent("component2");
+  assertTrue("FunctionalTestComponent expected",ftc instanceof FunctionalTestComponent);
+  ((FunctionalTestComponent)ftc).setEventCallback(callback);
   send(TEST_MESSAGE,"component2In");
   assertTrue(callbackCalled.await(LOCK_TIMEOUT,TimeUnit.MILLISECONDS));
-  assertEquals(TEST_MESSAGE,ftc.getLastReceivedMessage());
+  assertEquals(TEST_MESSAGE,((FunctionalTestComponent)ftc).getLastReceivedMessage());
   assertEquals(TEST_MESSAGE_RESPONSE,receiveTextMessage("component1Out"));
   assertTrue(currentTx.isBegun());
   Thread.sleep(1000);
