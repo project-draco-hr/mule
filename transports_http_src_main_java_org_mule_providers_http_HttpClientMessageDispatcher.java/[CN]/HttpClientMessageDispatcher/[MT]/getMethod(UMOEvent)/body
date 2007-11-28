@@ -1,55 +1,13 @@
 {
   UMOMessage msg=event.getMessage();
-  String method=msg.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
-  String ifNoneMatch=msg.getStringProperty(HttpConstants.HEADER_IF_NONE_MATCH,null);
-  setPropertyFromEndpoint(event,msg,HttpConstants.HEADER_CONTENT_TYPE);
   setPropertyFromEndpoint(event,msg,HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
-  URI uri=event.getEndpoint().getEndpointURI().getUri();
   HttpMethod httpMethod;
   Object body=event.getTransformedMessage();
   if (body instanceof HttpMethod) {
     httpMethod=(HttpMethod)body;
   }
- else   if (HttpConstants.METHOD_GET.equalsIgnoreCase(method)) {
-    httpMethod=new GetMethod(uri.toString());
-  }
- else   if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
-    PutMethod postMethod=new PutMethod(uri.toString());
-    httpMethod=createEntityMethod(event,body,postMethod);
-  }
- else   if (HttpConstants.METHOD_POST.equalsIgnoreCase(method)) {
-    PostMethod postMethod=new PostMethod(uri.toString());
-    httpMethod=createEntityMethod(event,body,postMethod);
-  }
- else   if (HttpConstants.METHOD_DELETE.equalsIgnoreCase(method)) {
-    httpMethod=new DeleteMethod(uri.toString());
-  }
- else   if (HttpConstants.METHOD_HEAD.equalsIgnoreCase(method)) {
-    httpMethod=new HeadMethod(uri.toString());
-  }
- else   if (HttpConstants.METHOD_OPTIONS.equalsIgnoreCase(method)) {
-    httpMethod=new OptionsMethod(uri.toString());
-  }
- else   if (HttpConstants.METHOD_TRACE.equalsIgnoreCase(method)) {
-    httpMethod=new TraceMethod(uri.toString());
-  }
  else {
-    throw new TransformerException(HttpMessages.unsupportedMethod(method));
-  }
-  httpMethod.setDoAuthentication(true);
-  if (event.getCredentials() != null) {
-    String authScopeHost=msg.getStringProperty("http.auth.scope.host",null);
-    int authScopePort=msg.getIntProperty("http.auth.scope.port",-1);
-    String authScopeRealm=msg.getStringProperty("http.auth.scope.realm",null);
-    String authScopeScheme=msg.getStringProperty("http.auth.scope.scheme",null);
-    client.getState().setCredentials(new AuthScope(authScopeHost,authScopePort,authScopeRealm,authScopeScheme),new UsernamePasswordCredentials(event.getCredentials().getUsername(),new String(event.getCredentials().getPassword())));
-    client.getParams().setAuthenticationPreemptive(true);
-  }
- else {
-    client.getParams().setAuthenticationPreemptive(false);
-  }
-  if (ifNoneMatch != null) {
-    httpMethod.setRequestHeader(HttpConstants.HEADER_IF_NONE_MATCH,ifNoneMatch);
+    httpMethod=(HttpMethod)sendTransformer.transform(msg);
   }
   return httpMethod;
 }
