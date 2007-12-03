@@ -5,18 +5,12 @@
   Object source=bean.getBeanDefinition().getSource();
   PropertyValue pv=target.getPropertyValues().getPropertyValue(newName);
   if (!targetConfig.isIgnored(oldName)) {
-    if (source instanceof ChildMapEntryDefinitionParser.KeyValuePair) {
+    if (ChildMapEntryDefinitionParser.KeyValuePair.class.getName().equals(bean.getBeanDefinition().getBeanClassName())) {
       if (pv == null) {
         pv=new PropertyValue(newName,new ManagedMap());
       }
-      ChildMapEntryDefinitionParser.KeyValuePair pair=(ChildMapEntryDefinitionParser.KeyValuePair)source;
-      ((Map)pv.getValue()).put(pair.getKey(),pair.getValue());
-    }
- else     if (ChildMapEntryDefinitionParser.KeyValuePair.class.getName().equals(bean.getBeanDefinition().getBeanClassName())) {
-      if (pv == null) {
-        pv=new PropertyValue(newName,new ManagedMap());
-      }
-      ((Map)pv.getValue()).put(bean.getRawBeanDefinition().getPropertyValues().getPropertyValue("key").getValue(),bean.getRawBeanDefinition().getPropertyValues().getPropertyValue("value").getValue());
+      PropertyValues pvs=bean.getRawBeanDefinition().getPropertyValues();
+      ((Map)pv.getValue()).put(pvs.getPropertyValue(ChildMapEntryDefinitionParser.KEY).getValue(),pvs.getPropertyValue(ChildMapEntryDefinitionParser.VALUE).getValue());
     }
  else     if (targetConfig.isCollection(oldName) || source instanceof ChildListEntryDefinitionParser.ListEntry) {
       if (pv == null) {
