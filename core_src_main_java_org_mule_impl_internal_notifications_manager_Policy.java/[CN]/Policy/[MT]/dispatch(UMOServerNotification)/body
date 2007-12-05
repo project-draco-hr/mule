@@ -1,0 +1,18 @@
+{
+  if (null != notification) {
+    boolean dispatched=false;
+    Class clazz=notification.getClass();
+    if (!knownEvents.containsKey(clazz) || ((Boolean)knownEvents.get(clazz)).booleanValue()) {
+      for (Iterator events=eventToSenders.keySet().iterator(); events.hasNext(); ) {
+        Class event=(Class)events.next();
+        if (event.isAssignableFrom(clazz)) {
+          for (Iterator senders=((Collection)eventToSenders.get(event)).iterator(); senders.hasNext(); ) {
+            ((Sender)senders.next()).dispatch(notification);
+          }
+          dispatched=true;
+        }
+      }
+      knownEvents.put(clazz,Boolean.valueOf(dispatched));
+    }
+  }
+}
