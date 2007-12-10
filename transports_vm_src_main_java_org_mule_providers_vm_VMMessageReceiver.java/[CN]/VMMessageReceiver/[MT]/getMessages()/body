@@ -1,10 +1,12 @@
 {
-  QueueSession qs=connector.getQueueSession();
-  Queue queue=qs.getQueue(endpoint.getEndpointURI().getAddress());
-  UMOEvent event=(UMOEvent)queue.poll(connector.getQueueTimeout());
-  if (event != null) {
-    UMOMessage msg=new MuleMessage(new MuleMessage(event.getMessage().getPayload(),event.getMessage()));
-    routeMessage(msg);
+  if (connector.isQueueEvents()) {
+    QueueSession qs=connector.getQueueSession();
+    Queue queue=qs.getQueue(endpoint.getEndpointURI().getAddress());
+    Object obj=queue.poll(connector.getQueueTimeout());
+    UMOMessage message=(UMOMessage)obj;
+    if (message != null) {
+      routeMessage(new MuleMessage(message.getPayload(),message));
+    }
   }
   return null;
 }

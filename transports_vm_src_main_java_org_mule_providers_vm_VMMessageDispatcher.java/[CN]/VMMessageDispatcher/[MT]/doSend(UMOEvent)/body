@@ -15,7 +15,9 @@
       throw new NoReceiverForEndpointException(VMMessages.noReceiverForEndpoint(connector.getName(),event.getEndpoint().getEndpointURI()));
     }
   }
-  retMessage=(UMOMessage)receiver.onCall(event);
+  UMOMessage message=event.getMessage();
+  connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),message);
+  retMessage=(UMOMessage)receiver.onCall(message,event.isSynchronous());
   if (logger.isDebugEnabled()) {
     logger.debug("sent event on endpointUri: " + event.getEndpoint().getEndpointURI());
   }
