@@ -6,6 +6,9 @@
   assertEquals(true,jmxAgent.isCreateServer());
   assertEquals(true,jmxAgent.isLocateServer());
   assertEquals(true,jmxAgent.isEnableStatistics());
+  MBeanServer mBeanServer=jmxAgent.getMBeanServer();
+  String domainName=jmxAgent.getJmxSupportFactory().getJmxSupport().getDomainName(managementContext);
+  assertEquals(6,mBeanServer.queryMBeans(ObjectName.getInstance(domainName + ":*"),null).size());
   agent=managementContext.getRegistry().lookupAgent("Log4j JMX Agent");
   assertNotNull(agent);
   assertEquals(Log4jAgent.class,agent.getClass());
@@ -14,4 +17,6 @@
   assertEquals(JmxServerNotificationAgent.class,agent.getClass());
   agent=managementContext.getRegistry().lookupAgent("Default Jmx Agent Support");
   assertNull(agent);
+  managementContext.dispose();
+  assertEquals(0,mBeanServer.queryMBeans(ObjectName.getInstance(domainName + ":*"),null).size());
 }
