@@ -1,16 +1,24 @@
 {
   if (activationSpec.getClass().equals(MuleActivationSpec.class)) {
+    MuleActivationSpec muleActivationSpec=(MuleActivationSpec)activationSpec;
     MuleEndpointKey key=new MuleEndpointKey(endpointFactory,(MuleActivationSpec)activationSpec);
-    UMOComponent component=(UMOComponent)endpoints.get(key);
+    UMOComponent component=(UMOComponent)endpoints.remove(key);
     if (component == null) {
       logger.warn("No endpoint was registered with key: " + key);
       return;
+    }
+    String modelName=null;
+    try {
+      modelName=resolveModelName(muleActivationSpec);
+    }
+ catch (    ResourceException e) {
+      logger.error(e.getMessage(),e);
     }
     try {
       managementContext.getRegistry().unregisterComponent(component.getName());
     }
  catch (    UMOException e) {
-      logger.warn(e);
+      logger.error(e.getMessage(),e);
     }
   }
 }

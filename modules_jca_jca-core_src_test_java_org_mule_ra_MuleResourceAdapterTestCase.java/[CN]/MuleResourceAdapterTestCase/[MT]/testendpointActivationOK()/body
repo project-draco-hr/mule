@@ -1,0 +1,20 @@
+{
+  MuleActivationSpec activationSpec=new MuleActivationSpec();
+  activationSpec.setResourceAdapter(resourceAdapter);
+  activationSpec.setModelName("jcaModel");
+  activationSpec.setEndpoint("test://testEndpoint");
+  MessageEndpointFactory endpointFactory=new MockEndpointFactory();
+  assertEquals(0,resourceAdapter.endpoints.size());
+  resourceAdapter.endpointActivation(endpointFactory,activationSpec);
+  assertEquals(1,resourceAdapter.endpoints.size());
+  MuleEndpointKey key=new MuleEndpointKey(endpointFactory,(MuleActivationSpec)activationSpec);
+  UMOComponent component=(UMOComponent)resourceAdapter.endpoints.get(key);
+  assertEquals("JcaComponent#" + endpointFactory.hashCode(),component.getName());
+  testJcaComponent(component);
+  testEndpoint(component);
+  assertEquals(endpointFactory,component.getServiceFactory().getOrCreate());
+  resourceAdapter.endpointActivation(endpointFactory,activationSpec);
+  assertEquals(1,resourceAdapter.endpoints.size());
+  resourceAdapter.endpointActivation(new MockEndpointFactory(),activationSpec);
+  assertEquals(2,resourceAdapter.endpoints.size());
+}

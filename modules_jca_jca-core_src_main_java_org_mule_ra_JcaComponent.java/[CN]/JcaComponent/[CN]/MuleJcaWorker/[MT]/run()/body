@@ -1,0 +1,18 @@
+{
+  if (logger.isTraceEnabled()) {
+    logger.trace("MuleJcaWorker: async Event for Mule  JCA EndPoint " + getName());
+  }
+  try {
+    event=OptimizedRequestContext.criticalSetEvent(event);
+    entryPointResolverSet.invoke(getManagedInstance(),RequestContext.getEventContext());
+  }
+ catch (  Exception e) {
+    if (e instanceof MessagingException) {
+      logger.error("Failed to execute  JCAEndPoint " + e.getMessage(),e);
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getName()),e));
+    }
+  }
+}

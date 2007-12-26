@@ -1,0 +1,18 @@
+{
+  MessageEndpointFactory endpointFactory=new MockEndpointFactory();
+  JcaModel jcaModel=resourceAdapter.getJcaModel("jca");
+  MuleActivationSpec activationSpec=new MuleActivationSpec();
+  activationSpec.setEndpoint("test://testEndpoint");
+  UMOImmutableEndpoint endpoint=resourceAdapter.createMessageInflowEndpoint(activationSpec);
+  UMOComponent component=resourceAdapter.createJcaComponent(endpointFactory,jcaModel,endpoint);
+  assertNotNull(component);
+  assertEquals("JcaComponent#" + endpointFactory.hashCode(),component.getName());
+  assertNotNull(component);
+  assertTrue(component instanceof JcaComponent);
+  assertNotNull(((JcaComponent)component).workManager);
+  testJcaComponent(component);
+  testEndpoint(component);
+  UMOEndpoint endpoint2=(UMOEndpoint)component.getInboundRouter().getEndpoints().get(0);
+  assertEquals(endpoint,endpoint2);
+  assertEquals(endpointFactory,component.getServiceFactory().getOrCreate());
+}

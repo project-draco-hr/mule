@@ -3,24 +3,13 @@
     throw new ResourceException("ActivationSpec not initialized with this ResourceAdapter instance");
   }
   if (activationSpec.getClass().equals(MuleActivationSpec.class)) {
+    MuleActivationSpec muleActivationSpec=(MuleActivationSpec)activationSpec;
     try {
-      UMOEndpointURI uri=new MuleEndpointURI(((MuleActivationSpec)activationSpec).getEndpoint());
-      UMOImmutableEndpoint endpoint=managementContext.getRegistry().lookupEndpointFactory().getEndpoint(uri,UMOEndpoint.ENDPOINT_TYPE_RECEIVER);
-      ((AbstractConnector)endpoint.getConnector()).getReceiverThreadingProfile().setWorkManagerFactory(new ThreadingProfile.WorkManagerFactory(){
-        public UMOWorkManager createWorkManager(        ThreadingProfile profile,        String name){
-          return new DelegateWorkManager(bootstrapContext.getWorkManager());
-        }
-      }
-);
-      MessageEndpoint messageEndpoint=null;
-      messageEndpoint=endpointFactory.createEndpoint(null);
-      String name="JcaComponent#" + messageEndpoint.hashCode();
-      UMOComponent component=new SedaComponent();
-      component.setName(name);
-      component.getInboundRouter().addEndpoint(endpoint);
-      component.setServiceFactory(new SingletonObjectFactory(messageEndpoint));
-      managementContext.getRegistry().registerComponent(component);
-      MuleEndpointKey key=new MuleEndpointKey(endpointFactory,(MuleActivationSpec)activationSpec);
+      String modelName=resolveModelName(muleActivationSpec);
+      JcaModel model=getJcaModel(modelName);
+      UMOImmutableEndpoint endpoint=createMessageInflowEndpoint(muleActivationSpec);
+      UMOComponent component=createJcaComponent(endpointFactory,model,endpoint);
+      MuleEndpointKey key=new MuleEndpointKey(endpointFactory,muleActivationSpec);
       endpoints.put(key,component);
     }
  catch (    Exception e) {
