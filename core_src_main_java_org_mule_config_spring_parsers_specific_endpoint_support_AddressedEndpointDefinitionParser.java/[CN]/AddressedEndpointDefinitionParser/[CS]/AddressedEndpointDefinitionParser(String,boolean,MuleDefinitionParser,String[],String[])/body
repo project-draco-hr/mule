@@ -4,12 +4,13 @@
   disableAttributes(endpointParser,propertyAttributes);
   addDelegate(endpointParser);
   MuleChildDefinitionParser addressParser=new ChildAddressDefinitionParser(metaOrProtocol,isMeta);
-  MuleChildDefinitionParser propertiesParser=new AttributePropertiesDefinitionParser("properties");
+  MuleChildDefinitionParser propertiesParser=new AttributePropertiesDefinitionParser(PROPERTIES);
+  endpointParser.addCollection(PROPERTIES);
   addressParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
   propertiesParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
   addHandledException(BlockAttribute.BlockAttributeException.class);
   enableAttributes(addressParser,URIBuilder.ALL_ATTRIBUTES);
-  enableAttributes(addressParser,requiredAddressAttributes);
+  enableAttributes(addressParser,ArrayUtils.setDifference(requiredAddressAttributes,propertyAttributes));
   String[][] addressAttributeSets=new String[][]{new String[]{URIBuilder.ADDRESS},new String[]{AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF},requiredAddressAttributes};
   addressParser.registerPreProcessor(new CheckRequiredAttributes(addressAttributeSets));
   addressParser.registerPreProcessor(new CheckExclusiveAttributes(addressAttributeSets));

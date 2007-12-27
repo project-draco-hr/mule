@@ -1,11 +1,9 @@
 {
-  if (null == element.getAttributeNode(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF)) {
-    return super.createBeanDefinitionBuilder(element,beanClass);
+  BeanDefinitionBuilder builder=super.createBeanDefinitionBuilder(element,beanClass);
+  String global=element.getAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF);
+  if (StringUtils.isNotBlank(global)) {
+    builder.addConstructorArgReference(global);
+    builder.addDependsOn(global);
   }
- else {
-    String parent=element.getAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF);
-    BeanDefinitionBuilder bdb=BeanDefinitionBuilder.childBeanDefinition(parent);
-    bdb.getBeanDefinition().setBeanClassName(beanClass.getName());
-    return bdb;
-  }
+  return builder;
 }
