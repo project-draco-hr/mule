@@ -1,0 +1,17 @@
+{
+  addressParser=new ChildAddressDefinitionParser(metaOrProtocol,isMeta);
+  addDelegate(addressParser);
+  MuleChildDefinitionParser propertiesParser=new AttributePropertiesDefinitionParser(QUERY_MAP);
+  propertiesParser.addCollection(QUERY_MAP);
+  addressParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
+  propertiesParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
+  enableAttributes(addressParser,URIBuilder.ALL_ATTRIBUTES);
+  enableAttributes(addressParser,ArrayUtils.setDifference(requiredAddressAttributes,propertyAttributes));
+  String[][] addressAttributeSets=new String[][]{new String[]{URIBuilder.ADDRESS},new String[]{AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF},requiredAddressAttributes};
+  addressParser.registerPreProcessor(new CheckRequiredAttributes(addressAttributeSets));
+  addressParser.registerPreProcessor(new CheckExclusiveAttributes(addressAttributeSets));
+  enableAttributes(propertiesParser,propertyAttributes);
+  enableAttribute(propertiesParser,AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF);
+  propertiesParser.registerPreProcessor(new CheckExclusiveAttributes(new String[][]{propertyAttributes,new String[]{AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF}}));
+  addChildDelegate(propertiesParser);
+}
