@@ -6,7 +6,13 @@
   }
   if (properties.size() > 0) {
     boolean first=true;
-    Iterator keys=new TreeSet(properties.keySet()).iterator();
+    Set keySet=new TreeSet(properties.keySet());
+    if (keySet.contains("wsdl")) {
+      buffer.append("?wsdl");
+      first=false;
+      keySet.remove("wsdl");
+    }
+    Iterator keys=keySet.iterator();
     while (keys.hasNext()) {
       if (first) {
         buffer.append(QUERY);
@@ -17,8 +23,11 @@
       }
       String key=(String)keys.next();
       buffer.append(key);
-      buffer.append(EQUALS);
-      buffer.append((String)properties.get(key));
+      String value=(String)properties.get(key);
+      if (null != value) {
+        buffer.append(EQUALS);
+        buffer.append(value);
+      }
     }
   }
 }
