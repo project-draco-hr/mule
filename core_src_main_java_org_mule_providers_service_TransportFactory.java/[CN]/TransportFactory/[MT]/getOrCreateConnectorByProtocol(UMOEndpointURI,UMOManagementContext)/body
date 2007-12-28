@@ -1,3 +1,22 @@
 {
-  return getOrCreateConnectorByProtocol(uri,uri.getCreateConnector(),managementContext);
+  String connectorName=uri.getConnectorName();
+  if (null != connectorName) {
+    UMOConnector connector=RegistryContext.getRegistry().lookupConnector(connectorName);
+    if (connector != null) {
+      return connector;
+    }
+  }
+  UMOConnector connector=getConnectorByProtocol(uri.getFullScheme());
+  if (connector == null) {
+    connector=createConnector(uri,managementContext);
+    try {
+      BeanUtils.populate(connector,uri.getParams());
+      connector.setManagementContext(managementContext);
+      managementContext.getRegistry().registerConnector(connector);
+    }
+ catch (    Exception e) {
+      throw new TransportFactoryException(e);
+    }
+  }
+  return connector;
 }
