@@ -1,0 +1,20 @@
+{
+  addressParser=new ChildAddressDefinitionParser(metaOrProtocol,isMeta);
+  addDelegate(addressParser);
+  MuleChildDefinitionParser propertiesParser=new AttributePropertiesDefinitionParser(QUERY_MAP);
+  propertiesParser.addCollection(QUERY_MAP);
+  addressParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
+  propertiesParser.registerPreProcessor(new BlockAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
+  enableAttributes(addressParser,URIBuilder.ALL_ATTRIBUTES);
+  enableAttributes(addressParser,requiredAddressAttributes);
+  String[][] addressAttributeSets=new String[][]{new String[]{URIBuilder.ADDRESS},new String[]{AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF},requiredAddressAttributes};
+  addressParser.registerPreProcessor(new CheckRequiredAttributes(addressAttributeSets));
+  addressParser.registerPreProcessor(new CheckExclusiveAttributes(addressAttributeSets));
+  disableAttributes(propertiesParser,endpointAttributes);
+  disableAttributes(propertiesParser,URIBuilder.ALL_ATTRIBUTES);
+  disableAttributes(propertiesParser,requiredAddressAttributes);
+  disableAttribute(propertiesParser,AbstractMuleBeanDefinitionParser.ATTRIBUTE_NAME);
+  propertiesParser.registerPreProcessor(new CheckExclusiveAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF));
+  propertiesParser.registerPreProcessor(new CheckRequiredAttributes(new String[][]{requiredProperties}));
+  addChildDelegate(propertiesParser);
+}
