@@ -1,0 +1,22 @@
+{
+  if (SpringXMLUtils.isLocalName(element,BEANS)) {
+    try {
+      Document doc=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+      doc.appendChild(doc.importNode(element,true));
+      spring.registerBeanDefinitions(doc,getReaderContext());
+    }
+ catch (    ParserConfigurationException e) {
+      throw new RuntimeException(e);
+    }
+  }
+ else   if (SpringXMLUtils.isLocalName(element,PROPERTY_ELEMENT)) {
+    parsePropertyElement(element,parent);
+  }
+ else   if (SpringXMLUtils.isLocalName(element,BEAN_ELEMENT)) {
+    registerBeanDefinitionHolder(parseBeanDefinitionElement(element,parent));
+  }
+ else {
+    throw new IllegalStateException("Unexpected Spring element: " + SpringXMLUtils.elementToString(element));
+  }
+  return parent;
+}

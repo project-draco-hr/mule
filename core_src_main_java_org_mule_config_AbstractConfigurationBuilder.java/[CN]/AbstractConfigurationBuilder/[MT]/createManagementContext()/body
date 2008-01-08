@@ -1,0 +1,27 @@
+{
+  UMOLifecycleManager lifecycleManager=new GenericLifecycleManager();
+  lifecycleManager.registerLifecycle(new ManagementContextInitialisePhase());
+  lifecycleManager.registerLifecycle(new ManagementContextStartPhase());
+  lifecycleManager.registerLifecycle(new ManagementContextStopPhase());
+  lifecycleManager.registerLifecycle(new ManagementContextDisposePhase());
+  MuleConfiguration config=new MuleConfiguration();
+  ThreadingProfile tp=config.getDefaultThreadingProfile();
+  UMOWorkManager workManager=new MuleWorkManager(tp,"MuleServer");
+  ServerNotificationManager notificationManager=new ServerNotificationManager();
+  notificationManager.addInterfaceToType(ManagerNotificationListener.class,ManagerNotification.class);
+  notificationManager.addInterfaceToType(ModelNotificationListener.class,ModelNotification.class);
+  notificationManager.addInterfaceToType(ComponentNotificationListener.class,ComponentNotification.class);
+  notificationManager.addInterfaceToType(SecurityNotificationListener.class,SecurityNotification.class);
+  notificationManager.addInterfaceToType(ManagementNotificationListener.class,ManagementNotification.class);
+  notificationManager.addInterfaceToType(AdminNotificationListener.class,AdminNotification.class);
+  notificationManager.addInterfaceToType(CustomNotificationListener.class,CustomNotification.class);
+  notificationManager.addInterfaceToType(ConnectionNotificationListener.class,ConnectionNotification.class);
+  notificationManager.addInterfaceToType(RegistryNotificationListener.class,RegistryNotification.class);
+  notificationManager.addInterfaceToType(ExceptionNotificationListener.class,ExceptionNotification.class);
+  notificationManager.addInterfaceToType(TransactionNotificationListener.class,TransactionNotification.class);
+  UMOManagementContext managementContext=new ManagementContext(lifecycleManager);
+  managementContext.setNotificationManager(notificationManager);
+  managementContext.setWorkManager(workManager);
+  managementContext.setConfiguration(config);
+  return managementContext;
+}

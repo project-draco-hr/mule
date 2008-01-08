@@ -1,0 +1,19 @@
+{
+  ManagedMap values=new ManagedMap();
+  NamedNodeMap attributes=element.getAttributes();
+  for (int x=0; x < attributes.getLength(); x++) {
+    Attr attribute=(Attr)attributes.item(x);
+    String oldName=SpringXMLUtils.attributeName(attribute);
+    String name=beanPropertyConfiguration.translateName(oldName);
+    Object value=beanPropertyConfiguration.translateValue(oldName,attribute.getNodeValue());
+    if (beanPropertyConfiguration.isReference(oldName)) {
+      values.put(name,new RuntimeBeanReference(attribute.getNodeValue()));
+    }
+ else {
+      values.put(name,value);
+    }
+  }
+  builder.addPropertyValue("sourceMap",values);
+  builder.addPropertyValue("targetMapClass",super.getBeanClass(element));
+  postProcess(getBeanAssembler(element,builder),element);
+}

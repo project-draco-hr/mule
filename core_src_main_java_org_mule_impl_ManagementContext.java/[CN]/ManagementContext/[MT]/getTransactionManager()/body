@@ -1,3 +1,22 @@
 {
+  TransactionManager transactionManager=(TransactionManager)getRegistry().lookupObject(MuleProperties.OBJECT_TRANSACTION_MANAGER);
+  if (transactionManager == null) {
+    Collection temp=getRegistry().lookupObjects(UMOTransactionManagerFactory.class);
+    if (temp.size() > 0) {
+      try {
+        transactionManager=(((UMOTransactionManagerFactory)temp.iterator().next()).create());
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new MuleRuntimeException(CoreMessages.createStaticMessage("Unable to create transaction manager"));
+      }
+    }
+ else {
+      temp=getRegistry().lookupObjects(TransactionManager.class);
+      if (temp.size() > 0) {
+        transactionManager=(((TransactionManager)temp.iterator().next()));
+      }
+    }
+  }
   return transactionManager;
 }
