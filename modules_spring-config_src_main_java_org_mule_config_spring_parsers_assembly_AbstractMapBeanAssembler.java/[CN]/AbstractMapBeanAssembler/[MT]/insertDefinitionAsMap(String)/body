@@ -1,18 +1,13 @@
 {
-  String newName=bestGuessName(getTargetConfig(),oldName,getTarget().getBeanClassName());
-  if (!getTargetConfig().isIgnored(oldName)) {
-    Map map;
-    if (null != getTarget().getPropertyValues().getPropertyValue(newName)) {
-      map=(Map)getTarget().getPropertyValues().getPropertyValue(newName).getValue();
-    }
- else {
-      map=new ManagedMap();
-    }
-    Iterator pvs=getBean().getBeanDefinition().getPropertyValues().getPropertyValueList().iterator();
-    while (pvs.hasNext()) {
-      PropertyValue pv=(PropertyValue)pvs.next();
-      map.put(pv.getName(),pv.getValue());
-    }
-    getTarget().getPropertyValues().addPropertyValue(newName,map);
+  BeanDefinitionBuilder builder=BeanDefinitionBuilder.rootBeanDefinition(MapCombiner.class);
+  Map map=new ManagedMap();
+  for (Iterator pvs=getBean().getBeanDefinition().getPropertyValues().getPropertyValueList().iterator(); pvs.hasNext(); ) {
+    PropertyValue pv=(PropertyValue)pvs.next();
+    map.put(pv.getName(),pv.getValue());
   }
+  List list=new ManagedList();
+  list.add(map);
+  builder.addPropertyValue(MapCombiner.LIST,list);
+  setBean(builder);
+  super.insertBeanInTarget(oldName);
 }

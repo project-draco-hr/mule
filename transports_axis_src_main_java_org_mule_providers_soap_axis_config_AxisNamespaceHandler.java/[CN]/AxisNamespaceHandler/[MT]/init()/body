@@ -3,14 +3,12 @@
   registerMuleBeanDefinitionParser("inbound-endpoint",new TransportEndpointDefinitionParser(AxisConnector.AXIS,TransportGlobalEndpointDefinitionParser.META,false,InboundEndpointFactoryBean.class,new String[]{},new String[]{})).addMapping("use",USE_MAP).addMapping("style",STYLE_MAP);
   registerMuleBeanDefinitionParser("outbound-endpoint",new TransportEndpointDefinitionParser(AxisConnector.AXIS,TransportGlobalEndpointDefinitionParser.META,false,OutboundEndpointFactoryBean.class,new String[]{},new String[]{})).addMapping("use",USE_MAP).addMapping("style",STYLE_MAP);
   registerBeanDefinitionParser("connector",new MuleOrphanDefinitionParser(AxisConnector.class,true));
-  registerBeanDefinitionParser("bean-type",new ChildListEntryDefinitionParser("beanTypes"));
-  registerBeanDefinitionParser("supported-scheme",new ChildListEntryDefinitionParser("supportedSchemes"));
+  registerBeanDefinitionParser("supported-scheme",new ChildListEntryDefinitionParser("supportedSchemes","value"));
   registerBeanDefinitionParser("soap-method",new SoapMethodDefinitionParser());
   registerBeanDefinitionParser("soap-parameter",new SoapParameterDefinitionParser());
   registerBeanDefinitionParser("soap-return",new SoapReturnDefinitionParser());
-  registerMuleBeanDefinitionParser("soap-service",new SoapServiceDefinitionParser());
-  registerMuleBeanDefinitionParser("options",new ChildSingletonMapDefinitionParser("properties")).addCollection("properties").registerPreProcessor(new AddAttribute(MapEntryCombiner.KEY,"axisOptions"));
+  registerMuleBeanDefinitionParser("soap-service",new ListInMapPropertiesDefinitionParser("properties","serviceInterfaces","interface"));
+  registerMuleBeanDefinitionParser("options",new SoapOptionsDefinitionParser());
   registerMuleBeanDefinitionParser("option",new SoapOptionDefinitionParser());
-  registerMuleBeanDefinitionParser("allowed-methods",new SoapOptionDefinitionParser()).registerPreProcessor(new AddAttribute(MapEntryCombiner.KEY,"allowedMethods"));
-  registerMuleBeanDefinitionParser("scope",new SoapOptionDefinitionParser()).registerPreProcessor(new AddAttribute(MapEntryCombiner.KEY,"scope"));
+  registerMuleBeanDefinitionParser("bean-type",new ParentContextDefinitionParser("connector",new ChildListEntryDefinitionParser("beanTypes","interface")).otherwise(new ListInMapPropertiesDefinitionParser("properties","beanTypes","interface")));
 }
