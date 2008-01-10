@@ -1,7 +1,7 @@
 {
   AxisProperties.setProperty("axis.doAutoTypes",String.valueOf(connector.isDoAutoTypes()));
-  String style=(String)endpoint.getProperties().get("style");
-  String use=(String)endpoint.getProperties().get("use");
+  String style=(String)endpoint.getProperties().get(AxisConnector.STYLE);
+  String use=(String)endpoint.getProperties().get(AxisConnector.USE);
   String doc=(String)endpoint.getProperties().get("documentation");
   UMOEndpointURI uri=endpoint.getEndpointURI();
   String serviceName=component.getName();
@@ -26,7 +26,7 @@
   service.setOption(AxisConnector.SERVICE_PROPERTY_SERVCE_PATH,servicePath);
   service.setOption(AxisConnector.SERVICE_PROPERTY_COMPONENT_NAME,serviceName);
   service.setName(serviceName);
-  Map options=(Map)endpoint.getProperties().get("axisOptions");
+  Map options=(Map)endpoint.getProperties().get(AXIS_OPTIONS);
   if (options == null) {
     options=new HashMap(2);
   }
@@ -39,14 +39,14 @@
     service.setOption(entry.getKey().toString(),entry.getValue());
     logger.debug("Adding Axis option: " + entry);
   }
-  Class[] interfaces=ServiceProxy.getInterfacesForComponent(component);
+  Class[] interfaces=AxisServiceProxy.getInterfacesForComponent(component);
   if (interfaces.length == 0) {
     throw new InitialisationException(AxisMessages.objectMustImplementAnInterface(serviceName),component);
   }
   String methodNames="*";
-  Map methods=(Map)endpoint.getProperties().get("soapMethods");
+  Map methods=(Map)endpoint.getProperties().get(AxisConnector.SOAP_METHODS);
   if (methods == null) {
-    methods=(Map)component.getProperties().get("soapMethods");
+    methods=(Map)component.getProperties().get(AxisConnector.SOAP_METHODS);
   }
   if (methods != null) {
     Iterator i=methods.keySet().iterator();
@@ -81,7 +81,7 @@
     methodNames=methodNames.substring(0,methodNames.length() - 1);
   }
  else {
-    String[] methodNamesArray=ServiceProxy.getMethodNames(interfaces);
+    String[] methodNamesArray=AxisServiceProxy.getMethodNames(interfaces);
     StringBuffer buf=new StringBuffer(64);
     for (int i=0; i < methodNamesArray.length; i++) {
       buf.append(methodNamesArray[i]).append(",");
@@ -90,7 +90,7 @@
     methodNames=methodNames.substring(0,methodNames.length() - 1);
   }
   String className=interfaces[0].getName();
-  String namespace=(String)endpoint.getProperties().get("serviceNamespace");
+  String namespace=(String)endpoint.getProperties().get(SERVICE_NAMESPACE);
   if (namespace == null) {
     namespace=Namespaces.makeNamespace(className);
   }
@@ -113,7 +113,7 @@
   if (style != null) {
     Style s=Style.getStyle(style);
     if (s == null) {
-      throw new CreateException(CoreMessages.valueIsInvalidFor(style,"style"),this);
+      throw new CreateException(CoreMessages.valueIsInvalidFor(style,AxisConnector.STYLE),this);
     }
  else {
       service.setStyle(s);
@@ -122,7 +122,7 @@
   if (use != null) {
     Use u=Use.getUse(use);
     if (u == null) {
-      throw new CreateException(CoreMessages.valueIsInvalidFor(use,"use"),this);
+      throw new CreateException(CoreMessages.valueIsInvalidFor(use,AxisConnector.USE),this);
     }
  else {
       service.setUse(u);
