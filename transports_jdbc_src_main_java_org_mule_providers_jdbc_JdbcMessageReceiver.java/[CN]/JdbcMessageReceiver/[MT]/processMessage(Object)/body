@@ -7,7 +7,10 @@
     UMOMessage umoMessage=new MuleMessage(msgAdapter);
     if (this.ackStmt != null) {
       Object[] ackParams=connector.getParams(endpoint,this.ackParams,umoMessage,this.endpoint.getEndpointURI().getAddress());
-      int nbRows=connector.createQueryRunner().update(con,this.ackStmt,ackParams);
+      if (logger.isDebugEnabled()) {
+        logger.debug("SQL UPDATE: " + ackStmt + ", params = "+ ArrayUtils.toString(ackParams));
+      }
+      int nbRows=connector.getQueryRunner().update(con,this.ackStmt,ackParams);
       if (nbRows != 1) {
         logger.warn("Row count for ack should be 1 and not " + nbRows);
       }

@@ -1,22 +1,11 @@
 {
-  try {
-    if (dataSourceFactory != null) {
-      dataSource=(DataSource)dataSourceFactory.getOrCreate();
-    }
- else {
-      if (dataSource == null) {
-        initJndiContext();
-        createDataSource();
-      }
-    }
-    if (dataSource != null && dataSource instanceof XADataSource) {
-      final TransactionManager tm=managementContext.getTransactionManager();
-      if (tm != null) {
-        dataSource=new DataSourceWrapper((XADataSource)dataSource,tm);
-      }
-    }
+  if (dataSource == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Missing data source"),this);
   }
- catch (  Exception e) {
-    throw new InitialisationException(CoreMessages.failedToCreate("Jdbc Connector"),e,this);
+  if (resultSetHandler == null) {
+    resultSetHandler=new MapListHandler();
+  }
+  if (queryRunner == null) {
+    queryRunner=new QueryRunner();
   }
 }
