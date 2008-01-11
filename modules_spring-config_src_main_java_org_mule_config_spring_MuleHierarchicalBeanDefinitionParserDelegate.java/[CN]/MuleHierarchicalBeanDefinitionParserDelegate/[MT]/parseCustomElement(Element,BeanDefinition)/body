@@ -12,16 +12,35 @@
       getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",element);
       return null;
     }
-    boolean isRecurse=false;
+    boolean noRecurse=false;
+    boolean forceRecurse=false;
     BeanDefinition finalChild;
     do {
       ParserContext parserContext=new ParserContext(getReaderContext(),this,parent);
       finalChild=handler.parse(element,parserContext);
       registerBean(element,finalChild);
-      isRecurse=isRecurse || !testFlag(finalChild,MULE_NO_RECURSE);
+      noRecurse=noRecurse || testFlag(finalChild,MULE_NO_RECURSE);
+      forceRecurse=forceRecurse || testFlag(finalChild,MULE_FORCE_RECURSE);
     }
  while (null != finalChild && testFlag(finalChild,MULE_REPEAT_PARSE));
-    if (SpringXMLUtils.isMuleNamespace(element) && isRecurse) {
+    boolean isRecurse;
+    if (noRecurse) {
+      if (forceRecurse) {
+        throw new IllegalStateException("Recursion requested and blocked");
+      }
+ else {
+        isRecurse=false;
+      }
+    }
+ else {
+      if (forceRecurse) {
+        isRecurse=true;
+      }
+ else {
+        isRecurse=SpringXMLUtils.isMuleNamespace(element);
+      }
+    }
+    if (isRecurse) {
       NodeList list=element.getChildNodes();
       for (int i=0; i < list.getLength(); i++) {
         if (list.item(i) instanceof Element) {
