@@ -2,6 +2,9 @@
   registerStandardTransportEndpoints(JdbcConnector.JDBC,ADDRESS_ATTRIBUTES).addAlias(QUERY_KEY,URIBuilder.PATH);
   registerBeanDefinitionParser("connector",new MuleOrphanDefinitionParser(JdbcConnector.class,true));
   registerBeanDefinitionParser("dataSource",new ObjectFactoryWrapper("dataSourceFactory"));
-  registerMuleBeanDefinitionParser("query",new ChildSingletonMapDefinitionParser("query"));
+  MuleDefinitionParser connectorQuery=new ChildSingletonMapDefinitionParser("query");
+  MuleDefinitionParser endpointQuery=new NestedMapDefinitionParser("properties","queries");
+  endpointQuery.addCollection("properties");
+  registerMuleBeanDefinitionParser("query",new ParentContextDefinitionParser("connector",connectorQuery).otherwise(endpointQuery));
   registerBeanDefinitionParser("extractors",new ParentDefinitionParser());
 }
