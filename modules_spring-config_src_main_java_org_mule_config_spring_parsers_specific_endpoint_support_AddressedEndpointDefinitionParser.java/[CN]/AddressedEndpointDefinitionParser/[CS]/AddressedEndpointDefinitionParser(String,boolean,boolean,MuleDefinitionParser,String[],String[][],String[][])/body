@@ -2,7 +2,16 @@
   enableAttributes(endpointParser,endpointAttributes);
   enableAttribute(endpointParser,AbstractMuleBeanDefinitionParser.ATTRIBUTE_NAME);
   addDelegate(endpointParser);
-  MuleChildDefinitionParser addressParser=new AddressWithPropertiesParser(metaOrProtocol,isMeta,uriProperties,endpointAttributes,requiredAddressAttributes,requiredProperties);
-  addHandledException(BlockAttribute.BlockAttributeException.class);
-  addChildDelegate(addressParser);
+  if (uriProperties) {
+    MuleChildDefinitionParser addressParser=new AddressWithPropertiesParser(metaOrProtocol,isMeta,endpointAttributes,requiredAddressAttributes,requiredProperties);
+    addHandledException(BlockAttribute.BlockAttributeException.class);
+    addChildDelegate(addressParser);
+  }
+ else {
+    MuleChildDefinitionParser addressParser=new AddressParser(metaOrProtocol,isMeta,requiredAddressAttributes);
+    addHandledException(BlockAttribute.BlockAttributeException.class);
+    addChildDelegate(addressParser);
+    MuleChildDefinitionParser propertiesParser=new PropertiesParser(PROPERTIES,endpointAttributes,requiredAddressAttributes,requiredProperties);
+    addChildDelegate(propertiesParser);
+  }
 }
