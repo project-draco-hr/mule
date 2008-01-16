@@ -1,0 +1,15 @@
+{
+  Object replyMessage=super.onCall(context);
+  if (expectTransaction) {
+    UMOTransaction currentTx=context.getCurrentTransaction();
+    if (currentTx == null || currentTx.isBegun() == false) {
+      context.setStopFurtherProcessing(true);
+      throw new TransactionException(MessageFactory.createStaticMessage("Trying to roll back transaction but no transaction is underway."));
+    }
+    if (rollback) {
+      logger.info("@@@@ Rolling back transaction @@@@");
+      currentTx.setRollbackOnly();
+    }
+  }
+  return replyMessage;
+}
