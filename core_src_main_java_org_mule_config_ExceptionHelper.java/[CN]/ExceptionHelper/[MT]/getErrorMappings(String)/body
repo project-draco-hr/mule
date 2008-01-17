@@ -9,11 +9,20 @@
     }
   }
  else {
-    Properties p=SpiUtils.findServiceDescriptor("org/mule/config",protocol + "-exception-mappings.properties",ExceptionHelper.class);
-    if (p == null) {
+    String name=SpiUtils.SERVICE_ROOT + SpiUtils.EXCEPTION_SERVICE_PATH + protocol+ "-exception-mappings.properties";
+    InputStream in=ExceptionHelper.class.getClassLoader().getResourceAsStream(name);
+    if (in == null) {
       errorMappings.put(protocol,"not found");
-      logger.warn("Failed to load error mappings from: META-INF/services/org/mule/config/" + protocol + "-exception-mappings.properties. This may be because there are no error code mappings for protocol: "+ protocol);
+      logger.warn("Failed to load error mappings from: " + name + " This may be because there are no error code mappings for protocol: "+ protocol);
       return null;
+    }
+    Properties p=new Properties();
+    try {
+      p.load(in);
+      in.close();
+    }
+ catch (    IOException iox) {
+      throw new IllegalArgumentException("Failed to load resource: " + name);
     }
     errorMappings.put(protocol,p);
     String applyTo=p.getProperty(APPLY_TO_PROPERTY,null);
