@@ -1,24 +1,15 @@
 {
   if (connectionFactory == null) {
-    if (jndiInitialFactory != null) {
-      connectionFactory=new JndiObjectFactory(connectionFactoryJndiName,jndiInitialFactory,jndiProviderUrl,jndiProviderProperties);
-      connectionFactory.initialise();
-      jndiContext=((JndiObjectFactory)connectionFactory).getContext();
-    }
- else     if (getDefaultConnectionFactory() != null) {
-      connectionFactory=getDefaultConnectionFactory();
-      connectionFactory.initialise();
-    }
- else {
-      throw new InitialisationException(JmsMessages.noConnectionFactorySet(),this);
-    }
+    connectionFactory=getDefaultConnectionFactory();
+  }
+  if (connectionFactory == null) {
+    throw new InitialisationException(JmsMessages.noConnectionFactorySet(),this);
   }
   if (topicResolver == null) {
     topicResolver=new DefaultJmsTopicResolver(this);
   }
   if (redeliveryHandler == null) {
-    redeliveryHandler=new PrototypeObjectFactory(DefaultRedeliveryHandler.class);
-    redeliveryHandler.initialise();
+    redeliveryHandler=new DefaultRedeliveryHandler();
   }
   try {
     managementContext.registerListener(this,getName());
