@@ -1,0 +1,55 @@
+{
+  ConfigurationBuilder configurationBuilder=null;
+  boolean remoteURL=false;
+  String resourceExtension=null;
+  try {
+    URL url=new URL(resource);
+    String protocol=url.getProtocol();
+    if (!protocol.equals("file")) {
+      remoteURL=true;
+    }
+ else {
+      remoteURL=false;
+    }
+  }
+ catch (  MalformedURLException e1) {
+    remoteURL=false;
+  }
+  if (!remoteURL) {
+    String[] splitResouce=resource.split("\\.");
+    if (splitResouce.length == 2) {
+      resourceExtension=splitResouce[1];
+    }
+  }
+  if (remoteURL && ClassUtils.isClassOnPath("org.mule.galaxy.mule2.config.GalaxyConfigurationBuilder",this.getClass())) {
+    try {
+      configurationBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass("org.mule.galaxy.mule2.config.GalaxyConfigurationBuilder",new Object[]{resource});
+    }
+ catch (    Exception e) {
+      throw new ConfigurationException(e);
+    }
+  }
+ else   if (ClassUtils.isClassOnPath("org.mule.config.spring.SpringXmlConfigurationBuilder",this.getClass()) && "xml".equals(resourceExtension)) {
+    try {
+      configurationBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass("org.mule.config.spring.SpringXmlConfigurationBuilder",new Object[]{resource});
+    }
+ catch (    Exception e) {
+      throw new ConfigurationException(e);
+    }
+  }
+ else   if (ClassUtils.isClassOnPath("org.mule.config.scripting.ScriptingConfigurationBuilder",this.getClass()) && "groovy".equals(resourceExtension)) {
+    try {
+      configurationBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass("org.mule.config.spring.SpringXmlConfigurationBuilder",new Object[]{resource});
+    }
+ catch (    Exception e) {
+      throw new ConfigurationException(e);
+    }
+  }
+ else {
+    logger.warn("No configuration builders available for configuration resource: \"" + resource + "\"");
+    return false;
+  }
+  configurationBuilder.configure(muleContext);
+  logger.info("Configured Mule with configuration resource \"" + resource + "\" using ConfigurationBuilder \""+ configurationBuilder.getClass().getName());
+  return true;
+}

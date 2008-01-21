@@ -5,31 +5,31 @@
   try {
     if (StringUtils.isEmpty(serverUri)) {
       logger.warn("No serverUriUrl specified, MuleAdminAgent will not start. E.g. use " + "<mule:admin-agent serverUri=\"tcp://example.com:60504\"/> ");
-      managementContext.getRegistry().unregisterAgent(this.getName());
+      muleContext.getRegistry().unregisterAgent(this.getName());
       return;
     }
-    if (managementContext.getRegistry().lookupComponent(MuleManagerComponent.MANAGER_COMPONENT_NAME) != null) {
+    if (muleContext.getRegistry().lookupComponent(MuleManagerComponent.MANAGER_COMPONENT_NAME) != null) {
       logger.info("Mule manager component has already been initialised, ignoring server url");
     }
  else {
-      if (managementContext.getRegistry().lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
+      if (muleContext.getRegistry().lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
         throw new AlreadyInitialisedException("Server Components",this);
       }
-      UMOEndpointBuilder endpointBuilder=managementContext.getRegistry().lookupEndpointBuilder(serverUri);
+      UMOEndpointBuilder endpointBuilder=muleContext.getRegistry().lookupEndpointBuilder(serverUri);
       if (endpointBuilder == null) {
         UMOEndpointURI uri=new MuleEndpointURI(serverUri);
-        endpointBuilder=new EndpointURIEndpointBuilder(uri,managementContext);
+        endpointBuilder=new EndpointURIEndpointBuilder(uri,muleContext);
         endpointBuilder.setSynchronous(true);
-        UMOConnector connector=TransportFactory.getOrCreateConnectorByProtocol(uri,managementContext);
-        if (managementContext.getRegistry().lookupConnector(connector.getName()) == null) {
+        UMOConnector connector=TransportFactory.getOrCreateConnectorByProtocol(uri,muleContext);
+        if (muleContext.getRegistry().lookupConnector(connector.getName()) == null) {
           connector.setName(DEFAULT_MANAGER_ENDPOINT);
-          managementContext.getRegistry().registerConnector(connector);
+          muleContext.getRegistry().registerConnector(connector);
         }
         endpointBuilder.setConnector(connector);
       }
       logger.info("Registering Admin listener on: " + serverUri);
-      UMOComponent component=MuleManagerComponent.getComponent(endpointBuilder,wireFormat,RegistryContext.getConfiguration().getDefaultEncoding(),RegistryContext.getConfiguration().getDefaultSynchronousEventTimeout(),managementContext);
-      managementContext.getRegistry().registerComponent(component);
+      UMOComponent component=MuleManagerComponent.getComponent(endpointBuilder,wireFormat,RegistryContext.getConfiguration().getDefaultEncoding(),RegistryContext.getConfiguration().getDefaultSynchronousEventTimeout(),muleContext);
+      muleContext.getRegistry().registerComponent(component);
     }
   }
  catch (  UMOException e) {

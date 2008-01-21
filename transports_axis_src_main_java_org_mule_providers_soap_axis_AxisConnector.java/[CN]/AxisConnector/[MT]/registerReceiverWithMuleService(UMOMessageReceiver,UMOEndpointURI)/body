@@ -3,7 +3,7 @@
     axisComponent=getOrCreateAxisComponent();
   }
  else {
-    managementContext.getRegistry().unregisterComponent(AXIS_SERVICE_PROPERTY + getName());
+    muleContext.getRegistry().unregisterComponent(AXIS_SERVICE_PROPERTY + getName());
   }
   if (axisComponent.getProperties().get(AXIS) == null) {
     axisComponent.getProperties().put(AXIS,axis);
@@ -21,20 +21,20 @@
     logger.debug("Modified endpoint with " + scheme + " scheme to "+ endpoint);
   }
   boolean sync=receiver.getEndpoint().isSynchronous();
-  UMOEndpointBuilder serviceEndpointbuilder=new EndpointURIEndpointBuilder(endpoint,managementContext);
+  UMOEndpointBuilder serviceEndpointbuilder=new EndpointURIEndpointBuilder(endpoint,muleContext);
   serviceEndpointbuilder.setSynchronous(sync);
   serviceEndpointbuilder.setName(ep.getScheme() + ":" + serviceName);
   serviceEndpointbuilder.setTransformers(receiver.getEndpoint().getTransformers());
   serviceEndpointbuilder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
   serviceEndpointbuilder.setFilter(receiver.getEndpoint().getFilter());
   serviceEndpointbuilder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
-  UMOEndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(receiver.getEndpoint(),managementContext);
+  UMOEndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(receiver.getEndpoint(),muleContext);
   receiverEndpointBuilder.setTransformers(TransformerUtils.UNDEFINED);
   receiverEndpointBuilder.setResponseTransformers(TransformerUtils.UNDEFINED);
   receiverEndpointBuilder.setFilter(null);
   receiverEndpointBuilder.setSecurityFilter(null);
-  UMOImmutableEndpoint serviceEndpoint=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(serviceEndpointbuilder);
-  UMOImmutableEndpoint receiverEndpoint=managementContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
+  UMOImmutableEndpoint serviceEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(serviceEndpointbuilder);
+  UMOImmutableEndpoint receiverEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
   receiver.setEndpoint(receiverEndpoint);
   axisComponent.getInboundRouter().addEndpoint(serviceEndpoint);
 }

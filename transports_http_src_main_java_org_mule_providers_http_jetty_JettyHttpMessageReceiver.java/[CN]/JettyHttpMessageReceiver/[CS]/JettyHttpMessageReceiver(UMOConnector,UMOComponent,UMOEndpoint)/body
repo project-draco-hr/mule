@@ -9,16 +9,16 @@
     scon.setName(JETTY_SERVLET_CONNECTOR_NAME);
     scon.setServletUrl(endpoint.getEndpointURI().getAddress());
     try {
-      UMOManagementContext managementContext=MuleServer.getManagementContext();
-      scon.setManagementContext(managementContext);
-      managementContext.getRegistry().registerConnector(scon);
+      MuleContext muleContext=MuleServer.getMuleContext();
+      scon.setMuleContext(muleContext);
+      muleContext.getRegistry().registerConnector(scon);
       String path=endpoint.getEndpointURI().getPath();
       if (StringUtils.isEmpty(path)) {
         path="/";
       }
-      UMOEndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder("servlet://" + path.substring(1),connector.getManagementContext());
+      UMOEndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder("servlet://" + path.substring(1),connector.getMuleContext());
       endpointBuilder.setTransformers(endpoint.getTransformers());
-      UMOImmutableEndpoint ep=connector.getManagementContext().getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder);
+      UMOImmutableEndpoint ep=connector.getMuleContext().getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder);
       scon.registerListener(component,ep);
     }
  catch (    Exception e) {
