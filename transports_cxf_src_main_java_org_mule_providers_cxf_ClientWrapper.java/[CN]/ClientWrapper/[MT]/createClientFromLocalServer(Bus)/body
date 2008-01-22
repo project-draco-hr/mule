@@ -1,0 +1,28 @@
+{
+  String uri=endpoint.getEndpointURI().toString();
+  int idx=uri.indexOf('?');
+  if (idx != -1) {
+    uri=uri.substring(0,idx);
+  }
+  EndpointInfo ei=new EndpointInfo();
+  ei.setAddress(uri);
+  DestinationFactoryManager dfm=bus.getExtension(DestinationFactoryManager.class);
+  DestinationFactory df=dfm.getDestinationFactoryForUri(uri);
+  if (df == null) {
+    throw new Exception("Could not find a destination factory for uri " + uri);
+  }
+  Destination dest=df.getDestination(ei);
+  MessageObserver mo=dest.getMessageObserver();
+  if (mo instanceof ChainInitiationObserver) {
+    ChainInitiationObserver cMo=(ChainInitiationObserver)mo;
+    Endpoint cxfEP=cMo.getEndpoint();
+    client=new ClientImpl(bus,cxfEP);
+    client.getInInterceptors().add(new MuleHeadersInInterceptor());
+    client.getInFaultInterceptors().add(new MuleHeadersInInterceptor());
+    client.getOutInterceptors().add(new MuleHeadersOutInterceptor());
+    client.getOutFaultInterceptors().add(new MuleHeadersOutInterceptor());
+  }
+ else {
+    throw new Exception("Could not create client! No Server was found directly on the endpoint: " + uri);
+  }
+}
