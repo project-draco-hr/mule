@@ -1,0 +1,53 @@
+{
+  if (logger.isTraceEnabled()) {
+    logger.trace("MuleProxy: async onEvent for Mule UMO " + component.getName());
+  }
+  try {
+    if (event.getEndpoint().canRequest()) {
+      event=OptimizedRequestContext.criticalSetEvent(event);
+      Object replyTo=event.getMessage().getReplyTo();
+      ReplyToHandler replyToHandler=getReplyToHandler(event.getMessage(),event.getEndpoint());
+      long startTime=0;
+      if (stat.isEnabled()) {
+        startTime=System.currentTimeMillis();
+      }
+      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+        event.getMessage().setBooleanProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY,true);
+      }
+      MuleMessage result=umo.intercept(null);
+      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+        result.removeProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY);
+      }
+      if (stat.isEnabled()) {
+        stat.addExecutionTime(System.currentTimeMillis() - startTime);
+      }
+      event=RequestContext.getEvent();
+      if (result != null && !event.isStopFurtherProcessing()) {
+        if (component.getOutboundRouter().hasEndpoints()) {
+          component.getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
+        }
+      }
+      if (result != null && replyToHandler != null) {
+        String requestor=(String)result.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
+        if ((requestor != null && !requestor.equals(component.getName())) || requestor == null) {
+          replyToHandler.processReplyTo(event,result,replyTo);
+        }
+      }
+    }
+ else {
+      event.getEndpoint().dispatch(event);
+    }
+    if (stat.isEnabled()) {
+      stat.incSentEventASync();
+    }
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof MessagingException) {
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(component.getName()),event.getMessage(),e));
+    }
+  }
+}

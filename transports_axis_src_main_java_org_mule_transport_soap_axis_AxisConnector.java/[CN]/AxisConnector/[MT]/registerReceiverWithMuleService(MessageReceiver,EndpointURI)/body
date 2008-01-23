@@ -1,0 +1,40 @@
+{
+  if (axisComponent == null) {
+    axisComponent=getOrCreateAxisComponent();
+  }
+ else {
+    muleContext.getRegistry().unregisterComponent(AXIS_SERVICE_PROPERTY + getName());
+  }
+  if (axisComponent.getProperties().get(AXIS) == null) {
+    axisComponent.getProperties().put(AXIS,axis);
+  }
+  String serviceName=receiver.getComponent().getName();
+  String endpoint;
+  String scheme=ep.getScheme().toLowerCase();
+  if (scheme.equals("jms") || scheme.equals("vm")) {
+    endpoint=ep.toString();
+  }
+ else {
+    endpoint=receiver.getEndpointURI().getAddress() + "/" + serviceName;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Modified endpoint with " + scheme + " scheme to "+ endpoint);
+  }
+  boolean sync=receiver.getEndpoint().isSynchronous();
+  EndpointBuilder serviceEndpointbuilder=new EndpointURIEndpointBuilder(endpoint,muleContext);
+  serviceEndpointbuilder.setSynchronous(sync);
+  serviceEndpointbuilder.setName(ep.getScheme() + ":" + serviceName);
+  serviceEndpointbuilder.setTransformers(receiver.getEndpoint().getTransformers());
+  serviceEndpointbuilder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
+  serviceEndpointbuilder.setFilter(receiver.getEndpoint().getFilter());
+  serviceEndpointbuilder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  EndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(receiver.getEndpoint(),muleContext);
+  receiverEndpointBuilder.setTransformers(TransformerUtils.UNDEFINED);
+  receiverEndpointBuilder.setResponseTransformers(TransformerUtils.UNDEFINED);
+  receiverEndpointBuilder.setFilter(null);
+  receiverEndpointBuilder.setSecurityFilter(null);
+  ImmutableEndpoint serviceEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(serviceEndpointbuilder);
+  ImmutableEndpoint receiverEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
+  receiver.setEndpoint(receiverEndpoint);
+  axisComponent.getInboundRouter().addEndpoint(serviceEndpoint);
+}

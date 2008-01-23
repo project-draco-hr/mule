@@ -1,0 +1,15 @@
+{
+  String URL="axis:http://localhost:8080/axis/Calculator.jws";
+  MuleClient client=new MuleClient();
+  SoapMethod method=new SoapMethod(new QName("http://muleumo.org/Calc","add"));
+  method.addNamedParameter(new QName("Number1"),NamedParameter.XSD_INT,"in");
+  method.addNamedParameter(new QName("Number2"),NamedParameter.XSD_INT,"in");
+  method.setReturnType(NamedParameter.XSD_INT);
+  Map props=new HashMap();
+  props.put(AxisConnector.STYLE,"wrapped");
+  props.put(AxisConnector.USE,"literal");
+  props.put(MuleProperties.MULE_METHOD_PROPERTY,method);
+  MuleMessage result=client.send(URL,new Object[]{new Integer(3),new Integer(3)},props);
+  assertNotNull(result);
+  assertEquals(result.getPayload(),new Integer(6));
+}

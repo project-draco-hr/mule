@@ -1,0 +1,52 @@
+{
+  final Object groupId=this.getReplyAggregateIdentifier(event.getMessage());
+  if (groupId == null || groupId.equals("-1")) {
+    throw new RoutingException(CoreMessages.noCorrelationId(),event.getMessage(),event.getEndpoint());
+  }
+  boolean lookupMiss=false;
+  while (true) {
+    if (lookupMiss) {
+      try {
+        Thread.sleep(1);
+      }
+ catch (      InterruptedException interrupted) {
+        Thread.currentThread().interrupt();
+      }
+    }
+    EventGroup group=this.getEventGroup(groupId);
+    if (group == null) {
+      group=this.addEventGroup(this.createEventGroup(event,groupId));
+    }
+synchronized (group) {
+      if (group != this.getEventGroup(groupId)) {
+        lookupMiss=true;
+        continue;
+      }
+      if (logger.isDebugEnabled()) {
+        logger.debug("Adding event to response aggregator group: " + groupId);
+      }
+      group.addEvent(event);
+      if (this.shouldAggregateEvents(group)) {
+        MuleMessage returnMessage=this.aggregateEvents(group);
+        this.removeEventGroup(group);
+        MuleMessage previousResult=(MuleMessage)responseMessages.putIfAbsent(groupId,returnMessage);
+        if (previousResult != null) {
+          throw new IllegalStateException("Detected duplicate aggregation result message with id: " + groupId);
+        }
+        Latch l=(Latch)locks.get(groupId);
+        if (l == null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Creating latch for " + groupId + " in "+ this);
+          }
+          l=new Latch();
+          Latch previous=(Latch)locks.putIfAbsent(groupId,l);
+          if (previous != null) {
+            l=previous;
+          }
+        }
+        l.countDown();
+      }
+      break;
+    }
+  }
+}

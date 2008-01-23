@@ -1,0 +1,24 @@
+{
+  EndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  Object method=getInitialMethod(event);
+  Call call=(Call)service.createCall();
+  parseStyle(event,call);
+  parseUse(event,call);
+  BeanUtils.populateWithoutFail(call,event.getEndpoint().getProperties(),false);
+  call.setTargetEndpointAddress(endpointUri.getAddress());
+  method=refineMethod(event,call,method);
+  String methodNamespace=call.getOperationName().getNamespaceURI();
+  call.setProperty(MuleProperties.MULE_EVENT_PROPERTY,event);
+  call.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint());
+  setCustomProperties(event,call);
+  call.setTimeout(new Integer(event.getTimeout()));
+  setUserCredentials(endpointUri,call);
+  Map methodCalls=(Map)event.getMessage().getProperty(AxisConnector.SOAP_METHODS);
+  if (methodCalls == null && !(method instanceof SoapMethod)) {
+    buildSoapMethods(event,call,method,methodNamespace,args);
+  }
+  setCallParams(call,event,call.getOperationName());
+  setSoapAction(event,endpointUri,call);
+  addAttachments(event,call);
+  return call;
+}

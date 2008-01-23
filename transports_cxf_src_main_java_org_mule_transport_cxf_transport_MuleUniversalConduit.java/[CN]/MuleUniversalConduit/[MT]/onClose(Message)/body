@@ -1,0 +1,59 @@
+{
+  final CachedOutputStream cached=(CachedOutputStream)m.getContent(OutputStream.class);
+  OutputHandler handler=new OutputHandler(){
+    public void write(    MuleEvent event,    OutputStream out) throws IOException {
+      IOUtils.copy(cached.getInputStream(),out);
+    }
+    @SuppressWarnings("unchecked") public Map getHeaders(    MuleEvent event){
+      Map<String,Object> headers=new HashMap<String,Object>();
+      headers.put(HttpConstants.HEADER_CONTENT_TYPE,m.get(Message.CONTENT_TYPE));
+      headers.put(SoapConstants.SOAP_ACTION,(String)m.get(SoapConstants.SOAP_ACTION));
+      MuleMessage msg=event.getMessage();
+      for (Iterator iterator=msg.getPropertyNames().iterator(); iterator.hasNext(); ) {
+        String headerName=(String)iterator.next();
+        Object headerValue=msg.getStringProperty(headerName,null);
+        if ((!headerName.startsWith(MuleProperties.PROPERTY_PREFIX) || (MuleProperties.MULE_USER_PROPERTY.compareTo(headerName) == 0)) && (!HttpConstants.HEADER_CONTENT_TYPE.equalsIgnoreCase(headerName)) && (!HttpConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(headerName))) {
+          headers.put(headerName,headerValue);
+        }
+      }
+      return headers;
+    }
+  }
+;
+  DefaultMessageAdapter sp=new DefaultMessageAdapter(handler);
+  String method=(String)m.get(Message.HTTP_REQUEST_METHOD);
+  if (method == null)   method=HttpConstants.METHOD_POST;
+  sp.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,method);
+  MuleEvent event=RequestContext.getEvent();
+  if (event != null) {
+    MuleMessage msg=event.getMessage();
+    for (Iterator i=msg.getPropertyNames().iterator(); i.hasNext(); ) {
+      String propertyName=(String)i.next();
+      sp.setProperty(propertyName,msg.getProperty(propertyName));
+    }
+  }
+  MuleMessage result=null;
+  String uri=setupURL(m);
+  LOGGER.info("Sending message to " + uri);
+  try {
+    Endpoint ep=(Endpoint)RegistryContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(uri);
+    result=sendStream(sp,ep);
+    if (result != null) {
+      Message inMessage=new MessageImpl();
+      String contentType=sp.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+      inMessage.put(Message.ENCODING,result.getEncoding());
+      inMessage.put(Message.CONTENT_TYPE,contentType);
+      inMessage.setContent(InputStream.class,new ByteArrayInputStream(result.getPayloadAsBytes()));
+      inMessage.setExchange(m.getExchange());
+      getMessageObserver().onMessage(inMessage);
+    }
+  }
+ catch (  Exception e) {
+    if (e instanceof IOException) {
+      throw (IOException)e;
+    }
+    IOException ex=new IOException("Could not send message to Mule.");
+    ex.initCause(e);
+    throw ex;
+  }
+}

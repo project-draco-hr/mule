@@ -1,0 +1,33 @@
+{
+  String destComponent=null;
+  MuleMessage result=null;
+  String endpoint=action.getResourceIdentifier();
+  if (action.getResourceIdentifier().startsWith("mule:")) {
+    destComponent=endpoint.substring(endpoint.lastIndexOf("/") + 1);
+  }
+ else {
+    destComponent=endpoint;
+  }
+  if (destComponent != null) {
+    MuleSession session=new DefaultMuleSession(MuleServer.getMuleContext().getRegistry().lookupComponent(destComponent));
+    MuleContext muleContext=MuleServer.getMuleContext();
+    EndpointBuilder builder=new EndpointURIEndpointBuilder(RequestContext.getEvent().getEndpoint(),muleContext);
+    builder.setTransformers(new LinkedList());
+    ImmutableEndpoint ep=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(builder);
+    MuleEvent event=new DefaultMuleEvent(action.getMessage(),ep,context.getSession(),context.isSynchronous());
+    event=RequestContext.setEvent(event);
+    if (context.isSynchronous()) {
+      result=session.getComponent().sendEvent(event);
+      ByteArrayOutputStream out=new ByteArrayOutputStream();
+      wireFormat.write(out,result,getEncoding());
+      return out.toByteArray();
+    }
+ else {
+      session.getComponent().dispatchEvent(event);
+      return null;
+    }
+  }
+ else {
+    return handleException(result,new DefaultMuleException(CoreMessages.couldNotDetermineDestinationComponentFromEndpoint(endpoint)));
+  }
+}

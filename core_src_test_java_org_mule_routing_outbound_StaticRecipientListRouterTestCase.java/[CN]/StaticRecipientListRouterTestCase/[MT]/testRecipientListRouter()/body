@@ -1,6 +1,6 @@
 {
   Mock session=MuleTestUtils.getMockSession();
-  UMOEndpoint endpoint1=getTestEndpoint("Test1Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  Endpoint endpoint1=getTestEndpoint("Test1Provider",Endpoint.ENDPOINT_TYPE_SENDER);
   assertNotNull(endpoint1);
   List recipients=new ArrayList();
   recipients.add("test://recipient1");
@@ -12,18 +12,18 @@
   router.setEndpoints(endpoints);
   router.setMuleContext(muleContext);
   assertEquals(2,router.getRecipients().size());
-  UMOMessage message=new MuleMessage("test event");
+  MuleMessage message=new DefaultMuleMessage("test event");
   assertTrue(router.isMatch(message));
-  session.expect("dispatchEvent",C.args(C.isA(UMOMessage.class),C.isA(UMOEndpoint.class)));
-  session.expect("dispatchEvent",C.args(C.isA(UMOMessage.class),C.isA(UMOEndpoint.class)));
-  router.route(message,(UMOSession)session.proxy(),false);
+  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)));
+  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)));
+  router.route(message,(MuleSession)session.proxy(),false);
   session.verify();
-  message=new MuleMessage("test event");
+  message=new DefaultMuleMessage("test event");
   router.getRecipients().add("test://recipient3");
-  session.expectAndReturn("sendEvent",C.args(C.isA(UMOMessage.class),C.isA(UMOEndpoint.class)),message);
-  session.expectAndReturn("sendEvent",C.args(C.isA(UMOMessage.class),C.isA(UMOEndpoint.class)),message);
-  session.expectAndReturn("sendEvent",C.args(C.isA(UMOMessage.class),C.isA(UMOEndpoint.class)),message);
-  UMOMessage result=router.route(message,(UMOSession)session.proxy(),true);
+  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)),message);
+  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)),message);
+  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)),message);
+  MuleMessage result=router.route(message,(MuleSession)session.proxy(),true);
   assertNotNull(result);
   assertTrue(result.getPayload() instanceof List);
   assertEquals(3,((List)result.getPayload()).size());

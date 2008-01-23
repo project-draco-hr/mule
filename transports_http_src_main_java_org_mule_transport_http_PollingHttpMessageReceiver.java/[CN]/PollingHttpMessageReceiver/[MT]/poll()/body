@@ -1,0 +1,16 @@
+{
+  MuleMessage req=new DefaultMuleMessage(new DefaultMessageAdapter(""));
+  if (etag != null && checkEtag) {
+    Map customHeaders=Collections.singletonMap(HttpConstants.HEADER_IF_NONE_MATCH,etag);
+    req.setProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY,customHeaders);
+  }
+  req.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,"GET");
+  MuleSession session=new DefaultMuleSession(component);
+  MuleEvent event=new DefaultMuleEvent(req,endpoint,session,true);
+  MuleMessage message=connector.send(endpoint,event);
+  int status=message.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,0);
+  etag=message.getStringProperty(HttpConstants.HEADER_ETAG,null);
+  if (status != 304 || !checkEtag) {
+    routeMessage(message,endpoint.isSynchronous());
+  }
+}

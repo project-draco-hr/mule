@@ -1,0 +1,23 @@
+{
+  MuleMessage result=null;
+  try {
+    ImmutableEndpoint endpoint=context.getMuleContext().getRegistry().lookupEndpointFactory().getOutboundEndpoint(action.getResourceIdentifier());
+    long timeout=MapUtils.getLongValue(action.getProperties(),MuleProperties.MULE_EVENT_TIMEOUT_PROPERTY,getSynchronousEventTimeout());
+    result=endpoint.getConnector().request(action.getResourceIdentifier(),timeout);
+    if (result != null) {
+      List transformers=((AbstractConnector)endpoint.getConnector()).getDefaultInboundTransformers();
+      if (transformers != null) {
+        result.applyTransformers(transformers);
+      }
+      ByteArrayOutputStream out=new ByteArrayOutputStream();
+      wireFormat.write(out,result,getEncoding());
+      return out.toByteArray();
+    }
+ else {
+      return null;
+    }
+  }
+ catch (  Exception e) {
+    return handleException(result,e);
+  }
+}

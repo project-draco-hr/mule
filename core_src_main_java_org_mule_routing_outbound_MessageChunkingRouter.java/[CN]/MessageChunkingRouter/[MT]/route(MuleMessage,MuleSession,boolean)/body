@@ -1,0 +1,49 @@
+{
+  if (messageSize == 0 && numberOfMessages < 2) {
+    return super.route(message,session,synchronous);
+  }
+ else   if (messageSize > 0) {
+    byte[] data=new byte[0];
+    try {
+      data=message.getPayloadAsBytes();
+    }
+ catch (    Exception e) {
+      throw new RoutingException(CoreMessages.failedToReadPayload(),message,getEndpoint(0,message),e);
+    }
+    int parts=data.length / messageSize;
+    if ((parts * messageSize) < data.length) {
+      parts++;
+    }
+    int len=messageSize;
+    MuleMessage part=null;
+    int count=0;
+    int pos=0;
+    byte[] buffer=null;
+    try {
+      for (; count < parts; count++) {
+        if ((pos + len) > data.length) {
+          len=data.length - pos;
+        }
+        buffer=new byte[len];
+        System.arraycopy(data,pos,buffer,0,buffer.length);
+        pos+=len;
+        part=new DefaultMuleMessage(buffer,message);
+        part.setCorrelationId(message.getUniqueId());
+        part.setCorrelationGroupSize(parts);
+        part.setCorrelationSequence(count);
+        if (logger.isInfoEnabled()) {
+          logger.info("sending part " + count + " of "+ parts);
+        }
+        super.route(part,session,synchronous);
+        if (logger.isInfoEnabled()) {
+          logger.info("sent");
+        }
+      }
+    }
+ catch (    RoutingException e) {
+      e=new RoutingException(e.getI18nMessage(),e.getUmoMessage(),e.getEndpoint(),e.getCause());
+      throw e;
+    }
+  }
+  return message;
+}

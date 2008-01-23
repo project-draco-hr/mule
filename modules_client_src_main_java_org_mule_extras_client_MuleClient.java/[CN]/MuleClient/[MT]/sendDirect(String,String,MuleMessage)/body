@@ -1,0 +1,27 @@
+{
+  Component component=muleContext.getRegistry().lookupComponent(componentName);
+  if (component == null) {
+    throw new MessagingException(CoreMessages.objectNotRegistered("Component",componentName),message);
+  }
+  List trans=null;
+  if (transformers != null) {
+    trans=MuleObjectHelper.getTransformers(transformers,",");
+  }
+  if (!RegistryContext.getConfiguration().isDefaultSynchronousEndpoints()) {
+    logger.warn("The mule muleContext is running synchronously, a null message payload will be returned");
+  }
+  MuleSession session=new DefaultMuleSession(component);
+  ImmutableEndpoint endpoint=getDefaultClientEndpoint(component,message.getPayload());
+  MuleEvent event=new DefaultMuleEvent(message,endpoint,session,true);
+  if (logger.isDebugEnabled()) {
+    logger.debug("MuleClient sending event direct to: " + componentName + ". MuleEvent is: "+ event);
+  }
+  MuleMessage result=event.getComponent().sendEvent(event);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Result of MuleClient sendDirect is: " + (result == null ? "null" : result.getPayload()));
+  }
+  if (result != null && trans != null) {
+    result.applyTransformers(trans);
+  }
+  return result;
+}

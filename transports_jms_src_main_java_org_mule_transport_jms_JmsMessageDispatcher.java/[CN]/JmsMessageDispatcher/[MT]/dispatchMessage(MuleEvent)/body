@@ -1,0 +1,153 @@
+{
+  Session session=null;
+  MessageProducer producer=null;
+  MessageConsumer consumer=null;
+  Destination replyTo=null;
+  boolean transacted=false;
+  boolean cached=false;
+  boolean remoteSync=useRemoteSync(event);
+  if (logger.isDebugEnabled()) {
+    logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". MuleEvent id is: "+ event.getId()+ ". Outbound transformers are: "+ event.getEndpoint().getTransformers());
+  }
+  try {
+    session=connector.getSessionFromTransaction();
+    if (session != null) {
+      transacted=true;
+      if (remoteSync) {
+        throw new IllegalTransactionStateException(JmsMessages.connectorDoesNotSupportSyncReceiveWhenTransacted());
+      }
+    }
+ else     if (event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions())) {
+      cached=true;
+      if (cachedSession != null) {
+        session=cachedSession;
+      }
+ else {
+        session=connector.getSession(event.getEndpoint());
+        cachedSession=session;
+      }
+    }
+ else {
+      session=connector.getSession(event.getEndpoint());
+      if (event.getEndpoint().getTransactionConfig().isTransacted()) {
+        transacted=true;
+      }
+    }
+    EndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+    boolean topic=connector.getTopicResolver().isTopic(event.getEndpoint(),true);
+    Destination dest=connector.getJmsSupport().createDestination(session,endpointUri.getAddress(),topic);
+    producer=connector.getJmsSupport().createProducer(session,dest,topic);
+    Object message=event.transformMessage();
+    if (!(message instanceof Message)) {
+      throw new DispatchException(JmsMessages.checkTransformer("JMS message",message.getClass(),connector.getName()),event.getMessage(),event.getEndpoint());
+    }
+    Message msg=(Message)message;
+    if (event.getMessage().getCorrelationId() != null) {
+      msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
+    }
+    MuleMessage eventMsg=event.getMessage();
+    if (connector.supportsProperty(JmsConstants.JMS_REPLY_TO)) {
+      Object tempReplyTo=eventMsg.removeProperty(JmsConstants.JMS_REPLY_TO);
+      if (tempReplyTo != null) {
+        if (tempReplyTo instanceof Destination) {
+          replyTo=(Destination)tempReplyTo;
+        }
+ else {
+          boolean replyToTopic=false;
+          String reply=tempReplyTo.toString();
+          int i=reply.indexOf(":");
+          if (i > -1) {
+            String qtype=reply.substring(0,i);
+            replyToTopic=JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(qtype);
+            reply=reply.substring(i + 1);
+          }
+          replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
+        }
+      }
+      if (remoteSync && replyTo == null) {
+        replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
+      }
+      if (replyTo != null) {
+        msg.setJMSReplyTo(replyTo);
+      }
+      if (remoteSync) {
+        consumer=connector.getJmsSupport().createConsumer(session,replyTo,topic);
+      }
+    }
+    String ttlString=(String)eventMsg.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
+    String priorityString=(String)eventMsg.removeProperty(JmsConstants.PRIORITY_PROPERTY);
+    String persistentDeliveryString=(String)eventMsg.removeProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY);
+    long ttl=StringUtils.isNotBlank(ttlString) ? NumberUtils.toLong(ttlString) : Message.DEFAULT_TIME_TO_LIVE;
+    int priority=StringUtils.isNotBlank(priorityString) ? NumberUtils.toInt(priorityString) : Message.DEFAULT_PRIORITY;
+    boolean persistent=StringUtils.isNotBlank(persistentDeliveryString) ? BooleanUtils.toBoolean(persistentDeliveryString) : connector.isPersistentDelivery();
+    if (connector.isHonorQosHeaders()) {
+      int priorityProp=eventMsg.getIntProperty(JmsConstants.JMS_PRIORITY,Connector.INT_VALUE_NOT_SET);
+      int deliveryModeProp=eventMsg.getIntProperty(JmsConstants.JMS_DELIVERY_MODE,Connector.INT_VALUE_NOT_SET);
+      if (priorityProp != Connector.INT_VALUE_NOT_SET) {
+        priority=priorityProp;
+      }
+      if (deliveryModeProp != Connector.INT_VALUE_NOT_SET) {
+        persistent=deliveryModeProp == DeliveryMode.PERSISTENT;
+      }
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Sending message of type " + ClassUtils.getSimpleName(msg.getClass()));
+    }
+    if (consumer != null && topic) {
+      Latch l=new Latch();
+      ReplyToListener listener=new ReplyToListener(l);
+      consumer.setMessageListener(listener);
+      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
+      int timeout=event.getTimeout();
+      if (logger.isDebugEnabled()) {
+        logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
+      }
+      l.await(timeout,TimeUnit.MILLISECONDS);
+      consumer.setMessageListener(null);
+      listener.release();
+      Message result=listener.getMessage();
+      if (result == null) {
+        logger.debug("No message was returned via replyTo destination");
+        return null;
+      }
+ else {
+        MessageAdapter adapter=connector.getMessageAdapter(result);
+        return new DefaultMuleMessage(JmsMessageUtils.toObject(result,connector.getSpecification()),adapter);
+      }
+    }
+ else {
+      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
+      if (consumer != null) {
+        int timeout=event.getTimeout();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
+        }
+        Message result=consumer.receive(timeout);
+        if (result == null) {
+          logger.debug("No message was returned via replyTo destination");
+          return null;
+        }
+ else {
+          MessageAdapter adapter=connector.getMessageAdapter(result);
+          return new DefaultMuleMessage(JmsMessageUtils.toObject(result,connector.getSpecification()),adapter);
+        }
+      }
+    }
+    return null;
+  }
+  finally {
+    connector.closeQuietly(producer);
+    connector.closeQuietly(consumer);
+    if (replyTo != null && (replyTo instanceof TemporaryQueue || replyTo instanceof TemporaryTopic)) {
+      if (replyTo instanceof TemporaryQueue) {
+        connector.closeQuietly((TemporaryQueue)replyTo);
+      }
+ else {
+        connector.closeQuietly((TemporaryTopic)replyTo);
+      }
+    }
+    if (session != null && !cached && !transacted) {
+      connector.closeQuietly(session);
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  MuleMessage returnMessage=null;
+  try {
+    MessageAdapter adapter=connector.getMessageAdapter(packet);
+    final SocketAddress clientAddress=socket.getRemoteSocketAddress();
+    if (clientAddress != null) {
+      adapter.setProperty(MuleProperties.MULE_REMOTE_CLIENT_ADDRESS,clientAddress);
+    }
+    returnMessage=routeMessage(new DefaultMuleMessage(adapter),endpoint.isSynchronous());
+    if (returnMessage != null) {
+      byte[] data;
+      if (responseTransformers != null) {
+        returnMessage.applyTransformers(responseTransformers);
+        Object response=returnMessage.getPayload();
+        if (response instanceof byte[]) {
+          data=(byte[])response;
+        }
+ else {
+          data=response.toString().getBytes();
+        }
+      }
+ else {
+        data=returnMessage.getPayloadAsBytes();
+      }
+      DatagramPacket result=new DatagramPacket(data,data.length,packet.getAddress(),packet.getPort());
+      socket.send(result);
+    }
+  }
+ catch (  Exception e) {
+    if (!disposing.get()) {
+      handleException(e);
+    }
+  }
+ finally {
+    dispose();
+  }
+}

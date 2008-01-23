@@ -1,10 +1,10 @@
 {
   Mock session=MuleTestUtils.getMockSession();
-  OutboundRouterCollection messageRouter=new OutboundRouterCollection();
+  DefaultOutboundRouterCollection messageRouter=new DefaultOutboundRouterCollection();
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
-  UMOEndpoint endpoint1=getTestEndpoint("Test1Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  Endpoint endpoint1=getTestEndpoint("Test1Provider",Endpoint.ENDPOINT_TYPE_SENDER);
   assertNotNull(endpoint1);
-  UMOEndpoint endpoint2=getTestEndpoint("Test2Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  Endpoint endpoint2=getTestEndpoint("Test2Provider",Endpoint.ENDPOINT_TYPE_SENDER);
   assertNotNull(endpoint2);
   MulticastingRouter router=new MulticastingRouter();
   RegExFilter filter=new RegExFilter("(.*) event");
@@ -14,16 +14,16 @@
   endpoints.add(endpoint2);
   router.setEndpoints(endpoints);
   assertEquals(filter,router.getFilter());
-  UMOMessage message=new MuleMessage("test event");
+  MuleMessage message=new DefaultMuleMessage("test event");
   assertTrue(router.isMatch(message));
   session.expect("dispatchEvent",C.eq(message,endpoint1));
   session.expect("dispatchEvent",C.eq(message,endpoint2));
-  router.route(message,(UMOSession)session.proxy(),false);
+  router.route(message,(MuleSession)session.proxy(),false);
   session.verify();
-  message=new MuleMessage("test event");
+  message=new DefaultMuleMessage("test event");
   session.expectAndReturn("sendEvent",C.eq(message,endpoint1),message);
   session.expectAndReturn("sendEvent",C.eq(message,endpoint2),message);
-  UMOMessage result=router.route(message,(UMOSession)session.proxy(),true);
+  MuleMessage result=router.route(message,(MuleSession)session.proxy(),true);
   assertNotNull(result);
   assertEquals(message,result);
   session.verify();

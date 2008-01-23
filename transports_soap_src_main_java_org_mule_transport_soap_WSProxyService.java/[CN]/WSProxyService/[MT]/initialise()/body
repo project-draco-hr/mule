@@ -1,0 +1,42 @@
+{
+  if (component != null) {
+    OutboundRouter router=(OutboundRouter)component.getOutboundRouter().getRouters().get(0);
+    Endpoint endpoint=(Endpoint)router.getEndpoints().get(0);
+    this.urlWebservice=endpoint.getEndpointURI().getAddress();
+    int paramIndex;
+    if ((paramIndex=this.urlWebservice.indexOf("?")) != -1) {
+      this.urlWebservice=this.urlWebservice.substring(0,paramIndex);
+    }
+    if (StringUtils.isNotBlank(this.wsdlFile)) {
+      try {
+        this.wsdlFileContents=IOUtils.getResourceAsString(this.wsdlFile,getClass());
+        if (StringUtils.isNotBlank(this.wsdlFileContents)) {
+          this.useFile=true;
+          logger.info("Using file " + this.wsdlFile + " as WSDL file");
+        }
+      }
+ catch (      IOException fileError) {
+        throw new InitialisationException(CoreMessages.failedToLoad(this.wsdlFile),this);
+      }
+    }
+    if (!this.useFile) {
+      if (StringUtils.isBlank(this.wsdlEndpoint)) {
+        if (urlWebservice == null) {
+          throw new InitialisationException(MessageFactory.createStaticMessage("urlWebservice has not been set, service has not been initialized properly"),this);
+        }
+        this.wsdlEndpoint=this.urlWebservice.concat("?WSDL");
+        logger.info("Defaulting to: " + this.wsdlEndpoint);
+      }
+ else {
+        logger.info("Using url " + this.wsdlEndpoint + " as WSDL");
+      }
+    }
+  }
+ else   if (!lazyInit) {
+    logger.debug("Component has not yet been injected, lazy initialization will be used.");
+    lazyInit=true;
+  }
+ else {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Component not set, this service has not been initialized properly."),this);
+  }
+}

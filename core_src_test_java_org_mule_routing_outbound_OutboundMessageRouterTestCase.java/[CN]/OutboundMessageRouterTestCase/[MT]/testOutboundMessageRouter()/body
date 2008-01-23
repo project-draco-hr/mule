@@ -1,12 +1,12 @@
 {
   Mock session=MuleTestUtils.getMockSession();
   session.expectAndReturn("getComponent",getTestComponent());
-  OutboundRouterCollection messageRouter=new OutboundRouterCollection();
+  DefaultOutboundRouterCollection messageRouter=new DefaultOutboundRouterCollection();
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   assertNotNull(messageRouter.getCatchAllStrategy());
-  UMOEndpoint endpoint1=getTestEndpoint("Test1Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  Endpoint endpoint1=getTestEndpoint("Test1Provider",Endpoint.ENDPOINT_TYPE_SENDER);
   assertNotNull(endpoint1);
-  UMOEndpoint endpoint2=getTestEndpoint("Test2Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  Endpoint endpoint2=getTestEndpoint("Test2Provider",Endpoint.ENDPOINT_TYPE_SENDER);
   assertNotNull(endpoint2);
   FilteringOutboundRouter router1=new FilteringOutboundRouter();
   PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
@@ -29,14 +29,14 @@
   list.add(router1);
   list.add(router2);
   messageRouter.setRouters(list);
-  UMOMessage message=new MuleMessage("test event");
+  MuleMessage message=new DefaultMuleMessage("test event");
   session.expect("dispatchEvent",C.eq(message,endpoint1));
-  messageRouter.route(message,(UMOSession)session.proxy(),false);
+  messageRouter.route(message,(MuleSession)session.proxy(),false);
   session.verify();
-  message=new MuleMessage(new IllegalArgumentException());
+  message=new DefaultMuleMessage(new IllegalArgumentException());
   session.expectAndReturn("getComponent",getTestComponent());
   session.expect("dispatchEvent",C.eq(message,endpoint2));
-  messageRouter.route(message,(UMOSession)session.proxy(),false);
+  messageRouter.route(message,(MuleSession)session.proxy(),false);
   session.verify();
   FilteringOutboundRouter router3=new FilteringOutboundRouter();
   router3.setFilter(new PayloadTypeFilter(Object.class));
@@ -44,12 +44,12 @@
   endpoints.add(endpoint2);
   router3.setEndpoints(endpoints);
   messageRouter.addRouter(router3);
-  message=new MuleMessage("testing multiple routing");
+  message=new DefaultMuleMessage("testing multiple routing");
   session.expectAndReturn("getComponent",getTestComponent());
   session.expectAndReturn("getComponent",getTestComponent());
   session.expect("dispatchEvent",C.eq(message,endpoint1));
   session.expect("dispatchEvent",C.eq(message,endpoint2));
   messageRouter.setMatchAll(true);
-  messageRouter.route(message,(UMOSession)session.proxy(),false);
+  messageRouter.route(message,(MuleSession)session.proxy(),false);
   session.verify();
 }

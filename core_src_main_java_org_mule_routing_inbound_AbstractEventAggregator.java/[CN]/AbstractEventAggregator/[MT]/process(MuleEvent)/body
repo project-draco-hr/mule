@@ -1,0 +1,47 @@
+{
+  MuleEvent[] result=null;
+  if (this.isMatch(event)) {
+    boolean miss=false;
+    final Object groupId=this.getEventGroupIdForEvent(event);
+    while (true) {
+      if (miss) {
+        try {
+          Thread.sleep(1);
+        }
+ catch (        InterruptedException interrupted) {
+          Thread.currentThread().interrupt();
+        }
+      }
+      EventGroup group=this.getEventGroup(groupId);
+      if (group == null) {
+        group=this.addEventGroup(this.createEventGroup(event,groupId));
+      }
+synchronized (group) {
+        if (group != this.getEventGroup(groupId)) {
+          miss=true;
+          continue;
+        }
+        group.addEvent(event);
+        if (this.shouldAggregateEvents(group)) {
+          MuleMessage returnMessage=this.aggregateEvents(group);
+          ImmutableEndpoint endpoint;
+          try {
+            MuleContext muleContext=MuleServer.getMuleContext();
+            EndpointBuilder builder=new EndpointURIEndpointBuilder(event.getEndpoint(),muleContext);
+            builder.setTransformers(new LinkedList());
+            builder.setName(this.getClass().getName());
+            endpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(builder);
+          }
+ catch (          MuleException e) {
+            throw new MessagingException(e.getI18nMessage(),returnMessage,e);
+          }
+          MuleEvent returnEvent=new DefaultMuleEvent(returnMessage,endpoint,event.getComponent(),event);
+          result=new MuleEvent[]{returnEvent};
+          this.removeEventGroup(group);
+        }
+        break;
+      }
+    }
+  }
+  return result;
+}

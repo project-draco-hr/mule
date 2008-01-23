@@ -1,0 +1,19 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("sending reply to: " + returnMessage.getReplyTo());
+  }
+  String replyToEndpoint=replyTo.toString();
+  ImmutableEndpoint endpoint=getEndpoint(event,replyToEndpoint);
+  returnMessage.removeProperty(MuleProperties.MULE_REPLY_TO_PROPERTY);
+  MuleEvent replyToEvent=new DefaultMuleEvent(returnMessage,endpoint,event.getSession(),false);
+  try {
+    endpoint.dispatch(replyToEvent);
+    if (logger.isInfoEnabled()) {
+      logger.info("reply to sent: " + endpoint);
+    }
+    ((AbstractComponent)event.getComponent()).getStatistics().incSentReplyToEvent();
+  }
+ catch (  Exception e) {
+    throw new DispatchException(CoreMessages.failedToDispatchToReplyto(endpoint),replyToEvent.getMessage(),replyToEvent.getEndpoint(),e);
+  }
+}

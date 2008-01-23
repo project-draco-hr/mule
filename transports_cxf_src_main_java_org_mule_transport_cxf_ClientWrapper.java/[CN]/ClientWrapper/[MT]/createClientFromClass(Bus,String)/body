@@ -1,0 +1,51 @@
+{
+  String wsdlLocation=(String)endpoint.getProperty(CxfConstants.WSDL_LOCATION);
+  Class<?> clientCls=ClassLoaderUtils.loadClass(clientClassName,getClass());
+  Service s=null;
+  if (wsdlLocation != null) {
+    Constructor<?> cons=clientCls.getConstructor(URL.class,QName.class);
+    ResourceManager rr=bus.getExtension(ResourceManager.class);
+    URL url=rr.resolveResource(wsdlLocation,URL.class);
+    if (url == null) {
+      URIResolver res=new URIResolver(wsdlLocation);
+      if (!res.isResolved()) {
+        throw new CreateException(CxfMessages.wsdlNotFound(wsdlLocation),this);
+      }
+      url=res.getURL();
+    }
+    WebServiceClient clientAnn=clientCls.getAnnotation(WebServiceClient.class);
+    QName svcName=new QName(clientAnn.targetNamespace(),clientAnn.name());
+    s=(Service)cons.newInstance(url,svcName);
+  }
+ else {
+    s=(Service)clientCls.newInstance();
+  }
+  String port=(String)endpoint.getProperty(CxfConstants.CLIENT_PORT);
+  if (port == null) {
+    throw new CreateException(CxfMessages.mustSpecifyPort(),this);
+  }
+  proxy=null;
+  if (port != null) {
+    for (    Method m : clientCls.getMethods()) {
+      WebEndpoint we=m.getAnnotation(WebEndpoint.class);
+      if (we != null && we.name().equals(port)) {
+        proxy=(BindingProvider)m.invoke(s,new Object[0]);
+        break;
+      }
+    }
+  }
+  if (proxy == null) {
+    throw new CreateException(CxfMessages.portNotFound(port),this);
+  }
+  EndpointURI uri=endpoint.getEndpointURI();
+  if (uri.getUser() != null) {
+    proxy.getRequestContext().put(BindingProvider.USERNAME_PROPERTY,uri.getUser());
+  }
+  if (uri.getPassword() != null) {
+    proxy.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY,uri.getPassword());
+  }
+  proxy.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,uri.getAddress());
+  client=ClientProxy.getClient(proxy);
+  defaultMethod=findMethod(clientCls);
+  defaultMethodName=getDefaultMethodName();
+}

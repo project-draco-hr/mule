@@ -1,0 +1,20 @@
+{
+  MuleMessage message;
+  if (src instanceof MuleMessage) {
+    message=(MuleMessage)src;
+  }
+ else   if (DebugOptions.isAutoWrapMessageAwareTransform()) {
+    message=new DefaultMuleMessage(src);
+  }
+ else {
+    MuleEventContext event=RequestContext.getEventContext();
+    if (event == null) {
+      throw new TransformerException(CoreMessages.noCurrentEventForTransformer(),this);
+    }
+    message=event.getMessage();
+    if (!message.getPayload().equals(src)) {
+      throw new IllegalStateException("Transform payload does not match current MuleEventContext payload");
+    }
+  }
+  return transform(message,encoding);
+}

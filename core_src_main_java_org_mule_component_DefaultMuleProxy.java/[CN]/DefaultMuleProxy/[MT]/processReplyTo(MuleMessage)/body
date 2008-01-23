@@ -1,0 +1,17 @@
+{
+  if (returnMessage != null && returnMessage.getReplyTo() != null) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("sending reply to: " + returnMessage.getReplyTo());
+    }
+    ImmutableEndpoint endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(returnMessage.getReplyTo().toString());
+    returnMessage.removeProperty(MuleProperties.MULE_REPLY_TO_PROPERTY);
+    MuleEvent replyToEvent=new DefaultMuleEvent(returnMessage,endpoint,event.getSession(),false);
+    onEvent(queueSession,replyToEvent);
+    if (logger.isDebugEnabled()) {
+      logger.debug("reply to sent: " + returnMessage.getReplyTo());
+    }
+    if (stat.isEnabled()) {
+      stat.incSentReplyToEvent();
+    }
+  }
+}

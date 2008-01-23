@@ -1,0 +1,76 @@
+{
+  if (logger.isTraceEnabled()) {
+    logger.trace("MuleProxy: sync call for Mule UMO " + component.getName());
+  }
+  MuleMessage returnMessage=null;
+  try {
+    if (event.getEndpoint().canRequest()) {
+      event=OptimizedRequestContext.unsafeSetEvent(event);
+      Object replyTo=event.getMessage().getReplyTo();
+      ReplyToHandler replyToHandler=getReplyToHandler(event.getMessage(),event.getEndpoint());
+      long startTime=0;
+      if (stat.isEnabled()) {
+        startTime=System.currentTimeMillis();
+      }
+      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+        event.getMessage().setBooleanProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY,true);
+      }
+      returnMessage=umo.intercept(null);
+      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+        returnMessage.removeProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY);
+      }
+      if (stat.isEnabled()) {
+        stat.addExecutionTime(System.currentTimeMillis() - startTime);
+      }
+      if (event.isStopFurtherProcessing()) {
+        logger.debug("MuleEvent stop further processing has been set, no outbound routing will be performed.");
+      }
+      if (returnMessage != null && !event.isStopFurtherProcessing()) {
+        if (component.getOutboundRouter().hasEndpoints()) {
+          MuleMessage outboundReturnMessage=component.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
+          if (outboundReturnMessage != null) {
+            returnMessage=outboundReturnMessage;
+          }
+        }
+ else {
+          logger.debug("Outbound router on component '" + component.getName() + "' doesn't have any endpoints configured.");
+        }
+      }
+      if (returnMessage != null && component.getResponseRouter() != null) {
+        logger.debug("Waiting for response router message");
+        returnMessage=component.getResponseRouter().getResponse(returnMessage);
+      }
+      if (returnMessage != null && replyToHandler != null) {
+        String requestor=(String)returnMessage.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
+        if ((requestor != null && !requestor.equals(component.getName())) || requestor == null) {
+          replyToHandler.processReplyTo(event,returnMessage,replyTo);
+        }
+      }
+    }
+ else {
+      returnMessage=event.getSession().sendEvent(event);
+      processReplyTo(returnMessage);
+    }
+    if (stat.isEnabled()) {
+      stat.incSentEventSync();
+    }
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof MessagingException) {
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(component.getName()),event.getMessage(),e));
+    }
+    if (returnMessage == null) {
+      returnMessage=new DefaultMuleMessage(NullPayload.getInstance(),RequestContext.getEvent().getMessage());
+    }
+    ExceptionPayload exceptionPayload=returnMessage.getExceptionPayload();
+    if (exceptionPayload == null) {
+      exceptionPayload=new DefaultExceptionPayload(e);
+    }
+    returnMessage.setExceptionPayload(exceptionPayload);
+  }
+  return returnMessage;
+}

@@ -3,8 +3,8 @@
   assertNotNull(bean1);
   final Latch whenFinished1=new Latch();
   EventCallback callback=new EventCallback(){
-    public void eventReceived(    UMOEventContext context,    Object o) throws Exception {
-      MuleApplicationEvent returnEvent=new MuleApplicationEvent("Event from a spring bean","vm://testBean2");
+    public void eventReceived(    MuleEventContext context,    Object o) throws Exception {
+      MuleApplicationEvent returnEvent=new MuleApplicationEvent("MuleEvent from a spring bean","vm://testBean2");
       MuleApplicationEvent e=(MuleApplicationEvent)o;
       e.getApplicationContext().publishEvent(returnEvent);
       if (eventCounter1.incrementAndGet() == NUMBER_OF_MESSAGES) {
@@ -18,7 +18,7 @@
   assertNotNull(bean2);
   Latch whenFinished2=new Latch();
   bean2.setEventCallback(new CountingEventCallback(eventCounter2,NUMBER_OF_MESSAGES,whenFinished2));
-  this.doSend("vm://event.multicaster","Test Spring Event",NUMBER_OF_MESSAGES);
+  this.doSend("vm://event.multicaster","Test Spring MuleEvent",NUMBER_OF_MESSAGES);
   whenFinished1.await(3000,TimeUnit.MILLISECONDS);
   whenFinished2.await(3000,TimeUnit.MILLISECONDS);
   assertEquals(NUMBER_OF_MESSAGES,eventCounter1.get());

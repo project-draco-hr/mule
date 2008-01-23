@@ -1,0 +1,46 @@
+{
+  event.setSynchronous(false);
+  event.getMessage().setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
+  event=OptimizedRequestContext.criticalSetEvent(event);
+  ImmutableEndpoint endpoint=event.getEndpoint();
+  if (endpoint.getSecurityFilter() != null) {
+    try {
+      endpoint.getSecurityFilter().authenticate(event);
+    }
+ catch (    org.mule.api.security.SecurityException e) {
+      logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+      connector.fireNotification(new SecurityNotification(e,SecurityNotification.ADMIN_EVENT_ACTION_START_RANGE));
+      connector.handleException(e);
+      return;
+    }
+catch (    MuleException e) {
+      disposeAndLogException();
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+    }
+  }
+  try {
+    Transaction tx=TransactionCoordination.getInstance().getTransaction();
+    if (isDoThreading() && !event.isSynchronous() && tx == null) {
+      workManager.scheduleWork(new Worker(event),WorkManager.INDEFINITE,null,connector);
+    }
+ else {
+      connectionStrategy.connect(this);
+      doDispatch(event);
+      if (connector.isEnableMessageEvents()) {
+        String component=null;
+        if (event.getComponent() != null) {
+          component=event.getComponent().getName();
+        }
+        connector.fireNotification(new MessageNotification(event.getMessage(),event.getEndpoint(),component,MessageNotification.MESSAGE_DISPATCHED));
+      }
+    }
+  }
+ catch (  DispatchException e) {
+    disposeAndLogException();
+    throw e;
+  }
+catch (  Exception e) {
+    disposeAndLogException();
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+  }
+}

@@ -1,0 +1,13 @@
+{
+  Registry registry=muleContext.getRegistry();
+  MuleEndpoint endpoint=(MuleEndpoint)registry.lookupEndpointFactory().getOutboundEndpoint(TEST_URL_NOWSDL);
+  endpoint.setProperty("wsdlUrl",TEST_URL_WSDL);
+  MuleMessage message=new DefaultMuleMessage("test1");
+  MuleSession session=new DefaultMuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler());
+  MuleEvent event=new DefaultMuleEvent(message,endpoint,session,true);
+  MuleMessage reply=session.sendEvent(event);
+  assertNotNull(reply);
+  Document response=(Document)reply.getPayload();
+  assertNotNull(response);
+  XMLAssert.assertXpathEvaluatesTo("test1","//*[namespace-uri()='http://applications.external.tck.mule.org' and local-name()='key']",response);
+}

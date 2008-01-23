@@ -1,0 +1,48 @@
+{
+  MuleMessage resultMessage=null;
+  ResponseOutputStream ros=null;
+  if (outputStream != null) {
+    if (outputStream instanceof ResponseOutputStream) {
+      ros=(ResponseOutputStream)outputStream;
+    }
+ else {
+      ros=new ResponseOutputStream(outputStream);
+    }
+  }
+  MuleSession session=new DefaultMuleSession(message,connector.getSessionHandler(),component);
+  MuleEvent muleEvent=new DefaultMuleEvent(message,endpoint,session,synchronous,ros);
+  muleEvent=OptimizedRequestContext.unsafeSetEvent(muleEvent);
+  message=muleEvent.getMessage();
+  boolean authorised=false;
+  if (endpoint.getSecurityFilter() != null) {
+    try {
+      endpoint.getSecurityFilter().authenticate(muleEvent);
+      authorised=true;
+    }
+ catch (    SecurityException e) {
+      logger.warn("Request was made but was not authenticated: " + e.getMessage(),e);
+      connector.fireNotification(new SecurityNotification(e,SecurityNotification.SECURITY_AUTHENTICATION_FAILED));
+      handleException(e);
+      resultMessage=RequestContext.getEvent().getMessage();
+    }
+  }
+ else {
+    authorised=true;
+  }
+  if (authorised) {
+    if (responseEndpoint) {
+      component.getResponseRouter().route(muleEvent);
+      return null;
+    }
+ else {
+      resultMessage=component.getInboundRouter().route(muleEvent);
+    }
+  }
+  if (resultMessage != null) {
+    if (resultMessage.getExceptionPayload() != null) {
+      setExceptionDetails(resultMessage,resultMessage.getExceptionPayload().getException());
+    }
+    resultMessage.applyTransformers(endpoint.getResponseTransformers());
+  }
+  return resultMessage;
+}

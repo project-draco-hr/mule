@@ -1,0 +1,40 @@
+{
+  try {
+    if (sendStream) {
+      PushbackInputStream in=new PushbackInputStream(inputStream);
+      int i=in.read();
+      in.unread(i);
+      MuleMessage umoMessage=new DefaultMuleMessage(connector.getMessageAdapter(in));
+      routeMessage(umoMessage,endpoint.isSynchronous());
+    }
+ else {
+      byte[] inputBuffer=new byte[bufferSize];
+      int len=inputStream.read(inputBuffer);
+      if (len == -1) {
+        return;
+      }
+      StringBuffer fullBuffer=new StringBuffer(bufferSize);
+      while (len > 0) {
+        fullBuffer.append(new String(inputBuffer,0,len));
+        len=0;
+        if (inputStream.available() > 0) {
+          len=inputStream.read(inputBuffer);
+        }
+      }
+      String finalMessageString;
+      int noCRLFLength=fullBuffer.length() - SystemUtils.LINE_SEPARATOR.length();
+      if (fullBuffer.indexOf(SystemUtils.LINE_SEPARATOR,noCRLFLength) != -1) {
+        finalMessageString=fullBuffer.substring(0,noCRLFLength);
+      }
+ else {
+        finalMessageString=fullBuffer.toString();
+      }
+      MuleMessage umoMessage=new DefaultMuleMessage(connector.getMessageAdapter(finalMessageString));
+      routeMessage(umoMessage,endpoint.isSynchronous());
+    }
+    doConnect();
+  }
+ catch (  Exception e) {
+    handleException(e);
+  }
+}

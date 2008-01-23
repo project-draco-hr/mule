@@ -1,0 +1,30 @@
+{
+  if (trans.size() > 1) {
+    TransformerWeighting weighting=null;
+    for (Iterator iterator=trans.iterator(); iterator.hasNext(); ) {
+      Transformer transformer=(Transformer)iterator.next();
+      TransformerWeighting current=new TransformerWeighting(input,output,transformer);
+      if (weighting == null) {
+        weighting=current;
+      }
+ else {
+        int compare=current.compareTo(weighting);
+        if (compare == 1) {
+          weighting=current;
+        }
+ else         if (compare == 0) {
+          if (!weighting.getTransformer().getClass().equals(current.getTransformer().getClass())) {
+            throw new TransformerException(CoreMessages.transformHasMultipleMatches(input,output,current.getTransformer(),weighting.getTransformer()));
+          }
+        }
+      }
+    }
+    return weighting.getTransformer();
+  }
+ else   if (trans.size() == 0) {
+    return null;
+  }
+ else {
+    return (Transformer)trans.get(0);
+  }
+}

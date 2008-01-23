@@ -1,0 +1,49 @@
+{
+  MuleMessage requestMessage=new DefaultMuleMessage(eventContext.transformMessage(),eventContext.getMessage());
+  MuleMessage responseMessage=null;
+  Object builtMessage;
+  if (component.getOutboundRouter().hasEndpoints()) {
+    List endpoints=new ArrayList();
+    for (Iterator iterator=component.getOutboundRouter().getRouters().iterator(); iterator.hasNext(); ) {
+      OutboundRouter router=(OutboundRouter)iterator.next();
+      endpoints.addAll(router.getEndpoints());
+    }
+    for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
+      ImmutableEndpoint endpoint=(ImmutableEndpoint)iterator.next();
+      Object request=requestMessage.getPayload();
+      boolean rsync=eventContext.getMessage().getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,endpoint.isRemoteSync());
+      if (!rsync) {
+        logger.info("Endpoint: " + endpoint + " is not remoteSync enabled. Message builder finishing");
+        if (eventContext.isSynchronous()) {
+          responseMessage=eventContext.sendEvent(requestMessage,endpoint);
+        }
+ else {
+          eventContext.dispatchEvent(requestMessage,endpoint);
+          responseMessage=null;
+        }
+        break;
+      }
+ else {
+        responseMessage=eventContext.sendEvent(requestMessage,endpoint);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Response Message Received from: " + endpoint.getEndpointURI());
+        }
+        if (logger.isTraceEnabled()) {
+          try {
+            logger.trace("Message Payload: \n" + StringMessageUtils.truncate(StringMessageUtils.toString(responseMessage.getPayload()),200,false));
+          }
+ catch (          Exception e) {
+          }
+        }
+        builtMessage=buildMessage(new DefaultMuleMessage(request,requestMessage),responseMessage);
+        responseMessage=new DefaultMuleMessage(builtMessage,responseMessage);
+        requestMessage=new DefaultMuleMessage(responseMessage.getPayload(),responseMessage);
+      }
+    }
+  }
+ else {
+    logger.info("There are currently no endpoints configured on component: " + component.getName());
+  }
+  eventContext.setStopFurtherProcessing(true);
+  return responseMessage;
+}

@@ -1,0 +1,21 @@
+{
+  if (stats.isEnabled()) {
+    stats.incReceivedEventASync();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Component: " + name + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
+  }
+  try {
+    enqueue(event);
+    if (stats.isEnabled()) {
+      stats.incQueuedEvent();
+    }
+  }
+ catch (  Exception e) {
+    FailedToQueueEventException e1=new FailedToQueueEventException(CoreMessages.interruptedQueuingEventFor(this.getName()),event.getMessage(),this,e);
+    handleException(e1);
+  }
+  if (logger.isTraceEnabled()) {
+    logger.trace("MuleEvent added to queue for: " + name);
+  }
+}

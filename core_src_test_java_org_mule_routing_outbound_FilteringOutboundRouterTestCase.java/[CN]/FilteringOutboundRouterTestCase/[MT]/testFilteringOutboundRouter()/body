@@ -1,8 +1,8 @@
 {
   Mock session=MuleTestUtils.getMockSession();
-  OutboundRouterCollection messageRouter=new OutboundRouterCollection();
+  DefaultOutboundRouterCollection messageRouter=new DefaultOutboundRouterCollection();
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
-  UMOEndpoint endpoint1=getTestEndpoint("Test1Provider",UMOEndpoint.ENDPOINT_TYPE_SENDER);
+  Endpoint endpoint1=getTestEndpoint("Test1Provider",Endpoint.ENDPOINT_TYPE_SENDER);
   assertNotNull(endpoint1);
   FilteringOutboundRouter router=new FilteringOutboundRouter();
   PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
@@ -12,18 +12,18 @@
   router.setEndpoints(endpoints);
   assertFalse(router.isUseTemplates());
   assertEquals(filter,router.getFilter());
-  UMOMessage message=new MuleMessage("test event");
+  MuleMessage message=new DefaultMuleMessage("test event");
   assertTrue(router.isMatch(message));
   session.expect("dispatchEvent",C.eq(message,endpoint1));
-  router.route(message,(UMOSession)session.proxy(),false);
+  router.route(message,(MuleSession)session.proxy(),false);
   session.verify();
-  message=new MuleMessage("test event");
+  message=new DefaultMuleMessage("test event");
   session.expectAndReturn("sendEvent",C.eq(message,endpoint1),message);
-  UMOMessage result=router.route(message,(UMOSession)session.proxy(),true);
+  MuleMessage result=router.route(message,(MuleSession)session.proxy(),true);
   assertNotNull(result);
   assertEquals(message,result);
   session.verify();
-  message=new MuleMessage(new Exception("test event"));
+  message=new DefaultMuleMessage(new Exception("test event"));
   assertTrue(!router.isMatch(message));
   router.setTransformers(CollectionUtils.singletonList(new AbstractTransformer(){
     public Object doTransform(    Object src,    String encoding) throws TransformerException {

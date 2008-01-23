@@ -1,30 +1,30 @@
 {
-  UMOImmutableEndpoint serverEndpoint=null;
+  ImmutableEndpoint serverEndpoint=null;
   if (synchronous) {
     serverEndpoint=syncServerEndpoint;
   }
  else {
     serverEndpoint=asyncServerEndpoint;
   }
-  updateContext(new MuleMessage(action),serverEndpoint,synchronous);
+  updateContext(new DefaultMuleMessage(action),serverEndpoint,synchronous);
   ByteArrayOutputStream out=new ByteArrayOutputStream();
   wireFormat.write(out,action,serverEndpoint.getEncoding());
   byte[] payload=out.toByteArray();
-  UMOMessage message=action.getMessage();
+  MuleMessage message=action.getMessage();
   if (message == null) {
-    message=new MuleMessage(payload);
+    message=new DefaultMuleMessage(payload);
   }
  else {
-    message=new MuleMessage(payload,message);
+    message=new DefaultMuleMessage(payload,message);
   }
   message.addProperties(action.getProperties());
-  MuleSession session=new MuleSession(message,((AbstractConnector)serverEndpoint.getConnector()).getSessionHandler());
-  UMOEvent event=new MuleEvent(message,serverEndpoint,session,true);
+  DefaultMuleSession session=new DefaultMuleSession(message,((AbstractConnector)serverEndpoint.getConnector()).getSessionHandler());
+  MuleEvent event=new DefaultMuleEvent(message,serverEndpoint,session,true);
   event.setTimeout(timeout);
   if (logger.isDebugEnabled()) {
-    logger.debug("MuleClient sending remote call to: " + action.getResourceIdentifier() + ". At "+ serverEndpoint.toString()+ " . Event is: "+ event);
+    logger.debug("MuleClient sending remote call to: " + action.getResourceIdentifier() + ". At "+ serverEndpoint.toString()+ " . MuleEvent is: "+ event);
   }
-  UMOMessage result;
+  MuleMessage result;
   try {
     if (synchronous) {
       result=serverEndpoint.send(event);
@@ -46,7 +46,7 @@
         if (response instanceof AdminNotification) {
           response=((AdminNotification)response).getMessage();
         }
-        return (UMOMessage)response;
+        return (MuleMessage)response;
       }
     }
   }

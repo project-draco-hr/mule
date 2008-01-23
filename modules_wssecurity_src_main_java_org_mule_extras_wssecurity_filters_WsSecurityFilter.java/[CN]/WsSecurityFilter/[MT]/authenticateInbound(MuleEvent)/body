@@ -1,0 +1,88 @@
+{
+  Map properties=event.getSession().getComponent().getProperties();
+  if (properties.containsKey("xfire")) {
+    XFire server=(XFire)properties.get("xfire");
+    String pathInfo=event.getEndpoint().getEndpointURI().getPath();
+    String serviceName;
+    int i=pathInfo.lastIndexOf('/');
+    if (i > -1) {
+      serviceName=pathInfo.substring(i + 1);
+    }
+ else {
+      serviceName=pathInfo;
+    }
+    Service service=server.getServiceRegistry().getService(serviceName);
+    XFireConnector connector=null;
+    Collection objs=RegistryContext.getRegistry().lookupObjects(Connector.class);
+    Iterator it=objs.iterator();
+    while (it.hasNext()) {
+      Object obj=it.next();
+      if (obj instanceof XFireConnector) {
+        if (connector == null) {
+          connector=(XFireConnector)obj;
+        }
+ else {
+          logger.warn("More than one XFire connector found, only one expected");
+        }
+      }
+    }
+    if (connector != null) {
+      Object[] outhandlers=service.getOutHandlers().toArray();
+      for (i=0; i < outhandlers.length; i++) {
+        if (outhandlers[i] instanceof DOMOutHandler) {
+          connector.getClientOutHandlers().remove(i);
+        }
+        if (outhandlers[i] instanceof WSS4JOutHandler) {
+          connector.getClientOutHandlers().remove(i);
+        }
+      }
+      Object[] handlers=service.getInHandlers().toArray();
+      boolean isDomInHandlerPresent=false;
+      boolean isWss4jInHandlerPresent=false;
+      for (i=0; i < handlers.length; i++) {
+        if (handlers[i] instanceof DOMInHandler) {
+          isDomInHandlerPresent=true;
+        }
+        if (handlers[i] instanceof MuleWSSInHandler) {
+          isWss4jInHandlerPresent=true;
+        }
+      }
+      if (!isDomInHandlerPresent) {
+        service.addInHandler(new DOMInHandler());
+      }
+      if (!isWss4jInHandlerPresent) {
+        service.addInHandler(new MuleWSSInHandler());
+      }
+      Properties props=new Properties();
+      if (event.getMessage().getProperty("action") != null) {
+        props.putAll(getProperties(event));
+      }
+      if (!props.isEmpty()) {
+        Object[] keys=props.keySet().toArray();
+        for (i=0; i < keys.length; i++) {
+          service.setProperty((String)keys[i],props.getProperty((String)keys[i]));
+        }
+      }
+    }
+  }
+ else   if (properties.containsKey(AxisConnector.AXIS)) {
+    AxisServer server=(AxisServer)event.getSession().getComponent().getProperties().get(AxisConnector.AXIS);
+    MuleConfigProvider provider=(MuleConfigProvider)server.getConfig();
+    String prefix=event.getEndpoint().getProtocol() + ":";
+    String serviceName=event.getEndpoint().getName().substring(prefix.length());
+    SOAPService soapService;
+    try {
+      soapService=provider.getService(new QName(serviceName));
+      Hashtable options=new Hashtable();
+      if (event.getMessage().getProperty("action") != null) {
+        options.putAll(getProperties(event));
+        soapService.setPropertyParent(options);
+        Handler inHandler=new WSDoAllReceiver();
+        provider.setGlobalRequest(inHandler);
+      }
+    }
+ catch (    ConfigurationException e) {
+      throw new UnsupportedAuthenticationSchemeException(MessageFactory.createStaticMessage("A Configurtation Exception occured while configuring WS-Security on Axis "),new DefaultMuleMessage(e.getMessage()));
+    }
+  }
+}

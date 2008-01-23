@@ -1,0 +1,29 @@
+{
+  if (getEndpoint() == null) {
+    throw new ComponentRoutingException(CoreMessages.noCatchAllEndpointSet(),message,getEndpoint(),session.getComponent());
+  }
+  try {
+    ImmutableEndpoint endpoint=getEndpoint();
+    if (sendTransformed && endpoint.getTransformers() != null) {
+      message.applyTransformers(endpoint.getTransformers());
+    }
+    MuleEvent newEvent=new DefaultMuleEvent(message,endpoint,session,synchronous);
+    if (synchronous) {
+      MuleMessage result=endpoint.send(newEvent);
+      if (statistics != null) {
+        statistics.incrementRoutedMessage(getEndpoint());
+      }
+      return result;
+    }
+ else {
+      endpoint.dispatch(newEvent);
+      if (statistics != null) {
+        statistics.incrementRoutedMessage(getEndpoint());
+      }
+      return null;
+    }
+  }
+ catch (  Exception e) {
+    throw new RoutingException(message,getEndpoint(),e);
+  }
+}

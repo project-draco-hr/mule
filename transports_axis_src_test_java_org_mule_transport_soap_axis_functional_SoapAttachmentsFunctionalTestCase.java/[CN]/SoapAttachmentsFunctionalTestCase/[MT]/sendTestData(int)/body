@@ -1,0 +1,17 @@
+{
+  ImmutableEndpoint ep=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint("axis:http://localhost:60198/mule/services/testComponent?method=receiveMessageWithAttachments");
+  AxisMessageDispatcher client=new AxisMessageDispatcher(ep);
+  for (int i=0; i < iterations; i++) {
+    MuleMessage msg=new DefaultMuleMessage("testPayload");
+    File tempFile=File.createTempFile("test",".att");
+    tempFile.deleteOnExit();
+    msg.addAttachment("testAttachment",new DataHandler(new FileDataSource(tempFile)));
+    DefaultMuleSession session=new DefaultMuleSession(msg,((AbstractConnector)ep.getConnector()).getSessionHandler());
+    DefaultMuleEvent event=new DefaultMuleEvent(msg,ep,session,true);
+    MuleMessage result=client.send(event);
+    assertNotNull(result);
+    assertNotNull(result.getPayload());
+    assertEquals(result.getPayloadAsString(),"Done");
+    callbackCount++;
+  }
+}

@@ -1,0 +1,17 @@
+{
+  if (serviceFactory == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Component " + name + " has not been initialized properly, no serviceFactory."),this);
+  }
+  Object component;
+  try {
+    component=serviceFactory.getOrCreate();
+    if (component instanceof ComponentAware) {
+      ((ComponentAware)component).setComponent(this);
+    }
+  }
+ catch (  Exception e) {
+    throw new LifecycleException(MessageFactory.createStaticMessage("Unable to create instance of POJO service"),e,this);
+  }
+  fireInitialisationCallbacks(component);
+  return component;
+}

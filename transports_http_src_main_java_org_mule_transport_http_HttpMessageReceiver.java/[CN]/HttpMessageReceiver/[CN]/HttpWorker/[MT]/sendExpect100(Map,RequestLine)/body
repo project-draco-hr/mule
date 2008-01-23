@@ -1,0 +1,12 @@
+{
+  if (HttpConstants.HTTP11.equals(headers.get(HttpConnector.HTTP_VERSION_PROPERTY))) {
+    String expectHeaderValue=ObjectUtils.toString(headers.get(HttpConstants.HEADER_EXPECT)).toLowerCase();
+    if (HttpConstants.HEADER_EXPECT_CONTINUE_REQUEST_VALUE.equals(expectHeaderValue)) {
+      HttpResponse expected=new HttpResponse();
+      expected.setStatusLine(requestLine.getHttpVersion(),HttpConstants.SC_CONTINUE);
+      final DefaultMuleEvent event=new DefaultMuleEvent(new DefaultMuleMessage(expected),endpoint,new DefaultMuleSession(component),true);
+      RequestContext.setEvent(event);
+      conn.writeResponse(transformResponse(expected));
+    }
+  }
+}

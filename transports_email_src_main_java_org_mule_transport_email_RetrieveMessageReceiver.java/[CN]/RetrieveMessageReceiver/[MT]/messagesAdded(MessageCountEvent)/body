@@ -1,0 +1,35 @@
+{
+  Message messages[]=event.getMessages();
+  if (messages != null) {
+    MuleMessage message=null;
+    for (int i=0; i < messages.length; i++) {
+      try {
+        if (!messages[i].getFlags().contains(Flags.Flag.DELETED)) {
+          MimeMessage mimeMessage=new MimeMessage((MimeMessage)messages[i]);
+          storeMessage(mimeMessage);
+          message=new DefaultMuleMessage(castConnector().getMessageAdapter(mimeMessage));
+          if (castConnector().isDeleteReadMessages()) {
+            messages[i].setFlag(Flags.Flag.DELETED,true);
+          }
+ else {
+            messages[i].setFlag(Flags.Flag.SEEN,true);
+          }
+          routeMessage(message,endpoint.isSynchronous());
+        }
+      }
+ catch (      MuleException e) {
+        handleException(e);
+      }
+catch (      Exception e) {
+        Exception forwarded;
+        if (message != null) {
+          forwarded=new RoutingException(EmailMessages.routingError(),message,endpoint,e);
+        }
+ else {
+          forwarded=new ReceiveException(endpoint,-1,e);
+        }
+        handleException(forwarded);
+      }
+    }
+  }
+}

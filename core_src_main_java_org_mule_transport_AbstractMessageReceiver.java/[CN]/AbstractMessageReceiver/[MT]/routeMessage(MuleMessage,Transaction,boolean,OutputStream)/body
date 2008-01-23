@@ -1,0 +1,29 @@
+{
+  if (connector.isEnableMessageEvents()) {
+    connector.fireNotification(new MessageNotification(message,endpoint,component.getName(),MessageNotification.MESSAGE_RECEIVED));
+  }
+  if (endpoint.isRemoteSync()) {
+    message.setBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,true);
+  }
+  if (message.getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,false)) {
+    synchronous=true;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Message Received from: " + endpoint.getEndpointURI());
+  }
+  if (logger.isTraceEnabled()) {
+    try {
+      logger.trace("Message Payload: \n" + StringMessageUtils.truncate(StringMessageUtils.toString(message.getPayload()),200,false));
+    }
+ catch (    Exception e) {
+    }
+  }
+  if (endpoint.getFilter() != null) {
+    if (!endpoint.getFilter().accept(message)) {
+      message=handleUnacceptedFilter(message);
+      RequestContext.setEvent(new DefaultMuleEvent(message,endpoint,new DefaultMuleSession(message,new NullSessionHandler()),synchronous));
+      return message;
+    }
+  }
+  return listener.onMessage(message,trans,synchronous,outputStream);
+}

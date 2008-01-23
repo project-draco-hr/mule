@@ -1,0 +1,31 @@
+{
+  this.checkDisposed();
+  if (!this.isStarted()) {
+    if (!this.isConnected()) {
+      startOnConnect.set(true);
+      connectionStrategy.connect(this);
+      return;
+    }
+    if (logger.isInfoEnabled()) {
+      logger.info("Starting: " + this);
+    }
+    ScheduledExecutorService currentScheduler=(ScheduledExecutorService)scheduler.get();
+    if (currentScheduler == null || currentScheduler.isShutdown()) {
+      scheduler.set(this.getScheduler());
+    }
+    this.doStart();
+    started.set(true);
+    if (receivers != null) {
+      for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
+        MessageReceiver mr=(MessageReceiver)iterator.next();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Starting receiver on endpoint: " + mr.getEndpoint().getEndpointURI());
+        }
+        mr.start();
+      }
+    }
+    if (logger.isInfoEnabled()) {
+      logger.info("Started: " + this);
+    }
+  }
+}

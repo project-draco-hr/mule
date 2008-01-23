@@ -1,0 +1,27 @@
+{
+  try {
+    Object result=callable.onCall(RequestContext.getEventContext());
+    MuleMessage returnMessage=null;
+    if (result instanceof MuleMessage) {
+      returnMessage=(MuleMessage)result;
+    }
+ else {
+      returnMessage=new DefaultMuleMessage(result,event.getMessage());
+    }
+    if (!event.isStopFurtherProcessing()) {
+      if (outboundRouter.hasEndpoints()) {
+        MuleMessage outboundReturnMessage=outboundRouter.route(returnMessage,event.getSession(),event.isSynchronous());
+        if (outboundReturnMessage != null) {
+          returnMessage=outboundReturnMessage;
+        }
+      }
+ else {
+        logger.debug("Outbound router on component '" + name + "' doesn't have any endpoints configured.");
+      }
+    }
+    return returnMessage;
+  }
+ catch (  Exception e) {
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+  }
+}

@@ -1,0 +1,23 @@
+{
+  logger.debug("DefaultEndpointFactory request for endpoint of type: " + type + ", for uri: "+ uri);
+  EndpointBuilder endpointBuilder=null;
+  if (uri.getEndpointName() != null) {
+    endpointBuilder=lookupEndpointBuilder(uri.getEndpointName());
+    if (endpointBuilder == null) {
+      throw new IllegalArgumentException("The endpoint with name: " + uri.getEndpointName() + "was not found.");
+    }
+  }
+ else {
+    logger.debug("Named EndpointBuilder not found, creating endpoint from uri");
+    endpointBuilder=new EndpointURIEndpointBuilder(uri,muleContext);
+  }
+  if (ImmutableEndpoint.ENDPOINT_TYPE_RECEIVER.equals(type)) {
+    return getInboundEndpoint(endpointBuilder);
+  }
+ else   if (ImmutableEndpoint.ENDPOINT_TYPE_SENDER.equals(type)) {
+    return getOutboundEndpoint(endpointBuilder);
+  }
+ else {
+    throw new IllegalArgumentException("The endpoint type: " + type + "is not recognized.");
+  }
+}

@@ -1,0 +1,43 @@
+{
+  String encoding=null;
+  Object payload=src;
+  MessageAdapter adapter=null;
+  if (src instanceof MessageAdapter) {
+    encoding=((MessageAdapter)src).getEncoding();
+    adapter=(MessageAdapter)src;
+    if ((!isSourceTypeSupported(MessageAdapter.class,true) && !isSourceTypeSupported(MuleMessage.class,true) && !(this instanceof AbstractMessageAwareTransformer))) {
+      src=((MessageAdapter)src).getPayload();
+      payload=adapter.getPayload();
+    }
+  }
+  if (encoding == null && endpoint != null) {
+    encoding=endpoint.getEncoding();
+  }
+ else   if (encoding == null) {
+    encoding=FileUtils.DEFAULT_ENCODING;
+  }
+  Class srcCls=src.getClass();
+  if (!isSourceTypeSupported(srcCls)) {
+    if (ignoreBadInput) {
+      logger.debug("Source type is incompatible with this transformer and property 'ignoreBadInput' is set to true, so the transformer chain will continue.");
+      return payload;
+    }
+ else {
+      throw new TransformerException(CoreMessages.transformOnObjectUnsupportedTypeOfEndpoint(this.getName(),payload.getClass(),endpoint),this);
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Applying transformer " + getName() + " ("+ getClass().getName()+ ")");
+    logger.debug("Object before transform: " + StringMessageUtils.truncate(StringMessageUtils.toString(payload),DEFAULT_TRUNCATE_LENGTH,false));
+  }
+  Object result;
+  result=doTransform(payload,encoding);
+  if (result == null) {
+    result=NullPayload.getInstance();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Object after transform: " + StringMessageUtils.truncate(StringMessageUtils.toString(result),DEFAULT_TRUNCATE_LENGTH,false));
+  }
+  result=checkReturnClass(result);
+  return result;
+}

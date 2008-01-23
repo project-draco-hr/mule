@@ -1,0 +1,22 @@
+{
+  MessageAdapter messageAdapter=receiver.getConnector().getMessageAdapter(args);
+  messageAdapter.setProperty(MuleProperties.MULE_METHOD_PROPERTY,method);
+  messageAdapter.addProperties(AxisCleanAndAddProperties.cleanAndAdd(RequestContext.getEventContext()));
+  MuleMessage message=receiver.routeMessage(new DefaultMuleMessage(messageAdapter),synchronous);
+  if (message != null) {
+    ExceptionPayload wsException=message.getExceptionPayload();
+    if (wsException != null) {
+      MuleException umoException=ExceptionHelper.getRootMuleException(wsException.getException());
+      if (umoException.getCause() != null) {
+        throw umoException.getCause();
+      }
+ else {
+        throw umoException;
+      }
+    }
+    return message.getPayload();
+  }
+ else {
+    return null;
+  }
+}

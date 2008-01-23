@@ -1,0 +1,17 @@
+{
+  boolean registered=false;
+  if (component.getInboundRouter() == null) {
+    component.setInboundRouter(new DefaultInboundRouterCollection());
+  }
+  for (Iterator routers=component.getInboundRouter().getRouters().iterator(); routers.hasNext(); ) {
+    InboundRouter router=(InboundRouter)routers.next();
+    if (router instanceof InboundPassThroughRouter) {
+      component.getInboundRouter().removeRouter(router);
+    }
+    registered=registered || router instanceof ForwardingConsumer;
+  }
+  if (!registered) {
+    component.getInboundRouter().addRouter(new ForwardingConsumer());
+  }
+  component.getInboundRouter().setMatchAll(true);
+}

@@ -1,0 +1,22 @@
+{
+  MuleMessage result=null;
+  if (routers.size() == 0) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("There are no routers configured on the response router. Returning the current message");
+    }
+    result=message;
+  }
+ else {
+    ResponseRouter router;
+    for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
+      router=(ResponseRouter)iterator.next();
+      result=router.getResponse(message);
+    }
+    if (result == null) {
+      if (getStatistics().isEnabled()) {
+        getStatistics().incrementNoRoutedMessage();
+      }
+    }
+  }
+  return result;
+}

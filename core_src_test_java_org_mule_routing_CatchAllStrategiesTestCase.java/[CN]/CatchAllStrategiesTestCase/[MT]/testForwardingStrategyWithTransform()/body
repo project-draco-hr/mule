@@ -2,10 +2,10 @@
   ForwardingCatchAllStrategy strategy=new ForwardingCatchAllStrategy();
   strategy.setSendTransformed(true);
   Mock endpoint=MuleTestUtils.getMockEndpoint();
-  Mock dispatcher=new Mock(UMOMessageDispatcher.class);
+  Mock dispatcher=new Mock(MessageDispatcher.class);
   Mock connector=MuleTestUtils.getMockConnector();
-  UMOEvent event=getTestEvent("UncaughtEvent");
-  strategy.setEndpoint((UMOEndpoint)endpoint.proxy());
+  MuleEvent event=getTestEvent("UncaughtEvent");
+  strategy.setEndpoint((Endpoint)endpoint.proxy());
   endpoint.expectAndReturn("getTransformers",CollectionUtils.singletonList(new TestEventTransformer()));
   endpoint.expectAndReturn("getTransformers",CollectionUtils.singletonList(new TestEventTransformer()));
   endpoint.expectAndReturn("getProperties",new HashMap());
@@ -14,8 +14,8 @@
   endpoint.expectAndReturn("getEndpointURI",new MuleEndpointURI("test://dummy"));
   endpoint.expect("send",new Constraint(){
     public boolean eval(    Object arg0){
-      if (arg0 instanceof UMOEvent) {
-        return "Transformed Test Data".equals(((UMOEvent)arg0).getMessage().getPayload());
+      if (arg0 instanceof MuleEvent) {
+        return "Transformed Test Data".equals(((MuleEvent)arg0).getMessage().getPayload());
       }
       return false;
     }

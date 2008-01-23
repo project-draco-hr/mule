@@ -1,0 +1,39 @@
+{
+  CxfMessageReceiver cxfReceiver=(CxfMessageReceiver)receiver;
+  Server server=cxfReceiver.getServer();
+  SedaComponent c=new SedaComponent();
+  c.setName(CXF_SERVICE_COMPONENT_NAME + server.getEndpoint().getService().getName() + c.hashCode());
+  c.setModel(muleContext.getRegistry().lookupSystemModel());
+  CxfServiceComponent svcComponent=new CxfServiceComponent((CxfMessageReceiver)receiver);
+  svcComponent.setBus(bus);
+  SingletonObjectFactory of=new SingletonObjectFactory(svcComponent);
+  of.setComponent(c);
+  of.initialise();
+  c.setServiceFactory(of);
+  String endpoint=receiver.getEndpointURI().getAddress();
+  String scheme=ep.getScheme().toLowerCase();
+  boolean sync=receiver.getEndpoint().isSynchronous();
+  if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")|| scheme.equals("servlet")) {
+    receiver.getEndpoint().getProperties().put(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
+    receiver.getEndpoint().getProperties().put(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+  }
+  QName serviceName=server.getEndpoint().getEndpointInfo().getName();
+  EndpointBuilder serviceEndpointbuilder=new EndpointURIEndpointBuilder(endpoint,muleContext);
+  serviceEndpointbuilder.setSynchronous(sync);
+  serviceEndpointbuilder.setName(ep.getScheme() + ":" + serviceName.getLocalPart());
+  serviceEndpointbuilder.setTransformers(receiver.getEndpoint().getTransformers());
+  serviceEndpointbuilder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers());
+  serviceEndpointbuilder.setFilter(receiver.getEndpoint().getFilter());
+  serviceEndpointbuilder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
+  EndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(receiver.getEndpoint(),muleContext);
+  receiverEndpointBuilder.setTransformers(TransformerUtils.UNDEFINED);
+  receiverEndpointBuilder.setResponseTransformers(TransformerUtils.UNDEFINED);
+  receiverEndpointBuilder.setFilter(null);
+  receiverEndpointBuilder.setSecurityFilter(null);
+  ImmutableEndpoint serviceEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(serviceEndpointbuilder);
+  ImmutableEndpoint receiverEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
+  receiver.setEndpoint(receiverEndpoint);
+  c.setInboundRouter(new DefaultInboundRouterCollection());
+  c.getInboundRouter().addEndpoint(serviceEndpoint);
+  components.add(c);
+}

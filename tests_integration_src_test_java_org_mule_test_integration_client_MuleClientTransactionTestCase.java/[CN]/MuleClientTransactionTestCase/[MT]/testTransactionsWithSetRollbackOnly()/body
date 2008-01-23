@@ -7,11 +7,11 @@
   }
   MuleTransactionConfig tc=new MuleTransactionConfig();
   tc.setFactory(new JmsTransactionFactory());
-  tc.setAction(UMOTransactionConfig.ACTION_ALWAYS_BEGIN);
-  UMOEndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder("jms://test.queue",muleContext);
+  tc.setAction(TransactionConfig.ACTION_ALWAYS_BEGIN);
+  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder("jms://test.queue",muleContext);
   endpointBuilder.setTransactionConfig(tc);
   endpointBuilder.setName("TransactedTest.Queue");
-  UMOImmutableEndpoint inboundEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
+  ImmutableEndpoint inboundEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
   client.getMuleContext().getRegistry().registerEndpoint(inboundEndpoint);
   TransactionTemplate tt=new TransactionTemplate(tc,null,muleContext);
   tt.execute(new TransactionCallback(){
@@ -19,13 +19,13 @@
       for (int i=0; i < 100; i++) {
         client.send("TransactedTest.Queue","Test Client Dispatch message " + i,props);
       }
-      UMOTransaction tx=TransactionCoordination.getInstance().getTransaction();
+      Transaction tx=TransactionCoordination.getInstance().getTransaction();
       assertNotNull(tx);
       tx.setRollbackOnly();
       return null;
     }
   }
 );
-  UMOMessage result=client.request("jms://replyTo.queue",2000);
+  MuleMessage result=client.request("jms://replyTo.queue",2000);
   assertNull(result);
 }

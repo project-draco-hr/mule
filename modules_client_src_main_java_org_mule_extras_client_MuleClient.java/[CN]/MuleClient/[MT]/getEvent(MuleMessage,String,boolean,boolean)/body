@@ -1,0 +1,17 @@
+{
+  ImmutableEndpoint endpoint=getOutboundEndpoint(uri);
+  if (!endpoint.getConnector().isStarted() && muleContext.isStarted()) {
+    endpoint.getConnector().start();
+  }
+  try {
+    DefaultMuleSession session=new DefaultMuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler());
+    if (user != null) {
+      message.setProperty(MuleProperties.MULE_USER_PROPERTY,MuleCredentials.createHeader(user.getUsername(),user.getPassword()));
+    }
+    DefaultMuleEvent event=new DefaultMuleEvent(message,endpoint,session,synchronous);
+    return event;
+  }
+ catch (  Exception e) {
+    throw new DispatchException(CoreMessages.failedToCreate("Client event"),message,endpoint,e);
+  }
+}

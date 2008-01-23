@@ -1,20 +1,20 @@
 {
   Mock session=MuleTestUtils.getMockSession();
-  UMOMessage message=new MuleMessage(payload);
+  MuleMessage message=new DefaultMuleMessage(payload);
   assertTrue(xmlSplitter.isMatch(message));
   final RoundRobinXmlSplitterTestCase.ItemNodeConstraint itemNodeConstraint=new RoundRobinXmlSplitterTestCase.ItemNodeConstraint();
   session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint1)));
   session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint2)));
   session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint3)));
   session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint1)));
-  xmlSplitter.route(message,(UMOSession)session.proxy(),false);
+  xmlSplitter.route(message,(MuleSession)session.proxy(),false);
   session.verify();
-  message=new MuleMessage(payload);
+  message=new DefaultMuleMessage(payload);
   session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint1)),message);
   session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint2)),message);
   session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint3)),message);
   session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint1)),message);
-  UMOMessage result=xmlSplitter.route(message,(UMOSession)session.proxy(),true);
+  MuleMessage result=xmlSplitter.route(message,(MuleSession)session.proxy(),true);
   assertNotNull(result);
   assertEquals(message,result);
   session.verify();

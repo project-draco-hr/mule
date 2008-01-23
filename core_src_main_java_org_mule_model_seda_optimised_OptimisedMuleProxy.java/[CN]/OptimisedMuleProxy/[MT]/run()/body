@@ -1,0 +1,44 @@
+{
+  if (logger.isTraceEnabled()) {
+    logger.trace("MuleProxy: async onEvent for Mule UMO " + component.getName());
+  }
+  try {
+    if (event.getEndpoint().canRequest()) {
+      event=RequestContext.setEvent(event);
+      long startTime=0;
+      if (stat.isEnabled()) {
+        startTime=System.currentTimeMillis();
+      }
+      MuleMessage result=invokeUmo(RequestContext.getEventContext());
+      if (stat.isEnabled()) {
+        stat.addExecutionTime(System.currentTimeMillis() - startTime);
+      }
+      event=RequestContext.getEvent();
+      if (result != null && !event.isStopFurtherProcessing()) {
+        component.getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
+      }
+    }
+ else {
+      event.getEndpoint().dispatch(event);
+    }
+    if (stat.isEnabled()) {
+      stat.incSentEventASync();
+    }
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof MuleException) {
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(component.getName()),event.getMessage(),e));
+    }
+  }
+ finally {
+    try {
+    }
+ catch (    Exception e2) {
+      logger.error("Failed to return proxy: " + e2.getMessage(),e2);
+    }
+  }
+}

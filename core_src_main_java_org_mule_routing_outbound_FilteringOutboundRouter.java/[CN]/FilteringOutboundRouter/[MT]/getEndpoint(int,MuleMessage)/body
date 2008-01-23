@@ -1,0 +1,32 @@
+{
+  if (!useTemplates) {
+    return (ImmutableEndpoint)endpoints.get(index);
+  }
+ else {
+    ImmutableEndpoint ep=(ImmutableEndpoint)endpoints.get(index);
+    String uri=ep.getEndpointURI().toString();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Uri before parsing is: " + uri);
+    }
+    Map props=new HashMap();
+    props.putAll(ep.getProperties());
+    for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
+      String propertyKey=(String)iterator.next();
+      props.put(propertyKey,message.getProperty(propertyKey));
+    }
+    String newUriString=parser.parse(props,uri);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Uri after parsing is: " + uri);
+    }
+    try {
+      EndpointURI newUri=new MuleEndpointURI(newUriString);
+      if (!newUri.getScheme().equalsIgnoreCase(ep.getEndpointURI().getScheme())) {
+        throw new CouldNotRouteOutboundMessageException(CoreMessages.schemeCannotChangeForRouter(ep.getEndpointURI().getScheme(),newUri.getScheme()),message,ep);
+      }
+      return new DynamicEndpointURIEndpoint(ep,newUri);
+    }
+ catch (    EndpointException e) {
+      throw new CouldNotRouteOutboundMessageException(CoreMessages.templateCausedMalformedEndpoint(uri,newUriString),message,ep,e);
+    }
+  }
+}

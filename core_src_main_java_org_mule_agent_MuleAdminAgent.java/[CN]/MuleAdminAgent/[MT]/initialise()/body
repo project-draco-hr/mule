@@ -1,0 +1,38 @@
+{
+  if (wireFormat == null) {
+    wireFormat=new SerializationWireFormat();
+  }
+  try {
+    if (StringUtils.isEmpty(serverUri)) {
+      logger.warn("No serverUriUrl specified, MuleAdminAgent will not start. E.g. use " + "<mule:admin-agent serverUri=\"tcp://example.com:60504\"/> ");
+      muleContext.getRegistry().unregisterAgent(this.getName());
+      return;
+    }
+    if (muleContext.getRegistry().lookupComponent(MuleManagerComponent.MANAGER_COMPONENT_NAME) != null) {
+      logger.info("Mule manager component has already been initialised, ignoring server url");
+    }
+ else {
+      if (muleContext.getRegistry().lookupConnector(DEFAULT_MANAGER_ENDPOINT) != null) {
+        throw new AlreadyInitialisedException("Server Components",this);
+      }
+      EndpointBuilder endpointBuilder=muleContext.getRegistry().lookupEndpointBuilder(serverUri);
+      if (endpointBuilder == null) {
+        EndpointURI uri=new MuleEndpointURI(serverUri);
+        endpointBuilder=new EndpointURIEndpointBuilder(uri,muleContext);
+        endpointBuilder.setSynchronous(true);
+        Connector connector=TransportFactory.getOrCreateConnectorByProtocol(uri,muleContext);
+        if (muleContext.getRegistry().lookupConnector(connector.getName()) == null) {
+          connector.setName(DEFAULT_MANAGER_ENDPOINT);
+          muleContext.getRegistry().registerConnector(connector);
+        }
+        endpointBuilder.setConnector(connector);
+      }
+      logger.info("Registering Admin listener on: " + serverUri);
+      Component component=MuleManagerComponent.getComponent(endpointBuilder,wireFormat,RegistryContext.getConfiguration().getDefaultEncoding(),RegistryContext.getConfiguration().getDefaultSynchronousEventTimeout(),muleContext);
+      muleContext.getRegistry().registerComponent(component);
+    }
+  }
+ catch (  MuleException e) {
+    throw new InitialisationException(e,this);
+  }
+}

@@ -1,0 +1,23 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Attempting to route event: " + event.getId());
+  }
+  if (filter == null) {
+    return true;
+  }
+  MuleMessage message=event.getMessage();
+  if (transformFirst) {
+    try {
+      Object payload=event.transformMessage();
+      message=new DefaultMuleMessage(payload,message);
+    }
+ catch (    TransformerException e) {
+      throw new RoutingException(CoreMessages.transformFailedBeforeFilter(),event.getMessage(),event.getEndpoint(),e);
+    }
+  }
+  boolean result=filter.accept(message);
+  if (logger.isDebugEnabled()) {
+    logger.debug("MuleEvent " + event.getId() + (result ? " passed filter " : " did not pass filter ")+ filter.getClass().getName());
+  }
+  return result;
+}

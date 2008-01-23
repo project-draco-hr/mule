@@ -1,0 +1,25 @@
+{
+  EndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+  event.transformMessage();
+  if (endpointUri == null) {
+    throw new DispatchException(CoreMessages.objectIsNull("Endpoint"),event.getMessage(),event.getEndpoint());
+  }
+  if (connector.isQueueEvents()) {
+    QueueSession session=connector.getQueueSession();
+    Queue queue=session.getQueue(endpointUri.getAddress());
+    queue.put(event.getMessage());
+  }
+ else {
+    VMMessageReceiver receiver=connector.getReceiver(event.getEndpoint().getEndpointURI());
+    if (receiver == null) {
+      logger.warn("No receiver for endpointUri: " + event.getEndpoint().getEndpointURI());
+      return;
+    }
+    MuleMessage message=event.getMessage();
+    connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),message);
+    receiver.onMessage(message);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("dispatched MuleEvent on endpointUri: " + endpointUri);
+  }
+}

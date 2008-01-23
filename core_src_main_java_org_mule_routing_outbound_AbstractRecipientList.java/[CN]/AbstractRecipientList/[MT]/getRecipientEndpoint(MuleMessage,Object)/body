@@ -1,0 +1,22 @@
+{
+  ImmutableEndpoint endpoint=null;
+  try {
+    if (recipient instanceof EndpointURI) {
+      endpoint=getRecipientEndpointFromUri((EndpointURI)recipient);
+    }
+ else     if (recipient instanceof String) {
+      endpoint=getRecipientEndpointFromString(message,(String)recipient);
+    }
+    if (null == endpoint) {
+      throw new RegistrationException("Failed to create endpoint for: " + recipient);
+    }
+    ImmutableEndpoint existingEndpoint=(ImmutableEndpoint)recipientCache.putIfAbsent(recipient,endpoint);
+    if (existingEndpoint != null) {
+      endpoint=existingEndpoint;
+    }
+  }
+ catch (  MuleException e) {
+    throw new RoutingException(message,endpoint,e);
+  }
+  return endpoint;
+}

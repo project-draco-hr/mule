@@ -1,0 +1,22 @@
+{
+  Object payload=event.transformMessage();
+  Object[] args;
+  if (payload instanceof Object[]) {
+    args=(Object[])payload;
+  }
+ else {
+    args=new Object[]{payload};
+  }
+  MuleMessage message=event.getMessage();
+  Set attachmentNames=message.getAttachmentNames();
+  if (attachmentNames != null && !attachmentNames.isEmpty()) {
+    List attachments=new ArrayList();
+    for (Iterator i=attachmentNames.iterator(); i.hasNext(); ) {
+      attachments.add(message.getAttachment((String)i.next()));
+    }
+    List temp=new ArrayList(Arrays.asList(args));
+    temp.add(attachments.toArray(new DataHandler[0]));
+    args=temp.toArray();
+  }
+  return args;
+}

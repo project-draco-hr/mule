@@ -1,0 +1,12 @@
+{
+  EndpointURI uri=endpoint.getEndpointURI();
+  String failedPath=uri.getScheme() + "://" + uri.getHost()+ ":"+ uri.getPort()+ getRequestPath(message);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Failed to bind to " + failedPath);
+  }
+  HttpResponse response=new HttpResponse();
+  response.setStatusLine(requestLine.getHttpVersion(),HttpConstants.SC_NOT_FOUND);
+  response.setBodyString(HttpMessages.cannotBindToAddress(failedPath).toString());
+  RequestContext.setEvent(new DefaultMuleEvent(new DefaultMuleMessage(response),endpoint,new DefaultMuleSession(component),true));
+  return transformResponse(response);
+}

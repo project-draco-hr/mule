@@ -1,0 +1,47 @@
+{
+  MuleContext muleContext=MuleServer.getMuleContext();
+  TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig(),endpoint.getConnector().getExceptionListener(),muleContext);
+  TransactionCallback cb=new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      Transaction tx=TransactionCoordination.getInstance().getTransaction();
+      if (tx != null) {
+        bindTransaction(tx);
+      }
+      List results=new ArrayList(messages.size());
+      for (Iterator iterator=messages.iterator(); iterator.hasNext(); ) {
+        Object o=iterator.next();
+        o=preProcessMessage(o);
+        if (o != null) {
+          MessageAdapter adapter;
+          if (o instanceof MessageAdapter) {
+            adapter=(MessageAdapter)o;
+          }
+ else {
+            adapter=endpoint.getConnector().getMessageAdapter(o);
+          }
+          DefaultMuleMessage muleMessage=new DefaultMuleMessage(adapter);
+          preRouteMuleMessage(muleMessage);
+          MuleMessage result=receiver.routeMessage(muleMessage,tx,tx != null || endpoint.isSynchronous(),out);
+          if (result != null) {
+            o=postProcessMessage(result);
+            if (o != null) {
+              results.add(o);
+            }
+          }
+        }
+      }
+      return results;
+    }
+  }
+;
+  try {
+    List results=(List)tt.execute(cb);
+    handleResults(results);
+  }
+ catch (  Exception e) {
+    handleException(e);
+  }
+ finally {
+    messages.clear();
+  }
+}

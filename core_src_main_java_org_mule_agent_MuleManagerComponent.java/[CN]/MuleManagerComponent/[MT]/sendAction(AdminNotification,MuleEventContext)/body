@@ -1,0 +1,30 @@
+{
+  MuleMessage result=null;
+  ImmutableEndpoint endpoint=null;
+  MuleContext muleContext=context.getMuleContext();
+  try {
+    if (AdminNotification.ACTION_DISPATCH == action.getAction()) {
+      endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(action.getResourceIdentifier());
+      context.dispatchEvent(action.getMessage(),endpoint);
+      return null;
+    }
+ else {
+      EndpointFactory endpointFactory=muleContext.getRegistry().lookupEndpointFactory();
+      EndpointBuilder endpointBuilder=endpointFactory.getEndpointBuilder(action.getResourceIdentifier());
+      endpointBuilder.setRemoteSync(true);
+      endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
+      result=context.sendEvent(action.getMessage(),endpoint);
+      if (result == null) {
+        return null;
+      }
+ else {
+        ByteArrayOutputStream out=new ByteArrayOutputStream();
+        wireFormat.write(out,result,getEncoding());
+        return out.toByteArray();
+      }
+    }
+  }
+ catch (  Exception e) {
+    return handleException(result,e);
+  }
+}

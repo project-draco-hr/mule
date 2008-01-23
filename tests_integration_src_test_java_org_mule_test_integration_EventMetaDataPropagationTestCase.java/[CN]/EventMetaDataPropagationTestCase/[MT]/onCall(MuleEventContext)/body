@@ -1,0 +1,39 @@
+{
+  if ("component1".equals(context.getComponent().getName())) {
+    Map props=new HashMap();
+    props.put("stringParam","param1");
+    props.put("objectParam",testObjectProperty);
+    props.put("doubleParam",new Double(12345.6));
+    props.put("integerParam",new Integer(12345));
+    props.put("longParam",new Long(123456789));
+    props.put("booleanParam",Boolean.TRUE);
+    MuleMessage msg=new DefaultMuleMessage(context.getMessageAsString(),props);
+    msg.addAttachment("test1",new DataHandler(new DataSource(){
+      public InputStream getInputStream() throws IOException {
+        return null;
+      }
+      public OutputStream getOutputStream() throws IOException {
+        return null;
+      }
+      public String getContentType(){
+        return "text/plain";
+      }
+      public String getName(){
+        return "test1";
+      }
+    }
+));
+    return msg;
+  }
+ else {
+    MuleMessage msg=context.getMessage();
+    assertEquals("param1",msg.getProperty("stringParam"));
+    assertEquals(testObjectProperty,msg.getProperty("objectParam"));
+    assertEquals(12345.6,12345.6,msg.getDoubleProperty("doubleParam",0));
+    assertEquals(12345,msg.getIntProperty("integerParam",0));
+    assertEquals(123456789,msg.getLongProperty("longParam",0));
+    assertEquals(true,msg.getBooleanProperty("booleanParam",false));
+    assertNotNull(msg.getAttachment("test1"));
+  }
+  return null;
+}

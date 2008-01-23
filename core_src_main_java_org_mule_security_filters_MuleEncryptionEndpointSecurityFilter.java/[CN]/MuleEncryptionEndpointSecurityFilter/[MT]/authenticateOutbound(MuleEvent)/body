@@ -1,0 +1,20 @@
+{
+  if (event.getSession().getSecurityContext() == null) {
+    if (isAuthenticate()) {
+      throw new UnauthorisedException(event.getMessage(),event.getSession().getSecurityContext(),event.getEndpoint(),this);
+    }
+ else {
+      return;
+    }
+  }
+  Authentication auth=event.getSession().getSecurityContext().getAuthentication();
+  if (isAuthenticate()) {
+    auth=getSecurityManager().authenticate(auth);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Authentication success: " + auth.toString());
+    }
+  }
+  String token=auth.getCredentials().toString();
+  String header=new String(strategy.encrypt(token.getBytes(),null));
+  getCredentialsAccessor().setCredentials(event,header);
+}

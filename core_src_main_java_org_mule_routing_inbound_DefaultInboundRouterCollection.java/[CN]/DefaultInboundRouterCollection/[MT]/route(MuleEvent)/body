@@ -1,0 +1,83 @@
+{
+  String inboundEndpoint=event.getEndpoint().getEndpointURI().getEndpointName();
+  if (StringUtils.isBlank(inboundEndpoint)) {
+    inboundEndpoint=event.getEndpoint().getName();
+  }
+  if (StringUtils.isBlank(inboundEndpoint)) {
+    inboundEndpoint=event.getEndpoint().getEndpointURI().getUri().toString();
+  }
+  event.getMessage().setProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,inboundEndpoint);
+  if (endpoints.size() > 0 && routers.size() == 0) {
+    addRouter(new InboundPassThroughRouter());
+  }
+  String componentName=event.getSession().getComponent().getName();
+  MuleEvent[] eventsToRoute=null;
+  boolean noRoute=true;
+  boolean match=false;
+  InboundRouter umoInboundRouter=null;
+  for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
+    umoInboundRouter=(InboundRouter)iterator.next();
+    if (umoInboundRouter.isMatch(event)) {
+      match=true;
+      eventsToRoute=umoInboundRouter.process(event);
+      noRoute=(eventsToRoute == null);
+      if (!matchAll) {
+        break;
+      }
+    }
+  }
+  if (!event.isStopFurtherProcessing()) {
+    if (noRoute) {
+      if (getStatistics().isEnabled()) {
+        getStatistics().incrementNoRoutedMessage();
+      }
+      if (!match) {
+        if (getCatchAllStrategy() != null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Message did not match any routers on: " + componentName + " - invoking catch all strategy");
+          }
+          if (getStatistics().isEnabled()) {
+            getStatistics().incrementCaughtMessage();
+          }
+          return getCatchAllStrategy().catchMessage(event.getMessage(),event.getSession(),event.isSynchronous());
+        }
+ else {
+          logger.warn("Message did not match any routers on: " + componentName + " and there is no catch all strategy configured on this router.  Disposing message: "+ event);
+          if (logger.isDebugEnabled()) {
+            try {
+              logger.warn("Message fragment is: " + StringMessageUtils.truncate(event.getMessageAsString(),100,true));
+            }
+ catch (            MuleException e) {
+            }
+          }
+        }
+      }
+    }
+ else {
+      try {
+        MuleMessage messageResult=null;
+        if (eventsToRoute != null) {
+          for (int i=0; i < eventsToRoute.length; i++) {
+            if (event.getMessage().getProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY) == null) {
+              event.getMessage().setProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,inboundEndpoint);
+            }
+            if (event.isSynchronous()) {
+              messageResult=send(eventsToRoute[i]);
+            }
+ else {
+              dispatch(eventsToRoute[i]);
+            }
+            if (getStatistics().isEnabled()) {
+              getStatistics().incrementRoutedMessage(eventsToRoute[i].getEndpoint());
+            }
+          }
+        }
+        return messageResult;
+      }
+ catch (      MuleException e) {
+        throw new RoutingException(event.getMessage(),event.getEndpoint(),e);
+      }
+    }
+  }
+  return (eventsToRoute != null && eventsToRoute.length > 0 ? eventsToRoute[eventsToRoute.length - 1].getMessage() : null);
+}

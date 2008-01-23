@@ -1,0 +1,18 @@
+{
+  if (endpoint == null) {
+    logger.warn("Endpoint argument is null, using outbound router to determine endpoint.");
+    return sendEvent(message);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("MuleSession has received synchronous event on endpoint: " + endpoint);
+  }
+  MuleEvent event=createOutboundEvent(message,endpoint,null);
+  MuleMessage result=sendEvent(event);
+  if (endpoint.isRemoteSync() && TransformerUtils.isDefined(endpoint.getResponseTransformers()) && result != null) {
+    result.applyTransformers(endpoint.getResponseTransformers());
+  }
+  if (result != null) {
+    processResponse(result);
+  }
+  return result;
+}

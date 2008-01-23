@@ -1,26 +1,26 @@
 {
-  UMOImmutableEndpoint endpoint;
+  ImmutableEndpoint endpoint;
   try {
     endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(applicationEvent.getEndpoint());
   }
- catch (  UMOException e) {
+ catch (  MuleException e) {
     throw new ApplicationEventException("Failed to get endpoint for endpointUri: " + applicationEvent.getEndpoint(),e);
   }
   if (endpoint != null) {
     try {
-      MuleMessage message=new MuleMessage(applicationEvent.getSource(),applicationEvent.getProperties());
+      DefaultMuleMessage message=new DefaultMuleMessage(applicationEvent.getSource(),applicationEvent.getProperties());
       if (applicationEvent.getMuleEventContext() != null) {
         applicationEvent.getMuleEventContext().setStopFurtherProcessing(true);
         applicationEvent.getMuleEventContext().dispatchEvent(message,endpoint);
       }
  else {
-        UMOSession session=new MuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler(),component);
-        RequestContext.setEvent(new MuleEvent(message,endpoint,session,false));
+        MuleSession session=new DefaultMuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler(),component);
+        RequestContext.setEvent(new DefaultMuleEvent(message,endpoint,session,false));
         if (endpoint.getTransformers() != null) {
-          message=new MuleMessage(applicationEvent.getSource(),applicationEvent.getProperties());
+          message=new DefaultMuleMessage(applicationEvent.getSource(),applicationEvent.getProperties());
           message.applyTransformers(endpoint.getTransformers());
         }
-        endpoint.dispatch(new MuleEvent(message,endpoint,session,false));
+        endpoint.dispatch(new DefaultMuleEvent(message,endpoint,session,false));
       }
     }
  catch (    Exception e1) {

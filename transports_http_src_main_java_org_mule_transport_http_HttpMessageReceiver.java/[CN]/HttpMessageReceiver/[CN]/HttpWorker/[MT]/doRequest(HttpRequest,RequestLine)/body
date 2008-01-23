@@ -1,0 +1,32 @@
+{
+  Map headers=parseHeaders(request);
+  MessageAdapter adapter=buildStandardAdapter(request,headers);
+  MuleMessage message=new DefaultMuleMessage(adapter);
+  if (logger.isDebugEnabled()) {
+    logger.debug(message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
+  }
+  MessageReceiver receiver=getTargetReceiver(message,endpoint);
+  HttpResponse response;
+  if (receiver != null) {
+    preRouteMessage(message);
+    MuleMessage returnMessage=receiver.routeMessage(message,endpoint.isSynchronous(),null);
+    Object tempResponse;
+    if (returnMessage != null) {
+      tempResponse=returnMessage.getPayload();
+    }
+ else {
+      tempResponse=NullPayload.getInstance();
+    }
+    if (tempResponse instanceof HttpResponse) {
+      response=(HttpResponse)tempResponse;
+    }
+ else {
+      response=transformResponse(returnMessage);
+    }
+    response.disableKeepAlive(!((HttpConnector)connector).isKeepAlive());
+  }
+ else {
+    response=buildFailureResponse(requestLine,message);
+  }
+  return response;
+}

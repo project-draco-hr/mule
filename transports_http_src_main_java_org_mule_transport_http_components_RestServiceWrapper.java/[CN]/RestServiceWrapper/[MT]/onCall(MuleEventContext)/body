@@ -1,0 +1,35 @@
+{
+  String tempUrl;
+  Object request=eventContext.transformMessage();
+  Object requestBody;
+  if (urlFromMessage) {
+    tempUrl=eventContext.getMessage().getStringProperty(REST_SERVICE_URL,null);
+    if (tempUrl == null) {
+      throw new IllegalArgumentException(CoreMessages.propertyIsNotSetOnEvent(REST_SERVICE_URL).toString());
+    }
+  }
+ else {
+    tempUrl=serviceUrl;
+  }
+  StringBuffer urlBuffer=new StringBuffer(tempUrl);
+  if (GET.equalsIgnoreCase(this.httpMethod)) {
+    requestBody=NullPayload.getInstance();
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,requiredParams,false,null);
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,optionalParams,true,null);
+  }
+ else {
+    StringBuffer requestBodyBuffer=new StringBuffer();
+    eventContext.getMessage().setProperty(CONTENT_TYPE,CONTENT_TYPE_VALUE);
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,requiredParams,false,requestBodyBuffer);
+    setRESTParams(urlBuffer,eventContext.getMessage(),request,optionalParams,true,requestBodyBuffer);
+    requestBody=requestBodyBuffer.toString();
+  }
+  tempUrl=urlBuffer.toString();
+  logger.info("Invoking REST service: " + tempUrl);
+  eventContext.getMessage().setProperty(HTTP_METHOD,httpMethod);
+  MuleMessage result=eventContext.sendEvent(new DefaultMuleMessage(requestBody,eventContext.getMessage()),tempUrl);
+  if (isErrorPayload(result)) {
+    handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),result),result);
+  }
+  return result;
+}

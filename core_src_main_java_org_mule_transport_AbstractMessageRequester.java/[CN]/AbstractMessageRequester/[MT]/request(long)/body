@@ -1,0 +1,18 @@
+{
+  try {
+    connectionStrategy.connect(this);
+    MuleMessage result=doRequest(timeout);
+    if (result != null && connector.isEnableMessageEvents()) {
+      connector.fireNotification(new MessageNotification(result,endpoint,null,MessageNotification.MESSAGE_RECEIVED));
+    }
+    return result;
+  }
+ catch (  DispatchException e) {
+    disposeAndLogException();
+    throw e;
+  }
+catch (  Exception e) {
+    disposeAndLogException();
+    throw new ReceiveException(endpoint,timeout,e);
+  }
+}

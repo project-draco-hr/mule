@@ -1,0 +1,45 @@
+{
+  if (TransformerUtils.isDefined(transformers) && transformers.size() > 0) {
+    Iterator iterator=transformers.iterator();
+    while (iterator.hasNext()) {
+      Transformer transformer=(Transformer)iterator.next();
+      if (getPayload() == null) {
+        if (transformer.isAcceptNull()) {
+          setPayload(NullPayload.getInstance());
+        }
+ else {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Transformer " + transformer + " doesn't support the null payload, exiting from transformer chain.");
+          }
+          break;
+        }
+      }
+      Class srcCls=getPayload().getClass();
+      if (transformer.isSourceTypeSupported(srcCls)) {
+        Object result=transformer.transform(this);
+        if (originalAdapter == null && DebugOptions.isCacheMessageOriginalPayload()) {
+          originalAdapter=adapter;
+        }
+        if (result instanceof MuleMessage) {
+synchronized (this) {
+            adapter=((MuleMessage)result).getAdapter();
+          }
+        }
+ else {
+          setPayload(result);
+        }
+      }
+ else {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Transformer " + transformer + " doesn't support the source payload: "+ srcCls);
+        }
+        if (!transformer.isIgnoreBadInput()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Exiting from transformer chain (ignoreBadInput = false)");
+          }
+          break;
+        }
+      }
+    }
+  }
+}

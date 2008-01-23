@@ -1,0 +1,15 @@
+{
+  String endpointName=httpServletRequest.getParameter("endpoint");
+  if (endpointName == null) {
+    throw new EndpointException(HttpMessages.httpParameterNotSet("endpoint"));
+  }
+  ImmutableEndpoint endpoint=RegistryContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointName);
+  if (endpoint == null) {
+    MessageReceiver receiver=(MessageReceiver)getReceivers().get(endpointName);
+    if (receiver == null) {
+      throw new EndpointNotFoundException(endpointName);
+    }
+    endpoint=receiver.getEndpoint();
+  }
+  return endpoint;
+}

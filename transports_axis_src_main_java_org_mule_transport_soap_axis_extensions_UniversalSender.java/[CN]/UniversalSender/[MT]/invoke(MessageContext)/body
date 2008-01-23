@@ -1,0 +1,119 @@
+{
+  boolean sync=true;
+  Call call=(Call)msgContext.getProperty("call_object");
+  if (call == null) {
+    throw new IllegalStateException("The call_object property must be set on the message context to the client Call object");
+  }
+  if (Boolean.TRUE.equals(call.getProperty("axis.one.way"))) {
+    sync=false;
+  }
+  String uri=msgContext.getStrProp(MessageContext.TRANS_URL);
+  ImmutableEndpoint requestEndpoint=(ImmutableEndpoint)call.getProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
+  ImmutableEndpoint endpoint;
+  if (msgContext.getUsername() != null) {
+    String[] tempEndpoint=uri.split("//");
+    String credentialString=msgContext.getUsername() + ":" + msgContext.getPassword();
+    uri=tempEndpoint[0] + "//" + credentialString+ "@"+ tempEndpoint[1];
+    try {
+      endpoint=lookupEndpoint(uri);
+    }
+ catch (    MuleException e) {
+      requestEndpoint.getConnector().handleException(e);
+      return;
+    }
+  }
+ else {
+    try {
+      endpoint=lookupEndpoint(uri);
+    }
+ catch (    MuleException e) {
+      requestEndpoint.getConnector().handleException(e);
+      return;
+    }
+  }
+  try {
+    if (requestEndpoint.getConnector() instanceof AxisConnector) {
+      msgContext.setTypeMappingRegistry(((AxisConnector)requestEndpoint.getConnector()).getAxis().getTypeMappingRegistry());
+    }
+    Map props=new HashMap();
+    Object payload=null;
+    int contentLength=0;
+    String contentType=null;
+    if (msgContext.getRequestMessage().countAttachments() > 0) {
+      File temp=File.createTempFile("soap",".tmp");
+      temp.deleteOnExit();
+      FileOutputStream fos=new FileOutputStream(temp);
+      msgContext.getRequestMessage().writeTo(fos);
+      fos.close();
+      contentLength=(int)temp.length();
+      payload=new FileInputStream(temp);
+      contentType="multipart/related";
+    }
+ else {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream(8192);
+      msgContext.getRequestMessage().writeTo(baos);
+      baos.close();
+      payload=baos.toByteArray();
+    }
+    for (Iterator iterator=msgContext.getPropertyNames(); iterator.hasNext(); ) {
+      String name=(String)iterator.next();
+      if (!name.equals("call_object") && !name.equals("wsdl.service")) {
+        props.put(name,msgContext.getProperty(name));
+      }
+    }
+    if ((RequestContext.getEvent() != null) && (RequestContext.getEvent().getMessage() != null)) {
+      props=AxisCleanAndAddProperties.cleanAndAdd(RequestContext.getEventContext());
+    }
+    String scheme=requestEndpoint.getEndpointURI().getScheme();
+    if (!("vm".equalsIgnoreCase(scheme) || "jms".equalsIgnoreCase(scheme))) {
+      if (call.useSOAPAction()) {
+        uri=call.getSOAPActionURI();
+      }
+      props.put(SoapConstants.SOAP_ACTION_PROPERTY_CAPS,uri);
+    }
+    if (contentLength > 0) {
+      props.put(HttpConstants.HEADER_CONTENT_LENGTH,Integer.toString(contentLength));
+    }
+    if (props.get(HttpConstants.HEADER_CONTENT_TYPE) == null) {
+      if (contentType == null) {
+        contentType="text/xml";
+      }
+      props.put(HttpConstants.HEADER_CONTENT_TYPE,contentType);
+    }
+    MuleMessage message=new DefaultMuleMessage(payload,props);
+    MuleSession session=RequestContext.getEventContext().getSession();
+    logger.info("Making Axis soap request on: " + uri);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Soap request is:\n" + new String((payload instanceof byte[] ? (byte[])payload : payload.toString().getBytes())));
+    }
+    if (sync) {
+      MuleContext muleContext=MuleServer.getMuleContext();
+      EndpointBuilder builder=new EndpointURIEndpointBuilder(endpoint,muleContext);
+      builder.setRemoteSync(true);
+      ImmutableEndpoint syncEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(builder);
+      MuleEvent dispatchEvent=new DefaultMuleEvent(message,syncEndpoint,session,sync);
+      MuleMessage result=endpoint.send(dispatchEvent);
+      if (result != null) {
+        byte[] response=result.getPayloadAsBytes();
+        Message responseMessage=new Message(response);
+        msgContext.setResponseMessage(responseMessage);
+      }
+ else {
+        logger.warn("No response message was returned from synchronous call to: " + uri);
+      }
+      if (payload instanceof File) {
+        ((File)payload).delete();
+      }
+    }
+ else {
+      MuleEvent dispatchEvent=new DefaultMuleEvent(message,endpoint,session,sync);
+      endpoint.dispatch(dispatchEvent);
+    }
+  }
+ catch (  AxisFault axisFault) {
+    throw axisFault;
+  }
+catch (  Exception e) {
+    throw new AxisFault(e.getMessage(),new Throwable(e));
+  }
+}

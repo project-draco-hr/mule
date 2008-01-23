@@ -1,0 +1,23 @@
+{
+  int i=header.indexOf(' ');
+  if (i == -1) {
+    throw new IllegalArgumentException(CoreMessages.headerMalformedValueIs(MuleProperties.MULE_USER_PROPERTY,header).toString());
+  }
+  String scheme=header.substring(0,i);
+  String creds=header.substring(i + 1);
+  if (!scheme.equalsIgnoreCase("plain")) {
+    EncryptionStrategy es=sm.getEncryptionStrategy(scheme);
+    if (es == null) {
+      throw new EncryptionStrategyNotFoundException(scheme);
+    }
+ else {
+      creds=new String(es.decrypt(creds.getBytes(),null));
+    }
+  }
+  StringTokenizer st=new StringTokenizer(creds,TOKEN_DELIM);
+  username=st.nextToken();
+  password=st.nextToken().toCharArray();
+  if (st.hasMoreTokens()) {
+    roles=st.nextToken();
+  }
+}

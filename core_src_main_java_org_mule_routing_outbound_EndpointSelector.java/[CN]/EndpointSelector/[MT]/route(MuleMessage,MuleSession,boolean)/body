@@ -1,0 +1,42 @@
+{
+  List endpoints;
+  String endpointName;
+  Object property=PropertyExtractorManager.processExpression(getSelectorProperty(),message);
+  if (property == null) {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSetOnEvent(getSelectorProperty()),message,null);
+  }
+  if (property instanceof String) {
+    endpoints=new ArrayList(1);
+    endpoints.add(property);
+  }
+ else   if (property instanceof List) {
+    endpoints=(List)property;
+  }
+ else {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(getSelectorProperty(),new Class[]{String.class,List.class},property.getClass()),message,null);
+  }
+  MuleMessage result=null;
+  for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
+    endpointName=iterator.next().toString();
+    if (StringUtils.isEmpty(endpointName)) {
+      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + getSelectorProperty()),message,null);
+    }
+    ImmutableEndpoint ep=null;
+    try {
+      ep=lookupEndpoint(endpointName);
+      if (ep == null) {
+        throw new CouldNotRouteOutboundMessageException(CoreMessages.objectNotFound("Endpoint",endpointName),message,ep);
+      }
+      if (synchronous) {
+        result=send(session,message,ep);
+      }
+ else {
+        dispatch(session,message,ep);
+      }
+    }
+ catch (    MuleException e) {
+      throw new CouldNotRouteOutboundMessageException(message,ep,e);
+    }
+  }
+  return result;
+}

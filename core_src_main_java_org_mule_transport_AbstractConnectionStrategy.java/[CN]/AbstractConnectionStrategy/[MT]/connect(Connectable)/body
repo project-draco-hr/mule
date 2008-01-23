@@ -1,0 +1,51 @@
+{
+  if (doThreading) {
+    try {
+      WorkManager wm=getWorkManager();
+      if (wm == null) {
+        throw new FatalConnectException(MessageFactory.createStaticMessage("No WorkManager is available"),connectable);
+      }
+      wm.scheduleWork(new Work(){
+        public void release(){
+        }
+        public void run(){
+          try {
+synchronized (reconnectLock) {
+              doConnect(connectable);
+            }
+          }
+ catch (          FatalConnectException e) {
+synchronized (reconnectLock) {
+              resetState();
+            }
+            if (connectable instanceof Connector) {
+              ((Connector)connectable).handleException(e);
+            }
+ else             if (connectable instanceof AbstractMessageReceiver) {
+              ((AbstractMessageReceiver)connectable).handleException(e);
+            }
+          }
+        }
+      }
+);
+    }
+ catch (    WorkException e) {
+synchronized (reconnectLock) {
+        resetState();
+      }
+      throw new FatalConnectException(e,connectable);
+    }
+  }
+ else {
+    try {
+synchronized (reconnectLock) {
+        doConnect(connectable);
+      }
+    }
+  finally {
+synchronized (reconnectLock) {
+        resetState();
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  if (super.process(event) != null) {
+    OutboundRouterCollection router=event.getComponent().getOutboundRouter();
+    event.setStopFurtherProcessing(true);
+    if (router == null) {
+      logger.debug("Descriptor has no outbound router configured to forward to, continuing with normal processing");
+      return new MuleEvent[]{event};
+    }
+ else {
+      try {
+        MuleMessage message=new DefaultMuleMessage(event.transformMessage(),event.getMessage());
+        MuleMessage response=router.route(message,event.getSession(),event.isSynchronous());
+        if (response != null) {
+          return new MuleEvent[]{new DefaultMuleEvent(response,event)};
+        }
+ else {
+          return null;
+        }
+      }
+ catch (      MuleException e) {
+        throw new RoutingException(event.getMessage(),event.getEndpoint(),e);
+      }
+    }
+  }
+  return null;
+}

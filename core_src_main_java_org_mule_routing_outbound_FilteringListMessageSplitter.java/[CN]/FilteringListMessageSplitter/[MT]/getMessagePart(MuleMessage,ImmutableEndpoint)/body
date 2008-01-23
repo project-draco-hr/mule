@@ -1,0 +1,15 @@
+{
+  List payloads=(List)payloadContext.get();
+  for (Iterator i=payloads.iterator(); i.hasNext(); ) {
+    Object payload=i.next();
+    MuleMessage result=new DefaultMuleMessage(payload,(Map)propertiesContext.get());
+    if (endpoint.getFilter() == null || endpoint.getFilter().accept(result)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Endpoint filter matched. Routing message over: " + endpoint.getEndpointURI().toString());
+      }
+      i.remove();
+      return result;
+    }
+  }
+  return null;
+}

@@ -1,0 +1,14 @@
+{
+  try {
+    Component c=MuleTestUtils.getTestComponent("testComponentWithoutInterfaces",ComponentWithoutInterfaces.class,null,muleContext,false);
+    ImmutableEndpoint ep=muleContext.getRegistry().lookupEndpointFactory().getEndpoint(new MuleEndpointURI(getComponentWithoutInterfacesEndpoint()),Endpoint.ENDPOINT_TYPE_RECEIVER);
+    c.getInboundRouter().addEndpoint(ep);
+    muleContext.getRegistry().registerComponent(c);
+    fail("Expected exception");
+  }
+ catch (  MuleException e) {
+    e=ExceptionHelper.getRootMuleException(e);
+    assertTrue(e instanceof InitialisationException);
+    assertTrue(e.getMessage(),e.getMessage().indexOf("must implement at least one interface") > -1);
+  }
+}

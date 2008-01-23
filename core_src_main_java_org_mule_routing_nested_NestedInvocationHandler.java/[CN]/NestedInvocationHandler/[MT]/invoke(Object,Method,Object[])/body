@@ -2,16 +2,16 @@
   if (method.getName().equals("toString")) {
     return toString();
   }
-  UMOMessage message=new MuleMessage(args);
-  UMONestedRouter router=(UMONestedRouter)routers.get(method.getName());
+  MuleMessage message=new DefaultMuleMessage(args);
+  NestedRouter router=(NestedRouter)routers.get(method.getName());
   if (router == null) {
-    router=(UMONestedRouter)routers.get(DEFAULT_METHOD_NAME_TOKEN);
+    router=(NestedRouter)routers.get(DEFAULT_METHOD_NAME_TOKEN);
   }
   if (router == null) {
     throw new IllegalArgumentException(CoreMessages.cannotFindBindingForMethod(method.getName()).toString());
   }
-  UMOMessage reply;
-  UMOEvent currentEvent=RequestContext.getEvent();
+  MuleMessage reply;
+  MuleEvent currentEvent=RequestContext.getEvent();
   reply=router.route(message,currentEvent.getSession(),router.getEndpoint().isSynchronous());
   if (reply != null) {
     if (reply.getExceptionPayload() != null) {
