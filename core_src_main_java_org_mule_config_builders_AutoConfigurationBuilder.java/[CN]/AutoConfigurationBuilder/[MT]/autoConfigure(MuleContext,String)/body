@@ -17,8 +17,8 @@
   }
   if (!remoteURL) {
     String[] splitResouce=resource.split("\\.");
-    if (splitResouce.length == 2) {
-      resourceExtension=splitResouce[1];
+    if (splitResouce.length >= 2) {
+      resourceExtension=splitResouce[splitResouce.length - 1];
     }
   }
   if (remoteURL && ClassUtils.isClassOnPath("org.mule.galaxy.mule2.config.GalaxyConfigurationBuilder",this.getClass())) {
@@ -46,10 +46,7 @@
     }
   }
  else {
-    logger.warn("No configuration builders available for configuration resource: \"" + resource + "\"");
-    return false;
+    throw new ConfigurationException(CoreMessages.configurationBuilderNoMatching(resource));
   }
   configurationBuilder.configure(muleContext);
-  logger.info("Configured Mule with configuration resource \"" + resource + "\" using ConfigurationBuilder \""+ configurationBuilder.getClass().getName());
-  return true;
 }

@@ -1,14 +1,22 @@
 {
   Runtime.getRuntime().addShutdownHook(new ShutdownThread());
-  Class cfgBuilderClass=ClassUtils.loadClass(getConfigBuilderClassName(),MuleServer.class);
-  ConfigurationBuilder cfgBuilder=(ConfigurationBuilder)cfgBuilderClass.newInstance();
+  if (configurationResources == null) {
+    logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
+    configurationResources=DEFAULT_CONFIGURATION;
+  }
+  ConfigurationBuilder cfgBuilder;
+  try {
+    cfgBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(getConfigBuilderClassName(),new Object[]{configurationResources},MuleServer.class);
+  }
+ catch (  Exception e) {
+    throw new ConfigurationException(CoreMessages.failedToLoad(getConfigBuilderClassName()),e);
+  }
   if (!cfgBuilder.isConfigured()) {
-    if (configurationResources == null) {
-      logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
-      configurationResources=DEFAULT_CONFIGURATION;
+    Properties startupProperties=null;
+    if (getStartupPropertiesFile() != null) {
+      startupProperties=PropertiesUtils.loadProperties(getStartupPropertiesFile(),getClass());
     }
-    Properties startupProperties=PropertiesUtils.loadProperties(getStartupPropertiesFile(),getClass());
     DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-    muleContextFactory.createMuleContext(configurationResources,startupProperties);
+    muleContext=muleContextFactory.createMuleContext(cfgBuilder,startupProperties);
   }
 }
