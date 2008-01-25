@@ -6,7 +6,13 @@
     factory=(TransformerFactory)ClassUtils.instanciateClass(factoryClassName,ClassUtils.NO_ARGS,this.getClass());
   }
  else {
-    factory=TransformerFactory.newInstance();
+    try {
+      factory=TransformerFactory.newInstance();
+    }
+ catch (    TransformerFactoryConfigurationError e) {
+      System.setProperty("javax.xml.transform.TransformerFactory",XMLUtils.TRANSFORMER_FACTORY_JDK5);
+      factory=TransformerFactory.newInstance();
+    }
   }
   factory.setURIResolver(new URIResolver(){
     public Source resolve(    String href,    String base) throws javax.xml.transform.TransformerException {

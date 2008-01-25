@@ -2,7 +2,14 @@
   Log.redirectTo(new CommonsLogger());
   URI uri=new URI(StringUtils.stripToEmpty(jmxAdaptorUrl));
   adaptor=new HttpAdaptor(uri.getPort(),uri.getHost());
-  XSLTProcessor processor=new XSLTProcessor();
+  XSLTProcessor processor;
+  try {
+    processor=new XSLTProcessor();
+  }
+ catch (  TransformerFactoryConfigurationError e) {
+    System.setProperty("javax.xml.transform.TransformerFactory",XMLUtils.TRANSFORMER_FACTORY_JDK5);
+    processor=new XSLTProcessor();
+  }
   if (StringUtils.isNotBlank(xslFilePath)) {
     processor.setFile(xslFilePath.trim());
   }
