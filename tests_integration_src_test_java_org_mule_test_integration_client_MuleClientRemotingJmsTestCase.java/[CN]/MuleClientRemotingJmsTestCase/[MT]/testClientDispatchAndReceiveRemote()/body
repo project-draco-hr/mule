@@ -1,12 +1,13 @@
 {
+  Thread.sleep(WAIT_TO_RESTART);
   String remoteEndpoint="vm://vmRemoteProvider/remote.queue";
   MuleClient client=new MuleClient();
   RegistryContext.getConfiguration().setDefaultSynchronousEndpoints(true);
   RemoteDispatcher dispatcher=client.getRemoteDispatcher(getServerUrl());
-  MuleMessage message=dispatcher.receiveRemote(remoteEndpoint,1000);
+  MuleMessage message=dispatcher.receiveRemote(remoteEndpoint,WAIT_TO_RECEIVE);
   assertNull(message);
-  dispatcher.sendRemote(remoteEndpoint,"Test Remote Message 2",null);
-  message=dispatcher.receiveRemote(remoteEndpoint,1000);
+  dispatcher.dispatchRemote(remoteEndpoint,"Test Remote Message 2",null);
+  message=dispatcher.receiveRemote(remoteEndpoint,WAIT_TO_RECEIVE);
   assertNotNull(message);
   assertEquals("Test Remote Message 2",message.getPayload());
 }
