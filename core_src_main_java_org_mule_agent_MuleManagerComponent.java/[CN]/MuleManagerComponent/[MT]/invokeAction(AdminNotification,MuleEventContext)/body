@@ -9,7 +9,7 @@
     destComponent=endpoint;
   }
   if (destComponent != null) {
-    MuleSession session=new DefaultMuleSession(MuleServer.getMuleContext().getRegistry().lookupComponent(destComponent));
+    MuleSession session=new DefaultMuleSession(MuleServer.getMuleContext().getRegistry().lookupService(destComponent));
     MuleContext muleContext=MuleServer.getMuleContext();
     EndpointBuilder builder=new EndpointURIEndpointBuilder(RequestContext.getEvent().getEndpoint(),muleContext);
     builder.setTransformers(new LinkedList());
@@ -17,13 +17,13 @@
     MuleEvent event=new DefaultMuleEvent(action.getMessage(),ep,context.getSession(),context.isSynchronous());
     event=RequestContext.setEvent(event);
     if (context.isSynchronous()) {
-      result=session.getComponent().sendEvent(event);
+      result=session.getService().sendEvent(event);
       ByteArrayOutputStream out=new ByteArrayOutputStream();
       wireFormat.write(out,result,getEncoding());
       return out.toByteArray();
     }
  else {
-      session.getComponent().dispatchEvent(event);
+      session.getService().dispatchEvent(event);
       return null;
     }
   }

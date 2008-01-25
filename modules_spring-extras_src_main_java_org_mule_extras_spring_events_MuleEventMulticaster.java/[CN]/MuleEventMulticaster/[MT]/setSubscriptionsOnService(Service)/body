@@ -1,0 +1,31 @@
+{
+  String[] subscriptions;
+  List endpoints=new ArrayList();
+  for (Iterator iterator=listeners.iterator(); iterator.hasNext(); ) {
+    ApplicationListener listener=(ApplicationListener)iterator.next();
+    if (listener instanceof AsynchronousEventListener) {
+      listener=((AsynchronousEventListener)listener).getListener();
+    }
+    if (listener instanceof MuleSubscriptionEventListener) {
+      subscriptions=((MuleSubscriptionEventListener)listener).getSubscriptions();
+      for (int i=0; i < subscriptions.length; i++) {
+        if (subscriptions[i].indexOf("*") == -1 && MuleEndpointURI.isMuleUri(subscriptions[i])) {
+          boolean isSoap=registerAsSoap(subscriptions[i],listener);
+          if (!isSoap) {
+            endpoints.add(subscriptions[i]);
+          }
+        }
+      }
+    }
+  }
+  if (endpoints.size() > 0) {
+    String endpoint;
+    for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
+      endpoint=(String)iterator.next();
+      ImmutableEndpoint ep=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpoint);
+      if (service.getInboundRouter().getEndpoint(ep.getName()) == null) {
+        service.getInboundRouter().addEndpoint(ep);
+      }
+    }
+  }
+}

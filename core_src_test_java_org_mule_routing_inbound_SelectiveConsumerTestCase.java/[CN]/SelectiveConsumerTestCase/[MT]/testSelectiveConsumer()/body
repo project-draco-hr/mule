@@ -1,6 +1,6 @@
 {
   Mock session=MuleTestUtils.getMockSession();
-  Component testComponent=getTestComponent("test",Apple.class);
+  Service testService=getTestService("test",Apple.class);
   InboundRouterCollection messageRouter=new DefaultInboundRouterCollection();
   SelectiveConsumer router=new SelectiveConsumer();
   messageRouter.addRouter(router);
@@ -13,17 +13,17 @@
   MuleEvent event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy(),false);
   assertTrue(router.isMatch(event));
   session.expect("dispatchEvent",C.eq(event));
-  session.expectAndReturn("getComponent",testComponent);
+  session.expectAndReturn("getService",testService);
   messageRouter.route(event);
   session.verify();
   event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy(),true);
   session.expectAndReturn("sendEvent",C.eq(event),message);
-  session.expectAndReturn("getComponent",testComponent);
+  session.expectAndReturn("getService",testService);
   MuleMessage result=messageRouter.route(event);
   assertNotNull(result);
   assertEquals(message,result);
   session.verify();
-  session.expectAndReturn("getComponent",testComponent);
+  session.expectAndReturn("getService",testService);
   session.expectAndReturn("toString","");
   message=new DefaultMuleMessage(new Exception());
   event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy(),false);

@@ -1,6 +1,6 @@
 {
   if (logger.isTraceEnabled()) {
-    logger.trace("MuleProxy: sync call for Mule UMO " + component.getName());
+    logger.trace("MuleProxy: sync call for Mule UMO " + service.getName());
   }
   MuleMessage returnMessage=null;
   try {
@@ -12,11 +12,11 @@
       if (stat.isEnabled()) {
         startTime=System.currentTimeMillis();
       }
-      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+      if (service.getName().startsWith("_xfireServiceComponent") || service.getName().startsWith("_axisServiceComponent")) {
         event.getMessage().setBooleanProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY,true);
       }
       returnMessage=umo.intercept(null);
-      if (component.getName().startsWith("_xfireServiceComponent") || component.getName().startsWith("_axisServiceComponent")) {
+      if (service.getName().startsWith("_xfireServiceComponent") || service.getName().startsWith("_axisServiceComponent")) {
         returnMessage.removeProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY);
       }
       if (stat.isEnabled()) {
@@ -26,23 +26,23 @@
         logger.debug("MuleEvent stop further processing has been set, no outbound routing will be performed.");
       }
       if (returnMessage != null && !event.isStopFurtherProcessing()) {
-        if (component.getOutboundRouter().hasEndpoints()) {
-          MuleMessage outboundReturnMessage=component.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
+        if (service.getOutboundRouter().hasEndpoints()) {
+          MuleMessage outboundReturnMessage=service.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
           if (outboundReturnMessage != null) {
             returnMessage=outboundReturnMessage;
           }
         }
  else {
-          logger.debug("Outbound router on component '" + component.getName() + "' doesn't have any endpoints configured.");
+          logger.debug("Outbound router on service '" + service.getName() + "' doesn't have any endpoints configured.");
         }
       }
-      if (returnMessage != null && component.getResponseRouter() != null) {
+      if (returnMessage != null && service.getResponseRouter() != null) {
         logger.debug("Waiting for response router message");
-        returnMessage=component.getResponseRouter().getResponse(returnMessage);
+        returnMessage=service.getResponseRouter().getResponse(returnMessage);
       }
       if (returnMessage != null && replyToHandler != null) {
         String requestor=(String)returnMessage.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
-        if ((requestor != null && !requestor.equals(component.getName())) || requestor == null) {
+        if ((requestor != null && !requestor.equals(service.getName())) || requestor == null) {
           replyToHandler.processReplyTo(event,returnMessage,replyTo);
         }
       }
@@ -61,7 +61,7 @@
       handleException(e);
     }
  else {
-      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(component.getName()),event.getMessage(),e));
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(service.getName()),event.getMessage(),e));
     }
     if (returnMessage == null) {
       returnMessage=new DefaultMuleMessage(NullPayload.getInstance(),RequestContext.getEvent().getMessage());

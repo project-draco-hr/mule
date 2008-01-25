@@ -1,0 +1,28 @@
+{
+  if (stopping.get() || stopped.get()) {
+    throw new ServiceException(CoreMessages.componentIsStopped(name),event.getMessage(),this);
+  }
+  try {
+    waitIfPaused(event);
+  }
+ catch (  InterruptedException e) {
+    throw new ServiceException(event.getMessage(),this,e);
+  }
+  ImmutableEndpoint endpoint=event.getEndpoint();
+  if (!endpoint.canRequest()) {
+    try {
+      endpoint.dispatch(event);
+    }
+ catch (    Exception e) {
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+    }
+    return;
+  }
+  if (stats.isEnabled()) {
+    stats.incReceivedEventASync();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Service: " + name + " has received asynchronous event on: "+ event.getEndpoint().getEndpointURI());
+  }
+  doDispatch(event);
+}

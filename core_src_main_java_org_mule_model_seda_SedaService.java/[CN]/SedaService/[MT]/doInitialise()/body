@@ -1,0 +1,25 @@
+{
+  MuleConfiguration config=RegistryContext.getConfiguration();
+  if (threadingProfile == null) {
+    threadingProfile=config.getDefaultComponentThreadingProfile();
+  }
+  workManager=threadingProfile.createWorkManager(getName());
+  if (queueProfile == null) {
+    queueProfile=((SedaModel)model).getQueueProfile();
+  }
+  if (queueTimeout == null) {
+    setQueueTimeout(new Integer(((SedaModel)model).getQueueTimeout()));
+  }
+  try {
+    if (name == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Service has no name to identify it"),this);
+    }
+    queueProfile.configureQueue(name,muleContext.getQueueManager());
+  }
+ catch (  InitialisationException e) {
+    throw e;
+  }
+catch (  Throwable e) {
+    throw new InitialisationException(CoreMessages.objectFailedToInitialise("Service Queue"),e,this);
+  }
+}

@@ -4,28 +4,28 @@
   String use=(String)endpoint.getProperties().get(AxisConnector.USE);
   String doc=(String)endpoint.getProperties().get("documentation");
   EndpointURI uri=endpoint.getEndpointURI();
-  String serviceName=component.getName();
+  String serviceName=service.getName();
   SOAPService existing=this.connector.getAxis().getService(serviceName);
   if (existing != null) {
-    service=existing;
+    soapService=existing;
     logger.debug("Using existing service for " + serviceName);
   }
  else {
     if (style != null && style.equalsIgnoreCase("message")) {
       logger.debug("Creating Message Provider");
-      service=new SOAPService(new MuleMsgProvider(connector));
+      soapService=new SOAPService(new MuleMsgProvider(connector));
     }
  else {
       logger.debug("Creating RPC Provider");
-      service=new SOAPService(new MuleRPCProvider(connector));
+      soapService=new SOAPService(new MuleRPCProvider(connector));
     }
-    service.setEngine(connector.getAxis());
+    soapService.setEngine(connector.getAxis());
   }
   String servicePath=uri.getPath();
-  service.setOption(serviceName,this);
-  service.setOption(AxisConnector.SERVICE_PROPERTY_SERVCE_PATH,servicePath);
-  service.setOption(AxisConnector.SERVICE_PROPERTY_COMPONENT_NAME,serviceName);
-  service.setName(serviceName);
+  soapService.setOption(serviceName,this);
+  soapService.setOption(AxisConnector.SERVICE_PROPERTY_SERVCE_PATH,servicePath);
+  soapService.setOption(AxisConnector.SERVICE_PROPERTY_COMPONENT_NAME,serviceName);
+  soapService.setName(serviceName);
   Map options=(Map)endpoint.getProperties().get(AXIS_OPTIONS);
   if (options == null) {
     options=new HashMap(2);
@@ -36,17 +36,17 @@
   Map.Entry entry;
   for (Iterator iterator=options.entrySet().iterator(); iterator.hasNext(); ) {
     entry=(Map.Entry)iterator.next();
-    service.setOption(entry.getKey().toString(),entry.getValue());
+    soapService.setOption(entry.getKey().toString(),entry.getValue());
     logger.debug("Adding Axis option: " + entry);
   }
-  Class[] interfaces=AxisServiceProxy.getInterfacesForComponent(component);
+  Class[] interfaces=AxisServiceProxy.getInterfacesForComponent(service);
   if (interfaces.length == 0) {
-    throw new InitialisationException(AxisMessages.objectMustImplementAnInterface(serviceName),component);
+    throw new InitialisationException(AxisMessages.objectMustImplementAnInterface(serviceName),service);
   }
   String methodNames="*";
   Map methods=(Map)endpoint.getProperties().get(AxisConnector.SOAP_METHODS);
   if (methods == null) {
-    methods=(Map)component.getProperties().get(AxisConnector.SOAP_METHODS);
+    methods=(Map)service.getProperties().get(AxisConnector.SOAP_METHODS);
   }
   if (methods != null) {
     Iterator i=methods.keySet().iterator();
@@ -74,7 +74,7 @@
         }
         parameters[j]=new ParameterDesc(parameter.getName(),mode,parameter.getType());
       }
-      service.getServiceDescription().addOperationDesc(new OperationDesc(method.getName().getLocalPart(),parameters,method.getReturnType()));
+      soapService.getServiceDescription().addOperationDesc(new OperationDesc(method.getName().getLocalPart(),parameters,method.getReturnType()));
       buf.append(method.getName().getLocalPart() + ",");
     }
     methodNames=buf.toString();
@@ -96,19 +96,19 @@
   }
   String wsdlFile=(String)endpoint.getProperties().get("wsdlFile");
   if (wsdlFile != null) {
-    service.getServiceDescription().setWSDLFile(wsdlFile);
+    soapService.getServiceDescription().setWSDLFile(wsdlFile);
   }
-  setOptionIfNotset(service,JavaProvider.OPTION_WSDL_SERVICEPORT,serviceName);
-  setOptionIfNotset(service,JavaProvider.OPTION_CLASSNAME,className);
-  setOptionIfNotset(service,JavaProvider.OPTION_SCOPE,"Request");
+  setOptionIfNotset(soapService,JavaProvider.OPTION_WSDL_SERVICEPORT,serviceName);
+  setOptionIfNotset(soapService,JavaProvider.OPTION_CLASSNAME,className);
+  setOptionIfNotset(soapService,JavaProvider.OPTION_SCOPE,"Request");
   if (StringUtils.isNotBlank(namespace)) {
-    setOptionIfNotset(service,JavaProvider.OPTION_WSDL_TARGETNAMESPACE,namespace);
+    setOptionIfNotset(soapService,JavaProvider.OPTION_WSDL_TARGETNAMESPACE,namespace);
   }
   if (methodNames == null) {
-    setOptionIfNotset(service,JavaProvider.OPTION_ALLOWEDMETHODS,"*");
+    setOptionIfNotset(soapService,JavaProvider.OPTION_ALLOWEDMETHODS,"*");
   }
  else {
-    setOptionIfNotset(service,JavaProvider.OPTION_ALLOWEDMETHODS,methodNames);
+    setOptionIfNotset(soapService,JavaProvider.OPTION_ALLOWEDMETHODS,methodNames);
   }
   if (style != null) {
     Style s=Style.getStyle(style);
@@ -116,7 +116,7 @@
       throw new CreateException(CoreMessages.valueIsInvalidFor(style,AxisConnector.STYLE),this);
     }
  else {
-      service.setStyle(s);
+      soapService.setStyle(s);
     }
   }
   if (use != null) {
@@ -125,24 +125,24 @@
       throw new CreateException(CoreMessages.valueIsInvalidFor(use,AxisConnector.USE),this);
     }
  else {
-      service.setUse(u);
+      soapService.setUse(u);
     }
   }
-  service.getServiceDescription().setDocumentation(doc);
-  service.setName(serviceName);
-  component.addInitialisationCallback(new AxisInitialisationCallback(service));
+  soapService.getServiceDescription().setDocumentation(doc);
+  soapService.setName(serviceName);
+  service.addInitialisationCallback(new AxisInitialisationCallback(soapService));
   if (uri.getScheme().equalsIgnoreCase("servlet")) {
-    connector.addServletService(service);
+    connector.addServletService(soapService);
     String endpointUrl=uri.getAddress() + "/" + serviceName;
     endpointUrl=endpointUrl.replaceFirst("servlet:","http:");
-    service.getServiceDescription().setEndpointURL(endpointUrl);
+    soapService.getServiceDescription().setEndpointURL(endpointUrl);
   }
  else {
-    service.getServiceDescription().setEndpointURL(uri.getAddress() + "/" + serviceName);
+    soapService.getServiceDescription().setEndpointURL(uri.getAddress() + "/" + serviceName);
   }
   if (StringUtils.isNotBlank(namespace)) {
-    service.getServiceDescription().setDefaultNamespace(namespace);
+    soapService.getServiceDescription().setDefaultNamespace(namespace);
   }
-  service.init();
-  service.stop();
+  soapService.init();
+  soapService.stop();
 }

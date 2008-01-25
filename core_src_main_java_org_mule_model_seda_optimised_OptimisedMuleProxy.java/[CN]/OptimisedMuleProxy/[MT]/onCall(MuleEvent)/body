@@ -1,6 +1,6 @@
 {
   if (logger.isTraceEnabled()) {
-    logger.trace("MuleProxy: sync call for Mule UMO " + component.getName());
+    logger.trace("MuleProxy: sync call for Mule UMO " + service.getName());
   }
   MuleMessage returnMessage=null;
   try {
@@ -18,14 +18,14 @@
         logger.debug("MuleEvent stop further processing has been set, no outbound routing will be performed.");
       }
       if (returnMessage != null && !event.isStopFurtherProcessing()) {
-        if (component.getOutboundRouter().hasEndpoints()) {
-          MuleMessage outboundReturnMessage=component.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
+        if (service.getOutboundRouter().hasEndpoints()) {
+          MuleMessage outboundReturnMessage=service.getOutboundRouter().route(returnMessage,event.getSession(),event.isSynchronous());
           if (outboundReturnMessage != null) {
             returnMessage=outboundReturnMessage;
           }
         }
  else {
-          logger.debug("Outbound router on component '" + component.getName() + "' doesn't have any endpoints configured.");
+          logger.debug("Outbound router on service '" + service.getName() + "' doesn't have any endpoints configured.");
         }
       }
     }
@@ -42,7 +42,7 @@
       handleException(e);
     }
  else {
-      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(component.getName()),event.getMessage(),e));
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(service.getName()),event.getMessage(),e));
     }
   }
   return returnMessage;

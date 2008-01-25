@@ -1,7 +1,7 @@
 {
-  Component component=muleContext.getRegistry().lookupComponent(componentName);
-  if (component == null) {
-    throw new MessagingException(CoreMessages.objectNotRegistered("Component",componentName),message);
+  Service service=muleContext.getRegistry().lookupService(componentName);
+  if (service == null) {
+    throw new MessagingException(CoreMessages.objectNotRegistered("Service",componentName),message);
   }
   List trans=null;
   if (transformers != null) {
@@ -10,13 +10,13 @@
   if (!RegistryContext.getConfiguration().isDefaultSynchronousEndpoints()) {
     logger.warn("The mule muleContext is running synchronously, a null message payload will be returned");
   }
-  MuleSession session=new DefaultMuleSession(component);
-  ImmutableEndpoint endpoint=getDefaultClientEndpoint(component,message.getPayload());
+  MuleSession session=new DefaultMuleSession(service);
+  ImmutableEndpoint endpoint=getDefaultClientEndpoint(service,message.getPayload());
   MuleEvent event=new DefaultMuleEvent(message,endpoint,session,true);
   if (logger.isDebugEnabled()) {
     logger.debug("MuleClient sending event direct to: " + componentName + ". MuleEvent is: "+ event);
   }
-  MuleMessage result=event.getComponent().sendEvent(event);
+  MuleMessage result=event.getService().sendEvent(event);
   if (logger.isDebugEnabled()) {
     logger.debug("Result of MuleClient sendDirect is: " + (result == null ? "null" : result.getPayload()));
   }

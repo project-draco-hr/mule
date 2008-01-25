@@ -1,0 +1,20 @@
+{
+  MuleEvent event=RequestContext.getEvent();
+  logger.debug("Catch all strategy handling event: " + event);
+  try {
+    logger.info("MuleEvent being routed from catch all strategy for endpoint: " + event.getEndpoint());
+    event=new DefaultMuleEvent(message,event.getEndpoint(),session.getService(),event);
+    if (synchronous) {
+      statistics.incrementRoutedMessage(event.getEndpoint());
+      return session.getService().sendEvent(event);
+    }
+ else {
+      statistics.incrementRoutedMessage(event.getEndpoint());
+      session.getService().dispatchEvent(event);
+      return null;
+    }
+  }
+ catch (  MuleException e) {
+    throw new ServiceRoutingException(event.getMessage(),event.getEndpoint(),session.getService(),e);
+  }
+}

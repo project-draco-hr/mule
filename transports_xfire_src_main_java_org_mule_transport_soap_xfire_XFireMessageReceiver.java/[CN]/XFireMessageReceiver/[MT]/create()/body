@@ -1,6 +1,6 @@
 {
   try {
-    Map props=new HashMap(component.getProperties());
+    Map props=new HashMap(service.getProperties());
     props.putAll(endpoint.getProperties());
     if (props.containsKey(PORT_TYPE)) {
       Object value=props.get(PORT_TYPE);
@@ -8,10 +8,10 @@
       QName portTypeQName=(QName)converter.convert(QName.class,value);
       props.put(PORT_TYPE,portTypeQName);
     }
-    String namespace=(String)component.getProperties().get(SoapConstants.SOAP_NAMESPACE_PROPERTY);
+    String namespace=(String)service.getProperties().get(SoapConstants.SOAP_NAMESPACE_PROPERTY);
     if (connector.isEnableJSR181Annotations()) {
       WebAnnotations wa=(WebAnnotations)ClassUtils.instanciateClass(XFireConnector.CLASSNAME_ANNOTATIONS,null,this.getClass());
-      WebServiceAnnotation webServiceAnnotation=wa.getWebServiceAnnotation(component.getServiceFactory().getObjectClass());
+      WebServiceAnnotation webServiceAnnotation=wa.getWebServiceAnnotation(service.getServiceFactory().getObjectClass());
       namespace=webServiceAnnotation.getTargetNamespace();
     }
     if ((namespace == null) || (namespace.equalsIgnoreCase(""))) {
@@ -33,10 +33,10 @@
       rewriteProperty(props,"scope");
       rewriteProperty(props,"schemas");
     }
-    serviceInterfaces=(List)component.getProperties().get(SoapConstants.SERVICE_INTERFACES);
+    serviceInterfaces=(List)service.getProperties().get(SoapConstants.SERVICE_INTERFACES);
     Class exposedInterface;
     if (serviceInterfaces == null) {
-      exposedInterface=component.getServiceFactory().getOrCreate().getClass();
+      exposedInterface=service.getServiceFactory().getOrCreate().getClass();
     }
  else {
       String className=(String)serviceInterfaces.get(0);
@@ -46,23 +46,23 @@
         logger.info("Only the first class was used to expose your method");
       }
     }
-    String wsdlUrl=(String)component.getProperties().get(SoapConstants.WSDL_URL_PROPERTY);
+    String wsdlUrl=(String)service.getProperties().get(SoapConstants.WSDL_URL_PROPERTY);
     if (StringUtils.isBlank(wsdlUrl)) {
-      service=connector.getServiceFactory().create(exposedInterface,component.getName(),namespace,props);
+      xfireService=connector.getServiceFactory().create(exposedInterface,service.getName(),namespace,props);
     }
  else {
-      service=connector.getServiceFactory().create(exposedInterface,new QName(namespace,component.getName()),new URL(wsdlUrl),props);
+      xfireService=connector.getServiceFactory().create(exposedInterface,new QName(namespace,service.getName()),new URL(wsdlUrl),props);
     }
     List inList=connector.getServerInHandlers();
     if (inList != null) {
       for (int i=0; i < inList.size(); i++) {
         Class clazz=ClassUtils.loadClass(inList.get(i).toString(),this.getClass());
         Handler handler=(Handler)clazz.getConstructor(null).newInstance(null);
-        service.addInHandler(handler);
+        xfireService.addInHandler(handler);
       }
     }
     boolean sync=endpoint.isSynchronous();
-    service.setInvoker(new MuleInvoker(this,sync));
+    xfireService.setInvoker(new MuleInvoker(this,sync));
   }
  catch (  Exception e) {
     throw new CreateException(e,this);

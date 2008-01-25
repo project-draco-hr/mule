@@ -1,0 +1,31 @@
+{
+  Model model=muleContext.getRegistry().lookupModel(MuleProperties.OBJECT_SYSTEM_MODEL);
+  if (model == null) {
+    model=new SedaModel();
+    model.setName(MuleProperties.OBJECT_SYSTEM_MODEL);
+    muleContext.getRegistry().registerModel(model);
+  }
+  Service service=muleContext.getRegistry().lookupService(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+  if (service != null) {
+    muleContext.getRegistry().unregisterComponent(service.getName());
+  }
+  service=new SedaService();
+  service.setName(EVENT_MULTICASTER_DESCRIPTOR_NAME);
+  if (subscriptions == null) {
+    logger.info("No receive endpoints have been set, using default '*'");
+    service.getInboundRouter().addEndpoint(muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint("vm://*"));
+  }
+ else {
+    InboundRouterCollection messageRouter=service.getInboundRouter();
+    for (int i=0; i < subscriptions.length; i++) {
+      String subscription=subscriptions[i];
+      EndpointFactory endpointFactory=muleContext.getRegistry().lookupEndpointFactory();
+      EndpointBuilder endpointBuilder=endpointFactory.getEndpointBuilder(subscription);
+      endpointBuilder.setSynchronous(!asynchronous);
+      ImmutableEndpoint endpoint=endpointFactory.getInboundEndpoint(endpointBuilder);
+      messageRouter.addEndpoint(endpoint);
+    }
+  }
+  service.setServiceFactory(new PrototypeObjectFactory(MuleEventMulticaster.class));
+  return service;
+}

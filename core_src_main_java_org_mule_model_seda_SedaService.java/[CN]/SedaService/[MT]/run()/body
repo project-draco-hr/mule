@@ -1,0 +1,62 @@
+{
+  DefaultMuleEvent event=null;
+  Object pojoService=null;
+  MuleProxy proxy=null;
+  QueueSession queueSession=muleContext.getQueueManager().getQueueSession();
+  while (!stopped.get()) {
+    try {
+      paused.whenFalse(null);
+      if (stopping.get()) {
+        if (queueSession == null || getQueueSize() <= 0) {
+          stopping.set(false);
+          break;
+        }
+      }
+      event=(DefaultMuleEvent)dequeue();
+      if (event != null) {
+        if (stats.isEnabled()) {
+          stats.decQueuedEvent();
+        }
+        if (logger.isDebugEnabled()) {
+          logger.debug("Service: " + name + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
+        }
+        pojoService=getOrCreateService();
+        proxy=createComponentProxy(pojoService);
+        proxy.onEvent(queueSession,event);
+        workManager.scheduleWork(proxy,WorkManager.INDEFINITE,null,this);
+      }
+    }
+ catch (    Exception e) {
+      if (isStopped() || isStopping()) {
+        break;
+      }
+      try {
+        if (serviceFactory != null) {
+          serviceFactory.release(pojoService);
+        }
+      }
+ catch (      Exception e2) {
+        logger.warn(e2);
+      }
+      if (e instanceof InterruptedException) {
+        stopping.set(false);
+        break;
+      }
+ else       if (e instanceof NoSuchElementException) {
+        handleException(new ServiceException(CoreMessages.proxyPoolTimedOut(),(event == null ? null : event.getMessage()),this,e));
+      }
+ else       if (e instanceof MuleException) {
+        handleException(e);
+      }
+ else       if (e instanceof WorkException) {
+        handleException(new ServiceException(CoreMessages.eventProcessingFailedFor(name),(event == null ? null : event.getMessage()),this,e));
+      }
+ else {
+        handleException(new ServiceException(CoreMessages.failedToGetPooledObject(),(event == null ? null : event.getMessage()),this,e));
+      }
+    }
+ finally {
+      stopping.set(false);
+    }
+  }
+}

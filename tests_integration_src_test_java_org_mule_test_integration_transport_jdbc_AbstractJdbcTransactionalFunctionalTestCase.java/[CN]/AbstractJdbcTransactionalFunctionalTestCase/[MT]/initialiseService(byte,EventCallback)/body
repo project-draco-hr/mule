@@ -1,0 +1,31 @@
+{
+  Service service=new SedaService();
+  service.setExceptionListener(new DefaultExceptionStrategy());
+  service.setName("testComponent");
+  service.setServiceFactory(new PrototypeObjectFactory(JdbcFunctionalTestComponent.class));
+  TransactionFactory tf=getTransactionFactory();
+  TransactionConfig txConfig=new MuleTransactionConfig();
+  txConfig.setFactory(tf);
+  txConfig.setAction(txBeginAction);
+  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(getInDest(),muleContext);
+  endpointBuilder.setName("testIn");
+  endpointBuilder.setConnector(connector);
+  endpointBuilder.setTransactionConfig(txConfig);
+  ImmutableEndpoint endpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder);
+  EndpointBuilder endpointBuilder2=new EndpointURIEndpointBuilder(getOutDest(),muleContext);
+  endpointBuilder2.setName("testOut");
+  endpointBuilder2.setConnector(connector);
+  ImmutableEndpoint outProvider=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder2);
+  service.setOutboundRouter(new DefaultOutboundRouterCollection());
+  OutboundPassThroughRouter router=new OutboundPassThroughRouter();
+  router.addEndpoint(outProvider);
+  service.getOutboundRouter().addRouter(router);
+  service.setInboundRouter(new DefaultInboundRouterCollection());
+  service.getInboundRouter().addEndpoint(endpoint);
+  HashMap props=new HashMap();
+  props.put("eventCallback",callback);
+  service.setProperties(props);
+  service.setModel(model);
+  muleContext.getRegistry().registerService(service);
+  return service;
+}
