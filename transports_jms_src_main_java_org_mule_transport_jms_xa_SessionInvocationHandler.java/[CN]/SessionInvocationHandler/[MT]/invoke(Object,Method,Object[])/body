@@ -3,7 +3,23 @@
     logger.debug("Invoking " + method);
   }
   if (underlyingObject.get() == null) {
-    throw new IllegalStateException("Underlying xaSession is null, XASession " + xaSession);
+    throw new IllegalStateException("Underlying session is null, XASession " + xaSession);
+  }
+  if (XaTransaction.MuleXaObject.DELIST_METHOD_NAME.equals(method.getName())) {
+    return Boolean.valueOf(delist());
+  }
+ else   if (XaTransaction.MuleXaObject.SET_REUSE_OBJECT_METHOD_NAME.equals(method.getName())) {
+    reuseObject=((Boolean)args[0]).booleanValue();
+    return null;
+  }
+ else   if (XaTransaction.MuleXaObject.IS_REUSE_OBJECT_METHOD_NAME.equals(method.getName())) {
+    return Boolean.valueOf(reuseObject);
+  }
+ else   if (XaTransaction.MuleXaObject.GET_TARGET_OBJECT_METHOD_NAME.equals(method.getName())) {
+    return getTargetObject();
+  }
+ else   if (XaTransaction.MuleXaObject.CLOSE_METHOD_NAME.equals(method.getName())) {
+    return SESSION_CLOSE_METHOD.invoke(underlyingObject.get(),args);
   }
   Object result=method.invoke(underlyingObject.get(),args);
   if (result instanceof TopicSubscriber) {

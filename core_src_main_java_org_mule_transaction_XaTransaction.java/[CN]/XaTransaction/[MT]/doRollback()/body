@@ -1,14 +1,17 @@
 {
   try {
-synchronized (this) {
-      TransactionManager txManager=MuleServer.getMuleContext().getTransactionManager();
-      txManager.rollback();
-    }
+    TransactionManager txManager=MuleServer.getMuleContext().getTransactionManager();
+    delistResources();
+    txManager.rollback();
   }
  catch (  SystemException e) {
     throw new TransactionRollbackException(e);
   }
+catch (  Exception e) {
+    throw new TransactionRollbackException(e);
+  }
  finally {
     this.transaction=null;
+    closeResources();
   }
 }
