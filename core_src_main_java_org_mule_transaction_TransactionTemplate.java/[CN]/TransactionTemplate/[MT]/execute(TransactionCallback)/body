@@ -5,11 +5,22 @@
  else {
     byte action=config.getAction();
     Transaction tx=TransactionCoordination.getInstance().getTransaction();
+    Transaction suspendedXATx=null;
     if (action == TransactionConfig.ACTION_NONE && tx != null) {
       throw new IllegalTransactionStateException(CoreMessages.transactionAvailableButActionIs("None"));
     }
  else     if (action == TransactionConfig.ACTION_ALWAYS_BEGIN && tx != null) {
-      throw new IllegalTransactionStateException(CoreMessages.transactionAvailableButActionIs("Always Begin"));
+      if (logger.isDebugEnabled()) {
+        logger.debug("Transaction action is ACTION_ALWAYS_BEGIN, " + "cuurent TX: " + tx);
+      }
+      if (tx.isXA()) {
+        suspendedXATx=tx;
+        suspendXATransaction(suspendedXATx);
+      }
+ else {
+        resolveTransaction(tx);
+      }
+      tx=null;
     }
  else     if (action == TransactionConfig.ACTION_ALWAYS_JOIN && tx == null) {
       throw new IllegalTransactionStateException(CoreMessages.transactionNotAvailableButActionIs("Always Join"));
@@ -17,7 +28,7 @@
     if (action == TransactionConfig.ACTION_ALWAYS_BEGIN || (action == TransactionConfig.ACTION_BEGIN_OR_JOIN && tx == null)) {
       logger.debug("Beginning transaction");
       tx=config.getFactory().beginTransaction(context);
-      logger.debug("Transaction successfully started");
+      logger.debug("Transaction successfully started: " + tx);
     }
  else {
       tx=null;
@@ -25,13 +36,10 @@
     try {
       Object result=callback.doInTransaction();
       if (tx != null) {
-        if (tx.isRollbackOnly()) {
-          logger.debug("Transaction is marked for rollback");
-          tx.rollback();
-        }
- else {
-          logger.debug("Committing transaction " + tx);
-          tx.commit();
+        resolveTransaction(tx);
+        if (suspendedXATx != null) {
+          resumeXATransaction(suspendedXATx);
+          tx=suspendedXATx;
         }
       }
       return result;
@@ -50,10 +58,10 @@
       if (tx != null) {
         if (tx.isRollbackOnly()) {
           logger.debug("Exception caught: rollback transaction",e);
-          tx.rollback();
         }
- else {
-          tx.commit();
+        resolveTransaction(tx);
+        if (suspendedXATx != null) {
+          resumeXATransaction(suspendedXATx);
         }
       }
       if (exceptionListener != null) {
@@ -65,7 +73,7 @@
     }
 catch (    Error e) {
       if (tx != null) {
-        logger.info("Error caught: rollback transaction",e);
+        logger.info("Error caught, rolling back TX " + tx,e);
         tx.rollback();
       }
       throw e;
