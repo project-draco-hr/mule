@@ -1,0 +1,52 @@
+{
+  if (!nodeOk) {
+    if (testLocal(notification)) {
+      nodeOk=true;
+      return SUCCESS;
+    }
+ else {
+      return FAILURE;
+    }
+  }
+  if (parallel.size() > 0) {
+    for (Iterator children=parallel.iterator(); children.hasNext(); ) {
+      Node child=(Node)children.next();
+switch (child.match(notification)) {
+case SUCCESS:
+        return SUCCESS;
+case EMPTY:
+      children.remove();
+    break;
+case FAILURE:
+  break;
+default :
+throw new IllegalStateException("Bad return from child");
+}
+}
+}
+if (parallel.size() > 0) {
+return FAILURE;
+}
+if (serial.size() > 0) {
+for (Iterator children=serial.iterator(); children.hasNext(); ) {
+Node child=(Node)children.next();
+switch (child.match(notification)) {
+case SUCCESS:
+return SUCCESS;
+case EMPTY:
+children.remove();
+break;
+case FAILURE:
+return FAILURE;
+default :
+throw new IllegalStateException("Bad return from child");
+}
+}
+}
+if (serial.size() > 0) {
+return FAILURE;
+}
+ else {
+return EMPTY;
+}
+}
