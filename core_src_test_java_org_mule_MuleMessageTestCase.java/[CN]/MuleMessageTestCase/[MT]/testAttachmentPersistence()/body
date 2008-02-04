@@ -1,0 +1,14 @@
+{
+  ObjectToByteArray transformer=new ObjectToByteArray();
+  transformer.setAcceptUMOMessage(true);
+  MuleEvent event=RequestContext.setEvent(getTestEvent("Mmm... attachments!"));
+  MuleMessage msg=event.getMessage();
+  msg.addAttachment("test-attachment",new DataHandler(new StringDataSource("attachment")));
+  Object serialized=transformer.transform(msg);
+  assertNotNull(serialized);
+  MuleMessage deserialized=(MuleMessage)new ByteArrayToObject().transform(serialized);
+  assertNotNull(deserialized);
+  assertEquals(deserialized.getUniqueId(),msg.getUniqueId());
+  assertEquals(deserialized.getPayload(),msg.getPayload());
+  assertEquals(deserialized.getAttachmentNames(),msg.getAttachmentNames());
+}
