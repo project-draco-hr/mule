@@ -1,11 +1,13 @@
 {
+  SaveCertificatesCallback callback=(SaveCertificatesCallback)muleContext.getRegistry().lookupObject("certificates");
+  callback.clear();
   MuleClient client=new MuleClient();
   for (int i=0; i < n; ++i) {
     String msg=TEST_MESSAGE + n;
     MuleMessage result=client.send("in",msg,null);
     assertEquals(FunctionalTestComponent.received(msg),result.getPayloadAsString());
   }
-  Iterator certificates=((SaveCertificatesCallback)muleContext.getRegistry().lookupObject("certificates")).getCertificates().iterator();
+  Iterator certificates=callback.getCertificates().iterator();
   for (int i=0; i < n; ++i) {
     assertTrue("No cert at " + i,certificates.hasNext());
     assertNotNull("Null cert at " + i,certificates.next());
