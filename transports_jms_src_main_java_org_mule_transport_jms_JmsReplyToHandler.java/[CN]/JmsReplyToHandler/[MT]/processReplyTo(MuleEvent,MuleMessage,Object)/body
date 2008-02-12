@@ -11,16 +11,18 @@
       return;
     }
     Class srcType=returnMessage.getPayload().getClass();
-    for (Iterator iterator=getTransformers().iterator(); iterator.hasNext(); ) {
-      Transformer t=(Transformer)iterator.next();
-      if (t.isSourceTypeSupported(srcType)) {
-        if (t.getEndpoint() == null) {
-          t.setEndpoint(getEndpoint(event,"jms://temporary"));
-          break;
+    if (TransformerUtils.isDefined(getTransformers())) {
+      for (Iterator iterator=getTransformers().iterator(); iterator.hasNext(); ) {
+        Transformer t=(Transformer)iterator.next();
+        if (t.isSourceTypeSupported(srcType)) {
+          if (t.getEndpoint() == null) {
+            t.setEndpoint(getEndpoint(event,"jms://temporary"));
+            break;
+          }
         }
       }
+      returnMessage.applyTransformers(getTransformers());
     }
-    returnMessage.applyTransformers(getTransformers());
     Object payload=returnMessage.getPayload();
     if (replyToDestination instanceof Topic && replyToDestination instanceof Queue && connector.getJmsSupport() instanceof Jms102bSupport) {
       logger.error(StringMessageUtils.getBoilerPlate("ReplyTo destination implements both Queue and Topic " + "while complying with JMS 1.0.2b specification. " + "Please report your application server or JMS vendor name and version "+ "to dev<_at_>mule.codehaus.org or http://mule.mulesource.org/jira"));
