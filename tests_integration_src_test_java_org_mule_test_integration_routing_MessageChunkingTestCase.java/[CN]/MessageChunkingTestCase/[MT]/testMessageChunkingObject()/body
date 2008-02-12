@@ -5,7 +5,7 @@
   final int parts=(int)Math.ceil((SerializationUtils.serialize(simpleSerializableObject).length / (double)2));
   muleContext.registerListener(new FunctionalTestNotificationListener(){
     public void onNotification(    ServerNotification notification){
-      assertEquals("ChunkingReceiver",notification.getResourceIdentifier());
+      assertEquals("ChunkingObjectReceiver",notification.getResourceIdentifier());
       Object reply=((FunctionalTestNotification)notification).getEventContext().getMessage().getPayload();
       assertTrue(reply instanceof SimpleSerializableObject);
       SimpleSerializableObject replySimpleSerializableObject=(SimpleSerializableObject)reply;
@@ -15,18 +15,18 @@
       chunkingReceiverLatch.countDown();
     }
   }
-,"ChunkingReceiver");
+,"ChunkingObjectReceiver");
   muleContext.registerListener(new MessageNotificationListener(){
     public void onNotification(    ServerNotification notification){
       if (notification.getAction() == MessageNotification.MESSAGE_RECEIVED) {
         messagePartsCount.getAndIncrement();
       }
-      assertEquals("ChunkingReceiver",notification.getResourceIdentifier());
+      assertEquals("ChunkingObjectReceiver",notification.getResourceIdentifier());
     }
   }
-,"ChunkingReceiver");
+,"ChunkingObjectReceiver");
   MuleClient client=new MuleClient();
-  client.dispatch("vm://inbound.channel",simpleSerializableObject,null);
+  client.dispatch("vm://inbound.object.channel",simpleSerializableObject,null);
   assertTrue(chunkingReceiverLatch.await(20L,TimeUnit.SECONDS));
   assertEquals(parts,messagePartsCount.get());
 }
