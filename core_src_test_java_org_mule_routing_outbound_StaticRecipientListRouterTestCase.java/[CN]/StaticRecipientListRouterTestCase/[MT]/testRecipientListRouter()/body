@@ -1,6 +1,6 @@
 {
   Mock session=MuleTestUtils.getMockSession();
-  Endpoint endpoint1=getTestOutboundEndpoint("Test1Provider");
+  ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider");
   assertNotNull(endpoint1);
   List recipients=new ArrayList();
   recipients.add("test://recipient1");
@@ -14,15 +14,15 @@
   assertEquals(2,router.getRecipients().size());
   MuleMessage message=new DefaultMuleMessage("test event");
   assertTrue(router.isMatch(message));
-  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)));
-  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)));
+  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(ImmutableEndpoint.class)));
+  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(ImmutableEndpoint.class)));
   router.route(message,(MuleSession)session.proxy(),false);
   session.verify();
   message=new DefaultMuleMessage("test event");
   router.getRecipients().add("test://recipient3");
-  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)),message);
-  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)),message);
-  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(Endpoint.class)),message);
+  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(ImmutableEndpoint.class)),message);
+  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(ImmutableEndpoint.class)),message);
+  session.expectAndReturn("sendEvent",C.args(C.isA(MuleMessage.class),C.isA(ImmutableEndpoint.class)),message);
   MuleMessage result=router.route(message,(MuleSession)session.proxy(),true);
   assertNotNull(result);
   assertTrue(result.getPayload() instanceof List);
