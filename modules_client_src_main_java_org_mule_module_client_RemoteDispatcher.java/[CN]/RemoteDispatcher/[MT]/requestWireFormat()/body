@@ -1,0 +1,22 @@
+{
+  MuleMessage msg=new DefaultMuleMessage(ServerHandshake.SERVER_HANDSHAKE_PROPERTY);
+  MuleMessage result=syncServerEndpoint.send(new DefaultMuleEvent(msg,syncServerEndpoint,new DefaultMuleSession(msg,new NullSessionHandler()),true));
+  if (result == null) {
+    throw new RemoteDispatcherException(ClientMessages.failedToDispatchActionNoResponseFromServer("request wire format",5000));
+  }
+  ServerHandshake handshake;
+  try {
+    ByteArrayInputStream in=new ByteArrayInputStream(result.getPayloadAsBytes());
+    handshake=(ServerHandshake)SerializationUtils.deserialize(in);
+  }
+ catch (  Exception e) {
+    throw new RemoteDispatcherException(ClientMessages.failedToDeserializeHandshakeFromServer(),e);
+  }
+  try {
+    WireFormat wf=(WireFormat)ClassUtils.instanciateClass(handshake.getWireFormatClass(),ClassUtils.NO_ARGS,getClass());
+    return wf;
+  }
+ catch (  Exception e) {
+    throw new UnsupportedWireFormatException(handshake.getWireFormatClass(),e);
+  }
+}

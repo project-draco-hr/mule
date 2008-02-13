@@ -1,0 +1,22 @@
+{
+  if (context.transformMessageToString().equals(ServerHandshake.SERVER_HANDSHAKE_PROPERTY)) {
+    return doHandshake(context);
+  }
+  Object result;
+  logger.debug("Message received by RemoteDispatcherComponent");
+  ByteArrayInputStream in=new ByteArrayInputStream(context.transformMessageToBytes());
+  RemoteDispatcherNotification action=(RemoteDispatcherNotification)((MuleMessage)wireFormat.read(in)).getPayload();
+  if (RemoteDispatcherNotification.ACTION_INVOKE == action.getAction()) {
+    result=invokeAction(action,context);
+  }
+ else   if (RemoteDispatcherNotification.ACTION_SEND == action.getAction() || RemoteDispatcherNotification.ACTION_DISPATCH == action.getAction()) {
+    result=sendAction(action,context);
+  }
+ else   if (RemoteDispatcherNotification.ACTION_RECEIVE == action.getAction()) {
+    result=receiveAction(action,context);
+  }
+ else {
+    result=handleException(null,new DefaultMuleException(CoreMessages.eventTypeNotRecognised("RemoteDispatcherNotification:" + action.getAction())));
+  }
+  return result;
+}
