@@ -5,16 +5,16 @@
       Socket socket=server.accept();
       logger.debug("have connection " + count);
       count.incrementAndGet();
-      try {
-        while (true) {
-          String msg=new String((byte[])protocol.read(new BufferedInputStream(socket.getInputStream())));
-          logger.debug("read: " + msg);
-          logger.debug("writing reply");
-          protocol.write(socket.getOutputStream(),"ok");
+      InputStream stream=new BufferedInputStream(socket.getInputStream());
+      while (true) {
+        Object read=protocol.read(stream);
+        if (null == read) {
+          break;
         }
-      }
- catch (      Exception e) {
-        logger.debug(e);
+        String msg=new String((byte[])read);
+        logger.debug("read: " + msg);
+        logger.debug("writing reply");
+        protocol.write(socket.getOutputStream(),"ok");
       }
     }
   }
