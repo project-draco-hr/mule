@@ -1,6 +1,6 @@
 {
   if (initialized.get()) {
-    return;
+    return LifecycleTransitionResult.OK;
   }
   if (mBeanServer == null && !locateServer && !createServer) {
     throw new InitialisationException(ManagementMessages.createOrLocateShouldBeSet(),this);
@@ -55,14 +55,15 @@
     }
   }
 ;
+  if (StringUtils.isBlank(muleContext.getId())) {
+    throw new IllegalArgumentException("Manager ID is mandatory when running with JmxAgent. Give your Mule configuration a valid ID.");
+  }
   try {
-    if (StringUtils.isBlank(muleContext.getId())) {
-      throw new IllegalArgumentException("Manager ID is mandatory when running with JmxAgent. Give your Mule configuration a valid ID.");
-    }
     muleContext.registerListener(l);
   }
  catch (  NotificationException e) {
     throw new InitialisationException(e,this);
   }
   initialized.compareAndSet(false,true);
+  return LifecycleTransitionResult.OK;
 }

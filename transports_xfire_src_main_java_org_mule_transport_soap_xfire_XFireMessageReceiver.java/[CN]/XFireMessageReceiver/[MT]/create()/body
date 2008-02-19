@@ -1,13 +1,12 @@
 {
   try {
-    Map props=new HashMap();
-    props.putAll(endpoint.getProperties());
+    Map props=new HashMap(endpoint.getProperties());
     if (props.containsKey(PORT_TYPE)) {
       Object value=props.get(PORT_TYPE);
       QName portTypeQName=QNamePropertyEditor.convert((String)value);
       props.put(PORT_TYPE,portTypeQName);
     }
-    String namespace=null;
+    String namespace=(String)endpoint.getProperties().get(SoapConstants.SOAP_NAMESPACE_PROPERTY);
     if (connector.isEnableJSR181Annotations()) {
       WebAnnotations wa=(WebAnnotations)ClassUtils.instanciateClass(XFireConnector.CLASSNAME_ANNOTATIONS,null,this.getClass());
       WebServiceAnnotation webServiceAnnotation=wa.getWebServiceAnnotation(service.getServiceFactory().getObjectClass());
@@ -32,6 +31,7 @@
       rewriteProperty(props,"scope");
       rewriteProperty(props,"schemas");
     }
+    serviceInterfaces=(List)endpoint.getProperties().get(SoapConstants.SERVICE_INTERFACES);
     Class exposedInterface;
     if (serviceInterfaces == null) {
       exposedInterface=service.getServiceFactory().getOrCreate().getClass();
@@ -44,7 +44,7 @@
         logger.info("Only the first class was used to expose your method");
       }
     }
-    String wsdlUrl=null;
+    String wsdlUrl=(String)endpoint.getProperties().get(SoapConstants.WSDL_URL_PROPERTY);
     if (StringUtils.isBlank(wsdlUrl)) {
       xfireService=connector.getServiceFactory().create(exposedInterface,service.getName(),namespace,props);
     }

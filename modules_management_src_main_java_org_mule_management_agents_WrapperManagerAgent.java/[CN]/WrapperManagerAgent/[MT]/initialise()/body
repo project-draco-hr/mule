@@ -12,7 +12,7 @@
  else     if (mBeanServer.isRegistered(jmxSupport.getObjectName(DEFAULT_WRAPPER_MBEAN_NAME))) {
       logger.info("Mule is embedded in a container already launched by a wrapper." + "Duplicates will not be registered. Use the " + DEFAULT_WRAPPER_MBEAN_NAME + " MBean "+ "instead for control.");
       unregisterMeQuietly();
-      return;
+      return LifecycleTransitionResult.OK;
     }
  else {
       lazyInitWrapperManager();
@@ -21,7 +21,7 @@
     if (!launchedByWrapper) {
       logger.info("This JVM hasn't been launched by the wrapper, the agent will not run.");
       unregisterMeQuietly();
-      return;
+      return LifecycleTransitionResult.OK;
     }
     wrapperName=jmxSupport.getObjectName(jmxSupport.getDomainName(muleContext) + ":" + WRAPPER_OBJECT_NAME);
     unregisterMBeansIfNecessary();
@@ -33,4 +33,5 @@
 catch (  Exception e) {
     throw new InitialisationException(CoreMessages.failedToStart("wrapper agent"),e,this);
   }
+  return LifecycleTransitionResult.OK;
 }

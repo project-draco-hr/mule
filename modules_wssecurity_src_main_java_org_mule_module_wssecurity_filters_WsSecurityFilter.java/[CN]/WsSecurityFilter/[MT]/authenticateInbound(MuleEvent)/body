@@ -1,7 +1,7 @@
 {
-  Map properties=event.getSession().getService().getProperties();
-  if (properties.containsKey("xfire")) {
-    XFire server=(XFire)properties.get("xfire");
+  ObjectFactory objFactory=event.getService().getServiceFactory();
+  if (objFactory instanceof SingletonObjectFactory && ((SingletonObjectFactory)objFactory).getInstance() instanceof XFireServiceComponent) {
+    XFire server=((XFireServiceComponent)((SingletonObjectFactory)objFactory).getInstance()).getXfire();
     String pathInfo=event.getEndpoint().getEndpointURI().getPath();
     String serviceName;
     int i=pathInfo.lastIndexOf('/');
@@ -65,8 +65,8 @@
       }
     }
   }
- else   if (properties.containsKey(AxisConnector.AXIS)) {
-    AxisServer server=(AxisServer)event.getSession().getService().getProperties().get(AxisConnector.AXIS);
+ else   if (objFactory instanceof SingletonObjectFactory && ((SingletonObjectFactory)objFactory).getInstance() instanceof AxisServiceComponent) {
+    AxisServer server=((AxisServiceComponent)((SingletonObjectFactory)objFactory).getInstance()).getAxis();
     MuleConfigProvider provider=(MuleConfigProvider)server.getConfig();
     String prefix=event.getEndpoint().getProtocol() + ":";
     String serviceName=event.getEndpoint().getName().substring(prefix.length());

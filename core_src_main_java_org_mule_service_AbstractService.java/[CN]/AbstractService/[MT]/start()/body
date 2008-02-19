@@ -1,18 +1,24 @@
 {
+  LifecycleTransitionResult status=LifecycleTransitionResult.OK;
   if (isStarted()) {
     logger.info("Service is already started: " + name);
-    return;
-  }
-  if (!beyondInitialState.get() && initialState.equals(AbstractService.INITIAL_STATE_STOPPED)) {
-    logger.info("Service " + name + " has not been started (initial state = 'stopped')");
-  }
- else   if (!beyondInitialState.get() && initialState.equals(AbstractService.INITIAL_STATE_PAUSED)) {
-    start(true);
-    logger.info("Service " + name + " has been started and paused (initial state = 'paused')");
   }
  else {
-    start(false);
-    logger.info("Service " + name + " has been started successfully");
+    if (initialState.equals(AbstractService.INITIAL_STATE_STOPPED)) {
+      System.out.println("stopped");
+    }
+    if (!beyondInitialState.get() && initialState.equals(AbstractService.INITIAL_STATE_STOPPED)) {
+      logger.info("Service " + name + " has not been started (initial state = 'stopped')");
+    }
+ else     if (!beyondInitialState.get() && initialState.equals(AbstractService.INITIAL_STATE_PAUSED)) {
+      status=start(true);
+      logger.info("Service " + name + " has been started and paused (initial state = 'paused')");
+    }
+ else {
+      status=start(false);
+      logger.info("Service " + name + " has been started successfully");
+    }
+    beyondInitialState.set(true);
   }
-  beyondInitialState.set(true);
+  return status;
 }

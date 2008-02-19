@@ -1,0 +1,28 @@
+{
+  if (!iface.isAssignableFrom(target.getClass())) {
+    throw new IllegalArgumentException(ClassUtils.getSimpleName(target.getClass()) + " is not an " + ClassUtils.getSimpleName(iface));
+  }
+  try {
+    LifecycleTransitionResult result=(LifecycleTransitionResult)method.invoke(target,ClassUtils.NO_ARGS);
+    if (result != LifecycleTransitionResult.OK) {
+      if (null != exception) {
+        if (exception.equals(InitialisationException.class)) {
+          throw new InitialisationException(CoreMessages.nestedRetry(),(Initialisable)target);
+        }
+ else {
+          throw new LifecycleException(CoreMessages.nestedRetry(),target);
+        }
+      }
+ else {
+        throw new IllegalStateException("Unexpected state from transition: " + result);
+      }
+    }
+    return result;
+  }
+ catch (  IllegalAccessException e) {
+    throw (IllegalArgumentException)new IllegalArgumentException("Unsupported interface: " + iface).initCause(e);
+  }
+catch (  InvocationTargetException e) {
+    throw (IllegalArgumentException)new IllegalArgumentException("Unsupported interface: " + iface).initCause(e);
+  }
+}

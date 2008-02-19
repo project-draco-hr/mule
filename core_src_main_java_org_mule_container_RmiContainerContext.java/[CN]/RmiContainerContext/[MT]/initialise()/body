@@ -1,19 +1,24 @@
 {
-  super.initialise();
-  if (securityPolicy != null) {
-    if (ClassUtils.getResource(securityPolicy,getClass()) != null) {
-      System.setProperty("java.security.policy",securityPolicy);
-    }
-  }
-  if (System.getSecurityManager() == null) {
-    try {
-      if (securityManager != null) {
-        Class clazz=ClassUtils.loadClass(securityManager,getClass());
-        System.setSecurityManager((SecurityManager)clazz.newInstance());
+  return LifecycleLogic.initialiseAll(this,super.initialise(),new LifecycleLogic.Closure(){
+    public LifecycleTransitionResult doContinue() throws InitialisationException {
+      if (securityPolicy != null) {
+        if (ClassUtils.getResource(securityPolicy,getClass()) != null) {
+          System.setProperty("java.security.policy",securityPolicy);
+        }
       }
-    }
- catch (    Exception e) {
-      throw new InitialisationException(e,this);
+      if (System.getSecurityManager() == null) {
+        try {
+          if (securityManager != null) {
+            Class clazz=ClassUtils.loadClass(securityManager,getClass());
+            System.setSecurityManager((SecurityManager)clazz.newInstance());
+          }
+        }
+ catch (        Exception e) {
+          throw new InitialisationException(e,RmiContainerContext.this);
+        }
+      }
+      return LifecycleTransitionResult.OK;
     }
   }
+);
 }

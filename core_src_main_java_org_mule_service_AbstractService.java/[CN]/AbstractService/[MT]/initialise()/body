@@ -21,13 +21,18 @@
     ((MuleContextAware)exceptionListener).setMuleContext(muleContext);
     ((Initialisable)exceptionListener).initialise();
   }
-  serviceFactory.initialise();
-  doInitialise();
-  stats=createStatistics();
-  stats.setEnabled(muleContext.getStatistics().isEnabled());
-  muleContext.getStatistics().add(stats);
-  stats.setOutboundRouterStat(outboundRouter.getStatistics());
-  stats.setInboundRouterStat(inboundRouter.getStatistics());
-  initialised.set(true);
-  fireComponentNotification(ServiceNotification.SERVICE_INITIALISED);
+  return LifecycleLogic.initialiseAll(this,serviceFactory.initialise(),new LifecycleLogic.Closure(){
+    public LifecycleTransitionResult doContinue() throws InitialisationException {
+      doInitialise();
+      stats=createStatistics();
+      stats.setEnabled(muleContext.getStatistics().isEnabled());
+      muleContext.getStatistics().add(stats);
+      stats.setOutboundRouterStat(outboundRouter.getStatistics());
+      stats.setInboundRouterStat(inboundRouter.getStatistics());
+      initialised.set(true);
+      fireComponentNotification(ServiceNotification.SERVICE_INITIALISED);
+      return LifecycleTransitionResult.OK;
+    }
+  }
+);
 }

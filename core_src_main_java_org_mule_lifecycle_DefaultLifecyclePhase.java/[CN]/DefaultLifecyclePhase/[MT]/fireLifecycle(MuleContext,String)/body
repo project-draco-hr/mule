@@ -11,30 +11,37 @@
   if (!isPhaseSupported(currentPhase)) {
     throw new IllegalStateException("Lifecycle phase: " + name + " does not support current phase: "+ currentPhase+ ". Phases supported are: "+ StringMessageUtils.toString(supportedPhases));
   }
-  boolean fireDefault=true;
-  Set called=new HashSet();
+  Set duplicates=new HashSet();
   for (Iterator iterator=orderedLifecycleObjects.iterator(); iterator.hasNext(); ) {
     LifecycleObject lo=(LifecycleObject)iterator.next();
-    if (lo.getType().equals(getLifecycleClass())) {
-      fireDefault=false;
-    }
-    Collection objects=RegistryContext.getRegistry().lookupObjects(lo.getType(),getRegistryScope());
-    if (objects != null && objects.size() > 0) {
+    List targets=new LinkedList(RegistryContext.getRegistry().lookupObjects(lo.getType(),getRegistryScope()));
+    if (targets.size() > 0) {
       lo.firePreNotification(muleContext);
-      for (Iterator iterator1=objects.iterator(); iterator1.hasNext(); ) {
-        Object o=iterator1.next();
-        if (called.contains(new Integer(o.hashCode()))) {
-          continue;
+      for (int retryCount=0; retryCount < RETRY_MAX && targets.size() > 0; ++retryCount) {
+        for (Iterator target=targets.iterator(); target.hasNext(); ) {
+          Object o=target.next();
+          if (duplicates.contains(o)) {
+            target.remove();
+          }
+ else {
+            if (logger.isDebugEnabled()) {
+              logger.debug("lifecycle phase: " + getName() + " for object: "+ o);
+            }
+            if (LifecycleTransitionResult.OK == applyLifecycle(o)) {
+              target.remove();
+              duplicates.add(o);
+            }
+ else             if (logger.isDebugEnabled()) {
+              logger.debug("retry requested for lifecycle phase: " + getName() + " for object: "+ o);
+            }
+          }
         }
-        if (logger.isDebugEnabled()) {
-          logger.debug("lifecycle phase: " + getName() + " for object: "+ o);
-        }
-        applyLifecycle(o);
-        called.add(new Integer(o.hashCode()));
+      }
+      if (targets.size() > 0) {
+        Object component=targets.iterator().next();
+        throw new LifecycleException(CoreMessages.exceededRetry(getName(),component),component);
       }
       lo.firePostNotification(muleContext);
     }
-  }
-  if (fireDefault) {
   }
 }

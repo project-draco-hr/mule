@@ -5,7 +5,10 @@
     endpoint=(ImmutableEndpoint)it.next();
     MessageReceiver receiver=((AbstractConnector)endpoint.getConnector()).getReceiver(this,endpoint);
     if (receiver != null) {
-      receiver.stop();
+      if (LifecycleTransitionResult.OK != receiver.stop()) {
+        throw new LifecycleException(CoreMessages.nestedRetry(),receiver);
+      }
     }
   }
+  return LifecycleTransitionResult.OK;
 }
