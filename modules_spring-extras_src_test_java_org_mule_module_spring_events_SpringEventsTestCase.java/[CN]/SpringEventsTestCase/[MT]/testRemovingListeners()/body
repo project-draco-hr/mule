@@ -1,7 +1,7 @@
 {
-  TestSubscriptionEventBean subscriptionBean=(TestSubscriptionEventBean)context.getBean("testSubscribingEventBean1");
+  TestSubscriptionEventBean subscriptionBean=(TestSubscriptionEventBean)muleContext.getRegistry().lookupObject("testSubscribingEventBean1");
   assertNotNull(subscriptionBean);
-  MuleEventMulticaster multicaster=(MuleEventMulticaster)context.getBean(AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME);
+  MuleEventMulticaster multicaster=(MuleEventMulticaster)muleContext.getRegistry().lookupObject(AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME);
   assertNotNull(multicaster);
   Latch whenFinished=new Latch();
   subscriptionBean.setEventCallback(new CountingEventCallback(eventCounter1,1,whenFinished));
@@ -18,6 +18,5 @@
   client.send("vm://event.multicaster","Test Spring MuleEvent",null);
   assertEquals(0,eventCounter1.get());
   multicaster.addApplicationListener(subscriptionBean);
-  context.refresh();
   subscriptionBean.setEventCallback(null);
 }

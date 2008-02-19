@@ -1,10 +1,11 @@
 {
-  TestAllEventBean bean=(TestAllEventBean)context.getBean("testAllEventBean");
+  TestAllEventBean bean=(TestAllEventBean)muleContext.getRegistry().lookupObject("testAllEventBean");
   assertNotNull(bean);
   Latch whenFinished=new Latch();
   bean.setEventCallback(new CountingEventCallback(eventCounter1,2,whenFinished));
   MuleClient client=new MuleClient();
   client.send("vm://event.multicaster","Test Spring MuleEvent",null);
+  ApplicationContext context=((MuleEventMulticaster)muleContext.getRegistry().lookupObject("applicationEventMulticaster")).applicationContext;
   context.publishEvent(new TestApplicationEvent(context));
   whenFinished.await(3000,TimeUnit.MILLISECONDS);
   assertEquals(2,eventCounter1.get());

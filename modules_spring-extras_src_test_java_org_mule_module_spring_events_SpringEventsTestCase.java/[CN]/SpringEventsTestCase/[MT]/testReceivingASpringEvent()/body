@@ -1,5 +1,5 @@
 {
-  TestApplicationEventBean bean=(TestApplicationEventBean)context.getBean("testEventSpringBean");
+  TestApplicationEventBean bean=(TestApplicationEventBean)muleContext.getRegistry().lookupObject("testEventSpringBean");
   assertNotNull(bean);
   final Latch whenFinished=new Latch();
   EventCallback callback=new EventCallback(){
@@ -14,6 +14,7 @@
   }
 ;
   bean.setEventCallback(callback);
+  ApplicationContext context=((MuleEventMulticaster)muleContext.getRegistry().lookupObject("applicationEventMulticaster")).applicationContext;
   context.publishEvent(new TestApplicationEvent(context));
   whenFinished.await(3000,TimeUnit.MILLISECONDS);
   assertEquals(1,eventCounter1.get());

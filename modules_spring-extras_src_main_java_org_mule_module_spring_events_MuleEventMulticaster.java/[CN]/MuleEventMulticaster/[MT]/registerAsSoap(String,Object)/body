@@ -1,3 +1,32 @@
 {
-  throw new DefaultMuleException("Need to reimplement this method without using the QuickConfigurationBuilder.");
+  if (endpoint.startsWith("glue") || endpoint.startsWith("soap") || endpoint.startsWith("axis")|| endpoint.startsWith("xfire")) {
+    EndpointURI ep=new MuleEndpointURI(endpoint);
+    String serviceName=null;
+    if (ep.getPath() != null) {
+      String path=ep.getPath();
+      if (path.endsWith("/")) {
+        path=path.substring(0,path.length() - 1);
+      }
+      int i=path.lastIndexOf("/");
+      if (i > -1) {
+        serviceName=path.substring(i + 1);
+      }
+    }
+ else {
+      serviceName=service.getName();
+    }
+    String newEndpoint=endpoint;
+    int i=newEndpoint.indexOf(serviceName);
+    newEndpoint=newEndpoint.substring(0,i - 1);
+    SedaService s=new SedaService();
+    s.setName(serviceName);
+    s.setQueueProfile(new QueueProfile());
+    s.getInboundRouter().addEndpoint(muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(newEndpoint));
+    s.setServiceFactory(new SingletonObjectFactory(listener));
+    muleContext.getRegistry().registerService(s);
+    return true;
+  }
+ else {
+    return false;
+  }
 }
