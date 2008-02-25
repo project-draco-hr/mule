@@ -6,16 +6,11 @@
   if (workManager == null) {
     throw new NullPointerException(CoreMessages.objectIsNull("workManager").getMessage());
   }
-  if (config == null) {
-    logger.info("A mule configuration object was not registered. Using default configuration");
-    config=new MuleConfiguration();
-  }
   try {
-    setupIds();
-    validateEncoding();
-    validateOSEncoding();
-    validateXML();
-    directories=new Directories(FileUtils.newFile(config.getWorkingDirectory()));
+    registryBroker=createRegistryBroker();
+    muleRegistry=new MuleRegistryHelper(registryBroker);
+    registryBroker.initialise();
+    directories=new Directories(FileUtils.newFile(getConfiguration().getWorkingDirectory()));
     workManager.start();
     getNotificationManager().start(workManager);
     fireNotification(new ManagerNotification(this,ManagerNotification.MANAGER_INITIALISING));
