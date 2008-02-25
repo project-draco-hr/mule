@@ -4,25 +4,40 @@
     return;
   }
 switch (event.getType()) {
-case BundleEvent.STARTED:
+case BundleEvent.INSTALLED:
 {
-      String configResources=getMuleConfigResources(bundle);
-      if (configResources != null) {
-        logger.info("New Mule configuration detected: " + configResources);
-        MuleContext muleContext=(MuleContext)muleContextRef.getService();
-        try {
-          new SpringXmlConfigurationBuilder(configResources).configure(muleContext);
-        }
- catch (        ConfigurationException e) {
-          logger.error(e);
-        }
+      Enumeration schemas=bundle.findEntries("/","*.xsd",true);
+      while (schemas.hasMoreElements()) {
+        URL url=(URL)schemas.nextElement();
+        logger.debug("Schema found in bundle: " + url);
       }
-      break;
     }
-case BundleEvent.STOPPING:
+case BundleEvent.STARTING:
 {
+    String configResourceList=getMuleConfigResources(bundle);
+    if (configResourceList != null) {
+      logger.info("Processing Mule configuration: " + configResourceList);
+      MuleContext muleContext=(MuleContext)muleContextRef.getService();
+      try {
+        String[] configResources=StringUtils.splitAndTrim(configResourceList,",; ");
+        ConfigResource[] configResourceUrls=new ConfigResource[configResources.length];
+        for (int i=0; i < configResources.length; i++) {
+          configResourceUrls[i]=new ConfigResource(bundle.getEntry(configResources[i]));
+        }
+        SpringXmlConfigurationBuilder builder=new SpringXmlConfigurationBuilder(configResourceUrls);
+        builder.setUseDefaultConfigResource(false);
+        builder.configure(muleContext);
+      }
+ catch (      ConfigurationException ce) {
+        logger.error(ce);
+      }
+    }
     break;
   }
+case BundleEvent.STOPPING:
+{
+  break;
+}
 default :
 break;
 }
