@@ -15,22 +15,37 @@
   if (!attemptFileLock(sourceFile)) {
     return;
   }
-  File destinationFile=null;
+  FileConnector fc=((FileConnector)connector);
   String sourceFileOriginalName=sourceFile.getName();
+  if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
+    throw new DefaultMuleException(FileMessages.fileDoesNotExist(sourceFileOriginalName));
+  }
+  DefaultMessageAdapter fileParserMsgAdaptor=new DefaultMessageAdapter(null);
+  fileParserMsgAdaptor.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+  File destinationFile=null;
+  if (moveDir != null) {
+    String destinationFileName=sourceFileOriginalName;
+    if (moveToPattern != null) {
+      destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(fileParserMsgAdaptor,moveToPattern);
+    }
+    destinationFile=FileUtils.newFile(moveDir,destinationFileName);
+  }
   MessageAdapter msgAdapter=null;
-  FileInputStream fileIn=null;
   try {
-    fileIn=new ReceiverFileInputStream(sourceFile,moveDir != null);
-    msgAdapter=connector.getMessageAdapter(fileIn);
+    if (fc.isStreaming()) {
+      msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(sourceFile,fc.isAutoDelete(),destinationFile));
+    }
+ else {
+      msgAdapter=connector.getMessageAdapter(sourceFile);
+    }
   }
  catch (  FileNotFoundException e) {
     logger.error("File being read disappeared!",e);
     return;
   }
   msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-  FileConnector fc=((FileConnector)connector);
-  if (!fc.isStreaming() || (fc.isStreaming() && !fc.isAutoDelete())) {
-    moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,msgAdapter,fileIn);
+  if (!fc.isStreaming()) {
+    moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,msgAdapter);
   }
  else {
     this.routeMessage(new DefaultMuleMessage(msgAdapter),endpoint.isSynchronous());

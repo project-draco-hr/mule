@@ -1,0 +1,32 @@
+{
+  boolean fileWasMoved=false;
+  try {
+    if (destinationFile != null) {
+      fileWasMoved=FileUtils.moveFile(sourceFile,destinationFile);
+      if (!fileWasMoved) {
+        throw new DefaultMuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
+      }
+      msgAdapter=connector.getMessageAdapter(destinationFile);
+      msgAdapter.setProperty(FileConnector.PROPERTY_FILENAME,destinationFile.getName());
+      msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+    }
+    this.routeMessage(new DefaultMuleMessage(msgAdapter),endpoint.isSynchronous());
+    if (((FileConnector)connector).isAutoDelete()) {
+      if (destinationFile == null) {
+        if (!sourceFile.delete()) {
+          throw new DefaultMuleException(FileMessages.failedToDeleteFile(sourceFile.getAbsolutePath()));
+        }
+      }
+ else {
+      }
+    }
+  }
+ catch (  Exception e) {
+    boolean fileWasRolledBack=false;
+    if (fileWasMoved) {
+      fileWasRolledBack=rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
+    }
+    Exception ex=new RoutingException(FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new DefaultMuleMessage(msgAdapter),endpoint,e);
+    this.handleException(ex);
+  }
+}

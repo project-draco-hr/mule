@@ -28,29 +28,41 @@
           return null;
         }
       }
-      DefaultMuleMessage message;
+      FileConnector fc=((FileConnector)connector);
+      String sourceFileOriginalName=result.getName();
+      DefaultMessageAdapter fileParserMsgAdaptor=new DefaultMessageAdapter(null);
+      fileParserMsgAdaptor.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
       File destinationFile=null;
-      if (connector.getMoveToDirectory() != null) {
-        destinationFile=FileUtils.newFile(connector.getMoveToDirectory(),result.getName());
-        if (!result.renameTo(destinationFile)) {
-          logger.error("Failed to move file: " + result.getAbsolutePath() + " to "+ destinationFile.getAbsolutePath());
-          message=new DefaultMuleMessage(connector.getMessageAdapter(result));
+      String movDir=fc.getMoveToDirectory();
+      if (movDir != null) {
+        String destinationFileName=sourceFileOriginalName;
+        String moveToPattern=fc.getMoveToPattern();
+        if (moveToPattern != null) {
+          destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(fileParserMsgAdaptor,moveToPattern);
+        }
+        destinationFile=FileUtils.newFile(movDir,destinationFileName);
+      }
+      MessageAdapter msgAdapter=null;
+      try {
+        if (fc.isStreaming()) {
+          msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(result,fc.isAutoDelete(),destinationFile));
         }
  else {
-          message=new DefaultMuleMessage(connector.getMessageAdapter(destinationFile));
+          msgAdapter=connector.getMessageAdapter(result);
         }
+      }
+ catch (      FileNotFoundException e) {
+        logger.error("File being read disappeared!",e);
+        return null;
+      }
+      msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+      if (!fc.isStreaming()) {
+        moveOrDelete(result,destinationFile);
+        return new DefaultMuleMessage(msgAdapter);
       }
  else {
-        message=new DefaultMuleMessage(connector.getMessageAdapter(result));
+        return new DefaultMuleMessage(msgAdapter);
       }
-      if (connector.isAutoDelete()) {
-        if (destinationFile == null) {
-          if (!result.delete()) {
-            throw new DefaultMuleException(FileMessages.failedToDeleteFile(result.getAbsolutePath()));
-          }
-        }
-      }
-      return message;
     }
   }
   return null;

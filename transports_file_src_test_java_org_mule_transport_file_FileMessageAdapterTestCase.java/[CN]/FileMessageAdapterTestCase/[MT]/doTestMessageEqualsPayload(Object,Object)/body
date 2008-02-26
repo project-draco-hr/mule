@@ -1,0 +1,24 @@
+{
+  byte[] messageBytes=null;
+  byte[] payloadBytes=null;
+  if (message instanceof File) {
+    File file=(File)message;
+    FileInputStream payloadFis=(FileInputStream)payload;
+    messageBytes=new byte[(int)file.length()];
+    payloadBytes=new byte[payloadFis.available()];
+    new FileInputStream((File)message).read(messageBytes);
+    ((FileInputStream)payload).read(payloadBytes);
+  }
+ else   if (message instanceof FileInputStream) {
+    FileInputStream fis=(FileInputStream)message;
+    FileInputStream payloadFis=(FileInputStream)payload;
+    messageBytes=new byte[fis.available()];
+    payloadBytes=new byte[payloadFis.available()];
+    fis.read(messageBytes);
+    payloadFis.read(payloadBytes);
+  }
+ else {
+    fail("FileMessageAdaptor supports File or FileInputStream");
+  }
+  assertTrue(Arrays.equals(messageBytes,payloadBytes));
+}
