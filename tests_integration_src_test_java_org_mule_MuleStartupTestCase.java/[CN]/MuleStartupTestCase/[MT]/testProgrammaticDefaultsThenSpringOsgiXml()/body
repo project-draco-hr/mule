@@ -1,9 +1,8 @@
 {
   setUpOsgiFramework();
   muleContext=new DefaultMuleContextFactory().createMuleContext(new OsgiMuleContextBuilder(bundleContext));
-  SpringXmlConfigurationBuilder builder=new SpringXmlConfigurationBuilder(USER_CONFIG);
-  builder.setUseDefaultConfigResource(false);
-  builder.configure(muleContext);
+  bundleContext.registerService(new String[]{OsgiMuleContext.class.getName(),MuleContext.class.getName()},muleContext,null);
+  new SpringOsgiXmlConfigurationBuilder(new String[]{"classpath:" + USER_CONFIG},bundleContext).configure(muleContext);
   muleContext.start();
   assertTrue("Default configuration not found in registry",verifyDefaultConfig());
   assertTrue("User configuration not found in registry",verifyUserConfig());
