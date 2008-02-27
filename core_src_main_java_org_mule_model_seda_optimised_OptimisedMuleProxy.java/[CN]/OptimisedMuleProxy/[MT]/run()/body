@@ -3,7 +3,7 @@
     logger.trace("MuleProxy: async onEvent for Mule UMO " + service.getName());
   }
   try {
-    if (event.getEndpoint().isInbound()) {
+    if (event.getEndpoint() instanceof InboundEndpoint) {
       event=RequestContext.setEvent(event);
       long startTime=0;
       if (stat.isEnabled()) {
@@ -19,7 +19,8 @@
       }
     }
  else {
-      event.getEndpoint().dispatch(event);
+      OutboundEndpoint endpoint=(OutboundEndpoint)event.getEndpoint();
+      endpoint.dispatch(event);
     }
     if (stat.isEnabled()) {
       stat.incSentEventASync();

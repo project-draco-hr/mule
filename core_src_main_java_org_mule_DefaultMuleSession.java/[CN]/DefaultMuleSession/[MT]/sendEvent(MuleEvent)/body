@@ -3,7 +3,7 @@
   if (timeout >= 0) {
     event.setTimeout(timeout);
   }
-  if (event.getEndpoint().isOutbound()) {
+  if (event.getEndpoint() instanceof OutboundEndpoint) {
     try {
       if (logger.isDebugEnabled()) {
         logger.debug("sending event: " + event);
@@ -16,7 +16,7 @@
         logger.warn("A session handler could not be obtained, using default.");
         new MuleSessionHandler().storeSessionInfoToMessage(this,event.getMessage());
       }
-      MuleMessage response=event.getEndpoint().send(event);
+      MuleMessage response=((OutboundEndpoint)event.getEndpoint()).send(event);
       response=OptimizedRequestContext.unsafeRewriteEvent(response);
       processResponse(response);
       return response;

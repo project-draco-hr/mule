@@ -7,7 +7,10 @@
   req.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,"GET");
   MuleSession session=new DefaultMuleSession(service,connector.getMuleContext());
   MuleEvent event=new DefaultMuleEvent(req,endpoint,session,true);
-  MuleMessage message=connector.send(endpoint,event);
+  MuleContext muleContext=endpoint.getMuleContext();
+  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(endpoint,muleContext);
+  OutboundEndpoint outboundEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
+  MuleMessage message=connector.send(outboundEndpoint,event);
   int status=message.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,0);
   etag=message.getStringProperty(HttpConstants.HEADER_ETAG,null);
   if (status != 304 || !checkEtag) {
