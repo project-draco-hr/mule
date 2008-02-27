@@ -1,7 +1,14 @@
 {
-  ObjectFactory objFactory=event.getService().getServiceFactory();
-  if (objFactory instanceof SingletonObjectFactory && ((SingletonObjectFactory)objFactory).getInstance() instanceof XFireServiceComponent) {
-    XFire server=((XFireServiceComponent)((SingletonObjectFactory)objFactory).getInstance()).getXfire();
+  ObjectFactory objFactory=event.getService().getComponentFactory();
+  Object component;
+  try {
+    component=objFactory.getInstance();
+  }
+ catch (  Exception ex) {
+    throw new MuleRuntimeException(CoreMessages.authDeniedOnEndpoint(event.getEndpoint().getEndpointURI()),ex);
+  }
+  if (objFactory instanceof SingletonObjectFactory && component instanceof XFireServiceComponent) {
+    XFire server=((XFireServiceComponent)component).getXfire();
     String pathInfo=event.getEndpoint().getEndpointURI().getPath();
     String serviceName;
     int i=pathInfo.lastIndexOf('/');
@@ -65,8 +72,8 @@
       }
     }
   }
- else   if (objFactory instanceof SingletonObjectFactory && ((SingletonObjectFactory)objFactory).getInstance() instanceof AxisServiceComponent) {
-    AxisServer server=((AxisServiceComponent)((SingletonObjectFactory)objFactory).getInstance()).getAxis();
+ else   if (objFactory instanceof SingletonObjectFactory && component instanceof AxisServiceComponent) {
+    AxisServer server=((AxisServiceComponent)component).getAxis();
     MuleConfigProvider provider=(MuleConfigProvider)server.getConfig();
     String prefix=event.getEndpoint().getProtocol() + ":";
     String serviceName=event.getEndpoint().getName().substring(prefix.length());
