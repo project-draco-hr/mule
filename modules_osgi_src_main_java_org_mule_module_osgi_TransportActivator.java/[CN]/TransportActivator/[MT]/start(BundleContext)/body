@@ -1,6 +1,8 @@
 {
-  Dictionary headers=bc.getBundle().getHeaders();
-  String transportHeader=(String)headers.get(OSGI_HEADER_TRANSPORTS);
+  Bundle bundle=bc.getBundle();
+  ClassLoader bundleClassLoader=BundleDelegatingClassLoader.createBundleClassLoaderFor(bundle);
+  Dictionary headers=bundle.getHeaders();
+  String transportHeader=(String)headers.get(TransportServiceDescriptor.OSGI_HEADER_TRANSPORT);
   if (transportHeader == null) {
     throw new ConfigurationException(MessageFactory.createStaticMessage("Transport must declare its protocol(s) as an OSGi header."));
   }
@@ -9,7 +11,7 @@
   for (int i=0; i < transports.length; ++i) {
     transport=transports[i];
     String descriptorPath="/" + SpiUtils.SERVICE_ROOT + SpiUtils.PROVIDER_SERVICE_PATH+ transport+ ".properties";
-    URL descriptorUrl=bc.getBundle().getEntry(descriptorPath);
+    URL descriptorUrl=bundle.getEntry(descriptorPath);
     if (descriptorUrl == null) {
       throw new ConfigurationException(MessageFactory.createStaticMessage("Unable to locate service descriptor file: " + descriptorPath));
     }
@@ -20,6 +22,7 @@
     osgiProps.put(Constants.SERVICE_PID,headers.get(Constants.BUNDLE_SYMBOLICNAME) + "." + transport);
     osgiProps.put(Constants.SERVICE_DESCRIPTION,headers.get(Constants.BUNDLE_DESCRIPTION));
     osgiProps.put(Constants.SERVICE_VENDOR,headers.get(Constants.BUNDLE_VENDOR));
+    osgiProps.put(TransportServiceDescriptor.OSGI_HEADER_TRANSPORT,transport);
     descriptorRef=bc.registerService(TransportServiceDescriptor.class.getName(),descriptor,osgiProps);
   }
 }

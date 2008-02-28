@@ -1,0 +1,25 @@
+{
+  if (ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE.equals(type)) {
+    ServiceReference[] transportRefs;
+    String filter="(" + TransportServiceDescriptor.OSGI_HEADER_TRANSPORT + "="+ name+ ")";
+    try {
+      transportRefs=bundleContext.getServiceReferences(TransportServiceDescriptor.class.getName(),filter);
+    }
+ catch (    InvalidSyntaxException e) {
+      throw new ServiceException(MessageFactory.createStaticMessage("Unable to look up TransportServiceDescriptors with filter: " + filter),e);
+    }
+    if (transportRefs == null || transportRefs.length < 1) {
+      throw new ServiceException(MessageFactory.createStaticMessage("No transport available with the schema: " + name));
+    }
+ else     if (transportRefs.length > 1) {
+      throw new ServiceException(MessageFactory.createStaticMessage("More than one transport is available with the schema: " + name + " and no algorithm is implemented to choose the correct one."));
+    }
+ else {
+      ServiceDescriptor sd=(ServiceDescriptor)bundleContext.getService(transportRefs[0]);
+      return sd;
+    }
+  }
+ else {
+    return super.lookupServiceDescriptor(type,name,overrides);
+  }
+}
