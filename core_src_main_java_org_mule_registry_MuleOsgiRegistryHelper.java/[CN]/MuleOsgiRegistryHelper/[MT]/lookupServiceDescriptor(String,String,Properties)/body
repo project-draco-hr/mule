@@ -1,9 +1,21 @@
 {
   if (ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE.equals(type)) {
-    ServiceReference[] transportRefs;
+    ServiceReference[] transportRefs=null;
     String filter="(" + TransportServiceDescriptor.OSGI_HEADER_TRANSPORT + "="+ name+ ")";
     try {
-      transportRefs=bundleContext.getServiceReferences(TransportServiceDescriptor.class.getName(),filter);
+      ServiceReference[] refs=bundleContext.getServiceReferences(TransportServiceDescriptor.class.getName(),null);
+      int nRefs=refs.length;
+      logger.debug("Searching for transport = " + name + ", "+ nRefs+ " TransportServiceDescriptor(s) found");
+      String transport;
+      for (int i=0; i < nRefs; ++i) {
+        transport=(String)refs[i].getProperty(TransportServiceDescriptor.OSGI_HEADER_TRANSPORT);
+        logger.debug("transport = " + transport);
+        if (name.equals(transport)) {
+          transportRefs=new ServiceReference[1];
+          transportRefs[0]=refs[i];
+          break;
+        }
+      }
     }
  catch (    InvalidSyntaxException e) {
       throw new ServiceException(MessageFactory.createStaticMessage("Unable to look up TransportServiceDescriptors with filter: " + filter),e);
