@@ -1,7 +1,7 @@
 {
   Bundle bundle=bc.getBundle();
-  ClassLoader bundleClassLoader=BundleDelegatingClassLoader.createBundleClassLoaderFor(bundle);
   Dictionary headers=bundle.getHeaders();
+  ClassLoader bundleClassLoader=BundleDelegatingClassLoader.createBundleClassLoaderFor(bundle,MuleContext.class.getClassLoader());
   String transportHeader=(String)headers.get(TransportServiceDescriptor.OSGI_HEADER_TRANSPORT);
   if (transportHeader == null) {
     throw new ConfigurationException(MessageFactory.createStaticMessage("Transport must declare its protocol(s) as an OSGi header."));
@@ -17,7 +17,7 @@
     }
     Properties props=new Properties();
     props.load(descriptorUrl.openStream());
-    ServiceDescriptor descriptor=ServiceDescriptorFactory.create(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,transport,props,null,MuleServer.getMuleContext().getRegistry());
+    ServiceDescriptor descriptor=ServiceDescriptorFactory.create(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE,transport,props,null,MuleServer.getMuleContext().getRegistry(),bundleClassLoader);
     Hashtable osgiProps=new Hashtable();
     osgiProps.put(Constants.SERVICE_PID,headers.get(Constants.BUNDLE_SYMBOLICNAME) + "." + transport);
     osgiProps.put(Constants.SERVICE_DESCRIPTION,headers.get(Constants.BUNDLE_DESCRIPTION));
