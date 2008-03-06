@@ -13,12 +13,12 @@
     }
  else {
       httpResponse=new HttpResponse();
-      httpResponse.setBody(new ByteArrayInputStream(message.getPayloadAsBytes()));
       String ct=message.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
       if (ct != null) {
         httpResponse.setHeader(new Header(HttpConstants.HEADER_CONTENT_TYPE,ct));
       }
       httpResponse.setStatusLine(httpResponse.getHttpVersion(),message.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpServletResponse.SC_OK));
+      httpResponse.setBody(message);
     }
     Header contentTypeHeader=httpResponse.getFirstHeader(HttpConstants.HEADER_CONTENT_TYPE);
     String contentType=null;
@@ -33,11 +33,12 @@
     }
     if (!contentType.startsWith("text")) {
       servletResponse.setContentType(contentType);
-      servletResponse.getOutputStream().write(httpResponse.getBodyBytes());
+      OutputHandler outputHandler=httpResponse.getBody();
+      outputHandler.write(RequestContext.getEvent(),servletResponse.getOutputStream());
     }
  else {
       servletResponse.setContentType(contentType);
-      servletResponse.getWriter().write(httpResponse.getBodyString());
+      servletResponse.getWriter().write(httpResponse.getBodyAsString());
     }
   }
   servletResponse.flushBuffer();

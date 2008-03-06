@@ -12,8 +12,8 @@
     }
     writer.println();
     writer.flush();
-    InputStream content=response.getBody();
-    if (content != null) {
+    if (response.hasBody()) {
+      OutputHandler handler=response.getBody();
       Header transferenc=response.getFirstHeader(HttpConstants.HEADER_TRANSFER_ENCODING);
       if (transferenc != null) {
         response.removeHeaders(HttpConstants.HEADER_CONTENT_LENGTH);
@@ -21,7 +21,7 @@
           outstream=new ChunkedOutputStream(outstream);
         }
       }
-      IOUtils.copy(content,outstream);
+      handler.write(RequestContext.getEvent(),outstream);
       if (outstream instanceof ChunkedOutputStream) {
         ((ChunkedOutputStream)outstream).finish();
       }
