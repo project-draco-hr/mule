@@ -27,19 +27,19 @@
             if (logger.isDebugEnabled()) {
               logger.debug("lifecycle phase: " + getName() + " for object: "+ o);
             }
-            if (applyLifecycle(o).isOk()) {
+            LifecycleTransitionResult result=applyLifecycle(o);
+            if (result.isOk()) {
               target.remove();
               duplicates.add(o);
             }
- else             if (logger.isDebugEnabled()) {
-              logger.debug("retry requested for lifecycle phase: " + getName() + " for object: "+ o);
+ else             if (retryCount + 1 == RETRY_MAX) {
+              throw (LifecycleException)new LifecycleException(CoreMessages.exceededRetry(getName(),o),o).initCause(result.getThrowable());
+            }
+ else {
+              logger.debug("Retry requested for " + o);
             }
           }
         }
-      }
-      if (targets.size() > 0) {
-        Object component=targets.iterator().next();
-        throw new LifecycleException(CoreMessages.exceededRetry(getName(),component),component);
       }
       lo.firePostNotification(muleContext);
     }
