@@ -5,8 +5,9 @@
     endpoint=(InboundEndpoint)it.next();
     MessageReceiver receiver=((AbstractConnector)endpoint.getConnector()).getReceiver(this,endpoint);
     if (receiver != null) {
-      if (LifecycleTransitionResult.OK != receiver.stop()) {
-        throw new LifecycleException(CoreMessages.nestedRetry(),receiver);
+      LifecycleTransitionResult result=receiver.stop();
+      if (!result.isOk()) {
+        throw (InitialisationException)new InitialisationException(CoreMessages.nestedRetry(),receiver).initCause(result.getThrowable());
       }
     }
   }

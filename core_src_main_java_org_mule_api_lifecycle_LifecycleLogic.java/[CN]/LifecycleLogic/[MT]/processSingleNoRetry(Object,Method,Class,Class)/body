@@ -4,17 +4,23 @@
   }
   try {
     LifecycleTransitionResult result=(LifecycleTransitionResult)method.invoke(target,ClassUtils.NO_ARGS);
-    if (result != LifecycleTransitionResult.OK) {
+    if (!isOk(result)) {
       if (null != exception) {
+        LifecycleException error;
         if (exception.equals(InitialisationException.class)) {
-          throw new InitialisationException(CoreMessages.nestedRetry(),(Initialisable)target);
+          error=new InitialisationException(CoreMessages.nestedRetry(),(Initialisable)target);
         }
  else {
-          throw new LifecycleException(CoreMessages.nestedRetry(),target);
+          error=new LifecycleException(CoreMessages.nestedRetry(),target);
         }
+        throw initCause(error,result);
       }
  else {
-        throw new IllegalStateException("Unexpected state from transition: " + result);
+        IllegalStateException error=new IllegalStateException("Unexpected state from transition: " + result);
+        if (null != result) {
+          error.initCause(result.getThrowable());
+        }
+        throw error;
       }
     }
     return result;
