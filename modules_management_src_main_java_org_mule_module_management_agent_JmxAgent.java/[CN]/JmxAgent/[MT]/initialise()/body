@@ -1,0 +1,69 @@
+{
+  if (initialized.get()) {
+    return LifecycleTransitionResult.OK;
+  }
+  if (mBeanServer == null && !locateServer && !createServer) {
+    throw new InitialisationException(ManagementMessages.createOrLocateShouldBeSet(),this);
+  }
+  if (mBeanServer == null && locateServer) {
+    List l=MBeanServerFactory.findMBeanServer(null);
+    if (l != null && l.size() > 0) {
+      mBeanServer=(MBeanServer)l.get(0);
+    }
+  }
+  if (mBeanServer == null && createServer) {
+    mBeanServer=MBeanServerFactory.createMBeanServer();
+    serverCreated.set(true);
+  }
+  if (mBeanServer == null) {
+    throw new InitialisationException(ManagementMessages.cannotLocateOrCreateServer(),this);
+  }
+  if (connectorServerUrl != null) {
+    try {
+      JMXServiceURL url=new JMXServiceURL(connectorServerUrl);
+      if (connectorServerProperties == null) {
+        connectorServerProperties=new HashMap(DEFAULT_CONNECTOR_SERVER_PROPERTIES);
+      }
+      if (!credentials.isEmpty()) {
+        JMXAuthenticator jmxAuthenticator=(JMXAuthenticator)ClassUtils.instanciateClass(DEFAULT_JMX_AUTHENTICATOR,ClassUtils.NO_ARGS);
+        ((SimplePasswordJmxAuthenticator)jmxAuthenticator).setCredentials(credentials);
+        connectorServerProperties.put(JMXConnectorServer.AUTHENTICATOR,jmxAuthenticator);
+      }
+      connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,connectorServerProperties,mBeanServer);
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(CoreMessages.failedToCreate("Jmx Connector"),e,this);
+    }
+  }
+  MuleContextNotificationListener l=new MuleContextNotificationListener(){
+    public void onNotification(    ServerNotification notification){
+      if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED_MODELS) {
+        try {
+          registerWrapperService();
+          registerStatisticsService();
+          registerMuleService();
+          registerConfigurationService();
+          registerModelServices();
+          registerServiceServices();
+          registerEndpointServices();
+          registerConnectorServices();
+        }
+ catch (        Exception e) {
+          throw new MuleRuntimeException(CoreMessages.objectFailedToInitialise("MBeans"),e);
+        }
+      }
+    }
+  }
+;
+  if (StringUtils.isBlank(muleContext.getId())) {
+    throw new IllegalArgumentException("Manager ID is mandatory when running with JmxAgent. Give your Mule configuration a valid ID.");
+  }
+  try {
+    muleContext.registerListener(l);
+  }
+ catch (  NotificationException e) {
+    throw new InitialisationException(e,this);
+  }
+  initialized.compareAndSet(false,true);
+  return LifecycleTransitionResult.OK;
+}
