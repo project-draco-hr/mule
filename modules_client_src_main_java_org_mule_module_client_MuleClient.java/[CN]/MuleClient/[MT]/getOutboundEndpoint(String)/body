@@ -1,3 +1,11 @@
 {
-  return muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(uri);
+  OutboundEndpoint endpoint=(OutboundEndpoint)outboundEndpointCache.get(uri);
+  if (endpoint == null) {
+    endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(uri);
+    OutboundEndpoint concurrentlyAddedEndpoint=(OutboundEndpoint)outboundEndpointCache.putIfAbsent(uri,endpoint);
+    if (concurrentlyAddedEndpoint != null) {
+      return concurrentlyAddedEndpoint;
+    }
+  }
+  return endpoint;
 }

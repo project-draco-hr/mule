@@ -1,7 +1,24 @@
 {
-  DefaultInboundEndpoint ep=new DefaultInboundEndpoint();
-  configureEndpoint(ep);
-  ep.setTransformers(getInboundTransformers(ep.getConnector(),ep.getEndpointURI()));
-  ep.setResponseTransformers(getInboundEndpointResponseTransformers(ep.getConnector(),ep.getEndpointURI()));
-  return ep;
+  Map properties=getProperties();
+  setPropertiesFromProperties(properties);
+  if (uriBuilder == null) {
+    throw new NullPointerException(CoreMessages.objectIsNull("uriBuilder").getMessage());
+  }
+  EndpointURI endpointURI=uriBuilder.getEndpoint();
+  endpointURI.initialise();
+  Connector connector=getConnector();
+  if (connector != null && endpointURI != null && !connector.supportsProtocol(endpointURI.getFullScheme())) {
+    throw new IllegalArgumentException(CoreMessages.connectorSchemeIncompatibleWithEndpointScheme(connector.getProtocol(),endpointURI).getMessage());
+  }
+  List transformers=getInboundTransformers(connector,endpointURI);
+  List responseTransformers=getInboundEndpointResponseTransformers(connector,endpointURI);
+  boolean remoteSync=getRemoteSync(connector);
+  boolean synchronous;
+  if (remoteSync) {
+    synchronous=true;
+  }
+ else {
+    synchronous=getSynchronous(connector,endpointURI);
+  }
+  return new DefaultInboundEndpoint(connector,endpointURI,transformers,responseTransformers,getName(endpointURI),getProperties(),getTransactionConfig(),getFilter(connector),getDefaultDeleteUnacceptedMessages(connector),getSecurityFilter(),synchronous,remoteSync,getRemoteSyncTimeout(connector),getInitialState(connector),getEndpointEncoding(connector),muleContext,getConnectionStrategy(connector));
 }
