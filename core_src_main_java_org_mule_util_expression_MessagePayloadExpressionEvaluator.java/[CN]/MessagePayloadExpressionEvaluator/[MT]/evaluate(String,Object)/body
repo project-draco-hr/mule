@@ -1,0 +1,27 @@
+{
+  if (message instanceof MuleMessage) {
+    if (expression == null) {
+      return ((MuleMessage)message).getPayload();
+    }
+ else {
+      try {
+        if (expression.equals(BYTE_ARRAY)) {
+          return ((MuleMessage)message).getPayload(byte[].class);
+        }
+ else {
+          return ((MuleMessage)message).getPayload(ClassUtils.loadClass(expression,getClass()));
+        }
+      }
+ catch (      TransformerException e) {
+        throw new MuleRuntimeException(CoreMessages.failedToProcessExtractorFunction(expression),e);
+      }
+catch (      ClassNotFoundException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+  if (message instanceof MessageAdapter) {
+    return ((MessageAdapter)message).getPayload();
+  }
+  return message;
+}
