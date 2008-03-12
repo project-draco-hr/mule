@@ -1,14 +1,20 @@
 {
-  try {
-    return LifecycleTransitionResult.startOrStopAll(service.start(),new LifecycleTransitionResult.Closure(){
-      public LifecycleTransitionResult doContinue(){
-        started=true;
-        return LifecycleTransitionResult.OK;
+  if (isStartable) {
+    try {
+      return LifecycleTransitionResult.startOrStopAll(((Startable)componentObject).start(),new LifecycleTransitionResult.Closure(){
+        public LifecycleTransitionResult doContinue(){
+          started=true;
+          return LifecycleTransitionResult.OK;
+        }
       }
-    }
 );
+    }
+ catch (    Exception e) {
+      throw new DefaultMuleException(CoreMessages.failedToStart("UMO Service: " + service.getName()),e);
+    }
   }
- catch (  Exception e) {
-    throw new DefaultMuleException(CoreMessages.failedToStart("UMO Service: " + service.getName()),e);
+ else {
+    started=true;
+    return LifecycleTransitionResult.OK;
   }
 }
