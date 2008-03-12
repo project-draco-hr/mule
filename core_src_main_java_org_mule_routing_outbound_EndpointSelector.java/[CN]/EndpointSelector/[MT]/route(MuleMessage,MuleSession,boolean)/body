@@ -1,9 +1,13 @@
 {
   List endpoints;
   String endpointName;
-  Object property=ExpressionEvaluatorManager.evaluate(getSelectorProperty(),message);
+  String prop=getSelectorExpression();
+  if (!ExpressionEvaluatorManager.isValidExpression(prop)) {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionInvalidForProperty("selectorExpression",prop),message,null);
+  }
+  Object property=ExpressionEvaluatorManager.evaluate(prop,message);
   if (property == null) {
-    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSetOnEvent(getSelectorProperty()),message,null);
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSetOnEvent(getSelectorExpression()),message,null);
   }
   if (property instanceof String) {
     endpoints=new ArrayList(1);
@@ -13,13 +17,13 @@
     endpoints=(List)property;
   }
  else {
-    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(getSelectorProperty(),new Class[]{String.class,List.class},property.getClass()),message,null);
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(getSelectorExpression(),new Class[]{String.class,List.class},property.getClass()),message,null);
   }
   MuleMessage result=null;
   for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
     endpointName=iterator.next().toString();
     if (StringUtils.isEmpty(endpointName)) {
-      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + getSelectorProperty()),message,null);
+      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + getSelectorExpression()),message,null);
     }
     OutboundEndpoint ep=null;
     try {

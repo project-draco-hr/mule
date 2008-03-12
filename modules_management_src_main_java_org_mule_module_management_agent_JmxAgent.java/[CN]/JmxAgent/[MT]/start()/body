@@ -1,18 +1,28 @@
 {
-  if (connectorServer != null) {
-    try {
-      logger.info("Starting JMX agent connector Server");
+  try {
+    logger.info("Creating and starting JMX agent connector Server");
+    if (connectorServerUrl != null) {
+      JMXServiceURL url=new JMXServiceURL(connectorServerUrl);
+      if (connectorServerProperties == null) {
+        connectorServerProperties=new HashMap(DEFAULT_CONNECTOR_SERVER_PROPERTIES);
+      }
+      if (!credentials.isEmpty()) {
+        JMXAuthenticator jmxAuthenticator=(JMXAuthenticator)ClassUtils.instanciateClass(DEFAULT_JMX_AUTHENTICATOR,ClassUtils.NO_ARGS);
+        ((SimplePasswordJmxAuthenticator)jmxAuthenticator).setCredentials(credentials);
+        connectorServerProperties.put(JMXConnectorServer.AUTHENTICATOR,jmxAuthenticator);
+      }
+      connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,connectorServerProperties,mBeanServer);
       connectorServer.start();
     }
- catch (    ExportException e) {
-      throw new JmxManagementException(CoreMessages.failedToStart("Jmx Agent"),e);
-    }
-catch (    IOException e) {
-      return LifecycleTransitionResult.retry(e,this);
-    }
-catch (    Exception e) {
-      throw new JmxManagementException(CoreMessages.failedToStart("Jmx Agent"),e);
-    }
+  }
+ catch (  ExportException e) {
+    throw new JmxManagementException(CoreMessages.failedToStart("Jmx Agent"),e);
+  }
+catch (  IOException e) {
+    return LifecycleTransitionResult.retry(e,this);
+  }
+catch (  Exception e) {
+    throw new JmxManagementException(CoreMessages.failedToStart("Jmx Agent"),e);
   }
   return LifecycleTransitionResult.OK;
 }

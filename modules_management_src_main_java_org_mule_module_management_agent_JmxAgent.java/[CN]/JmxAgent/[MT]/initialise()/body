@@ -18,23 +18,6 @@
   if (mBeanServer == null) {
     throw new InitialisationException(ManagementMessages.cannotLocateOrCreateServer(),this);
   }
-  if (connectorServerUrl != null) {
-    try {
-      JMXServiceURL url=new JMXServiceURL(connectorServerUrl);
-      if (connectorServerProperties == null) {
-        connectorServerProperties=new HashMap(DEFAULT_CONNECTOR_SERVER_PROPERTIES);
-      }
-      if (!credentials.isEmpty()) {
-        JMXAuthenticator jmxAuthenticator=(JMXAuthenticator)ClassUtils.instanciateClass(DEFAULT_JMX_AUTHENTICATOR,ClassUtils.NO_ARGS);
-        ((SimplePasswordJmxAuthenticator)jmxAuthenticator).setCredentials(credentials);
-        connectorServerProperties.put(JMXConnectorServer.AUTHENTICATOR,jmxAuthenticator);
-      }
-      connectorServer=JMXConnectorServerFactory.newJMXConnectorServer(url,connectorServerProperties,mBeanServer);
-    }
- catch (    Exception e) {
-      throw new InitialisationException(CoreMessages.failedToCreate("Jmx Connector"),e,this);
-    }
-  }
   MuleContextNotificationListener l=new MuleContextNotificationListener(){
     public void onNotification(    ServerNotification notification){
       if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED_MODELS) {

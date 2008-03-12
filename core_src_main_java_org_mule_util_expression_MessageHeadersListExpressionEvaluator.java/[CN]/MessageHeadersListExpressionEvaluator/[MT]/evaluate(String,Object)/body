@@ -1,4 +1,9 @@
 {
+  boolean required=false;
+  if (expression.endsWith("required")) {
+    required=true;
+    expression=expression.substring(0,expression.length() - 8);
+  }
   if (message instanceof MessageAdapter) {
     StringTokenizer tokenizer=new StringTokenizer(expression,DELIM);
     List result=new ArrayList(tokenizer.countTokens());
@@ -8,6 +13,9 @@
       Object val=((MessageAdapter)message).getProperty(s);
       if (val != null) {
         result.add(val);
+      }
+ else       if (required) {
+        throw new ExpressionRuntimeException(CoreMessages.expressionEvaluatorReturnedNull(NAME,expression));
       }
     }
     if (result.size() == 0) {
