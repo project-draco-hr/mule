@@ -1,7 +1,16 @@
 {
   try {
-    PGPCryptInfo pgpCryptInfo=(PGPCryptInfo)cryptInfo;
-    KeyBundle publicKey=pgpCryptInfo.getKeyBundle();
+    PGPCryptInfo pgpCryptInfo;
+    KeyBundle publicKey;
+    if (cryptInfo == null) {
+      MuleEvent event=RequestContext.getEvent();
+      publicKey=keyManager.getKeyBundle((String)credentialsAccessor.getCredentials(event));
+      pgpCryptInfo=new PGPCryptInfo(publicKey,false);
+    }
+ else {
+      pgpCryptInfo=(PGPCryptInfo)cryptInfo;
+      publicKey=pgpCryptInfo.getKeyBundle();
+    }
     LiteralMessageBuilder lmb=LiteralMessageBuilder.getInstance("OpenPGP");
     lmb.init(data);
     Message msg=lmb.build();
