@@ -3,7 +3,7 @@
     wrapper=new ClientWrapper(){
       @Override public void initialize() throws Exception, IOException {
         String wsdlUrl=endpoint.getEndpointURI().getAddress();
-        String serviceName=endpoint.getEndpointURI().getAddress();
+        String serviceName=null;
         String portName=null;
         if (endpoint.getProperty("wsdlLocation") != null && StringUtils.isNotBlank(endpoint.getProperty("wsdlLocation").toString())) {
           wsdlUrl=(String)endpoint.getProperty("wsdlLocation");
@@ -11,15 +11,13 @@
         if (endpoint.getProperty("service") != null && StringUtils.isNotBlank(endpoint.getProperty("service").toString())) {
           serviceName=(String)endpoint.getProperty("service");
         }
- else         if (serviceName.indexOf("?") > -1) {
-          serviceName=serviceName.substring(0,serviceName.lastIndexOf('?'));
-        }
         if (endpoint.getProperty("port") != null && StringUtils.isNotBlank(endpoint.getProperty("port").toString())) {
           portName=(String)endpoint.getProperty("port");
         }
         try {
           DynamicClientFactory cf=DynamicClientFactory.newInstance(bus);
-          this.client=cf.createClient(wsdlUrl,QName.valueOf(serviceName),(portName == null ? null : QName.valueOf(portName)));
+          this.client=cf.createClient(wsdlUrl,(serviceName == null ? null : QName.valueOf(serviceName)),(portName == null ? null : QName.valueOf(portName)));
+          addMuleInterceptors();
         }
  catch (        Exception ex) {
           disconnect();

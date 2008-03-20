@@ -9,11 +9,12 @@
     String serviceClassName=(String)endpointProps.get(CxfConstants.SERVICE_CLASS);
     List<AbstractFeature> features=(List<AbstractFeature>)endpointProps.get(CxfConstants.FEATURES);
     Class<?> svcCls=null;
+    Class<?> targetCls=getTargetClass();
     if (!StringUtils.isEmpty(serviceClassName)) {
       svcCls=ClassUtils.loadClass(serviceClassName,getClass());
     }
  else {
-      svcCls=getInterface();
+      svcCls=targetCls;
     }
     if (BooleanUtils.toBoolean(bridge)) {
       svcCls=ProviderService.class;
@@ -33,6 +34,7 @@
  else {
       throw new CreateException(CxfMessages.invalidFrontend(frontend),this);
     }
+    sfb.setServiceBean(service.getComponentFactory().getInstance());
     if (bindingId != null) {
       sfb.setBindingId(bindingId);
     }
@@ -43,6 +45,10 @@
     sfb.setInFaultInterceptors((List<Interceptor>)endpointProps.get("inFaultInterceptors"));
     sfb.setOutInterceptors((List<Interceptor>)endpointProps.get("outInterceptors"));
     sfb.setOutFaultInterceptors((List<Interceptor>)endpointProps.get("outFaultInterceptors"));
+    if (sfb.getInInterceptors() == null) {
+      sfb.setInInterceptors(new ArrayList<Interceptor>());
+    }
+    sfb.getInInterceptors().add(new MuleHeadersInInterceptor());
     if (databinding != null) {
       Class<?> c=ClassLoaderUtils.loadClass(databinding,getClass());
       sfb.setDataBinding((DataBinding)c.newInstance());
@@ -56,6 +62,7 @@
     addIgnoredMethods(svcFac,Callable.class.getName());
     addIgnoredMethods(svcFac,Initialisable.class.getName());
     addIgnoredMethods(svcFac,Disposable.class.getName());
+    addIgnoredMethods(svcFac,ServiceAware.class.getName());
     String name=(String)endpointProps.get(CxfConstants.NAME);
     String namespace=(String)endpointProps.get(CxfConstants.NAMESPACE);
     initServiceName(svcCls,name,namespace,svcFac);
@@ -63,7 +70,7 @@
     if (endpoint.getEndpointURI().getScheme().startsWith("http") || endpoint.getEndpointURI().getScheme().startsWith("servlet")) {
       sync=true;
     }
-    sfb.setInvoker(new MuleInvoker(this,sync));
+    sfb.setInvoker(new MuleInvoker(this,targetCls,sync));
     sfb.setStart(false);
     Bus bus=connector.getCxfBus();
     sfb.setBus(bus);

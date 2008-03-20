@@ -1,21 +1,34 @@
 {
   try {
     MessageImpl m=new MessageImpl();
-    Object payload=ctx.transformMessage();
-    if (payload instanceof InputStream) {
-      m.put(Message.ENCODING,ctx.getEncoding());
-      m.setContent(InputStream.class,payload);
+    MuleMessage muleMsg=ctx.getMessage();
+    String method=(String)muleMsg.getProperty(HttpConnector.HTTP_METHOD_PROPERTY);
+    String path=(String)muleMsg.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
+    if (path == null) {
+      path="";
     }
- else     if (payload instanceof Reader) {
-      m.setContent(XMLStreamReader.class,StaxUtils.createXMLStreamReader((Reader)payload));
-    }
- else     if (payload instanceof byte[]) {
-      m.setContent(InputStream.class,new ByteArrayInputStream((byte[])payload));
-    }
+    if (method != null) {
+      m.put(Message.HTTP_REQUEST_METHOD,method);
+      m.put(Message.PATH_INFO,path);
+      m.put(Message.BASE_PATH,ctx.getEndpointURI().getPath());
+      if (!"GET".equals(method.toUpperCase())) {
+        Object payload=ctx.transformMessage();
+        if (payload instanceof InputStream) {
+          m.put(Message.ENCODING,ctx.getEncoding());
+          m.setContent(InputStream.class,payload);
+        }
+ else         if (payload instanceof Reader) {
+          m.setContent(XMLStreamReader.class,StaxUtils.createXMLStreamReader((Reader)payload));
+        }
+ else         if (payload instanceof byte[]) {
+          m.setContent(InputStream.class,new ByteArrayInputStream((byte[])payload));
+        }
  else {
-      InputStream is=(InputStream)ctx.transformMessage(InputStream.class);
-      m.put(Message.ENCODING,ctx.getEncoding());
-      m.setContent(InputStream.class,is);
+          InputStream is=(InputStream)ctx.transformMessage(InputStream.class);
+          m.put(Message.ENCODING,ctx.getEncoding());
+          m.setContent(InputStream.class,is);
+        }
+      }
     }
     String soapAction=getSoapAction(ctx.getMessage());
     m.put(org.mule.transport.soap.SoapConstants.SOAP_ACTION_PROPERTY_CAPS,soapAction);
@@ -29,7 +42,7 @@
     m.put(LocalConduit.DIRECT_DISPATCH,Boolean.TRUE);
     m.setDestination(d);
     d.getMessageObserver().onMessage(m);
-    Object result=obs.getCachedStream().getOut().toString();
+    Object result=obs.getCachedStream().getInputStream();
     Message resMsg=obs.getMessage();
     Exception ex=resMsg.getContent(Exception.class);
     if (ex != null) {

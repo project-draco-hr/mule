@@ -1,5 +1,14 @@
 {
   Method method=wrapper.getMethod(event);
+  Map<String,Object> props=new HashMap<String,Object>();
+  props.put(MuleProperties.MULE_EVENT_PROPERTY,event);
+  String soapAction=(String)event.getMessage().getProperty(SoapConstants.SOAP_ACTION_PROPERTY);
+  if (soapAction != null) {
+    soapAction=parseSoapAction(soapAction,new QName(method.getName()),event);
+    props.put(org.apache.cxf.binding.soap.SoapConstants.SOAP_ACTION,soapAction);
+  }
+  BindingProvider bp=wrapper.getProxy();
+  bp.getRequestContext().putAll(props);
   Object response=method.invoke(wrapper.getProxy(),getArgs(event));
   return buildResponseMessage(event,new Object[]{response});
 }
