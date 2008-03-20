@@ -28,24 +28,23 @@
           return null;
         }
       }
-      FileConnector fc=((FileConnector)connector);
       String sourceFileOriginalName=result.getName();
       DefaultMessageAdapter fileParserMsgAdaptor=new DefaultMessageAdapter(null);
       fileParserMsgAdaptor.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
       File destinationFile=null;
-      String movDir=fc.getMoveToDirectory();
+      String movDir=connector.getMoveToDirectory();
       if (movDir != null) {
         String destinationFileName=sourceFileOriginalName;
-        String moveToPattern=fc.getMoveToPattern();
+        String moveToPattern=connector.getMoveToPattern();
         if (moveToPattern != null) {
-          destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(fileParserMsgAdaptor,moveToPattern);
+          destinationFileName=connector.getFilenameParser().getFilename(fileParserMsgAdaptor,moveToPattern);
         }
         destinationFile=FileUtils.newFile(movDir,destinationFileName);
       }
       MessageAdapter msgAdapter=null;
       try {
-        if (fc.isStreaming()) {
-          msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(result,fc.isAutoDelete(),destinationFile));
+        if (connector.isStreaming()) {
+          msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(result,connector.isAutoDelete(),destinationFile));
         }
  else {
           msgAdapter=connector.getMessageAdapter(result);
@@ -56,7 +55,7 @@
         return null;
       }
       msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-      if (!fc.isStreaming()) {
+      if (!connector.isStreaming()) {
         moveOrDelete(result,destinationFile);
         return new DefaultMuleMessage(msgAdapter);
       }
