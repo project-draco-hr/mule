@@ -1,0 +1,18 @@
+{
+  if (logger.isTraceEnabled()) {
+    logger.trace(this.getClass().getName() + ": sync call for Mule Component " + service.getName());
+  }
+  checkDisposed();
+  if (!(event.getEndpoint() instanceof InboundEndpoint)) {
+    throw new IllegalStateException("Unable to process outbound event, components only process incoming events.");
+  }
+  if (stopping.get() || !started.get()) {
+    throw new DefaultMuleException(CoreMessages.componentIsStopped(service.getName()));
+  }
+  try {
+    return doOnCall(event);
+  }
+ catch (  Exception e) {
+    throw new ServiceException(CoreMessages.failedToInvoke(this.toString()),event.getMessage(),service,e);
+  }
+}

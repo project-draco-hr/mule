@@ -1,7 +1,5 @@
 {
   DefaultMuleEvent event=null;
-  Object pojoService=null;
-  Component component=null;
   QueueSession queueSession=muleContext.getQueueManager().getQueueSession();
   while (!stopped.get()) {
     try {
@@ -20,23 +18,12 @@
         if (logger.isDebugEnabled()) {
           logger.debug("Service: " + name + " dequeued event on: "+ event.getEndpoint().getEndpointURI());
         }
-        pojoService=getOrCreateService();
-        component=createComponentProxy(pojoService);
-        component.setEvent(event);
-        workManager.scheduleWork(component,WorkManager.INDEFINITE,null,this);
+        workManager.scheduleWork(component.getWorker(event),WorkManager.INDEFINITE,null,this);
       }
     }
  catch (    Exception e) {
       if (isStopped() || isStopping()) {
         break;
-      }
-      try {
-        if (componentFactory != null) {
-          componentFactory.release(pojoService);
-        }
-      }
- catch (      Exception e2) {
-        logger.warn(e2);
       }
       if (e instanceof InterruptedException) {
         stopping.set(false);

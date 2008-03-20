@@ -1,0 +1,20 @@
+{
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    String alias=SpringXMLUtils.attributeName((Attr)attributes.item(i));
+    if (alias.equals(AbstractMuleBeanDefinitionParser.ATTRIBUTE_CLASS)) {
+      for (int j=0; j < element.getChildNodes().getLength(); j++) {
+        Node child=element.getChildNodes().item(j);
+        if (child instanceof Element && !(child.getLocalName().equals(BINDING_CHILD_ELEMENT) || child.getLocalName().equals(POOLING_PROFILE_CHILD_ELEMENT) || child.getLocalName().equals(ENTRY_POINT_RESOLVER_CHILD_ELEMENT)|| child.getLocalName().equals(ENTRY_POINT_RESOLVER_SET_CHILD_ELEMENT)|| child.getLocalName().endsWith(LIFECYCLE_ADAPTER_FACTORT_CHILD_ELEMENT))) {
+          StringBuffer message=new StringBuffer("The child element '");
+          message.append(child.getLocalName());
+          message.append("' cannot appear with the 'class' attribute");
+          message.append(" in element ");
+          message.append(SpringXMLUtils.elementToString(element));
+          message.append(".");
+          throw new CheckExclusiveClassAttributeObjectFactoryException(message.toString());
+        }
+      }
+    }
+  }
+}

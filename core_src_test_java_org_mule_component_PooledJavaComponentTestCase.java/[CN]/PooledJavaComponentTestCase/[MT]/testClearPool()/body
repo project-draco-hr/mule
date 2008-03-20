@@ -1,0 +1,14 @@
+{
+  PoolingProfile pp=getDefaultPoolingProfile();
+  pp.setExhaustedAction(PoolingProfile.WHEN_EXHAUSTED_FAIL);
+  PooledJavaComponent component=new PooledJavaComponent(getObjectFactory(),pp);
+  component.setService(getTestService());
+  component.initialise();
+  component.start();
+  LifecycleAdapter borrowed=component.borrowComponentLifecycleAdaptor();
+  assertEquals(1,component.lifecycleAdapterPool.getNumActive());
+  component.returnComponentLifecycleAdaptor(borrowed);
+  component.stop();
+  component.start();
+  assertEquals(0,component.lifecycleAdapterPool.getNumActive());
+}

@@ -1,0 +1,40 @@
+{
+  try {
+    InboundEndpoint endpoint=(InboundEndpoint)event.getEndpoint();
+    event=OptimizedRequestContext.criticalSetEvent(event);
+    Object replyTo=event.getMessage().getReplyTo();
+    ReplyToHandler replyToHandler=getReplyToHandler(event.getMessage(),endpoint);
+    long startTime=0;
+    if (statistics.isEnabled()) {
+      startTime=System.currentTimeMillis();
+    }
+    MuleMessage result=invokeComponentInstance(event);
+    if (statistics.isEnabled()) {
+      statistics.addExecutionTime(System.currentTimeMillis() - startTime);
+    }
+    event=RequestContext.getEvent();
+    if (result != null && !event.isStopFurtherProcessing()) {
+      if (service.getOutboundRouter().hasEndpoints()) {
+        service.getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
+      }
+    }
+    if (result != null && replyToHandler != null) {
+      String requestor=(String)result.getProperty(MuleProperties.MULE_REPLY_TO_REQUESTOR_PROPERTY);
+      if ((requestor != null && !requestor.equals(service.getName())) || requestor == null) {
+        replyToHandler.processReplyTo(event,result,replyTo);
+      }
+    }
+    if (statistics.isEnabled()) {
+      statistics.incSentEventASync();
+    }
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof MessagingException) {
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(service.getName()),event.getMessage(),e));
+    }
+  }
+}

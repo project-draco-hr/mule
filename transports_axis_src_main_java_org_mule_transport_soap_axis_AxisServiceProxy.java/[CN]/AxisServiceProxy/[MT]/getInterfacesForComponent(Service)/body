@@ -7,11 +7,16 @@
   }
   if (ifaces == null || ifaces.size() == 0) {
     final Class implementationClass;
-    try {
-      implementationClass=component.getComponentFactory().getObjectClass();
+    if (service.getComponent() instanceof JavaComponent) {
+      try {
+        implementationClass=((JavaComponent)service.getComponent()).getObjectType();
+      }
+ catch (      Exception e) {
+        throw new ClassNotFoundException("Unable to retrieve class from service factory",e);
+      }
     }
- catch (    Exception e) {
-      throw new ClassNotFoundException("Unable to retrieve class from service factory",e);
+ else {
+      throw new ClassNotFoundException("Unable to retrieve class from service factory");
     }
     final List intfList=ClassUtils.getAllInterfaces(implementationClass);
     interfaces=(Class[])intfList.toArray(new Class[intfList.size()]);

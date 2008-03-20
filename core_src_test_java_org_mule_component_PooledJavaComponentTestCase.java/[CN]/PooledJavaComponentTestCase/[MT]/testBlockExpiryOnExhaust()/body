@@ -1,0 +1,25 @@
+{
+  PoolingProfile pp=getDefaultPoolingProfile();
+  pp.setExhaustedAction(PoolingProfile.WHEN_EXHAUSTED_WAIT);
+  PooledJavaComponent component=new PooledJavaComponent(getObjectFactory(),pp);
+  component.setService(getTestService());
+  component.initialise();
+  component.start();
+  Object borrowed=null;
+  assertEquals(0,component.lifecycleAdapterPool.getNumActive());
+  borrowed=component.borrowComponentLifecycleAdaptor();
+  assertNotNull(borrowed);
+  borrowed=component.borrowComponentLifecycleAdaptor();
+  ;
+  assertNotNull(borrowed);
+  borrowed=component.borrowComponentLifecycleAdaptor();
+  ;
+  assertNotNull(borrowed);
+  assertEquals(3,component.lifecycleAdapterPool.getNumActive());
+  try {
+    borrowed=component.borrowComponentLifecycleAdaptor();
+    fail("Should throw an Exception");
+  }
+ catch (  Exception e) {
+  }
+}

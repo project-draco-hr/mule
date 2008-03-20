@@ -2,6 +2,8 @@
   if (initialised.get()) {
     throw new InitialisationException(CoreMessages.objectAlreadyInitialised("Service '" + name + "'"),this);
   }
+  component.setService(this);
+  component.initialise();
   if (inboundRouter == null) {
     inboundRouter=new DefaultInboundRouterCollection();
     inboundRouter.addRouter(new InboundPassThroughRouter());
@@ -13,26 +15,19 @@
   if (responseRouter == null) {
     responseRouter=new DefaultResponseRouterCollection();
   }
-  if (nestedRouter == null) {
-    nestedRouter=new DefaultNestedRouterCollection();
-  }
   if (exceptionListener == null) {
     exceptionListener=new DefaultServiceExceptionStrategy(this);
     ((MuleContextAware)exceptionListener).setMuleContext(muleContext);
     ((Initialisable)exceptionListener).initialise();
   }
-  return LifecycleTransitionResult.initialiseAll(componentFactory.initialise(),new LifecycleTransitionResult.Closure(){
-    public LifecycleTransitionResult doContinue() throws InitialisationException {
-      doInitialise();
-      stats=createStatistics();
-      stats.setEnabled(muleContext.getStatistics().isEnabled());
-      muleContext.getStatistics().add(stats);
-      stats.setOutboundRouterStat(outboundRouter.getStatistics());
-      stats.setInboundRouterStat(inboundRouter.getStatistics());
-      initialised.set(true);
-      fireComponentNotification(ServiceNotification.SERVICE_INITIALISED);
-      return LifecycleTransitionResult.OK;
-    }
-  }
-);
+  doInitialise();
+  stats=createStatistics();
+  stats.setEnabled(muleContext.getStatistics().isEnabled());
+  muleContext.getStatistics().add(stats);
+  stats.setOutboundRouterStat(outboundRouter.getStatistics());
+  stats.setInboundRouterStat(inboundRouter.getStatistics());
+  stats.setComponentStat(component.getStatistics());
+  initialised.set(true);
+  fireComponentNotification(ServiceNotification.SERVICE_INITIALISED);
+  return LifecycleTransitionResult.OK;
 }

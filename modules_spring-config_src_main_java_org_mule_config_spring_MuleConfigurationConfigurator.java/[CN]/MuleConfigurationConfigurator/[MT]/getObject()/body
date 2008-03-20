@@ -1,13 +1,13 @@
 {
   MuleConfiguration configuration=muleContext.getConfiguration();
-  configuration.setDefaultSynchronousEndpoints(isDefaultSynchronousEndpoints());
-  configuration.setWorkingDirectory(getWorkingDirectory());
-  configuration.setDefaultSynchronousEventTimeout(getDefaultSynchronousEventTimeout());
-  configuration.setDefaultEncoding(getDefaultEncoding());
-  configuration.setDefaultTransactionTimeout(getDefaultTransactionTimeout());
-  configuration.setDefaultRemoteSync(isDefaultRemoteSync());
-  configuration.setClusterId(getClusterId());
-  configuration.setDomainId(getDomainId());
-  configuration.setId(getId());
-  return configuration;
+  if (configuration instanceof DefaultMuleConfiguration) {
+    ((DefaultMuleConfiguration)configuration).setDefaultSynchronousEndpoints(config.isDefaultSynchronousEndpoints());
+    ((DefaultMuleConfiguration)configuration).setDefaultSynchronousEventTimeout(config.getDefaultSynchronousEventTimeout());
+    ((DefaultMuleConfiguration)configuration).setDefaultRemoteSync(config.isDefaultRemoteSync());
+    ((DefaultMuleConfiguration)configuration).setDefaultTransactionTimeout(config.getDefaultTransactionTimeout());
+    return configuration;
+  }
+ else {
+    throw new ConfigurationException(MessageFactory.createStaticMessage("Unable to set properties on read-only MuleConfiguration: " + configuration.getClass()));
+  }
 }
