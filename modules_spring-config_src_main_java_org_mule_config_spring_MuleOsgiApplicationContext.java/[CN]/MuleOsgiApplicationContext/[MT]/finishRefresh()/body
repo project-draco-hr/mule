@@ -1,11 +1,14 @@
 {
   super.finishRefresh();
-  if (!muleContext.isStarted()) {
+  if (muleContext.getLifecycleManager().isPhaseComplete(Startable.PHASE_NAME)) {
     try {
-      muleContext.start();
+      Map allBeans=getBeansOfType(Object.class);
+      if (allBeans != null && allBeans.size() > 0) {
+        muleContext.getLifecycleManager().applyPhase(allBeans.values(),Startable.PHASE_NAME);
+      }
     }
  catch (    MuleException e) {
-      throw new RuntimeException("Unable to start MuleContext",e);
+      logger.error("Unable to start objects in ApplicationContext: " + e.getMessage(),e);
     }
   }
 }
