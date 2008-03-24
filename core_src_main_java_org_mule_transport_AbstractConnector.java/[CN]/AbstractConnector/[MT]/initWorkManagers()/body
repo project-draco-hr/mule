@@ -1,6 +1,10 @@
 {
   if (receiverWorkManager.get() == null) {
-    WorkManager newWorkManager=this.getReceiverThreadingProfile().createWorkManager(getName() + ".receiver");
+    ThreadingProfile tp=getReceiverThreadingProfile();
+    if (tp == null) {
+      throw new ConfigurationException(MessageFactory.createStaticMessage("No ReceiverThreadingProfile has been configured"));
+    }
+    WorkManager newWorkManager=tp.createWorkManager(getName() + ".receiver");
     if (receiverWorkManager.compareAndSet(null,newWorkManager)) {
       newWorkManager.start();
     }
