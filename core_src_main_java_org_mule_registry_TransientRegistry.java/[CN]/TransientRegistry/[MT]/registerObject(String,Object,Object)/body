@@ -1,31 +1,25 @@
 {
   logger.debug("registering object");
-  if (isInitialised() || isInitialising()) {
+  if (MuleServer.getMuleContext().isInitialised() || MuleServer.getMuleContext().isInitialising()) {
     logger.debug("applying processors");
     object=applyProcessors(object);
   }
-  Map objectMap=getObjectTypeMap(metadata);
-  if (objectMap != null) {
-    if (objectMap.containsKey(key)) {
-      logger.warn("TransientRegistry already contains an object named '" + key + "'.  The previous object will be overwritten.");
+  if (registry.containsKey(key)) {
+    logger.warn("TransientRegistry already contains an object named '" + key + "'.  The previous object will be overwritten.");
+  }
+  registry.put(key,object);
+  try {
+    MuleContext mc=MuleServer.getMuleContext();
+    logger.debug("context: " + mc);
+    if (mc != null) {
+      logger.debug("applying lifecycle");
+      mc.getLifecycleManager().applyCompletedPhases(object);
     }
-    objectMap.put(key,object);
-    try {
-      MuleContext mc=MuleServer.getMuleContext();
-      logger.debug("context: " + mc);
-      if (mc != null) {
-        logger.debug("applying lifecycle");
-        mc.applyLifecycle(object);
-      }
  else {
-        throw new RegistrationException("Unable to register object (\"" + key + ":"+ ClassUtils.getSimpleName(object.getClass())+ "\") because MuleContext has not yet been created.");
-      }
-    }
- catch (    MuleException e) {
-      throw new RegistrationException(e);
+      throw new RegistrationException("Unable to register object (\"" + key + ":"+ ClassUtils.getSimpleName(object.getClass())+ "\") because MuleContext has not yet been created.");
     }
   }
- else {
-    throw new RegistrationException("No object map exists for type " + metadata);
+ catch (  MuleException e) {
+    throw new RegistrationException(e);
   }
 }
