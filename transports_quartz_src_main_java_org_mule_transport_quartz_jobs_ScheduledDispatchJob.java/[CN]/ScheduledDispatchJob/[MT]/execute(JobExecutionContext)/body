@@ -1,0 +1,19 @@
+{
+  JobDataMap jobDataMap=jobExecutionContext.getJobDetail().getJobDataMap();
+  Object payload=jobDataMap.get(QuartzConnector.PROPERTY_PAYLOAD);
+  if (payload == null) {
+    payload=NullPayload.getInstance();
+  }
+  ScheduledDispatchJobConfig config=(ScheduledDispatchJobConfig)jobDataMap.get(QuartzConnector.PROPERTY_JOB_CONFIG);
+  if (config == null) {
+    throw new JobExecutionException(QuartzMessages.missingJobDetail(QuartzConnector.PROPERTY_JOB_CONFIG).getMessage());
+  }
+  try {
+    MuleClient client=new MuleClient();
+    logger.debug("Dispatching payload on: " + config.getEndpointRef());
+    client.dispatch(config.getEndpointRef(),payload,jobDataMap);
+  }
+ catch (  MuleException e) {
+    throw new JobExecutionException(e);
+  }
+}

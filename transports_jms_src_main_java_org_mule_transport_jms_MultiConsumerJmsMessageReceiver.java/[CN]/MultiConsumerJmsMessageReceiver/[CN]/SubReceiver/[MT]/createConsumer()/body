@@ -1,0 +1,33 @@
+{
+  try {
+    JmsSupport jmsSupport=jmsConnector.getJmsSupport();
+    if (session == null) {
+      session=jmsConnector.getSession(endpoint);
+    }
+    boolean topic=jmsConnector.getTopicResolver().isTopic(endpoint,true);
+    Destination dest=jmsSupport.createDestination(session,endpoint.getEndpointURI().getAddress(),topic);
+    String selector=null;
+    if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {
+      selector=((JmsSelectorFilter)endpoint.getFilter()).getExpression();
+    }
+ else {
+      if (endpoint.getProperties() != null) {
+        selector=(String)endpoint.getProperties().get(JmsConstants.JMS_SELECTOR_PROPERTY);
+      }
+    }
+    String tempDurable=(String)endpoint.getProperties().get(JmsConstants.DURABLE_PROPERTY);
+    boolean durable=jmsConnector.isDurable();
+    if (tempDurable != null) {
+      durable=Boolean.valueOf(tempDurable).booleanValue();
+    }
+    String durableName=(String)endpoint.getProperties().get(JmsConstants.DURABLE_NAME_PROPERTY);
+    if (durableName == null && durable && dest instanceof Topic) {
+      durableName="mule." + jmsConnector.getName() + "."+ endpoint.getEndpointURI().getAddress();
+      logger.debug("Jms Connector for this receiver is durable but no durable name has been specified. Defaulting to: " + durableName);
+    }
+    consumer=jmsSupport.createConsumer(session,dest,selector,jmsConnector.isNoLocal(),durableName,topic);
+  }
+ catch (  JMSException e) {
+    throw new ConnectException(e,MultiConsumerJmsMessageReceiver.this);
+  }
+}

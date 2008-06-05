@@ -1,7 +1,12 @@
 {
-  CountDownLatch counter=TestComponent1.QUARTZ_COUNTER;
-  assertEquals(4,counter.getCount());
-  if (!counter.await(60,TimeUnit.SECONDS)) {
-    fail("CountDown timed out: expected 0, value is: " + counter.getCount());
-  }
+  FunctionalTestComponent2 component=(FunctionalTestComponent2)getComponent("quartzService1");
+  assertNotNull(component);
+  CountdownCallback count1=new CountdownCallback(4);
+  component.setEventCallback(count1);
+  component=(FunctionalTestComponent2)getComponent("quartzService2");
+  assertNotNull(component);
+  CountdownCallback count2=new CountdownCallback(2);
+  component.setEventCallback(count2);
+  assertTrue("Count 1 timed out: expected 0, value is: " + count1.getCount(),count1.await(60000));
+  assertTrue("Count 2 timed out: expected 0, value is: " + count2.getCount(),count2.await(5000));
 }

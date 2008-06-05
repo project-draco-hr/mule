@@ -1,0 +1,76 @@
+{
+  Object responseId=messageInfoMapping.getMessageId(message);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Waiting for response for message id: " + responseId + " in "+ this);
+  }
+  Latch l=(Latch)locks.get(responseId);
+  if (l == null) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Got response but no one is waiting for it yet. Creating latch for " + responseId + " in "+ this);
+    }
+    l=new Latch();
+    Latch previous=(Latch)locks.putIfAbsent(responseId,l);
+    if (previous != null) {
+      l=previous;
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Got latch for message: " + responseId);
+  }
+  MuleMessage result;
+  boolean resultAvailable=false;
+  boolean interruptedWhileWaiting=false;
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Waiting for response to message: " + responseId);
+    }
+    if (this.getTimeout() <= 0) {
+      l.await();
+      resultAvailable=true;
+    }
+ else {
+      resultAvailable=l.await(timeout,TimeUnit.MILLISECONDS);
+    }
+  }
+ catch (  InterruptedException e) {
+    interruptedWhileWaiting=true;
+  }
+ finally {
+    locks.remove(responseId);
+    result=(MuleMessage)responseMessages.remove(responseId);
+    if (interruptedWhileWaiting) {
+      Thread.currentThread().interrupt();
+    }
+  }
+  if (!resultAvailable) {
+    if (isFailOnTimeout()) {
+      if (logger.isTraceEnabled()) {
+        logger.trace("Current responses are: \n" + MapUtils.toString(responseMessages,true));
+      }
+      context.fireNotification(new RoutingNotification(message,null,RoutingNotification.ASYNC_REPLY_TIMEOUT));
+      throw new ResponseTimeoutException(CoreMessages.responseTimedOutWaitingForId(this.getTimeout(),responseId),message,null);
+    }
+ else {
+      EventGroup group=this.getEventGroup(responseId);
+      if (group == null) {
+        if (logger.isTraceEnabled()) {
+          logger.trace("There is no current event Group. Current responses are: \n" + MapUtils.toString(responseMessages,true));
+        }
+        return null;
+      }
+ else {
+        this.removeEventGroup(group);
+        MuleMessage msg=callback.aggregateEvents(group);
+        return msg;
+      }
+    }
+  }
+  if (result == null) {
+    throw new IllegalStateException("Response Message is null");
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("remaining locks  : " + locks.keySet());
+    logger.debug("remaining results: " + responseMessages.keySet());
+  }
+  return result;
+}

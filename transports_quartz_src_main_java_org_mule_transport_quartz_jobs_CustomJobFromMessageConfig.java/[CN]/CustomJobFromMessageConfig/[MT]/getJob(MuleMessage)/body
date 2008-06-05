@@ -1,0 +1,17 @@
+{
+  if (evaluator.equals("custom")) {
+    evaluator=customEvaluator;
+  }
+  Object result=ExpressionEvaluatorManager.evaluate(expression,evaluator,message,true);
+  Class clazz;
+  if (result instanceof Job) {
+    return (Job)result;
+  }
+ else   if (result instanceof JobConfig) {
+    clazz=((JobConfig)result).getJobClass();
+  }
+ else {
+    throw new IllegalStateException(CoreMessages.propertyIsNotSupportedType(evaluator + ":" + expression,new Class[]{Job.class,JobConfig.class},result.getClass()).getMessage());
+  }
+  return (Job)ClassUtils.instanciateClass(clazz,ClassUtils.NO_ARGS);
+}

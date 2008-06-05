@@ -32,5 +32,29 @@
       }
     }
   }
+  if (this.renameProperties != null && this.renameProperties.size() > 0) {
+    final Set propertyNames=message.getPropertyNames();
+    for (Iterator iterator=this.renameProperties.entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      if (entry.getKey() == null) {
+        logger.error("Setting Null property keys is not supported, this entry is being ignored");
+      }
+ else {
+        final String key=entry.getKey().toString();
+        final String value=(String)entry.getValue();
+        if (value == null) {
+          logger.error("Setting Null property values for renameProperties is not supported, this entry is being ignored");
+        }
+ else {
+          if (logger.isDebugEnabled() && !propertyNames.contains(key)) {
+            logger.debug("renaming message property " + key + " to "+ value);
+          }
+          Object propValue=message.getProperty(key);
+          message.removeProperty(key);
+          message.setProperty(value,propValue);
+        }
+      }
+    }
+  }
   return message;
 }

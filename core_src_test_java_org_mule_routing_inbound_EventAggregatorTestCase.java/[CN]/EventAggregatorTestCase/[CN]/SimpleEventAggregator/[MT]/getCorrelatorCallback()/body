@@ -1,0 +1,32 @@
+{
+  return new EventCorrelatorCallback(){
+    public boolean shouldAggregateEvents(    EventGroup events){
+      eventCount++;
+      if (eventCount == eventThreshold) {
+        eventCount=0;
+        return true;
+      }
+      return false;
+    }
+    public EventGroup createEventGroup(    MuleEvent event,    Object groupId){
+      return new EventGroup(groupId,eventThreshold);
+    }
+    public MuleMessage aggregateEvents(    EventGroup events) throws AggregationException {
+      if (events.size() != eventThreshold) {
+        throw new IllegalStateException("eventThreshold not yet reached?");
+      }
+      StringBuffer newPayload=new StringBuffer(80);
+      for (Iterator iterator=events.iterator(); iterator.hasNext(); ) {
+        MuleEvent event=(MuleEvent)iterator.next();
+        try {
+          newPayload.append(event.getMessageAsString()).append(" ");
+        }
+ catch (        MuleException e) {
+          throw new AggregationException(events,event.getEndpoint(),e);
+        }
+      }
+      return new DefaultMuleMessage(newPayload.toString(),(Map)null);
+    }
+  }
+;
+}

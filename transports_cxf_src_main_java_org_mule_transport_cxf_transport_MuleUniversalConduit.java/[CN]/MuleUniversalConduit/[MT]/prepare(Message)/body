@@ -1,11 +1,28 @@
 {
-  final MuleUniversalConduit conduit=this;
-  CachedOutputStream out=new CachedOutputStream(){
-    @Override public void close() throws IOException {
-      super.close();
-      conduit.onClose(message);
+  final ByteArrayOutputStream cache=new ByteArrayOutputStream();
+  final DelegatingOutputStream delegating=new DelegatingOutputStream(cache);
+  message.setContent(OutputStream.class,delegating);
+  AbstractPhaseInterceptor<Message> i=new AbstractPhaseInterceptor<Message>(Phase.PRE_STREAM){
+    public void handleMessage(    Message m) throws Fault {
+      try {
+        dispatchMuleMessage(m);
+      }
+ catch (      IOException e) {
+        throw new Fault(e);
+      }
     }
   }
 ;
-  message.setContent(OutputStream.class,out);
+  i.getAfter().add(MuleProtocolHeadersOutInterceptor.class.getName());
+  message.getInterceptorChain().add(i);
+  OutputHandler handler=new OutputHandler(){
+    public void write(    MuleEvent event,    OutputStream out) throws IOException {
+      out.write(cache.toByteArray());
+      delegating.setOutputStream(out);
+      message.getInterceptorChain().doIntercept(message);
+    }
+  }
+;
+  DefaultMessageAdapter req=new DefaultMessageAdapter(handler);
+  message.getExchange().put(CxfConstants.MULE_MESSAGE,req);
 }

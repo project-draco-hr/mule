@@ -1,0 +1,19 @@
+{
+  super(connector,service,endpoint);
+  jmsConnector=(JmsConnector)connector;
+  final boolean isTopic=jmsConnector.getTopicResolver().isTopic(endpoint,true);
+  receiversCount=jmsConnector.getNumberOfConcurrentTransactedReceivers();
+  if (isTopic && receiversCount != 1) {
+    if (logger.isInfoEnabled()) {
+      logger.info("Destination " + getEndpoint().getEndpointURI() + " is a topic, but "+ receiversCount+ " receivers have been configured. Will configure only 1.");
+    }
+    receiversCount=1;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Creating " + receiversCount + " sub-receivers for "+ endpoint.getEndpointURI());
+  }
+  consumers=new LinkedBlockingDeque(receiversCount);
+  for (int i=0; i < receiversCount; i++) {
+    consumers.addLast(new SubReceiver());
+  }
+}

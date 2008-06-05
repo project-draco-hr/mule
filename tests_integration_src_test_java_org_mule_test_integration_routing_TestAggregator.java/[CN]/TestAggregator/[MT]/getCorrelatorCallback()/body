@@ -1,0 +1,19 @@
+{
+  return new CollectionCorrelatorCallback(){
+    public MuleMessage aggregateEvents(    EventGroup events) throws AggregationException {
+      StringBuffer buffer=new StringBuffer(128);
+      for (Iterator iterator=events.iterator(); iterator.hasNext(); ) {
+        MuleEvent event=(MuleEvent)iterator.next();
+        try {
+          buffer.append(event.transformMessageToString());
+        }
+ catch (        TransformerException e) {
+          throw new AggregationException(events,event.getEndpoint(),e);
+        }
+      }
+      logger.debug("event payload is: " + buffer.toString());
+      return new DefaultMuleMessage(buffer.toString());
+    }
+  }
+;
+}

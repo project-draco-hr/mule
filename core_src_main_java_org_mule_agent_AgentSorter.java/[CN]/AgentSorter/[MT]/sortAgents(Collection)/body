@@ -1,0 +1,28 @@
+{
+  List sortedAgents=new ArrayList();
+  Collection agentsWithoutDependencies=CollectionUtils.select(agents,new Predicate(){
+    public boolean evaluate(    Object object){
+      return ((Agent)object).getDependentAgents().size() == 0;
+    }
+  }
+);
+  sortedAgents.addAll(agentsWithoutDependencies);
+  List remainingAgents=new ArrayList(agents);
+  remainingAgents.removeAll(agentsWithoutDependencies);
+  while (remainingAgents.size() > 0) {
+    int processedAgents=0;
+    ListIterator iter=remainingAgents.listIterator();
+    while (iter.hasNext()) {
+      Agent agent=(Agent)iter.next();
+      if (dependentAgentsPresent(agent.getDependentAgents(),agents,sortedAgents)) {
+        sortedAgents.add(agent);
+        iter.remove();
+        processedAgents++;
+      }
+    }
+    if (processedAgents == 0) {
+      throw new IllegalArgumentException("Dependency cycle: " + remainingAgents);
+    }
+  }
+  return sortedAgents;
+}

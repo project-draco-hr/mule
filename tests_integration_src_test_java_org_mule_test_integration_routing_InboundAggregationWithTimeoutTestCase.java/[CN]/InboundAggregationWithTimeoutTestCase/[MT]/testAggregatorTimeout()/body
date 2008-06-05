@@ -1,0 +1,15 @@
+{
+  final CountDownLatch latch=new CountDownLatch(1);
+  muleContext.registerListener(new RoutingNotificationListener(){
+    public void onNotification(    ServerNotification notification){
+      if (notification.getAction() == RoutingNotification.CORRELATION_TIMEOUT) {
+        latch.countDown();
+      }
+    }
+  }
+);
+  String message="test";
+  MuleClient client=new MuleClient();
+  client.dispatch("vm://distributor.queue",message,null);
+  assertTrue(latch.await(3000,TimeUnit.MILLISECONDS));
+}

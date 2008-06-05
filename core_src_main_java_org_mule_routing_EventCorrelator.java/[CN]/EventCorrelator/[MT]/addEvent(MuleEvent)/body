@@ -1,0 +1,59 @@
+{
+  final Object groupId=messageInfoMapping.getCorrelationId(event.getMessage());
+  if (groupId == null || groupId.equals("-1")) {
+    throw new RoutingException(CoreMessages.noCorrelationId(),event.getMessage(),event.getEndpoint());
+  }
+  boolean lookupMiss=false;
+  while (true) {
+    if (lookupMiss) {
+      try {
+        Thread.sleep(1);
+      }
+ catch (      InterruptedException interrupted) {
+        Thread.currentThread().interrupt();
+      }
+    }
+    if (isGroupAlreadyProcessed(groupId)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("An event was received for an event group that has already been processed, " + "this is probably because the async-reply timed out. Correlation Id is: " + groupId + ". Dropping event");
+      }
+      context.fireNotification(new RoutingNotification(event.getMessage(),event.getEndpoint().getEndpointURI().toString(),RoutingNotification.MISSED_ASYNC_REPLY));
+      return;
+    }
+    EventGroup group=this.getEventGroup(groupId);
+    if (group == null) {
+      group=this.addEventGroup(callback.createEventGroup(event,groupId));
+    }
+synchronized (group) {
+      if (group != this.getEventGroup(groupId)) {
+        lookupMiss=true;
+        continue;
+      }
+      if (logger.isDebugEnabled()) {
+        logger.debug("Adding event to response aggregator group: " + groupId);
+      }
+      group.addEvent(event);
+      if (callback.shouldAggregateEvents(group)) {
+        MuleMessage returnMessage=callback.aggregateEvents(group);
+        this.removeEventGroup(group);
+        MuleMessage previousResult=(MuleMessage)responseMessages.putIfAbsent(groupId,returnMessage);
+        if (previousResult != null) {
+          throw new IllegalStateException("Detected duplicate aggregation result message with id: " + groupId);
+        }
+        Latch l=(Latch)locks.get(groupId);
+        if (l == null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Creating latch for " + groupId + " in "+ this);
+          }
+          l=new Latch();
+          Latch previous=(Latch)locks.putIfAbsent(groupId,l);
+          if (previous != null) {
+            l=previous;
+          }
+        }
+        l.countDown();
+      }
+      break;
+    }
+  }
+}

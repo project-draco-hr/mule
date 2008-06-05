@@ -1,0 +1,26 @@
+{
+  String uri=setupURL(m);
+  LOGGER.info("Sending message to " + uri);
+  try {
+    OutboundEndpoint ep=RegistryContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(uri);
+    MessageAdapter req=(MessageAdapter)m.getExchange().get(CxfConstants.MULE_MESSAGE);
+    MuleMessage result=sendStream(req,ep);
+    if (result != null) {
+      Message inMessage=new MessageImpl();
+      String contentType=req.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+      inMessage.put(Message.ENCODING,result.getEncoding());
+      inMessage.put(Message.CONTENT_TYPE,contentType);
+      inMessage.setContent(InputStream.class,result.getPayload(InputStream.class));
+      inMessage.setExchange(m.getExchange());
+      getMessageObserver().onMessage(inMessage);
+    }
+  }
+ catch (  Exception e) {
+    if (e instanceof IOException) {
+      throw (IOException)e;
+    }
+    IOException ex=new IOException("Could not send message to Mule.");
+    ex.initCause(e);
+    throw ex;
+  }
+}

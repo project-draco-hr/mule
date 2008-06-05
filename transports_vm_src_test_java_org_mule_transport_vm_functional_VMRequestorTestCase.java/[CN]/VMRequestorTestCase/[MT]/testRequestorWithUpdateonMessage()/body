@@ -1,0 +1,19 @@
+{
+  final MuleClient client=new MuleClient();
+  Thread t=new Thread(new Runnable(){
+    public void run(){
+      try {
+        client.send("vm://in","test",null);
+      }
+ catch (      MuleException e) {
+        fail("failed to dispatch event: " + e);
+        e.printStackTrace();
+      }
+    }
+  }
+,"test-thread");
+  t.start();
+  MuleMessage result=client.request("vm://out",3000L);
+  assertNotNull(result);
+  result.setProperty("foo","bar");
+}

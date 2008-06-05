@@ -1,8 +1,12 @@
 {
   try {
-    MessageImpl m=new MessageImpl();
-    MuleMessage muleMsg=ctx.getMessage();
+    final MessageImpl m=new MessageImpl();
+    final MuleMessage muleMsg=ctx.getMessage();
     String method=(String)muleMsg.getProperty(HttpConnector.HTTP_METHOD_PROPERTY);
+    String ct=(String)muleMsg.getProperty(HttpConstants.HEADER_CONTENT_TYPE);
+    if (ct != null) {
+      m.put(Message.CONTENT_TYPE,ct);
+    }
     String path=(String)muleMsg.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
     if (path == null) {
       path="";
@@ -37,19 +41,42 @@
     if (d.getMessageObserver() == null) {
       throw new EndpointNotFoundException(uri);
     }
-    ResponseListener obs=new ResponseListener();
-    m.put(MuleUniversalDestination.RESPONSE_OBSERVER,obs);
     m.put(LocalConduit.DIRECT_DISPATCH,Boolean.TRUE);
+    m.put(MuleProperties.MULE_EVENT_PROPERTY,RequestContext.getEvent());
     m.setDestination(d);
-    d.getMessageObserver().onMessage(m);
-    Object result=obs.getCachedStream().getInputStream();
-    Message resMsg=obs.getMessage();
-    Exception ex=resMsg.getContent(Exception.class);
-    if (ex != null) {
-      ExceptionPayload exceptionPayload=new DefaultExceptionPayload(new Exception(result.toString()));
-      ctx.getMessage().setExceptionPayload(exceptionPayload);
+    OutputHandler outputHandler=new OutputHandler(){
+      public void write(      MuleEvent event,      OutputStream out) throws IOException {
+        Message outFaultMessage=m.getExchange().getOutFaultMessage();
+        Message outMessage=m.getExchange().getOutMessage();
+        Message contentMsg=null;
+        if (outFaultMessage != null) {
+          contentMsg=outFaultMessage;
+        }
+ else         if (outMessage != null) {
+          contentMsg=outMessage;
+        }
+        DelegatingOutputStream delegate=(DelegatingOutputStream)contentMsg.getContent(OutputStream.class);
+        out.write(((ByteArrayOutputStream)delegate.getOutputStream()).toByteArray());
+        delegate.setOutputStream(out);
+        contentMsg.getInterceptorChain().resume();
+        out.flush();
+      }
     }
-    return result;
+;
+    DefaultMuleMessage responseMsg=new DefaultMuleMessage(outputHandler);
+    ExchangeImpl exchange=new ExchangeImpl();
+    exchange.setInMessage(m);
+    exchange.put(CxfConstants.MULE_MESSAGE,responseMsg);
+    d.getMessageObserver().onMessage(m);
+    Message faultMsg=m.getExchange().getOutFaultMessage();
+    if (faultMsg != null) {
+      Exception ex=faultMsg.getContent(Exception.class);
+      if (ex != null) {
+        ExceptionPayload exceptionPayload=new DefaultExceptionPayload(new Exception(""));
+        ctx.getMessage().setExceptionPayload(exceptionPayload);
+      }
+    }
+    return responseMsg;
   }
  catch (  MuleException e) {
     logger.warn("Could not dispatch message to XFire!",e);
