@@ -4,13 +4,32 @@
     if (logger.isDebugEnabled()) {
       logger.debug(this + " : got proxy for " + event.getId()+ " = "+ component);
     }
+    Object replyTo=event.getMessage().getReplyTo();
+    ReplyToHandler replyToHandler=getReplyToHandler(event.getMessage(),(InboundEndpoint)event.getEndpoint());
     result=component.onCall(event);
+    result=sendToOutboundRouter(event,result);
+    result=processAsyncReplyRouter(result);
+    processReplyTo(event,result,replyToHandler,replyTo);
+    if (stats.isEnabled()) {
+      stats.incSentEventSync();
+    }
   }
- catch (  MuleException e) {
-    throw e;
-  }
-catch (  Exception e) {
-    throw new ServiceException(event.getMessage(),this,e);
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof MessagingException) {
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getName()),event.getMessage(),e));
+    }
+    if (result == null) {
+      result=new DefaultMuleMessage(NullPayload.getInstance(),RequestContext.getEvent().getMessage());
+    }
+    ExceptionPayload exceptionPayload=result.getExceptionPayload();
+    if (exceptionPayload == null) {
+      exceptionPayload=new DefaultExceptionPayload(e);
+    }
+    result.setExceptionPayload(exceptionPayload);
   }
   return result;
 }

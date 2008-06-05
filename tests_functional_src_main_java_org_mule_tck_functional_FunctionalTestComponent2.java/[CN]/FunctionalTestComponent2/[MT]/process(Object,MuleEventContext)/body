@@ -1,0 +1,45 @@
+{
+  if (enableMessageHistory) {
+    messageHistory.add(data);
+  }
+  String contents=data.toString();
+  String msg=StringMessageUtils.getBoilerPlate("Message Received in service: " + context.getService().getName() + ". Content is: "+ StringMessageUtils.truncate(contents,100,true),'*',80);
+  logger.info(msg);
+  if (eventCallback != null) {
+    eventCallback.eventReceived(context,this);
+  }
+  Object replyMessage;
+  if (returnData != null) {
+    if (returnData instanceof String && ExpressionEvaluatorManager.isValidExpression(returnData.toString())) {
+      replyMessage=ExpressionEvaluatorManager.parse(returnData.toString(),context.getMessage());
+    }
+ else {
+      replyMessage=returnData;
+    }
+  }
+ else {
+    if (appendString != null) {
+      replyMessage=append(contents,context.getMessage());
+    }
+ else {
+      replyMessage=contents;
+    }
+  }
+  if (isEnableNotifications()) {
+    MuleContext muleContext=context.getMuleContext();
+    if (muleContext == null) {
+      logger.warn("No MuleContext available from MuleEventContext");
+      muleContext=MuleServer.getMuleContext();
+    }
+    muleContext.fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
+  }
+  if (waitTime > 0) {
+    try {
+      Thread.sleep(waitTime);
+    }
+ catch (    InterruptedException e) {
+      logger.info("FunctionalTestComponent waitTime was interrupted");
+    }
+  }
+  return replyMessage;
+}

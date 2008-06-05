@@ -1,0 +1,41 @@
+{
+  Element parent=(Element)element.getParentNode();
+  String serviceName=parent.getAttribute(ATTRIBUTE_NAME);
+  builder.addPropertyReference("service",serviceName);
+  AbstractBeanDefinition objectFactoryBeanDefinition=new GenericBeanDefinition();
+  objectFactoryBeanDefinition.setBeanClass(OBJECT_FACTORY_TYPE);
+  objectFactoryBeanDefinition.getPropertyValues().addPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS,componentInstanceClass);
+  objectFactoryBeanDefinition.setInitMethodName(Initialisable.PHASE_NAME);
+  objectFactoryBeanDefinition.setDestroyMethodName(Disposable.PHASE_NAME);
+  Map props=new HashMap();
+  for (int i=0; i < element.getAttributes().getLength(); i++) {
+    Node n=element.getAttributes().item(i);
+    props.put(n.getLocalName(),n.getNodeValue());
+  }
+  String returnData=null;
+  NodeList list=element.getChildNodes();
+  for (int i=0; i < list.getLength(); i++) {
+    if ("return-data".equals(list.item(i).getLocalName())) {
+      Element rData=(Element)list.item(i);
+      if (StringUtils.isNotEmpty(rData.getAttribute("file"))) {
+        String file=rData.getAttribute("file");
+        try {
+          returnData=IOUtils.getResourceAsString(file,getClass());
+        }
+ catch (        IOException e) {
+          throw new BeanCreationException("Failed to load test-data resource: " + file,e);
+        }
+      }
+ else {
+        returnData=rData.getTextContent();
+      }
+      break;
+    }
+  }
+  if (returnData != null) {
+    props.put("returnData",returnData);
+  }
+  objectFactoryBeanDefinition.getPropertyValues().addPropertyValue("properties",props);
+  builder.addPropertyValue("objectFactory",objectFactoryBeanDefinition);
+  super.parseChild(element,parserContext,builder);
+}

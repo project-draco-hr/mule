@@ -43,10 +43,27 @@
     }
   }
   if (!resultAvailable) {
-    if (logger.isTraceEnabled()) {
-      logger.trace("Current responses are: \n" + MapUtils.toString(responseMessages,true));
+    if (isFailOnTimeout()) {
+      if (logger.isTraceEnabled()) {
+        logger.trace("Current responses are: \n" + MapUtils.toString(responseMessages,true));
+      }
+      muleContext.fireNotification(new RoutingNotification(message,null,RoutingNotification.ASYNC_REPLY_TIMEOUT));
+      throw new ResponseTimeoutException(CoreMessages.responseTimedOutWaitingForId(this.getTimeout(),responseId),message,null);
     }
-    throw new ResponseTimeoutException(CoreMessages.responseTimedOutWaitingForId(this.getTimeout(),responseId),message,null);
+ else {
+      EventGroup group=this.getEventGroup(responseId);
+      if (group == null) {
+        if (logger.isTraceEnabled()) {
+          logger.trace("There is no current event Group. Current responses are: \n" + MapUtils.toString(responseMessages,true));
+        }
+        return null;
+      }
+ else {
+        this.removeEventGroup(group);
+        MuleMessage msg=this.aggregateEvents(group);
+        return msg;
+      }
+    }
   }
   if (result == null) {
     throw new IllegalStateException("Response Message is null");

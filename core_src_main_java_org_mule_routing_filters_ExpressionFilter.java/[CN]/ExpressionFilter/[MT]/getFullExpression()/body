@@ -1,0 +1,48 @@
+{
+  if (fullExpression == null) {
+    if (evaluator == null) {
+      throw new IllegalArgumentException(CoreMessages.objectIsNull("evaluator").getMessage());
+    }
+    if (evaluator.equals("custom")) {
+      if (customEvaluator == null) {
+        throw new IllegalArgumentException(CoreMessages.objectIsNull("customEvaluator").getMessage());
+      }
+ else {
+        evaluator=customEvaluator;
+      }
+    }
+    if (evaluator.equals("header")) {
+      delegateFilter=new MessagePropertyFilter(expression);
+    }
+ else     if (evaluator.equals("regex")) {
+      delegateFilter=new RegExFilter(expression);
+    }
+ else     if (evaluator.equals("wildcard")) {
+      delegateFilter=new WildcardFilter(expression);
+    }
+ else     if (evaluator.equals("payload-type")) {
+      try {
+        delegateFilter=new PayloadTypeFilter(expression);
+      }
+ catch (      ClassNotFoundException e) {
+        IllegalArgumentException iae=new IllegalArgumentException();
+        iae.initCause(e);
+        throw iae;
+      }
+    }
+ else     if (evaluator.equals("exception-type")) {
+      try {
+        delegateFilter=new ExceptionTypeFilter(expression);
+      }
+ catch (      ClassNotFoundException e) {
+        IllegalArgumentException iae=new IllegalArgumentException();
+        iae.initCause(e);
+        throw iae;
+      }
+    }
+ else {
+      fullExpression=evaluator + ":" + (expression == null ? "" : expression);
+    }
+  }
+  return fullExpression;
+}

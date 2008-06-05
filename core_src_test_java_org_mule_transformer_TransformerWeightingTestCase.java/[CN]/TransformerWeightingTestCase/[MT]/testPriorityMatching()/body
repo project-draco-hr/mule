@@ -1,0 +1,21 @@
+{
+  DummyTransformer t1=new DummyTransformer();
+  t1.setName("--t1");
+  t1.registerSourceType(Orange.class);
+  t1.setReturnClass(Fruit.class);
+  muleContext.getRegistry().registerTransformer(t1);
+  DummyTransformer t2=new DummyTransformer();
+  t2.setName("--t2");
+  t2.registerSourceType(Object.class);
+  t2.setReturnClass(Fruit.class);
+  muleContext.getRegistry().registerTransformer(t2);
+  List trans=muleContext.getRegistry().lookupTransformers(BloodOrange.class,Fruit.class);
+  assertEquals(2,trans.size());
+  for (Iterator iterator=trans.iterator(); iterator.hasNext(); ) {
+    Transformer transformer=(Transformer)iterator.next();
+    assertTrue(transformer.getName().startsWith("--"));
+  }
+  Transformer result=muleContext.getRegistry().lookupTransformer(BloodOrange.class,Fruit.class);
+  assertNotNull(result);
+  assertEquals("--t1",result.getName());
+}

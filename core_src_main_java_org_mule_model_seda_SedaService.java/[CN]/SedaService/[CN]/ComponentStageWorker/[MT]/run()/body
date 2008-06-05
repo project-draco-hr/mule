@@ -1,3 +1,19 @@
 {
-  ((AbstractComponent)component).onEvent(event);
+  try {
+    event=OptimizedRequestContext.criticalSetEvent(event);
+    Object replyTo=event.getMessage().getReplyTo();
+    ReplyToHandler replyToHandler=getReplyToHandler(event.getMessage(),(InboundEndpoint)event.getEndpoint());
+    MuleMessage result=component.onCall(event);
+    dispatchToOutboundRouter(event,result);
+    processReplyTo(event,result,replyToHandler,replyTo);
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof MessagingException) {
+      handleException(e);
+    }
+ else {
+      handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getName()),event.getMessage(),e));
+    }
+  }
 }

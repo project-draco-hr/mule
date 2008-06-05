@@ -1,6 +1,7 @@
 {
+  OptimizedRequestContext.unsafeSetEvent(event);
   if (logger.isTraceEnabled()) {
-    logger.trace(this.getClass().getName() + ": sync call for Mule Component " + service.getName());
+    logger.trace("Invoking " + this.getClass().getName() + "component for service "+ service.getName());
   }
   checkDisposed();
   if (!(event.getEndpoint() instanceof InboundEndpoint)) {
@@ -10,9 +11,20 @@
     throw new DefaultMuleException(CoreMessages.componentIsStopped(service.getName()));
   }
   try {
-    return doOnCall(event);
+    long startTime=0;
+    if (statistics.isEnabled()) {
+      startTime=System.currentTimeMillis();
+    }
+    MuleMessage result=doOnCall(event);
+    if (statistics.isEnabled()) {
+      statistics.addExecutionTime(System.currentTimeMillis() - startTime);
+    }
+    return result;
   }
- catch (  Exception e) {
+ catch (  MuleException me) {
+    throw me;
+  }
+catch (  Exception e) {
     throw new ServiceException(CoreMessages.failedToInvoke(this.toString()),event.getMessage(),service,e);
   }
 }

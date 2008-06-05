@@ -1,0 +1,18 @@
+{
+  latch=new CountDownLatch(1);
+  muleContext.registerListener(new RoutingNotificationListener(){
+    public void onNotification(    ServerNotification notification){
+      if (notification.getAction() == RoutingNotification.ASYNC_REPLY_TIMEOUT) {
+        latch.countDown();
+      }
+    }
+  }
+);
+  String message="test";
+  MuleClient client=new MuleClient();
+  MuleMessage result=client.send("vm://distributor.queue",message,null);
+  assertNotNull(result);
+  assertNotNull(result.getExceptionPayload());
+  assertTrue(result.getExceptionPayload().getException() instanceof ResponseTimeoutException);
+  assertTrue(latch.await(3000,TimeUnit.MILLISECONDS));
+}

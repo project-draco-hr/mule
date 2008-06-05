@@ -1,0 +1,17 @@
+{
+  if (event.isStopFurtherProcessing()) {
+    logger.debug("MuleEvent stop further processing has been set, no outbound routing will be performed.");
+  }
+  if (result != null && !event.isStopFurtherProcessing()) {
+    if (getOutboundRouter().hasEndpoints()) {
+      MuleMessage outboundReturnMessage=getOutboundRouter().route(result,event.getSession(),event.isSynchronous());
+      if (outboundReturnMessage != null) {
+        result=outboundReturnMessage;
+      }
+    }
+ else {
+      logger.debug("Outbound router on service '" + getName() + "' doesn't have any endpoints configured.");
+    }
+  }
+  return result;
+}
