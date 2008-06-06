@@ -36,11 +36,12 @@
     }
     String soapAction=getSoapAction(ctx.getMessage());
     m.put(org.mule.transport.soap.SoapConstants.SOAP_ACTION_PROPERTY_CAPS,soapAction);
-    EndpointInfo ei=receiver.getServer().getEndpoint().getEndpointInfo();
-    MuleUniversalDestination d=(MuleUniversalDestination)universalTransport.getDestination(ei);
-    if (d.getMessageObserver() == null) {
+    EndpointURI epUri=ctx.getEndpointURI();
+    Server server=connector.getServer(epUri.toString());
+    if (server == null) {
       throw new EndpointNotFoundException(uri);
     }
+    org.apache.cxf.transport.Destination d=server.getDestination();
     m.put(LocalConduit.DIRECT_DISPATCH,Boolean.TRUE);
     m.put(MuleProperties.MULE_EVENT_PROPERTY,RequestContext.getEvent());
     m.setDestination(d);

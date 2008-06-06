@@ -1,0 +1,12 @@
+{
+  MuleClient client=new MuleClient();
+  final Latch latch=new Latch();
+  client.getMuleContext().registerListener(new FunctionalTestNotificationListener(){
+    public void onNotification(    ServerNotification notification){
+      latch.countDown();
+    }
+  }
+);
+  client.dispatch("inboundEndpoint","some data",null);
+  assertTrue(latch.await(TIMEOUT,TimeUnit.MILLISECONDS));
+}

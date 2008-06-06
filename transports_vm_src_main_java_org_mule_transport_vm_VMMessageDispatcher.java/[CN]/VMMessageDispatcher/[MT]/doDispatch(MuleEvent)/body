@@ -10,14 +10,22 @@
     queue.put(event.getMessage());
   }
  else {
-    VMMessageReceiver receiver=connector.getReceiver(event.getEndpoint().getEndpointURI());
+    final VMMessageReceiver receiver=connector.getReceiver(event.getEndpoint().getEndpointURI());
     if (receiver == null) {
       logger.warn("No receiver for endpointUri: " + event.getEndpoint().getEndpointURI());
       return;
     }
     MuleMessage message=event.getMessage();
     connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),message);
-    receiver.onMessage(message);
+    TransactionTemplate tt=new TransactionTemplate(receiver.getEndpoint().getTransactionConfig(),connector.getExceptionListener(),event.getMuleContext());
+    TransactionCallback cb=new TransactionCallback(){
+      public Object doInTransaction() throws Exception {
+        receiver.onMessage(event.getMessage());
+        return null;
+      }
+    }
+;
+    tt.execute(cb);
   }
   if (logger.isDebugEnabled()) {
     logger.debug("dispatched MuleEvent on endpointUri: " + endpointUri);

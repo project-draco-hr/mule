@@ -9,7 +9,7 @@
     }
  catch (    org.mule.api.security.SecurityException e) {
       logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
-      connector.fireNotification(new SecurityNotification(e,SecurityNotification.ADMIN_EVENT_ACTION_START_RANGE));
+      connector.fireNotification(new SecurityNotification(e,SecurityNotification.SECURITY_AUTHENTICATION_FAILED));
       connector.handleException(e);
       return;
     }
@@ -21,7 +21,7 @@ catch (    MuleException e) {
   try {
     Transaction tx=TransactionCoordination.getInstance().getTransaction();
     if (isDoThreading() && !event.isSynchronous() && tx == null) {
-      workManager.scheduleWork(new Worker(event),WorkManager.INDEFINITE,null,connector);
+      connector.getDispatcherWorkManager().scheduleWork(new Worker(event),WorkManager.INDEFINITE,null,connector);
     }
  else {
       connectionStrategy.connect(this);

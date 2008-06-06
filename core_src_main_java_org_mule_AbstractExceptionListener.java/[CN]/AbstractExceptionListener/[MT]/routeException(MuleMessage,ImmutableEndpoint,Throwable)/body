@@ -1,6 +1,6 @@
 {
-  OutboundEndpoint endpoint=getEndpoint(t);
-  if (endpoint != null) {
+  List endpoints=getEndpoints(t);
+  if (CollectionUtils.isNotEmpty(endpoints)) {
     try {
       logger.error("Message being processed is: " + (message == null ? "null" : message.toString()));
       MuleEventContext ctx=RequestContext.getEventContext();
@@ -24,11 +24,14 @@
  else {
         exceptionMessage=new DefaultMuleMessage(msg,ctx.getMessage());
       }
-      MuleEvent exceptionEvent=new DefaultMuleEvent(exceptionMessage,endpoint,new DefaultMuleSession(exceptionMessage,new MuleSessionHandler(),muleContext),true);
-      exceptionEvent=RequestContext.setEvent(exceptionEvent);
-      endpoint.send(exceptionEvent);
-      if (logger.isDebugEnabled()) {
-        logger.debug("routed Exception message via " + endpoint);
+      for (int i=0; i < endpoints.size(); i++) {
+        OutboundEndpoint endpoint=(OutboundEndpoint)endpoints.get(i);
+        MuleEvent exceptionEvent=new DefaultMuleEvent(exceptionMessage,endpoint,new DefaultMuleSession(exceptionMessage,new MuleSessionHandler(),muleContext),true);
+        exceptionEvent=RequestContext.setEvent(exceptionEvent);
+        endpoint.send(exceptionEvent);
+        if (logger.isDebugEnabled()) {
+          logger.debug("routed Exception message via " + endpoint);
+        }
       }
     }
  catch (    MuleException e) {

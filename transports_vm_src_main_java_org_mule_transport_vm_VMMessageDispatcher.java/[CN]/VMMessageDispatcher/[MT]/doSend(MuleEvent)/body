@@ -1,7 +1,7 @@
 {
   MuleMessage retMessage;
   EndpointURI endpointUri=event.getEndpoint().getEndpointURI();
-  VMMessageReceiver receiver=connector.getReceiver(endpointUri);
+  final VMMessageReceiver receiver=connector.getReceiver(endpointUri);
   event.transformMessage();
   if (receiver == null) {
     if (connector.isQueueEvents()) {
@@ -17,7 +17,14 @@
   }
   MuleMessage message=event.getMessage();
   connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),message);
-  retMessage=(MuleMessage)receiver.onCall(message,event.isSynchronous());
+  TransactionTemplate tt=new TransactionTemplate(receiver.getEndpoint().getTransactionConfig(),connector.getExceptionListener(),event.getMuleContext());
+  TransactionCallback cb=new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      return receiver.onCall(event.getMessage(),true);
+    }
+  }
+;
+  retMessage=(MuleMessage)tt.execute(cb);
   if (logger.isDebugEnabled()) {
     logger.debug("sent event on endpointUri: " + event.getEndpoint().getEndpointURI());
   }

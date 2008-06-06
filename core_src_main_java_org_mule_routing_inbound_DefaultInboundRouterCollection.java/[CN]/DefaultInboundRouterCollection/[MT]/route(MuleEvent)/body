@@ -11,17 +11,24 @@
     addRouter(new InboundPassThroughRouter());
   }
   String componentName=event.getSession().getService().getName();
-  MuleEvent[] eventsToRoute=null;
+  ConcurrentMap eventsToRoute=new ConcurrentHashMap(2);
   boolean noRoute=true;
   boolean match=false;
   InboundRouter umoInboundRouter;
+  MuleEvent lastEvent=null;
   for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
     umoInboundRouter=(InboundRouter)iterator.next();
     if (umoInboundRouter.isMatch(event)) {
       match=true;
-      eventsToRoute=umoInboundRouter.process(event);
-      noRoute=(eventsToRoute == null);
-      if (!matchAll) {
+      MuleEvent[] events=umoInboundRouter.process(event);
+      if (events != null) {
+        for (int i=0; i < events.length; i++) {
+          lastEvent=events[i];
+          eventsToRoute.putIfAbsent(lastEvent.getId(),lastEvent);
+        }
+      }
+      noRoute=(events == null);
+      if (!isMatchAll()) {
         break;
       }
     }
@@ -56,18 +63,19 @@
  else {
       try {
         MuleMessage messageResult=null;
-        for (int i=0; i < eventsToRoute.length; i++) {
+        for (Iterator iterator=eventsToRoute.values().iterator(); iterator.hasNext(); ) {
+          MuleEvent eventToRoute=(MuleEvent)iterator.next();
           if (event.getMessage().getProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY) == null) {
             event.getMessage().setProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY,inboundEndpoint);
           }
           if (event.isSynchronous()) {
-            messageResult=send(eventsToRoute[i]);
+            messageResult=send(eventToRoute);
           }
  else {
-            dispatch(eventsToRoute[i]);
+            dispatch(eventToRoute);
           }
           if (getStatistics().isEnabled()) {
-            getStatistics().incrementRoutedMessage(eventsToRoute[i].getEndpoint());
+            getStatistics().incrementRoutedMessage(eventToRoute.getEndpoint());
           }
         }
         return messageResult;
@@ -77,5 +85,10 @@
       }
     }
   }
-  return (eventsToRoute != null && eventsToRoute.length > 0 ? eventsToRoute[eventsToRoute.length - 1].getMessage() : null);
+  if (event.isSynchronous()) {
+    return (lastEvent == null ? null : lastEvent.getMessage());
+  }
+ else {
+    return null;
+  }
 }

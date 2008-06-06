@@ -1,48 +1,48 @@
 {
-  if (scriptEngine == null) {
-    if (compiledScript == null) {
-      if (scriptEngineName != null) {
-        scriptEngine=createScriptEngineByName(scriptEngineName);
-      }
- else       if (scriptFile != null) {
-        int i=scriptFile.lastIndexOf(".");
-        if (i > -1) {
-          logger.info("Script Engine name not set. Guessing by file extension.");
-          scriptEngine=createScriptEngineByExtension(scriptFile.substring(i + 1));
-          if (scriptEngine != null) {
-            setScriptEngineName(scriptEngine.getFactory().getEngineName());
-          }
-        }
-      }
-      if (scriptEngine == null) {
-        throw new InitialisationException(CoreMessages.propertiesNotSet("scriptEngine, scriptEngineName, compiledScript"),this);
-      }
-    }
- else {
-      scriptEngine=compiledScript.getEngine();
+  scriptEngineManager=new ScriptEngineManager();
+  if (scriptEngineName != null) {
+    scriptEngine=createScriptEngineByName(scriptEngineName);
+    if (scriptEngine == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Scripting engine '" + scriptEngineName + "' not found.  Available engines are: "+ listAvailableEngines()),this);
     }
   }
-  if (compiledScript == null) {
-    if (script == null) {
-      if (scriptText == null && scriptFile == null) {
-        throw new InitialisationException(CoreMessages.propertiesNotSet("scriptText, scriptFile"),this);
-      }
- else       if (scriptText != null) {
-        script=new StringReader(scriptText);
+ else   if (scriptFile != null) {
+    int i=scriptFile.lastIndexOf(".");
+    if (i > -1) {
+      logger.info("Script Engine name not set. Guessing by file extension.");
+      String ext=scriptFile.substring(i + 1);
+      scriptEngine=createScriptEngineByExtension(ext);
+      if (scriptEngine == null) {
+        throw new InitialisationException(MessageFactory.createStaticMessage("File extension '" + ext + "' does not map to a scripting engine.  Available engines are: "+ listAvailableEngines()),this);
       }
  else {
-        InputStream is;
-        try {
-          is=IOUtils.getResourceAsStream(scriptFile,getClass());
-          script=new InputStreamReader(is);
-        }
- catch (        IOException e) {
-          throw new InitialisationException(CoreMessages.cannotLoadFromClasspath(scriptFile),e,this);
-        }
+        setScriptEngineName(scriptEngine.getFactory().getEngineName());
       }
     }
+  }
+  Reader script;
+  if (StringUtils.isNotBlank(scriptText)) {
+    script=new StringReader(scriptText);
+  }
+ else   if (scriptFile != null) {
+    InputStream is;
     try {
-      compiledScript=compileScript(script);
+      is=IOUtils.getResourceAsStream(scriptFile,getClass());
+    }
+ catch (    IOException e) {
+      throw new InitialisationException(CoreMessages.cannotLoadFromClasspath(scriptFile),e,this);
+    }
+    if (is == null) {
+      throw new InitialisationException(CoreMessages.cannotLoadFromClasspath(scriptFile),this);
+    }
+    script=new InputStreamReader(is);
+  }
+ else {
+    throw new InitialisationException(CoreMessages.propertiesNotSet("scriptText, scriptFile"),this);
+  }
+  if (scriptEngine instanceof Compilable) {
+    try {
+      compiledScript=((Compilable)scriptEngine).compile(script);
     }
  catch (    ScriptException e) {
       throw new InitialisationException(e,this);
