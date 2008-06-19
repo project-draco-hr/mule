@@ -1,0 +1,35 @@
+{
+  LinkedHashMap entries=new LinkedHashMap();
+  JarFile jarFileWrapper=null;
+  if (jarFile != null) {
+    logger.debug("Reading jar entries from " + jarFile.getAbsolutePath());
+    try {
+      jarFileWrapper=new JarFile(jarFile);
+      Enumeration iter=jarFileWrapper.entries();
+      while (iter.hasMoreElements()) {
+        ZipEntry zipEntry=(ZipEntry)iter.nextElement();
+        InputStream entryStream=jarFileWrapper.getInputStream(zipEntry);
+        ByteArrayOutputStream byteArrayStream=new ByteArrayOutputStream();
+        try {
+          IOUtils.copy(entryStream,byteArrayStream);
+          entries.put(zipEntry.getName(),byteArrayStream.toByteArray());
+          logger.debug("Read jar entry " + zipEntry.getName() + " from "+ jarFile.getAbsolutePath());
+        }
+  finally {
+          byteArrayStream.close();
+        }
+      }
+    }
+  finally {
+      if (jarFileWrapper != null) {
+        try {
+          jarFileWrapper.close();
+        }
+ catch (        Exception ignore) {
+          logger.debug(ignore);
+        }
+      }
+    }
+  }
+  return entries;
+}
