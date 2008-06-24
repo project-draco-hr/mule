@@ -1,16 +1,10 @@
 {
-  String tempUrl;
-  MuleMessage result=null;
-  Object request=event.transformMessage();
   Object requestBody;
-  if (urlFromMessage) {
-    tempUrl=event.getMessage().getStringProperty(REST_SERVICE_URL,null);
-    if (tempUrl == null) {
-      throw new IllegalArgumentException(CoreMessages.propertyIsNotSetOnEvent(REST_SERVICE_URL).toString());
-    }
-  }
- else {
-    tempUrl=serviceUrl;
+  Object request=event.transformMessage();
+  String tempUrl=serviceUrl;
+  MuleMessage result;
+  if (ExpressionEvaluatorManager.isValidExpression(serviceUrl)) {
+    tempUrl=ExpressionEvaluatorManager.parse(serviceUrl,event.getMessage(),true);
   }
   StringBuffer urlBuffer=new StringBuffer(tempUrl);
   if (GET.equalsIgnoreCase(this.httpMethod)) {

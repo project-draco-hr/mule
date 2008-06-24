@@ -1,11 +1,16 @@
 {
+  long keepAliveTimeout=((TcpConnector)connector).getKeepAliveTimeout();
   try {
     do {
       conn.setKeepAlive(false);
+      if (keepAliveTimeout > 0) {
+        ((HttpConnector)connector).getKeepAliveMonitor().addExpirable(keepAliveTimeout,TimeUnit.MILLISECONDS,this);
+      }
       HttpRequest request=conn.readRequest();
       if (request == null) {
         break;
       }
+      ((HttpConnector)connector).getKeepAliveMonitor().removeExpirable(this);
       conn.writeResponse(processRequest(request));
     }
  while (conn.isKeepAlive());
@@ -15,7 +20,10 @@
   }
  finally {
     logger.info("Closing HTTP connection.");
-    conn.close();
-    conn=null;
+    if (conn.isOpen()) {
+      conn.close();
+      conn=null;
+      ((HttpConnector)connector).getKeepAliveMonitor().removeExpirable(this);
+    }
   }
 }

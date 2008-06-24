@@ -1,0 +1,47 @@
+{
+  if (message instanceof MuleMessage) {
+    if (StringUtils.isEmpty(expression)) {
+      return message;
+    }
+ else {
+      if (expression.equals("id")) {
+        return ((MuleMessage)message).getUniqueId();
+      }
+ else       if (expression.equals("correlationId")) {
+        return ((MuleMessage)message).getCorrelationId();
+      }
+ else       if (expression.equals("correlationSequence")) {
+        return new Integer(((MuleMessage)message).getCorrelationSequence());
+      }
+ else       if (expression.equals("correlationGroupSize")) {
+        return new Integer(((MuleMessage)message).getCorrelationGroupSize());
+      }
+ else       if (expression.equals("replyTo")) {
+        return ((MuleMessage)message).getReplyTo();
+      }
+ else       if (expression.equals("payload")) {
+        return ((MuleMessage)message).getPayload();
+      }
+ else       if (expression.equals("encoding")) {
+        return ((MuleMessage)message).getEncoding();
+      }
+ else       if (expression.equals("exception")) {
+        ExceptionPayload ep=((MuleMessage)message).getExceptionPayload();
+        if (ep != null) {
+          return ep.getException();
+        }
+        return null;
+      }
+ else {
+        throw new IllegalArgumentException(expression);
+      }
+    }
+  }
+ else {
+    logger.warn("Message is not of type MuleMessage, the expression will return the object without modification");
+    if (message instanceof MessageAdapter) {
+      return ((MessageAdapter)message).getPayload();
+    }
+  }
+  return message;
+}

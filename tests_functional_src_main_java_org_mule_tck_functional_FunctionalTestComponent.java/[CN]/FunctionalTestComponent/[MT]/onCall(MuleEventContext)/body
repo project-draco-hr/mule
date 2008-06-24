@@ -1,33 +1,6 @@
 {
-  if (enableMessageHistory) {
-    messageHistory.add(context.transformMessage());
+  if (isThrowException()) {
+    throwException();
   }
-  String contents=context.transformMessageToString();
-  String msg=StringMessageUtils.getBoilerPlate("Message Received in service: " + context.getService().getName() + ". Content is: "+ StringMessageUtils.truncate(contents,100,true),'*',80);
-  logger.info(msg);
-  if (eventCallback != null) {
-    eventCallback.eventReceived(context,this);
-  }
-  Object replyMessage;
-  if (returnMessage != null) {
-    replyMessage=returnMessage;
-  }
- else {
-    if (isAsString()) {
-      replyMessage=(addReceived ? received(contents) : contents) + (appendComponentName ? " " + context.getService().getName() : "");
-    }
- else {
-      replyMessage=context.getMessage().getPayload();
-    }
-  }
-  MuleContext muleContext=context.getMuleContext();
-  if (muleContext == null) {
-    logger.warn("No MuleContext available from MuleEventContext");
-    muleContext=MuleServer.getMuleContext();
-  }
-  muleContext.fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
-  if (throwException) {
-    throw new FunctionalTestException();
-  }
-  return replyMessage;
+  return process(getMessageFromContext(context),context);
 }

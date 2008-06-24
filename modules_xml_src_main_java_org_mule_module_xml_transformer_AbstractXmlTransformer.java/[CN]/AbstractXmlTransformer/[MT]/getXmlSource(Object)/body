@@ -1,23 +1,34 @@
 {
-  if (src instanceof byte[]) {
-    return new StreamSource(new ByteArrayInputStream((byte[])src));
-  }
- else   if (src instanceof InputStream) {
-    return new StreamSource((InputStream)src);
-  }
- else   if (src instanceof String) {
-    return new StreamSource(new StringReader((String)src));
-  }
- else   if (src instanceof DocumentSource) {
-    return (Source)src;
-  }
- else   if (src instanceof Document) {
-    return new DocumentSource((Document)src);
-  }
- else   if (src instanceof org.w3c.dom.Document || src instanceof org.w3c.dom.Element) {
-    return new DOMSource((org.w3c.dom.Node)src);
-  }
+  try {
+    if (src instanceof Source) {
+      return (Source)src;
+    }
+ else     if (src instanceof byte[]) {
+      ByteArrayInputStream stream=new ByteArrayInputStream((byte[])src);
+      return createStreamSource(stream);
+    }
+ else     if (src instanceof InputStream) {
+      return createStreamSource((InputStream)src);
+    }
+ else     if (src instanceof String) {
+      if (useStaxSource) {
+        return new StaxSource(xmlInputFactory.createXMLStreamReader(new StringReader((String)src)));
+      }
  else {
-    return null;
+        return new StreamSource(new StringReader((String)src));
+      }
+    }
+ else     if (src instanceof Document) {
+      return new DocumentSource((Document)src);
+    }
+ else     if (src instanceof org.w3c.dom.Document || src instanceof org.w3c.dom.Element) {
+      return new DOMSource((org.w3c.dom.Node)src);
+    }
+ else {
+      return null;
+    }
+  }
+ catch (  XMLStreamException e) {
+    throw new TransformerException(this,e);
   }
 }

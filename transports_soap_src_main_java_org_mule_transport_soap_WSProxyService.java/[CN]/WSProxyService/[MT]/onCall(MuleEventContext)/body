@@ -15,8 +15,13 @@
     InboundEndpoint webServiceEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(this.wsdlEndpoint);
     MuleMessage replyWSDL=eventContext.requestEvent(webServiceEndpoint,eventContext.getTimeout());
     wsdlString=replyWSDL.getPayloadAsString();
-    wsdlString=wsdlString.replaceAll(this.urlWebservice,eventContext.getEndpointURI().getAddress());
-    DefaultMuleMessage modifiedWsdl=new DefaultMuleMessage(wsdlString,message);
+    String realWSDLURI=wsdlEndpoint.split("\\?")[0];
+    String proxyWSDLURI=eventContext.getEndpointURI().toString();
+    wsdlString=wsdlString.replaceAll(realWSDLURI,proxyWSDLURI);
+    if (wsdlString.indexOf("localhost") > -1) {
+      wsdlString=wsdlString.replaceAll("localhost",InetAddress.getLocalHost().getHostName());
+    }
+    DefaultMuleMessage modifiedWsdl=new DefaultMuleMessage(wsdlString);
     logger.debug("WSDL retrieved successfully");
     eventContext.setStopFurtherProcessing(true);
     return modifiedWsdl;

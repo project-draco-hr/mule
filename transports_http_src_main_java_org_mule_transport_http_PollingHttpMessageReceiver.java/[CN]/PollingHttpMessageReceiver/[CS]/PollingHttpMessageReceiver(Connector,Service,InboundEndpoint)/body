@@ -1,8 +1,16 @@
 {
   super(connector,service,endpoint);
-  long pollingFrequency=MapUtils.getLongValue(endpoint.getProperties(),"pollingFrequency",-1);
+  HttpPollingConnector pollingConnector;
+  if (connector instanceof HttpPollingConnector) {
+    pollingConnector=(HttpPollingConnector)connector;
+  }
+ else {
+    throw new CreateException(HttpMessages.pollingReciverCannotbeUsed(),this);
+  }
+  long pollingFrequency=MapUtils.getLongValue(endpoint.getProperties(),"pollingFrequency",pollingConnector.getPollingFrequency());
   if (pollingFrequency > 0) {
     this.setFrequency(pollingFrequency);
   }
-  checkEtag=MapUtils.getBooleanValue(endpoint.getProperties(),"checkEtag",true);
+  checkEtag=MapUtils.getBooleanValue(endpoint.getProperties(),"checkEtag",pollingConnector.isCheckEtag());
+  discardEmptyContent=MapUtils.getBooleanValue(endpoint.getProperties(),"discardEmptyContent",pollingConnector.isDiscardEmptyContent());
 }

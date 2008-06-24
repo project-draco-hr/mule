@@ -1,0 +1,16 @@
+{
+  if (id == null) {
+    throw new IllegalArgumentException(CoreMessages.objectIsNull("id").toString());
+  }
+  StoredObject obj=new StoredObject(id,item);
+synchronized (store) {
+    if (store.values().contains(obj)) {
+      return false;
+    }
+    boolean written=false;
+    while (!written) {
+      written=(store.putIfAbsent(new Long(Utils.nanoTime()),obj) == null);
+    }
+    return true;
+  }
+}

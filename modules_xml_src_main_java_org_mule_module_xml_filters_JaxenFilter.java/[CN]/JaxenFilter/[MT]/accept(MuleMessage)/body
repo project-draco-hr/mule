@@ -1,0 +1,22 @@
+{
+  Object payload=obj.getPayload();
+  try {
+    if (payload instanceof DOMSource) {
+      accept(((DOMSource)payload).getNode());
+    }
+ else     if (payload instanceof byte[] || payload instanceof InputStream || payload instanceof String) {
+      try {
+        return accept(obj.getPayload(org.w3c.dom.Document.class));
+      }
+ catch (      Exception e) {
+        logger.warn("JaxenPath filter rejected message because it could not convert from " + payload.getClass() + " to Source: "+ e.getMessage(),e);
+        return false;
+      }
+    }
+    return accept(payload);
+  }
+ catch (  JaxenException e) {
+    logger.warn("JaxenPath filter rejected message because it could not build/evaluate the XPath expression.",e);
+    return false;
+  }
+}

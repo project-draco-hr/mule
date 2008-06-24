@@ -6,6 +6,9 @@
   }
   String method=msg.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
   try {
+    endpoint=endpoint.replaceAll("\\[","\\{");
+    endpoint=endpoint.replaceAll("\\]","\\}");
+    endpoint=ExpressionEvaluatorManager.parse(endpoint,msg,true);
     URI uri=new URI(endpoint);
     HttpMethod httpMethod;
     if (HttpConstants.METHOD_GET.equals(method)) {
@@ -27,7 +30,7 @@
       PostMethod postMethod=new PostMethod(uri.toString());
       String paramName=msg.getStringProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY,null);
       if (paramName == null) {
-        addParameters(uri.getQuery(),postMethod);
+        addParameters(uri.getQuery(),postMethod,msg);
         setupEntityMethod(src,outputEncoding,msg,uri,postMethod);
       }
  else {

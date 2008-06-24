@@ -48,6 +48,20 @@
     MuleMessage eventMsg=event.getMessage();
     if (connector.supportsProperty(JmsConstants.JMS_REPLY_TO)) {
       Object tempReplyTo=eventMsg.removeProperty(JmsConstants.JMS_REPLY_TO);
+      if (tempReplyTo == null) {
+        tempReplyTo=eventMsg.removeProperty(MuleProperties.MULE_REPLY_TO_PROPERTY);
+        if (tempReplyTo != null) {
+          if (tempReplyTo.toString().startsWith("jms://")) {
+            tempReplyTo=tempReplyTo.toString().substring(6);
+          }
+ else {
+            EndpointBuilder epb=event.getMuleContext().getRegistry().lookupEndpointBuilder(tempReplyTo.toString());
+            if (epb != null) {
+              tempReplyTo=epb.buildOutboundEndpoint().getEndpointURI().getAddress();
+            }
+          }
+        }
+      }
       if (tempReplyTo != null) {
         if (tempReplyTo instanceof Destination) {
           replyTo=(Destination)tempReplyTo;
