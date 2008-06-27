@@ -1,0 +1,41 @@
+{
+  muleContext.setTransactionManager(tm);
+  assertNull("There sould be no current transaction associated.",tm.getTransaction());
+  tm.setTransactionTimeout(TRANSACTION_TIMEOUT_SECONDS);
+  TransactionConfig config=new MuleTransactionConfig();
+  config.setFactory(new XaTransactionFactory());
+  config.setAction(TransactionConfig.ACTION_ALWAYS_BEGIN);
+  TransactionTemplate template=new TransactionTemplate(config,new DefaultExceptionStrategy(),muleContext);
+  final TransactionConfig nestedConfig=new MuleTransactionConfig();
+  nestedConfig.setFactory(new XaTransactionFactory());
+  nestedConfig.setAction(TransactionConfig.ACTION_NONE);
+  template.execute(new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      TransactionTemplate nestedTemplate=new TransactionTemplate(nestedConfig,new DefaultExceptionStrategy(),muleContext);
+      final Transaction firstTx=tm.getTransaction();
+      assertNotNull(firstTx);
+      assertEquals(firstTx.getStatus(),Status.STATUS_ACTIVE);
+      return nestedTemplate.execute(new TransactionCallback(){
+        public Object doInTransaction() throws Exception {
+          Transaction secondTx=tm.getTransaction();
+          assertNull(secondTx);
+          assertEquals(firstTx.getStatus(),Status.STATUS_ACTIVE);
+          try {
+            tm.resume(firstTx);
+            assertEquals(firstTx,tm.getTransaction());
+            assertEquals(firstTx.getStatus(),Status.STATUS_ACTIVE);
+            Transaction a=tm.suspend();
+            assertTrue(a.equals(firstTx));
+          }
+ catch (          Exception e) {
+            fail("Error: " + e);
+          }
+          return null;
+        }
+      }
+);
+    }
+  }
+);
+  assertNull("Committing via TX Manager should have disassociated TX from the current thread.",tm.getTransaction());
+}

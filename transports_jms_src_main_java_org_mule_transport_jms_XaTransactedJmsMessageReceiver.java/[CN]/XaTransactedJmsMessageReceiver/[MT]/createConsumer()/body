@@ -1,13 +1,31 @@
 {
+  logger.debug("Create a consumer for the jms destination");
   try {
     JmsSupport jmsSupport=this.connector.getJmsSupport();
     JmsThreadContext ctx=context.getContext();
-    if (ctx.session == null) {
-      ctx.session=this.connector.getSession(endpoint);
-      ((XaTransaction.MuleXaObject)ctx.session).setReuseObject(reuseSession);
+    if (ctx == null) {
+      ctx=new JmsThreadContext();
+    }
+    Session session;
+    Transaction tx=TransactionCoordination.getInstance().getTransaction();
+    if (this.reuseSession && ctx.session != null) {
+      session=ctx.session;
+      tx.bindResource(this.connector.getConnection(),session);
+    }
+ else {
+      session=this.connector.getSession(endpoint);
+      if (tx != null) {
+        ((XaTransaction.MuleXaObject)session).setReuseObject(reuseSession);
+      }
+    }
+    if (reuseSession) {
+      ctx.session=session;
+    }
+    if (this.reuseConsumer && ctx.consumer != null) {
+      return ctx.consumer;
     }
     final boolean topic=connector.getTopicResolver().isTopic(endpoint);
-    Destination dest=jmsSupport.createDestination(ctx.session,endpoint.getEndpointURI().getAddress(),topic);
+    Destination dest=jmsSupport.createDestination(session,endpoint.getEndpointURI().getAddress(),topic);
     String selector=null;
     if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {
       selector=((JmsSelectorFilter)endpoint.getFilter()).getExpression();
@@ -25,7 +43,11 @@
       durableName="mule." + connector.getName() + "."+ endpoint.getEndpointURI().getAddress();
       logger.debug("Jms Connector for this receiver is durable but no durable name has been specified. Defaulting to: " + durableName);
     }
-    ctx.consumer=jmsSupport.createConsumer(ctx.session,dest,selector,connector.isNoLocal(),durableName,topic);
+    MessageConsumer consumer=jmsSupport.createConsumer(session,dest,selector,connector.isNoLocal(),durableName,topic);
+    if (reuseConsumer) {
+      ctx.consumer=consumer;
+    }
+    return consumer;
   }
  catch (  JMSException e) {
     throw new ConnectException(e,this);

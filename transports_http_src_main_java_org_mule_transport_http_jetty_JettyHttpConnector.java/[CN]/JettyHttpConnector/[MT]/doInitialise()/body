@@ -1,0 +1,20 @@
+{
+  httpServer=new Server();
+  Context context=new Context(Context.NO_SECURITY | Context.NO_SESSIONS);
+  context.setContextPath("/");
+  ServletHolder holder=new ServletHolder();
+  receiverServlet=(getReceiverServlet() == null ? createReceiverServlet() : getReceiverServlet());
+  holder.setServlet(receiverServlet);
+  context.addServlet(holder,"/*");
+  httpServer.setHandler(context);
+  if (configFile != null) {
+    try {
+      InputStream is=IOUtils.getResourceAsStream(configFile,getClass());
+      XmlConfiguration config=new XmlConfiguration(is);
+      config.configure(httpServer);
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(e,this);
+    }
+  }
+}

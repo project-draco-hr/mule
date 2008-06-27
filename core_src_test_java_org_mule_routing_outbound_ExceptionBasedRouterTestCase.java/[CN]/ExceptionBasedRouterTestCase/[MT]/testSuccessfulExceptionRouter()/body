@@ -1,5 +1,6 @@
 {
-  Mock session=MuleTestUtils.getMockSession();
+  Mock mockSession=MuleTestUtils.getMockSession();
+  mockSession.matchAndReturn("getService",getTestService());
   DefaultOutboundRouterCollection messageRouter=new DefaultOutboundRouterCollection();
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   ImmutableEndpoint endpoint1=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint("test://Dummy1");
@@ -16,14 +17,14 @@
   assertEquals(filter,router.getFilter());
   MuleMessage message=new DefaultMuleMessage("test event");
   assertTrue(router.isMatch(message));
-  session.expect("sendEvent",C.eq(message,endpoint1));
-  MuleMessage result=router.route(message,(MuleSession)session.proxy(),false);
+  mockSession.expect("sendEvent",C.eq(message,endpoint1));
+  MuleMessage result=router.route(message,(MuleSession)mockSession.proxy(),false);
   assertNull("Async call should've returned null.",result);
-  session.verify();
+  mockSession.verify();
   message=new DefaultMuleMessage("test event");
-  session.expectAndReturn("sendEvent",C.eq(message,endpoint1),message);
-  result=router.route(message,(MuleSession)session.proxy(),true);
+  mockSession.expectAndReturn("sendEvent",C.eq(message,endpoint1),message);
+  result=router.route(message,(MuleSession)mockSession.proxy(),true);
   assertNotNull(result);
   assertEquals(message,result);
-  session.verify();
+  mockSession.verify();
 }

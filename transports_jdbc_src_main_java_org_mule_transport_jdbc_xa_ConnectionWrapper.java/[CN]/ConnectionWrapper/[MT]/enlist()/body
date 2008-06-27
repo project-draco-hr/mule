@@ -1,6 +1,12 @@
 {
+  try {
+    connection.setAutoCommit(false);
+  }
+ catch (  SQLException e) {
+    throw new TransactionException(e);
+  }
   if (isEnlisted()) {
-    return;
+    return false;
   }
   if (logger.isDebugEnabled()) {
     logger.debug("Enlistment request: " + this);
@@ -13,6 +19,14 @@
     throw new IllegalTransactionStateException(CoreMessages.notMuleXaTransaction(transaction));
   }
   if (!isEnlisted()) {
-    enlisted=((XaTransaction)transaction).enlistResource(xaConnection.getXAResource());
+    final XAResource xaResource;
+    try {
+      xaResource=xaConnection.getXAResource();
+    }
+ catch (    SQLException e) {
+      throw new TransactionException(e);
+    }
+    enlisted=((XaTransaction)transaction).enlistResource(xaResource);
   }
+  return enlisted;
 }

@@ -11,6 +11,7 @@
   ackStmt=connector.parseStatement(ackStmt,ackParams);
   Connection con=null;
   long t0=System.currentTimeMillis();
+  Transaction tx=TransactionCoordination.getInstance().getTransaction();
   try {
     con=connector.getConnection();
     if (timeout < 0) {
@@ -55,11 +56,15 @@
     }
     MessageAdapter msgAdapter=connector.getMessageAdapter(result);
     MuleMessage message=new DefaultMuleMessage(msgAdapter);
-    JdbcUtils.commitAndClose(con);
+    if (tx == null) {
+      JdbcUtils.commitAndClose(con);
+    }
     return message;
   }
  catch (  Exception e) {
-    JdbcUtils.rollbackAndClose(con);
+    if (tx == null) {
+      JdbcUtils.rollbackAndClose(con);
+    }
     throw e;
   }
 }

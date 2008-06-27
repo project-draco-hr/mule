@@ -16,7 +16,20 @@
  catch (    Exception e) {
     }
   }
-  MuleMessage result=session.sendEvent(message,endpoint);
+  TransactionTemplate tt=createTransactionTemplate(session,endpoint);
+  TransactionCallback cb=new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      return session.sendEvent(message,endpoint);
+    }
+  }
+;
+  MuleMessage result;
+  try {
+    result=(MuleMessage)tt.execute(cb);
+  }
+ catch (  Exception e) {
+    throw new RoutingException(message,null,e);
+  }
   if (getRouterStatistics() != null) {
     if (getRouterStatistics().isEnabled()) {
       getRouterStatistics().incrementRoutedMessage(endpoint);

@@ -2,76 +2,77 @@
   if (config == null) {
     return callback.doInTransaction();
   }
- else {
-    byte action=config.getAction();
-    Transaction tx=TransactionCoordination.getInstance().getTransaction();
-    Transaction suspendedXATx=null;
-    if (action == TransactionConfig.ACTION_NONE && tx != null) {
-      throw new IllegalTransactionStateException(CoreMessages.transactionAvailableButActionIs("None"));
+  byte action=(config != null) ? config.getAction() : TransactionConfig.ACTION_DEFAULT;
+  Transaction tx=TransactionCoordination.getInstance().getTransaction();
+  Transaction suspendedXATx=null;
+  if (action == TransactionConfig.ACTION_NEVER && tx != null) {
+    throw new IllegalTransactionStateException(CoreMessages.transactionAvailableButActionIs("Never"));
+  }
+ else   if ((action == TransactionConfig.ACTION_NONE || action == TransactionConfig.ACTION_ALWAYS_BEGIN) && tx != null) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(action + ", " + "current TX: "+ tx);
     }
- else     if (action == TransactionConfig.ACTION_ALWAYS_BEGIN && tx != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Transaction action is ACTION_ALWAYS_BEGIN, " + "current TX: " + tx);
-      }
-      if (tx.isXA()) {
-        suspendedXATx=tx;
-        suspendXATransaction(suspendedXATx);
-      }
- else {
-        resolveTransaction(tx);
-      }
-      tx=null;
-    }
- else     if (action == TransactionConfig.ACTION_ALWAYS_JOIN && tx == null) {
-      throw new IllegalTransactionStateException(CoreMessages.transactionNotAvailableButActionIs("Always Join"));
-    }
-    if (action == TransactionConfig.ACTION_ALWAYS_BEGIN || (action == TransactionConfig.ACTION_BEGIN_OR_JOIN && tx == null)) {
-      logger.debug("Beginning transaction");
-      tx=config.getFactory().beginTransaction(context);
-      logger.debug("Transaction successfully started: " + tx);
+    if (tx.isXA()) {
+      suspendedXATx=tx;
+      suspendXATransaction(suspendedXATx);
     }
  else {
-      tx=null;
+      resolveTransaction(tx);
     }
-    try {
-      Object result=callback.doInTransaction();
+    tx=null;
+  }
+ else   if (action == TransactionConfig.ACTION_ALWAYS_JOIN && tx == null) {
+    throw new IllegalTransactionStateException(CoreMessages.transactionNotAvailableButActionIs("Always Join"));
+  }
+  if (action == TransactionConfig.ACTION_ALWAYS_BEGIN || (action == TransactionConfig.ACTION_BEGIN_OR_JOIN && tx == null)) {
+    logger.debug("Beginning transaction");
+    tx=config.getFactory().beginTransaction(context);
+    logger.debug("Transaction successfully started: " + tx);
+  }
+ else {
+    tx=null;
+  }
+  try {
+    Object result=callback.doInTransaction();
+    if (tx != null) {
+      tx=TransactionCoordination.getInstance().getTransaction();
+    }
+    if (tx != null) {
+      resolveTransaction(tx);
+    }
+    if (suspendedXATx != null) {
+      resumeXATransaction(suspendedXATx);
+      tx=suspendedXATx;
+    }
+    return result;
+  }
+ catch (  Exception e) {
+    if (exceptionListener != null) {
+      logger.info("Exception Caught in Transaction template.  Handing off to exception handler: " + exceptionListener);
+      exceptionListener.exceptionThrown(e);
+    }
+ else {
+      logger.info("Exception Caught in Transaction template without any exception listeners defined, exception is rethrown.");
       if (tx != null) {
-        resolveTransaction(tx);
-        if (suspendedXATx != null) {
-          resumeXATransaction(suspendedXATx);
-          tx=suspendedXATx;
-        }
+        tx.setRollbackOnly();
       }
-      return result;
     }
- catch (    Exception e) {
-      if (exceptionListener != null) {
-        logger.info("Exception Caught in Transaction template.  Handing off to exception handler: " + exceptionListener);
-        exceptionListener.exceptionThrown(e);
+    if (tx != null) {
+      if (tx.isRollbackOnly()) {
+        logger.debug("Exception caught: rollback transaction",e);
       }
- else {
-        logger.info("Exception Caught in Transaction template without any exception listeners defined, exception is rethrown.");
-        if (tx != null) {
-          tx.setRollbackOnly();
-        }
-      }
-      if (tx != null) {
-        if (tx.isRollbackOnly()) {
-          logger.debug("Exception caught: rollback transaction",e);
-        }
-        resolveTransaction(tx);
-        if (suspendedXATx != null) {
-          resumeXATransaction(suspendedXATx);
-        }
-      }
-      throw e;
+      resolveTransaction(tx);
     }
-catch (    Error e) {
-      if (tx != null) {
-        logger.info("Error caught, rolling back TX " + tx,e);
-        tx.rollback();
-      }
-      throw e;
+    if (suspendedXATx != null) {
+      resumeXATransaction(suspendedXATx);
     }
+    throw e;
+  }
+catch (  Error e) {
+    if (tx != null) {
+      logger.info("Error caught, rolling back TX " + tx,e);
+      tx.rollback();
+    }
+    throw e;
   }
 }

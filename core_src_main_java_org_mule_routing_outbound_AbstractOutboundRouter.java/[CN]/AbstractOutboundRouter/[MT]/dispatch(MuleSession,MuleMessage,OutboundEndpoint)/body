@@ -8,7 +8,20 @@
       logger.debug("Message being sent to: " + endpoint.getEndpointURI() + " Message payload: \n(unable to retrieve payload: "+ e.getMessage()+ "\n outbound transformer is: "+ endpoint.getTransformers());
     }
   }
-  session.dispatchEvent(message,endpoint);
+  TransactionTemplate tt=createTransactionTemplate(session,endpoint);
+  TransactionCallback cb=new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      session.dispatchEvent(message,endpoint);
+      return null;
+    }
+  }
+;
+  try {
+    tt.execute(cb);
+  }
+ catch (  Exception e) {
+    throw new RoutingException(message,null,e);
+  }
   if (getRouterStatistics() != null) {
     if (getRouterStatistics().isEnabled()) {
       getRouterStatistics().incrementRoutedMessage(endpoint);

@@ -2,14 +2,16 @@
   Iterator i=resources.entrySet().iterator();
   while (i.hasNext()) {
     Map.Entry entry=(Map.Entry)i.next();
-    if (entry.getValue() instanceof MuleXaObject) {
-      MuleXaObject xaObject=(MuleXaObject)entry.getValue();
+    final Object value=entry.getValue();
+    if (value instanceof MuleXaObject) {
+      MuleXaObject xaObject=(MuleXaObject)value;
       if (!xaObject.isReuseObject()) {
         try {
           xaObject.close();
+          i.remove();
         }
  catch (        Exception e) {
-          logger.error("Cann't close resource " + xaObject);
+          logger.error("Failed to close resource " + xaObject,e);
         }
       }
     }

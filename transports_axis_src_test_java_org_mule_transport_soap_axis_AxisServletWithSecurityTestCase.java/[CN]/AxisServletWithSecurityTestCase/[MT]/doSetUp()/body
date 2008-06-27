@@ -1,11 +1,13 @@
 {
   httpServer=new Server();
-  SocketListener socketListener=new SocketListener(new InetAddrPort(HTTP_PORT));
-  httpServer.addListener(socketListener);
-  HttpContext context=httpServer.getContext("/");
-  context.setRequestLog(null);
-  ServletHandler handler=new ServletHandler();
-  handler.addServlet("MuleReceiverServlet","/services/*",MuleReceiverServlet.class.getName());
-  context.addHandler(handler);
+  SelectChannelConnector connector=new SelectChannelConnector();
+  connector.setPort(HTTP_PORT);
+  httpServer.addConnector(connector);
+  Context context=new Context();
+  context.setContextPath("/");
+  ServletHolder holder=new ServletHolder();
+  holder.setServlet(new MuleReceiverServlet());
+  context.addServlet(holder,"/services/*");
+  httpServer.addHandler(context);
   httpServer.start();
 }

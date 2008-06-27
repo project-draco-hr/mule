@@ -1,16 +1,28 @@
 {
-  try {
-    JmsThreadContext ctx=context.getContext();
-    if (ctx.consumer == null) {
-      createConsumer();
+  TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig(),connector.getExceptionListener(),connector.getMuleContext());
+  TransactionCallback cb=new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      try {
+        List messages=getMessages();
+        if (messages != null && messages.size() > 0) {
+          for (Iterator it=messages.iterator(); it.hasNext(); ) {
+            processMessage(it.next());
+          }
+        }
+        return null;
+      }
+ catch (      Exception e) {
+        JmsThreadContext ctx=context.getContext();
+        ctx.consumer=null;
+        Transaction tx=TransactionCoordination.getInstance().getTransaction();
+        if (ctx.session != null && tx instanceof XaTransaction.MuleXaObject) {
+          ((XaTransaction.MuleXaObject)ctx.session).setReuseObject(false);
+        }
+        ctx.session=null;
+        throw e;
+      }
     }
-    super.poll();
   }
- catch (  Exception e) {
-    closeConsumer(true);
-    throw e;
-  }
- finally {
-    closeConsumer(false);
-  }
+;
+  tt.execute(cb);
 }
