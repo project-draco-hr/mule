@@ -105,11 +105,23 @@
     }
     listeners.add(l);
   }
-  if (!ignoreMessageNotifications) {
-    logger.warn("EventLogger agent has been asked to log message notifications, but the MuleManager is configured not to fire Message notifications");
+  if (!ignoreMessageNotifications && !ignoreEndpointMessageNotifications) {
+    ServerNotificationListener l=new EndpointMessageNotificationListener(){
+      public void onNotification(      ServerNotification notification){
+        logEvent(notification);
+      }
+    }
+;
+    try {
+      muleContext.registerListener(l);
+    }
+ catch (    NotificationException e) {
+      throw new InitialisationException(e,this);
+    }
+    listeners.add(l);
   }
- else   if (!ignoreMessageNotifications) {
-    ServerNotificationListener l=new MessageNotificationListener(){
+  if (!ignoreMessageNotifications && !ignoreComponentMessageNotifications) {
+    ServerNotificationListener l=new ComponentMessageNotificationListener(){
       public void onNotification(      ServerNotification notification){
         logEvent(notification);
       }

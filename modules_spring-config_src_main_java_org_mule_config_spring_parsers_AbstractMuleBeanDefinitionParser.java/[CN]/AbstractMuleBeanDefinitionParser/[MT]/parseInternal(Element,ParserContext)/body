@@ -5,8 +5,8 @@
   checkElementNameUnique(element);
   Class beanClass=getClassInternal(element);
   BeanDefinitionBuilder builder=createBeanDefinitionBuilder(element,beanClass);
-  builder.setSource(parserContext.extractSource(element));
-  builder.setSingleton(isSingleton());
+  builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
+  builder.setScope(isSingleton() ? BeanDefinition.SCOPE_SINGLETON : BeanDefinition.SCOPE_PROTOTYPE);
   List interfaces=ClassUtils.getAllInterfaces(beanClass);
   if (interfaces != null) {
     if (interfaces.contains(Initialisable.class)) {
@@ -17,7 +17,7 @@
     }
   }
   if (parserContext.isNested()) {
-    builder.setSingleton(parserContext.getContainingBeanDefinition().isSingleton());
+    builder.setScope(parserContext.getContainingBeanDefinition().isSingleton() ? BeanDefinition.SCOPE_SINGLETON : BeanDefinition.SCOPE_PROTOTYPE);
   }
   doParse(element,parserContext,builder);
   return builder.getBeanDefinition();

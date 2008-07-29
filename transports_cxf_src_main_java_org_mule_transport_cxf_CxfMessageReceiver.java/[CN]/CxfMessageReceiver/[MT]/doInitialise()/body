@@ -8,10 +8,10 @@
     String mtomEnabled=(String)endpointProps.get(CxfConstants.MTOM_ENABLED);
     List<DataBinding> databinding=(List<DataBinding>)endpointProps.get(CxfConstants.DATA_BINDING);
     List<AbstractFeature> features=(List<AbstractFeature>)endpointProps.get(CxfConstants.FEATURES);
-    Class<?> svcCls;
+    String proxyStr=(String)endpointProps.get(CxfConstants.PROXY);
+    Class<?> svcCls=null;
     Class<?> targetCls;
-    Component component=service.getComponent();
-    proxy=component instanceof BridgeComponent || component instanceof PassThroughComponent;
+    proxy=BooleanUtils.toBoolean(proxyStr);
     if (proxy) {
       svcCls=ProxyService.class;
       targetCls=svcCls;
@@ -21,11 +21,11 @@
       if (StringUtils.isEmpty(frontend)) {
         frontend=connector.getDefaultFrontend();
       }
-      targetCls=getTargetClass();
       if (!StringUtils.isEmpty(serviceClassName)) {
         svcCls=ClassUtils.loadClass(serviceClassName,getClass());
       }
- else {
+      targetCls=getTargetClass(svcCls);
+      if (svcCls == null) {
         svcCls=targetCls;
       }
     }
@@ -44,10 +44,7 @@
       if (databinding != null && databinding.size() > 0) {
         sfb.setDataBinding(databinding.get(0));
       }
-      if (!(service.getComponent() instanceof JavaComponent)) {
-        throw new InitialisationException(CxfMessages.javaComponentRequiredForInboundEndpoint(),this);
-      }
- else {
+      if (service.getComponent() instanceof JavaComponent) {
         sfb.setServiceBean(((JavaComponent)service.getComponent()).getObjectFactory().getInstance());
       }
     }
@@ -85,6 +82,9 @@
       sfb.setOutFaultInterceptors(new ArrayList<Interceptor>());
     }
     sfb.getOutFaultInterceptors().add(new MuleProtocolHeadersOutInterceptor());
+    if (proxy) {
+      sfb.getOutInterceptors().add(new OutputPayloadInterceptor());
+    }
     sfb.setServiceClass(svcCls);
     sfb.setAddress(getAddressWithoutQuery());
     if (wsdlUrl != null) {
