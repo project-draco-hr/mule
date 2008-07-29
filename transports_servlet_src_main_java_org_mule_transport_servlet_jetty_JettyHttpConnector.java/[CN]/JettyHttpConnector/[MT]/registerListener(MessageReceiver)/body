@@ -1,0 +1,20 @@
+{
+  EndpointURI uri=receiver.getEndpointURI();
+  if (serverPorts.keySet().contains(new Integer(uri.getPort()))) {
+    logger.debug("Http server already listening on: " + uri.getPort());
+    receiverServlet.addReceiver(receiver);
+    return;
+  }
+  HttpListener cnn=createJettyConnector();
+  cnn.setPort(uri.getPort());
+  httpServer.addListener(cnn);
+  serverPorts.put(new Integer(uri.getPort()),null);
+  receiverServlet.addReceiver(receiver);
+  try {
+    cnn.start();
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    throw e;
+  }
+}

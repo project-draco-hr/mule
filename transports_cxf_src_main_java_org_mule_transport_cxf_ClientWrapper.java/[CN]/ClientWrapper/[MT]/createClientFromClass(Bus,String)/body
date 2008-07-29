@@ -24,28 +24,28 @@
   if (port == null) {
     throw new CreateException(CxfMessages.mustSpecifyPort(),this);
   }
-  proxy=null;
+  clientProxy=null;
   if (port != null) {
     for (    Method m : clientCls.getMethods()) {
       WebEndpoint we=m.getAnnotation(WebEndpoint.class);
       if (we != null && we.name().equals(port)) {
-        proxy=(BindingProvider)m.invoke(s,new Object[0]);
+        clientProxy=(BindingProvider)m.invoke(s,new Object[0]);
         break;
       }
     }
   }
-  if (proxy == null) {
+  if (clientProxy == null) {
     throw new CreateException(CxfMessages.portNotFound(port),this);
   }
   EndpointURI uri=endpoint.getEndpointURI();
   if (uri.getUser() != null) {
-    proxy.getRequestContext().put(BindingProvider.USERNAME_PROPERTY,uri.getUser());
+    clientProxy.getRequestContext().put(BindingProvider.USERNAME_PROPERTY,uri.getUser());
   }
   if (uri.getPassword() != null) {
-    proxy.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY,uri.getPassword());
+    clientProxy.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY,uri.getPassword());
   }
-  proxy.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,uri.getAddress());
-  client=ClientProxy.getClient(proxy);
+  clientProxy.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,uri.getAddress());
+  client=ClientProxy.getClient(clientProxy);
   defaultMethod=findMethod(clientCls);
   defaultMethodName=getDefaultMethodName();
 }

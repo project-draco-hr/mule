@@ -4,18 +4,18 @@
     String wsdlUrl=(String)endpointProps.get(CxfConstants.WSDL_LOCATION);
     String bindingId=(String)endpointProps.get(CxfConstants.BINDING_ID);
     String frontend=(String)endpointProps.get(CxfConstants.FRONTEND);
-    String bridgeProp=(String)endpointProps.get(CxfConstants.BRIDGE);
     String serviceClassName=(String)endpointProps.get(CxfConstants.SERVICE_CLASS);
     String mtomEnabled=(String)endpointProps.get(CxfConstants.MTOM_ENABLED);
     List<DataBinding> databinding=(List<DataBinding>)endpointProps.get(CxfConstants.DATA_BINDING);
     List<AbstractFeature> features=(List<AbstractFeature>)endpointProps.get(CxfConstants.FEATURES);
     Class<?> svcCls;
     Class<?> targetCls;
-    bridge=BooleanUtils.toBoolean(bridgeProp);
-    if (bridge) {
-      svcCls=ProviderService.class;
+    Component component=service.getComponent();
+    proxy=component instanceof BridgeComponent || component instanceof PassThroughComponent;
+    if (proxy) {
+      svcCls=ProxyService.class;
       targetCls=svcCls;
-      frontend="jaxws";
+      frontend="simple";
     }
  else {
       if (StringUtils.isEmpty(frontend)) {
@@ -40,7 +40,7 @@
  else {
       throw new CreateException(CxfMessages.invalidFrontend(frontend),this);
     }
-    if (!bridge) {
+    if (!proxy) {
       if (databinding != null && databinding.size() > 0) {
         sfb.setDataBinding(databinding.get(0));
       }
@@ -51,11 +51,15 @@
         sfb.setServiceBean(((JavaComponent)service.getComponent()).getObjectFactory().getInstance());
       }
     }
+ else {
+      sfb.setDataBinding(new StaxDataBinding());
+      sfb.getFeatures().add(new StaxDataBindingFeature());
+    }
     if (bindingId != null) {
       sfb.setBindingId(bindingId);
     }
     if (features != null) {
-      sfb.setFeatures(features);
+      sfb.getFeatures().addAll(features);
     }
     if (mtomEnabled != null) {
       Map<String,Object> properties=sfb.getProperties();

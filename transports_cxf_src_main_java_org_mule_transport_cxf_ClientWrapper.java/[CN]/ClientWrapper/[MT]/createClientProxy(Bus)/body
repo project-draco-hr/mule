@@ -1,0 +1,15 @@
+{
+  String wsdlLocation=(String)endpoint.getProperty(CxfConstants.WSDL_LOCATION);
+  ClientProxyFactoryBean cpf=new ClientProxyFactoryBean();
+  cpf.setServiceClass(ProxyService.class);
+  cpf.setDataBinding(new StaxDataBinding());
+  cpf.getFeatures().add(new StaxDataBindingFeature());
+  cpf.setAddress(endpoint.getEndpointURI().getAddress());
+  if (wsdlLocation != null) {
+    cpf.setWsdlLocation(wsdlLocation);
+  }
+  this.client=ClientProxy.getClient(cpf.create());
+  Binding binding=this.client.getEndpoint().getBinding();
+  removeInterceptor(binding.getOutInterceptors(),WrappedOutInterceptor.class.getName());
+  proxy=true;
+}
