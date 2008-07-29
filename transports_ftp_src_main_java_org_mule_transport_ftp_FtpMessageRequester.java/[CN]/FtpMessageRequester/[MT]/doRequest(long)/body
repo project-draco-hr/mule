@@ -14,18 +14,21 @@
       return null;
     }
     List fileList=new ArrayList();
+    FTPFile file=null;
     for (int i=0; i < files.length; i++) {
-      if (files[i].isFile()) {
-        if (filenameFilter == null || filenameFilter.accept(null,files[i].getName())) {
-          fileList.add(files[i]);
-          break;
+      file=files[i];
+      if (file.isFile()) {
+        if (filenameFilter == null || filenameFilter.accept(null,file.getName())) {
+          if (connector.validateFile(file)) {
+            fileList.add(file);
+            break;
+          }
         }
       }
     }
     if (fileList.size() == 0) {
       return null;
     }
-    FTPFile file=(FTPFile)fileList.get(0);
     ByteArrayOutputStream baos=new ByteArrayOutputStream();
     if (!client.retrieveFile(file.getName(),baos)) {
       throw new IOException("Ftp error: " + client.getReplyCode());

@@ -1,0 +1,58 @@
+{
+  isConnecting=true;
+  doThreading=false;
+  try {
+    muleContext.registerListener(new MuleContextNotificationListener(){
+      public void onNotification(      ServerNotification notification){
+        if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED) {
+          try {
+            if (muleContext.getWorkManager() == null) {
+              logger.error(MessageFactory.createStaticMessage("No WorkManager is available."));
+            }
+ else {
+              muleContext.getWorkManager().scheduleWork(new Work(){
+                public void release(){
+                }
+                public void run(){
+                  isInitialThread.set(new Boolean(false));
+                  try {
+synchronized (reconnectLock) {
+                      doConnect(connectable);
+                    }
+                  }
+ catch (                  FatalConnectException e) {
+synchronized (reconnectLock) {
+                      resetState();
+                    }
+                    if (connectable instanceof Connector) {
+                      ((Connector)connectable).handleException(e);
+                    }
+ else                     if (connectable instanceof AbstractMessageReceiver) {
+                      ((AbstractMessageReceiver)connectable).handleException(e);
+                    }
+                  }
+ finally {
+                    isConnecting=false;
+                  }
+                }
+              }
+);
+            }
+          }
+ catch (          WorkException e) {
+synchronized (reconnectLock) {
+              resetState();
+            }
+          }
+        }
+      }
+    }
+);
+  }
+ catch (  NotificationException e) {
+synchronized (reconnectLock) {
+      resetState();
+    }
+    throw new FatalConnectException(e,connectable);
+  }
+}
