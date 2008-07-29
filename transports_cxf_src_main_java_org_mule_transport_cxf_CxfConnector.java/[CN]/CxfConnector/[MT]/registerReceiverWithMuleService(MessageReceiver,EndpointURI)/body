@@ -10,16 +10,50 @@
   c.setComponent(new DefaultJavaComponent(new SingletonObjectFactory(svcComponent)));
   String endpoint=receiver.getEndpointURI().getAddress();
   String scheme=ep.getScheme().toLowerCase();
-  boolean sync=receiver.getEndpoint().isSynchronous();
+  InboundEndpoint originalEndpoint=receiver.getEndpoint();
+  boolean sync=originalEndpoint.isSynchronous();
   if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")|| scheme.equals("servlet")) {
-    receiver.getEndpoint().getProperties().put(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
-    receiver.getEndpoint().getProperties().put(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+    originalEndpoint.getProperties().put(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
+    originalEndpoint.getProperties().put(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
   }
   QName serviceName=server.getEndpoint().getEndpointInfo().getName();
-  EndpointBuilder serviceEndpointbuilder=new EndpointURIEndpointBuilder(endpoint,muleContext);
-  serviceEndpointbuilder.setSynchronous(sync);
-  serviceEndpointbuilder.setName(ep.getScheme() + ":" + serviceName.getLocalPart());
+  EndpointBuilder protocolEndpointBuilder=new EndpointURIEndpointBuilder(endpoint,muleContext);
+  protocolEndpointBuilder.setSynchronous(sync);
+  protocolEndpointBuilder.setName(ep.getScheme() + ":" + serviceName.getLocalPart());
+  EndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(originalEndpoint,muleContext);
+  EndpointBuilder transformerEndpoint;
+  if (cxfReceiver.isApplyTransformersToProtocol()) {
+    transformerEndpoint=protocolEndpointBuilder;
+    receiverEndpointBuilder.setTransformers(null);
+    receiverEndpointBuilder.setResponseTransformers(null);
+  }
+ else {
+    transformerEndpoint=receiverEndpointBuilder;
+  }
+  transformerEndpoint.setTransformers(originalEndpoint.getTransformers());
+  transformerEndpoint.setResponseTransformers(originalEndpoint.getResponseTransformers());
+  EndpointBuilder filterEndpoint;
+  if (cxfReceiver.isApplyFiltersToProtocol()) {
+    filterEndpoint=protocolEndpointBuilder;
+    receiverEndpointBuilder.setFilter(null);
+  }
+ else {
+    filterEndpoint=receiverEndpointBuilder;
+  }
+  filterEndpoint.setFilter(originalEndpoint.getFilter());
+  EndpointBuilder secFilterEndpoint;
+  if (cxfReceiver.isApplySecurityToProtocol()) {
+    secFilterEndpoint=protocolEndpointBuilder;
+    receiverEndpointBuilder.setSecurityFilter(null);
+  }
+ else {
+    secFilterEndpoint=receiverEndpointBuilder;
+  }
+  secFilterEndpoint.setSecurityFilter(originalEndpoint.getSecurityFilter());
+  InboundEndpoint protocolEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(protocolEndpointBuilder);
+  InboundEndpoint receiverEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
+  receiver.setEndpoint(receiverEndpoint);
   c.setInboundRouter(new DefaultInboundRouterCollection());
-  c.getInboundRouter().addEndpoint(muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(serviceEndpointbuilder));
+  c.getInboundRouter().addEndpoint(protocolEndpoint);
   services.add(c);
 }

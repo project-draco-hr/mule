@@ -3,11 +3,16 @@
     logger.warn(MessageFactory.createStaticMessage("Detected a lookup attempt with an empty or null key"),new Throwable().fillInStackTrace());
     return null;
   }
-  try {
-    return applicationContext.getBean(key);
+  if (key.equals(SPRING_APPLICATION_CONTEXT) && applicationContext != null) {
+    return applicationContext;
   }
- catch (  Exception e) {
-    logger.debug(e);
-    return null;
+ else {
+    try {
+      return applicationContext.getBean(key);
+    }
+ catch (    NoSuchBeanDefinitionException e) {
+      logger.debug(e);
+      return null;
+    }
   }
 }

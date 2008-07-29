@@ -8,57 +8,46 @@
     }
   }
   Object src=message.getPayload();
+  Document dom4jDoc;
   try {
-    if (src instanceof byte[]) {
-      src=new String((byte[])src);
-    }
-    Document dom4jDoc;
-    if (src instanceof String) {
-      String xml=(String)src;
-      SAXReader reader=new SAXReader();
-      setDoSchemaValidation(reader,isValidateSchema());
-      dom4jDoc=reader.read(new StringReader(xml));
-    }
- else     if (src instanceof org.dom4j.Document) {
-      dom4jDoc=(org.dom4j.Document)src;
+    if (validateSchema) {
+      dom4jDoc=XMLUtils.toDocument(src,getExternalSchemaLocation());
     }
  else {
+      dom4jDoc=XMLUtils.toDocument(src);
+    }
+    if (dom4jDoc == null) {
       logger.error("Non-XML message payload: " + src.getClass().toString());
       return;
     }
-    if (dom4jDoc != null) {
-      if (splitExpression.length() > 0) {
-        XPath xpath=dom4jDoc.createXPath(splitExpression);
-        if (namespaces != null) {
-          xpath.setNamespaceURIs(namespaces);
-        }
-        List foundNodes=xpath.selectNodes(dom4jDoc);
-        if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
-          message.setCorrelationGroupSize(foundNodes.size());
-        }
-        if (logger.isDebugEnabled()) {
-          logger.debug("Split into " + foundNodes.size());
-        }
-        List parts=new LinkedList();
-        for (Iterator iterator=foundNodes.iterator(); iterator.hasNext(); ) {
-          Node node=(Node)iterator.next();
-          if (node instanceof Element) {
-            node=(Node)node.clone();
-            parts.add(DocumentHelper.createDocument((Element)node));
-          }
+  }
+ catch (  Exception e) {
+    throw new IllegalArgumentException("Failed to initialise the payload: " + ExceptionUtils.getStackTrace(e));
+  }
+  if (splitExpression.length() > 0) {
+    XPath xpath=dom4jDoc.createXPath(splitExpression);
+    if (namespaces != null) {
+      xpath.setNamespaceURIs(namespaces);
+    }
+    List foundNodes=xpath.selectNodes(dom4jDoc);
+    if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
+      message.setCorrelationGroupSize(foundNodes.size());
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Split into " + foundNodes.size());
+    }
+    List parts=new LinkedList();
+    for (Iterator iterator=foundNodes.iterator(); iterator.hasNext(); ) {
+      Node node=(Node)iterator.next();
+      if (node instanceof Element) {
+        node=(Node)node.clone();
+        parts.add(DocumentHelper.createDocument((Element)node));
+      }
  else {
-            logger.warn("Dcoument node: " + node.asXML() + " is not an element and thus is not a valid part");
-          }
-        }
-        nodesContext.set(parts);
+        logger.warn("Dcoument node: " + node.asXML() + " is not an element and thus is not a valid part");
       }
     }
- else {
-      logger.warn("Unsupported message type, ignoring");
-    }
-  }
- catch (  Exception ex) {
-    throw new IllegalArgumentException("Failed to initialise the payload: " + ExceptionUtils.getStackTrace(ex));
+    nodesContext.set(parts);
   }
   Map theProperties=new HashMap();
   for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {

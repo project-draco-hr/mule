@@ -21,26 +21,22 @@
   }
   Object xpathResult=null;
   boolean accept=false;
-  if (obj instanceof Document) {
+  Document dom4jDoc;
+  try {
+    dom4jDoc=XMLUtils.toDocument(obj);
+  }
+ catch (  Exception e) {
+    logger.warn("JxPath filter rejected message because of an error while parsing XML: " + e.getMessage(),e);
+    return false;
+  }
+  if (dom4jDoc != null) {
     if (namespaces == null) {
-      xpathResult=((Document)obj).valueOf(pattern);
+      xpathResult=dom4jDoc.valueOf(pattern);
     }
  else {
       XPath xpath=DocumentHelper.createXPath(pattern);
       xpath.setNamespaceURIs(namespaces);
-      xpathResult=xpath.valueOf(obj);
-    }
-  }
- else   if (obj instanceof String) {
-    try {
-      return accept(DocumentHelper.parseText((String)obj));
-    }
- catch (    DocumentException e) {
-      logger.warn("JXPathFilter unable to parse XML document: " + e.getMessage(),e);
-      if (logger.isDebugEnabled()) {
-        logger.debug("XML = " + StringMessageUtils.truncate((String)obj,200,false));
-      }
-      return false;
+      xpathResult=xpath.valueOf(dom4jDoc);
     }
   }
  else {

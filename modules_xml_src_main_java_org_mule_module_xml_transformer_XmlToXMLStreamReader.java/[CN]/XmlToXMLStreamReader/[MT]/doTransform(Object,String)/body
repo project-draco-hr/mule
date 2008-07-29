@@ -1,28 +1,10 @@
 {
   try {
-    XMLStreamReader xsr;
-    if (payload instanceof StaxSource) {
-      xsr=((StaxSource)payload).getXMLStreamReader();
-    }
- else     if (payload instanceof Source) {
-      xsr=getXMLInputFactory().createXMLStreamReader((Source)payload);
-    }
- else     if (payload instanceof Document) {
-      xsr=getXMLInputFactory().createXMLStreamReader(new DOMSource((Node)payload));
-    }
- else     if (payload instanceof InputStream) {
-      xsr=getXMLInputFactory().createXMLStreamReader((InputStream)payload);
-    }
- else     if (payload instanceof String) {
-      xsr=getXMLInputFactory().createXMLStreamReader(new StringReader((String)payload));
-    }
- else     if (payload instanceof byte[]) {
-      xsr=getXMLInputFactory().createXMLStreamReader(new ByteArrayInputStream((byte[])payload));
-    }
- else {
+    XMLStreamReader xsr=XMLUtils.toXMLStreamReader(getXMLInputFactory(),payload);
+    if (xsr == null) {
       throw new TransformerException(MessageFactory.createStaticMessage("Unable to convert " + payload.getClass() + " to XMLStreamReader."));
     }
-    if (reversible) {
+    if (reversible && !(xsr instanceof ReversibleXMLStreamReader)) {
       return new ReversibleXMLStreamReader(xsr);
     }
  else {

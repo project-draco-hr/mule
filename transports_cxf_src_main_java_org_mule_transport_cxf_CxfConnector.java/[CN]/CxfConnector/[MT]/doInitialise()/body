@@ -1,11 +1,14 @@
 {
+  ApplicationContext context=(ApplicationContext)muleContext.getRegistry().lookupObject(SpringRegistry.SPRING_APPLICATION_CONTEXT);
   if (configurationLocation != null) {
-    bus=new SpringBusFactory().createBus(configurationLocation);
+    bus=new SpringBusFactory(context).createBus(configurationLocation,true);
   }
  else {
-    bus=new SpringBusFactory().createBus();
+    bus=new SpringBusFactory(context).createBus((String)null,true);
   }
-  BusFactory.setDefaultBus(null);
+  if (!initializeStaticBusInstance) {
+    BusFactory.setDefaultBus(null);
+  }
   MuleUniversalTransport transport=new MuleUniversalTransport(this);
   DestinationFactoryManager dfm=bus.getExtension(DestinationFactoryManager.class);
   dfm.registerDestinationFactory("http://schemas.xmlsoap.org/soap/http",transport);

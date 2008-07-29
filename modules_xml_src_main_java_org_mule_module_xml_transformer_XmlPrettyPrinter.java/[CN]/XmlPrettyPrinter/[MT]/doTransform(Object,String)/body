@@ -1,18 +1,16 @@
 {
   try {
-    ByteArrayOutputStream resultStream=new ByteArrayOutputStream();
-    Document document=null;
-    if (src instanceof String) {
-      String text=(String)src;
-      document=DocumentHelper.parseText(text);
+    Document document=XMLUtils.toDocument(src);
+    if (document != null) {
+      ByteArrayOutputStream resultStream=new ByteArrayOutputStream();
+      XMLWriter writer=new XMLWriter(resultStream,this.getOutputFormat());
+      writer.write(document);
+      writer.close();
+      return resultStream.toString(encoding);
     }
- else     if (src instanceof org.dom4j.Document) {
-      document=(Document)src;
+ else {
+      throw new DocumentException("Payload is not valid XML");
     }
-    XMLWriter writer=new XMLWriter(resultStream,this.getOutputFormat());
-    writer.write(document);
-    writer.close();
-    return resultStream.toString(encoding);
   }
  catch (  Exception e) {
     throw new TransformerException(this,e);
