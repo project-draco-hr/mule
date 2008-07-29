@@ -1,5 +1,5 @@
 {
-  SAXReader reader=new SAXReader();
+  org.dom4j.io.SAXReader reader=new org.dom4j.io.SAXReader();
   if (externalSchemaLocation != null) {
     reader.setValidation(true);
     reader.setFeature(APACHE_XML_FEATURES_VALIDATION_SCHEMA,true);
@@ -14,17 +14,26 @@
   if (obj instanceof org.dom4j.Document) {
     return (org.dom4j.Document)obj;
   }
+ else   if (obj instanceof org.w3c.dom.Document) {
+    org.dom4j.io.DOMReader domReader=new org.dom4j.io.DOMReader();
+    return domReader.read((org.w3c.dom.Document)obj);
+  }
+ else   if (obj instanceof org.xml.sax.InputSource) {
+    return reader.read((org.xml.sax.InputSource)obj);
+  }
+ else   if (obj instanceof javax.xml.transform.Source || obj instanceof XMLStreamReader) {
+    XmlToDomDocument tr=new XmlToDomDocument();
+    tr.setReturnClass(org.dom4j.Document.class);
+    return (org.dom4j.Document)tr.transform(obj);
+  }
+ else   if (obj instanceof java.io.InputStream) {
+    return reader.read((java.io.InputStream)obj);
+  }
  else   if (obj instanceof String) {
     return reader.read(new StringReader((String)obj));
   }
  else   if (obj instanceof byte[]) {
     return reader.read(new StringReader(new String((byte[])obj)));
-  }
- else   if (obj instanceof InputStream) {
-    return reader.read((InputStream)obj);
-  }
- else   if (obj instanceof InputSource) {
-    return reader.read((InputSource)obj);
   }
  else   if (obj instanceof File) {
     return reader.read((File)obj);

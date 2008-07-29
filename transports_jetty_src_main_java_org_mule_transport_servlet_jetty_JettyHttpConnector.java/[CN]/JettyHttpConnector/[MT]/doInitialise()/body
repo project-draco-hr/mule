@@ -1,12 +1,11 @@
 {
   httpServer=new Server();
-  HttpContext context=new HttpContext();
-  context.setContextPath("/");
-  context.setRequestLog(null);
+  if (getReceiverServlet() == null) {
+    setServletClass((useContinuations ? JettyContinuationsReceiverServlet.class : JettyReceiverServlet.class));
+  }
   ServletHandler handler=new ServletHandler();
-  holder=handler.addServlet("/*",getServletClass().getName());
-  context.addHandler(handler);
-  httpServer.addContext(context);
+  holder=handler.addServletWithMapping(getServletClass(),"/*");
+  httpServer.addHandler(handler);
   if (configFile != null) {
     try {
       InputStream is=IOUtils.getResourceAsStream(configFile,getClass());

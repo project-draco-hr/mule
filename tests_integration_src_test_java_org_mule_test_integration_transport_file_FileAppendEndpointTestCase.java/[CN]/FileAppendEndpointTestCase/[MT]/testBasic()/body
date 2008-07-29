@@ -1,0 +1,22 @@
+{
+  String myDirName="myout";
+  String myFileName="out.txt";
+  FileInputStream myFileStream=null;
+  File myDir=FileUtils.newFile(myDirName);
+  if (myDir.isDirectory()) {
+    File[] files=myDir.listFiles();
+    for (int i=0; i < files.length; i++) {
+      assertTrue(files[i].delete());
+    }
+    assertTrue(myDir.delete());
+  }
+  try {
+    assertFalse(FileUtils.newFile(myDir,myFileName).exists());
+    MuleClient client=new MuleClient();
+    client.send("vm://fileappend","Hello1",null);
+    fail("Expected exception: java.lang.IllegalArgumentException: configuring outputAppend on the file endpoint is no longer support. You can configure a the File connector instead.");
+  }
+ catch (  Exception e) {
+    assertEquals(DispatchException.class,e.getClass());
+  }
+}
