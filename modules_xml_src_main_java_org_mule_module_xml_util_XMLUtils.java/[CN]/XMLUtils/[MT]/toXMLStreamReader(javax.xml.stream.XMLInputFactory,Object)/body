@@ -18,7 +18,20 @@
     return factory.createXMLStreamReader(new org.dom4j.io.DocumentSource((org.dom4j.Document)obj));
   }
  else   if (obj instanceof java.io.InputStream) {
-    return factory.createXMLStreamReader((java.io.InputStream)obj);
+    final InputStream is=(java.io.InputStream)obj;
+    XMLStreamReader xsr=factory.createXMLStreamReader(is);
+    return new DelegateXMLStreamReader(xsr){
+      public void close() throws XMLStreamException {
+        super.close();
+        try {
+          is.close();
+        }
+ catch (        IOException e) {
+          throw new XMLStreamException(e);
+        }
+      }
+    }
+;
   }
  else   if (obj instanceof String) {
     return factory.createXMLStreamReader(new StringReader((String)obj));

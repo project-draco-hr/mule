@@ -1,0 +1,36 @@
+{
+  AttributesImpl attrs=new AttributesImpl();
+  int eventType=staxStreamReader.getEventType();
+  if (eventType != XMLStreamConstants.ATTRIBUTE && eventType != XMLStreamConstants.START_ELEMENT) {
+    throw new InternalError("getAttributes() attempting to process: " + eventType);
+  }
+  if (filter.getNamespacePrefixes()) {
+    for (int i=0; i < staxStreamReader.getNamespaceCount(); i++) {
+      String uri=staxStreamReader.getNamespaceURI(i);
+      if (uri == null)       uri="";
+      String prefix=staxStreamReader.getNamespacePrefix(i);
+      if (prefix == null)       prefix="";
+      String qName="xmlns";
+      if (prefix.length() == 0) {
+        prefix=qName;
+      }
+ else {
+        qName=qName + ':' + prefix;
+      }
+      attrs.addAttribute("http://www.w3.org/2000/xmlns/",prefix,qName,"CDATA",uri);
+    }
+  }
+  for (int i=0; i < staxStreamReader.getAttributeCount(); i++) {
+    String uri=staxStreamReader.getAttributeNamespace(i);
+    if (uri == null)     uri="";
+    String localName=staxStreamReader.getAttributeLocalName(i);
+    String prefix=staxStreamReader.getAttributePrefix(i);
+    String qName;
+    if (prefix == null || prefix.length() == 0)     qName=localName;
+ else     qName=prefix + ':' + localName;
+    String type=staxStreamReader.getAttributeType(i);
+    String value=staxStreamReader.getAttributeValue(i);
+    attrs.addAttribute(uri,localName,qName,type,value);
+  }
+  return attrs;
+}

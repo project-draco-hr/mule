@@ -1,6 +1,9 @@
 {
+  String preferredName=null;
+  String preferredPath=null;
   if (!name.endsWith(".properties")) {
     name+=".properties";
+    preferredName="preferred-" + name;
   }
   if (path.startsWith("/")) {
     path=path.substring(1);
@@ -12,10 +15,14 @@
     path+=name;
   }
  else {
+    preferredPath=SERVICE_ROOT + path + preferredName;
     path=SERVICE_ROOT + path + name;
   }
   try {
-    InputStream is=IOUtils.getResourceAsStream(path,currentClass,false,false);
+    InputStream is=IOUtils.getResourceAsStream(preferredPath,currentClass,false,false);
+    if (is == null) {
+      is=IOUtils.getResourceAsStream(path,currentClass,false,false);
+    }
     if (is != null) {
       Properties props=new Properties();
       try {

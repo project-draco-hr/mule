@@ -1,0 +1,22 @@
+{
+  try {
+    if (coreStreamTypesCloser.canClose(stream.getClass())) {
+      coreStreamTypesCloser.close(stream);
+    }
+ else {
+      Iterator closers=muleContext.getRegistry().lookupObjects(StreamCloser.class).iterator();
+      while (closers.hasNext()) {
+        StreamCloser closer=(StreamCloser)closers.next();
+        if (closer.canClose(stream.getClass())) {
+          closer.close(stream);
+        }
+ else {
+          log.debug("Unable to find an StreamCloser for the stream type: " + stream.getClass() + ", the stream: "+ stream+ " will not been closed.");
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    log.debug("Exception closing stream: " + stream,e);
+  }
+}
