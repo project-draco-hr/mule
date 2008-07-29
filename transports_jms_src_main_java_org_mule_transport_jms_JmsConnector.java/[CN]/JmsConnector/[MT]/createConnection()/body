@@ -34,7 +34,18 @@
           logger.warn(e.getMessage(),e);
         }
         try {
+          connectionStrategy.connect(jmsConnector);
+          Map receivers=new HashMap(jmsConnector.getReceivers());
           jmsConnector.initialise();
+          for (Iterator itReceivers=receivers.values().iterator(); itReceivers.hasNext(); ) {
+            MessageReceiver receiver=(MessageReceiver)itReceivers.next();
+            try {
+              jmsConnector.registerListener(receiver.getService(),receiver.getEndpoint());
+            }
+ catch (            Exception ex) {
+              throw new FatalConnectException(ex,receiver);
+            }
+          }
           jmsConnector.start();
         }
  catch (        FatalConnectException fcex) {
