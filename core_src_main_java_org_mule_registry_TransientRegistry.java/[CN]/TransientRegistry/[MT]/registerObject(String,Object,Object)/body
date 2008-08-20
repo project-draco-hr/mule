@@ -1,7 +1,6 @@
 {
   if (StringUtils.isBlank(key)) {
-    logger.warn("Attempt to register object with no key");
-    return;
+    throw new RegistrationException("Attempt to register object with no key");
   }
   logger.debug("registering object");
   if (MuleServer.getMuleContext().isInitialised() || MuleServer.getMuleContext().isInitialising()) {
@@ -14,18 +13,18 @@ synchronized (registry) {
     }
     registry.put(key,object);
   }
-  try {
-    MuleContext mc=MuleServer.getMuleContext();
-    logger.debug("context: " + mc);
-    if (mc != null) {
-      logger.debug("applying lifecycle");
+  MuleContext mc=MuleServer.getMuleContext();
+  logger.debug("context: " + mc);
+  if (mc != null) {
+    logger.debug("applying lifecycle");
+    try {
       mc.getLifecycleManager().applyCompletedPhases(object);
     }
- else {
-      throw new RegistrationException("Unable to register object (\"" + key + ":"+ ClassUtils.getSimpleName(object.getClass())+ "\") because MuleContext has not yet been created.");
+ catch (    MuleException e) {
+      throw new RegistrationException(e);
     }
   }
- catch (  MuleException e) {
-    throw new RegistrationException(e);
+ else {
+    throw new RegistrationException("Unable to register object (\"" + key + ":"+ ClassUtils.getSimpleName(object.getClass())+ "\") because MuleContext has not yet been created.");
   }
 }
