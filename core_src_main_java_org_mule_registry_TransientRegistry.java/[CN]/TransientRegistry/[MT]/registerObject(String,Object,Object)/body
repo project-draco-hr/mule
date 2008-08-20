@@ -1,13 +1,19 @@
 {
+  if (StringUtils.isBlank(key)) {
+    logger.warn("Attempt to register object with no key");
+    return;
+  }
   logger.debug("registering object");
   if (MuleServer.getMuleContext().isInitialised() || MuleServer.getMuleContext().isInitialising()) {
     logger.debug("applying processors");
     object=applyProcessors(object);
   }
-  if (registry.containsKey(key)) {
-    logger.warn("TransientRegistry already contains an object named '" + key + "'.  The previous object will be overwritten.");
+synchronized (registry) {
+    if (registry.containsKey(key)) {
+      logger.warn("TransientRegistry already contains an object named '" + key + "'.  The previous object will be overwritten.");
+    }
+    registry.put(key,object);
   }
-  registry.put(key,object);
   try {
     MuleContext mc=MuleServer.getMuleContext();
     logger.debug("context: " + mc);
