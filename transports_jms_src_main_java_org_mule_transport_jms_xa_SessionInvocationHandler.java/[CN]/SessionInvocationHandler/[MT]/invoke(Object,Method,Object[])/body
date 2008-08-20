@@ -1,9 +1,6 @@
 {
   if (logger.isDebugEnabled()) {
-    logger.debug("Invoking " + method);
-  }
-  if (underlyingObject.get() == null) {
-    throw new IllegalStateException("Underlying session is null, XASession " + xaSession);
+    logger.debug(this + " Invoking " + method);
   }
   if (XaTransaction.MuleXaObject.DELIST_METHOD_NAME.equals(method.getName())) {
     return Boolean.valueOf(delist());
@@ -22,9 +19,10 @@
     return getTargetObject();
   }
  else   if (XaTransaction.MuleXaObject.CLOSE_METHOD_NAME.equals(method.getName())) {
-    return SESSION_CLOSE_METHOD.invoke(underlyingObject.get(),args);
+    session.close();
+    return null;
   }
-  Object result=method.invoke(underlyingObject.get(),args);
+  Object result=method.invoke(session,args);
   if (result instanceof TopicSubscriber) {
     result=Proxy.newProxyInstance(Session.class.getClassLoader(),new Class[]{TopicSubscriber.class},new ConsumerProducerInvocationHandler(this,result));
   }
