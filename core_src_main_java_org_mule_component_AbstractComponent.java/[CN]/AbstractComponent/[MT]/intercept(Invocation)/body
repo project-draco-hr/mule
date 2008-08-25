@@ -1,0 +1,34 @@
+{
+  MuleEvent event=invocation.getEvent();
+  OptimizedRequestContext.unsafeSetEvent(event);
+  if (logger.isTraceEnabled()) {
+    logger.trace("Invoking " + this.getClass().getName() + "component for service "+ service.getName());
+  }
+  checkDisposed();
+  if (!(event.getEndpoint() instanceof InboundEndpoint)) {
+    throw new IllegalStateException("Unable to process outbound event, components only process incoming events.");
+  }
+  if (stopping.get() || !started.get()) {
+    throw new DefaultMuleException(CoreMessages.componentIsStopped(service.getName()));
+  }
+  try {
+    fireComponentNotification(event.getMessage(),ComponentMessageNotification.COMPONENT_PRE_INVOKE);
+    long startTime=0;
+    if (statistics.isEnabled()) {
+      startTime=System.currentTimeMillis();
+    }
+    Object result=doInvoke(event);
+    if (statistics.isEnabled()) {
+      statistics.addExecutionTime(System.currentTimeMillis() - startTime);
+    }
+    MuleMessage resultMessage=createResultMessage(event,result);
+    fireComponentNotification(resultMessage,ComponentMessageNotification.COMPONENT_POST_INVOKE);
+    return resultMessage;
+  }
+ catch (  MuleException me) {
+    throw me;
+  }
+catch (  Exception e) {
+    throw new ServiceException(CoreMessages.failedToInvoke(this.toString()),event.getMessage(),service,e);
+  }
+}
