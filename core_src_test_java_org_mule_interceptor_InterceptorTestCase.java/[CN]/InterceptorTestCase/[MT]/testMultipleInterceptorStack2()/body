@@ -1,0 +1,18 @@
+{
+  Service service=getTestService();
+  TestComponent component=new TestComponent();
+  service.setComponent(component);
+  List interceptors=new ArrayList();
+  interceptors.add(new TestInterceptor(INTERCEPTOR_ONE));
+  interceptors.add(new TestInterceptor(INTERCEPTOR_TWO));
+  interceptors.add(new TestInterceptor(INTERCEPTOR_THREE));
+  List stackInterceptors=new ArrayList();
+  stackInterceptors.add(new TestInterceptor(INTERCEPTOR_ONE));
+  stackInterceptors.add(new TestInterceptor(INTERCEPTOR_TWO));
+  stackInterceptors.add(new TestInterceptor(INTERCEPTOR_THREE));
+  interceptors.add(new InterceptorStack(stackInterceptors));
+  component.setInterceptors(interceptors);
+  service.start();
+  MuleMessage result=service.sendEvent(getTestInboundEvent(""));
+  assertEquals(INTERCEPTOR_ONE + BEFORE + INTERCEPTOR_TWO+ BEFORE+ INTERCEPTOR_THREE+ BEFORE+ INTERCEPTOR_ONE+ BEFORE+ INTERCEPTOR_TWO+ BEFORE+ INTERCEPTOR_THREE+ BEFORE+ COMPONENT+ INTERCEPTOR_THREE+ AFTER+ INTERCEPTOR_TWO+ AFTER+ INTERCEPTOR_ONE+ AFTER+ INTERCEPTOR_THREE+ AFTER+ INTERCEPTOR_TWO+ AFTER+ INTERCEPTOR_ONE+ AFTER,result.getPayloadAsString());
+}
