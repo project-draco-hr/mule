@@ -1,17 +1,23 @@
 {
+  final long finalTimeout=timeout;
   try {
-    connectionStrategy.connect(this);
-    MuleMessage result=doRequest(timeout);
-    if (result != null && connector.isEnableMessageEvents()) {
-      connector.fireNotification(new EndpointMessageNotification(result,endpoint,null,EndpointMessageNotification.MESSAGE_REQUESTED));
+    RetryContext context=retryTemplate.execute(new RetryCallback(){
+      public void doWork(      RetryContext context) throws Exception {
+        connect();
+        MuleMessage result=doRequest(finalTimeout);
+        if (result != null && connector.isEnableMessageEvents()) {
+          connector.fireNotification(new EndpointMessageNotification(result,endpoint,null,EndpointMessageNotification.MESSAGE_REQUESTED));
+        }
+        context.addReturnMessage(result);
+      }
+      public String getWorkDescription(){
+        return getConnectionDescription();
+      }
     }
-    return result;
+);
+    return context.getFirstReturnMessage();
   }
- catch (  DispatchException e) {
-    disposeAndLogException();
-    throw e;
-  }
-catch (  Exception e) {
+ catch (  Exception e) {
     disposeAndLogException();
     throw new ReceiveException(endpoint,timeout,e);
   }

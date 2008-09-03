@@ -20,26 +20,15 @@ catch (    MuleException e) {
   }
   try {
     Transaction tx=TransactionCoordination.getInstance().getTransaction();
+    Worker worker=new Worker(event);
     if (isDoThreading() && !event.isSynchronous() && tx == null) {
       connector.getDispatcherWorkManager().scheduleWork(new Worker(event),WorkManager.INDEFINITE,null,connector);
     }
  else {
-      connectionStrategy.connect(this);
-      doDispatch(event);
-      if (connector.isEnableMessageEvents()) {
-        String component=null;
-        if (event.getService() != null) {
-          component=event.getService().getName();
-        }
-        connector.fireNotification(new EndpointMessageNotification(event.getMessage(),event.getEndpoint(),component,EndpointMessageNotification.MESSAGE_DISPATCHED));
-      }
+      worker.run();
     }
   }
- catch (  DispatchException e) {
-    disposeAndLogException();
-    throw e;
-  }
-catch (  Exception e) {
+ catch (  Exception e) {
     disposeAndLogException();
     throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }

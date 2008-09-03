@@ -21,23 +21,29 @@ catch (    MuleException e) {
       throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
     }
   }
+  final MuleEvent finalEvent=event;
   try {
-    connectionStrategy.connect(this);
-    MuleMessage result=doSend(event);
-    if (connector.isEnableMessageEvents()) {
-      String component=null;
-      if (event.getService() != null) {
-        component=event.getService().getName();
+    RetryContext context=retryTemplate.execute(new RetryCallback(){
+      public void doWork(      RetryContext context) throws Exception {
+        connect();
+        MuleMessage result=doSend(finalEvent);
+        if (connector.isEnableMessageEvents()) {
+          String component=null;
+          if (finalEvent.getService() != null) {
+            component=finalEvent.getService().getName();
+          }
+          connector.fireNotification(new EndpointMessageNotification(finalEvent.getMessage(),finalEvent.getEndpoint(),component,EndpointMessageNotification.MESSAGE_SENT));
+        }
+        context.addReturnMessage(result);
       }
-      connector.fireNotification(new EndpointMessageNotification(event.getMessage(),event.getEndpoint(),component,EndpointMessageNotification.MESSAGE_SENT));
+      public String getWorkDescription(){
+        return getConnectionDescription();
+      }
     }
-    return result;
+);
+    return context.getFirstReturnMessage();
   }
- catch (  DispatchException e) {
-    disposeAndLogException();
-    throw e;
-  }
-catch (  Exception e) {
+ catch (  Exception e) {
     disposeAndLogException();
     throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }

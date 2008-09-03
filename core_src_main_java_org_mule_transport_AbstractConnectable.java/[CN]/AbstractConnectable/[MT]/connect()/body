@@ -1,35 +1,22 @@
 {
-  if (disposed) {
+  if (disposed.get()) {
     throw new IllegalStateException("Requester/dispatcher has been disposed; cannot connect to resource");
   }
-  if (connected) {
-    return;
-  }
-  if (!connecting) {
-    connecting=true;
-    if (logger.isDebugEnabled()) {
-      logger.debug("Connecting: " + this);
+  final RetryCallback callback=new RetryCallback(){
+    public void doWork(    RetryContext context) throws Exception {
+      doConnect();
+      connected.set(true);
+      if (startOnConnect) {
+        start();
+      }
     }
-    connectionStrategy.connect(this);
-    logger.info("Connected: " + this);
-    return;
-  }
-  try {
-    connectionStrategy.connect(connector);
-    this.doConnect();
-    connected=true;
-    connecting=false;
-    connector.fireNotification(new ConnectionNotification(this,getConnectEventId(endpoint),ConnectionNotification.CONNECTION_CONNECTED));
-  }
- catch (  Exception e) {
-    connected=false;
-    connecting=false;
-    connector.fireNotification(new ConnectionNotification(this,getConnectEventId(endpoint),ConnectionNotification.CONNECTION_FAILED));
-    if (e instanceof ConnectException) {
-      throw (ConnectException)e;
+    public String getWorkDescription(){
+      return getConnectionDescription();
     }
- else {
-      throw new ConnectException(e,this);
-    }
+  }
+;
+  retryTemplate.execute(callback);
+  if (startOnConnect) {
+    start();
   }
 }

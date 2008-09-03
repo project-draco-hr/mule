@@ -1,0 +1,18 @@
+{
+  if (retryCount != RETRY_COUNT_FOREVER && retryCounter.current().get() >= retryCount) {
+    return PolicyStatus.policyExhaused(null);
+  }
+ else {
+    if (logger.isInfoEnabled()) {
+      logger.info("Waiting for " + frequency + "ms before reconnecting. Failed attempt "+ retryCounter.current().get()+ " of "+ (retryCount != RETRY_COUNT_FOREVER ? String.valueOf(retryCount) : "unlimited"));
+    }
+    try {
+      retryCounter.current().getAndIncrement();
+      Thread.sleep(frequency);
+      return PolicyStatus.policyOk();
+    }
+ catch (    InterruptedException e) {
+      return PolicyStatus.policyExhaused(e);
+    }
+  }
+}
