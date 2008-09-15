@@ -1,3 +1,22 @@
 {
-  return isValidExpression(expression,DEFAULT_EXPRESSION_PREFIX);
+  final AtomicBoolean valid=new AtomicBoolean(true);
+  final AtomicBoolean match=new AtomicBoolean(false);
+  final StringBuffer message=new StringBuffer();
+  parser.parse(new TemplateParser.TemplateCallback(){
+    public Object match(    String token){
+      match.set(true);
+      if (token.indexOf(":") == -1) {
+        if (valid.get()) {
+          valid.compareAndSet(true,false);
+        }
+        message.append(token).append(" is malformed\n");
+      }
+      return null;
+    }
+  }
+,expression);
+  if (message.length() > 0) {
+    logger.warn("Expression " + expression + " is malformed: "+ message.toString());
+  }
+  return match.get() && valid.get();
 }
