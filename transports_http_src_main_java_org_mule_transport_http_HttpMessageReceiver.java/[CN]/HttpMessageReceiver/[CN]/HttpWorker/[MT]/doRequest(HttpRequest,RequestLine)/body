@@ -24,6 +24,21 @@
       response=transformResponse(returnMessage);
     }
     response.disableKeepAlive(!((HttpConnector)connector).isKeepAlive());
+    response.removeHeaders("Connection");
+    boolean endpointOverride=Boolean.parseBoolean((String)endpoint.getProperty("keepAlive"));
+    Header connectionHeader=request.getFirstHeader("Connection");
+    if (connectionHeader != null) {
+      if ("keep-alive".equalsIgnoreCase(connectionHeader.getValue()) && ((HttpConnector)connector).isKeepAlive() && !endpointOverride) {
+        Header header=new Header(HttpConstants.HEADER_CONNECTION,"keep-alive");
+        response.addHeader(header);
+        header=new Header(HttpConstants.HEADER_KEEP_ALIVE,"timeout=" + ((HttpConnector)connector).getKeepAliveTimeout());
+        response.addHeader(header);
+      }
+ else {
+        Header header=new Header(HttpConstants.HEADER_CONNECTION,"close");
+        response.addHeader(header);
+      }
+    }
   }
  else {
     response=buildFailureResponse(requestLine,message);
