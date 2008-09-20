@@ -1,0 +1,27 @@
+{
+  boolean persistent=true;
+  int capacity=345;
+  String queueName="test.service";
+  QueueManager queueManager=muleContext.getQueueManager();
+  Mock mockTransactionalQueueManager=new Mock(QueueManager.class);
+  mockTransactionalQueueManager.expect("toString");
+  mockTransactionalQueueManager.expect("setQueueConfiguration",new FullConstraintMatcher(C.eq(queueName),C.eq(new QueueConfiguration(capacity,persistent))));
+  mockTransactionalQueueManager.expectAndReturn("getQueueSession",queueManager.getQueueSession());
+  muleContext.getRegistry().registerObject(MuleProperties.OBJECT_QUEUE_MANAGER,(QueueManager)mockTransactionalQueueManager.proxy());
+  SedaService service=new SedaService();
+  service.setName("test");
+  service.setModel(new SedaModel());
+  service.setQueueProfile(new QueueProfile(capacity,persistent));
+  try {
+    muleContext.getRegistry().registerService(service);
+  }
+ catch (  RegistrationException e) {
+    if (e.getCause().getCause().getCause() instanceof AssertionFailedError) {
+      fail("Queue configuration does not match service queue profile");
+    }
+ else {
+      throw e;
+    }
+  }
+  assertEquals(queueName,service.queue.getName());
+}
