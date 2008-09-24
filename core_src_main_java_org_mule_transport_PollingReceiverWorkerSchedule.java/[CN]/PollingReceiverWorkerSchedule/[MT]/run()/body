@@ -1,8 +1,21 @@
 {
-  try {
-    if (!worker.isRunning()) {
-      workManager.scheduleWork(worker);
+  final RetryCallback callback=new RetryCallback(){
+    public void doWork(    RetryContext context) throws Exception {
+      receiver.connect();
+      try {
+        receiver.poll();
+      }
+ catch (      InterruptedException e) {
+        receiver.stop();
+      }
     }
+    public String getWorkDescription(){
+      return receiver.getConnectionDescription();
+    }
+  }
+;
+  try {
+    receiver.getConnector().getRetryPolicyTemplate().execute(callback);
   }
  catch (  Exception e) {
     receiver.handleException(e);
