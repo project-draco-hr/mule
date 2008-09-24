@@ -8,7 +8,7 @@
   MuleTransactionConfig tc=new MuleTransactionConfig();
   tc.setFactory(new JmsTransactionFactory());
   tc.setAction(TransactionConfig.ACTION_ALWAYS_BEGIN);
-  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder("jms://test.queue",muleContext);
+  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(new URIBuilder("jms://test.queue"),muleContext);
   endpointBuilder.setTransactionConfig(tc);
   endpointBuilder.setName("TransactedTest.Queue");
   ImmutableEndpoint inboundEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
@@ -17,7 +17,7 @@
   tt.execute(new TransactionCallback(){
     public Object doInTransaction() throws Exception {
       for (int i=0; i < 100; i++) {
-        client.send("TransactedTest.Queue","Test Client Dispatch message " + i,props);
+        client.send("jms://test.queue","Test Client Dispatch message " + i,props);
       }
       Transaction tx=TransactionCoordination.getInstance().getTransaction();
       assertNotNull(tx);
