@@ -10,12 +10,12 @@
  catch (    org.mule.api.security.SecurityException e) {
       logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
       connector.fireNotification(new SecurityNotification(e,SecurityNotification.SECURITY_AUTHENTICATION_FAILED));
-      handleException(e);
+      connector.handleException(e);
       return;
     }
 catch (    MuleException e) {
-      handleException(new DispatchException(event.getMessage(),event.getEndpoint(),e));
-      return;
+      disposeAndLogException();
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
     }
   }
   try {
@@ -29,6 +29,7 @@ catch (    MuleException e) {
     }
   }
  catch (  Exception e) {
-    handleException(new DispatchException(event.getMessage(),event.getEndpoint(),e));
+    disposeAndLogException();
+    throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
   }
 }
