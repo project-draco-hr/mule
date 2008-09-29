@@ -3,7 +3,16 @@
   QueueSession queueSession=muleContext.getQueueManager().getQueueSession();
   while (!stopped.get()) {
     try {
-      paused.whenFalse(null);
+      if (paused.get()) {
+        paused.whenFalse(null);
+        if (stopping.get()) {
+          if (!queueProfile.isPersistent() && (queueSession != null && getQueueSize() > 0)) {
+            logger.warn(CoreMessages.stopPausedSedaServiceNonPeristentQueueMessageLoss(getQueueSize(),this));
+          }
+          stopping.set(false);
+          break;
+        }
+      }
       if (stopping.get()) {
         if (queueProfile.isPersistent() || (queueSession == null || getQueueSize() <= 0)) {
           stopping.set(false);
