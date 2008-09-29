@@ -1,0 +1,34 @@
+{
+  MuleEvent event=createEventToSerialize();
+  muleContext.start();
+  List transformers=event.getEndpoint().getTransformers();
+  ImmutableEndpoint endpoint=event.getEndpoint();
+  Serializable serialized=(Serializable)new SerializableToByteArray().transform(event);
+  assertNotNull(serialized);
+  muleContext.dispose();
+  muleContext=createMuleContext();
+  muleContext.start();
+  createAndRegisterTransformersEndpointBuilderService();
+  MuleEvent deserialized=(MuleEvent)new ByteArrayToObject().transform(serialized);
+  assertNotNull(deserialized);
+  assertNotNull(deserialized.getMuleContext());
+  assertNotNull(deserialized.getSession());
+  assertEquals(event.getSession().getId(),deserialized.getSession().getId());
+  assertNotNull(deserialized.getSession().getService());
+  assertEquals(event.getSession().getService().getName(),deserialized.getSession().getService().getName());
+  assertEquals(event.getSession().getService().getInitialState(),deserialized.getSession().getService().getInitialState());
+  assertEquals(event.getSession().getService().getExceptionListener().getClass(),deserialized.getSession().getService().getExceptionListener().getClass());
+  assertEquals(event.getSession().getService().getComponent().getClass(),deserialized.getSession().getService().getComponent().getClass());
+  assertNotNull(deserialized.getEndpoint());
+  assertEquals(endpoint.getEncoding(),deserialized.getEndpoint().getEncoding());
+  assertEquals(endpoint.getEndpointBuilderName(),deserialized.getEndpoint().getEndpointBuilderName());
+  assertEquals(endpoint.getEndpointURI(),deserialized.getEndpoint().getEndpointURI());
+  assertEquals(endpoint.getProtocol(),deserialized.getEndpoint().getProtocol());
+  assertEquals(endpoint.getRemoteSyncTimeout(),deserialized.getEndpoint().getRemoteSyncTimeout());
+  assertEquals(endpoint.getConnector().getClass(),deserialized.getEndpoint().getConnector().getClass());
+  List deserializedTransformers=deserialized.getEndpoint().getTransformers();
+  assertEquals(2,deserializedTransformers.size());
+  assertEquals(((Transformer)transformers.get(0)).getName(),((Transformer)deserializedTransformers.get(0)).getName());
+  assertEquals(((Transformer)transformers.get(1)).getName(),((Transformer)deserializedTransformers.get(1)).getName());
+  assertEquals(PayloadTypeFilter.class,deserialized.getEndpoint().getFilter().getClass());
+}
