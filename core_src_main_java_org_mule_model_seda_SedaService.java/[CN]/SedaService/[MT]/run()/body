@@ -5,7 +5,7 @@
     try {
       paused.whenFalse(null);
       if (stopping.get()) {
-        if (queueSession == null || getQueueSize() <= 0) {
+        if (queueProfile.isPersistent() || (queueSession == null || getQueueSize() <= 0)) {
           stopping.set(false);
           break;
         }
@@ -22,28 +22,16 @@
       }
     }
  catch (    Exception e) {
-      if (isStopped() || isStopping()) {
-        break;
-      }
       if (e instanceof InterruptedException) {
         stopping.set(false);
         break;
       }
- else       if (e instanceof NoSuchElementException) {
-        handleException(new ServiceException(CoreMessages.proxyPoolTimedOut(),(event == null ? null : event.getMessage()),this,e));
-      }
- else       if (e instanceof MuleException) {
+      if (e instanceof MuleException) {
         handleException(e);
       }
- else       if (e instanceof WorkException) {
+ else {
         handleException(new ServiceException(CoreMessages.eventProcessingFailedFor(name),(event == null ? null : event.getMessage()),this,e));
       }
- else {
-        handleException(new ServiceException(CoreMessages.failedToGetPooledObject(),(event == null ? null : event.getMessage()),this,e));
-      }
-    }
- finally {
-      stopping.set(false);
     }
   }
 }
