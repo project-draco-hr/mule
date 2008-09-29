@@ -1,0 +1,32 @@
+{
+  if (!receiver.stopped.get()) {
+    try {
+      running=true;
+      receiver.connected.whenTrue(null);
+      receiver.getConnector().getRetryPolicyTemplate().execute(new RetryCallback(){
+        public void doWork(        RetryContext context) throws Exception {
+          receiver.connect();
+          try {
+            receiver.poll();
+          }
+ catch (          InterruptedException e) {
+            receiver.stop();
+          }
+catch (          Exception e) {
+            receiver.handleException(e);
+          }
+        }
+        public String getWorkDescription(){
+          return receiver.getConnectionDescription();
+        }
+      }
+);
+    }
+ catch (    Exception e) {
+      receiver.handleException(e);
+    }
+ finally {
+      running=false;
+    }
+  }
+}
