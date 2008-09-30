@@ -4,9 +4,9 @@
     MuleMessage reqMsg=(MuleMessage)exchange.getInMessage().get(CxfConstants.MULE_MESSAGE);
     CxfMessageAdapter messageAdapter=(CxfMessageAdapter)receiver.getConnector().getMessageAdapter(reqMsg);
     messageAdapter.setPayload(exchange.getInMessage());
+    BindingOperationInfo bop=exchange.get(BindingOperationInfo.class);
+    Service svc=exchange.get(Service.class);
     if (!receiver.isProxy()) {
-      BindingOperationInfo bop=exchange.get(BindingOperationInfo.class);
-      Service svc=exchange.get(Service.class);
       MethodDispatcher md=(MethodDispatcher)svc.get(MethodDispatcher.class.getName());
       Method m=md.getMethod(bop);
       if (targetClass != null) {
@@ -15,6 +15,10 @@
       messageAdapter.setProperty(MuleProperties.MULE_METHOD_PROPERTY,m);
     }
     DefaultMuleMessage muleReq=new DefaultMuleMessage(messageAdapter);
+    if (bop != null) {
+      muleReq.setProperty("cxf.operation",bop.getOperationInfo().getName());
+      muleReq.setProperty("cxf.service",svc.getName());
+    }
     String replyTo=(String)exchange.getInMessage().get(MuleProperties.MULE_REPLY_TO_PROPERTY);
     if (replyTo != null) {
       muleReq.setReplyTo(replyTo);
