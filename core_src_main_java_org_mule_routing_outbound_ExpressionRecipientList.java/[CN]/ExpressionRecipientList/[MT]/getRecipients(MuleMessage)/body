@@ -1,0 +1,20 @@
+{
+  String expr=getFullExpression();
+  if (!ExpressionEvaluatorManager.isValidExpression(expr)) {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionInvalidForProperty("expression",expr),message,null);
+  }
+  Object msgRecipients=ExpressionEvaluatorManager.evaluate(expr,message);
+  if (msgRecipients == null) {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSetOnEvent(getFullExpression()),message,null);
+  }
+ else   if (msgRecipients instanceof String) {
+    return Arrays.asList(StringUtils.splitAndTrim(msgRecipients.toString()," ,;:"));
+  }
+ else   if (msgRecipients instanceof List) {
+    return new ArrayList((List)msgRecipients);
+  }
+ else {
+    logger.error("Recipients on message are neither String nor List but: " + msgRecipients.getClass());
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(getFullExpression(),new Class[]{String.class,List.class},msgRecipients.getClass()),message,null);
+  }
+}
