@@ -3,8 +3,8 @@
   RetryPolicy policy=createRetryInstance();
   DefaultRetryContext context=new DefaultRetryContext(callback.getWorkDescription());
   try {
+    Exception cause=null;
     do {
-      Throwable cause;
       try {
         callback.doWork(context);
         if (notifier != null) {
@@ -15,21 +15,23 @@
  catch (      Exception e) {
         cause=e;
         if (notifier != null) {
-          notifier.failed(context,e);
+          notifier.failed(context,cause);
         }
-        if (e instanceof InterruptedException || e instanceof InterruptedIOException) {
+        if (cause instanceof InterruptedException || cause instanceof InterruptedIOException) {
           logger.error("Process was interrupted (InterruptedException), ceasing process");
           break;
         }
+ else {
+          status=policy.applyPolicy(cause);
+        }
       }
-      status=policy.applyPolicy(cause);
     }
  while (status.isOk());
     if (status == null || status.isOk()) {
       return context;
     }
  else {
-      throw new FatalConnectException(CoreMessages.failedToConnect(context.getDescription(),this),status.getThrowable(),this);
+      throw cause;
     }
   }
   finally {
