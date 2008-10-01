@@ -35,7 +35,12 @@
       throw new NoReceiverForEndpointException("No receiver found for endpointUri: " + uri);
     }
   }
-  receiver.setEndpoint(new DynamicURIInboundEndpoint(receiver.getEndpoint(),new MuleEndpointURI(getRequestUrl(httpServletRequest))));
+  InboundEndpoint endpoint=receiver.getEndpoint();
+  if (!(endpoint instanceof DynamicURIInboundEndpoint)) {
+    endpoint=new DynamicURIInboundEndpoint(receiver.getEndpoint());
+    receiver.setEndpoint(endpoint);
+  }
+  ((DynamicURIInboundEndpoint)endpoint).setEndpointURI(new MuleEndpointURI(getRequestUrl(httpServletRequest)));
   try {
     receiver.getEndpointURI().initialise();
   }

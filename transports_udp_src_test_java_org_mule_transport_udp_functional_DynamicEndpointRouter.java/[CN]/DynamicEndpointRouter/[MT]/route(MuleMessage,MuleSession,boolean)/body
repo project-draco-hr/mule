@@ -1,0 +1,35 @@
+{
+  MuleMessage result=null;
+  if (logger.isTraceEnabled()) {
+    logger.info("Synchronous: " + synchronous);
+  }
+  if (endpoints == null || endpoints.size() == 0) {
+    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
+  }
+  try {
+    OutboundEndpoint ep=(OutboundEndpoint)endpoints.get(0);
+    EndpointURI newUri;
+    for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
+      String propertyKey=(String)iterator.next();
+      Object propertyValue=message.getProperty(propertyKey);
+      if (propertyKey.equalsIgnoreCase("packet.port")) {
+        newUri=new MuleEndpointURI("udp://localhost:" + ((Integer)propertyValue).intValue());
+        if (logger.isDebugEnabled()) {
+          logger.info("Uri after parsing is: " + newUri.getAddress());
+        }
+        ep=new DynamicURIOutboundEndpoint(ep,newUri);
+        break;
+      }
+    }
+    if (synchronous) {
+      result=send(session,message,ep);
+    }
+ else {
+      dispatch(session,message,ep);
+    }
+  }
+ catch (  MuleException e) {
+    throw new CouldNotRouteOutboundMessageException(message,(ImmutableEndpoint)endpoints.get(0),e);
+  }
+  return result;
+}
