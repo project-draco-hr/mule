@@ -1,0 +1,22 @@
+{
+  Mock session=MuleTestUtils.getMockSession();
+  MuleMessage message=new DefaultMuleMessage(payload);
+  assertTrue(asyncXmlSplitter.isMatch(message));
+  final ItemNodeConstraint itemNodeConstraint=new ItemNodeConstraint();
+  session.expectAndReturn("getService",getTestService());
+  session.expectAndReturn("getService",getTestService());
+  session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint1)));
+  session.expect("dispatchEvent",C.args(itemNodeConstraint,C.eq(endpoint2)));
+  asyncXmlSplitter.route(message,(MuleSession)session.proxy(),false);
+  session.verify();
+  message=new DefaultMuleMessage(payload);
+  session.expectAndReturn("getService",getTestService());
+  session.expectAndReturn("getService",getTestService());
+  session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint4)),message);
+  session.expectAndReturn("sendEvent",C.args(itemNodeConstraint,C.eq(endpoint5)),message);
+  MuleMessage result=syncXmlSplitter.route(message,(MuleSession)session.proxy(),false);
+  assertNotNull(result);
+  assertTrue(result instanceof MuleMessageCollection);
+  assertEquals(2,((MuleMessageCollection)result).size());
+  session.verify();
+}

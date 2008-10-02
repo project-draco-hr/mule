@@ -1,0 +1,55 @@
+{
+  if (logger.isDebugEnabled()) {
+    if (splitExpression.length() == 0) {
+      logger.warn("splitExpression is not specified, no processing will take place");
+    }
+ else {
+      logger.debug("splitExpression is " + splitExpression);
+    }
+  }
+  Object src=message.getPayload();
+  try {
+    if (src instanceof byte[]) {
+      src=new String((byte[])src);
+    }
+    Document dom4jDoc;
+    if (src instanceof String) {
+      String xml=(String)src;
+      SAXReader reader=new SAXReader();
+      setDoSchemaValidation(reader,isValidateSchema());
+      dom4jDoc=reader.read(new StringReader(xml));
+    }
+ else     if (src instanceof org.dom4j.Document) {
+      dom4jDoc=(org.dom4j.Document)src;
+    }
+ else {
+      throw new IllegalArgumentException(CoreMessages.objectNotOfCorrectType(src.getClass(),new Class[]{Document.class,String.class,byte[].class}).getMessage());
+    }
+    XPath xpath=dom4jDoc.createXPath(splitExpression);
+    if (namespaces != null) {
+      xpath.setNamespaceURIs(namespaces);
+    }
+    List foundNodes=xpath.selectNodes(dom4jDoc);
+    if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
+      message.setCorrelationGroupSize(foundNodes.size());
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Split into " + foundNodes.size());
+    }
+    List parts=new LinkedList();
+    for (Iterator iterator=foundNodes.iterator(); iterator.hasNext(); ) {
+      Node node=(Node)iterator.next();
+      if (node instanceof Element) {
+        node=(Node)node.clone();
+        parts.add(DocumentHelper.createDocument((Element)node));
+      }
+ else {
+        logger.warn("Dcoument node: " + node.asXML() + " is not an element and thus is not a valid part");
+      }
+    }
+    return parts;
+  }
+ catch (  Exception ex) {
+    throw new IllegalArgumentException("Failed to initialise the payload: " + ExceptionUtils.getStackTrace(ex));
+  }
+}

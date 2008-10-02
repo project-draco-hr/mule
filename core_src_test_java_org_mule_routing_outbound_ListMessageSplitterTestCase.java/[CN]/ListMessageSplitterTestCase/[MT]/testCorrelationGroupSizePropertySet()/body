@@ -1,0 +1,18 @@
+{
+  Service testService=getTestService("test",Apple.class);
+  MuleSession session=getTestSession(testService,muleContext);
+  OutboundEndpoint endpoint=getTestOutboundEndpoint("Test1Endpoint","test://endpoint?synchronous=true");
+  ListMessageSplitter router=new ListMessageSplitter();
+  router.setFilter(null);
+  router.addEndpoint(endpoint);
+  List payload=new ArrayList();
+  payload.add("one");
+  payload.add("two");
+  payload.add("three");
+  payload.add("four");
+  MuleMessage message=new DefaultMuleMessage(payload);
+  MuleMessage result=router.route(message,session,true);
+  assertNotNull(result);
+  assertTrue(result instanceof MuleMessageCollection);
+  assertEquals("There should be 4 results for 4 split messages.",4,((MuleMessageCollection)result).size());
+}

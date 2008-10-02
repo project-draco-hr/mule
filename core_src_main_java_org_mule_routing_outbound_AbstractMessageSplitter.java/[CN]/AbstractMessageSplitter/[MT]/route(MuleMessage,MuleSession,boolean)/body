@@ -1,49 +1,45 @@
 {
   String correlationId=messageInfoMapping.getCorrelationId(message);
-  this.initialise(message);
-  OutboundEndpoint endpoint;
-  MuleMessage result=null;
-  List list=getEndpoints();
+  List results=new java.util.ArrayList();
   int correlationSequence=1;
-  for (Iterator iterator=list.iterator(); iterator.hasNext(); ) {
-    endpoint=(OutboundEndpoint)iterator.next();
-    message=getMessagePart(message,endpoint);
-    if (message == null) {
-      logger.warn("Message part is null for endpoint: " + endpoint.getEndpointURI().toString());
+  SplitMessage splitMessage=getMessageParts(message,getEndpoints());
+  java.util.Map props=new java.util.HashMap();
+  for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
+    String propertyKey=(String)iterator.next();
+    props.put(propertyKey,message.getProperty(propertyKey));
+  }
+  for (int i=0; i < splitMessage.size(); i++) {
+    SplitMessage.MessagePart part=splitMessage.getPart(i);
+    MuleMessage sendMessage;
+    if (part.getPart() instanceof MuleMessage) {
+      sendMessage=(MuleMessage)part.getPart();
     }
-    while (message != null) {
-      if (honorSynchronicity) {
-        synchronous=endpoint.isSynchronous();
-      }
-      try {
-        if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
-          boolean correlationSet=message.getCorrelationId() != null;
-          if (!correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
-            message.setCorrelationId(correlationId);
-          }
-          final int groupSize=message.getCorrelationGroupSize();
-          message.setCorrelationGroupSize(groupSize);
-          message.setCorrelationSequence(correlationSequence++);
-        }
-        if (honorSynchronicity) {
-          message.setBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,endpoint.isRemoteSync());
-        }
-        if (synchronous) {
-          result=send(session,message,endpoint);
-        }
  else {
-          dispatch(session,message,endpoint);
+      sendMessage=new org.mule.DefaultMuleMessage(part.getPart(),props);
+    }
+    try {
+      if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
+        boolean correlationSet=message.getCorrelationId() != null;
+        if (!correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
+          sendMessage.setCorrelationId(correlationId);
         }
+        sendMessage.setCorrelationGroupSize(splitMessage.size());
+        sendMessage.setCorrelationSequence(correlationSequence++);
       }
- catch (      MuleException e) {
-        throw new CouldNotRouteOutboundMessageException(message,endpoint,e);
+      if (honorSynchronicity) {
+        synchronous=part.getEndpoint().isSynchronous();
+        sendMessage.setBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,part.getEndpoint().isRemoteSync());
       }
-      if (!multimatch) {
-        break;
+      if (synchronous) {
+        results.add(send(session,sendMessage,part.getEndpoint()));
       }
-      message=this.getMessagePart(message,endpoint);
+ else {
+        dispatch(session,sendMessage,part.getEndpoint());
+      }
+    }
+ catch (    MuleException e) {
+      throw new CouldNotRouteOutboundMessageException(sendMessage,part.getEndpoint(),e);
     }
   }
-  this.cleanup();
-  return result;
+  return resultsHandler.aggregateResults(results,message);
 }
