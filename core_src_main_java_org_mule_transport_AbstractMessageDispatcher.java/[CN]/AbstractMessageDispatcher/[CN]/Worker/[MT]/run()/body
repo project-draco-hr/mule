@@ -1,23 +1,21 @@
 {
   try {
-    retryTemplate.execute(new RetryCallback(){
-      public void doWork(      RetryContext context) throws Exception {
-        final MuleEvent finalEvent=RequestContext.setEvent(event);
-        connect();
-        doDispatch(finalEvent);
-        if (connector.isEnableMessageEvents()) {
-          String component=null;
-          if (finalEvent.getService() != null) {
-            component=finalEvent.getService().getName();
-          }
-          connector.fireNotification(new EndpointMessageNotification(finalEvent.getMessage(),finalEvent.getEndpoint(),component,EndpointMessageNotification.MESSAGE_DISPATCHED));
-        }
-      }
-      public String getWorkDescription(){
-        return getConnectionDescription();
-      }
+    event=RequestContext.setEvent(event);
+    doPreConnect(event);
+    connect();
+    try {
+      doDispatch(event);
     }
-);
+  finally {
+      if (useStrictConnectDisconnect)       disconnect();
+    }
+    if (connector.isEnableMessageEvents()) {
+      String component=null;
+      if (event.getService() != null) {
+        component=event.getService().getName();
+      }
+      connector.fireNotification(new EndpointMessageNotification(event.getMessage(),event.getEndpoint(),component,EndpointMessageNotification.MESSAGE_DISPATCHED));
+    }
   }
  catch (  Exception e) {
     handleException(e);

@@ -2,20 +2,25 @@
   if (disposed.get()) {
     throw new IllegalStateException("Requester/dispatcher has been disposed; cannot connect to resource");
   }
-  final RetryCallback callback=new RetryCallback(){
+  retryTemplate.execute(new RetryCallback(){
     public void doWork(    RetryContext context) throws Exception {
-      doConnect();
-      connected.set(true);
-      if (startOnConnect) {
-        start();
+      try {
+        doConnect();
       }
+ catch (      Exception e) {
+        if (logger.isDebugEnabled()) {
+          e.printStackTrace();
+        }
+        throw e;
+      }
+      connected.set(true);
     }
     public String getWorkDescription(){
       return getConnectionDescription();
     }
   }
-;
-  retryTemplate.execute(callback);
+);
+  connected.whenTrue(null);
   if (startOnConnect) {
     start();
   }
