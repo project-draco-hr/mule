@@ -4,13 +4,16 @@
     String param=(String)paramNames.get(i);
     Object value=null;
     boolean foundValue=false;
-    if (message != null && ExpressionEvaluatorManager.isValidExpression(param)) {
+    boolean validExpression=ExpressionEvaluatorManager.isValidExpression(param);
+    if (message != null && validExpression) {
       value=ExpressionEvaluatorManager.evaluate(param,message);
       foundValue=value != null;
     }
     if (!foundValue) {
       String name=param.substring(2,param.length() - 1);
-      logger.warn("Config is using the legacy param format " + param + " (no evaluator defined).  This expression can be replaced with ${header:"+ name+ "}");
+      if (!validExpression) {
+        logger.warn("Config is using the legacy param format " + param + " (no evaluator defined).  This expression can be replaced with ${header:"+ name+ "}");
+      }
       value=endpoint.getProperty(name);
     }
     params[i]=value;
