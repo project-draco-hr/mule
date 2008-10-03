@@ -1,0 +1,22 @@
+{
+  Mock session=MuleTestUtils.getMockSession();
+  session.matchAndReturn("getService",getTestService());
+  ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider");
+  assertNotNull(endpoint1);
+  List recipients=new ArrayList();
+  recipients.add("test://recipient1");
+  recipients.add("test://recipient2");
+  StaticRecipientList router=new StaticRecipientList();
+  router.setRecipients(recipients);
+  List endpoints=new ArrayList();
+  endpoints.add(endpoint1);
+  router.setEndpoints(endpoints);
+  router.setMuleContext(muleContext);
+  assertEquals(2,router.getRecipients().size());
+  MuleMessage message=new DefaultMuleMessage("test event");
+  assertTrue(router.isMatch(message));
+  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(ImmutableEndpoint.class)));
+  session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.isA(ImmutableEndpoint.class)));
+  router.route(message,(MuleSession)session.proxy());
+  session.verify();
+}

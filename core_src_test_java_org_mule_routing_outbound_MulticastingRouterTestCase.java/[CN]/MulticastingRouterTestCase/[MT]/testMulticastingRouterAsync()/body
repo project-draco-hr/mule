@@ -1,0 +1,22 @@
+{
+  Mock session=MuleTestUtils.getMockSession();
+  session.matchAndReturn("getService",getTestService());
+  ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider");
+  assertNotNull(endpoint1);
+  ImmutableEndpoint endpoint2=getTestOutboundEndpoint("Test2Provider");
+  assertNotNull(endpoint2);
+  MulticastingRouter router=new MulticastingRouter();
+  RegExFilter filter=new RegExFilter("(.*) event");
+  router.setFilter(filter);
+  List endpoints=new ArrayList();
+  endpoints.add(endpoint1);
+  endpoints.add(endpoint2);
+  router.setEndpoints(endpoints);
+  assertEquals(filter,router.getFilter());
+  MuleMessage message=new DefaultMuleMessage("test event");
+  assertTrue(router.isMatch(message));
+  session.expect("dispatchEvent",C.eq(message,endpoint1));
+  session.expect("dispatchEvent",C.eq(message,endpoint2));
+  router.route(message,(MuleSession)session.proxy());
+  session.verify();
+}

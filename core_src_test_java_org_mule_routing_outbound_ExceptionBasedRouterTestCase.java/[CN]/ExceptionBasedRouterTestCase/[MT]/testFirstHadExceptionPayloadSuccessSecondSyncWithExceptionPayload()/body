@@ -1,8 +1,8 @@
 {
   Mock mockSession=MuleTestUtils.getMockSession();
   mockSession.matchAndReturn("getService",getTestService());
-  OutboundEndpoint endpoint1=getTestOutboundEndpoint("TestFailEndpoint","test://Failure");
-  OutboundEndpoint endpoint2=getTestOutboundEndpoint("TestSuccessEndpoint","test://Success");
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("TestFailEndpoint","test://Failure?synchronous=true");
+  OutboundEndpoint endpoint2=getTestOutboundEndpoint("TestSuccessEndpoint","test://Success?synchronous=true");
   ExceptionBasedRouter router=new ExceptionBasedRouter();
   router.addEndpoint(endpoint1);
   router.addEndpoint(endpoint2);
@@ -14,7 +14,7 @@
   final MuleSession session=(MuleSession)mockSession.proxy();
   mockSession.expectAndReturn("sendEvent",C.args(C.eq(message),C.eq(endpoint1)),exPayloadMessage);
   mockSession.expectAndReturn("sendEvent",C.args(C.eq(message),C.eq(endpoint2)),expectedResultMessage);
-  MuleMessage actualResultMessage=router.route(message,session,true);
+  MuleMessage actualResultMessage=router.route(message,session);
   mockSession.verify();
   assertEquals("Got an invalid return message.",expectedResultMessage,actualResultMessage);
 }

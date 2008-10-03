@@ -4,7 +4,7 @@
   DefaultOutboundRouterCollection messageRouter=new DefaultOutboundRouterCollection();
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   assertNotNull(messageRouter.getCatchAllStrategy());
-  ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider");
+  ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
   assertNotNull(endpoint1);
   ImmutableEndpoint endpoint2=getTestOutboundEndpoint("Test2Provider");
   assertNotNull(endpoint2);
@@ -31,12 +31,12 @@
   messageRouter.setRouters(list);
   MuleMessage message=new DefaultMuleMessage("test event");
   session.expect("dispatchEvent",C.eq(message,endpoint1));
-  messageRouter.route(message,(MuleSession)session.proxy(),false);
+  messageRouter.route(message,(MuleSession)session.proxy());
   session.verify();
   message=new DefaultMuleMessage(new IllegalArgumentException());
   session.expectAndReturn("getService",getTestService());
   session.expect("dispatchEvent",C.eq(message,endpoint2));
-  messageRouter.route(message,(MuleSession)session.proxy(),false);
+  messageRouter.route(message,(MuleSession)session.proxy());
   session.verify();
   FilteringOutboundRouter router3=new FilteringOutboundRouter();
   router3.setFilter(new PayloadTypeFilter(Object.class));
@@ -50,6 +50,6 @@
   session.expect("dispatchEvent",C.eq(message,endpoint1));
   session.expect("dispatchEvent",C.eq(message,endpoint2));
   messageRouter.setMatchAll(true);
-  messageRouter.route(message,(MuleSession)session.proxy(),false);
+  messageRouter.route(message,(MuleSession)session.proxy());
   session.verify();
 }

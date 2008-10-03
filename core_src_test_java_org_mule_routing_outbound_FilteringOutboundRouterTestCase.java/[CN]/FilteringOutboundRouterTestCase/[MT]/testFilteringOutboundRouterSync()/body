@@ -1,0 +1,20 @@
+{
+  Mock session=MuleTestUtils.getMockSession();
+  session.matchAndReturn("getService",getTestService());
+  ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=true");
+  assertNotNull(endpoint1);
+  FilteringOutboundRouter router=new FilteringOutboundRouter();
+  PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
+  router.setFilter(filter);
+  List endpoints=new ArrayList();
+  endpoints.add(endpoint1);
+  router.setEndpoints(endpoints);
+  assertFalse(router.isUseTemplates());
+  assertEquals(filter,router.getFilter());
+  MuleMessage message=new DefaultMuleMessage("test event");
+  session.expectAndReturn("sendEvent",C.eq(message,endpoint1),message);
+  MuleMessage result=router.route(message,(MuleSession)session.proxy());
+  assertNotNull(result);
+  assertEquals(message,result);
+  session.verify();
+}

@@ -1,8 +1,8 @@
 {
   Mock mockSession=MuleTestUtils.getMockSession();
   mockSession.matchAndReturn("getService",getTestService());
-  OutboundEndpoint endpoint1=getTestOutboundEndpoint("TestFailEndpoint","test://Failure");
-  OutboundEndpoint endpoint2=getTestOutboundEndpoint("TestSuccessEndpoint","test://Success");
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("TestFailEndpoint","test://Failure?synchronous=false");
+  OutboundEndpoint endpoint2=getTestOutboundEndpoint("TestSuccessEndpoint","test://Success?synchronous=false");
   ExceptionBasedRouter router=new ExceptionBasedRouter();
   router.addEndpoint(endpoint1);
   router.addEndpoint(endpoint2);
@@ -13,7 +13,7 @@
   MuleException rex=new RoutingException(message,endpoint1);
   mockSession.expectAndThrow("sendEvent",C.args(C.eq(message),C.eq(endpoint1)),rex);
   mockSession.expectAndReturn("dispatchEvent",C.args(C.eq(message),C.eq(endpoint2)),expectedResultMessage);
-  MuleMessage actualResultMessage=router.route(message,session,false);
+  MuleMessage actualResultMessage=router.route(message,session);
   assertNull("Async call should not return any results.",actualResultMessage);
   mockSession.verify();
 }
