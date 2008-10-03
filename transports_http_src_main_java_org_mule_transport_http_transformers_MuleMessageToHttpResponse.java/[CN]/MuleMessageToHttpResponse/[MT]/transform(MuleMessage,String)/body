@@ -36,27 +36,13 @@
         response.addHeader(header);
       }
     }
-    if (!response.containsHeader(HttpConstants.HEADER_CONNECTION)) {
-      String connHeader=msg.getStringProperty(HttpConstants.HEADER_CONNECTION,null);
-      if (connHeader != null) {
-        if (connHeader.equalsIgnoreCase("keep-alive")) {
-          Header header=new Header(HttpConstants.HEADER_CONNECTION,"keep-alive");
-          response.addHeader(header);
-          response.setKeepAlive(true);
-        }
-        if (connHeader.equalsIgnoreCase("close")) {
-          Header header=new Header(HttpConstants.HEADER_CONNECTION,"close");
-          response.addHeader(header);
-          response.setKeepAlive(false);
-        }
+    String connHeader=msg.getStringProperty(HttpConstants.HEADER_CONNECTION,null);
+    if (connHeader != null) {
+      if (connHeader.equalsIgnoreCase("keep-alive")) {
+        response.setKeepAlive(true);
       }
- else {
-        if (response.getHttpVersion().greaterEquals(HttpVersion.HTTP_1_1)) {
-          response.setKeepAlive(true);
-        }
- else {
-          response.setKeepAlive(false);
-        }
+      if (connHeader.equalsIgnoreCase("close")) {
+        response.setKeepAlive(false);
       }
     }
     if ("HEAD".equalsIgnoreCase(msg.getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,null))) {

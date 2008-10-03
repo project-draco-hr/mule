@@ -24,19 +24,23 @@
       response=transformResponse(returnMessage);
     }
     response.disableKeepAlive(!((HttpConnector)connector).isKeepAlive());
-    response.removeHeaders("Connection");
     boolean endpointOverride=Boolean.parseBoolean((String)endpoint.getProperty("keepAlive"));
     Header connectionHeader=request.getFirstHeader("Connection");
     if (connectionHeader != null) {
-      if ("keep-alive".equalsIgnoreCase(connectionHeader.getValue()) && ((HttpConnector)connector).isKeepAlive() && !endpointOverride) {
-        Header header=new Header(HttpConstants.HEADER_CONNECTION,"keep-alive");
-        response.addHeader(header);
-        header=new Header(HttpConstants.HEADER_KEEP_ALIVE,"timeout=" + ((HttpConnector)connector).getKeepAliveTimeout());
+      String value=connectionHeader.getValue();
+      if ("keep-alive".equalsIgnoreCase(value) && !endpointOverride) {
+        response.setKeepAlive(true);
+        Header header=new Header(HttpConstants.HEADER_KEEP_ALIVE,"timeout=" + ((HttpConnector)connector).getKeepAliveTimeout());
         response.addHeader(header);
       }
+ else       if ("close".equalsIgnoreCase(value)) {
+        response.setKeepAlive(false);
+      }
+ else       if (response.getHttpVersion().greaterEquals(HttpVersion.HTTP_1_1)) {
+        response.setKeepAlive(true);
+      }
  else {
-        Header header=new Header(HttpConstants.HEADER_CONNECTION,"close");
-        response.addHeader(header);
+        response.setKeepAlive(false);
       }
     }
   }
