@@ -1,13 +1,13 @@
 {
   List endpoints;
   String endpointName;
-  String prop=getFullExpression();
+  String prop=expressionConfig.getFullExpression();
   if (!ExpressionEvaluatorManager.isValidExpression(prop)) {
     throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionInvalidForProperty("expression",prop),message,null);
   }
   Object property=ExpressionEvaluatorManager.evaluate(prop,message);
   if (property == null) {
-    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionResultWasNull(getFullExpression()),message,null);
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionResultWasNull(expressionConfig.getFullExpression()),message,null);
   }
   if (property instanceof String) {
     endpoints=new ArrayList(1);
@@ -17,13 +17,14 @@
     endpoints=(List)property;
   }
  else {
-    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(getFullExpression(),new Class[]{String.class,List.class},property.getClass()),message,null);
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(expressionConfig.getFullExpression(),new Class[]{String.class,List.class},property.getClass()),message,null);
   }
   MuleMessage result=null;
+  List results=new ArrayList(endpoints.size());
   for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
     endpointName=iterator.next().toString();
     if (StringUtils.isEmpty(endpointName)) {
-      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + getFullExpression()),message,null);
+      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + expressionConfig.getFullExpression()),message,null);
     }
     OutboundEndpoint ep=null;
     try {
@@ -32,7 +33,7 @@
         throw new CouldNotRouteOutboundMessageException(CoreMessages.objectNotFound("Endpoint",endpointName),message,ep);
       }
       if (ep.isSynchronous()) {
-        result=send(session,message,ep);
+        results.add(send(session,message,ep));
       }
  else {
         dispatch(session,message,ep);
@@ -42,5 +43,5 @@
       throw new CouldNotRouteOutboundMessageException(message,ep,e);
     }
   }
-  return result;
+  return resultsHandler.aggregateResults(results,message);
 }

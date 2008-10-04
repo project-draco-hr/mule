@@ -12,24 +12,14 @@
       message.setCorrelationGroupSize(endpoints.size());
     }
   }
+  List results=new ArrayList(endpoints.size());
   try {
     OutboundEndpoint endpoint;
 synchronized (endpoints) {
       for (int i=0; i < endpoints.size(); i++) {
         endpoint=(OutboundEndpoint)endpoints.get(i);
         if (endpoint.isSynchronous()) {
-          if (result == null) {
-            result=send(session,message,endpoint);
-          }
- else {
-            String def=(String)endpoint.getProperties().get("default");
-            if (def != null) {
-              result=send(session,message,endpoint);
-            }
- else {
-              send(session,message,endpoint);
-            }
-          }
+          results.add(send(session,message,endpoint));
         }
  else {
           dispatch(session,message,endpoint);
@@ -40,5 +30,5 @@ synchronized (endpoints) {
  catch (  MuleException e) {
     throw new CouldNotRouteOutboundMessageException(message,(ImmutableEndpoint)endpoints.get(0),e);
   }
-  return result;
+  return resultsHandler.aggregateResults(results,message);
 }

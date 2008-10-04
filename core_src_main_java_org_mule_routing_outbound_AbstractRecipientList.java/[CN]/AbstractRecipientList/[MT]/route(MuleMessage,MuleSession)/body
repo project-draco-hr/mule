@@ -10,43 +10,25 @@
       message.setCorrelationGroupSize(recipients.size());
     }
   }
-  MuleMessage result=null;
+  MuleMessage result;
   OutboundEndpoint endpoint;
   MuleMessage request;
   for (Iterator iterator=recipients.iterator(); iterator.hasNext(); ) {
     Object recipient=iterator.next();
     request=new DefaultMuleMessage(message.getPayload(),message);
-    endpoint=this.getRecipientEndpoint(request,recipient);
+    endpoint=getRecipientEndpoint(request,recipient);
     boolean sync=(this.synchronous == null ? endpoint.isSynchronous() : this.synchronous.booleanValue());
     try {
       if (sync) {
-        result=this.send(session,request,endpoint);
-        if (result != null) {
-          results.add(result);
-        }
- else {
-          if (logger.isDebugEnabled()) {
-            logger.debug("No result was returned for sync call to: " + endpoint.getEndpointURI());
-          }
-        }
+        results.add(send(session,request,endpoint));
       }
  else {
-        this.dispatch(session,request,endpoint);
+        dispatch(session,request,endpoint);
       }
     }
  catch (    MuleException e) {
       throw new CouldNotRouteOutboundMessageException(request,endpoint,e);
     }
   }
-  if (results.size() == 0) {
-    return null;
-  }
- else   if (results.size() == 1) {
-    return new DefaultMuleMessage(results.get(0),result);
-  }
- else {
-    DefaultMessageCollection collection=new DefaultMessageCollection();
-    collection.addMessages(results);
-    return collection;
-  }
+  return resultsHandler.aggregateResults(results,message);
 }
