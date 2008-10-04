@@ -13,7 +13,10 @@
       }
  else {
         final String key=entry.getKey().toString();
-        final Object value=entry.getValue();
+        Object value=entry.getValue();
+        if (ExpressionEvaluatorManager.isValidExpression(value.toString())) {
+          value=ExpressionEvaluatorManager.evaluate(value.toString(),message);
+        }
         if (overwrite) {
           if (logger.isDebugEnabled()) {
             if (!propertyNames.contains(key)) {
@@ -41,11 +44,15 @@
       }
  else {
         final String key=entry.getKey().toString();
-        final String value=(String)entry.getValue();
+        String value=(String)entry.getValue();
         if (value == null) {
           logger.error("Setting Null property values for renameProperties is not supported, this entry is being ignored");
         }
  else {
+          if (ExpressionEvaluatorManager.isValidExpression(value)) {
+            Object temp=ExpressionEvaluatorManager.evaluate(value.toString(),message);
+            if (temp != null)             value=temp.toString();
+          }
           if (logger.isDebugEnabled() && !propertyNames.contains(key)) {
             logger.debug("renaming message property " + key + " to "+ value);
           }
