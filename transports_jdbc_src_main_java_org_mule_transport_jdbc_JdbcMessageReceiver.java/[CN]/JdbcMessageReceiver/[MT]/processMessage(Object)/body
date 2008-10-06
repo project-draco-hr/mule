@@ -1,6 +1,8 @@
 {
+  Connection con=null;
   Transaction tx=TransactionCoordination.getInstance().getTransaction();
   try {
+    con=this.connector.getConnection();
     MessageAdapter msgAdapter=this.connector.getMessageAdapter(message);
     MuleMessage umoMessage=new DefaultMuleMessage(msgAdapter);
     if (this.ackStmt != null) {
@@ -8,7 +10,7 @@
       if (logger.isDebugEnabled()) {
         logger.debug("SQL UPDATE: " + ackStmt + ", params = "+ ArrayUtils.toString(ackParams));
       }
-      int nbRows=connector.getQueryRunner().update(jdbcConnection,this.ackStmt,ackParams);
+      int nbRows=connector.getQueryRunner().update(con,this.ackStmt,ackParams);
       if (nbRows != 1) {
         logger.warn("Row count for ack should be 1 and not " + nbRows);
       }
@@ -16,16 +18,14 @@
     routeMessage(umoMessage,tx,tx != null || endpoint.isSynchronous());
   }
  catch (  Exception ex) {
-    if (tx == null) {
-      jdbcConnection.rollback();
-    }
- else {
+    if (tx != null) {
       tx.setRollbackOnly();
     }
     throw ex;
   }
  finally {
     if (endpoint.getMuleContext().getTransactionManager() != null || tx == null) {
+      JdbcUtils.close(con);
     }
   }
 }

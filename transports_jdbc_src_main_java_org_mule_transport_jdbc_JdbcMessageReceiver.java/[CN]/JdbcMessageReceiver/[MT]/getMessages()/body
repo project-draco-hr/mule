@@ -1,15 +1,29 @@
 {
-  Object[] readParams=connector.getParams(endpoint,this.readParams,null,this.endpoint.getEndpointURI().getAddress());
-  if (logger.isDebugEnabled()) {
-    logger.debug("SQL QUERY: " + readStmt + ", params = "+ ArrayUtils.toString(readParams));
+  Connection con=null;
+  try {
+    try {
+      con=this.connector.getConnection();
+    }
+ catch (    SQLException e) {
+      throw new ConnectException(e,this);
+    }
+    Object[] readParams=connector.getParams(endpoint,this.readParams,null,this.endpoint.getEndpointURI().getAddress());
+    if (logger.isDebugEnabled()) {
+      logger.debug("SQL QUERY: " + readStmt + ", params = "+ ArrayUtils.toString(readParams));
+    }
+    Object results=connector.getQueryRunner().query(con,this.readStmt,readParams,connector.getResultSetHandler());
+    List resultList=(List)results;
+    if (resultList != null && resultList.size() > 1 && isReceiveMessagesInTransaction() && !receiveMessagesInXaTransaction) {
+      logger.warn(JdbcMessages.moreThanOneMessageInTransaction(RECEIVE_MESSAGE_IN_TRANSCTION,RECEIVE_MESSAGES_IN_XA_TRANSCTION));
+      List singleResultList=new ArrayList(1);
+      singleResultList.add(resultList);
+      return singleResultList;
+    }
+    return resultList;
   }
-  Object results=connector.getQueryRunner().query(jdbcConnection,this.readStmt,readParams,connector.getResultSetHandler());
-  List resultList=(List)results;
-  if (resultList != null && resultList.size() > 1 && isReceiveMessagesInTransaction() && !receiveMessagesInXaTransaction) {
-    logger.warn(JdbcMessages.moreThanOneMessageInTransaction(RECEIVE_MESSAGE_IN_TRANSCTION,RECEIVE_MESSAGES_IN_XA_TRANSCTION));
-    List singleResultList=new ArrayList(1);
-    singleResultList.add(resultList);
-    return singleResultList;
+  finally {
+    if (TransactionCoordination.getInstance().getTransaction() == null) {
+      JdbcUtils.close(con);
+    }
   }
-  return resultList;
 }
