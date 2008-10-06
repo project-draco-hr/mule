@@ -1,0 +1,17 @@
+{
+  MuleClient client=new MuleClient();
+  client.dispatch("vm://distributor.queue",new Apple(),null);
+  List results=new ArrayList(3);
+  MuleMessage result=client.request("vm://collector.queue",5000);
+  assertNotNull(result);
+  results.add(result.getPayload());
+  result=client.request("vm://collector.queue",3000);
+  assertNotNull(result);
+  results.add(result.getPayload());
+  result=client.request("vm://collector.queue",3000);
+  assertNotNull(result);
+  results.add(result.getPayload());
+  assertTrue(results.contains("Apple Received in ServiceOne"));
+  assertTrue(results.contains("Apple Received in ServiceTwo"));
+  assertTrue(results.contains("Apple Received in ServiceThree"));
+}
