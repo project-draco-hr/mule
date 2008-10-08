@@ -1,0 +1,24 @@
+{
+  if (jndiInitialFactory != null) {
+    this.initJndiContext();
+    Object temp=jndiContext.lookup(connectionFactoryJndiName);
+    if (temp instanceof ConnectionFactory) {
+      return (ConnectionFactory)temp;
+    }
+ else {
+      throw new InitialisationException(JmsMessages.invalidResourceType(ConnectionFactory.class,temp),this);
+    }
+  }
+ else {
+    jndiDestinations=false;
+    forceJndiDestinations=false;
+    if (connectionFactory != null) {
+      return connectionFactory;
+    }
+    ConnectionFactory factory=this.getDefaultConnectionFactory();
+    if (factory != null) {
+      return factory;
+    }
+    throw new InitialisationException(JmsMessages.noConnectionFactorySet(),this);
+  }
+}
