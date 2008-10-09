@@ -1,19 +1,27 @@
 {
   try {
-    Object result;
-    Document doc=XMLUtils.toDocument(src);
-    if (doc != null) {
-      if (singleResult) {
-        result=doc.valueOf(expression);
+    Object result=null;
+    if (src instanceof String) {
+      Document doc=DocumentHelper.parseText((String)src);
+      XPath xpath=doc.createXPath(expression);
+      if (namespaces != null) {
+        xpath.setNamespaceURIs(namespaces);
+      }
+      Object obj=xpath.evaluate(doc);
+      if (obj instanceof List) {
+        for (int i=0; i < ((List)obj).size(); i++) {
+          final Node node=(Node)((List)obj).get(i);
+          result=add(result,node);
+          if (singleResult) {
+            if (logger.isWarnEnabled()) {
+              logger.warn("There are multiple Nodes returned. But only one record is returned because singleResult is true");
+            }
+            break;
+          }
+        }
       }
  else {
-        XPath xpath=doc.createXPath(expression);
-        List obj=(List)xpath.evaluate(doc);
-        result=new ArrayList(obj.size());
-        for (int i=0; i < obj.size(); i++) {
-          final Node node=(Node)obj.get(i);
-          ((List)result).add(node.getText());
-        }
+        result=add(result,obj);
       }
     }
  else {
