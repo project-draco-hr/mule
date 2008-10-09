@@ -1,5 +1,4 @@
 {
-  MuleMessage result=null;
   if (endpoints == null || endpoints.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
   }
@@ -15,15 +14,13 @@
   List results=new ArrayList(endpoints.size());
   try {
     OutboundEndpoint endpoint;
-synchronized (endpoints) {
-      for (int i=0; i < endpoints.size(); i++) {
-        endpoint=(OutboundEndpoint)endpoints.get(i);
-        if (endpoint.isSynchronous()) {
-          results.add(send(session,message,endpoint));
-        }
+    for (int i=0; i < endpoints.size(); i++) {
+      endpoint=(OutboundEndpoint)endpoints.get(i);
+      if (endpoint.isSynchronous()) {
+        results.add(send(session,new DefaultMuleMessage(message.getPayload(),message),endpoint));
+      }
  else {
-          dispatch(session,message,endpoint);
-        }
+        dispatch(session,message,endpoint);
       }
     }
   }

@@ -1,0 +1,19 @@
+{
+  FruitBowl fruitBowl=new FruitBowl(new Apple(),new Banana());
+  fruitBowl.addFruit(new Orange());
+  MuleClient client=new MuleClient();
+  client.dispatch("vm://distributor.queue",fruitBowl,null);
+  List results=new ArrayList(3);
+  MuleMessage result=client.request("vm://collector.queue",5000);
+  assertNotNull(result);
+  results.add(result.getPayload());
+  result=client.request("vm://collector.queue",3000);
+  assertNotNull(result);
+  results.add(result.getPayload());
+  result=client.request("vm://collector.queue",3000);
+  assertNotNull(result);
+  results.add(result.getPayload());
+  assertTrue(results.contains("Apple Received"));
+  assertTrue(results.contains("Banana Received"));
+  assertTrue(results.contains("Orange Received"));
+}
