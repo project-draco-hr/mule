@@ -15,47 +15,11 @@
  else {
     connection=jmsSupport.createConnection(cf);
   }
+  if (connection != null) {
+    connection.setExceptionListener(this);
+  }
   if (clientId != null) {
     connection.setClientID(getClientId());
-  }
-  if (recoverJmsConnections && !(getRetryPolicyTemplate() instanceof NoRetryPolicyTemplate) && connection != null) {
-    connection.setExceptionListener(new ExceptionListener(){
-      public void onException(      JMSException jmsException){
-        final JmsConnector jmsConnector=JmsConnector.this;
-        Map receivers=jmsConnector.getReceivers();
-        boolean isMultiConsumerReceiver=false;
-        if (!receivers.isEmpty()) {
-          Map.Entry entry=(Map.Entry)receivers.entrySet().iterator().next();
-          if (entry.getValue() instanceof MultiConsumerJmsMessageReceiver) {
-            isMultiConsumerReceiver=true;
-          }
-        }
-        int expectedReceiverCount=isMultiConsumerReceiver ? 1 : (jmsConnector.getReceivers().size() * jmsConnector.getNumberOfConcurrentTransactedReceivers());
-        if (logger.isDebugEnabled()) {
-          logger.debug("About to recycle myself due to remote JMS connection shutdown but need " + "to wait for all active receivers to report connection loss. Receiver count: " + (receiverReportedExceptionCount.get() + 1) + '/'+ expectedReceiverCount);
-        }
-        if (receiverReportedExceptionCount.incrementAndGet() >= expectedReceiverCount) {
-          receiverReportedExceptionCount.set(0);
-          try {
-            jmsConnector.stop();
-            jmsConnector.initialised.set(true);
-          }
- catch (          MuleException e) {
-            logger.warn(e.getMessage(),e);
-          }
-          try {
-            jmsConnector.start();
-          }
- catch (          RetryPolicyExhaustedException rpex) {
-            logger.fatal("Failed to reconnect to JMS server. I'm giving up.");
-          }
-catch (          MuleException umoex) {
-            throw new UnhandledException("Failed to recover a connector.",umoex);
-          }
-        }
-      }
-    }
-);
   }
   return connection;
 }
