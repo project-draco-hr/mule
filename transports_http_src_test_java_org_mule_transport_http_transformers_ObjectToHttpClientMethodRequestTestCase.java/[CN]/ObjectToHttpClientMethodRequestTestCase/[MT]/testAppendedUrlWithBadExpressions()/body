@@ -1,5 +1,5 @@
 {
-  MuleMessage message=setupRequestContext("http://mycompany.com/test?param=${foo:bar}");
+  MuleMessage message=setupRequestContext("http://mycompany.com/test?param=#[foo:bar]}");
   message.setPayload(NullPayload.getInstance());
   ObjectToHttpClientMethodRequest transformer=new ObjectToHttpClientMethodRequest();
   Object response=null;
@@ -8,13 +8,15 @@
     fail("unknown evaluator was used");
   }
  catch (  TransformerException e) {
+    assertTrue(e.getMessage().contains("Evaluator for \"foo\" is not registered with Mule"));
   }
-  message=setupRequestContext("http://mycompany.com/test?param=${header:bar}");
+  message=setupRequestContext("http://mycompany.com/test?param=#[header:bar]");
   message.setPayload(NullPayload.getInstance());
   try {
     response=transformer.transform(message);
     fail("Header 'bar' not set on the message");
   }
  catch (  TransformerException e) {
+    assertTrue(e.getMessage().contains("Expression Evaluator \"header\" with expression \"bar\" returned null but a value was required"));
   }
 }
