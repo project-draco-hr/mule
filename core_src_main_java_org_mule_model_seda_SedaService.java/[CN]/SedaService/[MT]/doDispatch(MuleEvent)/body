@@ -3,9 +3,14 @@
     logger.debug(MessageFormat.format("Service: {0} has received asynchronous event on: {1}",name,event.getEndpoint().getEndpointURI()));
   }
   try {
-    enqueue(event);
     if (stats.isEnabled()) {
-      stats.incQueuedEvent();
+synchronized (queueStatsGuard) {
+        enqueue(event);
+        stats.incQueuedEvent();
+      }
+    }
+ else {
+      enqueue(event);
     }
   }
  catch (  Exception e) {

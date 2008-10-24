@@ -19,11 +19,18 @@
           break;
         }
       }
-      event=(DefaultMuleEvent)dequeue();
-      if (event != null) {
-        if (stats.isEnabled()) {
-          stats.decQueuedEvent();
+      if (stats.isEnabled()) {
+synchronized (queueStatsGuard) {
+          event=(DefaultMuleEvent)dequeue();
+          if (event != null) {
+            stats.decQueuedEvent();
+          }
         }
+      }
+ else {
+        event=(DefaultMuleEvent)dequeue();
+      }
+      if (event != null) {
         if (logger.isDebugEnabled()) {
           logger.debug(MessageFormat.format("Service: {0} dequeued event on: {1}",name,event.getEndpoint().getEndpointURI()));
         }
