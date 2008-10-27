@@ -5,7 +5,7 @@
   Destination replyTo=null;
   boolean transacted=false;
   boolean cached=false;
-  boolean remoteSync=useRemoteSync(event);
+  boolean remoteSync=returnResponse(event);
   if (logger.isDebugEnabled()) {
     logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". MuleEvent id is: "+ event.getId()+ ". Outbound transformers are: "+ event.getEndpoint().getTransformers());
   }
@@ -13,9 +13,7 @@
     session=connector.getSessionFromTransaction();
     if (session != null) {
       transacted=true;
-      if (remoteSync) {
-        throw new IllegalTransactionStateException(JmsMessages.connectorDoesNotSupportSyncReceiveWhenTransacted());
-      }
+      remoteSync=false;
     }
  else     if (event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions())) {
       cached=true;
@@ -78,13 +76,13 @@
           replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
         }
       }
-      if (remoteSync && replyTo == null) {
+      if (remoteSync && replyTo == null && !connector.isDisableTemporaryReplyToDestinations()) {
         replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
       }
       if (replyTo != null) {
         msg.setJMSReplyTo(replyTo);
       }
-      if (remoteSync) {
+      if (remoteSync && replyTo != null) {
         try {
           consumer=connector.getJmsSupport().createConsumer(session,replyTo,topic);
         }
