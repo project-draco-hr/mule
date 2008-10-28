@@ -1,25 +1,23 @@
 {
   Service service=muleContext.getRegistry().lookupService("PausedTestPersistentQueueService");
-  int numMessage=500;
+  int numMessage=NUM_MESSAGES;
   for (int i=0; i < numMessage; i++) {
     service.dispatchEvent(getTestEvent("test",service,getTestInboundEndpoint("test://test")));
   }
   muleContext.stop();
-  Thread.sleep(200);
+  Thread.sleep(WAIT_TIME_MILLIS);
   assertEquals(0,getTestQueueSession().getQueue("out").size());
   assertQueues(numMessage,"PausedTestPersistentQueueService");
   muleContext.start();
-  Thread.sleep(200);
+  Thread.sleep(WAIT_TIME_MILLIS);
   muleContext.stop();
-  Thread.sleep(200);
+  Thread.sleep(WAIT_TIME_MILLIS);
   assertTrue(getTestQueueSession().getQueue("out").size() > 1);
   assertQueues(numMessage,"PausedTestPersistentQueueService");
   service.resume();
-  Thread.sleep(100);
   assertTrue(getTestQueueSession().getQueue("out").size() > 0);
   assertQueues(numMessage,"PausedTestPersistentQueueService");
   muleContext.start();
-  Thread.sleep(3000);
   muleContext.stop();
   assertQueues(numMessage,"PausedTestPersistentQueueService");
 }
