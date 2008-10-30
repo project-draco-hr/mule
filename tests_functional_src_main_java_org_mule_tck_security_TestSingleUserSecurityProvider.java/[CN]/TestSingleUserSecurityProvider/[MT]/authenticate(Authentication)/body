@@ -1,0 +1,22 @@
+{
+  String user=(String)authenticationRequest.getPrincipal();
+  logger.debug("Authenticating user: " + user);
+  if (authentication != null) {
+    Map props=authentication.getProperties();
+    int numberLogins=(Integer)props.get(PROPERTY_NUMBER_LOGINS);
+    String favoriteColor=(String)props.get(PROPERTY_FAVORITE_COLOR);
+    props.put(PROPERTY_NUMBER_LOGINS,numberLogins + 1);
+    authentication.setProperties(props);
+    logger.info("Welcome back " + user + " ("+ numberLogins+ 1+ " logins), we remembered your favorite color: "+ favoriteColor);
+  }
+ else {
+    String favoriteColor=getFavoriteColor(user);
+    logger.info("First login for user: " + user + ", favorite color is "+ favoriteColor);
+    Map props=new HashMap();
+    props.put(PROPERTY_NUMBER_LOGINS,1);
+    props.put(PROPERTY_FAVORITE_COLOR,favoriteColor);
+    authenticationRequest.setProperties(props);
+    authentication=authenticationRequest;
+  }
+  return authentication;
+}
