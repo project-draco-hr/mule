@@ -13,18 +13,13 @@ synchronized (registry) {
     }
     registry.put(key,object);
   }
-  MuleContext mc=MuleServer.getMuleContext();
-  logger.debug("context: " + mc);
-  if (mc != null) {
-    logger.debug("applying lifecycle");
-    try {
-      mc.getLifecycleManager().applyCompletedPhases(object);
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("applying lifecycle to object: " + object);
     }
- catch (    MuleException e) {
-      throw new RegistrationException(e);
-    }
+    context.getLifecycleManager().applyCompletedPhases(object);
   }
- else {
-    throw new RegistrationException("Unable to register object (\"" + key + ":"+ ClassUtils.getSimpleName(object.getClass())+ "\") because MuleContext has not yet been created.");
+ catch (  MuleException e) {
+    throw new RegistrationException(e);
   }
 }
