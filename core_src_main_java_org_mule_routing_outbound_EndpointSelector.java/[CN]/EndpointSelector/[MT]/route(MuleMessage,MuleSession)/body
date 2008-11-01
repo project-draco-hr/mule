@@ -1,13 +1,13 @@
 {
   List endpoints;
   String endpointName;
-  String prop=expressionConfig.getFullExpression();
-  if (!ExpressionEvaluatorManager.isValidExpression(prop)) {
+  String prop=expressionConfig.getFullExpression(expressionManager);
+  if (!muleContext.getExpressionManager().isValidExpression(prop)) {
     throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionInvalidForProperty("expression",prop),message,null);
   }
-  Object property=ExpressionEvaluatorManager.evaluate(prop,message);
+  Object property=muleContext.getExpressionManager().evaluate(prop,message);
   if (property == null) {
-    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionResultWasNull(expressionConfig.getFullExpression()),message,null);
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionResultWasNull(expressionConfig.getFullExpression(expressionManager)),message,null);
   }
   if (property instanceof String) {
     endpoints=new ArrayList(1);
@@ -17,14 +17,14 @@
     endpoints=(List)property;
   }
  else {
-    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(expressionConfig.getFullExpression(),new Class[]{String.class,List.class},property.getClass()),message,null);
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(expressionConfig.getFullExpression(expressionManager),new Class[]{String.class,List.class},property.getClass()),message,null);
   }
   MuleMessage result=null;
   List results=new ArrayList(endpoints.size());
   for (Iterator iterator=endpoints.iterator(); iterator.hasNext(); ) {
     endpointName=iterator.next().toString();
     if (StringUtils.isEmpty(endpointName)) {
-      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + expressionConfig.getFullExpression()),message,null);
+      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + expressionConfig.getFullExpression(expressionManager)),message,null);
     }
     OutboundEndpoint ep=null;
     try {
