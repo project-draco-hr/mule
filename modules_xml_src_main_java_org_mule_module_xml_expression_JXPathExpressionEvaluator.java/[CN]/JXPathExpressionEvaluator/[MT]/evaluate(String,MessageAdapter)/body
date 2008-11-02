@@ -1,27 +1,23 @@
 {
-  Object result=null;
-  Object payload=message;
-  if (message instanceof MessageAdapter) {
-    payload=((MessageAdapter)message).getPayload();
+  Object result;
+  Object payload=message.getPayload();
+  JXPathContext context=JXPathContext.newContext(message.getPayload());
+  if (namespaceManager != null) {
+    addNamespaces(namespaceManager,context);
   }
-  Document dom4jDoc;
+  Document doc;
   try {
-    dom4jDoc=XMLUtils.toDocument(payload);
+    doc=XMLUtils.toDocument(payload);
   }
  catch (  Exception e) {
     logger.error(e);
     return null;
   }
-  if (dom4jDoc != null) {
-    result=dom4jDoc.valueOf(name);
+  if (doc != null) {
+    result=doc.valueOf(name);
   }
  else {
-    JXPathContext context=JXPathContext.newContext(payload);
-    try {
-      result=context.getValue(name);
-    }
- catch (    Exception e) {
-    }
+    result=context.getValue(name);
   }
   return result;
 }
