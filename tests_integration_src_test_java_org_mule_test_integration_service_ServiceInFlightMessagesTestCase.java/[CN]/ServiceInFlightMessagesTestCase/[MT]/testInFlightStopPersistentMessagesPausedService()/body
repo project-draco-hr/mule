@@ -1,25 +1,17 @@
 {
   Service service=muleContext.getRegistry().lookupService("PausedTestPersistentQueueService");
-  int numMessage=NUM_MESSAGES;
-  for (int i=0; i < numMessage; i++) {
-    service.dispatchEvent(getTestEvent("test",service,getTestInboundEndpoint("test://test")));
-  }
+  populateSedaQueue(service,NUM_MESSAGES);
   muleContext.stop();
-  Thread.sleep(WAIT_TIME_MILLIS);
-  assertEquals(0,getTestQueueSession().getQueue("out").size());
-  assertQueues(numMessage,"PausedTestPersistentQueueService");
+  assertOutboundVMQueueEmpty();
+  assertNoLostMessages(NUM_MESSAGES,service);
   muleContext.start();
-  Thread.sleep(WAIT_TIME_MILLIS);
-  muleContext.stop();
-  Thread.sleep(WAIT_TIME_MILLIS);
-  assertTrue(getTestQueueSession().getQueue("out").size() > 1);
-  assertQueues(numMessage,"PausedTestPersistentQueueService");
   service.resume();
-  Thread.sleep(100);
-  assertTrue(getTestQueueSession().getQueue("out").size() > 0);
-  assertQueues(numMessage,"PausedTestPersistentQueueService");
-  muleContext.start();
-  Thread.sleep(1000);
+  Thread.sleep(WAIT_TIME_MILLIS);
   muleContext.stop();
-  assertQueues(numMessage,"PausedTestPersistentQueueService");
+  assertNoLostMessages(NUM_MESSAGES,service);
+  muleContext.start();
+  Thread.sleep(WAIT_TIME_MILLIS * 8);
+  muleContext.stop();
+  assertNoLostMessages(NUM_MESSAGES,service);
+  assertSedaQueueEmpty(service);
 }
