@@ -3,17 +3,11 @@
   if (this.isReceiveMessagesInTransaction()) {
     TransactionCallback cb=new TransactionCallback(){
       public Object doInTransaction() throws Exception {
-        if (useStrictConnectDisconnect)         connect();
-        try {
-          List messages=getMessages();
-          if (messages != null && messages.size() > 0) {
-            for (Iterator it=messages.iterator(); it.hasNext(); ) {
-              TransactedPollingMessageReceiver.this.processMessage(it.next());
-            }
+        List messages=getMessages();
+        if (messages != null && messages.size() > 0) {
+          for (Iterator it=messages.iterator(); it.hasNext(); ) {
+            TransactedPollingMessageReceiver.this.processMessage(it.next());
           }
-        }
-  finally {
-          if (useStrictConnectDisconnect)           disconnect();
         }
         return null;
       }
@@ -22,25 +16,19 @@
     tt.execute(cb);
   }
  else {
-    if (useStrictConnectDisconnect)     connect();
-    try {
-      List messages=getMessages();
-      if (messages != null && messages.size() > 0) {
-        final CountDownLatch countdown=new CountDownLatch(messages.size());
-        for (Iterator it=messages.iterator(); it.hasNext(); ) {
-          try {
-            this.getWorkManager().scheduleWork(new MessageProcessorWorker(tt,countdown,it.next()));
-          }
- catch (          Exception e) {
-            countdown.countDown();
-            throw e;
-          }
+    List messages=getMessages();
+    if (messages != null && messages.size() > 0) {
+      final CountDownLatch countdown=new CountDownLatch(messages.size());
+      for (Iterator it=messages.iterator(); it.hasNext(); ) {
+        try {
+          this.getWorkManager().scheduleWork(new MessageProcessorWorker(tt,countdown,it.next()));
         }
-        countdown.await();
+ catch (        Exception e) {
+          countdown.countDown();
+          throw e;
+        }
       }
-    }
-  finally {
-      if (useStrictConnectDisconnect)       disconnect();
+      countdown.await();
     }
   }
 }
