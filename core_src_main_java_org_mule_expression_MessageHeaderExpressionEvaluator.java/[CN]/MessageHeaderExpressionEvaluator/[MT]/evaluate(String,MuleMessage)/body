@@ -1,10 +1,19 @@
 {
   Object result=null;
-  if (message instanceof MessageAdapter) {
-    result=((MessageAdapter)message).getProperty(expression);
-    if (result == null && RequestContext.getEventContext() != null) {
-      result=RequestContext.getEventContext().getEndpointURI().getParams().get(expression);
-    }
+  boolean required;
+  if (expression.endsWith("*")) {
+    expression=expression.substring(expression.length() - 1);
+    required=false;
+  }
+ else {
+    required=true;
+  }
+  result=message.getProperty(expression);
+  if (result == null && RequestContext.getEventContext() != null) {
+    result=RequestContext.getEventContext().getEndpointURI().getParams().get(expression);
+  }
+  if (result == null && required) {
+    throw new ExpressionRuntimeException(CoreMessages.expressionEvaluatorReturnedNull(NAME,expression));
   }
   return result;
 }

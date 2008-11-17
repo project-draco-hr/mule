@@ -1,0 +1,16 @@
+{
+  Object result=muleContext.getExpressionManager().evaluate("#[mule:message.attachment(foo)]",createMessageWithAttachments());
+  assertNotNull(result);
+  assertTrue(result instanceof DataHandler);
+  ByteArrayOutputStream baos=new ByteArrayOutputStream(4);
+  ((DataHandler)result).writeTo(baos);
+  assertEquals("moo",baos.toString());
+  result=muleContext.getExpressionManager().evaluate("#[mule:message.attachment(fool*)]",createMessageWithAttachments());
+  assertNull(result);
+  try {
+    result=muleContext.getExpressionManager().evaluate("#[mule:message.attachment(fool)]",createMessageWithAttachments());
+    fail("Attachment 'fool' is not on the nessage and not defined as optional");
+  }
+ catch (  Exception e) {
+  }
+}

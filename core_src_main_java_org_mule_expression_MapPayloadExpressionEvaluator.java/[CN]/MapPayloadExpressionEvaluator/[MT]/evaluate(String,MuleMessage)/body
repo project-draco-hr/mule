@@ -1,10 +1,24 @@
 {
-  Object payload=message;
-  if (message instanceof MessageAdapter) {
-    payload=((MessageAdapter)message).getPayload();
-  }
+  Object payload=message.getPayload();
   if (payload instanceof Map) {
-    return ((Map)payload).get(expression);
+    if (expression.indexOf(",") > -1) {
+      String[] strings=StringUtils.splitAndTrim(expression,",");
+      Map result=new HashMap(strings.length);
+      for (int i=0; i < strings.length; i++) {
+        String s=strings[i];
+        Object val=getValue(s,(Map)payload);
+        if (val != null) {
+          if (s.endsWith("*")) {
+            s=s.substring(s.length() - 1);
+          }
+          result.put(s,val);
+        }
+      }
+      return result;
+    }
+ else {
+      return getValue(expression,(Map)payload);
+    }
   }
   return null;
 }
