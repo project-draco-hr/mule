@@ -16,11 +16,14 @@
     OutboundEndpoint endpoint;
     for (int i=0; i < endpoints.size(); i++) {
       endpoint=(OutboundEndpoint)endpoints.get(i);
-      if (endpoint.isSynchronous()) {
-        results.add(send(session,new DefaultMuleMessage(message.getPayload(),message),endpoint));
-      }
+      if (endpoint.getFilter() == null || (endpoint.getFilter() != null && endpoint.getFilter().accept(message))) {
+        MuleMessage clonedMessage=new DefaultMuleMessage(message.getPayload(),message);
+        if (endpoint.isSynchronous()) {
+          results.add(send(session,clonedMessage,endpoint));
+        }
  else {
-        dispatch(session,message,endpoint);
+          dispatch(session,clonedMessage,endpoint);
+        }
       }
     }
   }

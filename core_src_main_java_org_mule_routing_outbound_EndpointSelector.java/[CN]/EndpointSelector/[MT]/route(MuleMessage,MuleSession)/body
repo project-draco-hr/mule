@@ -5,7 +5,13 @@
   if (!muleContext.getExpressionManager().isValidExpression(prop)) {
     throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionInvalidForProperty("expression",prop),message,null);
   }
-  Object property=muleContext.getExpressionManager().evaluate(prop,message);
+  Object property=null;
+  try {
+    property=muleContext.getExpressionManager().evaluate(prop,message);
+  }
+ catch (  ExpressionRuntimeException e) {
+    logger.error(e.getMessage());
+  }
   if (property == null) {
     throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionResultWasNull(expressionConfig.getFullExpression(expressionManager)),message,null);
   }
