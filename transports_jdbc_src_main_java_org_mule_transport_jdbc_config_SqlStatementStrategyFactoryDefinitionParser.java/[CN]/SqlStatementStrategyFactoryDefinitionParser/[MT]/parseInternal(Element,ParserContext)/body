@@ -1,0 +1,22 @@
+{
+  final MutablePropertyValues parentProps=parserContext.getContainingBeanDefinition().getPropertyValues();
+  final String ref=element.getAttribute("ref");
+  final String clazz=element.getAttribute("class");
+  if (StringUtils.isBlank(ref) && StringUtils.isBlank(clazz)) {
+    throw new IllegalArgumentException("Neither ref nor class attribute specified for the sqlStatementStrategyFactory element");
+  }
+  if (StringUtils.isNotBlank(ref)) {
+    parentProps.addPropertyValue(JdbcNamespaceHandler.ATTRIBUTE_SQL_STATEMENT_FACTORY,new RuntimeBeanReference(ref));
+  }
+ else {
+    final Object strategy;
+    try {
+      strategy=ClassUtils.instanciateClass(clazz,ClassUtils.NO_ARGS,getClass());
+    }
+ catch (    Exception e) {
+      throw new RuntimeException(e);
+    }
+    parentProps.addPropertyValue(JdbcNamespaceHandler.ATTRIBUTE_SQL_STATEMENT_FACTORY,strategy);
+  }
+  return null;
+}
