@@ -1,22 +1,24 @@
 {
+  if (this.isStarted() == false) {
+    logger.warn("Attempting to stop a connector which is not started");
+    return;
+  }
   if (this.isDisposed()) {
     return;
   }
-  if (this.isStarted()) {
-    if (logger.isInfoEnabled()) {
-      logger.info("Stopping: " + this);
-    }
-    ((ScheduledExecutorService)scheduler.get()).shutdown();
-    this.doStop();
-    started.set(false);
-    if (receivers != null) {
-      for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
-        MessageReceiver mr=(MessageReceiver)iterator.next();
-        if (logger.isDebugEnabled()) {
-          logger.debug("Stopping receiver on endpoint: " + mr.getEndpoint().getEndpointURI());
-        }
-        mr.stop();
+  if (logger.isInfoEnabled()) {
+    logger.info("Stopping: " + this);
+  }
+  ((ScheduledExecutorService)scheduler.get()).shutdown();
+  this.doStop();
+  started.set(false);
+  if (receivers != null) {
+    for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
+      MessageReceiver mr=(MessageReceiver)iterator.next();
+      if (logger.isDebugEnabled()) {
+        logger.debug("Stopping receiver on endpoint: " + mr.getEndpoint().getEndpointURI());
       }
+      mr.stop();
     }
   }
   if (this.isConnected()) {
