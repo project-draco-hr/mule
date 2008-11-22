@@ -1,0 +1,34 @@
+{
+  if (component.getBindingCollection() != null) {
+    Map bindings=new HashMap();
+    for (Iterator it=component.getBindingCollection().getRouters().iterator(); it.hasNext(); ) {
+      InterfaceBinding interfaceBinding=(InterfaceBinding)it.next();
+      Object proxy=bindings.get(interfaceBinding.getInterface());
+      if (proxy == null) {
+        proxy=interfaceBinding.createProxy(componentObject);
+        bindings.put(interfaceBinding.getInterface(),proxy);
+        Method setterMethod;
+        List methods=ClassUtils.getSatisfiableMethods(componentObject.getClass(),new Class[]{interfaceBinding.getInterface()},true,false,null);
+        if (methods.size() == 1) {
+          setterMethod=(Method)methods.get(0);
+        }
+ else         if (methods.size() > 1) {
+          throw new TooManySatisfiableMethodsException(componentObject.getClass(),new Class[]{interfaceBinding.getInterface()});
+        }
+ else {
+          throw new NoSatisfiableMethodsException(componentObject.getClass(),new Class[]{interfaceBinding.getInterface()});
+        }
+        try {
+          setterMethod.invoke(componentObject,new Object[]{proxy});
+        }
+ catch (        Exception e) {
+          throw new InitialisationException(CoreMessages.failedToSetProxyOnService(interfaceBinding,componentObject.getClass()),e,this);
+        }
+      }
+ else {
+        BindingInvocationHandler handler=(BindingInvocationHandler)Proxy.getInvocationHandler(proxy);
+        handler.addRouterForInterface(interfaceBinding);
+      }
+    }
+  }
+}
