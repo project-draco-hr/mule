@@ -1,0 +1,19 @@
+{
+  if (!isEnlisted()) {
+    return false;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Delistment request: " + this);
+  }
+  Transaction transaction=TransactionCoordination.getInstance().getTransaction();
+  if (transaction == null) {
+    throw new IllegalTransactionStateException(CoreMessages.noMuleTransactionAvailable());
+  }
+  if (!(transaction instanceof XaTransaction)) {
+    throw new IllegalTransactionStateException(CoreMessages.notMuleXaTransaction(transaction));
+  }
+  if (isEnlisted()) {
+    enlisted=!((XaTransaction)transaction).delistResource(xaConnection.getXAResource(),XAResource.TMSUCCESS);
+  }
+  return !isEnlisted();
+}
