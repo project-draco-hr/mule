@@ -3,7 +3,7 @@
   Iterator iterator=endpoints.iterator();
   while (iterator.hasNext()) {
     ep=(OutboundEndpoint)iterator.next();
-    if (endpointName.equals(ep.getEndpointURI().getEndpointName())) {
+    if (endpointName.equals(ep.getName())) {
       return ep;
     }
  else     if (endpointName.equals(ep.getName())) {
@@ -13,5 +13,10 @@
       return ep;
     }
   }
-  return getMuleContext().getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointName);
+  try {
+    return getMuleContext().getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointName);
+  }
+ catch (  MalformedEndpointException e) {
+    throw new EndpointNotFoundException(CoreMessages.endpointNotFound(endpointName),e);
+  }
 }
