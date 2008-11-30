@@ -1,19 +1,15 @@
 {
-  final MuleClient client=new MuleClient();
-  Thread t=new Thread(new Runnable(){
-    public void run(){
-      try {
-        client.send("vm://in","test",null);
-      }
- catch (      MuleException e) {
-        fail("failed to dispatch event: " + e);
-        e.printStackTrace();
-      }
-    }
+  for (int i=0; i < 10; i++) {
+    makeClientRequest("test" + i);
   }
-,"test-thread");
-  t.start();
-  MuleMessage result=client.request("vm://out",3000L);
-  assertNotNull(result);
+  MuleClient client=new MuleClient();
+  List results=new ArrayList();
+  MuleMessage result=null;
+  for (int i=0; i < 10; i++) {
+    result=client.request("vm://out",3000L);
+    assertNotNull(result);
+    results.add(result.getPayloadAsString());
+  }
+  assertEquals(10,results.size());
   result.setProperty("foo","bar");
 }
