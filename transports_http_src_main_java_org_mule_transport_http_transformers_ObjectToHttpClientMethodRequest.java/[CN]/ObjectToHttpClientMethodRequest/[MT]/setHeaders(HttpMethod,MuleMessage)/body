@@ -4,6 +4,7 @@
   for (Iterator iterator=msg.getPropertyNames().iterator(); iterator.hasNext(); ) {
     headerName=(String)iterator.next();
     if (headerName.equalsIgnoreCase(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY)) {
+      logger.warn("Deprecation warning:  There is not need to set custom headers using: " + HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY + " you can now add the properties directly to the outbound endpoint or use the OUTBOUND property scope on the message.");
       Map customHeaders=(Map)msg.getProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
       if (customHeaders != null) {
         for (Iterator headerItr=customHeaders.entrySet().iterator(); headerItr.hasNext(); ) {
@@ -25,5 +26,13 @@
   Set attNams=msg.getAttachmentNames();
   if (msg.getPayload() instanceof InputStream && attNams != null && attNams.size() > 0) {
     httpMethod.addRequestHeader(HttpConstants.HEADER_CONTENT_TYPE,"multipart/related");
+  }
+  Object value;
+  for (Iterator iterator=msg.getPropertyNames(PropertyScope.OUTBOUND).iterator(); iterator.hasNext(); ) {
+    headerName=(String)iterator.next();
+    value=msg.getProperty(headerName,PropertyScope.OUTBOUND);
+    if (value != null) {
+      httpMethod.addRequestHeader(headerName,value.toString());
+    }
   }
 }
