@@ -1,0 +1,35 @@
+{
+  Map props=new HashMap();
+  props.put("inbound-foo","foo");
+  DefaultMessageAdapter adapter=new DefaultMessageAdapter(TEST_MESSAGE,props,null);
+  MuleMessage message=new DefaultMuleMessage(adapter);
+  try {
+    message.setProperty("inbound-bar","bar",PropertyScope.INBOUND);
+    fail("Inboiund scope should be read-only");
+  }
+ catch (  Exception e) {
+  }
+  message.setProperty("invocation-foo","foo",PropertyScope.INVOCATION);
+  MuleSession session=getTestSession(getTestService(),muleContext);
+  session.setProperty("session-foo","foo");
+  MuleEvent event=new DefaultMuleEvent(message,getTestInboundEndpoint("test1","test://test1?foo=bar&coo=car"),session,true);
+  message=event.getMessage();
+  try {
+    message.getPropertyNames(new PropertyScope("XXX",5));
+    fail("Should throw exception, XXX not a valid scope");
+  }
+ catch (  Exception e) {
+  }
+  assertEquals(0,message.getPropertyNames(PropertyScope.OUTBOUND).size());
+  assertEquals(3,message.getPropertyNames(PropertyScope.INVOCATION).size());
+  assertEquals("foo",message.getProperty("invocation-foo"));
+  assertEquals("bar",message.getProperty("foo"));
+  assertEquals("car",message.getProperty("coo"));
+  assertEquals("foo",message.getProperty("invocation-foo",PropertyScope.INVOCATION));
+  assertNull(message.getProperty("invocation-foo",PropertyScope.INBOUND));
+  assertNull(message.getProperty("invocation-foo",PropertyScope.OUTBOUND));
+  message.setProperty("outbound-foo","foo",PropertyScope.OUTBOUND);
+  assertEquals("foo",message.getProperty("outbound-foo",PropertyScope.OUTBOUND));
+  assertNull(message.getProperty("invocation-foo",PropertyScope.INBOUND));
+  assertEquals("foo",event.getProperty("session-foo"));
+}

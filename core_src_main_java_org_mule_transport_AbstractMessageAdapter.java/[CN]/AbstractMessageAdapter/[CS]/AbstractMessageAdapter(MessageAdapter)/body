@@ -1,15 +1,11 @@
 {
   logger=LogFactory.getLog(getClass());
   if (null != template) {
-    Iterator propertyNames=template.getPropertyNames().iterator();
-    while (propertyNames.hasNext()) {
-      String key=(String)propertyNames.next();
-      try {
-        setProperty(key,template.getProperty(key));
-      }
- catch (      Exception e) {
-        throw new MuleRuntimeException(CoreMessages.failedToReadPayload(),e);
-      }
+    if (template instanceof AbstractMessageAdapter) {
+      properties=((AbstractMessageAdapter)template).getPropertiesContext();
+    }
+ else {
+      properties=((AbstractMessageAdapter)((DefaultMuleMessage)template).getAdapter()).getPropertiesContext();
     }
     Iterator attachmentNames=template.getAttachmentNames().iterator();
     while (attachmentNames.hasNext()) {
