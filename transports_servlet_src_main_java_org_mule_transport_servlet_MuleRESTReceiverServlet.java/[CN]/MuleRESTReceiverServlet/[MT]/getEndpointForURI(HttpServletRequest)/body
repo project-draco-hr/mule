@@ -1,15 +1,18 @@
 {
   String endpointName=httpServletRequest.getParameter("endpoint");
   if (endpointName == null) {
-    throw new EndpointException(HttpMessages.httpParameterNotSet("endpoint"));
+    String uri=httpServletRequest.getPathInfo();
+    int i=uri.lastIndexOf("/");
+    if (i > -1) {
+      endpointName=uri.substring(i + 1);
+    }
   }
   InboundEndpoint endpoint=RegistryContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointName);
   if (endpoint == null) {
     MessageReceiver receiver=(MessageReceiver)getReceivers().get(endpointName);
-    if (receiver == null) {
-      throw new EndpointNotFoundException(endpointName);
+    if (receiver != null) {
+      endpoint=receiver.getEndpoint();
     }
-    endpoint=receiver.getEndpoint();
   }
   return endpoint;
 }
