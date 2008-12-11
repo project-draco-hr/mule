@@ -12,15 +12,9 @@
       httpResponse=(HttpResponse)message.getPayload();
     }
  else {
-      httpResponse=new HttpResponse();
-      String ct=message.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
-      if (ct != null) {
-        httpResponse.setHeader(new Header(HttpConstants.HEADER_CONTENT_TYPE,ct));
-      }
-      httpResponse.setStatusLine(httpResponse.getHttpVersion(),message.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpServletResponse.SC_OK));
-      httpResponse.setBody(message);
+      httpResponse=(HttpResponse)responseTransformer.transform(message);
     }
-    Header contentTypeHeader=null;
+    Header contentTypeHeader=httpResponse.getFirstHeader(HttpConstants.HEADER_CONTENT_TYPE);
     String contentType=null;
     if (contentTypeHeader == null) {
       contentType=defaultContentType;
@@ -28,11 +22,11 @@
  else {
       contentType=contentTypeHeader.getValue();
     }
+    servletResponse.setContentType(contentType);
     servletResponse=setHttpHeadersOnServletResponse(httpResponse,servletResponse);
     if (!servletResponse.isCommitted()) {
       servletResponse.setStatus(httpResponse.getStatusCode());
     }
-    servletResponse.setContentType(contentType);
     if (httpResponse.hasBody()) {
       OutputHandler outputHandler=httpResponse.getBody();
       outputHandler.write(RequestContext.getEvent(),servletResponse.getOutputStream());
