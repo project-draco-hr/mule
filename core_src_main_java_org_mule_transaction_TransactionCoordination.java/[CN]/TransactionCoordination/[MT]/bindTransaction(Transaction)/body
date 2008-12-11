@@ -1,7 +1,16 @@
 {
-  Transaction oldTx=(Transaction)transactions.get();
-  if (oldTx != null) {
+  Transaction oldTx=transactions.get();
+  if (oldTx != null && !(oldTx instanceof TransactionCollection)) {
     throw new IllegalTransactionStateException(CoreMessages.transactionAlreadyBound());
+  }
+  if (oldTx instanceof TransactionCollection) {
+    TransactionCollection txCollection=(TransactionCollection)oldTx;
+    if (txCollection.getTxCollection().contains(transaction)) {
+      throw new IllegalTransactionStateException(CoreMessages.transactionAlreadyBound());
+    }
+ else {
+      return;
+    }
   }
   transactions.set(transaction);
 synchronized (this) {

@@ -6,9 +6,11 @@
   boolean transacted=false;
   boolean cached=false;
   boolean remoteSync=returnResponse(event);
+  final Transaction muleTx=TransactionCoordination.getInstance().getTransaction();
   if (logger.isDebugEnabled()) {
     logger.debug("dispatching on endpoint: " + event.getEndpoint().getEndpointURI() + ". MuleEvent id is: "+ event.getId()+ ". Outbound transformers are: "+ event.getEndpoint().getTransformers());
   }
+  boolean sessionManaged=true;
   try {
     session=connector.getSessionFromTransaction();
     if (session != null) {
@@ -16,6 +18,7 @@
       remoteSync=false;
     }
  else     if (event.getMessage().getBooleanProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions())) {
+      sessionManaged=false;
       cached=true;
       if (cachedSession != null) {
         session=cachedSession;
@@ -26,12 +29,12 @@
       }
     }
  else {
+      sessionManaged=muleTx != null && muleTx.isXA();
       session=connector.getSession(event.getEndpoint());
       if (event.getEndpoint().getTransactionConfig().isTransacted()) {
         transacted=true;
       }
     }
-    EndpointURI endpointUri=event.getEndpoint().getEndpointURI();
     boolean topic=connector.getTopicResolver().isTopic(event.getEndpoint(),true);
     Destination dest=connector.getJmsSupport().createDestination(session,endpoint);
     producer=connector.getJmsSupport().createProducer(session,dest,topic);
@@ -162,6 +165,9 @@
  else {
         connector.closeQuietly((TemporaryTopic)replyTo);
       }
+    }
+    if (!sessionManaged && transacted && muleTx instanceof TransactionCollection) {
+      handleMultiTx(session);
     }
     if (session != null && !cached && !transacted) {
       connector.closeQuietly(session);
