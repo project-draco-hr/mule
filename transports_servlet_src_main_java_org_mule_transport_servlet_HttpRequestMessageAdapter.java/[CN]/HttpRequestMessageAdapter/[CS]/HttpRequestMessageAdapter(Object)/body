@@ -30,7 +30,15 @@
       if (key.startsWith(HttpConstants.X_PROPERTY_PREFIX)) {
         realKey=key.substring(2);
       }
-      setProperty(realKey,request.getHeader(key));
+      String value=request.getHeader(key);
+      if ("Host".equalsIgnoreCase(key)) {
+        realKey="Host";
+        int port=request.getLocalPort();
+        if (!value.contains(":") && port != 80 && port != 443) {
+          value=value + ":" + port;
+        }
+      }
+      setProperty(realKey,value);
     }
   }
  else {
