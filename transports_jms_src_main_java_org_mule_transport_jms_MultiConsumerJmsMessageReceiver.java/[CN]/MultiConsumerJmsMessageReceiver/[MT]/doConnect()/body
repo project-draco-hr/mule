@@ -2,7 +2,15 @@
   logger.debug("doConnect()");
   for (int i=0; i < receiversCount; i++) {
     SubReceiver sub=(SubReceiver)consumers.removeFirst();
-    sub.doConnect();
-    consumers.addLast(sub);
+    try {
+      sub.doConnect();
+    }
+ catch (    FatalException fex) {
+      sub.doDisconnect();
+      throw fex;
+    }
+ finally {
+      consumers.addLast(sub);
+    }
   }
 }
