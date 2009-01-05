@@ -2,9 +2,16 @@
   Map headers=parseHeaders(request);
   MessageAdapter adapter=buildStandardAdapter(request,headers);
   MuleMessage message=new DefaultMuleMessage(adapter);
+  String path=(String)message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
+  int i=path.indexOf('?');
+  if (i > -1) {
+    path=path.substring(0,i);
+  }
+  message.setProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY,path);
   if (logger.isDebugEnabled()) {
     logger.debug(message.getProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
   }
+  message.setProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY,HttpConnector.normalizeUrl(endpoint.getEndpointURI().getPath()));
   MessageReceiver receiver=getTargetReceiver(message,endpoint);
   HttpResponse response;
   if (receiver != null) {
