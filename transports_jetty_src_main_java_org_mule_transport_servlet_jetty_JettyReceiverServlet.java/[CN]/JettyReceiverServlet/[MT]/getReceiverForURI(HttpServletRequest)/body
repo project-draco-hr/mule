@@ -1,17 +1,11 @@
 {
-  String key=httpServletRequest.getLocalPort() + httpServletRequest.getPathInfo();
+  String key=httpServletRequest.getPathInfo();
   MessageReceiver receiver=(MessageReceiver)receivers.get(key);
   if (receiver == null) {
-    for (Iterator iterator=receivers.keySet().iterator(); iterator.hasNext(); ) {
-      String s=(String)iterator.next();
-      if (new WildcardFilter(s).accept(key)) {
-        receiver=(MessageReceiver)receivers.get(s);
-        break;
-      }
-    }
-    if (receiver == null) {
-      throw new NoReceiverForEndpointException(httpServletRequest.getPathInfo());
-    }
+    receiver=HttpMessageReceiver.findReceiverByStem(receivers,key);
+  }
+  if (receiver == null) {
+    throw new NoReceiverForEndpointException(httpServletRequest.getPathInfo());
   }
   return receiver;
 }
