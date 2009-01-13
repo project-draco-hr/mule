@@ -1,0 +1,28 @@
+{
+  try {
+    String connectionName="jdbc:derby:" + databaseName + ";create=true";
+    Driver derbyDriver=(Driver)ClassUtils.instanciateClass(DERBY_DRIVER_CLASS,new Object[0]);
+    Method connectMethod=derbyDriver.getClass().getMethod("connect",new Class[]{String.class,Properties.class});
+    connectMethod.invoke(derbyDriver,new Object[]{connectionName,null});
+    if (creationSql != null) {
+      DataSource embeddedDS=(DataSource)ClassUtils.instanciateClass(DERBY_DATASOURCE_CLASS,new Object[0]);
+      Method m=embeddedDS.getClass().getMethod("setDatabaseName",new Class[]{String.class});
+      m.invoke(embeddedDS,new Object[]{databaseName});
+      Connection con=null;
+      try {
+        con=embeddedDS.getConnection();
+        Statement st=con.createStatement();
+        st.execute(creationSql);
+        con.commit();
+      }
+  finally {
+        if (con != null && !con.isClosed()) {
+          con.close();
+        }
+      }
+    }
+  }
+ catch (  Exception ex) {
+    throw new RuntimeException("Error creating the database " + databaseName,ex);
+  }
+}
