@@ -1,35 +1,36 @@
 {
-  if (!timerStarted.get()) {
-    this.context.getWorkManager().scheduleWork(new Work(){
-      public void release(){
-      }
-      public void run(){
-        while (true) {
-          List expired=new ArrayList(1);
-          for (Iterator iterator=eventGroups.values().iterator(); iterator.hasNext(); ) {
+  if (timerStarted.get()) {
+    return;
+  }
+  this.context.getWorkManager().scheduleWork(new Work(){
+    public void release(){
+    }
+    public void run(){
+      while (true) {
+        List expired=new ArrayList(1);
+        for (Iterator iterator=eventGroups.values().iterator(); iterator.hasNext(); ) {
+          EventGroup group=(EventGroup)iterator.next();
+          if ((group.getCreated() + getTimeout()) < System.currentTimeMillis()) {
+            expired.add(group);
+          }
+        }
+        if (expired.size() > 0) {
+          for (Iterator iterator=expired.iterator(); iterator.hasNext(); ) {
             EventGroup group=(EventGroup)iterator.next();
-            if ((group.getCreated() + getTimeout()) < System.currentTimeMillis()) {
-              expired.add(group);
-            }
+            eventGroups.remove(group.getGroupId());
+            locks.remove(group.getGroupId());
+            context.fireNotification(new RoutingNotification(group.toMessageCollection(),null,RoutingNotification.CORRELATION_TIMEOUT));
+            group.toArray()[0].getService().getExceptionListener().exceptionThrown(new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.toMessageCollection()));
           }
-          if (expired.size() > 0) {
-            for (Iterator iterator=expired.iterator(); iterator.hasNext(); ) {
-              EventGroup group=(EventGroup)iterator.next();
-              eventGroups.remove(group.getGroupId());
-              locks.remove(group.getGroupId());
-              context.fireNotification(new RoutingNotification(group.toMessageCollection(),null,RoutingNotification.CORRELATION_TIMEOUT));
-              group.toArray()[0].getService().getExceptionListener().exceptionThrown(new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.toMessageCollection()));
-            }
-          }
-          try {
-            Thread.sleep(100);
-          }
- catch (          InterruptedException e) {
-            break;
-          }
+        }
+        try {
+          Thread.sleep(100);
+        }
+ catch (        InterruptedException e) {
+          break;
         }
       }
     }
-);
   }
+);
 }
