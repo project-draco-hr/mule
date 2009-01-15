@@ -9,24 +9,19 @@
     requestUri.append(endpoint.getProtocol()).append("://");
     requestUri.append(endpoint.getEndpointURI().getHost());
     requestUri.append(':').append(endpoint.getEndpointURI().getPort());
+    if (!"/".equals(path)) {
+      requestUri.append(path);
+    }
   }
+  String uriStr=requestUri.toString();
   if (logger.isTraceEnabled()) {
     logger.trace("Looking up receiver on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
   }
-  MessageReceiver receiver=connector.lookupReceiver(requestUri.toString());
+  MessageReceiver receiver=connector.lookupReceiver(uriStr);
   if (receiver == null && !"/".equals(path)) {
-    int x=path.lastIndexOf('/');
-    if (x > 1 && path.indexOf('.') > x) {
-      requestUri.append(path.substring(0,x));
-    }
- else {
-      requestUri.append(path);
-    }
     if (logger.isDebugEnabled()) {
       logger.debug("Secondary lookup of receiver on connector: " + connector.getName() + " with URI key: "+ requestUri.toString());
     }
-    String uriStr=requestUri.toString();
-    receiver=connector.lookupReceiver(uriStr);
     if (receiver == null) {
       receiver=findReceiverByStem(connector.getReceivers(),uriStr);
     }
