@@ -34,7 +34,13 @@ synchronized (queueStatsGuard) {
         if (logger.isDebugEnabled()) {
           logger.debug(MessageFormat.format("Service: {0} dequeued event on: {1}",name,event.getEndpoint().getEndpointURI()));
         }
-        workManager.scheduleWork(new ComponentStageWorker(event),WorkManager.INDEFINITE,null,this);
+        Work work=new ComponentStageWorker(event);
+        if (threadingProfile.isDoThreading()) {
+          workManager.scheduleWork(work,WorkManager.INDEFINITE,null,this);
+        }
+ else {
+          work.run();
+        }
       }
     }
  catch (    Exception e) {

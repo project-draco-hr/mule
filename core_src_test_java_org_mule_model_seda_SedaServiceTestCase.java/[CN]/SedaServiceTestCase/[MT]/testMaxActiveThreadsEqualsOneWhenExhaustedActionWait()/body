@@ -1,0 +1,22 @@
+{
+  final Latch latch=new Latch();
+  SedaService service=new SedaService();
+  service.setName("testMaxActiveThreadsEqualsOne");
+  service.setModel(muleContext.getRegistry().lookupSystemModel());
+  ChainedThreadingProfile threadingProfile=(ChainedThreadingProfile)muleContext.getDefaultServiceThreadingProfile();
+  threadingProfile.setMaxThreadsActive(1);
+  threadingProfile.setThreadWaitTimeout(200);
+  threadingProfile.setPoolExhaustedAction(ThreadingProfile.WHEN_EXHAUSTED_WAIT);
+  service.setThreadingProfile(threadingProfile);
+  service.setComponent(new SimpleCallableJavaComponent(new Callable(){
+    public Object onCall(    MuleEventContext eventContext) throws Exception {
+      latch.countDown();
+      return null;
+    }
+  }
+));
+  muleContext.getRegistry().registerService(service);
+  service.start();
+  service.dispatchEvent(getTestInboundEvent("test"));
+  assertTrue(latch.await(200,TimeUnit.MILLISECONDS));
+}
