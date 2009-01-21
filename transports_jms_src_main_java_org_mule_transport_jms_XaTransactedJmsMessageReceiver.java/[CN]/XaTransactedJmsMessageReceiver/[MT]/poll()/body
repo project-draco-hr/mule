@@ -16,11 +16,12 @@
         ctx.consumer=null;
         Transaction tx=TransactionCoordination.getInstance().getTransaction();
         if (ctx.session != null && tx instanceof XaTransaction.MuleXaObject) {
-          if (!(ctx.session instanceof XaTransaction.MuleXaObject)) {
-            ctx.session=null;
-            throw new XAException("Session should be XA, but is of type " + ctx.session.getClass().getName());
+          if (ctx.session instanceof XaTransaction.MuleXaObject) {
+            ((XaTransaction.MuleXaObject)ctx.session).setReuseObject(false);
           }
-          ((XaTransaction.MuleXaObject)ctx.session).setReuseObject(false);
+ else {
+            logger.warn("Session should be XA, but is of type " + ctx.session.getClass().getName());
+          }
         }
         ctx.session=null;
         throw e;
