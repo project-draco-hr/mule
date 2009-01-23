@@ -43,57 +43,14 @@
       throw new DispatchException(JmsMessages.checkTransformer("JMS message",message.getClass(),connector.getName()),event.getMessage(),event.getEndpoint());
     }
     Message msg=(Message)message;
+    processMessage(msg,event);
     if (event.getMessage().getCorrelationId() != null) {
       msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
     }
     MuleMessage eventMsg=event.getMessage();
-    if (connector.supportsProperty(JmsConstants.JMS_REPLY_TO)) {
-      Object tempReplyTo=eventMsg.removeProperty(JmsConstants.JMS_REPLY_TO);
-      if (tempReplyTo == null) {
-        tempReplyTo=eventMsg.removeProperty(MuleProperties.MULE_REPLY_TO_PROPERTY);
-        if (tempReplyTo != null) {
-          if (tempReplyTo.toString().startsWith("jms://")) {
-            tempReplyTo=tempReplyTo.toString().substring(6);
-          }
- else {
-            EndpointBuilder epb=event.getMuleContext().getRegistry().lookupEndpointBuilder(tempReplyTo.toString());
-            if (epb != null) {
-              tempReplyTo=epb.buildOutboundEndpoint().getEndpointURI().getAddress();
-            }
-          }
-        }
-      }
-      if (tempReplyTo != null) {
-        if (tempReplyTo instanceof Destination) {
-          replyTo=(Destination)tempReplyTo;
-        }
- else {
-          boolean replyToTopic=false;
-          String reply=tempReplyTo.toString();
-          int i=reply.indexOf(":");
-          if (i > -1) {
-            String qtype=reply.substring(0,i);
-            replyToTopic=JmsConstants.TOPIC_PROPERTY.equalsIgnoreCase(qtype);
-            reply=reply.substring(i + 1);
-          }
-          replyTo=connector.getJmsSupport().createDestination(session,reply,replyToTopic);
-        }
-      }
-      if (useReplyToDestination && replyTo == null && !disableTemporaryDestinations) {
-        replyTo=connector.getJmsSupport().createTemporaryDestination(session,topic);
-      }
-      if (replyTo != null) {
-        logger.info("Setting replyTo on message: " + replyTo);
-        msg.setJMSReplyTo(replyTo);
-      }
-      if (useReplyToDestination && replyTo != null) {
-        try {
-          consumer=connector.getJmsSupport().createConsumer(session,replyTo,topic);
-        }
- catch (        Exception e) {
-          logger.warn(e);
-        }
-      }
+    replyTo=getReplyToDestination(msg,session,event,useReplyToDestination,topic);
+    if (replyTo != null) {
+      msg.setJMSReplyTo(replyTo);
     }
     String ttlString=(String)eventMsg.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
     String priorityString=(String)eventMsg.removeProperty(JmsConstants.PRIORITY_PROPERTY);
@@ -114,34 +71,35 @@
     if (logger.isDebugEnabled()) {
       logger.debug("Sending message of type " + ClassUtils.getSimpleName(msg.getClass()));
     }
-    if (consumer != null && topic) {
-      Latch l=new Latch();
-      ReplyToListener listener=new ReplyToListener(l);
-      consumer.setMessageListener(listener);
-      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
-      int timeout=event.getTimeout();
-      if (logger.isDebugEnabled()) {
-        logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
-      }
-      l.await(timeout,TimeUnit.MILLISECONDS);
-      consumer.setMessageListener(null);
-      listener.release();
-      Message result=listener.getMessage();
-      if (result == null) {
-        logger.debug("No message was returned via replyTo destination");
-        return null;
-      }
- else {
-        MessageAdapter adapter=connector.getMessageAdapter(result);
-        return new DefaultMuleMessage(JmsMessageUtils.toObject(result,connector.getSpecification(),endpoint.getEncoding()),adapter);
-      }
-    }
- else {
-      connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
-      if (consumer != null) {
+    connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
+    if (useReplyToDestination) {
+      consumer=createReplyToConsumer(msg,event,session,replyTo,topic);
+      if (topic) {
+        Latch l=new Latch();
+        ReplyToListener listener=new ReplyToListener(l);
+        consumer.setMessageListener(listener);
+        connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
         int timeout=event.getTimeout();
-        if (logger.isInfoEnabled()) {
-          logger.info("Waiting for return event for: " + timeout + " ms on "+ replyTo);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
+        }
+        l.await(timeout,TimeUnit.MILLISECONDS);
+        consumer.setMessageListener(null);
+        listener.release();
+        Message result=listener.getMessage();
+        if (result == null) {
+          logger.debug("No message was returned via replyTo destination");
+          return null;
+        }
+ else {
+          MessageAdapter adapter=connector.getMessageAdapter(result);
+          return new DefaultMuleMessage(JmsMessageUtils.toObject(result,connector.getSpecification(),endpoint.getEncoding()),adapter);
+        }
+      }
+ else {
+        int timeout=event.getTimeout();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);
         }
         Message result=consumer.receive(timeout);
         if (result == null) {
