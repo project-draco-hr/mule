@@ -1,0 +1,44 @@
+{
+  if (getProperty(NOPE) != null)   return null;
+  String sub=getProperty(SUB);
+  if (sub != null && sub.trim().length() > 0)   error("Specified " + SUB + " but calls build() instead of builds() (might be a programmer error)");
+  if (getProperty(CONDUIT) != null)   error("Specified " + CONDUIT + " but calls build() instead of builds() (might be a programmer error");
+  dot=new Jar("dot");
+  addClose(dot);
+  try {
+    long modified=Long.parseLong(getProperty("base.modified"));
+    dot.updateModified(modified,"Base modified");
+  }
+ catch (  Exception e) {
+  }
+  doExpand(dot);
+  doIncludeResources(dot);
+  doConditional(dot);
+  Manifest manifest=calcManifest();
+  String mf=getProperty(MANIFEST);
+  if (mf != null) {
+    File mff=getFile(mf);
+    if (mff.isFile()) {
+      try {
+        InputStream in=new FileInputStream(mff);
+        manifest=new Manifest(in);
+        in.close();
+      }
+ catch (      Exception e) {
+        error(MANIFEST + " while reading manifest file",e);
+      }
+    }
+ else {
+      error(MANIFEST + ", no such file " + mf);
+    }
+  }
+  dot.setManifest(manifest);
+  addSources(dot);
+  if (getProperty(POM) != null)   doPom(dot);
+  doVerify(dot);
+  if (dot.getResources().isEmpty())   error("The JAR is empty");
+  dot.updateModified(lastModified(),"Last Modified Processor");
+  dot.setName(getBsn());
+  sign(dot);
+  return dot;
+}

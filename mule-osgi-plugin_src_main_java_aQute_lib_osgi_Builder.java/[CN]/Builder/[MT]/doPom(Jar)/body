@@ -1,0 +1,88 @@
+{
+{
+    Manifest manifest=dot.getManifest();
+    String name=manifest.getMainAttributes().getValue(Analyzer.BUNDLE_NAME);
+    String description=manifest.getMainAttributes().getValue(Analyzer.BUNDLE_DESCRIPTION);
+    String docUrl=manifest.getMainAttributes().getValue(Analyzer.BUNDLE_DOCURL);
+    String version=manifest.getMainAttributes().getValue(Analyzer.BUNDLE_VERSION);
+    String bundleVendor=manifest.getMainAttributes().getValue(Analyzer.BUNDLE_VENDOR);
+    ByteArrayOutputStream s=new ByteArrayOutputStream();
+    PrintStream ps=new PrintStream(s);
+    String bsn=manifest.getMainAttributes().getValue(Analyzer.BUNDLE_SYMBOLICNAME);
+    String licenses=manifest.getMainAttributes().getValue(BUNDLE_LICENSE);
+    if (bsn == null) {
+      error("Can not create POM unless Bundle-SymbolicName is set");
+      return;
+    }
+    bsn=bsn.trim();
+    int n=bsn.lastIndexOf('.');
+    if (n <= 0) {
+      error("Can not create POM unless Bundle-SymbolicName contains a .");
+      ps.close();
+      s.close();
+      return;
+    }
+    String groupId=bsn.substring(0,n);
+    String artifactId=bsn.substring(n + 1);
+    ps.println("<project xmlns='http://maven.apache.org/POM/4.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd'>");
+    ps.println("  <modelVersion>4.0.0</modelVersion>");
+    ps.println("  <groupId>" + groupId + "</groupId>");
+    n=artifactId.indexOf(';');
+    if (n > 0)     artifactId=artifactId.substring(0,n).trim();
+    ps.println("  <artifactId>" + artifactId + "</artifactId>");
+    ps.println("  <version>" + version + "</version>");
+    if (description != null) {
+      ps.println("  <description>");
+      ps.print("    ");
+      ps.println(description);
+      ps.println("  </description>");
+    }
+    if (name != null) {
+      ps.print("  <name>");
+      ps.print(name);
+      ps.println("</name>");
+    }
+    if (docUrl != null) {
+      ps.print("  <url>");
+      ps.print(docUrl);
+      ps.println("</url>");
+    }
+    if (bundleVendor != null) {
+      Matcher m=NAME_URL.matcher(bundleVendor);
+      String namePart=bundleVendor;
+      String urlPart=null;
+      if (m.matches()) {
+        namePart=m.group(1);
+        urlPart=m.group(2);
+      }
+      ps.println("  <organization>");
+      ps.print("    <name>");
+      ps.print(namePart.trim());
+      ps.println("</name>");
+      if (urlPart != null) {
+        ps.print("    <url>");
+        ps.print(urlPart.trim());
+        ps.println("</url>");
+      }
+      ps.println("  </organization>");
+    }
+    if (licenses != null) {
+      ps.println("  <licenses>");
+      Map<String,Map<String,String>> map=parseHeader(licenses);
+      for (Iterator<Map.Entry<String,Map<String,String>>> e=map.entrySet().iterator(); e.hasNext(); ) {
+        Map.Entry<String,Map<String,String>> entry=e.next();
+        ps.println("    <license>");
+        Map<String,String> values=entry.getValue();
+        print(ps,values,"name","name",(String)values.get("url"));
+        print(ps,values,"url","url",null);
+        print(ps,values,"distribution","distribution","repo");
+        ps.println("    </license>");
+      }
+      ps.println("  </licenses>");
+    }
+    ps.println("</project>");
+    ps.close();
+    s.close();
+    dot.putResource("pom.xml",new EmbeddedResource(s.toByteArray(),0));
+  }
+}

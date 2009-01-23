@@ -1,0 +1,56 @@
+{
+  begin();
+  String conduit=getProperty(CONDUIT);
+  if (conduit != null) {
+    Map<String,Map<String,String>> map=parseHeader(conduit);
+    Jar[] result=new Jar[map.size()];
+    int n=0;
+    for (    String file : map.keySet()) {
+      Jar c=new Jar(getFile(file));
+      addClose(c);
+      String name=map.get(file).get("name");
+      if (name != null)       c.setName(name);
+      result[n++]=c;
+    }
+    return result;
+  }
+  String sub=getProperty(SUB);
+  if (sub == null) {
+    Jar jar=build();
+    if (jar == null)     return new Jar[0];
+    return new Jar[]{jar};
+  }
+  List<Jar> result=new ArrayList<Jar>();
+  Set<Instruction> subs=replaceWitInstruction(parseHeader(sub),SUB).keySet();
+  List<File> members=new ArrayList<File>(Arrays.asList(getBase().listFiles()));
+  getProperties().remove(SUB);
+  nextFile:   while (members.size() > 0) {
+    File file=members.remove(0);
+    if (file.equals(getPropertiesFile()))     continue nextFile;
+    for (Iterator<Instruction> i=subs.iterator(); i.hasNext(); ) {
+      Instruction instruction=i.next();
+      if (instruction.matches(file.getName())) {
+        if (!instruction.isNegated()) {
+          Builder builder=null;
+          try {
+            builder=getSubBuilder();
+            addClose(builder);
+            builder.setProperties(file);
+            builder.setProperty(SUB,"");
+            Jar jar=builder.build();
+            jar.setName(builder.getBsn());
+            result.add(jar);
+          }
+ catch (          Exception e) {
+            e.printStackTrace();
+            error("Sub Building " + file,e);
+          }
+          if (builder != null)           getInfo(builder,file.getName() + ": ");
+        }
+        continue nextFile;
+      }
+    }
+  }
+  setProperty(SUB,sub);
+  return result.toArray(new Jar[result.size()]);
+}

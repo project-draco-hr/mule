@@ -1,0 +1,14 @@
+{
+  verifyListHeader("DynamicImport-Package",WILDCARDPACKAGE,true);
+  String dynamicImportPackage=getHeader("DynamicImport-Package");
+  if (dynamicImportPackage == null)   return;
+  Map<String,Map<String,String>> map=parseHeader(dynamicImportPackage);
+  for (  String name : map.keySet()) {
+    name=name.trim();
+    if (!verify(name,WILDCARDPACKAGE))     error("DynamicImport-Package header contains an invalid package name: " + name);
+    Map<String,String> sub=map.get(name);
+    if (r3 && sub.size() != 0) {
+      error("DynamicPackage-Import has attributes on import: " + name + ". This is however, an <=R3 bundle and attributes on this header were introduced in R4. ");
+    }
+  }
+}

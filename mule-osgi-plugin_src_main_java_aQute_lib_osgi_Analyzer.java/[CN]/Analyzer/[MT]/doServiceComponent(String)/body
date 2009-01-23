@@ -1,0 +1,30 @@
+{
+  Map<String,Map<String,String>> list=newMap();
+  Map<String,Map<String,String>> sc=parseHeader(serviceComponent);
+  if (!sc.isEmpty()) {
+    for (Iterator<Map.Entry<String,Map<String,String>>> i=sc.entrySet().iterator(); i.hasNext(); ) {
+      Map.Entry<String,Map<String,String>> entry=i.next();
+      String name=entry.getKey();
+      Map<String,String> info=entry.getValue();
+      if (name == null) {
+        error("No name in Service-Component header: " + info);
+        continue;
+      }
+      if (dot.exists(name)) {
+        list.put(name,info);
+      }
+ else {
+        String impl=name;
+        if (info.containsKey(COMPONENT_IMPLEMENTATION))         impl=info.get(COMPONENT_IMPLEMENTATION);
+        if (!checkClass(impl))         error("Not found Service-Component header: " + name);
+ else {
+          Resource resource=createComponentResource(name,info);
+          dot.putResource("OSGI-INF/" + name + ".xml",resource);
+          Map<String,String> empty=Collections.emptyMap();
+          list.put("OSGI-INF/" + name + ".xml",empty);
+        }
+      }
+    }
+  }
+  return list;
+}

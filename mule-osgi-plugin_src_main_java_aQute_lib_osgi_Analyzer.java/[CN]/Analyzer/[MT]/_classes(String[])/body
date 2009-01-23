@@ -1,0 +1,23 @@
+{
+  Set<Clazz> matched=new HashSet<Clazz>(classspace.values());
+  for (int i=1; i < args.length; i+=2) {
+    if (args.length < i + 1)     throw new IllegalArgumentException("${classes} macro must have odd number of arguments. " + _classesHelp);
+    String typeName=args[i];
+    Clazz.QUERY type=null;
+    if (typeName.equals("implementing") || typeName.equals("implements"))     type=Clazz.QUERY.IMPLEMENTS;
+ else     if (typeName.equals("extending") || typeName.equals("extends"))     type=Clazz.QUERY.EXTENDS;
+ else     if (typeName.equals("importing") || typeName.equals("imports"))     type=Clazz.QUERY.IMPORTS;
+ else     if (typeName.equals("all"))     type=Clazz.QUERY.ANY;
+ else     if (typeName.equals("version"))     type=Clazz.QUERY.VERSION;
+ else     if (typeName.equals("named"))     type=Clazz.QUERY.NAMED;
+    if (type == null)     throw new IllegalArgumentException("${classes} has invalid type: " + typeName + ". "+ _classesHelp);
+    String pattern=args[i + 1].replace('.','/');
+    Instruction instr=Instruction.getPattern(pattern);
+    for (Iterator<Clazz> c=matched.iterator(); c.hasNext(); ) {
+      Clazz clazz=c.next();
+      if (!clazz.is(type,instr,classspace))       c.remove();
+    }
+  }
+  if (matched.isEmpty())   return "";
+  return join(matched);
+}

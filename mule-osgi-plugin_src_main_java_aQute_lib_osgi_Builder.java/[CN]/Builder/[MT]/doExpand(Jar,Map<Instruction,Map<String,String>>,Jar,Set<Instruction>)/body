@@ -1,0 +1,46 @@
+{
+  loop:   for (  Map.Entry<String,Map<String,Resource>> directory : classpathEntry.getDirectories().entrySet()) {
+    String path=directory.getKey();
+    if (doNotCopy.matcher(getName(path)).matches())     continue;
+    if (directory.getValue() == null)     continue;
+    String pack=path.replace('/','.');
+    Instruction instr=matches(included,pack,superfluous);
+    if (instr != null) {
+      if (!instr.isNegated()) {
+        Map<String,Resource> contents=directory.getValue();
+        boolean overwriteResource=true;
+        if (jar.hasDirectory(path)) {
+          Map<String,String> directives=included.get(instr);
+switch (getSplitStrategy((String)directives.get(SPLIT_PACKAGE_DIRECTIVE))) {
+case SPLIT_MERGE_LAST:
+            overwriteResource=true;
+          break;
+case SPLIT_MERGE_FIRST:
+        overwriteResource=false;
+      break;
+case SPLIT_ERROR:
+    error(diagnostic(pack,getClasspath(),classpathEntry.source));
+  continue loop;
+case SPLIT_FIRST:
+continue loop;
+default :
+warning(diagnostic(pack,getClasspath(),classpathEntry.source));
+overwriteResource=false;
+break;
+}
+}
+jar.addDirectory(contents,overwriteResource);
+String key=path + "/bnd.info";
+Resource r=jar.getResource(key);
+if (r != null) jar.putResource(key,new PreprocessResource(this,r));
+if (hasSources()) {
+String srcPath="OSGI-INF/src/" + path;
+Map<String,Resource> srcContents=classpathEntry.getDirectories().get(srcPath);
+if (srcContents != null) {
+jar.addDirectory(srcContents,overwriteResource);
+}
+}
+}
+}
+}
+}

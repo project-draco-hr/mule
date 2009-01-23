@@ -1,0 +1,51 @@
+{
+  File buildDir=new File(buildDirectoryPath);
+  for (  Archive a : archives) {
+    try {
+      Artifact artifact=artifactFactory.createArtifactWithClassifier(a.getGroupId(),a.getArtifactId(),a.getVersion(),"jar",a.getClassifier());
+      HashSet<Artifact> dependencies=new HashSet<Artifact>();
+      resolver.resolveTransitively(dependencies,artifact,remoteRepos,local,source);
+      resolver.resolve(artifact,remoteRepos,local);
+      File artifactCopy=new File(buildDir,artifact.getFile().getName());
+      artifactCopy.delete();
+      FileUtils.copyFile(artifact.getFile(),artifactCopy);
+      File bundle=rebundle(artifactCopy,artifact,a,dependencies);
+      attach(a,bundle,"jar",a.getClassifier());
+    }
+ catch (    ArtifactResolutionException e) {
+      throw new MojoExecutionException("Could not resolve archive.",e);
+    }
+catch (    ArtifactNotFoundException e) {
+      throw new MojoExecutionException("Could not find archive.",e);
+    }
+catch (    IOException e) {
+      throw new MojoExecutionException("Could not create file.",e);
+    }
+catch (    Exception e) {
+      e.printStackTrace();
+      throw new MojoExecutionException("Could not rebundle.",e);
+    }
+    try {
+      Artifact pom=artifactFactory.createArtifactWithClassifier(a.getGroupId(),a.getArtifactId(),a.getVersion(),"pom",a.getClassifier());
+      resolver.resolve(pom,remoteRepos,local);
+      File pomCopy=new File(buildDir,pom.getFile().getName());
+      pomCopy.delete();
+      FileUtils.copyFile(pom.getFile(),pomCopy);
+      if (changeVersion(pomCopy,a.getVersion() + "-" + versionAppend)) {
+        attach(a,pomCopy,"pom",a.getClassifier());
+      }
+ else {
+        getLog().error("Could not change artifact POM version as POM was invalid or did not exist for " + pom);
+      }
+    }
+ catch (    ArtifactResolutionException e) {
+      getLog().error("Could not resolve POM for " + a + ". Skipping.");
+    }
+catch (    ArtifactNotFoundException e) {
+      getLog().error("Could not resolve POM for " + a + ". Skipping.");
+    }
+catch (    IOException e) {
+      throw new MojoExecutionException("Could not create file.",e);
+    }
+  }
+}

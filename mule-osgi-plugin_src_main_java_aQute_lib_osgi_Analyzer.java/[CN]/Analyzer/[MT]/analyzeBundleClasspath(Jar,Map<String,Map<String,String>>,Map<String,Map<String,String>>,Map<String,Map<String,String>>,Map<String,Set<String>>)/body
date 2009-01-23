@@ -1,0 +1,35 @@
+{
+  Map<String,Clazz> classSpace=new HashMap<String,Clazz>();
+  if (bundleClasspath.isEmpty()) {
+    analyzeJar(dot,"",classSpace,contained,referred,uses);
+  }
+ else {
+    for (    String path : bundleClasspath.keySet()) {
+      if (path.equals(".")) {
+        analyzeJar(dot,"",classSpace,contained,referred,uses);
+        continue;
+      }
+      Resource resource=dot.getResource(path);
+      if (resource != null) {
+        try {
+          Jar jar=new Jar(path);
+          addClose(jar);
+          EmbeddedResource.build(jar,resource);
+          analyzeJar(jar,"",classSpace,contained,referred,uses);
+        }
+ catch (        Exception e) {
+          warning("Invalid bundle classpath entry: " + path + " "+ e);
+        }
+      }
+ else {
+        if (dot.getDirectories().containsKey(path)) {
+          analyzeJar(dot,path + '/',classSpace,contained,referred,uses);
+        }
+ else {
+          warning("No sub JAR or directory " + path);
+        }
+      }
+    }
+  }
+  return classSpace;
+}

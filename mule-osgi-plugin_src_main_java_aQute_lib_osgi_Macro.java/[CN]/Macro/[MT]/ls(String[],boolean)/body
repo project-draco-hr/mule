@@ -1,0 +1,31 @@
+{
+  if (args.length < 2)   throw new IllegalArgumentException("the ${ls} macro must at least have a directory as parameter");
+  File dir=new File(args[1]);
+  if (!dir.isAbsolute())   throw new IllegalArgumentException("the ${ls} macro directory parameter is not absolute: " + dir);
+  if (!dir.exists())   throw new IllegalArgumentException("the ${ls} macro directory parameter does not exist: " + dir);
+  if (!dir.isDirectory())   throw new IllegalArgumentException("the ${ls} macro directory parameter points to a file instead of a directory: " + dir);
+  String[] files=dir.list();
+  List<String> result;
+  if (args.length < 3) {
+    result=Arrays.asList(files);
+  }
+ else   result=new ArrayList<String>();
+  for (int i=2; i < args.length; i++) {
+    String parts[]=args[i].split("\\s*,\\s*");
+    for (    String pattern : parts) {
+      Instruction instr=Instruction.getPattern(pattern);
+      for (int f=0; f < files.length; f++) {
+        if (files[f] != null) {
+          if (instr.matches(files[f])) {
+            if (!instr.isNegated()) {
+              if (relative)               result.add(files[f]);
+ else               result.add(new File(dir,files[f]).getAbsolutePath());
+            }
+            files[f]=null;
+          }
+        }
+      }
+    }
+  }
+  return Processor.join(result,",");
+}

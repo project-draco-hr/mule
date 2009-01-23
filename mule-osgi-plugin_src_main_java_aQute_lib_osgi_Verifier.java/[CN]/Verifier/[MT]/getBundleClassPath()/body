@@ -1,0 +1,50 @@
+{
+  List<Jar> list=newList();
+  String bcp=getHeader(Analyzer.BUNDLE_CLASSPATH);
+  if (bcp == null) {
+    list.add(dot);
+  }
+ else {
+    Map<String,Map<String,String>> entries=parseHeader(bcp);
+    for (    String jarOrDir : entries.keySet()) {
+      if (jarOrDir.equals(".")) {
+        list.add(dot);
+      }
+ else {
+        if (jarOrDir.equals("/"))         jarOrDir="";
+        if (jarOrDir.endsWith("/")) {
+          error("Bundle-Classpath directory must not end with a slash: " + jarOrDir);
+          jarOrDir=jarOrDir.substring(0,jarOrDir.length() - 1);
+        }
+        Resource resource=dot.getResource(jarOrDir);
+        if (resource != null) {
+          try {
+            Jar sub=new Jar(jarOrDir);
+            addClose(sub);
+            EmbeddedResource.build(sub,resource);
+            if (!jarOrDir.endsWith(".jar"))             warning("Valid JAR file on Bundle-Classpath does not have .jar extension: " + jarOrDir);
+            list.add(sub);
+          }
+ catch (          Exception e) {
+            error("Invalid embedded JAR file on Bundle-Classpath: " + jarOrDir + ", "+ e);
+          }
+        }
+ else         if (dot.getDirectories().containsKey(jarOrDir)) {
+          if (r3)           error("R3 bundles do not support directories on the Bundle-ClassPath: " + jarOrDir);
+          try {
+            Jar sub=new Jar(jarOrDir);
+            addClose(sub);
+            list.add(sub);
+          }
+ catch (          Exception e) {
+            error("Invalid embedded directory file on Bundle-Classpath: " + jarOrDir + ", "+ e);
+          }
+        }
+ else {
+          error("Cannot find a file or directory for Bundle-Classpath entry: " + jarOrDir);
+        }
+      }
+    }
+  }
+  return list;
+}

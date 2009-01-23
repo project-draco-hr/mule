@@ -1,0 +1,41 @@
+{
+  ByteBuffer bb=ByteBuffer.wrap(code);
+  bb.order(ByteOrder.BIG_ENDIAN);
+  int lastReference=-1;
+  while (bb.remaining() > 0) {
+    int instruction=0xFF & bb.get();
+switch (instruction) {
+case OpCodes.ldc:
+      lastReference=0xFF & bb.get();
+    break;
+case OpCodes.ldc_w:
+  lastReference=0xFFFF & bb.getShort();
+break;
+case OpCodes.invokestatic:
+int methodref=0xFFFF & bb.getShort();
+if ((methodref == forName || methodref == class$) && lastReference != -1 && pool[intPool[lastReference]] instanceof String) {
+String clazz=(String)pool[intPool[lastReference]];
+doClassReference(clazz.replace('.','/'));
+}
+break;
+case OpCodes.tableswitch:
+while ((bb.position() & 0x3) != 0) bb.get();
+bb.getInt();
+int low=bb.getInt();
+int high=bb.getInt();
+bb.position(bb.position() + (high - low + 1) * 4);
+lastReference=-1;
+break;
+case OpCodes.lookupswitch:
+while ((bb.position() & 0x3) != 0) bb.get();
+bb.getInt();
+int npairs=bb.getInt();
+bb.position(bb.position() + npairs * 8);
+lastReference=-1;
+break;
+default :
+lastReference=-1;
+bb.position(bb.position() + OpCodes.OFFSETS[instruction]);
+}
+}
+}

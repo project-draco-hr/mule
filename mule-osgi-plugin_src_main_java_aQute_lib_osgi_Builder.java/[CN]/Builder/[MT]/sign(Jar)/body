@@ -1,0 +1,36 @@
+{
+  String signing=getProperty("-sign");
+  if (signing == null)   return;
+  trace("Signing %s, with %s",getBsn(),signing);
+  Map<String,Map<String,String>> infos=parseHeader(signing);
+  for (  Map.Entry<String,Map<String,String>> entry : infos.entrySet()) {
+    String alias=entry.getKey();
+    String keystoreLocation=entry.getValue().get(KEYSTORE_LOCATION_DIRECTIVE);
+    String keystoreProvider=entry.getValue().get(KEYSTORE_PROVIDER_DIRECTIVE);
+    String password=entry.getValue().get(KEYSTORE_PASSWORD_DIRECTIVE);
+    String signpassword=entry.getValue().get(SIGN_PASSWORD_DIRECTIVE);
+    KeyStore keystore=getKeystore(keystoreLocation,keystoreProvider,password);
+    if (keystore == null) {
+      error("Cannot find keystore to sign bundle: location=%s,  provider=%s",keystoreLocation,keystoreProvider);
+    }
+ else {
+      if (signpassword == null && !"-none".equals(signpassword))       signpassword=password;
+      X509Certificate chain[]=getChain(keystore,alias);
+      if (chain == null) {
+        error("Trying to sign bundle but no signing certificate found: %s",alias);
+        continue;
+      }
+      try {
+        Key key=keystore.getKey(alias,(signpassword == null ? null : signpassword.toCharArray()));
+        KeyFactory keyFactory=KeyFactory.getInstance(key.getAlgorithm());
+        KeySpec keySpec=keyFactory.getKeySpec(key,RSAPrivateKeySpec.class);
+        PrivateKey privateKey=keyFactory.generatePrivate(keySpec);
+        JarSigner signer=new JarSigner(alias,privateKey,chain);
+        signer.signJar(jar);
+      }
+ catch (      UnrecoverableKeyException uke) {
+        error("Cannot get key to sign, likely invalid password: %s, for %s : %s",signpassword,alias,uke);
+      }
+    }
+  }
+}

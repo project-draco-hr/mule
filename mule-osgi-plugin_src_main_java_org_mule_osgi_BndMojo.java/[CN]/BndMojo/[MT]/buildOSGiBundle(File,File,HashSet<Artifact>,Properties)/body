@@ -1,0 +1,29 @@
+{
+  Builder builder=new Builder();
+  builder.setBase(new File(buildDirectoryPath));
+  builder.setProperties(properties);
+  List<Jar> cp=new ArrayList<Jar>();
+  Jar jar=new Jar(jarFile);
+  cp.add(jar);
+  for (  Artifact artifact : dependencies) {
+    cp.add(new Jar(artifact.getFile()));
+  }
+  builder.setClasspath(cp.toArray(new Jar[0]));
+  if (!properties.containsKey(Analyzer.EXPORT_PACKAGE) && !properties.containsKey(Analyzer.PRIVATE_PACKAGE)) {
+    if (properties.containsKey(Analyzer.EXPORT_CONTENTS)) {
+      properties.put(Analyzer.PRIVATE_PACKAGE,"!*");
+    }
+ else {
+      String bsn=properties.getProperty(Analyzer.BUNDLE_SYMBOLICNAME);
+      String namespace=bsn.replaceAll("\\W",".");
+      properties.put(Analyzer.EXPORT_PACKAGE,namespace + ".*");
+    }
+  }
+  Jar built=builder.build();
+  jar=builder.getJar();
+  dumpManifest("BND Manifest:",jar.getManifest(),getLog());
+  built.addAll(jar);
+  built.write(bundleFile);
+  builder.close();
+  return builder;
+}

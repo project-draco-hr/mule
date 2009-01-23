@@ -1,0 +1,33 @@
+{
+  File file=new File(name);
+  if (!file.isAbsolute())   file=new File(getBase(),name);
+  if (file.exists())   try {
+    Jar jar=new Jar(file);
+    addClose(jar);
+    return jar;
+  }
+ catch (  Exception e) {
+    error("Exception in parsing jar file for " + from + ": "+ name+ " "+ e);
+  }
+  try {
+    URL url=new URL(name);
+    Jar jar=new Jar(fileName(url.getPath()));
+    addClose(jar);
+    URLConnection connection=url.openConnection();
+    InputStream in=connection.getInputStream();
+    long lastModified=connection.getLastModified();
+    if (lastModified == 0)     lastModified=System.currentTimeMillis();
+    EmbeddedResource.build(jar,in,lastModified);
+    in.close();
+    return jar;
+  }
+ catch (  IOException ee) {
+    for (Iterator<Jar> cp=getClasspath().iterator(); cp.hasNext(); ) {
+      Jar entry=cp.next();
+      if (entry.source != null && entry.source.getName().equals(name)) {
+        return entry;
+      }
+    }
+  }
+  return null;
+}

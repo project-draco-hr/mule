@@ -1,0 +1,17 @@
+{
+  classpathExports=newHashMap();
+  for (Iterator<Jar> c=getClasspath().iterator(); c.hasNext(); ) {
+    Jar current=c.next();
+    checkManifest(current);
+    for (Iterator<String> j=current.getDirectories().keySet().iterator(); j.hasNext(); ) {
+      String dir=j.next();
+      Resource resource=current.getResource(dir + "/packageinfo");
+      if (resource != null) {
+        InputStream in=resource.openInputStream();
+        String version=parsePackageInfo(in);
+        in.close();
+        setPackageInfo(dir,"version",version);
+      }
+    }
+  }
+}
