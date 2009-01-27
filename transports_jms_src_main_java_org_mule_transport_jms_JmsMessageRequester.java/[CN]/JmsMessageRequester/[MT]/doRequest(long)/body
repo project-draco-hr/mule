@@ -8,15 +8,17 @@
     Destination dest=support.createDestination(session,endpoint);
     String selector=null;
     if (endpoint.getFilter() != null && endpoint.getFilter() instanceof JmsSelectorFilter) {
-      selector=((JmsSelectorFilter)endpoint.getFilter()).getExpression();
+      final String expressionTemplate=((JmsSelectorFilter)endpoint.getFilter()).getExpression();
+      selector=connector.getMuleContext().getExpressionManager().parse(expressionTemplate,null);
     }
  else     if (endpoint.getProperties() != null) {
-      selector=(String)endpoint.getProperties().get(JmsConstants.JMS_SELECTOR_PROPERTY);
+      final String expressionTemplate=(String)endpoint.getProperty(JmsConstants.JMS_SELECTOR_PROPERTY);
+      selector=connector.getMuleContext().getExpressionManager().parse(expressionTemplate,null);
     }
     String tempDurable=(String)endpoint.getProperties().get(JmsConstants.DURABLE_PROPERTY);
     boolean durable=connector.isDurable();
     if (tempDurable != null) {
-      durable=Boolean.valueOf(tempDurable).booleanValue();
+      durable=Boolean.valueOf(tempDurable);
     }
     String durableName=(String)endpoint.getProperties().get(JmsConstants.DURABLE_NAME_PROPERTY);
     if (durableName == null && durable && topic) {
