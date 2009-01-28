@@ -3,10 +3,17 @@
   if (isConnected()) {
     return;
   }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Connecting: " + this);
+  }
   retryPolicyTemplate.execute(new RetryCallback(){
     public void doWork(    RetryContext context) throws Exception {
+      if (!isAbleToConnect()) {
+        throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect to resource"),null);
+      }
       doConnect();
       setConnected(true);
+      logger.info("Connected: " + getWorkDescription());
       if (startOnConnect) {
         start();
       }
