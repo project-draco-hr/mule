@@ -1,0 +1,20 @@
+{
+  WSPasswordCallback pc=(WSPasswordCallback)callbacks[0];
+  if (pc.getUsage() == WSPasswordCallback.USERNAME_TOKEN || pc.getUsage() == WSPasswordCallback.USERNAME_TOKEN_UNKNOWN) {
+    DefaultMuleAuthentication auth=new DefaultMuleAuthentication(new MuleCredentials(pc.getIdentifer(),pc.getPassword().toCharArray()));
+    try {
+      securityManager.authenticate(auth);
+    }
+ catch (    SecurityException e) {
+      IOException ie=new IOException("password incorrect for user: " + pc.getIdentifer());
+      ie.initCause(e);
+      throw ie;
+    }
+catch (    SecurityProviderNotFoundException e) {
+      IOException ie=new IOException("password incorrect for user: " + pc.getIdentifer());
+      ie.initCause(e);
+      throw ie;
+    }
+    pc.setPassword(pc.getPassword());
+  }
+}
