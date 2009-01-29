@@ -1,0 +1,44 @@
+{
+  String preferredName=null;
+  String preferredPath=null;
+  if (!name.endsWith(".properties")) {
+    name+=".properties";
+    preferredName="preferred-" + name;
+  }
+  if (path.startsWith("/")) {
+    path=path.substring(1);
+  }
+  if (!path.endsWith("/")) {
+    path+="/";
+  }
+  if (path.startsWith(SERVICE_ROOT)) {
+    path+=name;
+  }
+ else {
+    preferredPath=SERVICE_ROOT + path + preferredName;
+    path=SERVICE_ROOT + path + name;
+  }
+  try {
+    InputStream is=IOUtils.getResourceAsStream(preferredPath,currentClass,false,false);
+    if (is == null && fallbackToNonPreferred) {
+      is=IOUtils.getResourceAsStream(path,currentClass,false,false);
+    }
+    if (is != null) {
+      Properties props=new Properties();
+      try {
+        props.load(is);
+        return props;
+      }
+ catch (      IOException e) {
+        logger.warn("Descriptor found but unable to load properties for service " + name);
+        return null;
+      }
+    }
+ else {
+      return null;
+    }
+  }
+ catch (  IOException e) {
+    return null;
+  }
+}
