@@ -4,8 +4,16 @@
       final String muleInternalDir=MuleServer.getMuleContext().getConfiguration().getWorkingDirectory();
       arjPropertyManager.propertyManager.setProperty(Environment.OBJECTSTORE_DIR,muleInternalDir + "/transaction-log");
     }
-    for (Iterator i=properties.entrySet().iterator(); i.hasNext(); ) {
-      Map.Entry entry=(Map.Entry)i.next();
+    if (!properties.containsKey(Environment.XA_NODE_IDENTIFIER)) {
+      try {
+        InetAddress address=InetAddress.getLocalHost();
+        final String xaNodeId=MessageFormat.format("Mule[{0}/{1}]",address.getHostName(),address.getHostAddress());
+        properties.put(Environment.XA_NODE_IDENTIFIER,xaNodeId);
+      }
+ catch (      UnknownHostException e) {
+      }
+    }
+    for (    Map.Entry entry : properties.entrySet()) {
       arjPropertyManager.propertyManager.setProperty((String)entry.getKey(),(String)entry.getValue());
     }
     tm=com.arjuna.ats.jta.TransactionManager.transactionManager();
