@@ -1,6 +1,13 @@
 {
-  if (type.equals(ServiceDescriptorFactory.PROVIDER_SERVICE_TYPE)) {
-    return findServiceDescriptor(PROVIDER_SERVICE_PATH,name,TransportFactory.class);
+  if (type.equals(ServiceDescriptorFactory.TRANSPORT_SERVICE_TYPE)) {
+    Properties tsd=findServiceDescriptor(TRANSPORT_SERVICE_PATH,name,TransportFactory.class);
+    if (tsd == null) {
+      tsd=findServiceDescriptor(PROVIDER_SERVICE_PATH,name,TransportFactory.class);
+      if (tsd != null && logger.isWarnEnabled()) {
+        logger.warn(MessageFormat.format("[{0}] transport service descriptor must be moved under {1}{2}. " + "Old-style {1}{3} has been deprecated and may not be supported in the future.",name,SERVICE_ROOT,TRANSPORT_SERVICE_PATH,PROVIDER_SERVICE_PATH));
+      }
+    }
+    return tsd;
   }
  else   if (type.equals(ServiceDescriptorFactory.EXCEPTION_SERVICE_TYPE)) {
     return findServiceDescriptor(EXCEPTION_SERVICE_PATH,name,ExceptionHelper.class);
