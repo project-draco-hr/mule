@@ -2,7 +2,13 @@
   try {
     final EndpointURI uri=endpoint.getEndpointURI();
     String filename=getFilename(endpoint,message);
-    final FTPClient client=this.createFtpClient(endpoint);
+    final FTPClient client;
+    try {
+      client=this.createFtpClient(endpoint);
+    }
+ catch (    Exception e) {
+      throw new OutboundConnectException(e,(OutboundEndpoint)endpoint);
+    }
     try {
       OutputStream out=client.storeFileStream(filename);
       return new CallbackOutputStream(out,new CallbackOutputStream.Callback(){
