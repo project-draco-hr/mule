@@ -1,8 +1,9 @@
 {
   super.doSetUp();
   httpServer=new Server(HTTP_PORT);
-  ServletHandler handler=new ServletHandler();
-  handler.addServletWithMapping(MuleReceiverServlet.class,"/services/*");
-  httpServer.addHandler(handler);
+  String path=getContextPath();
+  if (path.equals(""))   path="/";
+  Context c=new Context(httpServer,path,Context.SESSIONS);
+  c.addServlet(new ServletHolder(new MuleReceiverServlet()),"/services/*");
   httpServer.start();
 }
