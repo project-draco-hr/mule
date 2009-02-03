@@ -1,0 +1,39 @@
+{
+  super.initialise();
+  if (getXpath() == null) {
+    setXpath(XPathFactory.newInstance().newXPath());
+  }
+  if (pattern == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("A pattern must be supplied to the StandardXPathFilter."),this);
+  }
+  final Map<String,String> prefixToNamespaceMap=this.prefixToNamespaceMap;
+  if (prefixToNamespaceMap != null) {
+    getXpath().setNamespaceContext(new NamespaceContext(){
+      public String getNamespaceURI(      String prefix){
+        return prefixToNamespaceMap.get(prefix);
+      }
+      public String getPrefix(      String namespaceURI){
+        for (        Map.Entry<String,String> entry : prefixToNamespaceMap.entrySet()) {
+          if (namespaceURI.equals(entry.getValue())) {
+            return entry.getKey();
+          }
+        }
+        return null;
+      }
+      public Iterator getPrefixes(      String namespaceURI){
+        String prefix=getPrefix(namespaceURI);
+        if (prefix == null) {
+          return Collections.emptyList().iterator();
+        }
+ else {
+          return Arrays.asList(prefix).iterator();
+        }
+      }
+    }
+);
+  }
+  if (logger.isInfoEnabled()) {
+    logger.info("XPath implementation: " + getXpath());
+    logger.info("DocumentBuilderFactory implementation: " + getDocumentBuilderFactory());
+  }
+}
