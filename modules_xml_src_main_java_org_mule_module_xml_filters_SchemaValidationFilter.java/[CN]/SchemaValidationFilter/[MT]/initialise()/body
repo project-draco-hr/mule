@@ -1,0 +1,40 @@
+{
+  super.initialise();
+  if (getSchemaObject() == null) {
+    String schemaFile=getSchemaFile();
+    if (schemaFile == null) {
+      throw new InitialisationException(CoreMessages.objectIsNull("schemaFile"),this);
+    }
+    InputStream schemaStream;
+    try {
+      schemaStream=loadSchemaStream(schemaFile);
+    }
+ catch (    IOException e) {
+      throw new InitialisationException(e,this);
+    }
+    if (schemaStream == null) {
+      throw new InitialisationException(CoreMessages.failedToLoad(schemaFile),this);
+    }
+    SchemaFactory schemaFactory=SchemaFactory.newInstance(getSchemaLanguage());
+    if (logger.isInfoEnabled()) {
+      logger.info("Schema factory implementation: " + schemaFactory);
+    }
+    if (this.errorHandler != null) {
+      schemaFactory.setErrorHandler(this.errorHandler);
+    }
+    if (this.resourceResolver != null) {
+      schemaFactory.setResourceResolver(this.resourceResolver);
+    }
+    Schema schema;
+    try {
+      schema=schemaFactory.newSchema(new StreamSource(schemaStream));
+    }
+ catch (    SAXException e) {
+      throw new InitialisationException(e,this);
+    }
+    setSchemaObject(schema);
+  }
+  if (getSchemaObject() == null) {
+    throw new InitialisationException(CoreMessages.objectIsNull("schemaObject"),this);
+  }
+}
