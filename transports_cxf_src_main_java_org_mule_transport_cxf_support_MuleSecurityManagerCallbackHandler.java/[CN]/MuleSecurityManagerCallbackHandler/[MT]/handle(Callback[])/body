@@ -4,17 +4,13 @@
     DefaultMuleAuthentication auth=new DefaultMuleAuthentication(new MuleCredentials(pc.getIdentifer(),pc.getPassword().toCharArray()));
     try {
       securityManager.authenticate(auth);
+      pc.setPassword(pc.getPassword());
     }
  catch (    SecurityException e) {
-      IOException ie=new IOException("password incorrect for user: " + pc.getIdentifer());
-      ie.initCause(e);
-      throw ie;
+      throw new WSSecurityException(WSSecurityException.FAILED_AUTHENTICATION,null,null,e);
     }
 catch (    SecurityProviderNotFoundException e) {
-      IOException ie=new IOException("password incorrect for user: " + pc.getIdentifer());
-      ie.initCause(e);
-      throw ie;
+      throw new WSSecurityException(WSSecurityException.FAILED_AUTHENTICATION,null,null,e);
     }
-    pc.setPassword(pc.getPassword());
   }
 }
