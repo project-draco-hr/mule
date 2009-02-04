@@ -14,15 +14,15 @@
       doConnect();
       Map info=context.getMetaInfo();
       if (info != null) {
-        if (info.get("failedReceiver") != null) {
-          String receiverKey=(String)info.get("failedReceiver");
+        if (info.get(RetryContext.FAILED_RECEIVER) != null) {
+          String receiverKey=(String)info.get(RetryContext.FAILED_RECEIVER);
           MessageReceiver receiver=(MessageReceiver)receivers.get(receiverKey);
           if (!receiver.validateConnection()) {
             throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect to resource"),receiver);
           }
         }
- else         if (info.get("failedDispatcher") != null) {
-          OutboundEndpoint endpoint=(OutboundEndpoint)info.get("failedDispatcher");
+ else         if (info.get(RetryContext.FAILED_DISPATCHER) != null) {
+          OutboundEndpoint endpoint=(OutboundEndpoint)info.get(RetryContext.FAILED_DISPATCHER);
           MessageDispatcher dispatcher=(MessageDispatcher)dispatchers.borrowObject(endpoint);
           try {
             if (!dispatcher.validateConnection()) {
@@ -31,6 +31,18 @@
           }
   finally {
             dispatchers.returnObject(endpoint,dispatcher);
+          }
+        }
+ else         if (info.get(RetryContext.FAILED_REQUESTER) != null) {
+          OutboundEndpoint endpoint=(OutboundEndpoint)info.get(RetryContext.FAILED_REQUESTER);
+          MessageRequester requester=(MessageRequester)requesters.borrowObject(endpoint);
+          try {
+            if (!requester.validateConnection()) {
+              throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect to resource"),null);
+            }
+          }
+  finally {
+            requesters.returnObject(endpoint,requester);
           }
         }
       }
