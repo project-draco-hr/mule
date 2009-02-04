@@ -1,16 +1,18 @@
 {
   Connection connection=null;
   try {
-    ConnectionFactory factory=new ActiveMQConnectionFactory(scenario.getBrokerUrl());
-    connection=factory.createConnection();
+    connection=getConnectionFactory(false,false).createConnection();
     connection.start();
     Session session=null;
     try {
       session=connection.createSession(scenario.isTransacted(),scenario.getAcknowledge());
-      ActiveMQQueue destination=new ActiveMQQueue(scenario.getInputQueue());
+      Destination destination=createInputDestination(session,scenario);
       MessageProducer producer=null;
       try {
         producer=session.createProducer(destination);
+        if (scenario.isPersistent()) {
+          producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        }
         scenario.send(session,producer);
       }
   finally {
