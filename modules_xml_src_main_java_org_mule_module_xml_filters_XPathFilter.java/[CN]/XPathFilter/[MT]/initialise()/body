@@ -6,6 +6,20 @@
   if (pattern == null) {
     throw new InitialisationException(MessageFactory.createStaticMessage("A pattern must be supplied to the " + ClassUtils.getSimpleName(getClass())),this);
   }
+  try {
+    namespaceManager=(NamespaceManager)muleContext.getRegistry().lookupObject(NamespaceManager.class);
+  }
+ catch (  RegistrationException e) {
+    throw new ExpressionRuntimeException(CoreMessages.failedToLoad("NamespaceManager"),e);
+  }
+  if (namespaceManager != null) {
+    if (prefixToNamespaceMap == null) {
+      prefixToNamespaceMap=new HashMap(namespaceManager.getNamespaces());
+    }
+ else {
+      prefixToNamespaceMap.putAll(namespaceManager.getNamespaces());
+    }
+  }
   final Map<String,String> prefixToNamespaceMap=this.prefixToNamespaceMap;
   if (prefixToNamespaceMap != null) {
     getXpath().setNamespaceContext(new NamespaceContext(){
