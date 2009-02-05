@@ -1,0 +1,18 @@
+{
+  syncXmlSplitter.setNamespaces(null);
+  asyncXmlSplitter.setNamespaces(null);
+  NamespaceManager namespaceManager=(NamespaceManager)muleContext.getRegistry().lookupObject(NamespaceManager.class);
+  if (namespaceManager == null) {
+    namespaceManager=new NamespaceManager();
+    muleContext.getRegistry().registerObject(MuleProperties.OBJECT_MULE_NAMESPACE_MANAGER,namespaceManager);
+  }
+  Map namespaces=new HashMap();
+  namespaces.put("e","http://www.example.com");
+  syncXmlSplitter.setSplitExpression("/e:purchaseOrder/e:items/e:item");
+  asyncXmlSplitter.setSplitExpression("/e:purchaseOrder/e:items/e:item");
+  namespaceManager.setNamespaces(namespaces);
+  syncXmlSplitter.initialise();
+  asyncXmlSplitter.initialise();
+  String payload=IOUtils.getResourceAsString("purchase-order.xml",getClass());
+  internalTestSuccessfulXmlSplitter(payload);
+}

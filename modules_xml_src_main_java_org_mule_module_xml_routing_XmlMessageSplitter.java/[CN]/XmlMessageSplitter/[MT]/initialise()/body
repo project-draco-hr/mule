@@ -3,5 +3,19 @@
   if (StringUtils.isBlank(splitExpression)) {
     throw new IllegalArgumentException(CoreMessages.objectIsNull("splitExpression").getMessage());
   }
+  try {
+    namespaceManager=(NamespaceManager)muleContext.getRegistry().lookupObject(NamespaceManager.class);
+    if (namespaceManager != null) {
+      if (namespaces == null) {
+        namespaces=new HashMap(namespaceManager.getNamespaces());
+      }
+ else {
+        namespaces.putAll(namespaceManager.getNamespaces());
+      }
+    }
+  }
+ catch (  RegistrationException e) {
+    throw new InitialisationException(CoreMessages.failedToLoad("NamespaceManager"),e,this);
+  }
   super.initialise();
 }
