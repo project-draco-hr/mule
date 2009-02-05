@@ -11,11 +11,20 @@
       throw new ConnectException(e,this);
     }
     MuleMessage message;
-    InputStream stream=client.retrieveFileStream(file.getName());
-    if (stream == null) {
-      throw new IOException(MessageFormat.format("Failed to retrieve file {0}. Ftp error: {1}",file.getName(),client.getReplyCode()));
+    if (connector.isStreaming()) {
+      InputStream stream=client.retrieveFileStream(file.getName());
+      if (stream == null) {
+        throw new IOException(MessageFormat.format("Failed to retrieve file {0}. Ftp error: {1}",file.getName(),client.getReplyCode()));
+      }
+      message=new DefaultMuleMessage(connector.getMessageAdapter(stream));
     }
-    message=new DefaultMuleMessage(connector.getMessageAdapter(stream));
+ else {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream();
+      if (!client.retrieveFile(file.getName(),baos)) {
+        throw new IOException(MessageFormat.format("Failed to retrieve file {0}. Ftp error: {1}",file.getName(),client.getReplyCode()));
+      }
+      message=new DefaultMuleMessage(connector.getMessageAdapter(baos.toByteArray()));
+    }
     message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,file.getName());
     message.setProperty(FileConnector.PROPERTY_FILE_SIZE,file.getSize());
     routeMessage(message);
