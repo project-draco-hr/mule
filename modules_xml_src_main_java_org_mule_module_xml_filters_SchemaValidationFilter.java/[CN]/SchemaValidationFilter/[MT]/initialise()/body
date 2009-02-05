@@ -1,19 +1,24 @@
 {
   super.initialise();
   if (getSchemaObject() == null) {
-    String schemaFile=getSchemaFile();
-    if (schemaFile == null) {
+    if (schemaLocations == null) {
       throw new InitialisationException(CoreMessages.objectIsNull("schemaFile"),this);
     }
-    InputStream schemaStream;
-    try {
-      schemaStream=loadSchemaStream(schemaFile);
-    }
- catch (    IOException e) {
-      throw new InitialisationException(e,this);
-    }
-    if (schemaStream == null) {
-      throw new InitialisationException(CoreMessages.failedToLoad(schemaFile),this);
+    String[] split=StringUtils.split(schemaLocations,",");
+    Source[] schemas=new Source[split.length];
+    for (int i=0; i < split.length; i++) {
+      String loc=split[i].trim();
+      InputStream schemaStream;
+      try {
+        schemaStream=loadSchemaStream(loc);
+      }
+ catch (      IOException e) {
+        throw new InitialisationException(e,this);
+      }
+      if (schemaStream == null) {
+        throw new InitialisationException(CoreMessages.failedToLoad(loc),this);
+      }
+      schemas[i]=new StreamSource(schemaStream);
     }
     SchemaFactory schemaFactory=SchemaFactory.newInstance(getSchemaLanguage());
     if (logger.isInfoEnabled()) {
@@ -27,7 +32,7 @@
     }
     Schema schema;
     try {
-      schema=schemaFactory.newSchema(new StreamSource(schemaStream));
+      schema=schemaFactory.newSchema(schemas);
     }
  catch (    SAXException e) {
       throw new InitialisationException(e,this);
