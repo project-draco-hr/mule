@@ -7,20 +7,36 @@
     }
     public void run(){
       while (true) {
-        List expired=new ArrayList(1);
-        for (Iterator iterator=eventGroups.values().iterator(); iterator.hasNext(); ) {
-          EventGroup group=(EventGroup)iterator.next();
+        List<EventGroup> expired=new ArrayList<EventGroup>(1);
+        for (        Object o : eventGroups.values()) {
+          EventGroup group=(EventGroup)o;
           if ((group.getCreated() + getTimeout() * MILLI_TO_NANO_MULTIPLIER) < Utils.nanoTime()) {
             expired.add(group);
           }
         }
         if (expired.size() > 0) {
-          for (Iterator iterator=expired.iterator(); iterator.hasNext(); ) {
-            EventGroup group=(EventGroup)iterator.next();
+          for (          Object anExpired : expired) {
+            EventGroup group=(EventGroup)anExpired;
             eventGroups.remove(group.getGroupId());
             locks.remove(group.getGroupId());
-            context.fireNotification(new RoutingNotification(group.toMessageCollection(),null,RoutingNotification.CORRELATION_TIMEOUT));
-            group.toArray()[0].getService().getExceptionListener().exceptionThrown(new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.toMessageCollection()));
+            final Service service=group.toArray()[0].getService();
+            if (isFailOnTimeout()) {
+              context.fireNotification(new RoutingNotification(group.toMessageCollection(),null,RoutingNotification.CORRELATION_TIMEOUT));
+              service.getExceptionListener().exceptionThrown(new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.toMessageCollection()));
+            }
+ else {
+              if (logger.isDebugEnabled()) {
+                logger.debug(MessageFormat.format("Aggregator expired, but ''failOnTimeOut'' is false. Forwarding {0} events out of {1} " + "total for group ID: {2}",group.size(),group.expectedSize(),group.getGroupId()));
+              }
+              try {
+                MuleMessage msg=callback.aggregateEvents(group);
+                MuleEvent newEvent=new DefaultMuleEvent(msg,group.toArray()[0].getEndpoint(),new DefaultMuleSession(service,context),false);
+                service.getComponent().invoke(newEvent);
+              }
+ catch (              Exception e) {
+                service.getExceptionListener().exceptionThrown(e);
+              }
+            }
           }
         }
         try {
