@@ -70,6 +70,7 @@
         sfb.setProperties(properties);
       }
       properties.put("mtom-enabled",mtomEnabled);
+      properties.put(AttachmentOutInterceptor.WRITE_ATTACHMENTS,true);
     }
     sfb.setInInterceptors((List<Interceptor>)endpointProps.get("inInterceptors"));
     sfb.setInFaultInterceptors((List<Interceptor>)endpointProps.get("inFaultInterceptors"));
@@ -89,6 +90,8 @@
     sfb.getOutFaultInterceptors().add(new MuleProtocolHeadersOutInterceptor());
     if (proxy) {
       sfb.getOutInterceptors().add(new OutputPayloadInterceptor());
+      sfb.getInInterceptors().add(new CopyAttachmentInInterceptor());
+      sfb.getOutInterceptors().add(new CopyAttachmentOutInterceptor());
     }
     sfb.setServiceClass(svcCls);
     sfb.setAddress(getAddressWithoutQuery());
