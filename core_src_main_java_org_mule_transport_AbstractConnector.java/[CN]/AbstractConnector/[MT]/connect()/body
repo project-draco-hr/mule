@@ -8,7 +8,7 @@
   }
   retryPolicyTemplate.execute(new RetryCallback(){
     public void doWork(    RetryContext context) throws Exception {
-      if (!validateConnection(context).isOk()) {
+      if (validateConnections && !validateConnection(context).isOk()) {
         throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect to resource"),context.getLastFailure(),null);
       }
       doConnect();
@@ -16,7 +16,7 @@
       if (info.get(RetryContext.FAILED_RECEIVER) != null) {
         String receiverKey=(String)info.get(RetryContext.FAILED_RECEIVER);
         MessageReceiver receiver=(MessageReceiver)receivers.get(receiverKey);
-        if (!receiver.validateConnection(context).isOk()) {
+        if (validateConnections && !receiver.validateConnection(context).isOk()) {
           throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect receiver to resource"),context.getLastFailure(),receiver);
         }
       }
@@ -24,7 +24,7 @@
         OutboundEndpoint endpoint=(OutboundEndpoint)info.get(RetryContext.FAILED_DISPATCHER);
         MessageDispatcher dispatcher=(MessageDispatcher)dispatchers.borrowObject(endpoint);
         try {
-          if (!dispatcher.validateConnection(context).isOk()) {
+          if (validateConnections && !dispatcher.validateConnection(context).isOk()) {
             throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect dispatcher to resource"),context.getLastFailure(),null);
           }
         }
@@ -36,7 +36,7 @@
         OutboundEndpoint endpoint=(OutboundEndpoint)info.get(RetryContext.FAILED_REQUESTER);
         MessageRequester requester=(MessageRequester)requesters.borrowObject(endpoint);
         try {
-          if (!requester.validateConnection(context).isOk()) {
+          if (validateConnections && !requester.validateConnection(context).isOk()) {
             throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect requester to resource"),context.getLastFailure(),null);
           }
         }
