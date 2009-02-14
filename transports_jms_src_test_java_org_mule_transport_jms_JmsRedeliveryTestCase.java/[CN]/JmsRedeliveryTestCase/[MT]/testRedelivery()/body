@@ -1,4 +1,8 @@
 {
+  MuleClient client=new MuleClient();
+  while (client.request(DESTINATION,1000) != null) {
+    logger.warn("Destination " + DESTINATION + " isn't empty, draining it");
+  }
   FunctionalTestComponent ftc=getFunctionalTestComponent("Bouncer");
   final Latch mrexFired=new Latch();
   muleContext.registerListener(new ExceptionNotificationListener(){
@@ -19,8 +23,7 @@
   }
 ;
   ftc.setEventCallback(callback);
-  MuleClient client=new MuleClient();
-  client.dispatch("jms://in","test",null);
+  client.dispatch(DESTINATION,"test",null);
   mrexFired.await(timeout,TimeUnit.MILLISECONDS);
   assertEquals("MessageRedeliveredException never fired.",0,mrexFired.getCount());
   assertEquals("Wrong number of delivery attempts",4,callback.getCallbackCount());
