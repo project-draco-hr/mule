@@ -1,0 +1,27 @@
+{
+  FunctionalTestComponent ftc=getFunctionalTestComponent("Bouncer");
+  final Latch mrexFired=new Latch();
+  muleContext.registerListener(new ExceptionNotificationListener(){
+    public void onNotification(    ServerNotification notification){
+      ExceptionNotification n=(ExceptionNotification)notification;
+      if (n.getException() instanceof MessageRedeliveredException) {
+        mrexFired.countDown();
+      }
+    }
+  }
+);
+  final CounterCallback callback=new CounterCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object Component) throws Exception {
+      final int count=incCallbackCount();
+      logger.info("Message Delivery Count is: " + count);
+      throw new FunctionalTestException();
+    }
+  }
+;
+  ftc.setEventCallback(callback);
+  MuleClient client=new MuleClient();
+  client.dispatch("jms://in","test",null);
+  mrexFired.await(timeout,TimeUnit.MILLISECONDS);
+  assertEquals("MessageRedeliveredException never fired.",0,mrexFired.getCount());
+  assertEquals(3,callback.getCallbackCount());
+}
