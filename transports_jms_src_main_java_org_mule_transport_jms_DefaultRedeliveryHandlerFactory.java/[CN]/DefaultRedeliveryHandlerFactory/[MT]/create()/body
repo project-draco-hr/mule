@@ -1,3 +1,17 @@
 {
-  return new DefaultRedeliveryHandler();
+  RedeliveryHandler result=null;
+  if (handler.get() == null) {
+    final DefaultRedeliveryHandler newInstance=new DefaultRedeliveryHandler();
+    boolean ok=handler.compareAndSet(null,newInstance);
+    if (!ok) {
+      result=handler.get();
+    }
+ else {
+      result=newInstance;
+    }
+  }
+ else {
+    result=handler.get();
+  }
+  return result;
 }
