@@ -1,12 +1,15 @@
 {
-  MuleEvent event=RequestContext.getEvent();
+  MuleEvent event=(MuleEvent)message.get(MULE_EVENT_PROPERTY);
+  MuleMessage muleMsg;
   if (event == null) {
-    event=(MuleEvent)message.getExchange().getInMessage().get(MULE_EVENT_PROPERTY);
+    muleMsg=(MuleMessage)message.get(CxfConstants.MULE_MESSAGE);
+  }
+ else {
+    muleMsg=event.getMessage();
   }
   Collection<Attachment> atts=message.getAttachments();
   if (atts != null) {
-    MuleMessage muleMsg=event.getMessage();
-    muleMsg.setProperty(CxfConstants.ATTACHMENTS,atts);
+    muleMsg.setProperty(CxfConstants.ATTACHMENTS,atts,PropertyScope.OUTBOUND);
     muleMsg.setProperty(HttpConstants.HEADER_CONTENT_TYPE,muleMsg.getProperty(HttpConstants.HEADER_CONTENT_TYPE),PropertyScope.OUTBOUND);
   }
 }

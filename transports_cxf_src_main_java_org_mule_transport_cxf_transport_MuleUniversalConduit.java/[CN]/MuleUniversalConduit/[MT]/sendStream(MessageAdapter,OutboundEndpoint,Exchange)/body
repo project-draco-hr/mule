@@ -1,0 +1,30 @@
+{
+  MuleEventContext eventContext=RequestContext.getEventContext();
+  MuleSession session=null;
+  if (eventContext != null) {
+    session=eventContext.getSession();
+  }
+  MuleMessage message=new DefaultMuleMessage(sa);
+  if (session == null) {
+    session=new DefaultMuleSession(message,connector.getSessionHandler(),connector.getMuleContext());
+  }
+  MuleEvent prev=RequestContext.getEvent();
+  if (prev != null) {
+    for (Iterator itr=prev.getEndpoint().getProperties().keySet().iterator(); itr.hasNext(); ) {
+      String key=(String)itr.next();
+      message.removeProperty(key);
+    }
+  }
+  message.removeProperty(CxfConstants.OPERATION);
+  message.removeProperty(CxfConstants.INBOUND_OPERATION);
+  message.removeProperty(CxfConstants.INBOUND_SERVICE);
+  MuleEvent event=new DefaultMuleEvent(message,ep,session,true);
+  event.setTimeout(MuleEvent.TIMEOUT_NOT_SET_VALUE);
+  RequestContext.setEvent(event);
+  MuleMessage msg=ep.send(event);
+  Holder<MuleMessage> holder=(Holder<MuleMessage>)exchange.get("holder");
+  if (holder != null) {
+    holder.value=msg;
+  }
+  return msg;
+}

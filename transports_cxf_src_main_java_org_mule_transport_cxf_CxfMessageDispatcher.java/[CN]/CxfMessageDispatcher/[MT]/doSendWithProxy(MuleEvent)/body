@@ -2,6 +2,8 @@
   Method method=wrapper.getMethod(event);
   Map<String,Object> props=new HashMap<String,Object>();
   props.put(MuleProperties.MULE_EVENT_PROPERTY,event);
+  Holder<MuleMessage> holder=new Holder<MuleMessage>();
+  props.put("holder",holder);
   String soapAction=(String)event.getMessage().getProperty(SoapConstants.SOAP_ACTION_PROPERTY);
   if (soapAction != null) {
     soapAction=parseSoapAction(soapAction,new QName(method.getName()),event);
@@ -10,5 +12,6 @@
   BindingProvider bp=wrapper.getClientProxy();
   bp.getRequestContext().putAll(props);
   Object response=method.invoke(wrapper.getClientProxy(),getArgs(event));
-  return buildResponseMessage(event,new Object[]{response});
+  MuleMessage muleRes=holder.value;
+  return buildResponseMessage(muleRes,new Object[]{response});
 }
