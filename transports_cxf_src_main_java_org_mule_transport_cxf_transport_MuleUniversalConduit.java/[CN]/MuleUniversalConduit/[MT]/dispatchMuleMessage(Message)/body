@@ -6,13 +6,14 @@
     MessageAdapter req=(MessageAdapter)m.getExchange().get(CxfConstants.MULE_MESSAGE);
     req.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,uri,PropertyScope.INVOCATION);
     MuleMessage result=sendStream(req,ep,m.getExchange());
-    if (result != null && !isOneway(m.getExchange())) {
+    InputStream is=getResponseBody(m,result);
+    if (is != null) {
       Message inMessage=new MessageImpl();
       String contentType=result.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
       inMessage.put(CxfConstants.MULE_MESSAGE,result);
       inMessage.put(Message.ENCODING,result.getEncoding());
       inMessage.put(Message.CONTENT_TYPE,contentType);
-      inMessage.setContent(InputStream.class,result.getPayload(InputStream.class));
+      inMessage.setContent(InputStream.class,is);
       inMessage.setExchange(m.getExchange());
       getMessageObserver().onMessage(inMessage);
     }
