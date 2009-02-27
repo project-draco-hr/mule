@@ -1,8 +1,8 @@
 {
-  super(umoConnector,service,endpoint);
+  super(connector,service,endpoint);
   this.setTimeUnit(DEFAULT_JMS_POLL_TIMEUNIT);
   this.setFrequency(MapUtils.getLongValue(endpoint.getProperties(),"pollingFrequency",DEFAULT_JMS_POLL_FREQUENCY));
-  this.connector=(JmsConnector)umoConnector;
+  this.connector=(JmsConnector)connector;
   this.timeout=endpoint.getTransactionConfig().getTimeout();
   if (retryTemplate != null && !(retryTemplate instanceof NoRetryPolicyTemplate)) {
     this.reuseConsumer=false;
@@ -10,7 +10,7 @@
   }
   this.reuseConsumer=MapUtils.getBooleanValue(endpoint.getProperties(),"reuseConsumer",this.reuseConsumer);
   this.reuseSession=MapUtils.getBooleanValue(endpoint.getProperties(),"reuseSession",this.reuseSession);
-  boolean topic=connector.getTopicResolver().isTopic(getEndpoint());
+  boolean topic=this.connector.getTopicResolver().isTopic(getEndpoint());
   if (topic && (reuseConsumer || reuseSession)) {
     logger.warn("Destination " + getEndpoint().getEndpointURI() + " is a topic and XA transaction was "+ "configured. Forcing 'reuseSession' and 'reuseConsumer' to false. Set these "+ "on endpoint to avoid the message.");
     reuseConsumer=false;
