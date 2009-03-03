@@ -11,7 +11,7 @@
     addRouter(new InboundPassThroughRouter());
   }
   String componentName=event.getSession().getService().getName();
-  ConcurrentMap eventsToRoute=new ConcurrentHashMap(2);
+  Map<String,MuleEvent> eventsToRoute=new LinkedHashMap<String,MuleEvent>(2);
   boolean noRoute=true;
   boolean match=false;
   InboundRouter inboundRouter;
@@ -22,9 +22,9 @@
       match=true;
       MuleEvent[] events=inboundRouter.process(event);
       if (events != null) {
-        for (int i=0; i < events.length; i++) {
-          lastEvent=events[i];
-          eventsToRoute.putIfAbsent(lastEvent.getId(),lastEvent);
+        for (        MuleEvent event1 : events) {
+          lastEvent=event1;
+          eventsToRoute.put(lastEvent.getId(),lastEvent);
         }
       }
       noRoute=(events == null);
