@@ -1,0 +1,17 @@
+{
+  OutboundEndpoint ep=protocolEndpoints.get(uri);
+  if (ep != null)   return ep;
+  MuleContext muleContext=MuleServer.getMuleContext();
+  MuleRegistry registry=muleContext.getRegistry();
+  if (muleEndpoint == null) {
+    return registry.lookupEndpointFactory().getOutboundEndpoint(uri);
+  }
+  EndpointURIEndpointBuilder builder=new EndpointURIEndpointBuilder(uri,muleContext);
+  String connectorName=(String)muleEndpoint.getProperty("protocolConnector");
+  if (connectorName != null) {
+    builder.setConnector(registry.lookupConnector(connectorName));
+  }
+  ep=registry.lookupEndpointFactory().getOutboundEndpoint(builder);
+  protocolEndpoints.put(uri,ep);
+  return ep;
+}
