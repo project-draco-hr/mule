@@ -2,6 +2,7 @@
   if (message instanceof HttpServletRequest) {
     setPayload((HttpServletRequest)message);
     setContentEncoding((HttpServletRequest)message);
+    Map headers=new HashMap();
     final Map parameterMap=request.getParameterMap();
     if (parameterMap != null && parameterMap.size() > 0) {
       for (Iterator iterator=parameterMap.entrySet().iterator(); iterator.hasNext(); ) {
@@ -10,10 +11,10 @@
         Object value=entry.getValue();
         if (value != null) {
           if (value.getClass().isArray() && ((Object[])value).length == 1) {
-            setProperty(key,((Object[])value)[0]);
+            headers.put(key,((Object[])value)[0]);
           }
  else {
-            setProperty(key,value);
+            headers.put(key,value);
           }
         }
       }
@@ -21,7 +22,7 @@
     String key;
     for (Enumeration e=request.getAttributeNames(); e.hasMoreElements(); ) {
       key=(String)e.nextElement();
-      properties.setProperty(key,request.getAttribute(key));
+      headers.put(key,request.getAttribute(key));
     }
     String realKey;
     for (Enumeration e=request.getHeaderNames(); e.hasMoreElements(); ) {
@@ -38,7 +39,11 @@
           value=value + ":" + port;
         }
       }
-      setProperty(realKey,value);
+      headers.put(realKey,value);
+    }
+    addInboundProperties(headers);
+    if ("GET".equalsIgnoreCase(request.getMethod())) {
+      payload=getProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
     }
   }
  else {
