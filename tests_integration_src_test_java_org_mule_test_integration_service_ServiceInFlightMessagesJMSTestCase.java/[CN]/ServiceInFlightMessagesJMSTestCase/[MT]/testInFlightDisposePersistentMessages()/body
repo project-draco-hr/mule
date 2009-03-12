@@ -1,0 +1,14 @@
+{
+  Service service=muleContext.getRegistry().lookupService("TestPersistentQueueService");
+  TestJMSMessageListener listener=createTestJMSConsumer();
+  populateSedaQueue(service,NUM_MESSAGES);
+  muleContext.stop();
+  assertNoLostMessages(NUM_MESSAGES,service,listener);
+  muleContext.dispose();
+  muleContext=createMuleContext();
+  muleContext.start();
+  reregisterTestJMSConsumer(listener);
+  assertTrue(listener.countdownLatch.await(LATCH_WAIT_TIME_MILLIS,TimeUnit.MILLISECONDS));
+  assertNoLostMessages(NUM_MESSAGES,service,listener);
+  assertSedaQueueEmpty(service);
+}
