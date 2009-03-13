@@ -1,15 +1,27 @@
 {
   MuleMessage result;
+  boolean first=true;
   boolean matchfound=false;
   for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
     OutboundRouter outboundRouter=(OutboundRouter)iterator.next();
-    if (outboundRouter.isMatch(message)) {
+    final MuleMessage outboundRouterMessage;
+    if (!first && (isMatchAll() || outboundRouter.isRequiresNewMessage())) {
+      if (((DefaultMuleMessage)message).isConsumable()) {
+        throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),message);
+      }
+      outboundRouterMessage=new DefaultMuleMessage(message.getPayload(),message);
+    }
+ else {
+      outboundRouterMessage=message;
+    }
+    first=false;
+    if (outboundRouter.isMatch(outboundRouterMessage)) {
       matchfound=true;
       final OutboundRouter router=outboundRouter;
       TransactionTemplate tt=new TransactionTemplate(outboundRouter.getTransactionConfig(),session.getService().getExceptionListener(),muleContext);
       TransactionCallback cb=new TransactionCallback(){
         public Object doInTransaction() throws Exception {
-          return router.route(message,session);
+          return router.route(outboundRouterMessage,session);
         }
       }
 ;
@@ -17,7 +29,7 @@
         result=(MuleMessage)tt.execute(cb);
       }
  catch (      Exception e) {
-        throw new RoutingException(message,null,e);
+        throw new RoutingException(outboundRouterMessage,null,e);
       }
       if (!isMatchAll()) {
         return result;

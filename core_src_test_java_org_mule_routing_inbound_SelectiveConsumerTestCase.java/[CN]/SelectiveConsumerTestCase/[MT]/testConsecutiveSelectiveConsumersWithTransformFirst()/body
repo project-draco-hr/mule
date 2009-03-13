@@ -1,0 +1,15 @@
+{
+  Service testService=getTestService("test",Apple.class);
+  InboundRouterCollection messageRouter=new DefaultInboundRouterCollection();
+  SelectiveConsumer router=new TestSelectiveConsumer("test");
+  router.setFilter(new PayloadTypeFilter(String.class));
+  router.setTransformFirst(true);
+  messageRouter.addRouter(router);
+  SelectiveConsumer router2=new TestSelectiveConsumer("test TRANSFORMED");
+  messageRouter.addRouter(router2);
+  testService.setInboundRouter(messageRouter);
+  testService.start();
+  List<Transformer> transformers=new ArrayList<Transformer>();
+  transformers.add(new StringAppendTransformer(" TRANSFORMED"));
+  messageRouter.route(getTestEvent("test",getTestInboundEndpoint("endpoint",transformers)));
+}

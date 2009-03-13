@@ -1,0 +1,14 @@
+{
+  testService.getOutboundRouter().setMatchAll(true);
+  testService.getOutboundRouter().addRouter(new TestRequiresNewMessageOutboundRouter(false));
+  testService.getOutboundRouter().addRouter(new TestRequiresNewMessageOutboundRouter(false));
+  testService.start();
+  TestRequiresNewMessageOutboundRouter.latch=new CountDownLatch(2);
+  testEvent.getMessage().setPayload(new OutputHandler(){
+    public void write(    MuleEvent event,    OutputStream out) throws IOException {
+    }
+  }
+);
+  MuleMessage result=testService.sendEvent(testEvent);
+  assertTrue(result.getExceptionPayload() != null);
+}

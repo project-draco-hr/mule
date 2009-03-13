@@ -1,0 +1,14 @@
+{
+  testService.getOutboundRouter().setMatchAll(true);
+  testService.getOutboundRouter().addRouter(new TestRequiresNewMessageOutboundRouter(false));
+  testService.getOutboundRouter().addRouter(new TestDoesNotRequireNewMessageOutboundRouter(true));
+  testService.getOutboundRouter().addRouter(new TestRequiresNewMessageOutboundRouter(true));
+  testService.getOutboundRouter().addRouter(new TestDoesNotRequireNewMessageOutboundRouter(true));
+  testService.getOutboundRouter().addRouter(new TestRequiresNewMessageOutboundRouter(true));
+  testService.start();
+  TestRequiresNewMessageOutboundRouter.latch=new CountDownLatch(3);
+  TestDoesNotRequireNewMessageOutboundRouter.latch=new CountDownLatch(2);
+  testService.sendEvent(testEvent);
+  assertTrue(TestDoesNotRequireNewMessageOutboundRouter.latch.await(LATCH_AWAIT_TIMEOUT_MS,TimeUnit.MILLISECONDS));
+  assertTrue(TestDoesNotRequireNewMessageOutboundRouter.latch.await(LATCH_AWAIT_TIMEOUT_MS,TimeUnit.MILLISECONDS));
+}
