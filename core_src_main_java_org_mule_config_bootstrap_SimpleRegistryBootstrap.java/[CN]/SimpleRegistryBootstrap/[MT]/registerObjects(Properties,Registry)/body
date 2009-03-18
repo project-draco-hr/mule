@@ -1,13 +1,53 @@
 {
   for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
     Map.Entry entry=(Map.Entry)iterator.next();
-    Object object=ClassUtils.instanciateClass(entry.getValue().toString());
-    String key=entry.getKey().toString();
-    Class meta=Object.class;
-    if (object instanceof ObjectProcessor) {
-      meta=ObjectProcessor.class;
+    final String className=entry.getValue().toString();
+    boolean optional=false;
+    try {
+      int x=className.indexOf(",");
+      if (x > -1) {
+        Properties p=PropertiesUtils.getPropertiesFromString(className.substring(x + 1),',');
+        optional=p.containsKey("optional");
+      }
+      Object object=ClassUtils.instanciateClass(className);
+      String key=entry.getKey().toString();
+      Class meta=Object.class;
+      if (object instanceof ObjectProcessor) {
+        meta=ObjectProcessor.class;
+      }
+      registry.registerObject(key,object,meta);
     }
-    registry.registerObject(key,object,meta);
+ catch (    InvocationTargetException itex) {
+      Throwable cause=ExceptionUtils.getCause(itex);
+      if (cause instanceof NoClassDefFoundError && optional) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Ignoring optional object: " + className);
+        }
+      }
+ else {
+        throw new Exception(cause);
+      }
+    }
+catch (    NoClassDefFoundError ncdfe) {
+      if (optional) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Ignoring optional object: " + className);
+        }
+      }
+ else {
+        throw ncdfe;
+      }
+    }
+catch (    ClassNotFoundException cnfe) {
+      if (optional) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Ignoring optional object: " + className);
+        }
+      }
+ else {
+        throw cnfe;
+      }
+    }
   }
   props.clear();
 }
