@@ -1,0 +1,24 @@
+{
+  Connection c=null;
+  Session s=null;
+  try {
+    c=getConnection(false,false);
+    assertNotNull(c);
+    c.start();
+    s=c.createSession(false,Session.AUTO_ACKNOWLEDGE);
+    Destination d=s.createQueue(destination);
+    MessageConsumer consumer=s.createConsumer(d);
+    while (consumer.receiveNoWait() != null) {
+      logger.warn("Destination " + destination + " isn't empty, draining it");
+    }
+  }
+  finally {
+    if (c != null) {
+      c.stop();
+      if (s != null) {
+        s.close();
+      }
+      c.close();
+    }
+  }
+}
