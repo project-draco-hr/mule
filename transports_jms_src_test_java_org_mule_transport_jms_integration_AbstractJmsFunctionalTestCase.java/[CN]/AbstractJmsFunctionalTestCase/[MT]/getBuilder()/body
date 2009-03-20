@@ -1,10 +1,15 @@
 {
-  final String configResource=getConfigResources();
-  if (StringUtils.splitAndTrim(configResource,",; ").length > 1) {
-    throw new IllegalArgumentException("Parameterized tests don't support multiple " + "config files as input: " + configResource);
+  if (multipleProviders) {
+    final String configResource=getConfigResources();
+    if (StringUtils.splitAndTrim(configResource,",; ").length > 1) {
+      throw new IllegalArgumentException("Parameterized tests don't support multiple " + "config files as input: " + configResource);
+    }
+    String resources=configResource.substring(configResource.lastIndexOf("/") + 1);
+    resources=String.format("integration/%s/connector-%s,%s",getJmsConfig().getProviderName(),resources,getConfigResources());
+    SpringXmlConfigurationBuilder builder=new SpringXmlConfigurationBuilder(resources);
+    return builder;
   }
-  String resources=configResource.substring(configResource.lastIndexOf("/") + 1);
-  resources=String.format("integration/%s/connector-%s,%s",getJmsConfig().getProviderName(),resources,getConfigResources());
-  SpringXmlConfigurationBuilder builder=new SpringXmlConfigurationBuilder(resources);
-  return builder;
+ else {
+    return super.getBuilder();
+  }
 }
