@@ -45,9 +45,6 @@
     }
     Message msg=(Message)message;
     processMessage(msg,event);
-    if (event.getMessage().getCorrelationId() != null) {
-      msg.setJMSCorrelationID(event.getMessage().getCorrelationId());
-    }
     MuleMessage eventMsg=event.getMessage();
     replyTo=getReplyToDestination(msg,session,event,useReplyToDestination,topic);
     if (replyTo != null) {
@@ -60,17 +57,18 @@
     int priority=StringUtils.isNotBlank(priorityString) ? NumberUtils.toInt(priorityString) : Message.DEFAULT_PRIORITY;
     boolean persistent=StringUtils.isNotBlank(persistentDeliveryString) ? BooleanUtils.toBoolean(persistentDeliveryString) : connector.isPersistentDelivery();
     if (connector.isHonorQosHeaders()) {
-      int priorityProp=eventMsg.getIntProperty(JmsConstants.JMS_PRIORITY,Connector.INT_VALUE_NOT_SET);
-      int deliveryModeProp=eventMsg.getIntProperty(JmsConstants.JMS_DELIVERY_MODE,Connector.INT_VALUE_NOT_SET);
-      if (priorityProp != Connector.INT_VALUE_NOT_SET) {
-        priority=priorityProp;
+      Object priorityProp=eventMsg.getProperty(JmsConstants.JMS_PRIORITY,PropertyScope.OUTBOUND);
+      Object deliveryModeProp=eventMsg.getProperty(JmsConstants.JMS_DELIVERY_MODE,PropertyScope.OUTBOUND);
+      if (priorityProp != null) {
+        priority=NumberUtils.toInt(priorityProp);
       }
-      if (deliveryModeProp != Connector.INT_VALUE_NOT_SET) {
-        persistent=deliveryModeProp == DeliveryMode.PERSISTENT;
+      if (deliveryModeProp != null) {
+        persistent=NumberUtils.toInt(deliveryModeProp) == DeliveryMode.PERSISTENT;
       }
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Sending message of type " + ClassUtils.getSimpleName(msg.getClass()));
+      logger.info("Sending JMS Message type " + msg.getJMSType() + "\n  JMSMessageID="+ msg.getJMSMessageID()+ "\n  JMSCorrelationID="+ msg.getJMSCorrelationID()+ "\n  JMSDeliveryMode="+ (persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT)+ "\n  JMSPriority="+ priority+ "\n  JMSReplyTo="+ msg.getJMSReplyTo());
     }
     connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
     if (useReplyToDestination && replyTo != null) {
