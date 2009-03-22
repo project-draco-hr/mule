@@ -44,12 +44,12 @@
       throw new DispatchException(JmsMessages.checkTransformer("JMS message",message.getClass(),connector.getName()),event.getMessage(),event.getEndpoint());
     }
     Message msg=(Message)message;
-    processMessage(msg,event);
     MuleMessage eventMsg=event.getMessage();
     replyTo=getReplyToDestination(msg,session,event,useReplyToDestination,topic);
     if (replyTo != null) {
       msg.setJMSReplyTo(replyTo);
     }
+    processMessage(msg,event);
     String ttlString=(String)eventMsg.removeProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
     String priorityString=(String)eventMsg.removeProperty(JmsConstants.PRIORITY_PROPERTY);
     String persistentDeliveryString=(String)eventMsg.removeProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY);
@@ -68,7 +68,7 @@
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Sending message of type " + ClassUtils.getSimpleName(msg.getClass()));
-      logger.info("Sending JMS Message type " + msg.getJMSType() + "\n  JMSMessageID="+ msg.getJMSMessageID()+ "\n  JMSCorrelationID="+ msg.getJMSCorrelationID()+ "\n  JMSDeliveryMode="+ (persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT)+ "\n  JMSPriority="+ priority+ "\n  JMSReplyTo="+ msg.getJMSReplyTo());
+      logger.debug("Sending JMS Message type " + msg.getJMSType() + "\n  JMSMessageID="+ msg.getJMSMessageID()+ "\n  JMSCorrelationID="+ msg.getJMSCorrelationID()+ "\n  JMSDeliveryMode="+ (persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT)+ "\n  JMSPriority="+ priority+ "\n  JMSReplyTo="+ msg.getJMSReplyTo());
     }
     connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
     if (useReplyToDestination && replyTo != null) {
