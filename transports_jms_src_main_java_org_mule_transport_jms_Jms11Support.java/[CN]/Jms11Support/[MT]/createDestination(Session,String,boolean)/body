@@ -1,14 +1,24 @@
 {
   if (connector.isJndiDestinations()) {
-    Destination dest=this.getJndiDestination(name);
-    if (dest != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(MessageFormat.format("Destination {0} located in JNDI, will use it now",name));
+    try {
+      Destination dest=getJndiDestination(name);
+      if (dest != null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug(MessageFormat.format("Destination {0} located in JNDI, will use it now",name));
+        }
+        return dest;
       }
-      return dest;
+ else {
+        throw new JMSException("JNDI destination not found with name: " + name);
+      }
     }
- else     if (connector.isForceJndiDestinations()) {
-      throw new JMSException("JNDI destination not found with name: " + name);
+ catch (    JMSException e) {
+      if (connector.isForceJndiDestinations()) {
+        throw e;
+      }
+ else {
+        logger.warn("Unable to look up JNDI destination " + name + ": "+ e.getMessage());
+      }
     }
   }
   if (logger.isDebugEnabled()) {
