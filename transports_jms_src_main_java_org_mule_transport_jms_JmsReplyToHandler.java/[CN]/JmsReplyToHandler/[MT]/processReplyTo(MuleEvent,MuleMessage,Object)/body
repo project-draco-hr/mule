@@ -65,6 +65,15 @@
   }
  finally {
     connector.closeQuietly(replyToProducer);
-    connector.closeQuietly(session);
+    final Transaction transaction=TransactionCoordination.getInstance().getTransaction();
+    if (transaction == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Closing non-TX replyTo session: " + session);
+      }
+      connector.closeQuietly(session);
+    }
+ else     if (logger.isDebugEnabled()) {
+      logger.debug("Not closing TX replyTo session: " + session);
+    }
   }
 }
