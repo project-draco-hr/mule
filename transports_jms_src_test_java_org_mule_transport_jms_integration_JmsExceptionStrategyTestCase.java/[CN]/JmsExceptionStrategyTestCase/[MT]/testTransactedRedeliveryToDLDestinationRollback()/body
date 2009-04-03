@@ -1,6 +1,17 @@
 {
-  send(scenarioDeadLetter);
-  receive(scenarioDeadLetterRollback);
-  receive(scenarioDeadLetter);
-  receive(scenarioDeadLetterNotReceive);
+  sendAndCommit(DEFAULT_INPUT_MESSAGE);
+  receive(getJmsConfig().getDeadLetterDestinationName(),getTimeout(),new MessagePostProcessor(){
+    public void postProcess(    Session session,    Message message) throws JMSException {
+      session.rollback();
+    }
+  }
+);
+  receive(getJmsConfig().getDeadLetterDestinationName(),getTimeout(),new MessagePostProcessor(){
+    public void postProcess(    Session session,    Message message) throws JMSException {
+      session.commit();
+    }
+  }
+);
+  Message output=receive(getJmsConfig().getDeadLetterDestinationName(),getSmallTimeout(),null);
+  assertNull(output);
 }

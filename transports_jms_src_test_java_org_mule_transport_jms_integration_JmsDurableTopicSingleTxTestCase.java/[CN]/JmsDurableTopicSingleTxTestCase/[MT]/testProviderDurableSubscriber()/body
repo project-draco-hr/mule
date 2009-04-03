@@ -1,15 +1,18 @@
 {
   setClientId("Client1");
-  receive(scenarioNotReceive);
+  assertNull(receiveNoWait());
   setClientId("Client2");
-  receive(scenarioNotReceive);
+  assertNull(receiveNoWait());
   setClientId("Sender");
-  send(scenarioCommit);
+  sendAndCommit(DEFAULT_INPUT_MESSAGE);
   setClientId("Client1");
-  receive(scenarioCommit);
-  receive(scenarioNotReceive);
+  Message output=receiveAndCommit();
+  assertPayloadEquals(DEFAULT_INPUT_MESSAGE,output);
+  assertNull(receiveNoWait());
   setClientId("Client2");
-  receive(scenarioRollback);
-  receive(scenarioCommit);
-  receive(scenarioNotReceive);
+  receiveAndRollback();
+  assertPayloadEquals(DEFAULT_INPUT_MESSAGE,output);
+  output=receiveAndCommit();
+  assertPayloadEquals(DEFAULT_INPUT_MESSAGE,output);
+  assertNull(receiveNoWait());
 }

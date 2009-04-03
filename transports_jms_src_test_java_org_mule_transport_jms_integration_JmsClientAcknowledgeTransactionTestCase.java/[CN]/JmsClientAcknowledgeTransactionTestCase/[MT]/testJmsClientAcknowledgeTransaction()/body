@@ -1,6 +1,14 @@
 {
-  send(scenarioAcknowledge);
-  receive(scenarioWithoutAcknowledge);
-  receive(scenarioAcknowledge);
-  receive(scenarioNotReceive);
+  send();
+  Message output=receive();
+  assertPayloadEquals(DEFAULT_OUTPUT_MESSAGE,output);
+  output=receive(new MessagePostProcessor(){
+    public void postProcess(    Session session,    Message message) throws JMSException {
+      message.acknowledge();
+    }
+  }
+);
+  assertPayloadEquals(DEFAULT_OUTPUT_MESSAGE,output);
+  output=receiveNoWait();
+  assertNull(output);
 }
