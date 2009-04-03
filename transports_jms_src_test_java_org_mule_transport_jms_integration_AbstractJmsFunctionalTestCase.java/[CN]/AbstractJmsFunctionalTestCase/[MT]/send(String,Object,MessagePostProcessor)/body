@@ -1,0 +1,49 @@
+{
+  Connection connection=null;
+  try {
+    connection=getConnection(isUseTopics(),false);
+    if (getClientId() != null) {
+      connection.setClientID(getClientId());
+    }
+    connection.start();
+    Session session=null;
+    try {
+      session=connection.createSession(isTransacted(),getAcknowledgeMode());
+      Destination destination;
+      if (isUseTopics()) {
+        destination=session.createTopic(dest);
+      }
+ else {
+        destination=session.createQueue(dest);
+      }
+      MessageProducer producer=null;
+      try {
+        producer=session.createProducer(destination);
+        if (isPersistent()) {
+          producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        }
+        Message message=createJmsMessage(payload,session);
+        producer.send(message);
+        if (postProcessor != null) {
+          postProcessor.postProcess(session,message);
+        }
+        return message;
+      }
+  finally {
+        if (producer != null) {
+          producer.close();
+        }
+      }
+    }
+  finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+  }
+  finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+}
