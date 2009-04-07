@@ -5,7 +5,7 @@
  else   if (object instanceof String) {
     return session.createTextMessage((String)object);
   }
- else   if (object instanceof Map) {
+ else   if (object instanceof Map && validateMapMessageType((Map)object)) {
     MapMessage mMsg=session.createMapMessage();
     Map src=(Map)object;
     for (Iterator i=src.entrySet().iterator(); i.hasNext(); ) {
@@ -34,8 +34,12 @@
     List list=(List)object;
     for (Iterator iter=list.iterator(); iter.hasNext(); ) {
       Object o=iter.next();
-      validateStreamMessageType(o);
-      sMsg.writeObject(o);
+      if (validateStreamMessageType(o)) {
+        sMsg.writeObject(o);
+      }
+ else {
+        throw new MessageFormatException(String.format("Invalid type passed to StreamMessage: %s . Allowed types are: " + "Boolean, Byte, Short, Character, Integer, Long, Float, Double," + "String and byte[]",ClassUtils.getShortClassName(o,"null")));
+      }
     }
     return sMsg;
   }

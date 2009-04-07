@@ -4,17 +4,19 @@
   p.put("Key1","Value1");
   p.put("Key2",new byte[]{1,2,3});
   p.put("Key3",new Double(99.999));
+  p.put("Key4",new Orange());
   AbstractJmsTransformer trans=new SessionEnabledObjectToJMSMessage(session);
-  trans.setReturnClass(MapMessage.class);
+  trans.setReturnClass(ObjectMessage.class);
   Object result2=trans.transform(p);
-  assertTrue("Transformed object should be a MapMessage",result2 instanceof MapMessage);
-  MapMessage mMsg=(MapMessage)result2;
+  assertTrue("Transformed object should be a ObjectMessage",result2 instanceof ObjectMessage);
+  ObjectMessage oMsg=(ObjectMessage)result2;
   AbstractJmsTransformer trans2=new JMSMessageToObject();
   trans2.setReturnClass(Map.class);
-  Object result=trans2.transform(mMsg);
+  Object result=trans2.transform(oMsg);
   assertTrue("Transformed object should be a Map",result instanceof Map);
   Map m=(Map)result;
   assertEquals("Value1",m.get("Key1"));
   assertTrue(Arrays.equals(new byte[]{1,2,3},(byte[])m.get("Key2")));
   assertEquals(new Double(99.999),m.get("Key3"));
+  assertEquals(new Orange(),m.get("Key4"));
 }

@@ -1,0 +1,45 @@
+{
+  Session session=null;
+  try {
+    ConnectionFactory cf=new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&broker.useJmx=false");
+    session=cf.createConnection().createSession(false,Session.AUTO_ACKNOWLEDGE);
+    Map data=new HashMap();
+    data.put("value1",new Float(4));
+    data.put("value2",new byte[]{1,2,3});
+    data.put("value3","value3");
+    data.put("value4",new Double(67.9));
+    data.put("value5",true);
+    Message message=JmsMessageUtils.toMessage(data,session);
+    assertTrue(message instanceof MapMessage);
+    MapMessage mapMessage=(MapMessage)message;
+    assertEquals(new Float(4),mapMessage.getFloat("value1"));
+    assertTrue(Arrays.equals(new byte[]{1,2,3},mapMessage.getBytes("value2")));
+    assertEquals("value3",mapMessage.getString("value3"));
+    assertEquals(new Double(67.9),mapMessage.getDouble("value4"));
+    assertTrue(mapMessage.getBoolean("value5"));
+    data.put("orange",new Orange());
+    message=JmsMessageUtils.toMessage(data,session);
+    assertTrue(message instanceof ObjectMessage);
+    ObjectMessage objectMessage=(ObjectMessage)message;
+    Map values=(Map)objectMessage.getObject();
+    assertEquals(new Float(4),values.get("value1"));
+    assertTrue(Arrays.equals(new byte[]{1,2,3},(byte[])values.get("value2")));
+    assertEquals("value3",values.get("value3"));
+    assertEquals(new Double(67.9),values.get("value4"));
+    assertTrue((Boolean)values.get("value5"));
+    assertEquals(new Orange(),values.get("orange"));
+    data.put("notserializable",new BananaFactory());
+    try {
+      message=JmsMessageUtils.toMessage(data,session);
+      fail("attempt to send a non-serializable object in a map should fail");
+    }
+ catch (    Exception e) {
+      assertTrue(e.getCause() instanceof NotSerializableException);
+    }
+  }
+  finally {
+    if (session != null) {
+      session.close();
+    }
+  }
+}
