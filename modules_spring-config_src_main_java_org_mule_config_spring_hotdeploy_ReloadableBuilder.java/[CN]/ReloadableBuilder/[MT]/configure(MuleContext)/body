@@ -1,0 +1,58 @@
+{
+  try {
+    final ConfigResource[] allResources;
+    if (useDefaultConfigResource) {
+      allResources=new ConfigResource[configResources.length + 1];
+      allResources[0]=new ConfigResource(MULE_DEFAULTS_CONFIG);
+      System.arraycopy(configResources,0,allResources,1,configResources.length);
+    }
+ else {
+      allResources=configResources;
+    }
+    this.monitoredResource=new File(allResources[1].getUrl().getFile());
+    URLClassLoader cl=createNewClassloader(rootClassloader);
+    Thread.currentThread().setContextClassLoader(cl);
+    if (logger.isInfoEnabled()) {
+      logger.info("Monitoring for hot-reload: " + monitoredResource);
+    }
+    FileWatcher watcher=new FileWatcher(monitoredResource){
+      private volatile boolean cancelled;
+      protected synchronized void onChange(      File file){
+        if (!this.cancelled) {
+          this.cancel();
+          this.cancelled=true;
+        }
+ else {
+          return;
+        }
+        if (logger.isInfoEnabled()) {
+          logger.info("================== Reloading " + file);
+        }
+        try {
+          muleContext.dispose();
+          Thread.currentThread().setContextClassLoader(null);
+          URLClassLoader newCl=createNewClassloader(rootClassloader);
+          Thread.currentThread().setContextClassLoader(newCl);
+          DefaultMuleContextFactory f=new DefaultMuleContextFactory();
+          MuleContext newContext=f.createMuleContext(ReloadableBuilder.this);
+          doConfigure(newContext);
+          newContext.start();
+        }
+ catch (        Exception ex) {
+          throw new RuntimeException(ex);
+        }
+      }
+    }
+;
+    Timer timer=new Timer();
+    final int reloadIntervalMs=RELOAD_INTERVAL_MS;
+    timer.schedule(watcher,new Date(),reloadIntervalMs);
+    if (logger.isInfoEnabled()) {
+      logger.info("Reload interval: " + reloadIntervalMs);
+    }
+    super.configure(muleContext);
+  }
+ catch (  IOException e) {
+    throw new ConfigurationException(e);
+  }
+}

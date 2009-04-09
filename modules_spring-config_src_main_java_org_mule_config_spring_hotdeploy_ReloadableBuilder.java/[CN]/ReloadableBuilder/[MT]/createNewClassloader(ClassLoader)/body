@@ -1,0 +1,22 @@
+{
+  File parentFile=this.monitoredResource.getParentFile();
+  File libDir=new File(parentFile,"lib");
+  if (logger.isInfoEnabled()) {
+    logger.info("Library directory: " + libDir);
+  }
+  Collection jars=FileUtils.listFiles(libDir,new String[]{"jar"},false);
+  File[] jarFiles=(File[])jars.toArray(new File[jars.size()]);
+  URL[] urls=FileUtils.toURLs(jarFiles);
+  if (logger.isInfoEnabled()) {
+    StringBuilder sb=new StringBuilder();
+    sb.append("Updating the following jars:").append(SystemUtils.LINE_SEPARATOR);
+    sb.append("=============================").append(SystemUtils.LINE_SEPARATOR);
+    for (    URL url : urls) {
+      sb.append(url).append(SystemUtils.LINE_SEPARATOR);
+    }
+    sb.append("=============================").append(SystemUtils.LINE_SEPARATOR);
+    logger.info(sb.toString());
+  }
+  final URLClassLoader cl=new URLClassLoader(urls,parentCl);
+  return cl;
+}
