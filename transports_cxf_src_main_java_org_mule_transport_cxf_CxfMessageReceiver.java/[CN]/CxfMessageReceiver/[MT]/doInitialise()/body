@@ -10,6 +10,7 @@
     List<DataBinding> databinding=(List<DataBinding>)endpointProps.get(CxfConstants.DATA_BINDING);
     List<AbstractFeature> features=(List<AbstractFeature>)endpointProps.get(CxfConstants.FEATURES);
     String proxyStr=(String)endpointProps.get(CxfConstants.PROXY);
+    payload=(String)endpointProps.get(CxfConstants.PAYLOAD);
     applyFiltersToProtocol=isTrue((String)endpointProps.get(CxfConstants.APPLY_FILTERS_TO_PROTOCOL),true);
     applySecurityToProtocol=isTrue((String)endpointProps.get(CxfConstants.APPLY_SECURITY_TO_PROTOCOL),true);
     applyTransformersToProtocol=isTrue((String)endpointProps.get(CxfConstants.APPLY_TRANSFORMERS_TO_PROTOCOL),true);
@@ -95,6 +96,10 @@
       sfb.getOutInterceptors().add(new OutputPayloadInterceptor());
       sfb.getInInterceptors().add(new CopyAttachmentInInterceptor());
       sfb.getOutInterceptors().add(new CopyAttachmentOutInterceptor());
+      if (isProxyEnvelope()) {
+        sfb.getInInterceptors().add(new ReversibleStaxInInterceptor());
+        sfb.getInInterceptors().add(new ResetStaxInterceptor());
+      }
     }
     sfb.setServiceClass(svcCls);
     sfb.setAddress(getAddressWithoutQuery());
@@ -123,6 +128,9 @@
       configurer.configureBean(sfb.getServiceFactory().getEndpointName().toString(),sfb);
     }
     server=sfb.create();
+    if (proxy && isProxyEnvelope()) {
+      CxfUtils.removeInterceptor(server.getEndpoint().getBinding().getOutInterceptors(),SoapOutInterceptor.class.getName());
+    }
   }
  catch (  MuleException e) {
     throw new InitialisationException(e,this);

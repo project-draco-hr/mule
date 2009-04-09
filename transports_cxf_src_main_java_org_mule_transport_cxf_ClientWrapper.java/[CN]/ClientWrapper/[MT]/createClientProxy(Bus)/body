@@ -10,7 +10,13 @@
     cpf.setWsdlLocation(wsdlLocation);
   }
   this.client=ClientProxy.getClient(cpf.create());
-  Binding binding=this.client.getEndpoint().getBinding();
-  removeInterceptor(binding.getOutInterceptors(),WrappedOutInterceptor.class.getName());
   proxy=true;
+  proxyEnvelope=CxfConstants.PAYLOAD_ENVELOPE.equals(endpoint.getProperty(CxfConstants.PAYLOAD));
+  Binding binding=this.client.getEndpoint().getBinding();
+  CxfUtils.removeInterceptor(binding.getOutInterceptors(),WrappedOutInterceptor.class.getName());
+  if (proxyEnvelope) {
+    CxfUtils.removeInterceptor(binding.getOutInterceptors(),SoapOutInterceptor.class.getName());
+    client.getInInterceptors().add(new ReversibleStaxInInterceptor());
+    client.getInInterceptors().add(new ResetStaxInterceptor());
+  }
 }
