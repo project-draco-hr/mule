@@ -1,4 +1,5 @@
 {
+  final boolean redeploymentEnabled=!StartupContext.get().getStartupOptions().containsKey("production");
   try {
     final ConfigResource[] allResources;
     if (useDefaultConfigResource) {
@@ -12,7 +13,7 @@
     this.monitoredResource=new File(allResources[1].getUrl().getFile());
     URLClassLoader cl=createNewClassloader(rootClassloader);
     Thread.currentThread().setContextClassLoader(cl);
-    if (logger.isInfoEnabled()) {
+    if (redeploymentEnabled && logger.isInfoEnabled()) {
       logger.info("Monitoring for hot-reload: " + monitoredResource);
     }
     FileWatcher watcher=new FileWatcher(monitoredResource){
@@ -44,11 +45,13 @@
       }
     }
 ;
-    Timer timer=new Timer();
-    final int reloadIntervalMs=RELOAD_INTERVAL_MS;
-    timer.schedule(watcher,new Date(),reloadIntervalMs);
-    if (logger.isInfoEnabled()) {
-      logger.info("Reload interval: " + reloadIntervalMs);
+    if (redeploymentEnabled) {
+      Timer timer=new Timer();
+      final int reloadIntervalMs=RELOAD_INTERVAL_MS;
+      timer.schedule(watcher,new Date(),reloadIntervalMs);
+      if (logger.isInfoEnabled()) {
+        logger.info("Reload interval: " + reloadIntervalMs);
+      }
     }
     super.configure(muleContext);
   }
