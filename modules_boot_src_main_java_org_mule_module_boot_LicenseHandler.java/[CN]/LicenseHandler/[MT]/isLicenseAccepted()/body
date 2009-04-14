@@ -1,3 +1,12 @@
 {
-  return MuleBootstrapUtils.getResource(LICENSE_PROPERTIES_JAR_FILE_PATH,LicenseHandler.class) != null;
+  ClassLoader oldCl=Thread.currentThread().getContextClassLoader();
+  try {
+    File localJar=MuleBootstrapUtils.getMuleLocalJarFile();
+    URLClassLoader cl=new URLClassLoader(new URL[]{localJar.toURI().toURL()},oldCl);
+    Thread.currentThread().setContextClassLoader(cl);
+    return MuleBootstrapUtils.getResource(LICENSE_PROPERTIES_JAR_FILE_PATH,LicenseHandler.class) != null;
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(oldCl);
+  }
 }
