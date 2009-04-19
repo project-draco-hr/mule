@@ -1,0 +1,14 @@
+{
+  InboundEndpoint endpoint=receiver.getEndpoint();
+  String connectorKey=endpoint.getProtocol() + ":" + endpoint.getEndpointURI().getHost()+ ":"+ endpoint.getEndpointURI().getPort();
+synchronized (connectors) {
+    BayeuxHolder connectorRef=connectors.get(connectorKey);
+    if (connectorRef != null) {
+      if (connectorRef.decrement() == 0) {
+        getHttpServer().removeConnector(connectorRef.connector);
+        connectorRef.connector.stop();
+        connectors.remove(connectorKey);
+      }
+    }
+  }
+}

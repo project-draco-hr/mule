@@ -1,0 +1,27 @@
+{
+  if (!connector.isStarted()) {
+    logger.warn("Servlet container has not yet initiailised, ignoring event: " + event.getMessage().getPayload());
+    return;
+  }
+  Collection<Client> clients=bayeux.getClients();
+  if (clients.size() == 0 && cacheMessages) {
+    Object message=event.transformMessage();
+    if (logger.isTraceEnabled()) {
+      logger.trace("There are no clients waiting, adding message to cache: " + message);
+    }
+    messageCache.add(message);
+    return;
+  }
+  if (clients.size() > 0 && cacheMessages && !messageCache.isEmpty()) {
+    while (!messageCache.isEmpty()) {
+      for (      Client client : clients) {
+        deliver(client,channel,messageCache.remove());
+      }
+    }
+  }
+  if (clients.size() > 0) {
+    for (    Client client : clients) {
+      deliver(client,channel,event.transformMessage());
+    }
+  }
+}

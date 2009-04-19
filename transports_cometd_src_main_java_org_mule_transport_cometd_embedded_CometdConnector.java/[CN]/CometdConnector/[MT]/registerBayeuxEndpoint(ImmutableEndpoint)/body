@@ -1,0 +1,25 @@
+{
+  String connectorKey=endpoint.getProtocol() + ":" + endpoint.getEndpointURI().getHost()+ ":"+ endpoint.getEndpointURI().getPort();
+  BayeuxHolder holder;
+synchronized (connectors) {
+    holder=connectors.get(connectorKey);
+    if (holder == null) {
+      Connector connector=createJettyConnector();
+      connector.setPort(endpoint.getEndpointURI().getPort());
+      connector.setHost(endpoint.getEndpointURI().getHost());
+      if ("localhost".equalsIgnoreCase(endpoint.getEndpointURI().getHost())) {
+        logger.warn("You use localhost interface! It means that no external connections will be available." + " Don't you want to use 0.0.0.0 instead (all network interfaces)?");
+      }
+      getHttpServer().addConnector(connector);
+      ContinuationCometdServlet servlet=createServletForConnector(connector,endpoint);
+      holder=new BayeuxHolder(connector,servlet);
+      connectors.put(connectorKey,holder);
+    }
+ else {
+      holder.increment();
+    }
+    AbstractBayeux bayeux=holder.servlet.getBayeux();
+    bayeux.setJSONCommented(isJsonCommented());
+  }
+  return holder;
+}

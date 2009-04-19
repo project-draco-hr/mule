@@ -1,0 +1,17 @@
+{
+  super.init();
+  String servletConnectorName=getServletConfig().getInitParameter(COMETD_CONNECTOR_NAME_PROPERTY);
+  if (servletConnectorName == null) {
+    connector=(CometdServletConnector)TransportFactory.getConnectorByProtocol(CometdServletConnector.PROTOCOL);
+    if (connector == null) {
+      throw new ServletException(CometdMessages.noConnectorForProtocol(CometdServletConnector.PROTOCOL).toString());
+    }
+  }
+ else {
+    connector=(CometdServletConnector)RegistryContext.getRegistry().lookupConnector(servletConnectorName);
+    if (connector == null) {
+      throw new ServletException(CometdMessages.noCometdConnectorWithName(servletConnectorName,COMETD_CONNECTOR_NAME_PROPERTY).toString());
+    }
+  }
+  connector.setBayeux(getBayeux());
+}
