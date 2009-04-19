@@ -1,0 +1,24 @@
+{
+  try {
+    Object returnValue=null;
+    if (src instanceof byte[]) {
+      src=new String((byte[])src,encoding);
+    }
+    if (src instanceof String) {
+      if (getReturnClass().equals(DynaBean.class)) {
+        JSON json=JSONSerializer.toJSON(src.toString(),getJsonConfig());
+        returnValue=JSONObject.toBean((JSONObject)json,getJsonConfig());
+      }
+ else {
+        returnValue=JsonUtils.convertJsonToBean((String)src,getJsonConfig(),getReturnClass(),null);
+      }
+    }
+ else     if (src instanceof JSONObject) {
+      returnValue=JSONObject.toBean((JSONObject)src,getReturnClass(),new HashMap());
+    }
+    return returnValue;
+  }
+ catch (  Exception e) {
+    throw new TransformerException(CoreMessages.transformFailed("json",getReturnClass().getName()),this,e);
+  }
+}

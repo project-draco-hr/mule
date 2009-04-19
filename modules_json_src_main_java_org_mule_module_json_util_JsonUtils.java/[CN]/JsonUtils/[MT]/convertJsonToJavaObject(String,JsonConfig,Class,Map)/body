@@ -1,0 +1,42 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Converting jsonString to Java object: jsonString=" + jsonString + ", config="+ config);
+  }
+  Object returnValue=null;
+  if (isArray(jsonString)) {
+    if (List.class.isAssignableFrom(config.getEnclosedType())) {
+      JSON json=JSONSerializer.toJSON(jsonString,config);
+      returnValue=JSONArray.toCollection((JSONArray)json,config);
+    }
+ else     if (Set.class.isAssignableFrom(config.getEnclosedType())) {
+      config.setCollectionType(config.getEnclosedType());
+      JSON json=JSONSerializer.toJSON(jsonString,config);
+      returnValue=JSONArray.toCollection((JSONArray)json,config);
+    }
+ else {
+      returnValue=convertJsonToArray(jsonString,config);
+    }
+  }
+ else   if (isObject(jsonString)) {
+    returnValue=convertJsonToBean(jsonString,config,returnType,mappings);
+  }
+ else   if (isBoolean(jsonString)) {
+    returnValue=Boolean.valueOf(jsonString);
+  }
+ else   if (isNumber(jsonString)) {
+    returnValue=convertJsonToNumber(jsonString);
+  }
+ else   if (isNull(jsonString)) {
+    returnValue=null;
+  }
+ else   if (isString(jsonString)) {
+    returnValue=convertJsonToString(jsonString);
+  }
+ else {
+    throw new IllegalArgumentException("Provided JSON string matches neither of the known type: jsonString=" + jsonString);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Converted and returning value '" + returnValue + "', of type '"+ ((returnValue != null) ? returnValue.getClass().getName() : null)+ "'");
+  }
+  return returnValue;
+}
