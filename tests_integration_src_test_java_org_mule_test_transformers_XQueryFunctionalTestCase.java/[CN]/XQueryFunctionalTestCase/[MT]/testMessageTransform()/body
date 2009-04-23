@@ -1,0 +1,14 @@
+{
+  XMLUnit.setIgnoreWhitespace(true);
+  XMLUnit.setIgnoreComments(true);
+  String srcData=IOUtils.getResourceAsString("cd-catalog.xml",getClass());
+  String resultData=IOUtils.getResourceAsString("cd-catalog-result-with-params.xml",getClass());
+  MuleClient client=new MuleClient();
+  Map props=new HashMap();
+  props.put("ListTitle","MyList");
+  props.put("ListRating",new Integer(6));
+  MuleMessage message=client.send("vm://test.in",srcData,props);
+  assertNotNull(message);
+  assertNull(message.getExceptionPayload());
+  assertTrue(XMLUnit.compareXML(message.getPayloadAsString(),resultData).similar());
+}

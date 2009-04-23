@@ -1,0 +1,21 @@
+{
+  Object src=message.getPayload();
+  try {
+    Source sourceDoc=XMLUtils.toXmlSource(getXMLInputFactory(),isUseStaxSource(),src);
+    if (sourceDoc == null) {
+      return null;
+    }
+    ResultHolder holder=getResultHolder(returnClass);
+    if (holder == null) {
+      holder=getResultHolder(src.getClass());
+    }
+    if (holder == null || DelayedResult.class.equals(returnClass)) {
+      return getDelayedResult(message,encoding,sourceDoc);
+    }
+    doTransform(message,encoding,sourceDoc,holder.getResult());
+    return holder.getResultObject();
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

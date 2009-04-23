@@ -1,0 +1,63 @@
+{
+  try {
+    XQPreparedExpression transformer=null;
+    try {
+      transformer=(XQPreparedExpression)transformerPool.borrowObject();
+      bindParameters(transformer,message);
+      bindDocument(message.getPayload(),transformer);
+      XQResultSequence result=transformer.executeQuery();
+      List results=new ArrayList();
+      while (result.next()) {
+        XQItem item=result.getItem();
+        if (Node.class.isAssignableFrom(returnClass) || Node[].class.isAssignableFrom(returnClass)) {
+          results.add(item.getNode());
+        }
+ else         if (String.class.isAssignableFrom(returnClass) || String[].class.isAssignableFrom(returnClass)) {
+          results.add(item.getItemAsString());
+        }
+ else         if (XMLStreamReader.class.isAssignableFrom(returnClass) || XMLStreamReader[].class.isAssignableFrom(returnClass)) {
+          try {
+            results.add(item.getItemAsStream());
+          }
+ catch (          XQException e) {
+            throw new TransformerException(XmlMessages.streamNotAvailble(getName()));
+          }
+        }
+ else {
+          try {
+            results.add(item.getObject());
+          }
+ catch (          XQException e) {
+            throw new TransformerException(XmlMessages.objectNotAvailble(getName()));
+          }
+        }
+        if (!returnClass.isArray()) {
+          break;
+        }
+      }
+      if (returnClass.isArray()) {
+        return results.toArray();
+      }
+      if (results.size() == 1) {
+        return results.get(0);
+      }
+ else       if (results.size() == 0) {
+        return null;
+      }
+ else {
+        return results.toArray();
+      }
+    }
+  finally {
+      if (transformer != null) {
+        if (transformer.getWarnings() != null) {
+          logger.warn(transformer.getWarnings().getMessage(),transformer.getWarnings().fillInStackTrace());
+        }
+        transformerPool.returnObject(transformer);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}
