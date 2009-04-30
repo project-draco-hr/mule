@@ -1,9 +1,16 @@
 {
+  final String serverId=StringUtils.defaultIfEmpty(context.getInitParameter("mule.serverId"),null);
   WebappMuleXmlConfigurationBuilder builder=new WebappMuleXmlConfigurationBuilder(context,configResource);
   MuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
+  DefaultMuleConfiguration muleConfiguration=new DefaultMuleConfiguration();
+  if (serverId != null) {
+    muleConfiguration.setId(serverId);
+  }
+  MuleContextBuilder muleContextBuilder=new DefaultMuleContextBuilder();
+  muleContextBuilder.setMuleConfiguration(muleConfiguration);
   final ApplicationContext parentContext=(ApplicationContext)context.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
   if (parentContext != null) {
     builder.setParentContext(parentContext);
   }
-  return muleContextFactory.createMuleContext(builder);
+  return muleContextFactory.createMuleContext(builder,muleContextBuilder);
 }
