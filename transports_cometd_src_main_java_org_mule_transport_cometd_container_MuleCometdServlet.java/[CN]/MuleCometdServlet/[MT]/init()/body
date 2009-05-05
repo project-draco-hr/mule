@@ -4,7 +4,13 @@
   if (servletConnectorName == null) {
     connector=(CometdServletConnector)TransportFactory.getConnectorByProtocol(CometdServletConnector.PROTOCOL);
     if (connector == null) {
-      throw new ServletException(CometdMessages.noConnectorForProtocol(CometdServletConnector.PROTOCOL).toString());
+      connector=new CometdServletConnector();
+      try {
+        RegistryContext.getRegistry().registerConnector(connector);
+      }
+ catch (      MuleException e) {
+        throw new ServletException("Failed to register the CometdServletConnector",e);
+      }
     }
   }
  else {
