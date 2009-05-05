@@ -7,8 +7,12 @@
     if ((e.getAction() == ConnectionNotification.CONNECTION_FAILED || e.getAction() == ConnectionNotification.CONNECTION_DISCONNECTED) && ((Connector)e.getSource()).equals(endpoint.getConnector())) {
       return;
     }
+    MuleMessage msg=new DefaultMuleMessage(e,(Map)null);
     try {
-      MuleMessage msg=new DefaultMuleMessage(e,(Map)null);
+      if (endpoint.getFilter() != null && !endpoint.getFilter().accept(msg)) {
+        if (logger.isInfoEnabled())         logger.info("Message not accepted with filter: " + endpoint.getFilter());
+        return;
+      }
       MuleEvent event=new DefaultMuleEvent(msg,endpoint,session,false);
       endpoint.dispatch(event);
     }
