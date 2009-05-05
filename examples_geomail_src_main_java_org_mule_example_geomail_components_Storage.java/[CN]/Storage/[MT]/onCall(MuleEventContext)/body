@@ -1,0 +1,30 @@
+{
+  MuleMessage message=context.getMessage();
+  System.err.println("GroupSize: " + message.getCorrelationGroupSize());
+  System.err.println("Correlation ID: " + message.getCorrelationId());
+  System.err.println("Sequence Number: " + message.getCorrelationSequence());
+  for (Iterator it=message.getPropertyNames().iterator(); it.hasNext(); ) {
+    String key=(String)it.next();
+    System.err.println(key + " = " + message.getProperty(key));
+  }
+  String ip=(String)message.getProperty("ip");
+  if (ip == null) {
+    throw new IllegalStateException("'ip' property should have been set on UMOMessage.");
+  }
+  String from=(String)message.getProperty("from.email.address");
+  Sender sender=(Sender)message.getPayload();
+  sender.setIp(ip);
+  sender.setEmail(from);
+  if (getSenderDao().getSender(sender.getIp()) != null) {
+    log.warn("Sender '" + sender + "' should not be in the Database.");
+  }
+ else {
+    getSenderDao().addSender(sender);
+    log.warn("Sender '" + sender + "' successfully added to the Database.");
+  }
+  MuleMessage resultMessage=new DefaultMuleMessage(sender);
+  resultMessage.setCorrelationGroupSize(message.getCorrelationGroupSize());
+  resultMessage.setCorrelationId(message.getCorrelationId());
+  resultMessage.setCorrelationSequence(message.getCorrelationSequence());
+  return resultMessage;
+}
