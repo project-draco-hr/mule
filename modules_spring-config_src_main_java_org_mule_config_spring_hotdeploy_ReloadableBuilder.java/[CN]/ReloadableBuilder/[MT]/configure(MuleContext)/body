@@ -11,8 +11,8 @@
       allResources=configResources;
     }
     this.monitoredResource=new File(allResources[1].getUrl().getFile());
-    ClassLoader sharedCl=new DefaultMuleSharedDomainClassLoader(CLASSLOADER_ROOT);
-    ClassLoader cl=new MuleApplicationClassLoader(this.monitoredResource,sharedCl);
+    ClassLoader parent=MuleBootstrapUtils.isStandalone() ? new DefaultMuleSharedDomainClassLoader(CLASSLOADER_ROOT) : CLASSLOADER_ROOT;
+    ClassLoader cl=new MuleApplicationClassLoader(this.monitoredResource,parent);
     Thread.currentThread().setContextClassLoader(cl);
     if (redeploymentEnabled && logger.isInfoEnabled()) {
       logger.info("Monitoring for hot-reload: " + monitoredResource);
@@ -33,8 +33,8 @@
         try {
           muleContext.dispose();
           Thread.currentThread().setContextClassLoader(null);
-          ClassLoader sharedCl=new DefaultMuleSharedDomainClassLoader(CLASSLOADER_ROOT);
-          ClassLoader cl=new MuleApplicationClassLoader(monitoredResource,sharedCl);
+          ClassLoader parent=MuleBootstrapUtils.isStandalone() ? new DefaultMuleSharedDomainClassLoader(CLASSLOADER_ROOT) : CLASSLOADER_ROOT;
+          ClassLoader cl=new MuleApplicationClassLoader(monitoredResource,parent);
           Thread.currentThread().setContextClassLoader(cl);
           DefaultMuleContextFactory f=new DefaultMuleContextFactory();
           MuleContext newContext=f.createMuleContext(ReloadableBuilder.this);
