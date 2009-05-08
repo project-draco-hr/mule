@@ -1,10 +1,9 @@
 {
-  MessageAdapter adapter=endpoint.getConnector().getMessageAdapter(data);
+  MessageAdapter adapter=getConnector().getMessageAdapter(data);
+  Object replyTo=adapter.getReplyTo();
   MuleMessage message=CometdMessageReceiver.this.routeMessage(new DefaultMuleMessage(adapter));
-  if (message != null) {
-    return message.getPayload();
+  if (message != null && message.getExceptionPayload() != null && replyTo != null) {
+    ((AbstractConnector)getConnector()).getReplyToHandler().processReplyTo(RequestContext.getEvent(),message,replyTo);
   }
- else {
-    return null;
-  }
+  return null;
 }

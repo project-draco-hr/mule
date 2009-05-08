@@ -1,0 +1,19 @@
+{
+  AbstractBayeux bayeux=connector.getBayeux();
+  Channel channel=bayeux.getChannel(replyTo.toString(),false);
+  if (channel == null) {
+    logger.warn("No cometd Channel: " + replyTo + ". Maybe the client unregistered interest.");
+    return;
+  }
+  Object ret;
+  if (returnMessage.getExceptionPayload() != null) {
+    ret=returnMessage.getExceptionPayload().getMessage();
+  }
+ else {
+    returnMessage.applyTransformers(getTransformers());
+    ret=returnMessage.getPayload();
+  }
+  for (  Client client : channel.getSubscribers()) {
+    channel.publish(client,ret,null);
+  }
+}

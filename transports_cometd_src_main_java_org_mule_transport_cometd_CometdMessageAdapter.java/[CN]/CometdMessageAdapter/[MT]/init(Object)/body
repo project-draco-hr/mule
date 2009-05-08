@@ -1,0 +1,56 @@
+{
+  if (message instanceof Map) {
+    Map map=(Map)message;
+    Object p=map.remove(PAYLOAD_PARAM);
+    if (p != null) {
+      if (filter.accept(p)) {
+        transformer=new JsonToObject();
+        transformer.setReturnClass(Map.class);
+        try {
+          this.payload=transformer.transform(p);
+        }
+ catch (        TransformerException e) {
+          throw new MessagingException(CoreMessages.transformFailed(message.getClass().getName(),Map.class.getName()),message,e);
+        }
+      }
+ else {
+        payload=p;
+      }
+    }
+ else {
+      throw new IllegalArgumentException("payload parameter not set");
+    }
+    setReplyTo(map.remove(REPLYTO_PARAM));
+    if (map.size() > 0) {
+      addProperties(map,PropertyScope.INVOCATION);
+    }
+  }
+ else   if (filter.accept(message)) {
+    if (message.toString().indexOf("payload") > -1) {
+      transformer=new JsonToObject();
+      transformer.setReturnClass(DefaultMuleMessageDTO.class);
+      DefaultMuleMessageDTO dto=null;
+      try {
+        dto=(DefaultMuleMessageDTO)transformer.transform(message);
+      }
+ catch (      TransformerException e) {
+        throw new MessagingException(CoreMessages.transformFailed(message.getClass().getName(),DefaultMuleMessageDTO.class.getName()),message,e);
+      }
+      payload=dto.getPayload();
+      dto.addPropertiesTo(this);
+    }
+ else {
+      transformer=new JsonToObject();
+      transformer.setReturnClass(Map.class);
+      try {
+        payload=transformer.transform(message);
+      }
+ catch (      TransformerException e) {
+        throw new MessagingException(CoreMessages.transformFailed(message.getClass().getName(),DefaultMuleMessageDTO.class.getName()),message,e);
+      }
+    }
+  }
+ else {
+    payload=message;
+  }
+}
