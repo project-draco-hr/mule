@@ -1,18 +1,17 @@
 {
   File file=FileUtils.newFile(endpoint.getEndpointURI().getAddress());
   File result=null;
-  FilenameFilter filenameFilter=null;
-  String filter=(String)endpoint.getProperty("filter");
-  if (filter != null) {
-    filter=URLDecoder.decode(filter,MuleServer.getMuleContext().getConfiguration().getDefaultEncoding());
-    filenameFilter=new FilenameWildcardFilter(filter);
-  }
   if (file.exists()) {
     if (file.isFile()) {
       result=file;
     }
  else     if (file.isDirectory()) {
-      result=FileMessageDispatcher.getNextFile(endpoint.getEndpointURI().getAddress(),filenameFilter);
+      if (fileFilter != null) {
+        result=FileMessageDispatcher.getNextFile(endpoint.getEndpointURI().getAddress(),fileFilter);
+      }
+ else {
+        result=FileMessageDispatcher.getNextFile(endpoint.getEndpointURI().getAddress(),filenameFilter);
+      }
     }
     if (result != null) {
       boolean checkFileAge=connector.getCheckFileAge();
