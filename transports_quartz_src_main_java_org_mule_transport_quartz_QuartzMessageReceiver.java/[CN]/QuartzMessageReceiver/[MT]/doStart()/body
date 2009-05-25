@@ -12,6 +12,18 @@
     jobDataMap.put(QUARTZ_RECEIVER_PROPERTY,this.getReceiverKey());
     jobDataMap.put(QUARTZ_CONNECTOR_PROPERTY,this.connector.getName());
     jobDataMap.putAll(endpoint.getProperties());
+    if (jobConfig instanceof EventGeneratorJobConfig) {
+      jobDataMap.put(QuartzConnector.PROPERTY_PAYLOAD,((EventGeneratorJobConfig)jobConfig).getPayload());
+    }
+    jobDataMap.put(QuartzConnector.PROPERTY_JOB_CONFIG,jobConfig);
+    Job job=null;
+    if (jobConfig instanceof CustomJobConfig) {
+      job=((CustomJobConfig)jobConfig).getJob();
+    }
+    if (job != null) {
+      jobDataMap.put(QuartzConnector.PROPERTY_JOB_OBJECT,job);
+      jobDetail.setJobClass(CustomJob.class);
+    }
     jobDetail.setJobDataMap(jobDataMap);
     Trigger trigger;
     String cronExpression=(String)endpoint.getProperty(QuartzConnector.PROPERTY_CRON_EXPRESSION);
