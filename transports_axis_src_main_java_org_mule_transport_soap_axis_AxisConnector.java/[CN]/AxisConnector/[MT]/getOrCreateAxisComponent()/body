@@ -1,14 +1,16 @@
 {
-  Service c=muleContext.getRegistry().lookupService(AXIS_SERVICE_PROPERTY + getName());
-  if (c == null) {
-    c=new SedaService();
-    c.setName(AXIS_SERVICE_PROPERTY + getName());
-    c.setModel(muleContext.getRegistry().lookupSystemModel());
+  Service service=muleContext.getRegistry().lookupService(AXIS_SERVICE_PROPERTY + getName());
+  if (service == null) {
+    service=new SedaService();
+    service.setName(AXIS_SERVICE_PROPERTY + getName());
+    service.setModel(muleContext.getRegistry().lookupSystemModel());
     Map props=new HashMap();
     props.put(AXIS,axis);
     SingletonObjectFactory of=new SingletonObjectFactory(AxisServiceComponent.class,props);
     of.initialise();
-    c.setComponent(new DefaultJavaComponent(of));
+    final DefaultJavaComponent component=new DefaultJavaComponent(of);
+    component.setMuleContext(muleContext);
+    service.setComponent(component);
   }
-  return c;
+  return service;
 }

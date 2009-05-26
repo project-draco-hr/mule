@@ -2,12 +2,15 @@
   CxfMessageReceiver cxfReceiver=(CxfMessageReceiver)receiver;
   Server server=cxfReceiver.getServer();
   uriToServer.put(server.getEndpoint().getEndpointInfo().getAddress(),server);
-  SedaService c=new SedaService();
-  c.setName(CXF_SERVICE_COMPONENT_NAME + server.getEndpoint().getService().getName() + c.hashCode());
-  c.setModel(muleContext.getRegistry().lookupSystemModel());
+  SedaService service=new SedaService();
+  service.setMuleContext(muleContext);
+  service.setName(CXF_SERVICE_COMPONENT_NAME + server.getEndpoint().getService().getName() + service.hashCode());
+  service.setModel(muleContext.getRegistry().lookupSystemModel());
   CxfServiceComponent svcComponent=new CxfServiceComponent(this,(CxfMessageReceiver)receiver);
   svcComponent.setBus(bus);
-  c.setComponent(new DefaultJavaComponent(new SingletonObjectFactory(svcComponent)));
+  final DefaultJavaComponent component=new DefaultJavaComponent(new SingletonObjectFactory(svcComponent));
+  component.setMuleContext(muleContext);
+  service.setComponent(component);
   String endpoint=receiver.getEndpointURI().getAddress();
   String scheme=ep.getScheme().toLowerCase();
   InboundEndpoint originalEndpoint=receiver.getEndpoint();
@@ -62,7 +65,7 @@
   InboundEndpoint protocolEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(protocolEndpointBuilder);
   InboundEndpoint receiverEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
   receiver.setEndpoint(receiverEndpoint);
-  c.setInboundRouter(new DefaultInboundRouterCollection());
-  c.getInboundRouter().addEndpoint(protocolEndpoint);
-  services.add(c);
+  service.setInboundRouter(new DefaultInboundRouterCollection());
+  service.getInboundRouter().addEndpoint(protocolEndpoint);
+  services.add(service);
 }
