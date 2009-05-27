@@ -1,0 +1,23 @@
+{
+  super.init();
+  String servletConnectorName=getServletConfig().getInitParameter(COMETD_CONNECTOR_NAME_PROPERTY);
+  if (servletConnectorName == null) {
+    connector=(AjaxServletConnector)TransportFactory.getConnectorByProtocol(AjaxServletConnector.PROTOCOL);
+    if (connector == null) {
+      connector=new AjaxServletConnector();
+      try {
+        RegistryContext.getRegistry().registerConnector(connector);
+      }
+ catch (      MuleException e) {
+        throw new ServletException("Failed to register the AjaxServletConnector",e);
+      }
+    }
+  }
+ else {
+    connector=(AjaxServletConnector)RegistryContext.getRegistry().lookupConnector(servletConnectorName);
+    if (connector == null) {
+      throw new ServletException(AjaxMessages.noAjaxConnectorWithName(servletConnectorName,COMETD_CONNECTOR_NAME_PROPERTY).toString());
+    }
+  }
+  connector.setBayeux(getBayeux());
+}
