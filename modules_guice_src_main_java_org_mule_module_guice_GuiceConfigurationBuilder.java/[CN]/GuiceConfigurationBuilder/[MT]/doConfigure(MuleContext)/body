@@ -1,0 +1,38 @@
+{
+  Injector injector;
+  if (basepath != null && basepath.startsWith("/")) {
+    basepath=basepath.substring(1);
+  }
+  if (modules == null) {
+    ClasspathScanner scanner=new ClasspathScanner(new String[]{basepath});
+    Set<Class> classes=scanner.scanFor(Module.class);
+    classes.remove(AbstractMuleGuiceModule.class);
+    if (classes.size() == 0) {
+      throw new ConfigurationException(CoreMessages.createStaticMessage("There are no Guice module objects on the classpath under: " + basepath));
+    }
+    modules=new Module[classes.size()];
+    int i=0;
+    for (    Class module : classes) {
+      Module m=(Module)ClassUtils.instanciateClass(module,ClassUtils.NO_ARGS);
+      modules[i++]=m;
+    }
+  }
+  Map<String,Object> stringBindings=new HashMap<String,Object>();
+  for (int i=0; i < modules.length; i++) {
+    Module module=modules[i];
+    if (module instanceof AbstractMuleGuiceModule) {
+      stringBindings.putAll(((AbstractMuleGuiceModule)module).getStringBindings());
+    }
+  }
+  if (stage != null) {
+    injector=Guice.createInjector(stage,modules);
+  }
+ else {
+    injector=Guice.createInjector(modules);
+  }
+  MuleInjectorImpl muleInjector=new MuleInjectorImpl(injector,stringBindings);
+  GuiceRegistry registry=new GuiceRegistry(muleInjector);
+  muleContext.addRegistry(2,registry);
+  muleContext.getRegistry().registerObject(INJECTOR_OBJECT_NAME,muleInjector);
+  registry.initialise();
+}
