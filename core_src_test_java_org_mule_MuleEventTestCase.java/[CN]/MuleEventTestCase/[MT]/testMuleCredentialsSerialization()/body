@@ -1,0 +1,15 @@
+{
+  String username="mule";
+  String password="rulez";
+  String url="test://" + username + ":"+ password+ "@localhost";
+  ImmutableEndpoint endpoint=getTestOutboundEndpoint("Test",url);
+  MuleEvent event=RequestContext.setEvent(getTestEvent("payload",endpoint));
+  Serializable serialized=(Serializable)new SerializableToByteArray().transform(event);
+  assertNotNull(serialized);
+  MuleEvent deserialized=(MuleEvent)new ByteArrayToObject().transform(serialized);
+  assertNotNull(deserialized);
+  Credentials credentials=deserialized.getCredentials();
+  assertNotNull(credentials);
+  assertEquals(username,credentials.getUsername());
+  assertTrue(Arrays.equals(password.toCharArray(),credentials.getPassword()));
+}
