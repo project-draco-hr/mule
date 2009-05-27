@@ -1,0 +1,30 @@
+{
+  Set<Class> set=new HashSet<Class>();
+  String path=url.getFile().substring(5,url.getFile().indexOf("!"));
+  JarFile jar=new JarFile(path);
+  for (Enumeration entries=jar.entries(); entries.hasMoreElements(); ) {
+    JarEntry entry=(JarEntry)entries.nextElement();
+    if (entry.getName().startsWith(basepath) && entry.getName().endsWith(".class")) {
+      try {
+        String name=entry.getName();
+        if (name.contains("$1")) {
+          continue;
+        }
+        ClassReader reader=new ClassReader(classLoader.getResourceAsStream(name));
+        ClassScanner visitor=getScanner(clazz);
+        reader.accept(visitor,0);
+        if (visitor.isMatch()) {
+          Class c=loadClass(visitor.getClassName());
+          if (c != null) {
+            set.add(c);
+          }
+        }
+      }
+ catch (      Exception e) {
+        Throwable t=ExceptionHelper.getRootException(e);
+        logger.warn(e.toString() + ": caused by: " + t.toString());
+      }
+    }
+  }
+  return set;
+}

@@ -1,0 +1,26 @@
+{
+  if (clazz.isInterface()) {
+    if (clazz.isAnnotation()) {
+      AnnotationFilter filter=null;
+      Annotation[] annos=clazz.getDeclaredAnnotations();
+      for (int i=0; i < annos.length; i++) {
+        Annotation anno=annos[i];
+        if (anno instanceof Target) {
+          if (((Target)anno).value()[0] == ElementType.ANNOTATION_TYPE) {
+            filter=new MetaAnnotationTypeFilter(clazz);
+          }
+        }
+      }
+      if (filter == null) {
+        filter=new AnnotationTypeFilter(clazz);
+      }
+      return new AnnotationsScanner(filter);
+    }
+ else {
+      return new InterfaceClassScanner(clazz);
+    }
+  }
+ else {
+    return new ImplementationClassScanner(clazz);
+  }
+}

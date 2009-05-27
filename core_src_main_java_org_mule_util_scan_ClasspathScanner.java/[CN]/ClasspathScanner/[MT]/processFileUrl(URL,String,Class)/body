@@ -1,0 +1,29 @@
+{
+  Set<Class> set=new HashSet<Class>();
+  String urlBase=url.getFile();
+  Collection<File> files=FileUtils.listFiles(new File(url.getFile()),new String[]{"class"},true);
+  String name=null;
+  for (  File file : files) {
+    try {
+      name=file.getAbsolutePath().substring(urlBase.length() - basepath.length());
+      name=name.replaceAll("/",".");
+      if (name.endsWith(".class")) {
+        name=name.substring(0,name.length() - 6);
+      }
+      ClassReader reader=new ClassReader(name);
+      ClassScanner visitor=getScanner(clazz);
+      reader.accept(visitor,0);
+      if (visitor.isMatch()) {
+        Class c=loadClass(visitor.getClassName());
+        if (c != null) {
+          set.add(c);
+        }
+      }
+    }
+ catch (    IOException e) {
+      Throwable t=ExceptionHelper.getRootException(e);
+      logger.warn(e.toString() + ": caused by: " + t.toString());
+    }
+  }
+  return set;
+}
