@@ -3,9 +3,11 @@
     throw new RegistrationException("Attempt to register object with no key");
   }
   logger.debug("registering object");
-  if (MuleServer.getMuleContext().isInitialised() || MuleServer.getMuleContext().isInitialising()) {
-    logger.debug("applying processors");
-    object=applyProcessors(object);
+  if (!MuleRegistry.LIFECYCLE_BYPASS_FLAG.equals(metadata)) {
+    if (MuleServer.getMuleContext().isInitialised() || MuleServer.getMuleContext().isInitialising()) {
+      logger.debug("applying processors");
+      object=applyProcessors(object);
+    }
   }
 synchronized (registry) {
     if (registry.containsKey(key)) {
@@ -14,10 +16,12 @@ synchronized (registry) {
     registry.put(key,object);
   }
   try {
-    if (logger.isDebugEnabled()) {
-      logger.debug("applying lifecycle to object: " + object);
+    if (!MuleRegistry.LIFECYCLE_BYPASS_FLAG.equals(metadata)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("applying lifecycle to object: " + object);
+      }
+      context.getLifecycleManager().applyCompletedPhases(object);
     }
-    context.getLifecycleManager().applyCompletedPhases(object);
   }
  catch (  MuleException e) {
     throw new RegistrationException(e);
