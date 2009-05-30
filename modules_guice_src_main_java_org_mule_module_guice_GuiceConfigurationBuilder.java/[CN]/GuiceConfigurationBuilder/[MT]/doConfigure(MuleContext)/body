@@ -21,7 +21,7 @@
   for (int i=0; i < modules.length; i++) {
     Module module=modules[i];
     if (module instanceof AbstractMuleGuiceModule) {
-      stringBindings.putAll(((AbstractMuleGuiceModule)module).getStringBindings());
+      ((AbstractMuleGuiceModule)module).setMuleContext(muleContext);
     }
   }
   if (stage != null) {
@@ -30,9 +30,20 @@
  else {
     injector=Guice.createInjector(modules);
   }
-  MuleInjectorImpl muleInjector=new MuleInjectorImpl(injector,stringBindings);
-  GuiceRegistry registry=new GuiceRegistry(muleInjector);
+  GuiceRegistry registry=new GuiceRegistry(injector);
   muleContext.addRegistry(2,registry);
-  muleContext.getRegistry().registerObject(INJECTOR_OBJECT_NAME,muleInjector);
+  for (Iterator<Key<?>> iterator=injector.getBindings().keySet().iterator(); iterator.hasNext(); ) {
+    Key key=iterator.next();
+    if (Connector.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+      Connector c=(Connector)injector.getInstance(key);
+      c.setName(ObjectNameHelper.getConnectorName(c));
+      c.setMuleContext(muleContext);
+      muleContext.getRegistry().registerConnector(c);
+    }
+ else     if (Agent.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+      Agent a=(Agent)injector.getInstance(key);
+      muleContext.getRegistry().registerAgent(a);
+    }
+  }
   registry.initialise();
 }
