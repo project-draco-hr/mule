@@ -1,7 +1,12 @@
 {
   assertTrue(simpleServerLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+  Map<String,String> properties=new HashMap<String,String>();
+  properties.put("COOKIE_HEADER","MYCOOKIE");
   MuleClient client=new MuleClient();
-  client.send("vm://vm-in","foobar",null);
+  client.send("vm://vm-in","foobar",properties);
   assertTrue(latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
   assertTrue(cookieFound);
+  assertTrue(cookieHeaders.size() == 2);
+  assertEquals("Cookie: $Version=0; customCookie=yes",cookieHeaders.get(0));
+  assertEquals("Cookie: $Version=0; expressionCookie=MYCOOKIE",cookieHeaders.get(1));
 }
