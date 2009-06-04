@@ -1,6 +1,6 @@
 {
   String result=template;
-  Matcher m=pattern.matcher(template);
+  Matcher m=pattern.matcher(result);
   while (m.find()) {
     Object value=null;
     String match=m.group();
@@ -19,11 +19,17 @@
  else {
       String matchRegex=escape(match);
       String valueString=value.toString();
+      if (valueString.indexOf('$') != -1) {
+        valueString=valueString.replaceAll("\\$",DOLLAR_ESCAPE);
+      }
       if (valueString.indexOf('\\') != -1) {
         valueString=valueString.replaceAll("\\\\","\\\\\\\\");
       }
       result=result.replaceAll(matchRegex,valueString);
     }
+  }
+  if (result.indexOf(DOLLAR_ESCAPE) != -1) {
+    result=result.replaceAll(DOLLAR_ESCAPE,"\\$");
   }
   return result;
 }
