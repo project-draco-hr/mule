@@ -1,17 +1,12 @@
 {
   MuleClient client=new MuleClient();
-  Object ftc=getComponent("testComponent");
+  FunctionalStreamingTestComponent ftc=(FunctionalStreamingTestComponent)getComponent("testComponent");
   assertTrue("FunctionalStreamingTestComponent expected",ftc instanceof FunctionalStreamingTestComponent);
-  assertNotNull(ftc);
   CountDownLatch latch=new CountDownLatch(1);
   AtomicReference message=new AtomicReference();
   EventCallback callback=newCallback(latch,message);
   ((FunctionalStreamingTestComponent)ftc).setEventCallback(callback,TEST_MESSAGE.length());
   client.dispatch("tcp://localhost:60196",TEST_MESSAGE,new HashMap());
-  NamedPayload payload=awaitUpload();
-  assertNotNull(payload);
-  logger.info("received message: " + payload);
-  assertEquals(TEST_MESSAGE,new String(payload.getPayload()));
   latch.await(getTimeout(),TimeUnit.MILLISECONDS);
   assertEquals("Received stream; length: 16; 'Test...sage'",message.get());
   stopServer();
@@ -22,10 +17,6 @@
   EventCallback callback2=newCallback(latch2,message2);
   ((FunctionalStreamingTestComponent)ftc).setEventCallback(callback2,TEST_MESSAGE_2.length());
   client.dispatch("tcp://localhost:60196",TEST_MESSAGE_2,new HashMap());
-  NamedPayload payload2=awaitUpload();
-  assertNotNull(payload2);
-  logger.info("received message: " + payload2);
-  assertEquals(TEST_MESSAGE_2,new String(payload2.getPayload()));
   latch2.await(getTimeout(),TimeUnit.MILLISECONDS);
   assertEquals("Received stream; length: 20; 'Anot...sage'",message2.get());
 }

@@ -1,14 +1,35 @@
 {
+  final CountDownLatch latch=new CountDownLatch(1);
+  final AtomicReference message=new AtomicReference();
+  final AtomicInteger loopCount=new AtomicInteger(0);
+  EventCallback callback=new EventCallback(){
+    public synchronized void eventReceived(    MuleEventContext context,    Object component){
+      try {
+        logger.info("called " + loopCount.incrementAndGet() + " times");
+        FunctionalTestComponent ftc=(FunctionalTestComponent)component;
+        if (1 == latch.getCount()) {
+          String o=new String((byte[])ftc.getLastReceivedMessage());
+          message.set(o);
+          latch.countDown();
+        }
+      }
+ catch (      Exception e) {
+        logger.error(e.getMessage(),e);
+      }
+    }
+  }
+;
   Map properties=new HashMap();
   MuleClient client=new MuleClient();
-  client.dispatch("ftp://anonymous:email@localhost:" + getPort(),TEST_MESSAGE,properties);
-  NamedPayload payload=awaitUpload();
-  assertNotNull(payload);
-  assertEquals(TEST_MESSAGE,new String(payload.getPayload()));
-  logger.info("received message OK!");
-  MuleMessage retrieved=client.request("ftp://anonymous:email@localhost:" + getPort(),getTimeout());
-  assertNotNull(retrieved);
-  assertNotNull(retrieved.getProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME));
-  assertNotNull(retrieved.getProperty(FileConnector.PROPERTY_FILE_SIZE));
-  assertEquals(retrieved.getPayloadAsString(),TEST_MESSAGE);
+  assertTrue(getFtpClient().expectFileCount("/",0,1000));
+  Object component=getComponent("testComponent");
+  assertTrue("FunctionalTestComponent expected",component instanceof FunctionalTestComponent);
+  FunctionalTestComponent ftc=(FunctionalTestComponent)component;
+  assertNotNull(ftc);
+  ftc.setEventCallback(callback);
+  logger.debug("before dispatch");
+  client.dispatch(getMuleFtpEndpoint(),TEST_MESSAGE,properties);
+  logger.debug("before retrieve");
+  latch.await(getTimeout(),TimeUnit.MILLISECONDS);
+  assertEquals(TEST_MESSAGE,message.get());
 }

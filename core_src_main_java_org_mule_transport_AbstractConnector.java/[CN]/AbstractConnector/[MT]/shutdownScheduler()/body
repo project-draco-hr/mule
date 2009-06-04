@@ -1,0 +1,26 @@
+{
+  ScheduledExecutorService schedulerExecutor=((ScheduledExecutorService)scheduler.get());
+  if (schedulerExecutor != null) {
+    schedulerExecutor.shutdown();
+    try {
+      if (!schedulerExecutor.awaitTermination(muleContext.getConfiguration().getShutdownTimeout(),TimeUnit.MILLISECONDS)) {
+        List outstanding=schedulerExecutor.shutdownNow();
+        if (!schedulerExecutor.awaitTermination(SCHEDULER_FORCED_SHUTDOWN_TIMEOUT,TimeUnit.MILLISECONDS)) {
+          logger.warn(MessageFormat.format("Pool {0} did not terminate in time; {1} work items were cancelled.",name,outstanding.isEmpty() ? "No" : Integer.toString(outstanding.size())));
+        }
+ else {
+          if (!outstanding.isEmpty()) {
+            logger.warn(MessageFormat.format("Pool {0} terminated; {1} work items were cancelled.",name,Integer.toString(outstanding.size())));
+          }
+        }
+      }
+    }
+ catch (    InterruptedException ie) {
+      schedulerExecutor.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
+ finally {
+      schedulerExecutor=null;
+    }
+  }
+}

@@ -1,10 +1,16 @@
 {
   if (workExecutorService != null) {
+    workExecutorService.shutdown();
     try {
-      List outstanding=workExecutorService.shutdownNow();
-      if (!workExecutorService.awaitTermination(SHUTDOWN_TIMEOUT,TimeUnit.MILLISECONDS)) {
-        if (logger.isWarnEnabled()) {
+      if (!workExecutorService.awaitTermination(gracefulShutdownTimeout,TimeUnit.MILLISECONDS)) {
+        List outstanding=workExecutorService.shutdownNow();
+        if (!workExecutorService.awaitTermination(FORCEFUL_SHUTDOWN_TIMEOUT,TimeUnit.MILLISECONDS)) {
           logger.warn(MessageFormat.format("Pool {0} did not terminate in time; {1} work items were cancelled.",name,outstanding.isEmpty() ? "No" : Integer.toString(outstanding.size())));
+        }
+ else {
+          if (!outstanding.isEmpty()) {
+            logger.warn(MessageFormat.format("Pool {0} terminated; {1} work items were cancelled.",name,Integer.toString(outstanding.size())));
+          }
         }
       }
     }

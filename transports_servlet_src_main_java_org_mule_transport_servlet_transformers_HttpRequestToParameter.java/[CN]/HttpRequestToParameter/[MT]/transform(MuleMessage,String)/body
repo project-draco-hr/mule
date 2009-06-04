@@ -1,15 +1,12 @@
 {
-  HttpServletRequest request=((HttpRequestMessageAdapter)message.getAdapter()).getRequest();
-  String payloadParam=(String)request.getAttribute(AbstractReceiverServlet.PAYLOAD_PARAMETER_NAME);
-  if (null == payloadParam) {
-    payloadParam=AbstractReceiverServlet.DEFAULT_PAYLOAD_PARAMETER_NAME;
-  }
-  String payload=request.getParameter(payloadParam);
+  HttpRequestMessageAdapter messageAdapter=(HttpRequestMessageAdapter)message.getAdapter();
+  String payloadParam=messageAdapter.getStringProperty(AbstractReceiverServlet.PAYLOAD_PARAMETER_NAME,AbstractReceiverServlet.DEFAULT_PAYLOAD_PARAMETER_NAME);
+  String payload=messageAdapter.getStringProperty(payloadParam,null);
   if (null == payload) {
-    if (isText(request.getContentType())) {
+    if (isText(messageAdapter.getContentType())) {
       try {
         InputStream is=(InputStream)message.getPayload();
-        BufferedReader reader=new BufferedReader(new InputStreamReader(is,request.getCharacterEncoding()));
+        BufferedReader reader=new BufferedReader(new InputStreamReader(is,messageAdapter.getCharacterEncoding()));
         StringBuffer buffer=new StringBuffer(8192);
         String line=reader.readLine();
         while (line != null) {

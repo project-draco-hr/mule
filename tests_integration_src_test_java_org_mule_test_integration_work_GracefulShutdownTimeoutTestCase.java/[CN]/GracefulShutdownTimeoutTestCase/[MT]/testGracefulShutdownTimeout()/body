@@ -1,0 +1,16 @@
+{
+  final Latch latch=new Latch();
+  org.mule.api.service.Service service=(Service)muleContext.getRegistry().lookupService("TestService");
+  FunctionalTestComponent testComponent=(FunctionalTestComponent)getComponent(service);
+  testComponent.setEventCallback(new EventCallback(){
+    public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      Thread.sleep(5500);
+      latch.countDown();
+    }
+  }
+);
+  service.dispatchEvent(getTestInboundEvent("test"));
+  Thread.sleep(200);
+  service.dispose();
+  assertTrue(latch.await(1000,TimeUnit.MILLISECONDS));
+}

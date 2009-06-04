@@ -2,26 +2,17 @@
   if (message instanceof Object[]) {
     Object[] messageParts=(Object[])message;
     this.message=messageParts[0];
-    Map headers=new HashMap();
+    Map<Object,Object> headers=new HashMap<Object,Object>();
     if (messageParts.length > 1) {
       Object second=messageParts[1];
       if (second instanceof Map) {
-        Map props=(Map)second;
-        for (Iterator iterator=props.entrySet().iterator(); iterator.hasNext(); ) {
-          Map.Entry e=(Map.Entry)iterator.next();
-          String key=(String)e.getKey();
-          Object value=e.getValue();
-          if (value != null) {
-            headers.put(key,value);
-          }
-        }
+        setupHeadersFromMap(headers,(Map)second);
       }
  else       if (second instanceof Header[]) {
-        Header[] inboundHeaders=(Header[])second;
-        for (int i=0; i < inboundHeaders.length; i++) {
-          headers.put(inboundHeaders[i].getName(),inboundHeaders[i].getValue());
-        }
+        setupHeadersFromHeaderArray(headers,(Header[])second);
       }
+      determineHttpVersion(headers);
+      rewriteConnectionAndKeepAliveHeaders(headers);
       addInboundProperties(headers);
     }
   }
@@ -32,13 +23,10 @@
  else {
     this.message=message;
   }
-  String temp=getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,null);
-  if (HttpConstants.HTTP10.equalsIgnoreCase(temp)) {
-    http11=false;
-  }
-  Header contenttype=getHeader(HttpConstants.HEADER_CONTENT_TYPE);
-  if (contenttype != null) {
-    HeaderElement values[]=contenttype.getElements();
+  String contentType=getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,null);
+  if (contentType != null) {
+    Header contentTypeHeader=new Header(HttpConstants.HEADER_CONTENT_TYPE,contentType);
+    HeaderElement values[]=contentTypeHeader.getElements();
     if (values.length == 1) {
       NameValuePair param=values[0].getParameterByName("charset");
       if (param != null) {

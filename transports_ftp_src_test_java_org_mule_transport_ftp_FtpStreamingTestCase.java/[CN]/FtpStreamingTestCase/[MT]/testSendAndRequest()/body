@@ -19,15 +19,12 @@
   }
 ;
   MuleClient client=new MuleClient();
-  Object ftc=getComponent("testComponent");
-  assertTrue("FunctionalStreamingTestComponent expected",ftc instanceof FunctionalStreamingTestComponent);
+  Object component=getComponent("testComponent");
+  assertTrue("FunctionalStreamingTestComponent expected",component instanceof FunctionalStreamingTestComponent);
+  FunctionalStreamingTestComponent ftc=(FunctionalStreamingTestComponent)component;
   assertNotNull(ftc);
-  ((FunctionalStreamingTestComponent)ftc).setEventCallback(callback,TEST_MESSAGE.length());
+  ftc.setEventCallback(callback,TEST_MESSAGE.length());
   client.dispatch("tcp://localhost:60196",TEST_MESSAGE,new HashMap());
-  NamedPayload payload=awaitUpload();
-  assertNotNull(payload);
-  logger.info("received message: " + payload);
-  assertEquals(TEST_MESSAGE,new String(payload.getPayload()));
   latch.await(getTimeout(),TimeUnit.MILLISECONDS);
   assertEquals("Received stream; length: 16; 'Test...sage'",message.get());
 }
