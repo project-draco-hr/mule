@@ -1,16 +1,10 @@
 {
   Set<Class> set=new HashSet<Class>();
   String urlBase=url.getFile();
-  Collection<File> files=FileUtils.listFiles(new File(url.getFile()),new String[]{"class"},true);
-  String name=null;
+  Collection<File> files=FileUtils.listFiles(new File(urlBase),new String[]{"class"},true);
   for (  File file : files) {
     try {
-      name=file.getAbsolutePath().substring(urlBase.length() - basepath.length());
-      name=name.replaceAll("/",".");
-      if (name.endsWith(".class")) {
-        name=name.substring(0,name.length() - 6);
-      }
-      ClassReader reader=new ClassReader(name);
+      ClassReader reader=new ClassReader(new FileInputStream(file));
       ClassScanner visitor=getScanner(clazz);
       reader.accept(visitor,0);
       if (visitor.isMatch()) {
