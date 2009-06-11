@@ -1,11 +1,10 @@
 {
   MuleMessage result;
-  boolean first=true;
   boolean matchfound=false;
   for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
     OutboundRouter outboundRouter=(OutboundRouter)iterator.next();
     final MuleMessage outboundRouterMessage;
-    if (!first && (isMatchAll() || outboundRouter.isRequiresNewMessage())) {
+    if (iterator.hasNext() && (isMatchAll() || outboundRouter.isRequiresNewMessage())) {
       if (((DefaultMuleMessage)message).isConsumable()) {
         throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),message);
       }
@@ -14,7 +13,6 @@
  else {
       outboundRouterMessage=message;
     }
-    first=false;
     if (outboundRouter.isMatch(outboundRouterMessage)) {
       matchfound=true;
       final OutboundRouter router=outboundRouter;
