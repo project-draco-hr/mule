@@ -28,12 +28,18 @@
  else     if (HttpConstants.METHOD_POST.equalsIgnoreCase(method)) {
       PostMethod postMethod=new PostMethod(uri.toString());
       String paramName=msg.getStringProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY,null);
-      if (paramName == null) {
-        addParameters(uri.getQuery(),postMethod,msg);
-        setupEntityMethod(src,outputEncoding,msg,uri,postMethod);
+      if (src instanceof Map) {
+        for (Iterator iterator=((Map)src).entrySet().iterator(); iterator.hasNext(); ) {
+          Map.Entry entry=(Map.Entry)iterator.next();
+          postMethod.addParameter(entry.getKey().toString(),entry.getValue().toString());
+        }
+      }
+ else       if (paramName != null) {
+        postMethod.addParameter(paramName,src.toString());
       }
  else {
-        postMethod.addParameter(paramName,src.toString());
+        addParameters(uri.getQuery(),postMethod,msg);
+        setupEntityMethod(src,outputEncoding,msg,uri,postMethod);
       }
       httpMethod=postMethod;
     }
