@@ -1,0 +1,18 @@
+{
+  if (!connector.isFollowRedirects()) {
+    if (logger.isInfoEnabled())     logger.info("Received a redirect, but followRedirects=false. Response code: " + method.getStatusCode() + " "+ method.getStatusText());
+    return getResponseFromMethod(method,null);
+  }
+  Header locationHeader=method.getRequestHeader(HttpConstants.HEADER_LOCATION);
+  if (locationHeader == null) {
+    throw new HttpResponseException(method.getStatusText(),method.getStatusCode());
+  }
+  OutboundEndpoint out=new EndpointURIEndpointBuilder(locationHeader.getValue(),connector.getMuleContext()).buildOutboundEndpoint();
+  if (event.isSynchronous()) {
+    return connector.send(out,event);
+  }
+ else {
+    connector.dispatch(out,event);
+    return null;
+  }
+}
