@@ -1,0 +1,23 @@
+{
+  super(endpoint);
+  String wsdlUrl=endpoint.getEndpointURI().getAddress();
+  String serviceName=null;
+  String portName=null;
+  if (endpoint.getProperty("wsdlLocation") != null && StringUtils.isNotBlank(endpoint.getProperty("wsdlLocation").toString())) {
+    wsdlUrl=(String)endpoint.getProperty("wsdlLocation");
+  }
+  if (endpoint.getProperty("service") != null && StringUtils.isNotBlank(endpoint.getProperty("service").toString())) {
+    serviceName=(String)endpoint.getProperty("service");
+  }
+  if (endpoint.getProperty("port") != null && StringUtils.isNotBlank(endpoint.getProperty("port").toString())) {
+    portName=(String)endpoint.getProperty("port");
+  }
+  try {
+    this.client=createClient(bus,wsdlUrl,serviceName,portName);
+    addMuleInterceptors();
+  }
+ catch (  Exception ex) {
+    disconnect();
+    throw ex;
+  }
+}
