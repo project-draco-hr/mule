@@ -1,11 +1,6 @@
 {
-  URL url=Thread.currentThread().getContextClassLoader().getResource("./encrypted-signed.asc");
-  int length=(int)FileUtils.newFile(url.getFile()).length();
-  byte[] msg=new byte[length];
-  FileInputStream in=new FileInputStream(url.getFile());
-  in.read(msg);
-  in.close();
-  Map props=new HashMap();
+  byte[] msg=loadEncryptedMessage();
+  Map<String,String> props=new HashMap<String,String>();
   props.put("TARGET_FILE",TARGET);
   MuleClient client=new MuleClient();
   MuleMessage reply=client.send("vm://echo",new String(msg),props);
@@ -14,7 +9,7 @@
     FileReader outputFile=new FileReader(DIRECTORY + TARGET);
     outputFile.close();
     File f=FileUtils.newFile(DIRECTORY + TARGET);
-    f.delete();
+    assertTrue("Deleting the output file failed",f.delete());
   }
  catch (  FileNotFoundException fileNotFound) {
     fail("File not successfully created");
