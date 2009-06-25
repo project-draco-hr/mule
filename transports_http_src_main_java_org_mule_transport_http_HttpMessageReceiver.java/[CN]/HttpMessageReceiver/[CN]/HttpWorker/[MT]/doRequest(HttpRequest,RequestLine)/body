@@ -30,14 +30,19 @@
  else {
       response=transformResponse(returnMessage);
     }
-    response.disableKeepAlive(!((HttpConnector)connector).isKeepAlive());
-    boolean endpointOverride=Boolean.parseBoolean((String)endpoint.getProperty("keepAlive"));
+    HttpConnector httpConnector=(HttpConnector)connector;
+    response.disableKeepAlive(!httpConnector.isKeepAlive());
+    boolean endpointOverride=true;
+    String keepAliveEndpointValue=(String)endpoint.getProperty("keepAlive");
+    if (keepAliveEndpointValue != null) {
+      endpointOverride=Boolean.parseBoolean(keepAliveEndpointValue);
+    }
     Header connectionHeader=request.getFirstHeader("Connection");
     if (connectionHeader != null) {
       String value=connectionHeader.getValue();
-      if ("keep-alive".equalsIgnoreCase(value) && !endpointOverride) {
+      if ("keep-alive".equalsIgnoreCase(value) && endpointOverride) {
         response.setKeepAlive(true);
-        Header header=new Header(HttpConstants.HEADER_KEEP_ALIVE,"timeout=" + ((HttpConnector)connector).getKeepAliveTimeout());
+        Header header=new Header(HttpConstants.HEADER_KEEP_ALIVE,"timeout=" + httpConnector.getKeepAliveTimeout());
         response.addHeader(header);
       }
  else       if ("close".equalsIgnoreCase(value)) {
@@ -49,6 +54,10 @@
  else {
         response.setKeepAlive(false);
       }
+    }
+    if (response.getHttpVersion().equals(HttpVersion.HTTP_1_0)) {
+      Header header=new Header(HttpConstants.HEADER_CONNECTION,"Keep-Alive");
+      response.setHeader(header);
     }
   }
  else {
