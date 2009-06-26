@@ -4,6 +4,11 @@
     if (src instanceof byte[]) {
       src=new String((byte[])src,encoding);
     }
+ else     if (src instanceof InputStream) {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream();
+      IOUtils.copy((InputStream)src,baos);
+      src=baos.toString();
+    }
     if (src instanceof String) {
       if (getReturnClass().equals(DynaBean.class)) {
         JSON json=JSONSerializer.toJSON(src.toString(),getJsonConfig());
@@ -21,5 +26,10 @@
   }
  catch (  Exception e) {
     throw new TransformerException(CoreMessages.transformFailed("json",getReturnClass().getName()),this,e);
+  }
+ finally {
+    if (src instanceof InputStream) {
+      IOUtils.closeQuietly((InputStream)src);
+    }
   }
 }
