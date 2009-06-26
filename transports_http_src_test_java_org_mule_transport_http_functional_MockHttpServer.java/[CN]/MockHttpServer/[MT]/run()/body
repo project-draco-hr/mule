@@ -1,21 +1,11 @@
 {
   try {
-    ServerSocket serverSocket=new ServerSocket(LISTEN_PORT);
-    simpleServerLatch.countDown();
+    ServerSocket serverSocket=new ServerSocket(listenPort);
+    startupLatch.countDown();
     Socket socket=serverSocket.accept();
     InputStream in=socket.getInputStream();
     BufferedReader reader=new BufferedReader(new InputStreamReader(in));
-    String line=reader.readLine();
-    while (line != null) {
-      if (line.indexOf(COOKIE_HEADER) > -1) {
-        cookieFound=true;
-        cookieHeaders.add(line);
-      }
-      line=reader.readLine();
-      if (line.trim().length() == 0) {
-        line=null;
-      }
-    }
+    readHttpRequest(reader);
     OutputStream out=socket.getOutputStream();
     out.write("HTTP/1.1 200 OK\n\n".getBytes());
     in.close();
@@ -27,6 +17,6 @@
     throw new RuntimeException(ex);
   }
  finally {
-    latch.countDown();
+    testCompleteLatch.countDown();
   }
 }
