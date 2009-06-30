@@ -13,9 +13,9 @@
     message=new DefaultMuleMessage(args);
   }
   message.setProperty(MuleProperties.MULE_METHOD_PROPERTY,method.getName(),PropertyScope.INVOCATION);
-  InterfaceBinding router=(InterfaceBinding)routers.get(method.getName());
+  InterfaceBinding router=routers.get(method.getName());
   if (router == null) {
-    router=(InterfaceBinding)routers.get(DEFAULT_METHOD_NAME_TOKEN);
+    router=routers.get(DEFAULT_METHOD_NAME_TOKEN);
   }
   if (router == null) {
     throw new IllegalArgumentException(CoreMessages.cannotFindBindingForMethod(method.getName()).toString());
@@ -28,7 +28,12 @@
       throw reply.getExceptionPayload().getException();
     }
  else {
-      return reply.getPayload();
+      if (method.getReturnType().equals(MuleMessage.class)) {
+        return reply;
+      }
+ else {
+        return reply.getPayload();
+      }
     }
   }
  else {
