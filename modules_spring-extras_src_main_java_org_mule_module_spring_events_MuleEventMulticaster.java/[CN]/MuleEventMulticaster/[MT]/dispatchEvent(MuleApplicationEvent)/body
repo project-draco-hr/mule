@@ -8,7 +8,7 @@
   }
   if (endpoint != null) {
     try {
-      DefaultMuleMessage message=new DefaultMuleMessage(applicationEvent.getSource(),applicationEvent.getProperties());
+      DefaultMuleMessage message=new DefaultMuleMessage(applicationEvent.getSource(),applicationEvent.getProperties(),muleContext);
       if (applicationEvent.getMuleEventContext() != null) {
         applicationEvent.getMuleEventContext().setStopFurtherProcessing(true);
         applicationEvent.getMuleEventContext().dispatchEvent(message,endpoint);
@@ -17,7 +17,7 @@
         MuleSession session=new DefaultMuleSession(message,((AbstractConnector)endpoint.getConnector()).getSessionHandler(),service,muleContext);
         RequestContext.setEvent(new DefaultMuleEvent(message,endpoint,session,false));
         if (endpoint.getTransformers() != null) {
-          message=new DefaultMuleMessage(applicationEvent.getSource(),applicationEvent.getProperties());
+          message=new DefaultMuleMessage(applicationEvent.getSource(),applicationEvent.getProperties(),muleContext);
           message.applyTransformers(endpoint.getTransformers());
         }
         endpoint.dispatch(new DefaultMuleEvent(message,endpoint,session,false));

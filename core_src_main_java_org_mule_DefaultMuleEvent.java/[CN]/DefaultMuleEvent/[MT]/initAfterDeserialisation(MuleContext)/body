@@ -1,0 +1,46 @@
+{
+  if (session instanceof DefaultMuleSession) {
+    ((DefaultMuleSession)session).initAfterDeserialisation(muleContext);
+  }
+  if (message instanceof DefaultMuleMessage) {
+    ((DefaultMuleMessage)message).initAfterDeserialisation(muleContext);
+  }
+  int endpointHashcode=(Integer)serializedData.get("endpointHashcode");
+  boolean isInboundEndpoint=(Boolean)serializedData.get("isInboundEndpoint");
+  String endpointBuilderName=(String)serializedData.get("endpointBuilderName");
+  String endpointUri=(String)serializedData.get("endpointUri");
+  LinkedList<String> transformerNames=(LinkedList<String>)serializedData.get("transformers");
+  endpoint=(ImmutableEndpoint)muleContext.getRegistry().lookupObject(DefaultEndpointFactory.ENDPOINT_REGISTRY_PREFIX + endpointHashcode);
+  if (endpoint == null) {
+    if (endpointBuilderName != null && muleContext.getRegistry().lookupEndpointBuilder(endpointBuilderName) != null) {
+      if (isInboundEndpoint) {
+        endpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilderName);
+      }
+ else {
+        endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilderName);
+      }
+    }
+ else {
+      List<Transformer> transformers=new LinkedList<Transformer>();
+      for (      String name : transformerNames) {
+        Transformer next=muleContext.getRegistry().lookupTransformer(name);
+        if (next == null) {
+          throw new IllegalStateException(CoreMessages.objectNotFound(name).toString());
+        }
+ else {
+          transformers.add(next);
+        }
+      }
+      EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(endpointUri,muleContext);
+      endpointBuilder.setTransformers(transformers);
+      if (isInboundEndpoint) {
+        endpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder);
+      }
+ else {
+        endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
+      }
+    }
+  }
+  serializedData.clear();
+  serializedData=null;
+}

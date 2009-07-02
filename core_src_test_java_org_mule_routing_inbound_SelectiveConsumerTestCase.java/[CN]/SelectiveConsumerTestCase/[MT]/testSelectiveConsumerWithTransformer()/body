@@ -1,14 +1,14 @@
 {
   Mock session=MuleTestUtils.getMockSession();
   Service testService=getTestService("test",Apple.class);
-  InboundRouterCollection messageRouter=new DefaultInboundRouterCollection();
-  SelectiveConsumer router=new SelectiveConsumer();
+  InboundRouterCollection messageRouter=createObject(DefaultInboundRouterCollection.class);
+  SelectiveConsumer router=createObject(SelectiveConsumer.class);
   messageRouter.addRouter(router);
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   PayloadTypeFilter filter=new PayloadTypeFilter(byte[].class);
   router.setFilter(filter);
   assertEquals(filter,router.getFilter());
-  MuleMessage message=new DefaultMuleMessage("test event");
+  MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   ImmutableEndpoint endpoint=getTestOutboundEndpoint("Test1Provider",CollectionUtils.singletonList(new ObjectToByteArray()));
   MuleEvent event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy(),false);
   assertTrue(router.isMatch(event));
@@ -25,7 +25,7 @@
   session.verify();
   session.expectAndReturn("getService",testService);
   session.expectAndReturn("toString","");
-  message=new DefaultMuleMessage("Hello String");
+  message=new DefaultMuleMessage("Hello String",muleContext);
   event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy(),false);
   router.setTransformFirst(false);
   assertTrue(!router.isMatch(event));

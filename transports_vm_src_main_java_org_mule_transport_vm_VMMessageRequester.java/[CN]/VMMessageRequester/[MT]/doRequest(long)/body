@@ -12,24 +12,24 @@
       return null;
     }
  else {
-      MuleMessage message=null;
+      MuleEvent event=null;
       if (logger.isDebugEnabled()) {
         logger.debug("Waiting for a message on " + endpoint.getEndpointURI().getAddress());
       }
       try {
-        message=(MuleMessage)queue.poll(timeout);
+        event=(MuleEvent)queue.poll(timeout);
       }
  catch (      InterruptedException e) {
         logger.error("Failed to receive message from queue: " + endpoint.getEndpointURI());
       }
-      if (message != null) {
-        if (message instanceof ThreadSafeAccess) {
-          ((ThreadSafeAccess)message).resetAccessControl();
+      if (event != null) {
+        if (event.getMessage() instanceof ThreadSafeAccess) {
+          ((ThreadSafeAccess)event.getMessage()).resetAccessControl();
         }
         if (logger.isDebugEnabled()) {
-          logger.debug("Message received: " + message);
+          logger.debug("Message received: " + event);
         }
-        return message;
+        return event.getMessage();
       }
  else {
         if (logger.isDebugEnabled()) {

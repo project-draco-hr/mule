@@ -11,7 +11,7 @@
       eventContext.setStopFurtherProcessing(true);
       return wsdlFileContents;
     }
-    MuleContext muleContext=MuleServer.getMuleContext();
+    MuleContext muleContext=eventContext.getMuleContext();
     InboundEndpoint webServiceEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(this.wsdlEndpoint);
     MuleMessage replyWSDL=eventContext.requestEvent(webServiceEndpoint,eventContext.getTimeout());
     wsdlString=replyWSDL.getPayloadAsString();
@@ -21,7 +21,7 @@
     if (wsdlString.indexOf("localhost") > -1) {
       wsdlString=wsdlString.replaceAll("localhost",InetAddress.getLocalHost().getHostName());
     }
-    DefaultMuleMessage modifiedWsdl=new DefaultMuleMessage(wsdlString);
+    DefaultMuleMessage modifiedWsdl=new DefaultMuleMessage(wsdlString,muleContext);
     logger.debug("WSDL retrieved successfully");
     eventContext.setStopFurtherProcessing(true);
     return modifiedWsdl;

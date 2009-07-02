@@ -4,13 +4,13 @@
   router.addEndpoint(endpoint3);
   Map m=new HashMap();
   m.put("barValue","bar");
-  MuleMessage message=new DefaultMuleMessage("test event",m);
+  MuleMessage message=new DefaultMuleMessage("test event",m,muleContext);
   assertTrue(router.isMatch(message));
   ImmutableEndpoint ep=router.getEndpoint(2,message);
   assertEquals("test://foo?bar&synchronous=true",ep.getEndpointURI().toString());
-  session.expectAndReturn("sendEvent",C.eq(message,new DynamicURIOutboundEndpoint((OutboundEndpoint)router.getEndpoints().get(0),new MuleEndpointURI("test://test?synchronous=true"))),message);
-  session.expectAndReturn("sendEvent",C.eq(message,new DynamicURIOutboundEndpoint((OutboundEndpoint)router.getEndpoints().get(1),new MuleEndpointURI("test://test?synchronous=true"))),message);
-  session.expectAndReturn("sendEvent",C.eq(message,new DynamicURIOutboundEndpoint((OutboundEndpoint)router.getEndpoints().get(2),new MuleEndpointURI("test://foo?bar&synchronous=true"))),message);
+  session.expectAndReturn("sendEvent",C.eq(message,new DynamicURIOutboundEndpoint((OutboundEndpoint)router.getEndpoints().get(0),new MuleEndpointURI("test://test?synchronous=true",muleContext))),message);
+  session.expectAndReturn("sendEvent",C.eq(message,new DynamicURIOutboundEndpoint((OutboundEndpoint)router.getEndpoints().get(1),new MuleEndpointURI("test://test?synchronous=true",muleContext))),message);
+  session.expectAndReturn("sendEvent",C.eq(message,new DynamicURIOutboundEndpoint((OutboundEndpoint)router.getEndpoints().get(2),new MuleEndpointURI("test://foo?bar&synchronous=true",muleContext))),message);
   final MuleMessage result=router.route(message,(MuleSession)session.proxy());
   assertNotNull("This is a sync call, we need a result returned.",result);
   assertEquals(message,result);

@@ -4,8 +4,11 @@
   if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
     throw new IOException("Failed to create directory: " + file.getAbsolutePath());
   }
-  ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream(file));
-  oos.writeObject(obj);
-  oos.close();
+  try {
+    serializer.write(new FileOutputStream(file),obj,muleContext.getConfiguration().getDefaultEncoding());
+  }
+ catch (  MuleException e) {
+    throw new IOException(e.getDetailedMessage());
+  }
   return id;
 }

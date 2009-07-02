@@ -1,0 +1,29 @@
+{
+  if (muleContext == null) {
+    throw new IllegalArgumentException(CoreMessages.objectIsNull("muleContext").getMessage());
+  }
+  this.muleContext=muleContext;
+  if (message instanceof MessageAdapter) {
+    adapter=(MessageAdapter)message;
+    ((ThreadSafeAccess)adapter).resetAccessControl();
+  }
+ else {
+    adapter=new DefaultMessageAdapter(message,previous);
+  }
+  if (previous.getExceptionPayload() != null) {
+    setExceptionPayload(previous.getExceptionPayload());
+  }
+  setEncoding(previous.getEncoding());
+  if (previous.getAttachmentNames().size() > 0) {
+    Set<String> attNames=adapter.getAttachmentNames();
+    for (    String s : attNames) {
+      try {
+        addAttachment(s,adapter.getAttachment(s));
+      }
+ catch (      Exception e) {
+        throw new MuleRuntimeException(CoreMessages.failedToReadAttachment(s),e);
+      }
+    }
+  }
+  resetAccessControl();
+}

@@ -1,12 +1,16 @@
 {
   super.init();
+  MuleContext muleContext=(MuleContext)getServletContext().getAttribute(MuleProperties.MULE_CONTEXT_PROPERTY);
+  if (muleContext == null) {
+    throw new ServletException("Property " + MuleProperties.MULE_CONTEXT_PROPERTY + " not set on ServletContext");
+  }
   String servletConnectorName=getServletConfig().getInitParameter(AJAX_CONNECTOR_NAME_PROPERTY);
   if (servletConnectorName == null) {
-    connector=(AjaxServletConnector)TransportFactory.getConnectorByProtocol(getConnectorProtocol());
+    connector=(AjaxServletConnector)new TransportFactory(muleContext).getConnectorByProtocol(getConnectorProtocol());
     if (connector == null) {
       connector=new AjaxServletConnector();
       try {
-        RegistryContext.getRegistry().registerConnector(connector);
+        muleContext.getRegistry().registerConnector(connector);
       }
  catch (      MuleException e) {
         throw new ServletException("Failed to register the AjaxServletConnector",e);
@@ -14,7 +18,7 @@
     }
   }
  else {
-    connector=(AjaxServletConnector)RegistryContext.getRegistry().lookupConnector(servletConnectorName);
+    connector=(AjaxServletConnector)muleContext.getRegistry().lookupConnector(servletConnectorName);
     if (connector == null) {
       throw new ServletException(AjaxMessages.noAjaxConnectorWithName(servletConnectorName,AJAX_CONNECTOR_NAME_PROPERTY).toString());
     }

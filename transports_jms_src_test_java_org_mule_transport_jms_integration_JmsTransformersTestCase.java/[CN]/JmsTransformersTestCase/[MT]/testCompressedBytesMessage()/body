@@ -10,6 +10,7 @@
   assertTrue("Source compressedBytes should be compressed",compressor.isCompressed(compressedBytes));
   AbstractJmsTransformer trans=new SessionEnabledObjectToJMSMessage(session);
   trans.setReturnClass(BytesMessage.class);
+  initialiseObject(trans);
   Object result2=trans.transform(compressedBytes);
   assertTrue("Transformed object should be a Bytes message",result2 instanceof BytesMessage);
   BytesMessage intermediate=(BytesMessage)result2;
@@ -19,7 +20,7 @@
   assertTrue("Intermediate bytes must be compressed",compressor.isCompressed(intermediateBytes));
   assertTrue("Intermediate bytes must be equal to compressed source",Arrays.equals(compressedBytes,intermediateBytes));
   assertEquals("Intermediate bytes and compressed source must have same size",compressedBytes.length,intermediateSize);
-  AbstractJmsTransformer trans2=new JMSMessageToObject();
+  AbstractJmsTransformer trans2=createObject(JMSMessageToObject.class);
   trans2.setReturnClass(byte[].class);
   BytesMessage bMsg=session.createBytesMessage();
   bMsg.writeBytes(compressedBytes);

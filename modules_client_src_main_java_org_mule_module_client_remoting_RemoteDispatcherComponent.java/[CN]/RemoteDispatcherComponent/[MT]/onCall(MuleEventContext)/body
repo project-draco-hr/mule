@@ -1,4 +1,5 @@
 {
+  muleContext=context.getMuleContext();
   if (context.transformMessageToString().equals(ServerHandshake.SERVER_HANDSHAKE_PROPERTY)) {
     return doHandshake(context);
   }
@@ -6,6 +7,11 @@
   logger.debug("Message received by RemoteDispatcherComponent");
   ByteArrayInputStream in=new ByteArrayInputStream(context.transformMessageToBytes());
   RemoteDispatcherNotification action=(RemoteDispatcherNotification)((MuleMessage)wireFormat.read(in)).getPayload();
+  if (action.getMessage() != null) {
+    Method m=action.getMessage().getClass().getDeclaredMethod("initAfterDeserialisation",MuleContext.class);
+    m.setAccessible(true);
+    m.invoke(action.getMessage(),muleContext);
+  }
   if (RemoteDispatcherNotification.ACTION_INVOKE == action.getAction()) {
     result=invokeAction(action,context);
   }

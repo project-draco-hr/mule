@@ -1,6 +1,10 @@
 {
   boolean sync=true;
   Call call=(Call)msgContext.getProperty("call_object");
+  muleContext=(MuleContext)call.getProperty(MuleProperties.MULE_CONTEXT_PROPERTY);
+  if (muleContext == null) {
+    throw new IllegalArgumentException("Property org.mule.MuleContext not set on Axis MessageContext");
+  }
   if (call == null) {
     throw new IllegalStateException("The call_object property must be set on the message context to the client Call object");
   }
@@ -80,14 +84,13 @@
       }
       props.put(HttpConstants.HEADER_CONTENT_TYPE,contentType);
     }
-    MuleMessage message=new DefaultMuleMessage(payload,props);
+    MuleMessage message=new DefaultMuleMessage(payload,props,muleContext);
     MuleSession session=RequestContext.getEventContext().getSession();
     logger.info("Making Axis soap request on: " + uri);
     if (logger.isDebugEnabled()) {
       logger.debug("Soap request is:\n" + new String((payload instanceof byte[] ? (byte[])payload : payload.toString().getBytes())));
     }
     if (sync) {
-      MuleContext muleContext=MuleServer.getMuleContext();
       EndpointBuilder builder=new EndpointURIEndpointBuilder(endpoint,muleContext);
       builder.setSynchronous(true);
       OutboundEndpoint syncEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(builder);

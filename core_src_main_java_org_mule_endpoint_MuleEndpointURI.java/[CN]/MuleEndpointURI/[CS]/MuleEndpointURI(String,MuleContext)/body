@@ -1,0 +1,20 @@
+{
+  uri=uri.trim().replaceAll(" ","%20");
+  uri=uri.replaceAll("\\{","\\[");
+  uri=uri.replaceAll("\\}","\\]");
+  if (!validateUrl(uri)) {
+    throw new MalformedEndpointException(uri);
+  }
+  this.muleContext=muleContext;
+  try {
+    schemeMetaInfo=retrieveSchemeMetaInfo(uri);
+    if (schemeMetaInfo != null) {
+      uri=uri.replaceFirst(schemeMetaInfo + ":","");
+    }
+    this.uri=new URI(uri);
+    this.userInfo=this.uri.getRawUserInfo();
+  }
+ catch (  URISyntaxException e) {
+    throw new MalformedEndpointException(uri,e);
+  }
+}

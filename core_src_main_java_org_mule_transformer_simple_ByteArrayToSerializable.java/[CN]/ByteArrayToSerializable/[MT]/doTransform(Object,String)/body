@@ -1,11 +1,37 @@
 {
   try {
+    final Object result;
     if (src instanceof byte[]) {
-      return SerializationUtils.deserialize((byte[])src);
+      result=SerializationUtils.deserialize((byte[])src);
     }
  else {
-      return SerializationUtils.deserialize((InputStream)src);
+      result=SerializationUtils.deserialize((InputStream)src);
     }
+    if (result instanceof DeserializationPostInitialisable) {
+      try {
+        final Method m=result.getClass().getDeclaredMethod("initAfterDeserialisation",MuleContext.class);
+        Object o=AccessController.doPrivileged(new PrivilegedAction(){
+          public Object run(){
+            try {
+              m.setAccessible(true);
+              m.invoke(result,muleContext);
+              return null;
+            }
+ catch (            Exception e) {
+              return e;
+            }
+          }
+        }
+);
+        if (o != null) {
+          throw (Exception)o;
+        }
+      }
+ catch (      NoSuchMethodException e) {
+        throw new IllegalArgumentException("Object " + result.getClass() + " implements "+ DeserializationPostInitialisable.class+ " but does not have a method "+ "private void initAfterDeserialisation(MuleContext) defined",e);
+      }
+    }
+    return result;
   }
  catch (  Exception e) {
     throw new TransformerException(CoreMessages.transformFailed("byte[]","Object"),this,e);

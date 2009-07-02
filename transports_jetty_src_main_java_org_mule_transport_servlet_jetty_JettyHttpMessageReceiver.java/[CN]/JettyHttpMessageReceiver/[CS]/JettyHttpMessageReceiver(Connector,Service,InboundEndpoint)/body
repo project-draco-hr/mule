@@ -1,15 +1,14 @@
 {
   super(connector,service,endpoint);
   if ("rest".equals(endpoint.getEndpointURI().getScheme())) {
-    ServletConnector scon=(ServletConnector)TransportFactory.getConnectorByProtocol("servlet");
+    ServletConnector scon=(ServletConnector)new TransportFactory(connector.getMuleContext()).getConnectorByProtocol("servlet");
     if (scon == null) {
       scon=new ServletConnector();
       scon.setName(JETTY_SERVLET_CONNECTOR_NAME);
       scon.setServletUrl(endpoint.getEndpointURI().getAddress());
-      MuleContext muleContext=MuleServer.getMuleContext();
-      scon.setMuleContext(muleContext);
+      scon.setMuleContext(connector.getMuleContext());
       try {
-        muleContext.getRegistry().registerConnector(scon);
+        connector.getMuleContext().getRegistry().registerConnector(scon);
       }
  catch (      MuleException e) {
         throw new CreateException(e,this);

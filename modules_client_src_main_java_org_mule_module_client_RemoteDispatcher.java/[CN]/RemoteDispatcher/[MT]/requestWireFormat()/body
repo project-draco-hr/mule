@@ -1,6 +1,6 @@
 {
-  MuleMessage msg=new DefaultMuleMessage(ServerHandshake.SERVER_HANDSHAKE_PROPERTY);
-  MuleMessage result=syncServerEndpoint.send(new DefaultMuleEvent(msg,syncServerEndpoint,new DefaultMuleSession(msg,new NullSessionHandler(),MuleServer.getMuleContext()),true));
+  MuleMessage msg=new DefaultMuleMessage(ServerHandshake.SERVER_HANDSHAKE_PROPERTY,muleContext);
+  MuleMessage result=syncServerEndpoint.send(new DefaultMuleEvent(msg,syncServerEndpoint,new DefaultMuleSession(msg,new NullSessionHandler(),muleContext),true));
   if (result == null) {
     throw new RemoteDispatcherException(ClientMessages.failedToDispatchActionNoResponseFromServer("request wire format",5000));
   }
@@ -14,6 +14,7 @@
   }
   try {
     WireFormat wf=(WireFormat)ClassUtils.instanciateClass(handshake.getWireFormatClass(),ClassUtils.NO_ARGS,getClass());
+    wf.setMuleContext(muleContext);
     return wf;
   }
  catch (  Exception e) {

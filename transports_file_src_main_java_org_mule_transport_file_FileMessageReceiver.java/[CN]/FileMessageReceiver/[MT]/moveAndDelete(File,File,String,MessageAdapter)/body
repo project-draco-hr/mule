@@ -10,7 +10,7 @@
       msgAdapter.setProperty(FileConnector.PROPERTY_FILENAME,destinationFile.getName());
       msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
     }
-    this.routeMessage(new DefaultMuleMessage(msgAdapter),endpoint.isSynchronous());
+    this.routeMessage(new DefaultMuleMessage(msgAdapter,connector.getMuleContext()),endpoint.isSynchronous());
     if (((FileConnector)connector).isAutoDelete()) {
       if (destinationFile == null) {
         if (!sourceFile.delete()) {
@@ -26,7 +26,7 @@
     if (fileWasMoved) {
       fileWasRolledBack=rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
     }
-    Exception ex=new RoutingException(FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new DefaultMuleMessage(msgAdapter),endpoint,e);
+    Exception ex=new RoutingException(FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new DefaultMuleMessage(msgAdapter,connector.getMuleContext()),endpoint,e);
     this.handleException(ex);
   }
 }

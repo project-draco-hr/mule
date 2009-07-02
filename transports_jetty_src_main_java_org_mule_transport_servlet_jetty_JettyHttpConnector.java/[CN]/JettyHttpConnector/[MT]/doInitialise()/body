@@ -3,9 +3,16 @@
   if (getReceiverServlet() == null) {
     setServletClass((useContinuations ? JettyContinuationsReceiverServlet.class : JettyReceiverServlet.class));
   }
-  ServletHandler handler=new ServletHandler();
-  holder=handler.addServletWithMapping(getServletClass(),"/*");
-  httpServer.addHandler(handler);
+  Context root=new Context(httpServer,"/",Context.SESSIONS);
+  holder=root.addServlet(getServletClass(),"/*");
+  root.addEventListener(new ServletContextListener(){
+    public void contextInitialized(    ServletContextEvent sce){
+      sce.getServletContext().setAttribute(MuleProperties.MULE_CONTEXT_PROPERTY,muleContext);
+    }
+    public void contextDestroyed(    ServletContextEvent sce){
+    }
+  }
+);
   if (configFile != null) {
     try {
       InputStream is=IOUtils.getResourceAsStream(configFile,getClass());

@@ -1,30 +1,16 @@
 {
-  MuleContext muleContext=MuleServer.getMuleContext();
   in.defaultReadObject();
-  int endpointHashCode=in.readInt();
-  boolean isEndpointInbound=in.readBoolean();
-  String endpointbBuilderName=(String)in.readObject();
-  String endpointUri=(String)in.readObject();
-  endpoint=(ImmutableEndpoint)muleContext.getRegistry().lookupObject(DefaultEndpointFactory.ENDPOINT_REGISTRY_PREFIX + endpointHashCode);
-  if (endpoint == null) {
-    if (endpointbBuilderName != null && muleContext.getRegistry().lookupEndpointBuilder(endpointbBuilderName) != null) {
-      if (isEndpointInbound) {
-        endpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointbBuilderName);
-      }
- else {
-        endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointbBuilderName);
-      }
-    }
- else {
-      List transformers=unmarshallTransformers(in);
-      EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(endpointUri,muleContext);
-      endpointBuilder.setTransformers(transformers);
-      if (isEndpointInbound) {
-        endpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder);
-      }
- else {
-        endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
-      }
+  serializedData=new HashMap();
+  serializedData.put("endpointHashcode",in.readInt());
+  serializedData.put("isInboundEndpoint",in.readBoolean());
+  serializedData.put("endpointBuilderName",in.readObject());
+  serializedData.put("endpointUri",in.readObject());
+  int count=in.readInt();
+  List<String> trans=new LinkedList<String>();
+  if (count > 0) {
+    while (--count > 0) {
+      trans.add((String)in.readObject());
     }
   }
+  serializedData.put("transformers",trans);
 }

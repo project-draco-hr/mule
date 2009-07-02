@@ -1,7 +1,7 @@
 {
   Mock session=MuleTestUtils.getMockSession();
   session.matchAndReturn("getService",getTestService());
-  DefaultOutboundRouterCollection messageRouter=new DefaultOutboundRouterCollection();
+  DefaultOutboundRouterCollection messageRouter=createObject(DefaultOutboundRouterCollection.class);
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   assertNotNull(messageRouter.getCatchAllStrategy());
   ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
@@ -29,11 +29,11 @@
   list.add(router1);
   list.add(router2);
   messageRouter.setRouters(list);
-  MuleMessage message=new DefaultMuleMessage("test event");
+  MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   session.expect("dispatchEvent",C.eq(message,endpoint1));
   messageRouter.route(message,(MuleSession)session.proxy());
   session.verify();
-  message=new DefaultMuleMessage(new IllegalArgumentException());
+  message=new DefaultMuleMessage(new IllegalArgumentException(),muleContext);
   session.expectAndReturn("getService",getTestService());
   session.expect("dispatchEvent",C.eq(message,endpoint2));
   messageRouter.route(message,(MuleSession)session.proxy());
@@ -44,7 +44,7 @@
   endpoints.add(endpoint2);
   router3.setEndpoints(endpoints);
   messageRouter.addRouter(router3);
-  message=new DefaultMuleMessage("testing multiple routing");
+  message=new DefaultMuleMessage("testing multiple routing",muleContext);
   session.expectAndReturn("getService",getTestService());
   session.expectAndReturn("getService",getTestService());
   session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.eq(endpoint1)));

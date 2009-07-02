@@ -6,20 +6,20 @@
  else {
     serverEndpoint=asyncServerEndpoint;
   }
-  MuleMessage serializeMessage=new DefaultMuleMessage(action);
+  MuleMessage serializeMessage=new DefaultMuleMessage(action,muleContext);
   updateContext(serializeMessage,serverEndpoint,synchronous);
   ByteArrayOutputStream out=new ByteArrayOutputStream();
   wireFormat.write(out,serializeMessage,serverEndpoint.getEncoding());
   byte[] payload=out.toByteArray();
   MuleMessage message=action.getMessage();
   if (message == null) {
-    message=new DefaultMuleMessage(payload);
+    message=new DefaultMuleMessage(payload,muleContext);
   }
  else {
-    message=new DefaultMuleMessage(payload,message);
+    message=new DefaultMuleMessage(payload,message,muleContext);
   }
   message.addProperties(action.getProperties());
-  MuleSession session=new DefaultMuleSession(message,((AbstractConnector)serverEndpoint.getConnector()).getSessionHandler(),MuleServer.getMuleContext());
+  MuleSession session=new DefaultMuleSession(message,((AbstractConnector)serverEndpoint.getConnector()).getSessionHandler(),muleContext);
   MuleEvent event=new DefaultMuleEvent(message,serverEndpoint,session,true);
   event.setTimeout(timeout);
   if (logger.isDebugEnabled()) {

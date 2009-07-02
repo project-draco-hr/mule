@@ -1,4 +1,12 @@
 {
   DefaultMuleMessage msg=(DefaultMuleMessage)RequestContext.getEvent().getMessage();
-  return SerializationUtils.serialize(msg);
+  wireFormat.setMuleContext(RequestContext.getEvent().getMuleContext());
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  try {
+    wireFormat.write(baos,msg,msg.getEncoding());
+  }
+ catch (  MuleException e) {
+    throw new IOException(e.getDetailedMessage());
+  }
+  return baos.toByteArray();
 }

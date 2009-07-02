@@ -1,11 +1,15 @@
 {
   super.doSetUp();
-  httpServer=new Server();
-  SelectChannelConnector conn=new SelectChannelConnector();
-  conn.setPort(HTTP_PORT);
-  httpServer.addConnector(conn);
-  ServletHandler handler=new ServletHandler();
-  handler.addServletWithMapping(MuleReceiverServlet.class,"/services/*");
-  httpServer.addHandler(handler);
+  httpServer=new Server(HTTP_PORT);
+  Context c=new Context(httpServer,"/",Context.SESSIONS);
+  c.addServlet(new ServletHolder(new MuleReceiverServlet()),"/services/*");
+  c.addEventListener(new ServletContextListener(){
+    public void contextInitialized(    ServletContextEvent sce){
+      sce.getServletContext().setAttribute(MuleProperties.MULE_CONTEXT_PROPERTY,muleContext);
+    }
+    public void contextDestroyed(    ServletContextEvent sce){
+    }
+  }
+);
   httpServer.start();
 }
