@@ -1,4 +1,14 @@
 {
+  try {
+    long timeout=((HttpsConnector)getConnector()).getSslHandshakeTimeout();
+    boolean handshakeComplete=latch.await(timeout,TimeUnit.MILLISECONDS);
+    if (!handshakeComplete) {
+      throw new MessagingException(HttpMessages.sslHandshakeDidNotComplete(),message);
+    }
+  }
+ catch (  InterruptedException e) {
+    throw new MessagingException(HttpMessages.sslHandshakeDidNotComplete(),message,e);
+  }
   super.preRouteMessage(message);
   if (peerCertificateChain != null) {
     message.setProperty(HttpsConnector.PEER_CERTIFICATES,peerCertificateChain);

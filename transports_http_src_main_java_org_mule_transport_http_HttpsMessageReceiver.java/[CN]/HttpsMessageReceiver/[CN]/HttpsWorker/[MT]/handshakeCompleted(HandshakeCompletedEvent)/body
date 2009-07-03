@@ -1,9 +1,14 @@
 {
-  localCertificateChain=event.getLocalCertificates();
   try {
-    peerCertificateChain=event.getPeerCertificates();
+    localCertificateChain=event.getLocalCertificates();
+    try {
+      peerCertificateChain=event.getPeerCertificates();
+    }
+ catch (    SSLPeerUnverifiedException e) {
+      logger.debug("Cannot get peer certificate chain: " + e.getMessage());
+    }
   }
- catch (  SSLPeerUnverifiedException e) {
-    logger.debug("Cannot get peer certificate chain: " + e.getMessage());
+  finally {
+    latch.countDown();
   }
 }

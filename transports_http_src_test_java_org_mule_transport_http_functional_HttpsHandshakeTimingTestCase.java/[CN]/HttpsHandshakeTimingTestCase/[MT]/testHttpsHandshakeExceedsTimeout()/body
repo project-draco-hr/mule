@@ -1,0 +1,15 @@
+{
+  MockHttpsMessageReceiver messageReceiver=setupMockHttpsMessageReceiver();
+  MockSslSocket socket=new MockSslSocket();
+  Work work=messageReceiver.createWork(socket);
+  assertNotNull(work);
+  MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,muleContext);
+  try {
+    invokePreRouteMessage(work,message);
+    fail();
+  }
+ catch (  InvocationTargetException ite) {
+    assertTrue(ite.getCause() instanceof MessagingException);
+    assertTrue(ite.getCause().getMessage().contains("handshake"));
+  }
+}
