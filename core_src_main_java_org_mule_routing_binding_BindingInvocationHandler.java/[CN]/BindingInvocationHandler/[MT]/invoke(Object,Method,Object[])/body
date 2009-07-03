@@ -2,16 +2,7 @@
   if (method.getName().equals("toString")) {
     return toString();
   }
-  MuleMessage message;
-  if (args == null) {
-    message=new DefaultMuleMessage(NullPayload.getInstance(),muleContext);
-  }
- else   if (args.length == 1) {
-    message=new DefaultMuleMessage(args[0],muleContext);
-  }
- else {
-    message=new DefaultMuleMessage(args,muleContext);
-  }
+  MuleMessage message=createMuleMessage(args);
   message.setProperty(MuleProperties.MULE_METHOD_PROPERTY,method.getName(),PropertyScope.INVOCATION);
   InterfaceBinding router=routers.get(method.getName());
   if (router == null) {
@@ -20,20 +11,14 @@
   if (router == null) {
     throw new IllegalArgumentException(CoreMessages.cannotFindBindingForMethod(method.getName()).toString());
   }
-  MuleMessage reply;
   MuleEvent currentEvent=RequestContext.getEvent();
-  reply=router.route(message,currentEvent.getSession());
+  MuleMessage reply=router.route(message,currentEvent.getSession());
   if (reply != null) {
     if (reply.getExceptionPayload() != null) {
-      throw reply.getExceptionPayload().getException();
+      throw findDeclaredMethodException(method,reply.getExceptionPayload().getException());
     }
  else {
-      if (MuleMessage.class.isAssignableFrom(method.getReturnType())) {
-        return reply;
-      }
- else {
-        return reply.getPayload();
-      }
+      return determineReply(reply,method);
     }
   }
  else {
