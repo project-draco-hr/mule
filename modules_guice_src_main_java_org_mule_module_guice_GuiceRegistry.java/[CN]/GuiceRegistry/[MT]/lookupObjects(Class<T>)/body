@@ -1,8 +1,14 @@
 {
   try {
-    List<T> list=new ArrayList<T>(1);
-    list.add(injector.getInstance(type));
-    return list;
+    List<Binding<T>> bindings=injector.findBindingsByType(TypeLiteral.get(type));
+    if (bindings != null && bindings.size() > 0) {
+      List<T> list=new ArrayList<T>(bindings.size());
+      for (      Binding<T> binding : bindings) {
+        list.add(binding.getProvider().get());
+      }
+      return list;
+    }
+    return Collections.EMPTY_LIST;
   }
  catch (  ConfigurationException e) {
     return Collections.EMPTY_LIST;
