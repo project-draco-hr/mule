@@ -6,7 +6,7 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Connecting: " + this);
   }
-  retryPolicyTemplate.execute(new RetryCallback(){
+  RetryCallback callback=new RetryCallback(){
     public void doWork(    RetryContext context) throws Exception {
       if (validateConnections && !validateConnection(context).isOk()) {
         throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect to resource"),context.getLastFailure(),null);
@@ -54,5 +54,6 @@
       return getConnectionDescription();
     }
   }
-,muleContext.getWorkManager());
+;
+  retryPolicyTemplate.execute(callback,muleContext.getWorkManager());
 }
