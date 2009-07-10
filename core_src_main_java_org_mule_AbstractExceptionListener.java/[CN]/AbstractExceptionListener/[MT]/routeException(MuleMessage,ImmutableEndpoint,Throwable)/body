@@ -15,8 +15,14 @@
  else       if (failedEndpoint != null) {
         endpointUri=failedEndpoint.getEndpointURI();
       }
-      ExceptionMessage msg;
-      msg=new ExceptionMessage(getErrorMessagePayload(message),t,component,endpointUri);
+      Object payload;
+      if (message.getPayload() instanceof Serializable) {
+        payload=message.getPayload();
+      }
+ else {
+        payload=message.getPayloadAsString();
+      }
+      ExceptionMessage msg=new ExceptionMessage(payload,t,component,endpointUri);
       MuleMessage exceptionMessage;
       if (ctx == null) {
         exceptionMessage=new DefaultMuleMessage(msg,muleContext);
@@ -34,7 +40,7 @@
         }
       }
     }
- catch (    MuleException e) {
+ catch (    Exception e) {
       logFatal(message,e);
       closeStream(message);
     }

@@ -1,0 +1,13 @@
+{
+  Map map=new HashMap();
+  map.put("key1","value1");
+  map.put("key2","value2");
+  MuleClient mc=new MuleClient();
+  mc.dispatch("vm://in1",map,null);
+  MuleMessage message=mc.request("vm://out1",FunctionalTestCase.RECEIVE_TIMEOUT);
+  assertTrue(message.getPayload() instanceof ExceptionMessage);
+  Object payload=((ExceptionMessage)message.getPayload()).getPayload();
+  assertTrue("payload shoud be a HashMap, but is " + payload.getClass().getName(),payload instanceof Map);
+  assertEquals("value1",((Map)payload).get("key1"));
+  assertEquals("value2",((Map)payload).get("key2"));
+}
