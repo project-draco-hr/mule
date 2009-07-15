@@ -11,9 +11,18 @@
     }
     if (src instanceof String) {
       if (getReturnClass().equals(JsonData.class)) {
+        getJsonConfig().setEnclosedType(getReturnClass());
         JSON json=JSONSerializer.toJSON(src.toString(),getJsonConfig());
-        returnValue=JSONObject.toBean((JSONObject)json,getJsonConfig());
-        returnValue=new JsonData((MorphDynaBean)returnValue);
+        if (json instanceof JSONArray) {
+          getJsonConfig().setEnclosedType(List.class);
+          getJsonConfig().setArrayMode(JsonConfig.MODE_LIST);
+          List list=(List)JSONArray.toCollection((JSONArray)json,getJsonConfig());
+          returnValue=new JsonData(list);
+        }
+ else {
+          returnValue=JSONObject.toBean((JSONObject)json,getJsonConfig());
+          returnValue=new JsonData((MorphDynaBean)returnValue);
+        }
       }
  else {
         returnValue=JsonUtils.convertJsonToBean((String)src,getJsonConfig(),getReturnClass(),(getReturnClass().equals(DefaultMuleMessageDTO.class) ? dtoMappings : null));
