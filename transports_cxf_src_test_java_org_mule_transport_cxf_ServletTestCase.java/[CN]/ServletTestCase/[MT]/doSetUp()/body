@@ -1,17 +1,5 @@
 {
   super.doSetUp();
-  httpServer=new Server(HTTP_PORT);
-  String path=getContextPath();
-  if (path.equals(""))   path="/";
-  Context c=new Context(httpServer,path,Context.SESSIONS);
-  c.addServlet(new ServletHolder(new MuleReceiverServlet()),"/services/*");
-  c.addEventListener(new ServletContextListener(){
-    public void contextInitialized(    ServletContextEvent sce){
-      sce.getServletContext().setAttribute(MuleProperties.MULE_CONTEXT_PROPERTY,muleContext);
-    }
-    public void contextDestroyed(    ServletContextEvent sce){
-    }
-  }
-);
+  httpServer=new EmbeddedJettyServer(HTTP_PORT,getContextPath(),"/services/*",new MuleReceiverServlet(),muleContext);
   httpServer.start();
 }
