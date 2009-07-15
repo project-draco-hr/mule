@@ -2,14 +2,27 @@
   if (folder == null || !folder.isOpen()) {
     Store store=castConnector().getSessionDetails(endpoint).newStore();
     EndpointURI uri=endpoint.getEndpointURI();
-    store.connect(uri.getHost(),uri.getPort(),uri.getUser(),uri.getPassword());
+    String user=(uri.getUser() != null ? URLDecoder.decode(uri.getUser()) : null);
+    String pass=(uri.getPassword() != null ? URLDecoder.decode(uri.getPassword()) : null);
+    store.connect(uri.getHost(),uri.getPort(),user,pass);
     folder=store.getFolder(castConnector().getMailboxFolder());
     if (!folder.isOpen()) {
       try {
         folder.open(Folder.READ_WRITE);
       }
  catch (      MessagingException e) {
-        logger.warn("Failed to open folder: " + folder.getFullName(),e);
+        logger.warn("Failed to open folder: " + folder.getFullName() + " This is not an exception since some server implementations do not require the flder to be open",e);
+      }
+    }
+    if (castConnector().getMoveToFolder() != null) {
+      moveToFolder=store.getFolder(castConnector().getMoveToFolder());
+      if (!moveToFolder.isOpen()) {
+        try {
+          moveToFolder.open(Folder.READ_WRITE);
+        }
+ catch (        MessagingException e) {
+          logger.warn("Failed to open folder: " + moveToFolder.getFullName() + " This is not an exception since some server implementations do not require the flder to be open",e);
+        }
       }
     }
   }

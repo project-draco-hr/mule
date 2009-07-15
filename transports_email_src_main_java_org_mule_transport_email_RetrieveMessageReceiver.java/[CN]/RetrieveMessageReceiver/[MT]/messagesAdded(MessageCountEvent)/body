@@ -4,7 +4,7 @@
     MuleMessage message=null;
     for (int i=0; i < messages.length; i++) {
       try {
-        if (!messages[i].getFlags().contains(Flags.Flag.DELETED)) {
+        if (!messages[i].getFlags().contains(Flags.Flag.DELETED) && !messages[i].getFlags().contains(Flags.Flag.SEEN)) {
           MimeMessage mimeMessage=new MimeMessage((MimeMessage)messages[i]);
           storeMessage(mimeMessage);
           message=new DefaultMuleMessage(castConnector().getMessageAdapter(mimeMessage),connector.getMuleContext());
@@ -29,6 +29,14 @@ catch (      Exception e) {
           forwarded=new ReceiveException(endpoint,-1,e);
         }
         handleException(forwarded);
+      }
+    }
+    if (moveToFolder != null) {
+      try {
+        folder.copyMessages(messages,moveToFolder);
+      }
+ catch (      MessagingException e) {
+        handleException(e);
       }
     }
   }

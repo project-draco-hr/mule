@@ -1,0 +1,15 @@
+{
+  payload=message.getContent();
+  if (payload instanceof Multipart) {
+    TreeMap attachments=new TreeMap();
+    MailUtils.getAttachments((Multipart)payload,attachments);
+    logger.debug("Received Multipart message. Adding attachments");
+    for (Iterator iterator=attachments.entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      Part part=(Part)entry.getValue();
+      String name=entry.getKey().toString();
+      addAttachment(name,part.getDataHandler());
+      addAttachmentHeaders(name,part);
+    }
+  }
+}
