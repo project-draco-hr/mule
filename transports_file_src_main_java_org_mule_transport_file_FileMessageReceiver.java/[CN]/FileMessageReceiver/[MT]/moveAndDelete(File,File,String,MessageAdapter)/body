@@ -2,8 +2,10 @@
   boolean fileWasMoved=false;
   try {
     if (destinationFile != null) {
-      fileWasMoved=FileUtils.moveFile(sourceFile,destinationFile);
-      if (!fileWasMoved) {
+      try {
+        FileUtils.moveFile(sourceFile,destinationFile);
+      }
+ catch (      IOException e) {
         throw new DefaultMuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
       }
       msgAdapter=connector.getMessageAdapter(destinationFile);
@@ -24,7 +26,12 @@
  catch (  Exception e) {
     boolean fileWasRolledBack=false;
     if (fileWasMoved) {
-      fileWasRolledBack=rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
+      try {
+        rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
+        fileWasRolledBack=true;
+      }
+ catch (      IOException ioException) {
+      }
     }
     Exception ex=new RoutingException(FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new DefaultMuleMessage(msgAdapter,connector.getMuleContext()),endpoint,e);
     this.handleException(ex);
