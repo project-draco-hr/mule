@@ -7,7 +7,7 @@
     }
     return result;
   }
-  Object result=muleContext.getExpressionManager().evaluate(expr,message);
+  Object result=muleContext.getExpressionManager().evaluate(expr,message,false);
   if (result == null) {
     return nullReturnsTrue;
   }
@@ -15,7 +15,15 @@
     return (Boolean)result;
   }
  else   if (result instanceof String) {
-    return ((String)result).toLowerCase().equals(TRUE);
+    if (result.toString().toLowerCase().equalsIgnoreCase("false")) {
+      return false;
+    }
+ else     if (result.toString().toLowerCase().equalsIgnoreCase("true")) {
+      return true;
+    }
+ else {
+      return !nullReturnsTrue;
+    }
   }
  else {
     logger.warn("Expression: " + expr + ", returned an non-boolean result. Returning: "+ !nullReturnsTrue);

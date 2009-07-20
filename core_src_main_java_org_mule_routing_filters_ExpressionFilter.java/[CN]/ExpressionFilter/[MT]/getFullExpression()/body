@@ -1,28 +1,17 @@
 {
   if (fullExpression == null) {
-    if (evaluator == null) {
-      throw new IllegalArgumentException(CoreMessages.objectIsNull("evaluator").getMessage());
+    if (config.getEvaluator().equals("header")) {
+      delegateFilter=new MessagePropertyFilter(config.getExpression());
     }
-    if (evaluator.equals("custom")) {
-      if (customEvaluator == null) {
-        throw new IllegalArgumentException(CoreMessages.objectIsNull("customEvaluator").getMessage());
-      }
- else {
-        evaluator=customEvaluator;
-      }
+ else     if (config.getEvaluator().equals("regex")) {
+      delegateFilter=new RegExFilter(config.getExpression());
     }
-    if (evaluator.equals("header")) {
-      delegateFilter=new MessagePropertyFilter(expression);
+ else     if (config.getEvaluator().equals("wildcard")) {
+      delegateFilter=new WildcardFilter(config.getExpression());
     }
- else     if (evaluator.equals("regex")) {
-      delegateFilter=new RegExFilter(expression);
-    }
- else     if (evaluator.equals("wildcard")) {
-      delegateFilter=new WildcardFilter(expression);
-    }
- else     if (evaluator.equals("payload-type")) {
+ else     if (config.getEvaluator().equals("payload-type")) {
       try {
-        delegateFilter=new PayloadTypeFilter(expression);
+        delegateFilter=new PayloadTypeFilter(config.getExpression());
       }
  catch (      ClassNotFoundException e) {
         IllegalArgumentException iae=new IllegalArgumentException();
@@ -30,9 +19,9 @@
         throw iae;
       }
     }
- else     if (evaluator.equals("exception-type")) {
+ else     if (config.getEvaluator().equals("exception-type")) {
       try {
-        delegateFilter=new ExceptionTypeFilter(expression);
+        delegateFilter=new ExceptionTypeFilter(config.getExpression());
       }
  catch (      ClassNotFoundException e) {
         IllegalArgumentException iae=new IllegalArgumentException();
@@ -41,7 +30,7 @@
       }
     }
  else {
-      fullExpression=evaluator + ":" + (expression == null ? "" : expression);
+      fullExpression=config.getFullExpression(muleContext.getExpressionManager());
     }
   }
   return fullExpression;
