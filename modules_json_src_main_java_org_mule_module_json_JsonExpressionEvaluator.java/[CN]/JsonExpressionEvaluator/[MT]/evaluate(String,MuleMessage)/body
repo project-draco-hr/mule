@@ -1,0 +1,53 @@
+{
+  String compareTo=null;
+  boolean not=false;
+  int start=expression.lastIndexOf("->");
+  if (start == -1)   start=0;
+  int i=expression.indexOf("==",start);
+  if (i > -1) {
+    compareTo=expression.substring(i + 2,expression.length()).trim();
+    expression=expression.substring(0,i).trim();
+  }
+ else   if ((i=expression.indexOf("!=",start)) > -1) {
+    compareTo=expression.substring(i + 2,expression.length()).trim();
+    expression=expression.substring(0,i).trim();
+    not=true;
+  }
+  try {
+    JsonData data=message.getPayload(JsonData.class);
+    try {
+      Object result=data.get(expression);
+      if (compareTo != null) {
+        if (compareTo.equalsIgnoreCase("null")) {
+          boolean answer=result == null;
+          return (not ? !answer : answer);
+        }
+ else         if (result instanceof Number && NumberUtils.isDigits(compareTo)) {
+          boolean answer=NumberUtils.createNumber(compareTo).equals(result);
+          return (not ? !answer : answer);
+        }
+ else         if (result instanceof Boolean && (compareTo.equalsIgnoreCase("true") || compareTo.equalsIgnoreCase("false"))) {
+          boolean answer=result.equals(Boolean.valueOf(compareTo));
+          return (not ? !answer : answer);
+        }
+ else {
+          boolean answer=compareTo.equals(result);
+          return (not ? !answer : answer);
+        }
+      }
+ else {
+        return result;
+      }
+    }
+ catch (    IllegalArgumentException e) {
+      throw e;
+    }
+catch (    MorphException e) {
+      logger.debug("returning null for json expression: " + expression + ": "+ e.getMessage());
+      return null;
+    }
+  }
+ catch (  TransformerException e) {
+    throw new MuleRuntimeException(CoreMessages.failedToProcessExtractorFunction(getName() + ":" + expression),e);
+  }
+}
