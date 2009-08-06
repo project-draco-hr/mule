@@ -25,7 +25,13 @@
     message.applyTransformers(((OutboundEndpoint)prev.getEndpoint()).getTransformers());
     event.transformMessage();
   }
-  MuleMessage msg=ep.send(event);
+  MuleMessage msg=null;
+  if (ep.isSynchronous()) {
+    msg=ep.send(event);
+  }
+ else {
+    ep.dispatch(event);
+  }
   Holder<MuleMessage> holder=(Holder<MuleMessage>)exchange.get("holder");
   if (holder != null) {
     holder.value=msg;
