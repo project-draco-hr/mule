@@ -8,28 +8,7 @@
       result=SerializationUtils.deserialize((InputStream)src);
     }
     if (result instanceof DeserializationPostInitialisable) {
-      try {
-        final Method m=result.getClass().getDeclaredMethod("initAfterDeserialisation",MuleContext.class);
-        Object o=AccessController.doPrivileged(new PrivilegedAction<Object>(){
-          public Object run(){
-            try {
-              m.setAccessible(true);
-              m.invoke(result,muleContext);
-              return null;
-            }
- catch (            Exception e) {
-              return e;
-            }
-          }
-        }
-);
-        if (o != null) {
-          throw (Exception)o;
-        }
-      }
- catch (      NoSuchMethodException e) {
-        throw new IllegalArgumentException("Object " + result.getClass() + " implements "+ DeserializationPostInitialisable.class+ " but does not have a method "+ "private void initAfterDeserialisation(MuleContext) defined",e);
-      }
+      DeserializationPostInitialisable.Implementation.init(result,muleContext);
     }
     return result;
   }
