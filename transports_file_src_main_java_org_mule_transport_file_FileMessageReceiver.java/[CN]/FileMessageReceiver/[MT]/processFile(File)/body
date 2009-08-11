@@ -1,5 +1,6 @@
 {
-  boolean checkFileAge=((FileConnector)connector).getCheckFileAge();
+  FileConnector fileConnector=(FileConnector)connector;
+  boolean checkFileAge=fileConnector.getCheckFileAge();
   if (checkFileAge) {
     long fileAge=((FileConnector)connector).getFileAge();
     long lastMod=sourceFile.lastModified();
@@ -18,13 +19,20 @@
  else   if (logger.isInfoEnabled()) {
     logger.info("Lock obtained on file: " + sourceFile.getAbsolutePath());
   }
-  FileConnector fc=((FileConnector)connector);
   String sourceFileOriginalName=sourceFile.getName();
   if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
     throw new DefaultMuleException(FileMessages.fileDoesNotExist(sourceFileOriginalName));
   }
   DefaultMessageAdapter fileParserMsgAdaptor=new DefaultMessageAdapter(null);
   fileParserMsgAdaptor.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+  File workFile=null;
+  if (workDir != null && (moveDir == null || (moveDir != null && fileConnector.isStreaming()))) {
+    String workFileName=sourceFileOriginalName;
+    workFileName=fileConnector.getFilenameParser().getFilename(fileParserMsgAdaptor,workFileNamePattern);
+    workFile=FileUtils.newFile(workDir,workFileName);
+    move(sourceFile,workFile);
+    sourceFile=workFile;
+  }
   File destinationFile=null;
   if (moveDir != null) {
     String destinationFileName=sourceFileOriginalName;
@@ -35,8 +43,8 @@
   }
   MessageAdapter msgAdapter;
   try {
-    if (fc.isStreaming()) {
-      msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(sourceFile,fc.isAutoDelete(),destinationFile));
+    if (fileConnector.isStreaming()) {
+      msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(sourceFile,fileConnector.isAutoDelete(),destinationFile));
     }
  else {
       msgAdapter=connector.getMessageAdapter(sourceFile);
@@ -47,10 +55,11 @@
     return;
   }
   msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-  if (!fc.isStreaming()) {
+  if (!fileConnector.isStreaming()) {
     moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,msgAdapter);
   }
  else {
+    msgAdapter.setProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
     this.routeMessage(new DefaultMuleMessage(msgAdapter,connector.getMuleContext()),endpoint.isSynchronous());
   }
 }
