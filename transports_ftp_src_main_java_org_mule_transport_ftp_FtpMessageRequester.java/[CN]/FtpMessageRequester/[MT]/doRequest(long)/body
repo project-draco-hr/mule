@@ -2,44 +2,16 @@
   FTPClient client=null;
   try {
     client=connector.createFtpClient(endpoint);
-    FilenameFilter filenameFilter=null;
-    if (endpoint.getFilter() instanceof FilenameFilter) {
-      filenameFilter=(FilenameFilter)endpoint.getFilter();
-    }
-    FTPFile[] files=client.listFiles();
-    if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
-      throw new IOException("Ftp error: " + client.getReplyCode());
-    }
-    if (files == null || files.length == 0) {
-      return null;
-    }
-    List fileList=new ArrayList();
-    FTPFile file=null;
-    for (int i=0; i < files.length; i++) {
-      file=files[i];
-      if (file.isFile()) {
-        if (filenameFilter == null || filenameFilter.accept(null,file.getName())) {
-          if (connector.validateFile(file)) {
-            fileList.add(file);
-            break;
-          }
-        }
-      }
-    }
-    if (fileList.size() == 0) {
-      return null;
-    }
-    ByteArrayOutputStream baos=new ByteArrayOutputStream();
-    if (!client.retrieveFile(file.getName(),baos)) {
-      throw new IOException("Ftp error: " + client.getReplyCode());
-    }
-    MuleMessage reply=new DefaultMuleMessage(connector.getMessageAdapter(baos.toByteArray()),connector.getMuleContext());
-    reply.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,file.getName());
-    reply.setProperty(FileConnector.PROPERTY_FILE_SIZE,new Long(file.getSize()));
+    FTPFile fileToProcess=findFileToProcess(client);
+    String originalFileName=fileToProcess.getName();
+    fileToProcess=prepareFile(client,fileToProcess);
+    byte[] payload=retriveFileContents(client,fileToProcess);
+    MuleMessage reply=new DefaultMuleMessage(connector.getMessageAdapter(payload),connector.getMuleContext());
+    reply.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalFileName);
+    reply.setProperty(FileConnector.PROPERTY_FILE_SIZE,new Long(fileToProcess.getSize()));
     return reply;
   }
   finally {
-    logger.debug("leaving doRequest()");
     connector.releaseFtp(endpoint.getEndpointURI(),client);
   }
 }
