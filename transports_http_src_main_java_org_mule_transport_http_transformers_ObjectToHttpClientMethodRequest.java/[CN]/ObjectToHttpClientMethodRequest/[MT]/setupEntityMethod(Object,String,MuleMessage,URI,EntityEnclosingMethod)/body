@@ -1,6 +1,15 @@
 {
   if (!(msg.getPayload() instanceof NullPayload)) {
     String mimeType=(String)msg.getProperty(HttpConstants.HEADER_CONTENT_TYPE,PropertyScope.OUTBOUND);
+    String httpVersion=msg.getStringProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+    if (HttpConstants.HTTP10.equals(httpVersion)) {
+      try {
+        src=msg.getPayloadAsBytes();
+      }
+ catch (      Exception e) {
+        throw new TransformerException(this,e);
+      }
+    }
     if (src instanceof String) {
       if (mimeType != null) {
         int parameterIndex=mimeType.indexOf(";");

@@ -21,10 +21,15 @@
         long len=response.getContentLength();
         if (len < 0) {
           if (response.getHttpVersion().lessEquals(HttpVersion.HTTP_1_0)) {
-            throw new IOException("Chunked encoding not supported for HTTP version " + response.getHttpVersion());
+            len=msg.getPayloadAsBytes().length;
+            response.setBody(msg);
+            Header header=new Header(HttpConstants.HEADER_CONTENT_LENGTH,Long.toString(len));
+            response.setHeader(header);
           }
-          Header header=new Header(HttpConstants.HEADER_TRANSFER_ENCODING,"chunked");
-          response.addHeader(header);
+ else {
+            Header header=new Header(HttpConstants.HEADER_TRANSFER_ENCODING,"chunked");
+            response.addHeader(header);
+          }
         }
  else {
           Header header=new Header(HttpConstants.HEADER_CONTENT_LENGTH,Long.toString(len));
@@ -50,7 +55,7 @@
     }
     return response;
   }
- catch (  IOException e) {
+ catch (  Exception e) {
     throw new TransformerException(this,e);
   }
 }
