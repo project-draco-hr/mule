@@ -1,20 +1,19 @@
 {
   Set<Class> set=new HashSet<Class>();
   String path=url.getFile().substring(5,url.getFile().indexOf("!"));
-  path=URLDecoder.decode(path);
+  path=path.replaceAll("%20"," ");
   JarFile jar=new JarFile(path);
   for (Enumeration entries=jar.entries(); entries.hasMoreElements(); ) {
     JarEntry entry=(JarEntry)entries.nextElement();
     if (entry.getName().startsWith(basepath) && entry.getName().endsWith(".class")) {
       try {
         String name=entry.getName();
-        if (name.contains("$1")) {
+        if (name.matches("\\$[1-9]")) {
           continue;
         }
         URL classURL=classLoader.getResource(name);
         InputStream classStream=classURL.openStream();
-        ClassReader reader=new ClassReader(classStream);
-        classStream.close();
+        ClassReader reader=new ClosableClassReader(classStream);
         ClassScanner visitor=getScanner(clazz);
         reader.accept(visitor,0);
         if (visitor.isMatch()) {

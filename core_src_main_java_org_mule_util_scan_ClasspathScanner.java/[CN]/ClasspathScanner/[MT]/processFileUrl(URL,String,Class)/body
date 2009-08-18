@@ -1,13 +1,12 @@
 {
   Set<Class> set=new HashSet<Class>();
   String urlBase=url.getFile();
-  urlBase=URLDecoder.decode(urlBase);
+  urlBase=urlBase.replaceAll("%20"," ");
   Collection<File> files=FileUtils.listFiles(new File(urlBase),new String[]{"class"},true);
   for (  File file : files) {
     try {
       InputStream classStream=new FileInputStream(file);
-      ClassReader reader=new ClassReader(classStream);
-      classStream.close();
+      ClassReader reader=new ClosableClassReader(classStream);
       ClassScanner visitor=getScanner(clazz);
       reader.accept(visitor,0);
       if (visitor.isMatch()) {
