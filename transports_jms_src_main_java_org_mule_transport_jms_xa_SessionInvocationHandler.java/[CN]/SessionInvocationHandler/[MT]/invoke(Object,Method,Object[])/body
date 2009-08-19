@@ -19,7 +19,15 @@
     return getTargetObject();
   }
  else   if (XaTransaction.MuleXaObject.CLOSE_METHOD_NAME.equals(method.getName())) {
-    session.close();
+    try {
+      session.close();
+      xaSession.close();
+    }
+ catch (    Exception ex) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Closing the session and the xaSession failed",ex);
+      }
+    }
     return null;
   }
   Object result=method.invoke(session,args);
