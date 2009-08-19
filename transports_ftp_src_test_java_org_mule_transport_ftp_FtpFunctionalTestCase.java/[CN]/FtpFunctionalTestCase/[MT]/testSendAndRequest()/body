@@ -1,34 +1,14 @@
 {
-  final CountDownLatch latch=new CountDownLatch(1);
-  final AtomicReference message=new AtomicReference();
-  final AtomicInteger loopCount=new AtomicInteger(0);
-  EventCallback callback=new EventCallback(){
-    public synchronized void eventReceived(    MuleEventContext context,    Object component){
-      try {
-        logger.info("called " + loopCount.incrementAndGet() + " times");
-        FunctionalTestComponent ftc=(FunctionalTestComponent)component;
-        if (1 == latch.getCount()) {
-          String o=new String((byte[])ftc.getLastReceivedMessage());
-          message.set(o);
-          latch.countDown();
-        }
-      }
- catch (      Exception e) {
-        logger.error(e.getMessage(),e);
-      }
-    }
-  }
-;
-  MuleClient client=new MuleClient();
-  assertTrue(getFtpClient().expectFileCount("/",0,1000));
+  CountDownLatch latch=new CountDownLatch(1);
+  AtomicReference message=new AtomicReference();
   Object component=getComponent("testComponent");
+  assertNotNull(component);
   assertTrue("FunctionalTestComponent expected",component instanceof FunctionalTestComponent);
   FunctionalTestComponent ftc=(FunctionalTestComponent)component;
-  assertNotNull(ftc);
-  ftc.setEventCallback(callback);
-  logger.debug("before dispatch");
-  client.dispatch(getMuleFtpEndpoint(),TEST_MESSAGE,new HashMap<Object,Object>());
-  logger.debug("before retrieve");
+  ftc.setEventCallback(new FunctionalEventCallback(latch,message));
+  MuleClient client=new MuleClient();
+  client.dispatch(getMuleFtpEndpoint(),TEST_MESSAGE,null);
   latch.await(getTimeout(),TimeUnit.MILLISECONDS);
   assertEquals(TEST_MESSAGE,message.get());
+  Thread.sleep(500);
 }
