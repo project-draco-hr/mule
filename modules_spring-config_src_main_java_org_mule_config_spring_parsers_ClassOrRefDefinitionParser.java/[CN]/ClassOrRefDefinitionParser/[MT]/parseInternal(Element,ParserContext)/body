@@ -1,0 +1,23 @@
+{
+  MutablePropertyValues parentProps=parserContext.getContainingBeanDefinition().getPropertyValues();
+  String ref=element.getAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF);
+  String className=element.getAttribute(AbstractMuleBeanDefinitionParser.ATTRIBUTE_CLASS);
+  if (StringUtils.isBlank(ref) && StringUtils.isBlank(className)) {
+    String elementName=element.getLocalName();
+    throw new IllegalArgumentException("Neither ref nor class attribute specified for the " + elementName + " element");
+  }
+  if (StringUtils.isNotBlank(ref)) {
+    parentProps.addPropertyValue(propertyName,new RuntimeBeanReference(ref));
+  }
+ else {
+    Object instance;
+    try {
+      instance=ClassUtils.instanciateClass(className,ClassUtils.NO_ARGS,getClass());
+    }
+ catch (    Exception e) {
+      throw new RuntimeException(e);
+    }
+    parentProps.addPropertyValue(propertyName,instance);
+  }
+  return null;
+}
