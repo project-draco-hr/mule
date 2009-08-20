@@ -1,30 +1,27 @@
 {
   final CountDownLatch latch=new CountDownLatch(1);
-  final AtomicReference message=new AtomicReference();
-  final AtomicInteger loopCount=new AtomicInteger(0);
+  final AtomicReference messageHolder=new AtomicReference();
   EventCallback callback=new EventCallback(){
     public synchronized void eventReceived(    MuleEventContext context,    Object component){
       try {
-        logger.info("called " + loopCount.incrementAndGet() + " times");
-        FunctionalStreamingTestComponent ftc=(FunctionalStreamingTestComponent)component;
         if (1 == latch.getCount()) {
-          message.set(ftc.getSummary());
+          messageHolder.set(context.getMessage());
           latch.countDown();
         }
       }
  catch (      Exception e) {
-        logger.error(e.getMessage(),e);
+        fail();
       }
     }
   }
 ;
-  MuleClient client=new MuleClient();
   Object component=getComponent("testComponent");
   assertTrue("FunctionalStreamingTestComponent expected",component instanceof FunctionalStreamingTestComponent);
   FunctionalStreamingTestComponent ftc=(FunctionalStreamingTestComponent)component;
-  assertNotNull(ftc);
   ftc.setEventCallback(callback,TEST_MESSAGE.length());
-  client.dispatch("tcp://localhost:60196",TEST_MESSAGE,new HashMap());
-  latch.await(getTimeout(),TimeUnit.MILLISECONDS);
-  assertEquals("Received stream; length: 16; 'Test...sage'",message.get());
+  createFileOnFtpServer("input.txt");
+  assertTrue(latch.await(getTimeout(),TimeUnit.MILLISECONDS));
+  MuleMessage message=(MuleMessage)messageHolder.get();
+  assertNotNull(message);
+  assertTrue(message.getPayload() instanceof InputStream);
 }
