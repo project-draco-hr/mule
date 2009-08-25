@@ -1,14 +1,21 @@
 {
-  String id=getId(obj);
-  File file=FileUtils.newFile(store,queue + File.separator + id+ EXTENSION);
+  String id=UUID.getUUID();
+  String filename=queue + File.separator + id+ EXTENSION;
+  File file=FileUtils.newFile(store,filename);
   if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
     throw new IOException("Failed to create directory: " + file.getAbsolutePath());
   }
+  OutputStream out=new FileOutputStream(file);
   try {
-    serializer.write(new FileOutputStream(file),obj,muleContext.getConfiguration().getDefaultEncoding());
+    serializer.write(out,obj,muleContext.getConfiguration().getDefaultEncoding());
   }
  catch (  MuleException e) {
-    throw new IOException(e.getDetailedMessage());
+    IOException iox=new IOException();
+    iox.initCause(e);
+    throw iox;
+  }
+ finally {
+    out.close();
   }
   return id;
 }
