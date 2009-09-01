@@ -30,14 +30,13 @@
  else {
         exceptionMessage=new DefaultMuleMessage(msg,ctx.getMessage(),muleContext);
       }
-      for (int i=0; i < endpoints.size(); i++) {
-        OutboundEndpoint endpoint=(OutboundEndpoint)endpoints.get(i);
-        MuleEvent exceptionEvent=new DefaultMuleEvent(exceptionMessage,endpoint,new DefaultMuleSession(exceptionMessage,new MuleSessionHandler(),muleContext),true);
-        exceptionEvent=RequestContext.setEvent(exceptionEvent);
-        endpoint.send(exceptionEvent);
-        if (logger.isDebugEnabled()) {
-          logger.debug("routed Exception message via " + endpoint);
-        }
+      Service service=ctx.getService();
+      if (service != null) {
+        OutboundRouter router=createOutboundRouter();
+        router.route(exceptionMessage,new DefaultMuleSession(exceptionMessage,new MuleSessionHandler(),ctx.getService(),muleContext));
+      }
+ else {
+        customRouteExceptionMessage(exceptionMessage);
       }
     }
  catch (    Exception e) {

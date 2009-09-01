@@ -1,0 +1,20 @@
+{
+  for (int i=0; i < endpoints.size(); i++) {
+    OutboundEndpoint endpoint=(OutboundEndpoint)endpoints.get(i);
+    if (((DefaultMuleMessage)exceptionMessage).isConsumable()) {
+      throw new MessagingException(CoreMessages.cannotCopyStreamPayload(exceptionMessage.getPayload().getClass().getName()),exceptionMessage);
+    }
+    MuleMessage clonedMessage=new DefaultMuleMessage(exceptionMessage.getPayload(),exceptionMessage,muleContext);
+    MuleEvent exceptionEvent=new DefaultMuleEvent(clonedMessage,endpoint,new DefaultMuleSession(clonedMessage,new MuleSessionHandler(),muleContext),true);
+    exceptionEvent=RequestContext.setEvent(exceptionEvent);
+    if (endpoint.isSynchronous()) {
+      endpoint.send(exceptionEvent);
+    }
+ else {
+      endpoint.dispatch(exceptionEvent);
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("routed Exception message via " + endpoint);
+    }
+  }
+}
