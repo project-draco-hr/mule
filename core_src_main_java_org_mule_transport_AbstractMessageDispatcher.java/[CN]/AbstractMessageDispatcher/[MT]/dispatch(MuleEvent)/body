@@ -1,7 +1,6 @@
 {
   event.setSynchronous(false);
   event.getMessage().setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,event.getEndpoint().getEndpointURI().toString());
-  event=OptimizedRequestContext.criticalSetEvent(event);
   ImmutableEndpoint endpoint=event.getEndpoint();
   if (endpoint.getSecurityFilter() != null) {
     try {
@@ -22,7 +21,7 @@ catch (    Exception e) {
     Transaction tx=TransactionCoordination.getInstance().getTransaction();
     Worker worker=new Worker(event);
     if (isDoThreading() && !event.isSynchronous() && tx == null) {
-      connector.getDispatcherWorkManager().scheduleWork(new Worker(event),WorkManager.INDEFINITE,null,connector);
+      connector.getDispatcherWorkManager().scheduleWork(worker,WorkManager.INDEFINITE,null,connector);
     }
  else {
       worker.run();
