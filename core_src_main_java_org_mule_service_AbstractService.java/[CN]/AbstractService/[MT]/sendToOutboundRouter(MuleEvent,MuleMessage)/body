@@ -4,15 +4,15 @@
   }
   if (result != null && !event.isStopFurtherProcessing() && !(result.getPayload() instanceof NullPayload)) {
     if (getOutboundRouter().hasEndpoints()) {
+      if (stats.isEnabled()) {
+        stats.incSentEventSync();
+      }
       MuleMessage outboundReturnMessage=getOutboundRouter().route(new DefaultMuleMessage(result.getPayload(),result,muleContext),event.getSession());
       if (outboundReturnMessage != null) {
         result=outboundReturnMessage;
       }
  else       if (getComponent() instanceof PassThroughComponent) {
         return new DefaultMuleMessage(NullPayload.getInstance(),result,muleContext);
-      }
-      if (stats.isEnabled()) {
-        stats.incSentEventSync();
       }
     }
  else {
