@@ -1,5 +1,14 @@
 {
   super(endpoint);
   this.connector=(HttpConnector)endpoint.getConnector();
-  this.sendTransformer=new ObjectToHttpClientMethodRequest();
+  List<Transformer> ts=connector.getDefaultOutboundTransformers();
+  if (ts.size() == 1) {
+    this.sendTransformer=ts.get(0);
+  }
+ else   if (ts.size() == 0) {
+    this.sendTransformer=new ObjectToHttpClientMethodRequest();
+  }
+ else {
+    this.sendTransformer=new TransformerChain(ts);
+  }
 }
