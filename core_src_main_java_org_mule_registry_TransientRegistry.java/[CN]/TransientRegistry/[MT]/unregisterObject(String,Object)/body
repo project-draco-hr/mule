@@ -3,12 +3,10 @@
 synchronized (registry) {
     obj=registry.remove(key);
   }
-  if (obj instanceof Stoppable) {
-    try {
-      ((Stoppable)obj).stop();
-    }
- catch (    MuleException e) {
-      throw new RegistrationException(e);
-    }
+  try {
+    context.getLifecycleManager().applyPhases(obj,Disposable.PHASE_NAME);
+  }
+ catch (  MuleException e) {
+    throw new RegistrationException(e);
   }
 }
