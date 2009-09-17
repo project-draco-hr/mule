@@ -4,8 +4,11 @@ synchronized (registry) {
     Object obj;
     for (Iterator iterator=allObjects.iterator(); iterator.hasNext(); ) {
       obj=iterator.next();
-      if (obj instanceof Disposable) {
-        ((Disposable)obj).dispose();
+      try {
+        applyLifecycle(obj);
+      }
+ catch (      MuleException e) {
+        logger.warn("Object '" + obj + "'disposed with error: "+ e.getDetailedMessage());
       }
     }
   }
