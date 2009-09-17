@@ -1,13 +1,25 @@
 {
   LifecycleAdapter lifecycleAdapter;
+  Object object=objectFactory.getInstance();
+  if (wireObject.get()) {
+    if (objectFactory.isSingleton()) {
+      wireObject.set(false);
+    }
+    if (object instanceof ServiceAware) {
+      ((ServiceAware)object).setService(getService());
+    }
+    if (!objectFactory.isExternallyManagedLifecycle()) {
+      muleContext.getRegistry().applyProcessors(object);
+    }
+  }
   if (lifecycleAdapterFactory != null) {
-    lifecycleAdapter=lifecycleAdapterFactory.create(objectFactory.getInstance(),this,entryPointResolverSet,muleContext);
+    lifecycleAdapter=lifecycleAdapterFactory.create(object,this,entryPointResolverSet,muleContext);
   }
  else   if (objectFactory.isExternallyManagedLifecycle()) {
-    lifecycleAdapter=new NullLifecycleAdapter(objectFactory.getInstance(),this,entryPointResolverSet,muleContext);
+    lifecycleAdapter=new NullLifecycleAdapter(object,this,entryPointResolverSet,muleContext);
   }
  else {
-    lifecycleAdapter=service.getModel().getLifecycleAdapterFactory().create(objectFactory.getInstance(),this,entryPointResolverSet,muleContext);
+    lifecycleAdapter=service.getModel().getLifecycleAdapterFactory().create(object,this,entryPointResolverSet,muleContext);
   }
   lifecycleAdapter.initialise();
   return lifecycleAdapter;
