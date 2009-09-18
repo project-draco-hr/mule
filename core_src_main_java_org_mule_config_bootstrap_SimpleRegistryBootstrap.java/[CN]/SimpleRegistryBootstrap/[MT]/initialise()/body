@@ -1,5 +1,6 @@
 {
   Enumeration e=ClassUtils.getResources(SERVICE_PATH + REGISTRY_PROPERTIES,getClass());
+  List<Properties> bootstraps=new LinkedList<Properties>();
   while (e.hasMoreElements()) {
     try {
       URL url=(URL)e.nextElement();
@@ -8,10 +9,40 @@
       }
       Properties p=new Properties();
       p.load(url.openStream());
-      process(p);
+      bootstraps.add(p);
     }
  catch (    Exception e1) {
       throw new InitialisationException(e1,this);
     }
+  }
+  int objectCounter=1;
+  int transformerCounter=1;
+  Properties accumulatedProps=new Properties();
+  for (  Properties bootstrap : bootstraps) {
+    for (    Map.Entry entry : bootstrap.entrySet()) {
+      final String key=(String)entry.getKey();
+      if (key.startsWith(OBJECT_PREFIX)) {
+        String newKey=OBJECT_PREFIX + objectCounter++;
+        accumulatedProps.put(newKey,entry.getValue());
+      }
+ else       if (key.startsWith("transformer")) {
+        String newKey=TRANSFORMER_PREFIX + transformerCounter++;
+        accumulatedProps.put(newKey,entry.getValue());
+      }
+ else {
+        if (accumulatedProps.getProperty(key) != null) {
+          throw new IllegalStateException("more than one registry-bootstrap.properties file contains a key " + key);
+        }
+ else {
+          accumulatedProps.put(key,entry.getValue());
+        }
+      }
+    }
+  }
+  try {
+    process(accumulatedProps);
+  }
+ catch (  Exception e1) {
+    throw new InitialisationException(e1,this);
   }
 }
