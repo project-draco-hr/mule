@@ -1,8 +1,20 @@
 {
   try {
-    namespaceManager=muleContext.getRegistry().lookupObject(NamespaceManager.class);
+    this.muleContext.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
+      public void onNotification(      MuleContextNotification notification){
+        if (MuleContextNotification.CONTEXT_STARTING == notification.getAction()) {
+          try {
+            namespaceManager=muleContext.getRegistry().lookupObject(NamespaceManager.class);
+          }
+ catch (          RegistrationException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+    }
+);
   }
- catch (  RegistrationException e) {
-    throw new ExpressionRuntimeException(CoreMessages.failedToLoad("NamespaceManager"),e);
+ catch (  Throwable t) {
+    throw new InitialisationException(t,this);
   }
 }
