@@ -70,14 +70,14 @@
       logger.debug("Sending message of type " + ClassUtils.getSimpleName(msg.getClass()));
       logger.debug("Sending JMS Message type " + msg.getJMSType() + "\n  JMSMessageID="+ msg.getJMSMessageID()+ "\n  JMSCorrelationID="+ msg.getJMSCorrelationID()+ "\n  JMSDeliveryMode="+ (persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT)+ "\n  JMSPriority="+ priority+ "\n  JMSReplyTo="+ msg.getJMSReplyTo());
     }
-    connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
+    connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic,endpoint);
     if (useReplyToDestination && replyTo != null) {
       consumer=createReplyToConsumer(msg,event,session,replyTo,topic);
       if (topic) {
         Latch l=new Latch();
         ReplyToListener listener=new ReplyToListener(l);
         consumer.setMessageListener(listener);
-        connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic);
+        connector.getJmsSupport().send(producer,msg,persistent,priority,ttl,topic,endpoint);
         int timeout=event.getTimeout();
         if (logger.isDebugEnabled()) {
           logger.debug("Waiting for return event for: " + timeout + " ms on "+ replyTo);

@@ -42,9 +42,10 @@
       correlationIDString=(String)eventMsg.getProperty(JmsConstants.JMS_MESSAGE_ID);
       replyToMessage.setJMSCorrelationID(correlationIDString);
     }
-    ((AbstractService)event.getService()).getStatistics().incSentReplyToEvent();
+    event.getService().getStatistics().incSentReplyToEvent();
+    final ImmutableEndpoint endpoint=event.getEndpoint();
     if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
-      connector.getJmsSupport().send(replyToProducer,replyToMessage,topic);
+      connector.getJmsSupport().send(replyToProducer,replyToMessage,topic,endpoint);
     }
  else {
       long ttl=Message.DEFAULT_TIME_TO_LIVE;
@@ -55,8 +56,8 @@
       if (priorityString != null) {
         priority=Integer.parseInt(priorityString);
       }
-      boolean persistent=StringUtils.isNotBlank(persistentDeliveryString) ? Boolean.valueOf(persistentDeliveryString).booleanValue() : connector.isPersistentDelivery();
-      connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl,topic);
+      boolean persistent=StringUtils.isNotBlank(persistentDeliveryString) ? Boolean.valueOf(persistentDeliveryString) : connector.isPersistentDelivery();
+      connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl,topic,endpoint);
     }
     logger.info("Reply Message sent to: " + replyToDestination + " with correlationID:"+ correlationIDString);
   }
