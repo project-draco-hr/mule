@@ -1,0 +1,25 @@
+{
+  if (!this.cancelled) {
+    this.cancel();
+    this.cancelled=true;
+  }
+ else {
+    return;
+  }
+  if (logger.isInfoEnabled()) {
+    logger.info("================== Reloading " + file);
+  }
+  try {
+    muleContext.dispose();
+    Thread.currentThread().setContextClassLoader(null);
+    ClassLoader parent=MuleBootstrapUtils.isStandalone() ? new DefaultMuleSharedDomainClassLoader(CLASSLOADER_ROOT) : CLASSLOADER_ROOT;
+    ClassLoader cl=new MuleApplicationClassLoader(monitoredResource,parent);
+    Thread.currentThread().setContextClassLoader(cl);
+    DefaultMuleContextFactory f=new DefaultMuleContextFactory();
+    MuleContext newContext=f.createMuleContext(ReloadableBuilder.this);
+    newContext.start();
+  }
+ catch (  Exception ex) {
+    throw new RuntimeException(ex);
+  }
+}

@@ -17,47 +17,23 @@
     if (redeploymentEnabled && logger.isInfoEnabled()) {
       logger.info("Monitoring for hot-reload: " + monitoredResource);
     }
-    FileWatcher watcher=new FileWatcher(monitoredResource){
-      private volatile boolean cancelled;
-      protected synchronized void onChange(      File file){
-        if (!this.cancelled) {
-          this.cancel();
-          this.cancelled=true;
-        }
- else {
-          return;
-        }
-        if (logger.isInfoEnabled()) {
-          logger.info("================== Reloading " + file);
-        }
-        try {
-          muleContext.dispose();
-          Thread.currentThread().setContextClassLoader(null);
-          ClassLoader parent=MuleBootstrapUtils.isStandalone() ? new DefaultMuleSharedDomainClassLoader(CLASSLOADER_ROOT) : CLASSLOADER_ROOT;
-          ClassLoader cl=new MuleApplicationClassLoader(monitoredResource,parent);
-          Thread.currentThread().setContextClassLoader(cl);
-          DefaultMuleContextFactory f=new DefaultMuleContextFactory();
-          MuleContext newContext=f.createMuleContext(ReloadableBuilder.this);
-          doConfigure(newContext);
-          newContext.start();
-        }
- catch (        Exception ex) {
-          throw new RuntimeException(ex);
-        }
-      }
-    }
-;
+    final FileWatcher watcher=new ConfigFileWatcher(muleContext);
     if (redeploymentEnabled) {
-      Timer timer=new Timer();
-      final int reloadIntervalMs=RELOAD_INTERVAL_MS;
-      timer.schedule(watcher,new Date(),reloadIntervalMs);
-      if (logger.isInfoEnabled()) {
-        logger.info("Reload interval: " + reloadIntervalMs);
+      muleContext.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
+        public void onNotification(        MuleContextNotification notification){
+          if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED) {
+            scheduleConfigMonitor(watcher);
+          }
+        }
       }
+);
     }
     super.configure(muleContext);
   }
- catch (  IOException e) {
+ catch (  NotificationException e) {
+    throw new ConfigurationException(e);
+  }
+catch (  IOException e) {
     throw new ConfigurationException(e);
   }
 }
