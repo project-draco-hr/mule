@@ -17,27 +17,31 @@
   }
   int objectCounter=1;
   int transformerCounter=1;
-  Properties accumulatedProps=new Properties();
+  Properties transformers=new Properties();
+  Properties namedObjects=new Properties();
+  Properties unnamedObjects=new Properties();
   for (  Properties bootstrap : bootstraps) {
     for (    Map.Entry entry : bootstrap.entrySet()) {
       final String key=(String)entry.getKey();
-      if (key.startsWith(OBJECT_PREFIX)) {
-        String newKey=OBJECT_PREFIX + objectCounter++;
-        accumulatedProps.put(newKey,entry.getValue());
+      if (key.contains(OBJECT_KEY)) {
+        String newKey=key.substring(0,key.lastIndexOf(".")) + objectCounter++;
+        unnamedObjects.put(newKey,entry.getValue());
       }
- else       if (key.startsWith("transformer")) {
-        String newKey=TRANSFORMER_PREFIX + transformerCounter++;
-        accumulatedProps.put(newKey,entry.getValue());
+ else       if (key.contains(TRANSFORMER_KEY)) {
+        String newKey=key.substring(0,key.lastIndexOf(".")) + transformerCounter++;
+        transformers.put(newKey,entry.getValue());
       }
  else {
 {
-          accumulatedProps.put(key,entry.getValue());
+          namedObjects.put(key,entry.getValue());
         }
       }
     }
   }
   try {
-    process(accumulatedProps);
+    registerUnnamedObjects(unnamedObjects,context.getRegistry());
+    registerTransformers(transformers,context.getRegistry());
+    registerObjects(namedObjects,context.getRegistry());
   }
  catch (  Exception e1) {
     throw new InitialisationException(e1,this);
