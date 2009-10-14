@@ -1,0 +1,22 @@
+{
+  OutboundEndpoint out=getTestOutboundEndpoint("out","test://out");
+  connector.send(out,getTestEvent("data"));
+  assertEquals(1,connector.dispatchers.getNumIdle());
+  assertDispatcherStartedConntected(out,false,true);
+  connector.start();
+  assertDispatcherStartedConntected(out,false,true);
+  OutboundEndpoint out2=getTestOutboundEndpoint("out2","test://out2");
+  connector.send(out2,getTestEvent("data"));
+  assertEquals(2,connector.dispatchers.getNumIdle());
+  assertDispatcherStartedConntected(out,false,true);
+  assertDispatcherStartedConntected(out2,false,true);
+  connector.stop();
+  assertEquals(0,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
+  connector.start();
+  assertEquals(0,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
+  connector.send(out,getTestEvent("data"));
+  assertEquals(1,connector.dispatchers.getNumIdle());
+  assertDispatcherStartedConntected(out,false,true);
+  connector.dispose();
+  assertEquals(0,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
+}

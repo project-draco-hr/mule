@@ -1,0 +1,27 @@
+{
+  connector.registerListener(getTestService(),getTestInboundEndpoint("in","test://in"));
+  assertEquals(1,connector.receivers.size());
+  assertFalse(((AbstractMessageReceiver)connector.receivers.get("in")).isConnected());
+  assertFalse(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  connector.start();
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isConnected());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  connector.registerListener(getTestService(),getTestInboundEndpoint("in2","test://in2"));
+  assertEquals(2,connector.receivers.size());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isConnected());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  connector.stop();
+  assertEquals(2,connector.receivers.size());
+  assertFalse(((AbstractMessageReceiver)connector.receivers.get("in")).isConnected());
+  assertFalse(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  assertFalse(((AbstractMessageReceiver)connector.receivers.get("in2")).isConnected());
+  assertFalse(((AbstractMessageReceiver)connector.receivers.get("in2")).isStarted());
+  connector.start();
+  assertEquals(2,connector.receivers.size());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isConnected());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in2")).isConnected());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in2")).isStarted());
+  connector.dispose();
+  assertEquals(0,connector.receivers.size());
+}
