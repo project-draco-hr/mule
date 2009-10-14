@@ -1,0 +1,39 @@
+{
+  if (!this.isStarted()) {
+    logger.warn("Attempting to stop a connector which is not started");
+    return;
+  }
+  if (this.isDisposed()) {
+    return;
+  }
+  if (logger.isInfoEnabled()) {
+    logger.info("Stopping: " + this);
+  }
+  shutdownScheduler();
+  if (disposeWorkManagers) {
+    disposeWorkManagers();
+  }
+  this.doStop();
+  started.set(false);
+  if (receivers != null) {
+    for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
+      MessageReceiver mr=(MessageReceiver)iterator.next();
+      if (logger.isDebugEnabled()) {
+        logger.debug("Stopping receiver on endpoint: " + mr.getEndpoint().getEndpointURI());
+      }
+      mr.stop();
+    }
+  }
+  if (this.isConnected()) {
+    try {
+      this.disconnect();
+    }
+ catch (    Exception e) {
+      logger.error("Failed to disconnect: " + e.getMessage(),e);
+    }
+  }
+  scheduler.set(null);
+  if (logger.isInfoEnabled()) {
+    logger.info("Stopped: " + this);
+  }
+}

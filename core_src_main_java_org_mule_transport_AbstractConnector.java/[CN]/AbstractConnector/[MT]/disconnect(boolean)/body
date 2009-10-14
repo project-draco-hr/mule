@@ -1,0 +1,34 @@
+{
+  startOnConnect=isStarted();
+  this.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_DISCONNECTED));
+  connected.set(false);
+  try {
+    if (receivers != null) {
+      for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
+        MessageReceiver receiver=(MessageReceiver)iterator.next();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Disconnecting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+        }
+        receiver.disconnect();
+      }
+    }
+    this.doDisconnect();
+  }
+  finally {
+    if (receivers != null) {
+      for (Iterator iterator=receivers.values().iterator(); iterator.hasNext(); ) {
+        MessageReceiver receiver=(MessageReceiver)iterator.next();
+        if (receiver instanceof AbstractMessageReceiver && ((AbstractMessageReceiver)receiver).isStarted()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Stopping receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+          }
+          receiver.stop();
+        }
+      }
+    }
+    if (this.isStarted()) {
+      this.stop(stopWorkManagers);
+    }
+  }
+  logger.info("Disconnected: " + this.getConnectionDescription());
+}
