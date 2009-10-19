@@ -4,6 +4,7 @@
   ImmutableEndpoint endpoint1=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint("test://AlwaysFail");
   ImmutableEndpoint endpoint2=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint("test://AlwaysFail");
   ExceptionBasedRouter router=new ExceptionBasedRouter();
+  router.setMuleContext(muleContext);
   RegExFilter filter=new RegExFilter("(.*) event");
   router.setFilter(filter);
   List<ImmutableEndpoint> endpoints=new ArrayList<ImmutableEndpoint>();
@@ -14,8 +15,8 @@
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   assertTrue(router.isMatch(message));
   MuleException rex=new RoutingException(message,endpoint1);
-  mockSession.expectAndThrow("sendEvent",C.args(C.eq(message),C.eq(endpoint1)),rex);
-  mockSession.expectAndThrow("dispatchEvent",C.args(C.eq(message),C.eq(endpoint2)),rex);
+  mockSession.expectAndThrow("sendEvent",C.args(new IsPayloadEqual(message),C.eq(endpoint1)),rex);
+  mockSession.expectAndThrow("dispatchEvent",C.args(new IsPayloadEqual(message),C.eq(endpoint2)),rex);
   MuleSession session=(MuleSession)mockSession.proxy();
   MuleMessage result=null;
   try {

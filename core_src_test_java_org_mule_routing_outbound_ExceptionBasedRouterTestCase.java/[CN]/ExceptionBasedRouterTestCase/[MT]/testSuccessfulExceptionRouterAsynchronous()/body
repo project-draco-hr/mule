@@ -7,6 +7,7 @@
   ImmutableEndpoint endpoint2=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint("test://Dummy2");
   ImmutableEndpoint endpoint3=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint("test://Dummy3");
   ExceptionBasedRouter router=new ExceptionBasedRouter();
+  router.setMuleContext(muleContext);
   RegExFilter filter=new RegExFilter("(.*) event");
   router.setFilter(filter);
   List<ImmutableEndpoint> endpoints=new ArrayList<ImmutableEndpoint>();
@@ -17,7 +18,7 @@
   assertEquals(filter,router.getFilter());
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   assertTrue(router.isMatch(message));
-  mockSession.expect("sendEvent",C.eq(message,endpoint1));
+  mockSession.expect("sendEvent",C.args(new IsPayloadEqual(message),C.eq(endpoint1)));
   MuleMessage result=router.route(message,(MuleSession)mockSession.proxy());
   assertNull("Async call should've returned null.",result);
   mockSession.verify();

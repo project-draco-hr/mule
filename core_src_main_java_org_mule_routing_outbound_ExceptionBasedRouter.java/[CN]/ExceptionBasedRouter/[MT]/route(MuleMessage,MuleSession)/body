@@ -1,29 +1,46 @@
 {
-  if (endpoints == null || endpoints.size() == 0) {
+  List recipients=null;
+  try {
+    recipients=getRecipients(message);
+  }
+ catch (  RequiredValueException e) {
+  }
+  if (recipients == null) {
+    int endpointsCount=endpoints.size();
+    recipients=new ArrayList(endpointsCount);
+    for (int i=0; i < endpointsCount; i++) {
+      recipients.add(getEndpoint(i,message));
+    }
+  }
+  if (recipients == null || recipients.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
   }
-  final int endpointsCount=endpoints.size();
   if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
     boolean correlationSet=message.getCorrelationId() != null;
     if (correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
       logger.debug("CorrelationId is already set, not setting Correlation group size");
     }
  else {
-      message.setCorrelationGroupSize(endpointsCount);
+      message.setCorrelationGroupSize(recipients.size());
     }
   }
   MuleMessage result=null;
   OutboundEndpoint endpoint=null;
+  MuleMessage request=null;
   boolean success=false;
-  for (int i=0; i < endpointsCount; i++) {
-    endpoint=getEndpoint(i,message);
-    boolean lastEndpoint=(i == endpointsCount - 1);
+  for (Iterator iterator=recipients.iterator(); iterator.hasNext(); ) {
+    request=new DefaultMuleMessage(message.getPayload(),message,muleContext);
+    endpoint=getRecipientEndpoint(request,iterator.next());
+    boolean lastEndpoint=!iterator.hasNext();
     if (!lastEndpoint) {
       logger.info("Sync mode will be forced for " + endpoint.getEndpointURI() + ", as there are more endpoints available.");
     }
     if (!lastEndpoint || endpoint.isSynchronous()) {
       try {
-        result=send(session,message,endpoint);
+        result=send(session,request,endpoint);
+        if (result != null) {
+          result.applyTransformers(endpoint.getResponseTransformers());
+        }
         if (!exceptionPayloadAvailable(result)) {
           if (logger.isDebugEnabled()) {
             logger.debug("Successful invocation detected, stopping further processing.");
@@ -41,7 +58,7 @@
     }
  else {
       try {
-        dispatch(session,message,endpoint);
+        dispatch(session,request,endpoint);
         success=true;
         break;
       }
@@ -51,7 +68,7 @@
     }
   }
   if (!success) {
-    throw new CouldNotRouteOutboundMessageException(message,endpoint);
+    throw new CouldNotRouteOutboundMessageException(request,endpoint);
   }
   return result;
 }
