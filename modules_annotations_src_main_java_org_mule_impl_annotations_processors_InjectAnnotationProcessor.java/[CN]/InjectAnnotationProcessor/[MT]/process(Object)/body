@@ -1,0 +1,33 @@
+{
+  Field[] fields;
+  try {
+    fields=object.getClass().getDeclaredFields();
+  }
+ catch (  NoClassDefFoundError e) {
+    if (logger.isDebugEnabled()) {
+      logger.warn(e.toString());
+    }
+    return object;
+  }
+  for (int i=0; i < fields.length; i++) {
+    Field field=fields[i];
+    if (field.isAnnotationPresent(Inject.class)) {
+      try {
+        field.setAccessible(true);
+        Object value;
+        value=context.getRegistry().lookupObject(field.getType());
+        if (value == null) {
+          throw new RuntimeException("Required object not found in registry of Type: " + field.getType());
+        }
+        field.set(object,value);
+      }
+ catch (      RuntimeException e) {
+        throw e;
+      }
+catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  return object;
+}

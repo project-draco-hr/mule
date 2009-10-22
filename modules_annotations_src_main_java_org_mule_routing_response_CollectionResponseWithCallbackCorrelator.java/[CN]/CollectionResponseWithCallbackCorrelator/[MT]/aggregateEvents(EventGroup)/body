@@ -1,0 +1,11 @@
+{
+  MuleEvent receivedEvent=(MuleEvent)events.iterator().next();
+  MuleMessage result=super.aggregateEvents(events);
+  MuleEvent event=new DefaultMuleEvent(result,receivedEvent.getEndpoint(),receivedEvent.getService(),receivedEvent);
+  try {
+    return event.getService().getComponent().invoke(event);
+  }
+ catch (  MuleException e) {
+    throw new AggregationException(AnnotationsMessages.failedToInvokeReplyMethod(callback),events,event.getEndpoint());
+  }
+}

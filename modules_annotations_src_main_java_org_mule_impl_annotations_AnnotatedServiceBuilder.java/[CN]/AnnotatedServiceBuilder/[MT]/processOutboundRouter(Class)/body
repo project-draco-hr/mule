@@ -1,0 +1,28 @@
+{
+  Collection routerParsers=context.getRegistry().lookupObjects(RouterAnnotationParser.class);
+  OutboundRouter router=null;
+  List<AnnotationMetaData> annotations=AnnotationUtils.getClassAndMethodAnnotations(componentFactoryClass);
+  for (  AnnotationMetaData metaData : annotations) {
+    Router routerAnnotation=metaData.getAnnotation().annotationType().getAnnotation(Router.class);
+    if (routerAnnotation != null && routerAnnotation.type() == RouterType.Outbound) {
+      if (router != null) {
+        throw new IllegalStateException("You can onnly configure one outbound router on a service");
+      }
+      for (Iterator iterator=routerParsers.iterator(); iterator.hasNext(); ) {
+        RouterAnnotationParser parser=(RouterAnnotationParser)iterator.next();
+        if (parser.supports(metaData.getAnnotation(),metaData.getClazz(),metaData.getMember())) {
+          router=(OutboundRouter)parser.parseRouter(metaData.getAnnotation());
+          break;
+        }
+      }
+    }
+  }
+  if (router == null) {
+    router=new OutboundPassThroughRouter();
+  }
+  if (router instanceof MuleContextAware) {
+    ((MuleContextAware)router).setMuleContext(context);
+  }
+  router.initialise();
+  return router;
+}

@@ -1,0 +1,25 @@
+{
+  List<String> strings=split(filterString);
+  Filter filter=null;
+  for (  String s : strings) {
+    if (s.equals("AND")) {
+      filter=new AndFilter(filter);
+    }
+ else     if (s.equals("OR")) {
+      filter=new OrFilter(filter);
+    }
+ else     if (filter instanceof AndFilter) {
+      ((AndFilter)filter).getFilters().add(new org.mule.routing.filters.ExpressionFilter(s));
+    }
+ else     if (filter instanceof OrFilter) {
+      ((OrFilter)filter).getFilters().add(new org.mule.routing.filters.ExpressionFilter(s));
+    }
+ else     if (filter == null) {
+      filter=new org.mule.routing.filters.ExpressionFilter(s);
+    }
+ else {
+      throw new DefaultMuleException("Expression Filter is malformed. IF this is a nested filter make sure each expression is separated by either 'AND' or 'OR'");
+    }
+  }
+  return filter;
+}

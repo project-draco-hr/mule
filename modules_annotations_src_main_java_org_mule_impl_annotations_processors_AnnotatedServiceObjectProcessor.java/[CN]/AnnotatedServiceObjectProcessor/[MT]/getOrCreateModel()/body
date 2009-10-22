@@ -1,0 +1,27 @@
+{
+  DefaultEntryPointResolverSet resolverSet=new DefaultEntryPointResolverSet();
+  AnnotatedEntryPointResolver resolver=new AnnotatedEntryPointResolver();
+  resolver.setMuleContext(context);
+  resolverSet.addEntryPointResolver(resolver);
+  Model model=null;
+  try {
+    Collection<Model> models=context.getRegistry().lookupObjects(Model.class);
+    for (Iterator<Model> iterator=models.iterator(); iterator.hasNext(); ) {
+      Model m=iterator.next();
+      if (!m.getName().equals(MuleProperties.OBJECT_SYSTEM_MODEL)) {
+        model=m;
+        model.setEntryPointResolverSet(resolverSet);
+        break;
+      }
+    }
+    if (model == null) {
+      model=createModel();
+      model.setEntryPointResolverSet(resolverSet);
+      context.getRegistry().registerModel(model);
+    }
+  }
+ catch (  Exception e) {
+    throw new RuntimeException(e);
+  }
+  return model;
+}

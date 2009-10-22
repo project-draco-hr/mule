@@ -1,0 +1,26 @@
+{
+  Field[] fields=componentFactoryClass.getDeclaredFields();
+  for (int i=0; i < fields.length; i++) {
+    Field field=fields[i];
+    if (field.isAnnotationPresent(Bind.class)) {
+      Bind binding=field.getAnnotation(Bind.class);
+      AnnotatedEndpointData epd=new AnnotatedEndpointData(MEP.OutIn);
+      epd.setConnectorName(binding.connector());
+      epd.setAddress(binding.uri());
+      org.mule.api.routing.InterfaceBinding router=new DefaultInterfaceBinding();
+      router.setInterface(field.getType());
+      if (!StringUtils.isBlank(binding.method())) {
+        router.setMethod(getValue(binding.method()));
+        for (int j=0; j < componentFactoryClass.getMethods().length; j++) {
+          Method m=componentFactoryClass.getMethods()[j];
+          if (m.getName().equals(router.getMethod())) {
+            epd.setMEPUsingMethod(m,false);
+            break;
+          }
+        }
+      }
+      router.setEndpoint(builder.processEndpoint(epd));
+      ((JavaComponent)service.getComponent()).getBindingCollection().addRouter(router);
+    }
+  }
+}

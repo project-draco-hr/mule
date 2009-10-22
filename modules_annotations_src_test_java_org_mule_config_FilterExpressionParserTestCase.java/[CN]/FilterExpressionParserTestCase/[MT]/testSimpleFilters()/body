@@ -1,0 +1,16 @@
+{
+  ExpressionFilterParser parser=new ExpressionFilterParser();
+  Filter f=parser.parseFilterString("#[regex:foo bar]");
+  assertNotNull(f);
+  assertTrue(f instanceof ExpressionFilter);
+  MuleMessage message=new DefaultMuleMessage("foo bar baz",muleContext);
+  assertTrue(f.accept(message));
+  f=parser.parseFilterString("#[regex:[.*] bar] AND #[wildcard:foo*]");
+  assertNotNull(f);
+  assertTrue(f instanceof AndFilter);
+  assertEquals(2,((AndFilter)f).getFilters().size());
+  assertTrue(((AndFilter)f).getFilters().get(0) instanceof ExpressionFilter);
+  assertEquals("regex",((ExpressionFilter)((AndFilter)f).getFilters().get(0)).getEvaluator());
+  assertTrue(((AndFilter)f).getFilters().get(1) instanceof ExpressionFilter);
+  assertEquals("wildcard",((ExpressionFilter)((AndFilter)f).getFilters().get(1)).getEvaluator());
+}

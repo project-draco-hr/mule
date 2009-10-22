@@ -1,0 +1,42 @@
+{
+  try {
+    Field[] fields;
+    try {
+      fields=object.getClass().getDeclaredFields();
+    }
+ catch (    NoClassDefFoundError e) {
+      if (logger.isDebugEnabled()) {
+        logger.warn(e.toString());
+      }
+      return object;
+    }
+    for (int i=0; i < fields.length; i++) {
+      Field field=fields[i];
+      if (field.isAnnotationPresent(Bind.class)) {
+        Bind binding=field.getAnnotation(Bind.class);
+        AnnotatedEndpointData epd=new AnnotatedEndpointData(MEP.OutIn);
+        epd.setConnectorName(binding.connector());
+        epd.setAddress(binding.uri());
+        org.mule.api.routing.InterfaceBinding router=new DefaultInterfaceBinding();
+        router.setInterface(field.getType());
+        if (!StringUtils.isBlank(binding.method())) {
+          router.setMethod(getValue(binding.method()));
+          for (int j=0; j < object.getClass().getMethods().length; j++) {
+            Method m=object.getClass().getMethods()[j];
+            if (m.getName().equals(router.getMethod())) {
+              epd.setMEPUsingMethod(m,false);
+              break;
+            }
+          }
+        }
+        router.setEndpoint(builder.processEndpoint(epd));
+        field.setAccessible(true);
+        field.set(object,router.createProxy(object));
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new MuleRuntimeException(CoreMessages.createStaticMessage("Failed to process @Bind annotation"),e);
+  }
+  return object;
+}

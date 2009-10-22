@@ -1,0 +1,16 @@
+{
+  Collection routerParsers=context.getRegistry().lookupObjects(RouterAnnotationParser.class);
+  for (int i=0; i < componentFactoryClass.getAnnotations().length; i++) {
+    Annotation annotation=componentFactoryClass.getAnnotations()[i];
+    Router routerAnnotation=annotation.annotationType().getAnnotation(Router.class);
+    if (routerAnnotation != null && routerAnnotation.type() == RouterType.Inbound) {
+      for (Iterator iterator=routerParsers.iterator(); iterator.hasNext(); ) {
+        RouterAnnotationParser parser=(RouterAnnotationParser)iterator.next();
+        if (parser.supports(annotation,componentFactoryClass,null)) {
+          service.getInboundRouter().addRouter(parser.parseRouter(annotation));
+          break;
+        }
+      }
+    }
+  }
+}

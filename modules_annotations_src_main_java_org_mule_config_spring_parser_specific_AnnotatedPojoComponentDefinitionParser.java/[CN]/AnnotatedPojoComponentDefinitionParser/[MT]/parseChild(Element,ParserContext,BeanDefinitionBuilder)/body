@@ -1,0 +1,19 @@
+{
+  super.parseChild(element,parserContext,builder);
+  String serviceName=((Element)element.getParentNode()).getAttribute(ATTRIBUTE_NAME);
+  builder.addDependsOn(serviceName);
+  String temp=element.getAttribute(ATTRIBUTE_CLASS);
+  Class serviceClass;
+  try {
+    serviceClass=ClassUtils.loadClass(temp,getClass());
+  }
+ catch (  ClassNotFoundException e) {
+    throw new BeanCreationException("failed to load annotate bean class",e);
+  }
+  builder.addPropertyValue(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS,serviceClass);
+  getBeanAssembler(element,builder).extendBean(AbstractObjectFactory.ATTRIBUTE_OBJECT_CLASS,serviceClass,false);
+  if (serviceClass.isAnnotationPresent(Service.class)) {
+    Service service=(Service)serviceClass.getAnnotation(Service.class);
+    builder.addPropertyValue("scope",service.scope());
+  }
+}

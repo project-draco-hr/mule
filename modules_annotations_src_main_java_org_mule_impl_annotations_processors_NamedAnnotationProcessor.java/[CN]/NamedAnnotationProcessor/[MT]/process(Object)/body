@@ -1,0 +1,39 @@
+{
+  Field[] fields;
+  try {
+    fields=object.getClass().getDeclaredFields();
+  }
+ catch (  NoClassDefFoundError e) {
+    if (logger.isDebugEnabled()) {
+      logger.warn(e.toString());
+    }
+    return object;
+  }
+  for (int i=0; i < fields.length; i++) {
+    Field field=fields[i];
+    if (field.isAnnotationPresent(Named.class)) {
+      Named named=field.getAnnotation(Named.class);
+      try {
+        field.setAccessible(true);
+        Object value;
+        if (StringUtils.isNotBlank(named.value())) {
+          value=context.getRegistry().lookupObject(named.value());
+          if (value == null) {
+            throw new RuntimeException("Required object not found in registry with key: " + named.value());
+          }
+        }
+ else {
+          value=context.getRegistry().lookupObject(field.getType());
+          if (value == null) {
+            throw new RuntimeException("Required object not found in registry of Type: " + field.getType());
+          }
+        }
+        field.set(object,value);
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  return object;
+}
