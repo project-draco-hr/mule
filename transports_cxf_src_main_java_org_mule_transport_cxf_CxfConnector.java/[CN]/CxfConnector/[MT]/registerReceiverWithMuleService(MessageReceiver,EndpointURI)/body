@@ -2,16 +2,16 @@
   CxfMessageReceiver cxfReceiver=(CxfMessageReceiver)receiver;
   Server server=cxfReceiver.getServer();
   uriToServer.put(server.getEndpoint().getEndpointInfo().getAddress(),server);
-  SedaService service=new SedaService();
-  service.setMuleContext(muleContext);
+  SedaService outerProtocolService=new SedaService();
+  outerProtocolService.setMuleContext(muleContext);
   String uniqueServiceName=createServiceName(server.getEndpoint());
-  service.setName(uniqueServiceName);
-  service.setModel(muleContext.getRegistry().lookupSystemModel());
+  outerProtocolService.setName(uniqueServiceName);
+  outerProtocolService.setModel(muleContext.getRegistry().lookupSystemModel());
   CxfServiceComponent svcComponent=new CxfServiceComponent(this,(CxfMessageReceiver)receiver);
   svcComponent.setBus(bus);
   final DefaultJavaComponent component=new DefaultJavaComponent(new SingletonObjectFactory(svcComponent));
   component.setMuleContext(muleContext);
-  service.setComponent(component);
+  outerProtocolService.setComponent(component);
   String endpoint=receiver.getEndpointURI().getAddress();
   String scheme=ep.getScheme().toLowerCase();
   InboundEndpoint originalEndpoint=receiver.getEndpoint();
@@ -66,7 +66,10 @@
   InboundEndpoint protocolEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(protocolEndpointBuilder);
   InboundEndpoint receiverEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
   receiver.setEndpoint(receiverEndpoint);
-  service.setInboundRouter(new DefaultInboundRouterCollection());
-  service.getInboundRouter().addEndpoint(protocolEndpoint);
-  services.add(service);
+  outerProtocolService.setInboundRouter(new DefaultInboundRouterCollection());
+  outerProtocolService.getInboundRouter().addEndpoint(protocolEndpoint);
+  if (!serviceToProtocolServices.containsKey(receiver.getService())) {
+    serviceToProtocolServices.put(receiver.getService().getName(),new HashSet());
+  }
+  serviceToProtocolServices.get(receiver.getService().getName()).add(outerProtocolService);
 }
