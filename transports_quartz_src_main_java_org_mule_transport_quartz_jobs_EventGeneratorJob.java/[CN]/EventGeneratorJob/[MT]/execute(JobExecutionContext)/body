@@ -30,7 +30,9 @@
         payload=NullPayload.getInstance();
       }
     }
-    receiver.routeMessage(new DefaultMuleMessage(receiver.getConnector().getMessageAdapter(payload),muleContext));
+    MuleMessage msg=new DefaultMuleMessage(receiver.getConnector().getMessageAdapter(payload),muleContext);
+    msg.setProperty(QuartzConnector.PROPERTY_JOB_DATA,jobExecutionContext.getJobDetail().getJobDataMap(),PropertyScope.INVOCATION);
+    receiver.routeMessage(msg);
   }
  catch (  Exception e) {
     receiver.handleException(e);
