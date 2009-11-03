@@ -1,7 +1,9 @@
 {
   MuleClient client=new MuleClient();
-  MuleMessage result=client.send("http://localhost:63081/services/oneway",prepareOneWayTestMessage(),prepareOneWayTestProperties());
+  MuleMessage result=client.send("http://localhost:63081/services/routeBasedOnSoapAction",prepareOneWayTestMessage(),prepareOneWayTestProperties());
   assertEquals("",result.getPayloadAsString());
+  int status=result.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,-1);
+  assertEquals(HttpConstants.SC_OK,status);
   AsyncService component=(AsyncService)getComponent("asyncService");
   assertTrue(component.getLatch().await(10000,TimeUnit.MILLISECONDS));
 }
