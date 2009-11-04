@@ -15,19 +15,28 @@
   if (epData.getEncoding() != null) {
     endpointBuilder.setEncoding(getPropertyValue(epData.getEncoding()));
   }
+  AbstractConnector connector;
   if (epData.getConnectorName() != null) {
-    endpointBuilder.setConnector(muleContext.getRegistry().lookupConnector(getPropertyValue(epData.getConnectorName())));
+    connector=(AbstractConnector)muleContext.getRegistry().lookupConnector(getPropertyValue(epData.getConnectorName()));
   }
  else   if (epData.getConnector() != null) {
-    endpointBuilder.setConnector(epData.getConnector());
+    connector=(AbstractConnector)epData.getConnector();
   }
  else {
     MuleEndpointURI uri=new MuleEndpointURI(getPropertyValue(epData.getAddress()),muleContext);
-    Connector connector=transportFactory.createConnector(uri);
+    connector=(AbstractConnector)transportFactory.createConnector(uri);
     if (muleContext.getRegistry().lookupConnector(connector.getName()) == null) {
       muleContext.getRegistry().registerConnector(connector);
     }
-    endpointBuilder.setConnector(connector);
+  }
+  endpointBuilder.setConnector(connector);
+  String threadsString=(String)epData.getProperties().get("threads");
+  if (threadsString != null) {
+    int threads=Integer.valueOf(threadsString);
+    connector.setMaxDispatchersActive(threads);
+    connector.setMaxRequestersActive(threads);
+    connector.getReceiverThreadingProfile().setMaxThreadsActive(threads);
+    connector.getReceiverThreadingProfile().setMaxThreadsIdle(threads);
   }
   if (epData.getName() != null) {
     endpointBuilder.setName(getPropertyValue(epData.getName()));
