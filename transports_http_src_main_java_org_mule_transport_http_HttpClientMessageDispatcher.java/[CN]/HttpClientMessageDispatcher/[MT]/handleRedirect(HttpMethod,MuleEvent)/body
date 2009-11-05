@@ -1,11 +1,12 @@
 {
-  if (!connector.isFollowRedirects()) {
+  String followRedirects=(String)endpoint.getProperty("followRedirects");
+  if (followRedirects == null || "false".equalsIgnoreCase(followRedirects)) {
     if (logger.isInfoEnabled()) {
       logger.info("Received a redirect, but followRedirects=false. Response code: " + method.getStatusCode() + " "+ method.getStatusText());
     }
     return getResponseFromMethod(method,null);
   }
-  Header locationHeader=method.getRequestHeader(HttpConstants.HEADER_LOCATION);
+  Header locationHeader=method.getResponseHeader(HttpConstants.HEADER_LOCATION);
   if (locationHeader == null) {
     throw new HttpResponseException(method.getStatusText(),method.getStatusCode());
   }
