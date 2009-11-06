@@ -4,7 +4,15 @@
     methodCall=component.getClass().getName() + "." + method.getName()+ "("+ StringMessageUtils.toString(ClassUtils.getClassTypes(arguments))+ ")";
     logger.debug("Invoking " + methodCall);
   }
-  Object result=method.invoke(component,arguments);
+  Object result;
+  if (isSynchronizeCall()) {
+synchronized (component) {
+      result=method.invoke(component,arguments);
+    }
+  }
+ else {
+    result=method.invoke(component,arguments);
+  }
   if (method.getReturnType().equals(Void.TYPE)) {
     result=VoidResult.getInstance();
   }
