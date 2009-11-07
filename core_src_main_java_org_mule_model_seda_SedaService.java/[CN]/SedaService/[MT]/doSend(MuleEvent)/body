@@ -23,7 +23,12 @@
       handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getName()),event.getMessage(),e));
     }
     if (result == null) {
-      result=new DefaultMuleMessage(NullPayload.getInstance(),RequestContext.getEvent().getMessage(),muleContext);
+      if (exceptionListener != null && exceptionListener instanceof AbstractExceptionListener && ((AbstractExceptionListener)exceptionListener).getReturnMessage() != null) {
+        result=((AbstractExceptionListener)exceptionListener).getReturnMessage();
+      }
+ else {
+        result=new DefaultMuleMessage(NullPayload.getInstance(),RequestContext.getEvent().getMessage(),muleContext);
+      }
     }
     ExceptionPayload exceptionPayload=result.getExceptionPayload();
     if (exceptionPayload == null) {
