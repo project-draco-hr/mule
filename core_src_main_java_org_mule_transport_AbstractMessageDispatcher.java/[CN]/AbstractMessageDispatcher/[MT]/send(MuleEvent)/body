@@ -24,6 +24,15 @@ catch (    Exception e) {
   try {
     connect();
     MuleMessage result=doSend(event);
+    if (result != null) {
+      List<String> responseProperties=((OutboundEndpoint)endpoint).getResponseProperties();
+      for (      String propertyName : responseProperties) {
+        Object propertyValue=event.getMessage().getProperty(propertyName);
+        if (propertyValue != null) {
+          result.setProperty(propertyName,propertyValue);
+        }
+      }
+    }
     if (connector.isEnableMessageEvents()) {
       String component=null;
       if (event.getService() != null) {
