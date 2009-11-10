@@ -10,7 +10,19 @@
   }
   BindingProvider bp=wrapper.getClientProxy();
   bp.getRequestContext().putAll(props);
-  Object response=method.invoke(wrapper.getClientProxy(),getArgs(event));
+  Object response;
+  try {
+    response=method.invoke(wrapper.getClientProxy(),getArgs(event));
+  }
+ catch (  InvocationTargetException e) {
+    Throwable ex=((InvocationTargetException)e).getTargetException();
+    if (ex != null && ex.getMessage().contains("Security")) {
+      throw new WebServiceSecurityException(event,e);
+    }
+ else {
+      throw e;
+    }
+  }
   MuleMessage muleRes=holder.value;
   return buildResponseMessage(muleRes,new Object[]{response});
 }
