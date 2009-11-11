@@ -1,0 +1,37 @@
+{
+  String config=context.getInitParameter(MuleXmlBuilderContextListener.INIT_PARAMETER_MULE_CONFIG);
+  if (config == null) {
+    config=MuleServer.DEFAULT_CONFIGURATION;
+    ;
+    if (logger.isDebugEnabled()) {
+      logger.debug("No Mule config file(s) specified, using default: " + config);
+    }
+  }
+ else {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Mule config file(s): " + config);
+    }
+  }
+  muleContext=getMuleContext(context);
+  if (muleContext == null) {
+    throw new RuntimeException("MuleContext is not available");
+  }
+  try {
+    configurationBuilder=new WebappMuleXmlConfigurationBuilder(context,config);
+    configurationBuilder.setUseDefaultConfigResource(false);
+    final ApplicationContext parentContext=(ApplicationContext)context.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+    if (parentContext != null) {
+      configurationBuilder.setParentContext(parentContext);
+    }
+    configurationBuilder.configure(muleContext);
+  }
+ catch (  MuleException ex) {
+    context.log(ex.getMessage(),ex);
+    ex.printStackTrace();
+  }
+catch (  Error error) {
+    context.log(error.getMessage(),error);
+    error.printStackTrace();
+    throw error;
+  }
+}
