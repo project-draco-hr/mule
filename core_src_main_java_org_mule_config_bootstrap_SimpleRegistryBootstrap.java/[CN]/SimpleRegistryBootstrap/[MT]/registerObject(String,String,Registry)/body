@@ -1,0 +1,58 @@
+{
+  boolean optional=false;
+  String className=null;
+  try {
+    int x=value.indexOf(",");
+    if (x > -1) {
+      Properties p=PropertiesUtils.getPropertiesFromString(value.substring(x + 1),',');
+      optional=p.containsKey("optional");
+      className=value.substring(0,x);
+    }
+ else {
+      className=value;
+    }
+    Object o=ClassUtils.instanciateClass(className);
+    Class meta=Object.class;
+    if (o instanceof ObjectProcessor) {
+      meta=ObjectProcessor.class;
+    }
+ else     if (o instanceof StreamCloser) {
+      meta=StreamCloser.class;
+    }
+ else     if (o instanceof BootstrapObjectFactory) {
+      o=((BootstrapObjectFactory)o).create();
+    }
+    registry.registerObject(key,o,meta);
+  }
+ catch (  InvocationTargetException itex) {
+    Throwable cause=ExceptionUtils.getCause(itex);
+    if (cause instanceof NoClassDefFoundError && optional) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Ignoring optional object: " + className);
+      }
+    }
+ else {
+      throw new Exception(cause);
+    }
+  }
+catch (  NoClassDefFoundError ncdfe) {
+    if (optional) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Ignoring optional object: " + className);
+      }
+    }
+ else {
+      throw ncdfe;
+    }
+  }
+catch (  ClassNotFoundException cnfe) {
+    if (optional) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Ignoring optional object: " + className);
+      }
+    }
+ else {
+      throw cnfe;
+    }
+  }
+}

@@ -1,54 +1,6 @@
 {
-  String objectString;
   for (  Map.Entry<Object,Object> entry : props.entrySet()) {
-    objectString=(String)entry.getValue();
-    boolean optional=false;
-    try {
-      int x=objectString.indexOf(",");
-      if (x > -1) {
-        Properties p=PropertiesUtils.getPropertiesFromString(objectString.substring(x + 1),',');
-        optional=p.containsKey("optional");
-      }
-      Object o=ClassUtils.instanciateClass(objectString);
-      Class meta=Object.class;
-      if (o instanceof ObjectProcessor) {
-        meta=ObjectProcessor.class;
-      }
- else       if (o instanceof StreamCloser) {
-        meta=StreamCloser.class;
-      }
-      registry.registerObject(entry.getKey().toString() + "#" + o.hashCode(),o,meta);
-    }
- catch (    InvocationTargetException itex) {
-      Throwable cause=ExceptionUtils.getCause(itex);
-      if (cause instanceof NoClassDefFoundError && optional) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("Ignoring optional unnamed object: " + objectString);
-        }
-      }
- else {
-        throw new Exception(cause);
-      }
-    }
-catch (    NoClassDefFoundError ncdfe) {
-      if (optional) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("Ignoring optional unnamed object: " + objectString);
-        }
-      }
- else {
-        throw ncdfe;
-      }
-    }
-catch (    ClassNotFoundException cnfe) {
-      if (optional) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("Ignoring optional unnamed object: " + objectString);
-        }
-      }
- else {
-        throw cnfe;
-      }
-    }
+    registerObject(entry.getKey() + "#" + UUID.getUUID(),(String)entry.getValue(),registry);
   }
+  props.clear();
 }
