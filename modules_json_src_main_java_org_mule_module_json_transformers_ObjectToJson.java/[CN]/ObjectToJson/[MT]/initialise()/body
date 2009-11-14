@@ -1,16 +1,13 @@
 {
   super.initialise();
-  if (getReturnClass().equals(Object.class)) {
-    logger.warn("The return class is not set not type validation will be done");
-  }
-  if (excludeProperties != null) {
-    getJsonConfig().setExcludes(StringUtils.splitAndTrim(excludeProperties,","));
-  }
-  if (includeProperties != null) {
-    getJsonConfig().setJsonPropertyFilter(new IncludePropertiesFilter(StringUtils.splitAndTrim(includeProperties,",")));
-  }
   if (getSourceClass() != null) {
     sourceTypes.clear();
     registerSourceType(getSourceClass());
+  }
+  for (  Map.Entry<Class,Class> entry : getMixins().entrySet()) {
+    getMapper().getSerializationConfig().addMixInAnnotations(entry.getKey(),entry.getValue());
+  }
+  for (  Map.Entry<Class,Class> entry : serializationMixins.entrySet()) {
+    getMapper().getSerializationConfig().addMixInAnnotations(entry.getKey(),entry.getValue());
   }
 }

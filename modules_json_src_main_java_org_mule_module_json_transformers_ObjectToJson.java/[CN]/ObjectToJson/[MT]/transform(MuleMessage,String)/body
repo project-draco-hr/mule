@@ -6,24 +6,18 @@
     }
     src=this.getException(message.getExceptionPayload().getException());
   }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Converting payload " + src + " to "+ String.class);
-  }
-  String returnValue;
-  Class et=getJsonConfig().getEnclosedType();
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
   try {
-    if (et == null) {
-      getJsonConfig().setEnclosedType(src.getClass());
-    }
-    returnValue=JsonUtils.convertJavaObjectToJson(src,getJsonConfig());
+    getMapper().writeValue(baos,src);
   }
-  finally {
-    if (et == null) {
-      getJsonConfig().setEnclosedType(null);
-    }
+ catch (  IOException e) {
+    throw new TransformerException(this,e);
   }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Successfully converted to value: " + returnValue);
+  System.out.println(baos.toString());
+  if (returnClass.equals(byte[].class)) {
+    return baos.toByteArray();
   }
-  return returnValue;
+ else {
+    return baos.toString();
+  }
 }

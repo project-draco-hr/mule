@@ -1,0 +1,19 @@
+{
+  Map<Class,Class> mixins=new HashMap<Class,Class>();
+  for (int i=0; i < element.getChildNodes().getLength(); i++) {
+    Node node=element.getChildNodes().item(i);
+    if (node.getNodeType() == Node.ELEMENT_NODE) {
+      String mixinClass=node.getAttributes().getNamedItem("mixinClass").getTextContent();
+      String targetClass=node.getAttributes().getNamedItem("targetClass").getTextContent();
+      try {
+        mixins.put(ClassUtils.loadClass(targetClass,getClass()),ClassUtils.loadClass(mixinClass,getClass()));
+      }
+ catch (      ClassNotFoundException e) {
+        throw new BeanCreationException("Failed to create Mixin map",e);
+      }
+    }
+  }
+  builder.addPropertyValue("sourceMap",mixins);
+  builder.addPropertyValue("targetMapClass",mapClass.getName());
+  getBeanAssembler(element,builder).setBeanFlag(MuleHierarchicalBeanDefinitionParserDelegate.MULE_NO_RECURSE);
+}
