@@ -4,9 +4,7 @@
     Object p=map.remove(PAYLOAD_PARAM);
     if (p != null) {
       if (filter.accept(p)) {
-        transformer=new JsonToObject();
-        transformer.setReturnClass(Map.class);
-        this.payload=transformer.transform(p);
+        this.payload=readJsonAs(p,HashMap.class);
       }
  else {
         payload=p;
@@ -22,17 +20,12 @@
   }
  else   if (filter.accept(message)) {
     if (message.toString().indexOf("payload") > -1) {
-      transformer=new JsonToObject();
-      transformer.setReturnClass(DefaultMuleMessageDTO.class);
-      DefaultMuleMessageDTO dto=null;
-      dto=(DefaultMuleMessageDTO)transformer.transform(message);
+      DefaultMuleMessageDTO dto=readJsonAs(message,DefaultMuleMessageDTO.class);
       payload=dto.getPayload();
       dto.addPropertiesTo(this);
     }
  else {
-      transformer=new JsonToObject();
-      transformer.setReturnClass(Map.class);
-      payload=transformer.transform(message);
+      this.payload=readJsonAs(message,HashMap.class);
     }
   }
  else {
