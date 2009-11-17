@@ -1,29 +1,16 @@
 {
-  Transformer result=(Transformer)exactTransformerCache.get(inputType.getName() + outputType.getName());
-  if (result != null) {
-    return result;
-  }
-  List trans=lookupTransformers(inputType,outputType);
-  result=getNearestTransformerMatch(trans,inputType,outputType);
-  Transformer secondPass=null;
-  if (result == null) {
-    if (outputType.equals(String.class)) {
-      secondPass=objectToString;
+  Transformer trans;
+  Collection<TransformerResolver> resolvers=lookupObjects(TransformerResolver.class);
+  for (  TransformerResolver resolver : resolvers) {
+    try {
+      trans=resolver.resolve(new TransformCriteria(new Class[]{inputType},outputType,null,null));
+      if (trans != null) {
+        return trans;
+      }
     }
- else     if (outputType.equals(byte[].class)) {
-      secondPass=objectToByteArray;
-    }
- else {
-      throw new TransformerException(CoreMessages.noTransformerFoundForMessage(inputType,outputType));
-    }
-    trans=lookupTransformers(inputType,Object.class);
-    result=getNearestTransformerMatch(trans,inputType,outputType);
-    if (result != null) {
-      result=new TransformerChain(new Transformer[]{result,secondPass});
+ catch (    ResolverException e) {
+      throw new TransformerException(e.getI18nMessage());
     }
   }
-  if (result != null) {
-    exactTransformerCache.put(inputType.getName() + outputType.getName(),result);
-  }
-  return result;
+  throw new TransformerException(CoreMessages.noTransformerFoundForMessage(inputType,outputType));
 }
