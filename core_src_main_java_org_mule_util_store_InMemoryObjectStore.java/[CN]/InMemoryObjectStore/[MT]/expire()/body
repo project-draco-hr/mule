@@ -1,19 +1,10 @@
 {
   int currentSize=store.size();
-  int excess=(currentSize - maxEntries);
-  if (excess > 0) {
-    while (currentSize > maxEntries) {
-      store.pollFirstEntry();
-      currentSize--;
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("Expired " + excess + " excess entries");
-    }
-  }
-  if (entryTTL > 0 && currentSize != 0) {
+  currentSize=trimToMaxSize(currentSize);
+  if ((entryTTL > 0) && (currentSize != 0)) {
     final long now=Utils.nanoTime();
     int expiredEntries=0;
-    Map.Entry oldestEntry;
+    Map.Entry<?,?> oldestEntry;
     purge:     while ((oldestEntry=store.firstEntry()) != null) {
       Long oldestKey=(Long)oldestEntry.getKey();
       long oldestKeyValue=oldestKey.longValue();
