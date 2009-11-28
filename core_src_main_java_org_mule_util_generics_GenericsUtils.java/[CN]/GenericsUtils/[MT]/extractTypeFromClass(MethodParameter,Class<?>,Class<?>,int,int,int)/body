@@ -1,0 +1,21 @@
+{
+  if (clazz.getName().startsWith("java.util.")) {
+    return null;
+  }
+  if (clazz.getSuperclass() != null && isIntrospectionCandidate(clazz.getSuperclass())) {
+    return extractType(methodParam,clazz.getGenericSuperclass(),source,typeIndex,nestingLevel,currentLevel);
+  }
+  Type[] ifcs=clazz.getGenericInterfaces();
+  if (ifcs != null) {
+    for (    Type ifc : ifcs) {
+      Type rawType=ifc;
+      if (ifc instanceof ParameterizedType) {
+        rawType=((ParameterizedType)ifc).getRawType();
+      }
+      if (rawType instanceof Class<?> && isIntrospectionCandidate((Class)rawType)) {
+        return extractType(methodParam,ifc,source,typeIndex,nestingLevel,currentLevel);
+      }
+    }
+  }
+  return null;
+}

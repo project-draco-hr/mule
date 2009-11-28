@@ -1,0 +1,29 @@
+{
+  Transformer transformer=exactTransformerCache.get(source.toString() + result.toString());
+  if (transformer != null) {
+    return transformer;
+  }
+  List<Transformer> trans=muleContext.getRegistry().lookupTransformers(source,result);
+  transformer=getNearestTransformerMatch(trans,source.getType(),result.getType());
+  Transformer secondPass=null;
+  if (transformer == null) {
+    if (result.getType().equals(String.class)) {
+      secondPass=objectToString;
+    }
+ else     if (result.getType().equals(byte[].class)) {
+      secondPass=objectToByteArray;
+    }
+ else {
+      return null;
+    }
+    trans=muleContext.getRegistry().lookupTransformers(source,new SimpleDataType(Object.class));
+    transformer=getNearestTransformerMatch(trans,source.getType(),result.getType());
+    if (transformer != null) {
+      transformer=new TransformerChain(transformer,secondPass);
+    }
+  }
+  if (transformer != null) {
+    exactTransformerCache.put(source.toString() + result.toString(),transformer);
+  }
+  return transformer;
+}

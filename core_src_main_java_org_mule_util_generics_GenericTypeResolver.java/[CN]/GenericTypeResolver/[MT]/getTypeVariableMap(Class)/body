@@ -1,0 +1,30 @@
+{
+  Reference<Map<TypeVariable,Type>> ref=typeVariableCache.get(clazz);
+  Map<TypeVariable,Type> typeVariableMap=(ref != null ? ref.get() : null);
+  if (typeVariableMap == null) {
+    typeVariableMap=new HashMap<TypeVariable,Type>();
+    extractTypeVariablesFromGenericInterfaces(clazz.getGenericInterfaces(),typeVariableMap);
+    Type genericType=clazz.getGenericSuperclass();
+    Class type=clazz.getSuperclass();
+    while (type != null && !Object.class.equals(type)) {
+      if (genericType instanceof ParameterizedType) {
+        ParameterizedType pt=(ParameterizedType)genericType;
+        populateTypeMapFromParameterizedType(pt,typeVariableMap);
+      }
+      extractTypeVariablesFromGenericInterfaces(type.getGenericInterfaces(),typeVariableMap);
+      genericType=type.getGenericSuperclass();
+      type=type.getSuperclass();
+    }
+    type=clazz;
+    while (type.isMemberClass()) {
+      genericType=type.getGenericSuperclass();
+      if (genericType instanceof ParameterizedType) {
+        ParameterizedType pt=(ParameterizedType)genericType;
+        populateTypeMapFromParameterizedType(pt,typeVariableMap);
+      }
+      type=type.getEnclosingClass();
+    }
+    typeVariableCache.put(clazz,new WeakReference<Map<TypeVariable,Type>>(typeVariableMap));
+  }
+  return typeVariableMap;
+}

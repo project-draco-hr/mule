@@ -1,0 +1,19 @@
+{
+  List<Transformer> results=transformerListCache.get(source.toString() + result.toString());
+  if (results != null) {
+    return results;
+  }
+  results=new ArrayList<Transformer>(2);
+  Collection<Transformer> transformers=getTransformers();
+  for (  Transformer t : transformers) {
+    if (!(t instanceof DiscoverableTransformer)) {
+      continue;
+    }
+    DataType dt=t.getReturnDataType();
+    if (result.isCompatibleWith(dt) && t.isSourceDataTypeSupported(source)) {
+      results.add(t);
+    }
+  }
+  transformerListCache.put(source.toString() + result.toString(),results);
+  return results;
+}
