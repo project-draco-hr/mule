@@ -2,7 +2,9 @@
   String compareTo=null;
   boolean not=false;
   int start=expression.lastIndexOf("/");
-  if (start == -1)   start=0;
+  if (start == -1) {
+    start=0;
+  }
   int i=expression.indexOf("==",start);
   if (i > -1) {
     compareTo=expression.substring(i + 2,expression.length()).trim();
@@ -14,7 +16,8 @@
     not=true;
   }
   try {
-    JsonData data=message.getPayload(JsonData.class);
+    String json=message.getPayloadAsString();
+    JsonData data=new JsonData(json);
     try {
       Object result=data.get(expression);
       if (compareTo != null) {
@@ -44,7 +47,7 @@
       return null;
     }
   }
- catch (  TransformerException e) {
+ catch (  Exception e) {
     throw new MuleRuntimeException(CoreMessages.failedToProcessExtractorFunction(getName() + ":" + expression),e);
   }
 }
