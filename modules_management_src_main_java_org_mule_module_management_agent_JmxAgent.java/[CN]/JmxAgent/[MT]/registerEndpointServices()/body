@@ -1,19 +1,17 @@
 {
-  Iterator iter=muleContext.getRegistry().lookupObjects(Connector.class).iterator();
-  Connector connector;
-  while (iter.hasNext()) {
-    connector=(Connector)iter.next();
+  for (  Connector connector : muleContext.getRegistry().lookupObjects(Connector.class)) {
     if (connector instanceof AbstractConnector) {
-      for (Iterator iterator=((AbstractConnector)connector).getReceivers().values().iterator(); iterator.hasNext(); ) {
+      for (Iterator<?> iterator=((AbstractConnector)connector).getReceivers().values().iterator(); iterator.hasNext(); ) {
         EndpointServiceMBean mBean=new EndpointService((MessageReceiver)iterator.next());
-        final String rawName=mBean.getName();
-        final String name=jmxSupport.escape(rawName);
+        String fullName=buildFullyQualifiedEndpointName(mBean,connector);
         if (logger.isInfoEnabled()) {
-          logger.info("Attempting to register service with name: " + jmxSupport.getDomainName(muleContext) + ":type=org.mule.Endpoint,service="+ jmxSupport.escape(mBean.getComponentName())+ ",name="+ name);
+          logger.info("Attempting to register service with name: " + fullName);
         }
-        ObjectName on=jmxSupport.getObjectName(jmxSupport.getDomainName(muleContext) + ":type=org.mule.Endpoint,service=" + jmxSupport.escape(mBean.getComponentName())+ ",name="+ name);
+        ObjectName on=jmxSupport.getObjectName(fullName);
         mBeanServer.registerMBean(mBean,on);
-        logger.info("Registered Endpoint Service with name: " + on);
+        if (logger.isInfoEnabled()) {
+          logger.info("Registered Endpoint Service with name: " + on);
+        }
       }
     }
  else {
