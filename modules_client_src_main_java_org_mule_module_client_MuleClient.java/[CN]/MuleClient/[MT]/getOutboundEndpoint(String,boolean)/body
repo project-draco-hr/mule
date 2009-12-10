@@ -1,0 +1,13 @@
+{
+  OutboundEndpoint endpoint=(OutboundEndpoint)outboundEndpointCache.get(uri + ":" + synchronous);
+  if (endpoint == null) {
+    EndpointBuilder endpointBuilder=muleContext.getRegistry().lookupEndpointFactory().getEndpointBuilder(uri);
+    endpointBuilder.setSynchronous(synchronous);
+    endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
+    OutboundEndpoint concurrentlyAddedEndpoint=(OutboundEndpoint)outboundEndpointCache.putIfAbsent(uri + ":" + synchronous,endpoint);
+    if (concurrentlyAddedEndpoint != null) {
+      return concurrentlyAddedEndpoint;
+    }
+  }
+  return endpoint;
+}
