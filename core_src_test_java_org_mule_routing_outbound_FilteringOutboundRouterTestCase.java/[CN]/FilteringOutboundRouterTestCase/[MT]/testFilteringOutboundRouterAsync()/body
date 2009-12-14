@@ -1,12 +1,12 @@
 {
   Mock session=MuleTestUtils.getMockSession();
   session.matchAndReturn("getService",getTestService());
-  ImmutableEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
   assertNotNull(endpoint1);
   FilteringOutboundRouter router=new FilteringOutboundRouter();
   PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
   router.setFilter(filter);
-  List endpoints=new ArrayList();
+  List<OutboundEndpoint> endpoints=new ArrayList<OutboundEndpoint>();
   endpoints.add(endpoint1);
   router.setEndpoints(endpoints);
   assertFalse(router.isUseTemplates());
@@ -19,7 +19,7 @@
   message=new DefaultMuleMessage(new Exception("test event"),muleContext);
   assertTrue(!router.isMatch(message));
   router.setTransformers(CollectionUtils.singletonList(new AbstractTransformer(){
-    public Object doTransform(    Object src,    String encoding) throws TransformerException {
+    @Override public Object doTransform(    Object src,    String encoding) throws TransformerException {
       return ((Exception)src).getMessage();
     }
   }

@@ -8,7 +8,7 @@
   OutboundEndpoint endpoint5=getTestOutboundEndpoint("Test5Endpoint","test://endpointUri.5?synchronous=true");
   OutboundEndpoint endpoint6=getTestOutboundEndpoint("Test6Endpoint","test://endpointUri.6?synchronous=true");
   AbstractMessageSplitter router=new AbstractMessageSplitter(){
-    protected SplitMessage getMessageParts(    MuleMessage message,    List endpoints){
+    @Override protected SplitMessage getMessageParts(    MuleMessage message,    List endpoints){
       int i=0;
       SplitMessage splitMessage=new SplitMessage();
       for (StringTokenizer tokenizer=new StringTokenizer(message.getPayload().toString(),","); tokenizer.hasMoreTokens(); i++) {
@@ -20,7 +20,7 @@
   }
 ;
   router.setMuleContext(muleContext);
-  List endpoints=new ArrayList();
+  List<OutboundEndpoint> endpoints=new ArrayList<OutboundEndpoint>();
   endpoints.add(endpoint1);
   endpoints.add(endpoint2);
   endpoints.add(endpoint3);
@@ -32,7 +32,7 @@
   session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.eq(endpoint3)));
   router.route(message,(MuleSession)session.proxy());
   session.verify();
-  endpoints=new ArrayList();
+  endpoints=new ArrayList<OutboundEndpoint>();
   endpoints.add(endpoint4);
   endpoints.add(endpoint5);
   endpoints.add(endpoint6);
