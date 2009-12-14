@@ -1,0 +1,25 @@
+{
+  String[] lines=originalLogString.split("\n");
+  int payloadLine=-1;
+  for (int i=0; i < lines.length; ++i) {
+    if (lines[i].startsWith("Payload: ")) {
+      payloadLine=i;
+      break;
+    }
+  }
+  if (payloadLine == -1) {
+    System.err.println("Could not find a line which begins with 'Payload: '");
+    return originalLogString;
+  }
+  String payload=lines[payloadLine];
+  String xml=StringUtils.substringAfter(payload,"Payload: ");
+  XmlPrettyPrinter pp=new XmlPrettyPrinter();
+  try {
+    xml=(String)pp.transform(xml);
+  }
+ catch (  MuleException e) {
+    System.err.println(e.getMessage());
+  }
+  lines[payloadLine]="Payload: \n" + xml;
+  return StringUtils.join(lines,"\n");
+}
