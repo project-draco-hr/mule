@@ -9,7 +9,13 @@
       ros=new ResponseOutputStream(outputStream);
     }
   }
-  MuleSession session=new DefaultMuleSession(message,connector.getSessionHandler(),service,connector.getMuleContext());
+  MuleSession session=connector.getSessionHandler().retrieveSessionInfoFromMessage(message);
+  if (session != null) {
+    session.setService(service);
+  }
+ else {
+    session=new DefaultMuleSession(service,connector.getMuleContext());
+  }
   MuleEvent muleEvent=new DefaultMuleEvent(message,endpoint,session,synchronous,ros);
   muleEvent=OptimizedRequestContext.unsafeSetEvent(muleEvent);
   boolean authorised=false;

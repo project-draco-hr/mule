@@ -1,6 +1,20 @@
 {
+  if (scope == null) {
+    clearProperties();
+    return;
+  }
   checkScopeForWriteAccess(scope);
-  Map props=getScopedProperties(scope);
-  keySet.removeAll(props.keySet());
-  props.clear();
+  if (PropertyScope.SESSION.equals(scope)) {
+    if (RequestContext.getEvent() != null) {
+      MuleSession session=RequestContext.getEvent().getSession();
+      for (      Object key : session.getPropertyNamesAsSet()) {
+        session.removeProperty(key);
+      }
+    }
+  }
+ else {
+    Map props=getScopedProperties(scope);
+    keySet.removeAll(props.keySet());
+    props.clear();
+  }
 }

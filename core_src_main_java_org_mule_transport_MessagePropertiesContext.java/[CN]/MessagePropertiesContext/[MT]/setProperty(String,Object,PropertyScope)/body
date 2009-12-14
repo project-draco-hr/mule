@@ -1,5 +1,16 @@
 {
+  if (scope == null) {
+    setProperty(key,value);
+    return;
+  }
   checkScopeForWriteAccess(scope);
-  getScopedProperties(scope).put(key,value);
-  keySet.add(key);
+  if (PropertyScope.SESSION.equals(scope)) {
+    if (RequestContext.getEvent() != null) {
+      RequestContext.getEvent().getSession().setProperty(key,value);
+    }
+  }
+ else {
+    getScopedProperties(scope).put(key,value);
+    keySet.add(key);
+  }
 }

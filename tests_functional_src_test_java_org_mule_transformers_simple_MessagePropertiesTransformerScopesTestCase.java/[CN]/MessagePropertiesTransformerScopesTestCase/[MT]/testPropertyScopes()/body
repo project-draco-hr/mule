@@ -1,0 +1,27 @@
+{
+  MuleMessage msg=new DefaultMuleMessage("message",muleContext);
+  MessagePropertiesTransformer add=new MessagePropertiesTransformer();
+  add.setScope(PropertyScope.INVOCATION);
+  Map addProps=new HashMap();
+  addProps.put("foo","bar");
+  addProps.put("foo2","baz");
+  add.setAddProperties(addProps);
+  add.setMuleContext(muleContext);
+  msg=(DefaultMuleMessage)add.transform(msg,null);
+  assertEquals("bar",msg.getProperty("foo",PropertyScope.INVOCATION));
+  assertNull(msg.getProperty("foo",PropertyScope.OUTBOUND));
+  assertNull(msg.getProperty("foo",PropertyScope.SESSION));
+  MessagePropertiesTransformer deleteWrongScope=new MessagePropertiesTransformer();
+  deleteWrongScope.setScope(PropertyScope.OUTBOUND);
+  deleteWrongScope.setDeleteProperties(Collections.singletonList("foo"));
+  deleteWrongScope.setMuleContext(muleContext);
+  msg=(DefaultMuleMessage)deleteWrongScope.transform(msg,null);
+  assertEquals("bar",msg.getProperty("foo",PropertyScope.INVOCATION));
+  MessagePropertiesTransformer delete=new MessagePropertiesTransformer();
+  add.setScope(PropertyScope.INVOCATION);
+  delete.setDeleteProperties(Collections.singletonList("foo"));
+  delete.setMuleContext(muleContext);
+  msg=(DefaultMuleMessage)delete.transform(msg,null);
+  assertNull(msg.getProperty("foo",PropertyScope.INVOCATION));
+  assertEquals("baz",msg.getProperty("foo2",PropertyScope.INVOCATION));
+}

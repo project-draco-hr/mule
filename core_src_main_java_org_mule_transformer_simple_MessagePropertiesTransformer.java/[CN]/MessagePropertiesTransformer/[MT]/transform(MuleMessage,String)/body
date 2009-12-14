@@ -1,11 +1,10 @@
 {
   if (deleteProperties != null && deleteProperties.size() > 0) {
     for (Iterator iterator=deleteProperties.iterator(); iterator.hasNext(); ) {
-      message.removeProperty(iterator.next().toString());
+      message.removeProperty(iterator.next().toString(),scope);
     }
   }
   if (addProperties != null && addProperties.size() > 0) {
-    final Set propertyNames=message.getPropertyNames();
     for (Iterator iterator=addProperties.entrySet().iterator(); iterator.hasNext(); ) {
       Map.Entry entry=(Map.Entry)iterator.next();
       if (entry.getKey() == null) {
@@ -17,29 +16,22 @@
         if (muleContext.getExpressionManager().isValidExpression(value.toString())) {
           value=muleContext.getExpressionManager().evaluate(value.toString(),message);
         }
-        if (overwrite) {
-          if (logger.isDebugEnabled()) {
-            if (propertyNames.contains(key)) {
-              logger.debug("Overwriting message property " + key);
-            }
+        if (message.getProperty(key,scope) != null) {
+          if (overwrite) {
+            logger.debug("Overwriting message property " + key);
+            message.setProperty(key,value,scope);
           }
-          message.setProperty(key,value);
+ else {
+            logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,value,scope));
+          }
         }
  else {
-          if (propertyNames.contains(key)) {
-            if (logger.isDebugEnabled()) {
-              logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}",key,value));
-            }
-          }
- else {
-            message.setProperty(key,value);
-          }
+          message.setProperty(key,value,scope);
         }
       }
     }
   }
   if (this.renameProperties != null && this.renameProperties.size() > 0) {
-    final Set propertyNames=message.getPropertyNames();
     for (Iterator iterator=this.renameProperties.entrySet().iterator(); iterator.hasNext(); ) {
       Map.Entry entry=(Map.Entry)iterator.next();
       if (entry.getKey() == null) {
@@ -56,12 +48,12 @@
             Object temp=muleContext.getExpressionManager().evaluate(value.toString(),message);
             if (temp != null)             value=temp.toString();
           }
-          if (logger.isDebugEnabled() && !propertyNames.contains(key)) {
+          if (logger.isDebugEnabled() && message.getProperty(key,scope) == null) {
             logger.debug("renaming message property " + key + " to "+ value);
           }
-          Object propValue=message.getProperty(key);
-          message.removeProperty(key);
-          message.setProperty(value,propValue);
+          Object propValue=message.getProperty(key,scope);
+          message.removeProperty(key,scope);
+          message.setProperty(value,propValue,scope);
         }
       }
     }
