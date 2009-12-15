@@ -1,0 +1,9 @@
+{
+  MuleClient muleClient=new MuleClient();
+  MuleMessage result=muleClient.send("vm://in2",new DefaultMuleMessage("test",muleContext));
+  assertNull("Shouldn't have any exceptions",result.getExceptionPayload());
+  assertEquals(NullPayload.getInstance(),result.getPayload());
+  MuleMessage jmsMessage=muleClient.request("jms://out2",FunctionalTestCase.RECEIVE_TIMEOUT);
+  assertEquals("test [REMOTESYNC RESPONSE] [REMOTESYNC RESPONSE 2]",jmsMessage.getPayloadAsString());
+  assertFalse(jmsMessage.getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,false));
+}
