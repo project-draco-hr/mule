@@ -1,0 +1,28 @@
+{
+  try {
+    Object payload=muleEvent.getMessage().getPayload();
+    Feed feed;
+    if (payload instanceof Feed) {
+      feed=(Feed)payload;
+    }
+ else {
+      feed=(Feed)objectToFeed.transform(muleEvent.getMessage().getPayload());
+    }
+    List<MuleEvent> events=new ArrayList<MuleEvent>();
+    Set<Entry> entries=new TreeSet<Entry>(new EntryComparator());
+    entries.addAll(feed.getEntries());
+    for (    Entry entry : entries) {
+      MuleMessage m=new DefaultMuleMessage(entry,getMuleContext());
+      if (entryFilter != null && !entryFilter.accept(m)) {
+        continue;
+      }
+      m.setProperty(ATOM_FEED_PROPERTY,feed,PropertyScope.INVOCATION);
+      MuleEvent e=new DefaultMuleEvent(m,muleEvent.getEndpoint(),muleEvent.getService(),muleEvent);
+      events.add(e);
+    }
+    return events.toArray(new MuleEvent[]{});
+  }
+ catch (  TransformerException e) {
+    throw new MessagingException(e.getI18nMessage(),muleEvent.getMessage(),e);
+  }
+}

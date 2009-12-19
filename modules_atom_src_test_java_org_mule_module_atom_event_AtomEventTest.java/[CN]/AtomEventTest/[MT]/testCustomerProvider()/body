@@ -1,0 +1,17 @@
+{
+  repository=(Repository)muleContext.getRegistry().lookupObject("jcrRepository");
+  MuleClient client=new MuleClient();
+  Map props=new HashMap();
+  props.put("title","Foo Bar");
+  client.send("vm://in","Mmm feeding",props);
+  Thread.sleep(1000);
+  AbderaClient aClient=new AbderaClient();
+  ClientResponse res=aClient.get("http://localhost:9002/events");
+  Document<Feed> doc=res.getDocument();
+  Feed feed=doc.getRoot();
+  assertEquals(1,feed.getEntries().size());
+  Entry e=feed.getEntries().get(0);
+  assertEquals("Mmm feeding",e.getContent());
+  assertEquals("Ross Mason",e.getAuthor().getName());
+  assertEquals("Foo Bar",e.getTitle());
+}
