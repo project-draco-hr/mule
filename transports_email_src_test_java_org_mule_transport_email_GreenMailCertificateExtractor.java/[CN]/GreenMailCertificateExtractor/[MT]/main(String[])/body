@@ -10,7 +10,7 @@
   KeyStore ks=KeyStore.getInstance(KeyStore.getDefaultType());
   char[] pass="changeit".toString().toCharArray();
   ks.load(new ByteArrayInputStream(hardCodedKeystore),pass);
-  Enumeration aliases=ks.aliases();
+  Enumeration<?> aliases=ks.aliases();
   while (aliases.hasMoreElements()) {
     String alias=(String)aliases.nextElement();
     logger.info(alias);
@@ -18,6 +18,9 @@
     logger.info(certificate);
     assert(certificate instanceof X509Certificate);
     X509Certificate x509=(X509Certificate)certificate;
-    (new FileOutputStream(FileUtils.newFile("/tmp/greenmail-" + alias))).write(x509.getEncoded());
+    File certFile=FileUtils.newFile("/tmp/greenmail-" + alias);
+    OutputStream out=new FileOutputStream(certFile);
+    out.write(x509.getEncoded());
+    out.close();
   }
 }
