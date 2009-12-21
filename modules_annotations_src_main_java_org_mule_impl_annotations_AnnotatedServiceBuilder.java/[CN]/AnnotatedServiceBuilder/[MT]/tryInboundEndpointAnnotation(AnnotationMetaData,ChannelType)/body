@@ -1,14 +1,13 @@
 {
   Channel channelAnno=metaData.getAnnotation().annotationType().getAnnotation(Channel.class);
   if (channelAnno != null && channelAnno.type() == channelType) {
-    Collection c=context.getRegistry().lookupObjects(EndpointAnnotationParser.class);
-    for (Iterator iterator=c.iterator(); iterator.hasNext(); ) {
-      EndpointAnnotationParser parser=(EndpointAnnotationParser)iterator.next();
-      if (parser.supports(metaData.getAnnotation(),metaData.getClazz(),metaData.getMember())) {
-        return parser.parseInboundEndpoint(metaData.getAnnotation(),Collections.EMPTY_MAP);
-      }
+    EndpointAnnotationParser parser=parserFactory.getEndpointParser(metaData.getAnnotation(),metaData.getClazz(),metaData.getMember());
+    if (parser == null) {
+      throw new AnnotationException(AnnotationsMessages.createStaticMessage("No parser found for annotation: " + metaData));
     }
-    throw new AnnotationException(AnnotationsMessages.createStaticMessage("No parser found for annotation: " + metaData));
+ else {
+      return parser.parseInboundEndpoint(metaData.getAnnotation(),Collections.EMPTY_MAP);
+    }
   }
   return null;
 }
