@@ -64,6 +64,12 @@
     if (p != null) {
       muleResMsg.setProperty(MuleProperties.MULE_CORRELATION_SEQUENCE_PROPERTY,p);
     }
+    boolean protocolReplyTo=false;
+    InboundEndpoint endpoint=receiver.getEndpoint();
+    if (endpoint.isSynchronous() && receiver.getEndpoint().getEndpointURI().getScheme().equals("jms")) {
+      protocolReplyTo=true;
+      muleReqMsg.setProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY,"true",PropertyScope.INVOCATION);
+    }
     ExchangeImpl exchange=new ExchangeImpl();
     exchange.setInMessage(m);
     m.put(CxfConstants.MULE_MESSAGE,muleReqMsg);
@@ -78,7 +84,12 @@
         muleResMsg.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,500);
       }
     }
-    muleResMsg.setProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY,"true");
+    if (protocolReplyTo) {
+      muleResMsg.removeProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY);
+    }
+ else {
+      muleResMsg.setProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY,"true",PropertyScope.INVOCATION);
+    }
     return muleResMsg;
   }
  catch (  MuleException e) {
