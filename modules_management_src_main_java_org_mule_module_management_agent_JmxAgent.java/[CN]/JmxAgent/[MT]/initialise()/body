@@ -2,18 +2,24 @@
   if (initialized.get()) {
     return;
   }
-  if (mBeanServer == null && !locateServer && !createServer) {
-    throw new InitialisationException(ManagementMessages.createOrLocateShouldBeSet(),this);
-  }
-  if (mBeanServer == null && locateServer) {
-    List<?> l=MBeanServerFactory.findMBeanServer(null);
-    if (l != null && l.size() > 0) {
-      mBeanServer=(MBeanServer)l.get(0);
+  try {
+    Object agent=muleContext.getRegistry().lookupObject(this.getClass());
+    if (agent == this && this.initialized.get()) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Found an existing JMX agent in the registry, we're done here.");
+      }
+      return;
     }
+  }
+ catch (  RegistrationException e) {
+    throw new InitialisationException(e,this);
   }
   if (mBeanServer == null && createServer) {
     mBeanServer=MBeanServerFactory.createMBeanServer();
     serverCreated.set(true);
+  }
+  if (mBeanServer == null && locateServer) {
+    mBeanServer=ManagementFactory.getPlatformMBeanServer();
   }
   if (mBeanServer == null) {
     throw new InitialisationException(ManagementMessages.cannotLocateOrCreateServer(),this);
