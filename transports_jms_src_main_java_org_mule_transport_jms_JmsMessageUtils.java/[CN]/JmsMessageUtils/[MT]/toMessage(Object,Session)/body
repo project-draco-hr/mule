@@ -5,34 +5,37 @@
  else   if (object instanceof String) {
     return session.createTextMessage((String)object);
   }
- else   if (object instanceof Map && validateMapMessageType((Map)object)) {
+ else   if (object instanceof Map<?,?> && validateMapMessageType((Map<?,?>)object)) {
     MapMessage mMsg=session.createMapMessage();
-    Map src=(Map)object;
-    for (Iterator i=src.entrySet().iterator(); i.hasNext(); ) {
-      Map.Entry entry=(Map.Entry)i.next();
+    Map<?,?> src=(Map<?,?>)object;
+    for (Iterator<?> i=src.entrySet().iterator(); i.hasNext(); ) {
+      Map.Entry<?,?> entry=(Map.Entry<?,?>)i.next();
       mMsg.setObject(entry.getKey().toString(),entry.getValue());
     }
     return mMsg;
   }
  else   if (object instanceof InputStream) {
-    StreamMessage sMsg=session.createStreamMessage();
+    StreamMessage streamMessage=session.createStreamMessage();
     InputStream temp=(InputStream)object;
     byte[] buffer=new byte[4096];
     int len;
     try {
       while ((len=temp.read(buffer)) != -1) {
-        sMsg.writeBytes(buffer,0,len);
+        streamMessage.writeBytes(buffer,0,len);
       }
     }
  catch (    IOException e) {
       throw new JMSException("Failed to read input stream to create a stream message: " + e);
     }
-    return sMsg;
+ finally {
+      IOUtils.closeQuietly(temp);
+    }
+    return streamMessage;
   }
- else   if (object instanceof List) {
+ else   if (object instanceof List<?>) {
     StreamMessage sMsg=session.createStreamMessage();
-    List list=(List)object;
-    for (Iterator iter=list.iterator(); iter.hasNext(); ) {
+    List<?> list=(List<?>)object;
+    for (Iterator<?> iter=list.iterator(); iter.hasNext(); ) {
       Object o=iter.next();
       if (validateStreamMessageType(o)) {
         sMsg.writeObject(o);
