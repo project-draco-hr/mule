@@ -15,6 +15,22 @@
   baos=new ByteArrayOutputStream(4);
   dh.writeTo(baos);
   assertEquals("maz",baos.toString());
+  result=muleContext.getExpressionManager().evaluate("#[mule:message.attachments(foo?, baz)]",createMessageWithAttachments());
+  assertNotNull(result);
+  assertTrue(result instanceof Map);
+  assertEquals(2,((Map)result).size());
+  assertNotNull(((Map)result).get("foo"));
+  assertTrue(((Map)result).get("foo") instanceof DataHandler);
+  dh=(DataHandler)((Map)result).get("foo");
+  baos=new ByteArrayOutputStream(4);
+  dh.writeTo(baos);
+  assertEquals("moo",baos.toString());
+  assertNotNull(((Map)result).get("baz"));
+  assertTrue(((Map)result).get("baz") instanceof DataHandler);
+  dh=(DataHandler)((Map)result).get("baz");
+  baos=new ByteArrayOutputStream(4);
+  dh.writeTo(baos);
+  assertEquals("maz",baos.toString());
   result=muleContext.getExpressionManager().evaluate("#[mule:message.attachments(foo, fool?)]",createMessageWithAttachments());
   assertNotNull(((Map)result).get("foo"));
   try {
