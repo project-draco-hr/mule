@@ -1,5 +1,6 @@
 {
   super();
+  HttpConnector connector=(HttpConnector)endpoint.getConnector();
   if (socket == null) {
     throw new IllegalArgumentException("Socket may not be null");
   }
@@ -12,7 +13,13 @@
   if (connector.getServerSoTimeout() != Connector.INT_VALUE_NOT_SET && socket.getSoTimeout() != connector.getServerSoTimeout()) {
     socket.setSoTimeout(connector.getServerSoTimeout());
   }
+  if (endpoint.getEncoding() != null) {
+    encoding=endpoint.getEncoding();
+  }
+ else {
+    encoding=connector.getMuleContext().getConfiguration().getDefaultEncoding();
+  }
+  sync=endpoint.isSynchronous();
   this.in=socket.getInputStream();
   this.out=new DataOutputStream(socket.getOutputStream());
-  this.encoding=encoding;
 }

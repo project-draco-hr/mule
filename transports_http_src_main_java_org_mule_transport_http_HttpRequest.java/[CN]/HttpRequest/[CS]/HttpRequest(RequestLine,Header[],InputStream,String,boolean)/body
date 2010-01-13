@@ -14,15 +14,20 @@
       Header contentLength=this.headers.getFirstHeader(HttpConstants.HEADER_CONTENT_LENGTH);
       Header transferEncoding=this.headers.getFirstHeader(HttpConstants.HEADER_TRANSFER_ENCODING);
       InputStream in=content;
-      if (transferEncoding != null) {
-        if (transferEncoding.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
-          in=new ChunkedInputStream(in);
-        }
+      if (sync) {
+        in=new ByteArrayInputStream(IOUtils.toByteArray((InputStream)in));
       }
- else       if (contentLength != null) {
-        long len=getContentLength();
-        if (len >= 0) {
-          in=new ContentLengthInputStream(in,len);
+ else {
+        if (transferEncoding != null) {
+          if (transferEncoding.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
+            in=new ChunkedInputStream(in);
+          }
+        }
+ else         if (contentLength != null) {
+          long len=getContentLength();
+          if (len >= 0) {
+            in=new ContentLengthInputStream(in,len);
+          }
         }
       }
       this.entity=in;
