@@ -1,21 +1,21 @@
 {
   this.name=test.getClass().getName();
   try {
-    URL[] urls=new URL[]{ClassUtils.getClassPathRoot(test.getClass())};
-    URL fileUrl=new URLClassLoader(urls).getResource("mule-test-exclusions.txt");
+    URL classUrl=ClassUtils.getClassPathRoot(test.getClass());
+    URLClassLoader tempClassLoader=new URLClassLoader(new URL[]{classUrl});
+    URL fileUrl=tempClassLoader.getResource("mule-test-exclusions.txt");
     if (fileUrl != null) {
-      URI fileUri=new URI(StringUtils.removeStart(fileUrl.toString(),"jar:"));
-      Iterator lines=FileUtils.lineIterator(FileUtils.newFile(fileUri));
+      InputStream in=fileUrl.openStream();
+      Iterator<?> lines=IOUtils.lineIterator(in,"UTF-8");
       excluded=IteratorUtils.filteredIterator(lines,new Predicate(){
         public boolean evaluate(        Object object){
           return StringUtils.equals(name,StringUtils.trimToEmpty((String)object));
         }
       }
 ).hasNext();
+      in.close();
     }
   }
  catch (  IOException ioex) {
-  }
-catch (  URISyntaxException e) {
   }
 }
