@@ -5,15 +5,20 @@
     URLClassLoader tempClassLoader=new URLClassLoader(new URL[]{classUrl});
     URL fileUrl=tempClassLoader.getResource("mule-test-exclusions.txt");
     if (fileUrl != null) {
-      InputStream in=fileUrl.openStream();
-      Iterator<?> lines=IOUtils.lineIterator(in,"UTF-8");
-      excluded=IteratorUtils.filteredIterator(lines,new Predicate(){
-        public boolean evaluate(        Object object){
-          return StringUtils.equals(name,StringUtils.trimToEmpty((String)object));
+      InputStream in=null;
+      try {
+        in=fileUrl.openStream();
+        Iterator<?> lines=IOUtils.lineIterator(in,"UTF-8");
+        excluded=IteratorUtils.filteredIterator(lines,new Predicate(){
+          public boolean evaluate(          Object object){
+            return StringUtils.equals(name,StringUtils.trimToEmpty((String)object));
+          }
         }
-      }
 ).hasNext();
-      in.close();
+      }
+  finally {
+        IOUtils.closeQuietly(in);
+      }
     }
   }
  catch (  IOException ioex) {
