@@ -1,0 +1,11 @@
+{
+  String url="http://localhost:65082/services/EchoUMO";
+  String msg="<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" + "<soap:Body><echo><text>foo</text></echo></soap:Body></soap:Envelope>";
+  MuleClient client=new MuleClient();
+  MuleMessage response=client.send(url,msg,null);
+  assertNotNull(response);
+  String responseString=response.getPayloadAsString();
+  assertTrue(responseString.contains("echoResponse"));
+  assertFalse(responseString.contains("soap:Fault"));
+  assertTrue(tapLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+}
