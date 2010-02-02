@@ -6,14 +6,14 @@
     Router routerAnnotation=metaData.getAnnotation().annotationType().getAnnotation(Router.class);
     if (routerAnnotation != null && routerAnnotation.type() == RouterType.Outbound) {
       if (router != null) {
-        throw new IllegalStateException("You can onnly configure one outbound router on a service");
+        throw new IllegalStateException("You can only configure one outbound router on a service");
       }
-      for (Iterator iterator=routerParsers.iterator(); iterator.hasNext(); ) {
-        RouterAnnotationParser parser=(RouterAnnotationParser)iterator.next();
-        if (parser.supports(metaData.getAnnotation(),metaData.getClazz(),metaData.getMember())) {
-          router=(OutboundRouter)parser.parseRouter(metaData.getAnnotation());
-          break;
-        }
+      RouterAnnotationParser parser=parserFactory.getRouterParser(metaData.getAnnotation(),metaData.getClazz(),metaData.getMember());
+      if (parser != null) {
+        router=(OutboundRouter)parser.parseRouter(metaData.getAnnotation());
+      }
+ else {
+        throw new IllegalStateException("Cannot find parser for router annotation: " + metaData.getAnnotation().toString());
       }
     }
   }

@@ -1,10 +1,14 @@
 {
-  Collection c=muleContext.getRegistry().lookupObjects(ExpressionParser.class);
-  for (Iterator iterator=c.iterator(); iterator.hasNext(); ) {
-    ExpressionParser parser=(ExpressionParser)iterator.next();
-    if (parser.supports(annotation)) {
-      return parser.parse(annotation,paramType);
-    }
+  AnnotationsParserFactory factory;
+  try {
+    factory=muleContext.getRegistry().lookupObject(AnnotationsParserFactory.class);
   }
-  throw new IllegalArgumentException(AnnotationsMessages.noParserFoundForAnnotation(annotation).getMessage());
+ catch (  RegistrationException e) {
+    throw new IllegalArgumentException(AnnotationsMessages.noParserFoundForAnnotation(annotation).getMessage());
+  }
+  ExpressionParser parser=factory.getExpressionParser(annotation);
+  if (parser == null) {
+    throw new IllegalArgumentException(AnnotationsMessages.noParserFoundForAnnotation(annotation).getMessage());
+  }
+  return parser.parse(annotation,paramType);
 }

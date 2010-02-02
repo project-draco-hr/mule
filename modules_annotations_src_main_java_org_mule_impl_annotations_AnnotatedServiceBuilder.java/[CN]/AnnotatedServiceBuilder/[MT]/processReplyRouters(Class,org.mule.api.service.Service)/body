@@ -1,20 +1,20 @@
 {
-  Collection routerParsers=context.getRegistry().lookupObjects(RouterAnnotationParser.class);
   List<AnnotationMetaData> annotations=AnnotationUtils.getClassAndMethodAnnotations(componentFactoryClass);
   for (  AnnotationMetaData metaData : annotations) {
     Router routerAnnotation=metaData.getAnnotation().annotationType().getAnnotation(Router.class);
     if (routerAnnotation != null && routerAnnotation.type() == RouterType.ReplyTo) {
-      for (Iterator iterator=routerParsers.iterator(); iterator.hasNext(); ) {
-        RouterAnnotationParser parser=(RouterAnnotationParser)iterator.next();
-        if (parser.supports(metaData.getAnnotation(),metaData.getClazz(),metaData.getMember())) {
-          org.mule.api.routing.Router router=parser.parseRouter(metaData.getAnnotation());
-          if (router instanceof MuleContextAware) {
-            ((MuleContextAware)router).setMuleContext(context);
-          }
-          router.initialise();
-          service.getResponseRouter().addRouter(router);
-          break;
+      RouterAnnotationParser parser=parserFactory.getRouterParser(metaData.getAnnotation(),metaData.getClazz(),metaData.getMember());
+      if (parser != null) {
+        org.mule.api.routing.Router router=parser.parseRouter(metaData.getAnnotation());
+        if (router instanceof MuleContextAware) {
+          ((MuleContextAware)router).setMuleContext(context);
         }
+        router.initialise();
+        service.getResponseRouter().addRouter(router);
+        break;
+      }
+ else {
+        throw new IllegalStateException("Cannot find parser for router annotation: " + metaData.getAnnotation().toString());
       }
     }
   }
