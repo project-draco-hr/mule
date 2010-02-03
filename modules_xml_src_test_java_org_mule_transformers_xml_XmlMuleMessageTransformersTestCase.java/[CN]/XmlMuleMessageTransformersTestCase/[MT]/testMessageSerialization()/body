@@ -16,8 +16,28 @@
   msg=(MuleMessage)result;
   assertEquals("test",msg.getPayload());
   assertEquals(new Apple(),msg.getProperty("object",PropertyScope.OUTBOUND));
+  assertEquals(new Apple(),msg.getProperty("oBjeCt",PropertyScope.OUTBOUND));
+  assertNull(msg.getProperty("oBjeCt",PropertyScope.INBOUND));
+  assertNull(msg.getProperty("oBjeCt",PropertyScope.INVOCATION));
+  assertNull(msg.getProperty("oBjeCt",PropertyScope.SESSION));
   assertEquals("hello",msg.getProperty("string"));
+  assertEquals("hello",msg.getProperty("String"));
+  assertNull(msg.getProperty("string",PropertyScope.INBOUND));
+  assertNull(msg.getProperty("string",PropertyScope.INVOCATION));
+  assertNull(msg.getProperty("string",PropertyScope.SESSION));
   assertEquals(new Integer(1),msg.getProperty("number",PropertyScope.INVOCATION));
+  assertEquals(new Integer(1),msg.getProperty("NUMBER",PropertyScope.INVOCATION));
+  assertNull(msg.getProperty("number",PropertyScope.INBOUND));
+  assertNull(msg.getProperty("number",PropertyScope.OUTBOUND));
+  assertNull(msg.getProperty("number",PropertyScope.SESSION));
   assertEquals("1234",msg.getCorrelationId());
   assertEquals("UTF-8",msg.getEncoding());
+  Set<String> keys=msg.getPropertyNames();
+  assertEquals(5,keys.size());
+  keys.remove(MuleProperties.MULE_CORRELATION_ID_PROPERTY);
+  keys.remove(MuleProperties.MULE_ENCODING_PROPERTY);
+  for (  String key : keys) {
+    assertTrue(key.equals("number") || key.equals("string") || key.equals("object"));
+    assertFalse(key.equals("NUMBER") || key.equals("STRING") || key.equals("OBJECT"));
+  }
 }
