@@ -1,8 +1,12 @@
 {
-  if (objectClass == null || objectClass.get() == null) {
+  if (objectClass == null) {
     throw new InitialisationException(MessageFactory.createStaticMessage("Object factory has not been initialized."),this);
   }
-  Object object=ClassUtils.instanciateClass(objectClass.get());
+  Class<?> klass=objectClass.get();
+  if (klass == null) {
+    klass=setupObjectClassFromObjectClassName();
+  }
+  Object object=ClassUtils.instanciateClass(klass);
   if (properties != null) {
     BeanUtils.populateWithoutFail(object,properties,true);
   }
