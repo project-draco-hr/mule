@@ -1,24 +1,16 @@
 {
-  PoolingProfile pp=getDefaultPoolingProfile();
+  PoolingProfile pp=createDefaultPoolingProfile();
   pp.setExhaustedAction(PoolingProfile.WHEN_EXHAUSTED_WAIT);
-  PooledJavaComponent component=new PooledJavaComponent(getObjectFactory(),pp);
-  component.setService(getTestService());
-  component.setMuleContext(muleContext);
-  component.initialise();
-  component.start();
-  Object borrowed=null;
+  PooledJavaComponent component=createPooledComponent(pp);
   assertEquals(0,component.lifecycleAdapterPool.getNumActive());
-  borrowed=component.borrowComponentLifecycleAdaptor();
-  assertNotNull(borrowed);
-  borrowed=component.borrowComponentLifecycleAdaptor();
-  assertNotNull(borrowed);
-  borrowed=component.borrowComponentLifecycleAdaptor();
-  assertNotNull(borrowed);
-  assertEquals(3,component.lifecycleAdapterPool.getNumActive());
+  borrowLifecycleAdaptersUntilPoolIsFull(component);
+  long startTime=System.currentTimeMillis();
   try {
-    borrowed=component.borrowComponentLifecycleAdaptor();
+    component.borrowComponentLifecycleAdaptor();
     fail("Should throw an Exception");
   }
- catch (  Exception e) {
+ catch (  NoSuchElementException e) {
+    long totalTime=System.currentTimeMillis() - startTime;
+    assertTrue(totalTime >= MAX_WAIT);
   }
 }

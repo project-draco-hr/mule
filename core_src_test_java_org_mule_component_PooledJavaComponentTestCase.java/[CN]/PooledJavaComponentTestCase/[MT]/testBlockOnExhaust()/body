@@ -1,24 +1,26 @@
 {
-  PoolingProfile pp=getDefaultPoolingProfile();
+  PoolingProfile pp=createDefaultPoolingProfile();
   pp.setExhaustedAction(PoolingProfile.WHEN_EXHAUSTED_WAIT);
-  PooledJavaComponent component=new PooledJavaComponent(getObjectFactory(),pp);
-  component.setService(getTestService());
-  component.setMuleContext(muleContext);
-  component.initialise();
-  component.start();
-  Object borrowed=null;
+  PooledJavaComponent component=createPooledComponent(pp);
   assertEquals(0,component.lifecycleAdapterPool.getNumActive());
-  borrowed=component.borrowComponentLifecycleAdaptor();
-  borrowed=component.borrowComponentLifecycleAdaptor();
-  assertEquals(2,component.lifecycleAdapterPool.getNumActive());
-  long borrowerWait=500;
+  int oneRemainingInPool=(MAX_ACTIVE - 1);
+  for (int i=0; i < oneRemainingInPool; i++) {
+    LifecycleAdapter borrowed=component.borrowComponentLifecycleAdaptor();
+    assertNotNull(borrowed);
+    assertEquals(component.lifecycleAdapterPool.getNumActive(),i + 1);
+  }
+  assertEquals(oneRemainingInPool,component.lifecycleAdapterPool.getNumActive());
+  long startTime=System.currentTimeMillis();
+  int borrowerWait=500;
   Borrower borrower=new Borrower(component,borrowerWait);
-  borrower.start();
+  new Thread(borrower,"BorrowThread").start();
   try {
     Thread.sleep(200);
   }
  catch (  InterruptedException e) {
   }
-  borrowed=component.borrowComponentLifecycleAdaptor();
+  Object borrowed=component.borrowComponentLifecycleAdaptor();
   assertNotNull(borrowed);
+  long totalTime=System.currentTimeMillis() - startTime;
+  assertTrue(totalTime > borrowerWait);
 }

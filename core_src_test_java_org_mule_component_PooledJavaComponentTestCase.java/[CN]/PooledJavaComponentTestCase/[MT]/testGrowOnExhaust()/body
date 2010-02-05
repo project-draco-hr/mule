@@ -1,16 +1,9 @@
 {
-  PoolingProfile pp=getDefaultPoolingProfile();
+  PoolingProfile pp=createDefaultPoolingProfile();
   pp.setExhaustedAction(PoolingProfile.WHEN_EXHAUSTED_GROW);
-  PooledJavaComponent component=new PooledJavaComponent(getObjectFactory(),pp);
-  component.setMuleContext(muleContext);
-  component.setService(getTestService());
-  component.initialise();
-  component.start();
+  PooledJavaComponent component=createPooledComponent(pp);
+  borrowLifecycleAdaptersUntilPoolIsFull(component);
   Object borrowed=component.borrowComponentLifecycleAdaptor();
-  borrowed=component.borrowComponentLifecycleAdaptor();
-  borrowed=component.borrowComponentLifecycleAdaptor();
-  assertEquals(3,component.lifecycleAdapterPool.getNumActive());
-  borrowed=component.borrowComponentLifecycleAdaptor();
   assertNotNull(borrowed);
-  assertEquals(4,component.lifecycleAdapterPool.getNumActive());
+  assertEquals(MAX_ACTIVE + 1,component.lifecycleAdapterPool.getNumActive());
 }
