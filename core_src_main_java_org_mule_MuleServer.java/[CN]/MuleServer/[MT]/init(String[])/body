@@ -1,14 +1,14 @@
 {
-  Map options;
+  Map<String,Object> commandlineOptions;
   try {
-    options=SystemUtils.getCommandLineOptions(args,CLI_OPTIONS);
+    commandlineOptions=SystemUtils.getCommandLineOptions(args,CLI_OPTIONS);
   }
  catch (  DefaultMuleException me) {
     throw new IllegalArgumentException(me.toString());
   }
   MuleUrlStreamHandlerFactory.installUrlStreamHandlerFactory();
-  String config=(String)options.get("config");
-  if (config == null && !options.containsKey("idle")) {
+  String config=(String)commandlineOptions.get("config");
+  if (config == null && !commandlineOptions.containsKey("idle")) {
     logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
     URL configUrl=IOUtils.getResourceAsUrl(DEFAULT_CONFIGURATION,MuleServer.class,true,false);
     if (configUrl != null) {
@@ -22,7 +22,7 @@
   if (config != null) {
     setConfigurationResources(config);
   }
-  final String productionMode=(String)options.get("production");
+  final String productionMode=(String)commandlineOptions.get("production");
   try {
     setConfigBuilderClassName(CLASSNAME_DEV_MODE_CONFIG_BUILDER);
   }
@@ -32,8 +32,8 @@
     System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
     System.exit(1);
   }
-  String cfgBuilderClassName=(String)options.get("builder");
-  if (options.containsKey("idle")) {
+  String cfgBuilderClassName=(String)commandlineOptions.get("builder");
+  if (commandlineOptions.containsKey("idle")) {
     setConfigurationResources("IDLE");
     cfgBuilderClassName=CLASSNAME_DEFAULT_IDLE_CONFIG_BUILDER;
   }
@@ -51,9 +51,9 @@
       System.exit(1);
     }
   }
-  String propertiesFile=(String)options.get("props");
+  String propertiesFile=(String)commandlineOptions.get("props");
   if (propertiesFile != null) {
     setStartupPropertiesFile(propertiesFile);
   }
-  StartupContext.get().setStartupOptions(options);
+  StartupContext.get().setStartupOptions(commandlineOptions);
 }
