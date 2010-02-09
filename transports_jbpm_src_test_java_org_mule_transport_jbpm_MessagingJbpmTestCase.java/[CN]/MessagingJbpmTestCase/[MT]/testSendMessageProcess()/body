@@ -1,0 +1,20 @@
+{
+  ((Jbpm)bpms).deployProcess("message-process.jpdl.xml");
+  MuleMessage response;
+  Object process;
+  BPMS bpms=connector.getBpms();
+  MuleClient client=new MuleClient();
+  try {
+    response=client.send("bpm://message","data",null);
+    process=response.getPayload();
+    String processId=(String)bpms.getId(process);
+    assertFalse(processId == null);
+    assertEquals("waitForSomething",bpms.getState(process));
+    response=client.send("bpm://message/" + processId,"data",null);
+    process=response.getPayload();
+    assertTrue(bpms.hasEnded(process));
+  }
+  finally {
+    client.dispose();
+  }
+}

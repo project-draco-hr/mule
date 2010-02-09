@@ -1,0 +1,20 @@
+{
+  ((Jbpm)bpms).deployProcess("simple-process.jpdl.xml");
+  MuleMessage response;
+  Object process;
+  BPMS bpms=connector.getBpms();
+  MuleClient client=new MuleClient();
+  try {
+    response=client.send("bpm://?" + ProcessConnector.PROPERTY_ACTION + "="+ ProcessConnector.ACTION_START+ "&"+ ProcessConnector.PROPERTY_PROCESS_TYPE+ "=simple","data",null);
+    process=response.getPayload();
+    String processId=response.getStringProperty(ProcessConnector.PROPERTY_PROCESS_ID,null);
+    assertFalse(processId == null);
+    assertEquals("dummyState",bpms.getState(process));
+    response=client.send("bpm://?" + ProcessConnector.PROPERTY_ACTION + "="+ ProcessConnector.ACTION_ADVANCE+ "&"+ ProcessConnector.PROPERTY_PROCESS_TYPE+ "=simple&"+ ProcessConnector.PROPERTY_PROCESS_ID+ "="+ processId,"data",null);
+    process=response.getPayload();
+    assertTrue(bpms.hasEnded(process));
+  }
+  finally {
+    client.dispose();
+  }
+}
