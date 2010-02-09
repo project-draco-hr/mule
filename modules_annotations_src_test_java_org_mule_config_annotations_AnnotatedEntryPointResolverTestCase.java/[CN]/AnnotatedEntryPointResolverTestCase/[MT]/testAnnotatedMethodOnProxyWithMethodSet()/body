@@ -1,0 +1,15 @@
+{
+  AnnotatedEntryPointResolver resolver=new AnnotatedEntryPointResolver();
+  resolver.setMuleContext(muleContext);
+  Enhancer e=new Enhancer();
+  e.setSuperclass(AnnotatedComponent.class);
+  e.setCallback(new DummyMethodCallback());
+  Object proxy=e.create();
+  MuleEventContext context=getTestEventContext(TEST_PAYLOAD);
+  context.getMessage().setProperty("name","Ross");
+  context.getMessage().setProperty(MuleProperties.MULE_METHOD_PROPERTY,"doSomething");
+  InvocationResult result=resolver.invoke(proxy,context);
+  assertEquals(result.getState(),InvocationResult.STATE_INVOKED_SUCESSFUL);
+  Document doc=DocumentHelper.parseText(TEST_PAYLOAD);
+  assertEquals("Hello:Ross:" + doc.asXML(),result.getResult());
+}

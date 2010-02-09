@@ -1,13 +1,22 @@
 {
   Object[] payload;
-  if (AnnotationUtils.methodHasParamAnnotations(method)) {
-    payload=getPayloadFromMessageWithAnnotations(method,context);
+  Method m=method;
+  if (Enhancer.isEnhanced(component.getClass())) {
+    try {
+      m=component.getClass().getSuperclass().getMethod(method.getName(),method.getParameterTypes());
+    }
+ catch (    NoSuchMethodException e) {
+      throw new TransformerException(CoreMessages.createStaticMessage(e.getMessage()),e);
+    }
+  }
+  if (AnnotationUtils.methodHasParamAnnotations(m)) {
+    payload=getPayloadFromMessageWithAnnotations(m,context);
   }
  else {
     payload=getPayloadFromMessage(context);
     List methods=ClassUtils.getSatisfiableMethods(component.getClass(),ClassUtils.getClassTypes(payload),true,true,ignoredMethods);
-    if (methods.size() == 0 && method.getParameterTypes().length == 1) {
-      Object temp=context.getMessage().getPayload(method.getParameterTypes()[0]);
+    if (methods.size() == 0 && m.getParameterTypes().length == 1) {
+      Object temp=context.getMessage().getPayload(m.getParameterTypes()[0]);
       payload=new Object[]{temp};
     }
   }
