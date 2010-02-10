@@ -3,12 +3,19 @@
   if (uri == null) {
     throw new EndpointException(HttpMessages.unableToGetEndpointUri(httpServletRequest.getRequestURI()));
   }
-  MessageReceiver receiver=(MessageReceiver)getReceivers().get(uri);
+  MessageReceiver receiver=getReceivers().get(uri);
   if (receiver == null) {
     receiver=HttpMessageReceiver.findReceiverByStem(connector.getReceivers(),uri);
   }
   if (receiver == null) {
-    throw new NoReceiverForEndpointException("No receiver found for endpointUri: " + uri);
+    for (    Object key : getReceivers().keySet()) {
+      if (new WildcardFilter(key.toString()).accept(uri)) {
+        receiver=connector.getReceivers().get(key);
+      }
+    }
+    if (receiver == null) {
+      throw new NoReceiverForEndpointException(uri);
+    }
   }
   InboundEndpoint endpoint=receiver.getEndpoint();
   if (!(endpoint instanceof DynamicURIInboundEndpoint)) {
