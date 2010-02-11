@@ -14,17 +14,17 @@
     endpointBuilder.setFilter(filter);
   }
   if (epData.getEncoding() != null) {
-    endpointBuilder.setEncoding(getPropertyValue(epData.getEncoding()));
+    endpointBuilder.setEncoding(parsePlaceholderValues(epData.getEncoding()));
   }
   AbstractConnector connector;
   if (epData.getConnectorName() != null) {
-    connector=(AbstractConnector)muleContext.getRegistry().lookupConnector(getPropertyValue(epData.getConnectorName()));
+    connector=(AbstractConnector)muleContext.getRegistry().lookupConnector(parsePlaceholderValues(epData.getConnectorName()));
   }
  else   if (epData.getConnector() != null) {
     connector=(AbstractConnector)epData.getConnector();
   }
  else {
-    MuleEndpointURI uri=new MuleEndpointURI(getPropertyValue(epData.getAddress()),muleContext);
+    MuleEndpointURI uri=new MuleEndpointURI(parsePlaceholderValues(epData.getAddress()),muleContext);
     connector=(AbstractConnector)transportFactory.createConnector(uri);
     if (muleContext.getRegistry().lookupConnector(connector.getName()) == null) {
       muleContext.getRegistry().registerConnector(connector);
@@ -40,7 +40,7 @@
     connector.getReceiverThreadingProfile().setMaxThreadsIdle(threads);
   }
   if (epData.getName() != null) {
-    endpointBuilder.setName(getPropertyValue(epData.getName()));
+    endpointBuilder.setName(parsePlaceholderValues(epData.getName()));
   }
   endpointBuilder.setSynchronous(epData.isSynchronous());
   if (epData.getType() == ChannelType.Inbound) {
