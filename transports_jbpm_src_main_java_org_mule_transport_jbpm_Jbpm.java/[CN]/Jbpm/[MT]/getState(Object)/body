@@ -1,8 +1,17 @@
 {
   ProcessInstance processInstance=(ProcessInstance)process;
-  Set activities=processInstance.findActiveActivityNames();
-  if (activities != null && activities.size() > 0) {
-    return activities.iterator().next();
+  if (processInstance == null || processInstance.isEnded()) {
+    return ProcessInstance.STATE_ENDED;
   }
-  return null;
+  Set activities=processInstance.findActiveActivityNames();
+  String state=null;
+  for (  Object activityName : activities) {
+    if (state == null) {
+      state=(String)activityName;
+    }
+ else {
+      state+=" / " + activityName;
+    }
+  }
+  return state;
 }

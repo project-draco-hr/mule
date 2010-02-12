@@ -1,0 +1,23 @@
+{
+  MuleMessage response;
+  ProcessInstance process;
+  BPMS bpms=connector.getBpms();
+  MuleClient client=new MuleClient();
+  try {
+    response=client.send("bpm://fork","data",null);
+    process=(ProcessInstance)response.getPayload();
+    String state=(String)bpms.getState(process);
+    assertTrue(state.contains("waitForResponseA"));
+    assertTrue(state.contains("waitForResponseB"));
+    Thread.sleep(2000);
+    process=(ProcessInstance)bpms.lookupProcess(process.getId());
+    assertEquals("waitForResponseA",bpms.getState(process));
+    muleContext.getRegistry().lookupService("ServiceA").start();
+    Thread.sleep(2000);
+    process=(ProcessInstance)bpms.lookupProcess(process.getId());
+    assertTrue(bpms.hasEnded(process));
+  }
+  finally {
+    client.dispose();
+  }
+}

@@ -1,3 +1,16 @@
 {
-  return processEngine.getExecutionService().signalExecutionById((String)processId,processVariables);
+  String processId;
+  Execution execution=processEngine.getExecutionService().findExecutionById((String)executionId);
+  if (execution.getProcessInstance() != null) {
+    processId=execution.getProcessInstance().getId();
+  }
+ else {
+    processId=execution.getId();
+  }
+  processEngine.getExecutionService().signalExecutionById((String)executionId,(String)signalName,parameters);
+  ProcessInstance process=processEngine.getExecutionService().findProcessInstanceById(processId);
+  if (process == null) {
+    process=new EndedProcess(processId);
+  }
+  return process;
 }

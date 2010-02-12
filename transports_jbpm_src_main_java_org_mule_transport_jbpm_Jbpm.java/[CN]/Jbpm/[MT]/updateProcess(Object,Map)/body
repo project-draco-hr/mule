@@ -1,6 +1,18 @@
 {
-  if (processVariables != null && !processVariables.isEmpty()) {
-    processEngine.getExecutionService().setVariables((String)executionId,processVariables);
+  String processId;
+  Execution execution=processEngine.getExecutionService().findExecutionById((String)executionId);
+  if (execution.getProcessInstance() != null) {
+    processId=execution.getProcessInstance().getId();
   }
-  return processEngine.getExecutionService().findExecutionById((String)executionId).getProcessInstance();
+ else {
+    processId=execution.getId();
+  }
+  if (variables != null && !variables.isEmpty()) {
+    processEngine.getExecutionService().setVariables((String)executionId,variables);
+  }
+  ProcessInstance process=processEngine.getExecutionService().findProcessInstanceById(processId);
+  if (process == null) {
+    process=new EndedProcess(processId);
+  }
+  return process;
 }
