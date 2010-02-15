@@ -8,14 +8,10 @@
     receiver=HttpMessageReceiver.findReceiverByStem(connector.getReceivers(),uri);
   }
   if (receiver == null) {
-    for (    Object key : getReceivers().keySet()) {
-      if (new WildcardFilter(key.toString()).accept(uri)) {
-        receiver=connector.getReceivers().get(key);
-      }
-    }
-    if (receiver == null) {
-      throw new NoReceiverForEndpointException(uri);
-    }
+    receiver=matchReceiverByWildcard(uri,receiver);
+  }
+  if (receiver == null) {
+    throw new NoReceiverForEndpointException(uri);
   }
   InboundEndpoint endpoint=receiver.getEndpoint();
   if (!(endpoint instanceof DynamicURIInboundEndpoint)) {
