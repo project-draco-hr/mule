@@ -1,0 +1,22 @@
+{
+  MuleClient client=new MuleClient();
+  client.send("vm://in","Test1",null);
+  Thread.sleep(SLEEP);
+  client.send("vm://in","Test2",null);
+  Thread.sleep(SLEEP);
+  client.send("vm://in","Test3",null);
+  Thread.sleep(SLEEP);
+  Thread.sleep(muleContext.getConfiguration().getDefaultQueueTimeout());
+  MuleMessage result=client.request("vm://out",RECEIVE_TIMEOUT);
+  assertNotNull(result);
+  assertEquals("Test1",result.getPayloadAsString());
+  result=client.request("vm://out",RECEIVE_TIMEOUT);
+  assertNotNull(result);
+  assertEquals("Test2",result.getPayloadAsString());
+  Thread.sleep(SLEEP);
+  result=client.request("vm://out",RECEIVE_TIMEOUT);
+  if (result != null) {
+    System.out.println("result = " + result.getPayloadAsString());
+  }
+  assertNull(result);
+}

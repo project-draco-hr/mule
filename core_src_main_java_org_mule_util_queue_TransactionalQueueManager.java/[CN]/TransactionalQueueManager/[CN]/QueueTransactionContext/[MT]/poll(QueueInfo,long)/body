@@ -6,7 +6,16 @@
       return queueAdded.remove(queueAdded.size() - 1);
     }
   }
-  Object o=queue.poll(timeout);
+  Object o;
+  try {
+    o=queue.poll(timeout);
+  }
+ catch (  InterruptedException e) {
+    if (!Stoppable.PHASE_NAME.equals(getMuleContext().getLifecycleManager().getExecutingPhase())) {
+      throw e;
+    }
+    return null;
+  }
   if (o != null) {
     if (removed == null) {
       removed=new HashMap();

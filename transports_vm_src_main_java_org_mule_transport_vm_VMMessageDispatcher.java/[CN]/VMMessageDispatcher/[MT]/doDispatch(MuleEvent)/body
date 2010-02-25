@@ -6,7 +6,9 @@
   }
   QueueSession session=connector.getQueueSession();
   Queue queue=session.getQueue(endpointUri.getAddress());
-  queue.put(event);
+  if (!queue.offer(event,connector.getQueueTimeout())) {
+    throw new DispatchException(VMMessages.queueIsFull(queue.getName(),queue.size()),event.getMessage(),event.getEndpoint());
+  }
   if (logger.isDebugEnabled()) {
     logger.debug("dispatched MuleEvent on endpointUri: " + endpointUri);
   }
