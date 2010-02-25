@@ -1,8 +1,9 @@
 {
   for (  Service service : muleContext.getRegistry().lookupObjects(Service.class)) {
-    String rawName=service.getName();
-    String name=jmxSupport.escape(rawName);
-    ObjectName on=jmxSupport.getObjectName(jmxSupport.getDomainName(muleContext) + ":type=org.mule.Service,name=" + name);
+    final String rawName=service.getName();
+    final String name=jmxSupport.escape(rawName);
+    final String jmxName=String.format("%s:%s%s",jmxSupport.getDomainName(muleContext),ServiceServiceMBean.DEFAULT_JMX_NAME_PREFIX,name);
+    ObjectName on=jmxSupport.getObjectName(jmxName);
     ServiceServiceMBean serviceMBean=new ServiceService(rawName,muleContext);
     logger.debug("Registering service with name: " + on);
     mBeanServer.registerMBean(serviceMBean,on);
