@@ -1,17 +1,12 @@
 {
   if (message instanceof Map) {
     Map map=(Map)message;
-    Object p=map.remove(PAYLOAD_PARAM);
+    Object p=map.remove(Bayeux.DATA_FIELD);
     if (p != null) {
-      if (filter.accept(p)) {
-        this.payload=readJsonAs(p,HashMap.class);
-      }
- else {
-        payload=p;
-      }
+      payload=p;
     }
  else {
-      throw new IllegalArgumentException("payload parameter not set");
+      throw new IllegalArgumentException("data parameter not set");
     }
     setReplyTo(map.remove(REPLYTO_PARAM));
     if (map.size() > 0) {
@@ -19,13 +14,18 @@
     }
   }
  else   if (filter.accept(message)) {
-    if (message.toString().indexOf("payload") > -1) {
-      DefaultMuleMessageDTO dto=readJsonAs(message,DefaultMuleMessageDTO.class);
-      payload=dto.getPayload();
-      dto.addPropertiesTo(this);
+    if (message.toString().indexOf(Bayeux.DATA_FIELD) > -1) {
+      try {
+        JsonData jd=new JsonData(message.toString());
+        payload=jd.get(Bayeux.DATA_FIELD).toString();
+        setReplyTo(jd.get(REPLYTO_PARAM));
+      }
+ catch (      IOException e) {
+        throw new DefaultMuleException(e);
+      }
     }
  else {
-      this.payload=readJsonAs(message,HashMap.class);
+      this.payload=message;
     }
   }
  else {

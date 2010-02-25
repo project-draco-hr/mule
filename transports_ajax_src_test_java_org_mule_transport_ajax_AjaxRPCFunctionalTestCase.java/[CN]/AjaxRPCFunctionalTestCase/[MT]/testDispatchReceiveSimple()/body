@@ -1,9 +1,18 @@
 {
-  MuleClient client=new MuleClient();
-  client.dispatch("endpoint1",TEST_JSON_MESSAGE,null);
-  MuleMessage result=client.request("result",5000L);
-  assertNotNull(result);
-  assertTrue(result.getPayload() instanceof Map);
-  assertEquals("foo",((Map)result.getPayload()).get("value1"));
-  assertEquals("bar",((Map)result.getPayload()).get("value2"));
+  final Latch latch=new Latch();
+  final AtomicReference<Object> data=new AtomicReference<Object>();
+  client.addListener(new MessageListener(){
+    public void deliver(    Client client,    Client client1,    Message message){
+      if (message.getData() != null) {
+        data.set((message.getData()));
+        latch.release();
+      }
+    }
+  }
+);
+  client.subscribe("/response");
+  client.publish("/request",TEST_JSON_MESSAGE,null);
+  latch.await(10,TimeUnit.SECONDS);
+  assertNotNull(data.get());
+  assertEquals("{\"value1\":\"foo\",\"value2\":\"bar\"}",data.get());
 }

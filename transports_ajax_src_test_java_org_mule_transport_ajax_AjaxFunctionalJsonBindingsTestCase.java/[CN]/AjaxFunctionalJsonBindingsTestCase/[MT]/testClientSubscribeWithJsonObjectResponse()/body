@@ -1,0 +1,19 @@
+{
+  final Latch latch=new Latch();
+  final AtomicReference<Object> data=new AtomicReference<Object>();
+  client.addListener(new MessageListener(){
+    public void deliver(    Client client,    Client client1,    Message message){
+      if (message.getData() != null) {
+        data.set((message.toString()));
+        latch.release();
+      }
+    }
+  }
+);
+  client.subscribe("/test1");
+  MuleClient muleClient=new MuleClient();
+  muleClient.dispatch("vm://in1","Ross",null);
+  latch.await(10,TimeUnit.SECONDS);
+  assertNotNull(data.get());
+  assertEquals("{\"data\":{\"name\":\"Ross\"},\"channel\":\"/test1\"}",data.get());
+}

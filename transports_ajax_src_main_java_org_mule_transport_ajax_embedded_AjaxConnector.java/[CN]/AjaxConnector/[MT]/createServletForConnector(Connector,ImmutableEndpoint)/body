@@ -1,19 +1,21 @@
 {
-  ContinuationCometdServlet servlet=new ContinuationCometdServlet();
+  ContinuationCometdServlet servlet=new MuleAjaxServlet();
   Context context=new Context(this.getHttpServer(),"/",Context.NO_SESSIONS);
   context.setConnectorNames(new String[]{connector.getName()});
+  context.addEventListener(new ServletContextListener(){
+    public void contextInitialized(    ServletContextEvent sce){
+      sce.getServletContext().setAttribute(MuleProperties.MULE_CONTEXT_PROPERTY,muleContext);
+      sce.getServletContext().setAttribute(MuleAjaxServlet.AJAX_CONNECTOR_NAME_PROPERTY,getName());
+    }
+    public void contextDestroyed(    ServletContextEvent sce){
+    }
+  }
+);
   ServletHolder holder=new ServletHolder();
   holder.setServlet(servlet);
   context.setResourceBase(endpoint.getEndpointURI().getPath());
   context.addServlet(holder,"/ajax/*");
-  context.addServlet("org.mortbay.jetty.servlet.DefaultServlet","/");
-  try {
-    connector.start();
-    context.start();
-  }
- catch (  Exception e) {
-    throw new InitialisationException(AjaxMessages.failedToStartAjaxServlet(),e,this);
-  }
+  context.addServlet(DefaultServlet.class,"/");
   if (getInterval() != INT_VALUE_NOT_SET)   holder.setInitParameter("interval",Integer.toString(getInterval()));
   holder.setInitParameter("JSONCommented",Boolean.toString(isJsonCommented()));
   if (getLogLevel() != INT_VALUE_NOT_SET)   holder.setInitParameter("logLevel",Integer.toString(getLogLevel()));
@@ -22,6 +24,5 @@
   if (getTimeout() != INT_VALUE_NOT_SET)   holder.setInitParameter("timeout",Integer.toString(getTimeout()));
   if (getRefsThreshold() != INT_VALUE_NOT_SET)   holder.setInitParameter("refsThreshold",Integer.toString(getRefsThreshold()));
   holder.setInitParameter("requestAvailable",Boolean.toString(isRequestAvailable()));
-  holder.setInitParameter("directDeliver",Boolean.toString(isDirectDeliver()));
   return servlet;
 }

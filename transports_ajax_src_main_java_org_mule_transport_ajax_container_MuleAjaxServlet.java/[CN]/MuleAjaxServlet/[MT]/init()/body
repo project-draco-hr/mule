@@ -2,9 +2,12 @@
   super.init();
   MuleContext muleContext=(MuleContext)getServletContext().getAttribute(MuleProperties.MULE_CONTEXT_PROPERTY);
   if (muleContext == null) {
-    throw new ServletException("Property " + MuleProperties.MULE_CONTEXT_PROPERTY + " not set on ServletContext");
+    throw new ServletException("Attribute " + MuleProperties.MULE_CONTEXT_PROPERTY + " not set on ServletContext");
   }
   String servletConnectorName=getServletConfig().getInitParameter(AJAX_CONNECTOR_NAME_PROPERTY);
+  if (servletConnectorName == null) {
+    servletConnectorName=(String)getServletContext().getAttribute(AJAX_CONNECTOR_NAME_PROPERTY);
+  }
   if (servletConnectorName == null) {
     connector=(AjaxServletConnector)new TransportFactory(muleContext).getConnectorByProtocol(getConnectorProtocol());
     if (connector == null) {
@@ -24,4 +27,11 @@
     }
   }
   connector.setBayeux(getBayeux());
+  jsonTransformer=new ObjectToJson();
+  try {
+    connector.getMuleContext().getRegistry().applyProcessorsAndLifecycle(jsonTransformer);
+  }
+ catch (  MuleException e) {
+    throw new ServletException(e);
+  }
 }
