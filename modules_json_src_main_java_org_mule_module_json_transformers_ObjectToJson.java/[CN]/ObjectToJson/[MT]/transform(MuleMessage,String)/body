@@ -1,5 +1,13 @@
 {
   Object src=message.getPayload();
+  if (src instanceof String) {
+    if (isJsonFilter.accept(src)) {
+      return src;
+    }
+ else {
+      throw new TransformerException(JsonMessages.messageStringIsNotJson());
+    }
+  }
   if (message.getExceptionPayload() != null && this.isHandleException()) {
     if (logger.isDebugEnabled()) {
       logger.debug("Found exception with null payload");
@@ -13,7 +21,6 @@
  catch (  IOException e) {
     throw new TransformerException(this,e);
   }
-  System.out.println(baos.toString());
   if (returnType.equals(byte[].class)) {
     return baos.toByteArray();
   }
