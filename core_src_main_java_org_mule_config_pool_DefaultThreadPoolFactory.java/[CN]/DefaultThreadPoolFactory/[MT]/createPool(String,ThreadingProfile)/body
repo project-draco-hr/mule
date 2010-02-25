@@ -6,32 +6,23 @@
  else {
     buffer=new SynchronousQueue();
   }
-  ThreadPoolExecutor pool=new ThreadPoolExecutor(Math.min(tp.getMaxThreadsIdle(),tp.getMaxThreadsActive()),tp.getMaxThreadsActive(),tp.getThreadTTL(),TimeUnit.MILLISECONDS,buffer);
-  if (tp.getThreadFactory() != null) {
-    pool.setThreadFactory(tp.getThreadFactory());
-  }
- else {
-    if (StringUtils.isNotBlank(name)) {
-      pool.setThreadFactory(new NamedThreadFactory(name,MuleContext.class.getClassLoader()));
-    }
- else {
-    }
-  }
+  ThreadPoolExecutor pool=internalCreatePool(name,tp,buffer);
+  configureThreadFactory(name,tp,pool);
   if (tp.getRejectedExecutionHandler() != null) {
     pool.setRejectedExecutionHandler(tp.getRejectedExecutionHandler());
   }
  else {
 switch (tp.getPoolExhaustedAction()) {
-case WHEN_EXHAUSTED_DISCARD_OLDEST:
+case ThreadingProfile.WHEN_EXHAUSTED_DISCARD_OLDEST:
       pool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
     break;
-case WHEN_EXHAUSTED_RUN:
+case ThreadingProfile.WHEN_EXHAUSTED_RUN:
   pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 break;
-case WHEN_EXHAUSTED_ABORT:
+case ThreadingProfile.WHEN_EXHAUSTED_ABORT:
 pool.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
 break;
-case WHEN_EXHAUSTED_DISCARD:
+case ThreadingProfile.WHEN_EXHAUSTED_DISCARD:
 pool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
 break;
 default :
