@@ -1,11 +1,11 @@
 {
   CxfMessageReceiver cxfReceiver=(CxfMessageReceiver)receiver;
   Server server=cxfReceiver.getServer();
+  Service service=cxfReceiver.getService();
   uriToServer.put(server.getEndpoint().getEndpointInfo().getAddress(),server);
   SedaService outerProtocolService=new SedaService();
   outerProtocolService.setMuleContext(muleContext);
-  String uniqueServiceName=createServiceName(server.getEndpoint());
-  outerProtocolService.setName(uniqueServiceName);
+  outerProtocolService.setName(service.getName() + "_cxfComponent");
   outerProtocolService.setModel(muleContext.getRegistry().lookupSystemModel());
   CxfServiceComponent svcComponent=new CxfServiceComponent(this,(CxfMessageReceiver)receiver);
   svcComponent.setBus(bus);
@@ -48,6 +48,7 @@
   }
  else {
     filterEndpoint=receiverEndpointBuilder;
+    protocolEndpointBuilder.setFilter(null);
   }
   filterEndpoint.setFilter(originalEndpoint.getFilter());
   EndpointBuilder secFilterEndpoint;
