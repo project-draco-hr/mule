@@ -1,0 +1,49 @@
+{
+  MessageService mule=EnvironmentImpl.getCurrent().get(MuleMessageService.class);
+  if (mule == null) {
+    throw new JbpmException("The Mule MessageService is not available from the ProcessEngine, you may need to add it to your jbpm.cfg.xml file");
+  }
+  if (payload == null) {
+    if (payloadSource == null) {
+      payloadObject=execution.getVariable(ProcessConnector.PROCESS_VARIABLE_DATA);
+      if (payloadObject == null) {
+        payloadObject=execution.getVariable(ProcessConnector.PROCESS_VARIABLE_INCOMING);
+      }
+    }
+ else {
+      String[] tokens=StringUtils.split(payloadSource,".",2);
+      payloadObject=execution.getVariable(tokens[0]);
+      if (tokens.length > 1) {
+        JXPathContext context=JXPathContext.newContext(payloadObject);
+        payloadObject=context.getValue(tokens[1].replaceAll("\\.","/"));
+      }
+    }
+  }
+ else {
+    payloadObject=payload;
+  }
+  if (payloadObject == null) {
+    throw new IllegalArgumentException("Payload for message is null.  Payload source is \"" + payloadSource + "\"");
+  }
+  Map props=new HashMap();
+  props.put(ProcessConnector.PROPERTY_PROCESS_TYPE,((ExecutionImpl)execution).getProcessDefinition().getName());
+  props.put(ProcessConnector.PROPERTY_PROCESS_ID,execution.getId());
+  MuleMessage response=mule.generateMessage(endpoint,payloadObject,props,synchronous);
+  if (synchronous && response != null) {
+    Object responsePayload=response.getPayload();
+    if (responsePayloadClass != null) {
+      log.debug("Validating response type = " + responsePayload.getClass() + ", expected = "+ responsePayloadClass);
+      if (!responsePayloadClass.isAssignableFrom(responsePayload.getClass())) {
+        throw new JbpmException("Response message is of type " + responsePayload.getClass() + " but expected type is "+ responsePayloadClass);
+      }
+    }
+    if (variableName != null) {
+      if (responsePayload != null) {
+        execution.setVariable(variableName,responsePayload);
+      }
+ else {
+        log.info("Synchronous message was sent to endpoint " + endpoint + ", but no response was returned.");
+      }
+    }
+  }
+}
