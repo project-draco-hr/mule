@@ -1,16 +1,15 @@
 {
-  MessageDispatcher dispatcher=null;
+  Work dispatchWork=new DispatchWorker(event,endpoint);
   try {
-    dispatcher=this.getDispatcher(endpoint);
-    dispatcher.dispatch(event);
+    Transaction tx=TransactionCoordination.getInstance().getTransaction();
+    if (getDispatcherThreadingProfile().isDoThreading() && !event.isSynchronous() && tx == null) {
+      getDispatcherWorkManager().scheduleWork(dispatchWork,WorkManager.INDEFINITE,null,AbstractConnector.this);
+    }
+ else {
+      dispatchWork.run();
+    }
   }
- catch (  DispatchException dex) {
-    throw dex;
-  }
-catch (  MuleException ex) {
-    throw new DispatchException(event.getMessage(),endpoint,ex);
-  }
- finally {
-    this.returnDispatcher(endpoint,dispatcher);
+ catch (  Exception e) {
+    handleException(e);
   }
 }

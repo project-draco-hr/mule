@@ -18,13 +18,19 @@ catch (    Exception e) {
     }
   }
   try {
-    Transaction tx=TransactionCoordination.getInstance().getTransaction();
-    Worker worker=new Worker(event);
-    if (isDoThreading() && !event.isSynchronous() && tx == null) {
-      connector.getDispatcherWorkManager().scheduleWork(worker,WorkManager.INDEFINITE,null,connector);
+    if (endpoint instanceof OutboundEndpointDecorator) {
+      if (!((OutboundEndpointDecorator)endpoint).onMessage(event.getMessage())) {
+        return;
+      }
     }
- else {
-      worker.run();
+    connect();
+    doDispatch(event);
+    if (connector.isEnableMessageEvents()) {
+      String component=null;
+      if (event.getService() != null) {
+        component=event.getService().getName();
+      }
+      connector.fireNotification(new EndpointMessageNotification(event.getMessage(),event.getEndpoint(),component,EndpointMessageNotification.MESSAGE_DISPATCHED));
     }
   }
  catch (  Exception e) {
