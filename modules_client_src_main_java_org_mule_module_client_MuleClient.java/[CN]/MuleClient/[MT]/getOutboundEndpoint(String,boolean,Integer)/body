@@ -1,0 +1,16 @@
+{
+  OutboundEndpoint endpoint=(OutboundEndpoint)outboundEndpointCache.get(uri + ":" + synchronous+ ":"+ responseTimeout);
+  if (endpoint == null) {
+    EndpointBuilder endpointBuilder=muleContext.getRegistry().lookupEndpointFactory().getEndpointBuilder(uri);
+    endpointBuilder.setSynchronous(synchronous);
+    if (responseTimeout != null && responseTimeout > 0) {
+      endpointBuilder.setResponseTimeout(responseTimeout.intValue());
+    }
+    endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
+    OutboundEndpoint concurrentlyAddedEndpoint=(OutboundEndpoint)outboundEndpointCache.putIfAbsent(uri + ":" + synchronous+ ":"+ responseTimeout,endpoint);
+    if (concurrentlyAddedEndpoint != null) {
+      return concurrentlyAddedEndpoint;
+    }
+  }
+  return endpoint;
+}
