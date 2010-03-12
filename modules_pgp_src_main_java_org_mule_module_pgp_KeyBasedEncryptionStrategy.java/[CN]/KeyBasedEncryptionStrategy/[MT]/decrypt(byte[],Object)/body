@@ -1,11 +1,15 @@
 {
   try {
-    MessageFactory mf=MessageFactory.getInstance("OpenPGP");
     ByteArrayInputStream in=new ByteArrayInputStream(data);
-    Collection msgs=mf.generateMessages(in);
+    MessageFactory mf=MessageFactory.getInstance("OpenPGP");
+    Collection<?> msgs=mf.generateMessages(in);
     Message msg=(Message)msgs.iterator().next();
     if (msg instanceof EncryptedMessage) {
-      msg=((EncryptedMessage)msg).decrypt(keyManager.getSecretKeyBundle(),keyManager.getSecretPassphrase().toCharArray());
+      EncryptedMessage encryptedMessage=(EncryptedMessage)msg;
+      KeyBundle secretKeyBundle=keyManager.getSecretKeyBundle();
+      char[] passphrase=keyManager.getSecretPassphrase().toCharArray();
+      msg=encryptedMessage.decrypt(secretKeyBundle,passphrase);
+      applyStrongEncryptionWorkaround(msg);
       return new PGPArmouredMessage(msg).getEncoded();
     }
   }
