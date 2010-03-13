@@ -1,7 +1,4 @@
 {
-  if (lifecycleManager.getCurrentPhase().equals(Initialisable.PHASE_NAME)) {
-    return;
-  }
   lifecycleManager.checkPhase(Initialisable.PHASE_NAME);
   if (getNotificationManager() == null) {
     throw new MuleRuntimeException(CoreMessages.objectIsNull(MuleProperties.OBJECT_NOTIFICATION_MANAGER));
@@ -10,7 +7,6 @@
     throw new MuleRuntimeException(CoreMessages.objectIsNull("workManager"));
   }
   try {
-    registryBroker.initialise();
     muleRegistryHelper.initialise();
     if (workManager instanceof MuleContextAware) {
       MuleContextAware contextAware=(MuleContextAware)workManager;
@@ -19,7 +15,7 @@
     workManager.start();
     getNotificationManager().start(workManager,workListener);
     fireNotification(new MuleContextNotification(this,MuleContextNotification.CONTEXT_INITIALISING));
-    lifecycleManager.firePhase(this,Initialisable.PHASE_NAME);
+    getLifecycleManager().fireLifecycle(muleRegistryHelper,Initialisable.PHASE_NAME);
     fireNotification(new MuleContextNotification(this,MuleContextNotification.CONTEXT_INITIALISED));
     initSplashScreens();
   }

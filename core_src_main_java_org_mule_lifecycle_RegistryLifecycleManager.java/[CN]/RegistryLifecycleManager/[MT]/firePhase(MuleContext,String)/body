@@ -1,0 +1,18 @@
+{
+  if (currentPhase.equalsIgnoreCase(phase)) {
+    logger.debug("Already in lifecycle phase: " + phase);
+    return;
+  }
+  LifecyclePhase li=lookupPhase(phase);
+  if (!li.isPhaseSupported(currentPhase)) {
+    throw new IllegalStateException("Lifecycle phase: " + phase + " does not support current phase: "+ currentPhase+ ". Phases supported are: "+ StringMessageUtils.toString(li.getSupportedPhases()));
+  }
+  try {
+    setExecutingPhase(phase);
+    muleContext.getRegistry().fireLifecycle(phase);
+    setCurrentPhase(li);
+  }
+  finally {
+    setExecutingPhase(null);
+  }
+}

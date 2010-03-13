@@ -1,0 +1,18 @@
+{
+  LifecyclePhase li=lookupPhase(phase);
+  if (currentPhase.equalsIgnoreCase(phase)) {
+    logger.debug("Already in lifecycle phase: " + phase);
+    return;
+  }
+  if (!li.isPhaseSupported(currentPhase)) {
+    throw new IllegalStateException("Lifecycle phase: " + phase + " does not support current phase: "+ currentPhase+ ". Phases supported are: "+ StringMessageUtils.toString(li.getSupportedPhases()));
+  }
+  try {
+    setExecutingPhase(phase);
+    li.applyLifecycle(registry);
+    setCurrentPhase(li);
+  }
+  finally {
+    setExecutingPhase(null);
+  }
+}
