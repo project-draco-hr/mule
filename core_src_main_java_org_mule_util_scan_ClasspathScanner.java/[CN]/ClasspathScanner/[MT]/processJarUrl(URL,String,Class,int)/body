@@ -8,7 +8,7 @@
     if (entry.getName().startsWith(basepath) && entry.getName().endsWith(".class")) {
       try {
         String name=entry.getName();
-        if (name.matches("\\$[1-9]")) {
+        if (name.contains("$") && !hasFlag(flags,INCLUDE_INNER)) {
           continue;
         }
         URL classURL=classLoader.getResource(name);
@@ -17,10 +17,7 @@
         ClassScanner visitor=getScanner(clazz);
         reader.accept(visitor,0);
         if (visitor.isMatch()) {
-          Class c=loadClass(visitor.getClassName());
-          if (c != null) {
-            set.add(c);
-          }
+          addClassToSet(loadClass(visitor.getClassName()),set,flags);
         }
       }
  catch (      Exception e) {

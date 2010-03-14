@@ -10,15 +10,15 @@
   Collection<File> files=FileUtils.listFiles(new File(urlBase),new String[]{"class"},true);
   for (  File file : files) {
     try {
+      if (file.getName().contains("$") && !hasFlag(flags,INCLUDE_INNER)) {
+        continue;
+      }
       InputStream classStream=new FileInputStream(file);
       ClassReader reader=new ClosableClassReader(classStream);
       ClassScanner visitor=getScanner(clazz);
       reader.accept(visitor,0);
       if (visitor.isMatch()) {
-        Class c=loadClass(visitor.getClassName());
-        if (c != null) {
-          set.add(c);
-        }
+        addClassToSet(loadClass(visitor.getClassName()),set,flags);
       }
     }
  catch (    IOException e) {
