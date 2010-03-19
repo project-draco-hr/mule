@@ -7,7 +7,15 @@
     }
     return result;
   }
-  Object result=muleContext.getExpressionManager().evaluate(expr,message,false);
+  Object result;
+  ClassLoader originalContextClassLoader=Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(expressionEvaluationClassLoader);
+    result=muleContext.getExpressionManager().evaluate(expr,message,false);
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(originalContextClassLoader);
+  }
   if (result == null) {
     return nullReturnsTrue;
   }

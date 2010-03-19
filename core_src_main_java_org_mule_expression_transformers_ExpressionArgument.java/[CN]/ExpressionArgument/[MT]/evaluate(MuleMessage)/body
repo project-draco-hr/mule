@@ -1,5 +1,13 @@
 {
-  Object result=muleContext.getExpressionManager().evaluate(getExpression(),getEvaluator(),message,!isOptional());
+  Object result=null;
+  ClassLoader originalContextClassLoader=Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(expressionEvaluationClassLoader);
+    result=muleContext.getExpressionManager().evaluate(getExpression(),getEvaluator(),message,!isOptional());
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(originalContextClassLoader);
+  }
   if (getReturnClass() != null && result != null) {
     if (!getReturnClass().isInstance(result)) {
       throw new ExpressionRuntimeException(CoreMessages.transformUnexpectedType(result.getClass(),getReturnClass()));
