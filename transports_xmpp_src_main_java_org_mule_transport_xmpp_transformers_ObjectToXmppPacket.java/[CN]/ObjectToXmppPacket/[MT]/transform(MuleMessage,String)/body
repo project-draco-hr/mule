@@ -1,28 +1,27 @@
 {
-  Object src=msg.getPayload();
+  Object src=muleMessage.getPayload();
   if (src instanceof Message) {
     return src;
   }
   Message result=new Message();
-  if (msg.getExceptionPayload() != null) {
-    result.setError(new XMPPError(503,msg.getExceptionPayload().getMessage()));
+  if (muleMessage.getExceptionPayload() != null) {
+    result.setError(new XMPPError(XMPPError.Condition.service_unavailable,muleMessage.getExceptionPayload().getMessage()));
   }
-  for (Iterator iterator=msg.getPropertyNames().iterator(); iterator.hasNext(); ) {
-    String name=(String)iterator.next();
-    if (name.equals(XmppConnector.XMPP_THREAD)) {
-      result.setThread((String)msg.getProperty(name));
+  for (  String propertyName : muleMessage.getPropertyNames()) {
+    if (propertyName.equals(XmppConnector.XMPP_THREAD)) {
+      result.setThread((String)muleMessage.getProperty(propertyName));
     }
- else     if (name.equals(XmppConnector.XMPP_SUBJECT)) {
-      result.setSubject((String)msg.getProperty(name));
+ else     if (propertyName.equals(XmppConnector.XMPP_SUBJECT)) {
+      result.setSubject((String)muleMessage.getProperty(propertyName));
     }
- else     if (name.equals(XmppConnector.XMPP_FROM)) {
-      result.setFrom((String)msg.getProperty(name));
+ else     if (propertyName.equals(XmppConnector.XMPP_FROM)) {
+      result.setFrom((String)muleMessage.getProperty(propertyName));
     }
- else     if (name.equals(XmppConnector.XMPP_TO)) {
-      result.setTo((String)msg.getProperty(name));
+ else     if (propertyName.equals(XmppConnector.XMPP_TO)) {
+      result.setTo((String)muleMessage.getProperty(propertyName));
     }
  else {
-      result.setProperty(name,msg.getProperty(name));
+      result.setProperty(propertyName,muleMessage.getProperty(propertyName));
     }
   }
   result.setBody((String)src);

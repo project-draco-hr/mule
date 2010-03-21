@@ -1,40 +1,15 @@
 {
-  if (chat == null && groupChat == null) {
-    MuleMessage msg=event.getMessage();
-    boolean group=msg.getBooleanProperty(XmppConnector.XMPP_GROUP_CHAT,false);
-    String nickname=msg.getStringProperty(XmppConnector.XMPP_NICKNAME,"mule");
-    String recipient=event.getEndpoint().getEndpointURI().getPath().substring(1);
-    if (group) {
-      groupChat=new GroupChat(xmppConnection,recipient);
-      if (!groupChat.isJoined()) {
-        groupChat.join(nickname);
-      }
-    }
- else {
-      chat=new Chat(xmppConnection,recipient);
-    }
-  }
-  Object msgObj=event.getMessage().getPayload();
-  Message message;
-  if (!(msgObj instanceof Message)) {
-    message=(Message)event.transformMessage();
+  Object payload=event.getMessage().getPayload();
+  Message jabberMessage=null;
+  if (payload instanceof Message) {
+    jabberMessage=(Message)payload;
   }
  else {
-    message=(Message)msgObj;
+    jabberMessage=(Message)event.transformMessage();
   }
-  if (logger.isTraceEnabled()) {
-    logger.trace("Transformed packet: " + message.toXML());
-  }
-  if (message.getTo() != null) {
-    xmppConnection.sendPacket(message);
-  }
- else   if (chat != null) {
-    chat.sendMessage(message);
-  }
- else {
-    groupChat.sendMessage(message);
-  }
+  conversation.dispatch(jabberMessage);
   if (logger.isDebugEnabled()) {
-    logger.debug("Packet successfully sent");
+    String recipient=XmppConnector.getRecipient(endpoint);
+    logger.debug("Message \"" + jabberMessage.getBody() + "\" successfully sent to "+ recipient);
   }
 }
