@@ -1,14 +1,19 @@
 {
-  if (inboundTransformer != null) {
-    return CollectionUtils.singletonList(inboundTransformer);
+  if (inboundTransformer.get() != null) {
+    return CollectionUtils.singletonList(inboundTransformer.get());
   }
   if (defaultInboundTransformer != null) {
     logger.info("Loading default inbound transformer: " + defaultInboundTransformer);
     try {
-      inboundTransformer=(Transformer)ClassUtils.instanciateClass(defaultInboundTransformer,ClassUtils.NO_ARGS,classLoader);
-      inboundTransformer.setName(inboundTransformer.getName() + "#" + hashCode());
-      muleContext.getRegistry().registerObject(inboundTransformer.getName(),inboundTransformer);
-      return CollectionUtils.singletonList(inboundTransformer);
+synchronized (inboundTransformer) {
+        if (inboundTransformer.get() == null) {
+          Transformer newTransformer=(Transformer)ClassUtils.instanciateClass(defaultInboundTransformer,ClassUtils.NO_ARGS,classLoader);
+          newTransformer.setName(newTransformer.getName() + "#" + hashCode());
+          muleContext.getRegistry().registerObject(newTransformer.getName(),newTransformer);
+          inboundTransformer.compareAndSet(null,newTransformer);
+        }
+      }
+      return CollectionUtils.singletonList(inboundTransformer.get());
     }
  catch (    Exception e) {
       throw new TransportFactoryException(CoreMessages.failedToLoadTransformer("inbound",defaultInboundTransformer),e);

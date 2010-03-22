@@ -1,14 +1,19 @@
 {
-  if (outboundTransformer != null) {
-    return CollectionUtils.singletonList(outboundTransformer);
+  if (outboundTransformer.get() != null) {
+    return CollectionUtils.singletonList(outboundTransformer.get());
   }
   if (defaultOutboundTransformer != null) {
     logger.info("Loading default outbound transformer: " + defaultOutboundTransformer);
     try {
-      outboundTransformer=(Transformer)ClassUtils.instanciateClass(defaultOutboundTransformer,ClassUtils.NO_ARGS,classLoader);
-      outboundTransformer.setName(outboundTransformer.getName() + "#" + hashCode());
-      muleContext.getRegistry().registerObject(outboundTransformer.getName(),outboundTransformer);
-      return CollectionUtils.singletonList(outboundTransformer);
+synchronized (outboundTransformer) {
+        if (outboundTransformer.get() == null) {
+          Transformer newTransformer=(Transformer)ClassUtils.instanciateClass(defaultOutboundTransformer,ClassUtils.NO_ARGS,classLoader);
+          newTransformer.setName(newTransformer.getName() + "#" + hashCode());
+          muleContext.getRegistry().registerObject(newTransformer.getName(),newTransformer);
+          outboundTransformer.compareAndSet(null,newTransformer);
+        }
+      }
+      return CollectionUtils.singletonList(outboundTransformer.get());
     }
  catch (    Exception e) {
       throw new TransportFactoryException(CoreMessages.failedToLoadTransformer("outbound",defaultOutboundTransformer),e);
