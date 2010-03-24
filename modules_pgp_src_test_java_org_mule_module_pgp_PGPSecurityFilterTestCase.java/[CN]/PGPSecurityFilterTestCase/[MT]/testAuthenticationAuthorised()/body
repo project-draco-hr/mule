@@ -5,6 +5,14 @@
   MuleClient client=new MuleClient();
   MuleMessage reply=client.send("vm://echo",new String(msg),props);
   assertNull(reply.getExceptionPayload());
+  File pollingFile=null;
+  for (int i=0; i < 5; i++) {
+    pollingFile=new File(DIRECTORY + TARGET);
+    if (!pollingFile.exists()) {
+      Thread.sleep(1000);
+    }
+  }
+  pollingFile=null;
   try {
     FileReader outputFile=new FileReader(DIRECTORY + TARGET);
     String fileContents=IOUtils.toString(outputFile);
