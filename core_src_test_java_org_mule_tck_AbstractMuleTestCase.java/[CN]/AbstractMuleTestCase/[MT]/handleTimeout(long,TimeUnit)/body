@@ -1,8 +1,11 @@
 {
-  String msg="Timeout of " + unit.toMillis(timeout) + "ms exceeded - exiting VM! (modify via -Dmule.test.timeoutSecs=XX)";
+  String msg="Timeout of " + unit.toMillis(timeout) + "ms exceeded (modify via -Dmule.test.timeoutSecs=XX)";
   if (failOnTimeout) {
-    logger.fatal(msg);
-    Runtime.getRuntime().halt(1);
+    logger.fatal(msg + " - Attempting to interrupt thread for test " + this.getName());
+    if (currentTestRunningThread != null) {
+      currentTestRunningThread.interrupt();
+    }
+    giveTheTestSomeTimeToCleanUpAndThenKillIt("Interrupting didn't work. Killing the VM!. Test " + this.getName() + " did not finish correctly.");
   }
  else {
     logger.warn(msg);
