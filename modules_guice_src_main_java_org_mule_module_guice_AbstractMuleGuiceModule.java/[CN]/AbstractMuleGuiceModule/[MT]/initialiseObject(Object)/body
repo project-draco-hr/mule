@@ -1,8 +1,19 @@
 {
+  int flags=MuleRegistry.INJECT_PROCESSORS_BYPASS_FLAG + MuleRegistry.PRE_INIT_PROCESSORS_BYPASS_FLAG;
+  String name;
   if (o instanceof NamedObject) {
-    muleContext.getRegistry().registerObject(((NamedObject)o).getName(),o);
+    name=((NamedObject)o).getName();
   }
  else {
-    muleContext.getRegistry().registerObject(String.valueOf(o.getClass().getSimpleName() + "#" + o.hashCode()),o);
+    name=String.valueOf(o.getClass().getSimpleName() + "#" + o.hashCode());
+  }
+  try {
+    Object result=muleContext.getRegistry().applyProcessors(o,MuleRegistry.INJECT_PROCESSORS_BYPASS_FLAG);
+    if (result != null) {
+      muleContext.getRegistry().registerObject(name,result,flags);
+    }
+  }
+ catch (  MuleException e) {
+    throw new RegistrationException(e);
   }
 }

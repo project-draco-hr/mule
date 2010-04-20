@@ -1,0 +1,48 @@
+{
+  try {
+    if (phase.getName().equals(Initialisable.PHASE_NAME)) {
+      logger.debug("Initialising service: " + service.getName());
+      service.doInitialise();
+      fireServiceNotification(ServiceNotification.SERVICE_INITIALISED);
+    }
+ else     if (phase.getName().equals(Startable.PHASE_NAME)) {
+      logger.debug("Starting service: " + service.getName());
+      service.doStart();
+      fireServiceNotification(ServiceNotification.SERVICE_STARTED);
+    }
+ else     if (phase.getName().equals(Pausable.PHASE_NAME)) {
+      logger.debug("Pausing service: " + service.getName());
+      service.doPause();
+      fireServiceNotification(ServiceNotification.SERVICE_PAUSED);
+    }
+ else     if (phase.getName().equals(Resumable.PHASE_NAME)) {
+      logger.debug("Resuming service: " + service.getName());
+      service.doResume();
+      fireServiceNotification(ServiceNotification.SERVICE_RESUMED);
+    }
+ else     if (phase.getName().equals(Stoppable.PHASE_NAME)) {
+      logger.debug("Stopping service: " + service.getName());
+      service.doStop();
+      fireServiceNotification(ServiceNotification.SERVICE_STOPPED);
+    }
+ else     if (phase.getName().equals(Disposable.PHASE_NAME)) {
+      logger.debug("Disposing service: " + service.getName());
+      if (getState().isPhaseComplete(Pausable.PHASE_NAME)) {
+        setExecutingPhase(null);
+        service.resume();
+      }
+      if (getState().isStarted()) {
+        setExecutingPhase(null);
+        service.stop();
+      }
+      service.doDispose();
+      fireServiceNotification(ServiceNotification.SERVICE_DISPOSED);
+    }
+ else {
+      throw new LifecycleException(CoreMessages.lifecyclePhaseNotRecognised(phase.getName()),service);
+    }
+  }
+ catch (  MuleException e) {
+    throw new LifecycleException(e,service);
+  }
+}

@@ -1,21 +1,22 @@
 {
   DefaultMuleEvent event=null;
   QueueSession queueSession=muleContext.getQueueManager().getQueueSession();
-  while (!stopped.get()) {
+  while (!isStopped()) {
     try {
-      if (paused.get()) {
-        paused.whenFalse(null);
-        if (stopping.get()) {
+      if (isPaused()) {
+        waitIfPaused(event);
+        if (lifecycleManager.getState().isStopping()) {
+          queueDraining.set(true);
           if (!isPersistent() && (queueSession != null && getQueueSize() > 0)) {
             logger.warn(CoreMessages.stopPausedSedaServiceNonPeristentQueueMessageLoss(getQueueSize(),this));
           }
-          stopping.set(false);
+          queueDraining.set(false);
           break;
         }
       }
-      if (stopping.get()) {
+      if (lifecycleManager.getState().isStopping()) {
         if (isPersistent() || queueSession == null || getQueueSize() <= 0) {
-          stopping.set(false);
+          queueDraining.set(false);
           break;
         }
       }
@@ -38,7 +39,7 @@
     }
  catch (    Exception e) {
       if (e instanceof InterruptedException) {
-        stopping.set(false);
+        queueDraining.set(false);
         break;
       }
       if (e instanceof MuleException) {

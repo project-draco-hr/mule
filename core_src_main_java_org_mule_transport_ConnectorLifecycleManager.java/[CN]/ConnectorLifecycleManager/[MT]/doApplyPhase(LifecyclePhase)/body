@@ -1,0 +1,30 @@
+{
+  try {
+    if (phase.getName().equals(Initialisable.PHASE_NAME)) {
+      logger.debug("Initialising connector: " + connector.getName());
+      connector.doInitialise();
+    }
+ else     if (phase.getName().equals(Startable.PHASE_NAME)) {
+      logger.debug("Starting connector: " + connector.getName());
+      connector.doStart();
+    }
+ else     if (phase.getName().equals(Stoppable.PHASE_NAME)) {
+      logger.debug("Stopping connector: " + connector.getName());
+      connector.doStop();
+    }
+ else     if (phase.getName().equals(Disposable.PHASE_NAME)) {
+      logger.debug("Disposing connector: " + connector.getName());
+      if (getState().isStarted()) {
+        setExecutingPhase(null);
+        connector.stop();
+      }
+      connector.doDispose();
+    }
+ else {
+      throw new LifecycleException(CoreMessages.lifecyclePhaseNotRecognised(phase.getName()),connector);
+    }
+  }
+ catch (  MuleException e) {
+    throw new LifecycleException(e,connector);
+  }
+}

@@ -1,22 +1,32 @@
 {
-  OutboundEndpoint out=getTestOutboundEndpoint("out","test://out");
-  connector.send(out,getTestEvent("data"));
-  assertEquals(1,connector.dispatchers.getNumIdle());
-  assertDispatcherStartedConntected(out,false,true);
+  OutboundEndpoint out=getTestOutboundEndpoint("out","test://out",null,null,null,connector);
+  try {
+    connector.send(out,getTestEvent("data"));
+    fail("cannot sent on a connector that is not started");
+  }
+ catch (  DispatchException e) {
+    assertTrue(e.getCause() instanceof LifecycleException);
+  }
+  assertEquals(0,connector.dispatchers.getNumIdle());
+  assertDispatcherStartedConntected(out,false,false);
   connector.start();
-  assertDispatcherStartedConntected(out,false,true);
-  OutboundEndpoint out2=getTestOutboundEndpoint("out2","test://out2");
+  assertDispatcherStartedConntected(out,true,true);
+  OutboundEndpoint out2=getTestOutboundEndpoint("out2","test://out2",null,null,null,connector);
   connector.send(out2,getTestEvent("data"));
   assertEquals(2,connector.dispatchers.getNumIdle());
-  assertDispatcherStartedConntected(out,false,true);
-  assertDispatcherStartedConntected(out2,false,true);
+  assertDispatcherStartedConntected(out,true,true);
+  assertDispatcherStartedConntected(out2,true,true);
   connector.stop();
   assertEquals(0,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
+  assertDispatcherStartedConntected(out,false,false);
+  assertDispatcherStartedConntected(out2,false,false);
   connector.start();
-  assertEquals(0,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
+  assertEquals(2,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
+  assertDispatcherStartedConntected(out,true,true);
+  assertDispatcherStartedConntected(out2,true,true);
   connector.send(out,getTestEvent("data"));
-  assertEquals(1,connector.dispatchers.getNumIdle());
-  assertDispatcherStartedConntected(out,false,true);
+  assertEquals(2,connector.dispatchers.getNumIdle());
+  assertDispatcherStartedConntected(out,true,true);
   connector.dispose();
   assertEquals(0,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
 }

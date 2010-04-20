@@ -1,0 +1,31 @@
+{
+  if (executingPhase != null) {
+    if (name.equalsIgnoreCase(executingPhase)) {
+      throw new IllegalStateException("Phase '" + name + "' is already currently being executed");
+    }
+ else {
+      throw new IllegalStateException("Currently executing lifecycle phase: " + executingPhase);
+    }
+  }
+  if (name.equalsIgnoreCase(currentPhase)) {
+    throw new IllegalStateException("Already in lifecycle phase '" + name + "', cannot fire the same phase twice");
+  }
+  Integer phaseIndex=getPhaseIndex(name);
+  if (phaseIndex == null) {
+    throw new IllegalStateException("Phase does not exist: " + name);
+  }
+ else {
+    if (Disposable.PHASE_NAME.equals(name)) {
+      return;
+    }
+    if (index.get(phaseIndex - 1).getName().equals(getCurrentPhase())) {
+      return;
+    }
+    for (    LifecyclePair pair : lifecyclePairs) {
+      if (pair.getBegin().getName().equals(name) && pair.getEnd().getName().equals(getCurrentPhase()) || pair.getEnd().getName().equals(name) && pair.getBegin().getName().equals(getCurrentPhase())) {
+        return;
+      }
+    }
+    throw new IllegalStateException("Lifecycle phase: " + currentPhase + " does not support phase: "+ name);
+  }
+}

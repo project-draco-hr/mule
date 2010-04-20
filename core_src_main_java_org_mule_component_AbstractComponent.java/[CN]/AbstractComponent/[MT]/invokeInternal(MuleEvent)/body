@@ -3,11 +3,10 @@
   if (logger.isTraceEnabled()) {
     logger.trace("Invoking " + this.getClass().getName() + "component for service "+ service.getName());
   }
-  checkDisposed();
   if (!(event.getEndpoint() instanceof InboundEndpoint)) {
     throw new IllegalStateException("Unable to process outbound event, components only process incoming events.");
   }
-  if (stopping.get() || !started.get()) {
+  if (service.getLifecycleManager().getState().isStopping() || !service.getLifecycleManager().getState().isStarted()) {
     throw new DefaultMuleException(CoreMessages.componentIsStopped(service.getName()));
   }
   try {

@@ -1,22 +1,37 @@
 {
-  assertFalse(service.isStarted());
-  assertFalse(service.isPaused());
-  service.stop();
+  assertFalse(getService().isStarted());
+  assertFalse(getService().isPaused());
   try {
-    service.resume();
+    getService().stop();
     fail("Exception expected: Cannot stop an uninitialised service");
   }
- catch (  MuleException e) {
+ catch (  IllegalStateException e) {
   }
-  service.initialise();
-  assertFalse(service.isStarted());
-  service.stop();
-  assertFalse(service.isStarted());
-  service.start();
-  assertTrue(service.isStarted());
-  service.stop();
-  assertFalse(service.isStarted());
-  service.stop();
-  assertFalse(service.isStarted());
-  service.dispose();
+  try {
+    getService().resume();
+    fail("Exception expected: Cannot resume an uninitialised service");
+  }
+ catch (  IllegalStateException e) {
+  }
+  getService().initialise();
+  assertFalse(getService().isStarted());
+  try {
+    getService().stop();
+    fail("Exception expected: Cannot stop a service that is not started");
+  }
+ catch (  IllegalStateException e) {
+  }
+  assertFalse(getService().isStarted());
+  getService().start();
+  assertTrue(getService().isStarted());
+  getService().stop();
+  assertFalse(getService().isStarted());
+  try {
+    getService().stop();
+    fail("Exception expected: Cannot stop a service that is not started");
+  }
+ catch (  IllegalStateException e) {
+  }
+  assertFalse(getService().isStarted());
+  getService().dispose();
 }

@@ -2,9 +2,7 @@
   final Latch latch=new Latch();
   final String serviceName="testDoThreadingFalse";
   final String serviceThreadName=serviceName + ".1";
-  SedaService service=new SedaService(muleContext);
   service.setName(serviceName);
-  service.setModel(muleContext.getRegistry().lookupSystemModel());
   ChainedThreadingProfile threadingProfile=(ChainedThreadingProfile)muleContext.getDefaultServiceThreadingProfile();
   threadingProfile.setDoThreading(false);
   service.setThreadingProfile(threadingProfile);
@@ -18,6 +16,6 @@
 ));
   muleContext.getRegistry().registerService(service);
   service.start();
-  service.dispatchEvent(getTestInboundEvent("test"));
+  service.dispatchEvent(MuleTestUtils.getTestInboundEvent("test",service,muleContext));
   assertTrue(latch.await(200,TimeUnit.MILLISECONDS));
 }

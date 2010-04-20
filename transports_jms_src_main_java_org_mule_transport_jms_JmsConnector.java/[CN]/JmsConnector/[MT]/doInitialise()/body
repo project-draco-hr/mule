@@ -15,7 +15,14 @@
     redeliveryHandlerFactory=new AutoDiscoveryRedeliveryHandlerFactory(this);
   }
   try {
-    muleContext.registerListener(this,getName());
+    muleContext.registerListener(new ConnectionNotificationListener<ConnectionNotification>(){
+      public void onNotification(      ConnectionNotification notification){
+        if (notification.getAction() == ConnectionNotification.CONNECTION_DISCONNECTED || notification.getAction() == ConnectionNotification.CONNECTION_FAILED) {
+          clearDispatchers();
+        }
+      }
+    }
+,getName());
   }
  catch (  NotificationException nex) {
     throw new InitialisationException(nex,this);

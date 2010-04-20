@@ -1,22 +1,20 @@
 {
-  if (initialised.get()) {
-    InitialisationException e=new AlreadyInitialisedException("Connector '" + getProtocol() + "."+ getName()+ "'",this);
-    throw e;
-  }
-  if (logger.isInfoEnabled()) {
-    logger.info("Initialising: " + this);
-  }
+  lifecycleManager.checkPhase(Initialisable.PHASE_NAME);
   if (retryPolicyTemplate == null) {
     retryPolicyTemplate=(RetryPolicyTemplate)muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE);
   }
   this.initFromServiceDescriptor();
   configureDispatcherPool();
   setMaxRequestersActive(getRequesterThreadingProfile().getMaxThreadsActive());
-  this.doInitialise();
+  try {
+    lifecycleManager.fireLifecycle(Initialisable.PHASE_NAME);
+  }
+ catch (  LifecycleException e) {
+    throw new InitialisationException(e,this);
+  }
   if (exceptionListener == null) {
     exceptionListener=new DefaultExceptionStrategy();
     ((DefaultExceptionStrategy)exceptionListener).setMuleContext(muleContext);
     ((DefaultExceptionStrategy)exceptionListener).initialise();
   }
-  initialised.set(true);
 }

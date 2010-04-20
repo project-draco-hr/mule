@@ -44,7 +44,11 @@
   muleContext.addRegistry(registry);
   for (Iterator<Key<?>> iterator=injector.getBindings().keySet().iterator(); iterator.hasNext(); ) {
     Key key=iterator.next();
-    if (Connector.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+    if (key.getAnnotation() instanceof AnnotatedService) {
+      Object obj=injector.getInstance(key);
+      applyProcessors(obj,key,injector,muleContext);
+    }
+ else     if (Connector.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
       Connector c=(Connector)injector.getInstance(key);
       c.setName(new ObjectNameHelper(muleContext).getConnectorName(c));
       muleContext.getRegistry().registerConnector(c);

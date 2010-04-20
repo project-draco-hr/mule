@@ -1,9 +1,4 @@
 {
-  if (initialised.get()) {
-    throw new InitialisationException(CoreMessages.objectAlreadyInitialised("Service '" + name + "'"),this);
-  }
-  component.setService(this);
-  component.initialise();
   if (inboundRouter == null) {
     inboundRouter=new DefaultInboundRouterCollection();
     inboundRouter.addRouter(new InboundPassThroughRouter());
@@ -18,13 +13,18 @@
   if (exceptionListener == null) {
     exceptionListener=getModel().getExceptionListener();
   }
-  doInitialise();
+  try {
+    lifecycleManager.fireLifecycle(Initialisable.PHASE_NAME);
+  }
+ catch (  LifecycleException e) {
+    throw new InitialisationException(e,this);
+  }
+  component.setService(this);
+  component.initialise();
   stats=createStatistics();
   stats.setEnabled(muleContext.getStatistics().isEnabled());
   muleContext.getStatistics().add(stats);
   stats.setOutboundRouterStat(outboundRouter.getStatistics());
   stats.setInboundRouterStat(inboundRouter.getStatistics());
   stats.setComponentStat(component.getStatistics());
-  initialised.set(true);
-  fireServiceNotification(ServiceNotification.SERVICE_INITIALISED);
 }

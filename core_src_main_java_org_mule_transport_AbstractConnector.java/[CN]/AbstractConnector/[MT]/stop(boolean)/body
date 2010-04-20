@@ -1,20 +1,10 @@
 {
-  if (!this.isStarted()) {
-    logger.warn("Attempting to stop a connector which is not started: " + getName());
-    return;
-  }
-  if (this.isDisposed()) {
-    return;
-  }
-  if (logger.isInfoEnabled()) {
-    logger.info("Stopping: " + this);
-  }
+  lifecycleManager.checkPhase(Stoppable.PHASE_NAME);
   shutdownScheduler();
   if (disposeWorkManagers) {
     disposeWorkManagers();
   }
-  this.doStop();
-  started.set(false);
+  lifecycleManager.fireLifecycle(Stoppable.PHASE_NAME);
   if (receivers != null) {
     for (    MessageReceiver receiver : receivers.values()) {
       if (logger.isDebugEnabled()) {
@@ -23,8 +13,8 @@
       receiver.stop();
     }
   }
-  this.disposeDispatchers();
-  this.disposeRequesters();
+  this.clearDispatchers();
+  this.clearRequesters();
   if (this.isConnected()) {
     try {
       this.disconnect();
@@ -34,7 +24,4 @@
     }
   }
   scheduler=null;
-  if (logger.isInfoEnabled()) {
-    logger.info("Stopped: " + this);
-  }
 }

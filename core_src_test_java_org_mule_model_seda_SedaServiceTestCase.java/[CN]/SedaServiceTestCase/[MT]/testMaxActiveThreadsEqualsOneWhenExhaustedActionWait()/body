@@ -1,8 +1,6 @@
 {
   final Latch latch=new Latch();
-  SedaService service=new SedaService(muleContext);
   service.setName("testMaxActiveThreadsEqualsOne");
-  service.setModel(muleContext.getRegistry().lookupSystemModel());
   ChainedThreadingProfile threadingProfile=(ChainedThreadingProfile)muleContext.getDefaultServiceThreadingProfile();
   threadingProfile.setMaxThreadsActive(1);
   threadingProfile.setThreadWaitTimeout(200);
@@ -17,6 +15,6 @@
 ));
   muleContext.getRegistry().registerService(service);
   service.start();
-  service.dispatchEvent(getTestInboundEvent("test"));
+  service.dispatchEvent(MuleTestUtils.getTestInboundEvent("test",service,muleContext));
   assertTrue(latch.await(200,TimeUnit.MILLISECONDS));
 }

@@ -1,0 +1,21 @@
+{
+  if (objectClass == null || disposed) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Object factory has not been initialized."),this);
+  }
+  Class<?> klass=objectClass.get();
+  if (klass == null) {
+    klass=setupObjectClassFromObjectClassName();
+  }
+  Object object=ClassUtils.instanciateClass(klass);
+  if (properties != null) {
+    BeanUtils.populateWithoutFail(object,properties,true);
+  }
+  if (object instanceof ServiceAware) {
+    ((ServiceAware)object).setService(service);
+  }
+  if (isAutoWireObject()) {
+    muleContext.getRegistry().applyProcessors(object);
+  }
+  fireInitialisationCallbacks(object);
+  return object;
+}
