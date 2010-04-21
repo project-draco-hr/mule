@@ -1,0 +1,14 @@
+{
+  final Latch latch=new Latch();
+  muleContext.registerListener(new EndpointMessageNotificationListener<EndpointMessageNotification>(){
+    public void onNotification(    EndpointMessageNotification notification){
+      if (notification instanceof EndpointMessageNotification) {
+        latch.countDown();
+      }
+    }
+  }
+);
+  receiver=createTestMessageReceiver(null,null,false,null);
+  receiver.routeMessage(createTestRequestMessage());
+  assertTrue(latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+}
