@@ -7,17 +7,23 @@
     message=new DefaultMuleMessage(connector.getMessageAdapter(payload),connector.getMuleContext());
   }
   message.addProperties(messageProperties);
+  MuleMessage response=null;
   if (connector.isAllowGlobalDispatcher()) {
     if (synchronous) {
-      return connector.getMuleClient().send(endpoint,message);
+      response=connector.getMuleClient().send(endpoint,message);
     }
  else {
       connector.getMuleClient().dispatch(endpoint,message);
-      return null;
     }
   }
  else {
     message.setStringProperty(ProcessConnector.PROPERTY_ENDPOINT,endpoint);
-    return routeMessage(message,synchronous);
+    response=routeMessage(message,synchronous);
+  }
+  if (response != null && response.getExceptionPayload() != null) {
+    throw new ConnectorException(MessageFactory.createStaticMessage("Unable to send or route message"),getConnector(),response.getExceptionPayload().getRootException());
+  }
+ else {
+    return response;
   }
 }
