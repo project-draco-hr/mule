@@ -25,19 +25,28 @@
     if (redeploymentEnabled) {
       muleContext.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
         public void onNotification(        MuleContextNotification notification){
-          if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED) {
-            scheduleConfigMonitor(watcher);
-          }
-        }
-      }
+          final int action=notification.getAction();
+switch (action) {
+case MuleContextNotification.CONTEXT_STARTED:
+            System.out.println("ReloadableBuilder.onNotification:: CONTEXT_STARTED");
+          scheduleConfigMonitor(watcher);
+        break;
+case MuleContextNotification.CONTEXT_STOPPING:
+      System.out.println("ReloadableBuilder.onNotification:: CONTEXT_STOPPING");
+    watchTimer.shutdownNow();
+  muleContext.unregisterListener(this);
+break;
+}
+}
+}
 );
-    }
-    super.configure(muleContext);
-  }
- catch (  NotificationException e) {
-    throw new ConfigurationException(e);
-  }
-catch (  IOException e) {
-    throw new ConfigurationException(e);
-  }
+}
+super.configure(muleContext);
+}
+ catch (NotificationException e) {
+throw new ConfigurationException(e);
+}
+catch (IOException e) {
+throw new ConfigurationException(e);
+}
 }
