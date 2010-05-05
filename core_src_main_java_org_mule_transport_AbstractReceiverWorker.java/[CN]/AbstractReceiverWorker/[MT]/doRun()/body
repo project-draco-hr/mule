@@ -9,23 +9,16 @@
       }
       List results=new ArrayList(messages.size());
       for (Iterator iterator=messages.iterator(); iterator.hasNext(); ) {
-        Object o=iterator.next();
-        o=preProcessMessage(o);
-        if (o != null) {
-          MessageAdapter adapter;
-          if (o instanceof MessageAdapter) {
-            adapter=(MessageAdapter)o;
-          }
- else {
-            adapter=endpoint.getConnector().getMessageAdapter(o);
-          }
-          DefaultMuleMessage muleMessage=new DefaultMuleMessage(adapter,muleContext);
+        Object payload=iterator.next();
+        payload=preProcessMessage(payload);
+        if (payload != null) {
+          MuleMessage muleMessage=receiver.createMuleMessage(payload,endpoint.getEncoding());
           preRouteMuleMessage(muleMessage);
           MuleMessage result=receiver.routeMessage(muleMessage,tx,tx != null || endpoint.isSynchronous(),out);
           if (result != null) {
-            o=postProcessMessage(result);
-            if (o != null) {
-              results.add(o);
+            payload=postProcessMessage(result);
+            if (payload != null) {
+              results.add(payload);
             }
           }
         }

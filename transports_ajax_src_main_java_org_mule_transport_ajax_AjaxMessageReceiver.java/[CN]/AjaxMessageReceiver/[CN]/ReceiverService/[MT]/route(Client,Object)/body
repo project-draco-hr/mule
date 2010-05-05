@@ -1,9 +1,10 @@
 {
-  MessageAdapter adapter=getConnector().getMessageAdapter(data);
-  Object replyTo=adapter.getReplyTo();
-  MuleMessage message=AjaxMessageReceiver.this.routeMessage(new DefaultMuleMessage(adapter,connector.getMuleContext()));
+  AbstractConnector connector=(AbstractConnector)getConnector();
+  MuleMessage messageToRoute=createMuleMessage(data,endpoint.getEncoding());
+  Object replyTo=messageToRoute.getReplyTo();
+  MuleMessage message=AjaxMessageReceiver.this.routeMessage(messageToRoute);
   if ((message != null && message.getExceptionPayload() == null) && replyTo != null) {
-    ((AbstractConnector)getConnector()).getReplyToHandler().processReplyTo(RequestContext.getEvent(),message,replyTo);
+    connector.getReplyToHandler().processReplyTo(RequestContext.getEvent(),message,replyTo);
   }
   return null;
 }

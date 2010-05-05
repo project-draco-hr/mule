@@ -1,0 +1,18 @@
+{
+  for (Enumeration<?> e=request.getHeaderNames(); e.hasMoreElements(); ) {
+    String key=(String)e.nextElement();
+    String realKey=key;
+    if (key.startsWith(HttpConstants.X_PROPERTY_PREFIX)) {
+      realKey=key.substring(2);
+    }
+    String value=request.getHeader(key);
+    if (HttpConstants.HEADER_HOST.equalsIgnoreCase(key)) {
+      realKey=HttpConstants.HEADER_HOST;
+      int port=request.getLocalPort();
+      if (!value.contains(":") && port != 80 && port != 443) {
+        value=value + ":" + port;
+      }
+    }
+    messageProperties.put(realKey,value);
+  }
+}

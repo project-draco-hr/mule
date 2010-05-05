@@ -28,16 +28,16 @@
       logger.debug("Message with id: " + id + " has been redelivered for the first time");
     }
     if (connectorRedelivery == JmsConnector.REDELIVERY_FAIL_ON_FIRST) {
-      JmsMessageAdapter adapter=(JmsMessageAdapter)connector.getMessageAdapter(message);
-      throw new MessageRedeliveredException(JmsMessages.tooManyRedeliveries(id,String.valueOf(redeliveryCount),connectorRedelivery,connector.getName()),new DefaultMuleMessage(adapter,connector.getMuleContext()));
+      MuleMessage msg=createMuleMessage(message);
+      throw new MessageRedeliveredException(JmsMessages.tooManyRedeliveries(id,String.valueOf(redeliveryCount),connectorRedelivery,connector.getName()),msg);
     }
   }
  else   if (redeliveryCount > connectorRedelivery) {
     if (logger.isDebugEnabled()) {
       logger.debug(MessageFormat.format("Message with id: {0} has been redelivered {1} times, which exceeds the maxRedelivery setting " + "of {2} on the connector {3}",id,redeliveryCount,connectorRedelivery,connector.getName()));
     }
-    JmsMessageAdapter adapter=(JmsMessageAdapter)connector.getMessageAdapter(message);
-    throw new MessageRedeliveredException(JmsMessages.tooManyRedeliveries(id,"" + redeliveryCount,connectorRedelivery,connector.getName()),new DefaultMuleMessage(adapter,connector.getMuleContext()));
+    MuleMessage msg=createMuleMessage(message);
+    throw new MessageRedeliveredException(JmsMessages.tooManyRedeliveries(id,"" + redeliveryCount,connectorRedelivery,connector.getName()),msg);
   }
  else {
     messages.put(id,redeliveryCount);

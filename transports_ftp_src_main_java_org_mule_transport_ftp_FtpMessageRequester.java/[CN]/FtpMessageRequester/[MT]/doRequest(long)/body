@@ -6,13 +6,9 @@
     if (fileToProcess == null) {
       return null;
     }
-    String originalFileName=fileToProcess.getName();
     fileToProcess=prepareFile(client,fileToProcess);
-    byte[] payload=retriveFileContents(client,fileToProcess);
-    MuleMessage reply=new DefaultMuleMessage(connector.getMessageAdapter(payload),connector.getMuleContext());
-    reply.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalFileName);
-    reply.setProperty(FileConnector.PROPERTY_FILE_SIZE,new Long(fileToProcess.getSize()));
-    return reply;
+    FtpMuleMessageFactory muleMessageFactory=createMuleMessageFactory(client);
+    return muleMessageFactory.create(fileToProcess,endpoint.getEncoding());
   }
   finally {
     connector.releaseFtp(endpoint.getEndpointURI(),client);

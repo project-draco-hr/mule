@@ -88,11 +88,10 @@
         Message result=listener.getMessage();
         if (result == null) {
           logger.debug("No message was returned via replyTo destination");
-          return new DefaultMuleMessage(NullPayload.getInstance(),connector.getMuleContext());
+          return createNullMuleMessage();
         }
  else {
-          MessageAdapter adapter=connector.getMessageAdapter(result);
-          return new DefaultMuleMessage(JmsMessageUtils.toObject(result,connector.getSpecification(),endpoint.getEncoding()),adapter,connector.getMuleContext());
+          return createMessageWithJmsMessagePayload(result);
         }
       }
  else {
@@ -103,16 +102,15 @@
         Message result=consumer.receive(timeout);
         if (result == null) {
           logger.debug("No message was returned via replyTo destination " + replyTo);
-          return new DefaultMuleMessage(NullPayload.getInstance(),connector.getMuleContext());
+          return createNullMuleMessage();
         }
  else {
-          MessageAdapter adapter=connector.getMessageAdapter(result);
-          return new DefaultMuleMessage(JmsMessageUtils.toObject(result,connector.getSpecification(),endpoint.getEncoding()),adapter,connector.getMuleContext());
+          return createMessageWithJmsMessagePayload(result);
         }
       }
     }
  else {
-      return returnOriginalMessageAsReply ? new DefaultMuleMessage(msg,connector.getMuleContext()) : null;
+      return returnOriginalMessageAsReply ? createMuleMessage(msg) : null;
     }
   }
   finally {

@@ -23,7 +23,7 @@
   if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
     throw new DefaultMuleException(FileMessages.fileDoesNotExist(sourceFileOriginalName));
   }
-  DefaultMessageAdapter fileParserMsgAdaptor=new DefaultMessageAdapter(null);
+  DefaultMuleMessage fileParserMsgAdaptor=new DefaultMuleMessage(null,connector.getMuleContext());
   fileParserMsgAdaptor.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
   File workFile=null;
   if (workDir != null && (moveDir == null || (moveDir != null && fileConnector.isStreaming()))) {
@@ -41,25 +41,27 @@
     }
     destinationFile=FileUtils.newFile(moveDir,destinationFileName);
   }
-  MessageAdapter msgAdapter;
+  MuleMessage message=null;
+  String encoding=endpoint.getEncoding();
   try {
     if (fileConnector.isStreaming()) {
-      msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(sourceFile,fileConnector.isAutoDelete(),destinationFile));
+      ReceiverFileInputStream payload=new ReceiverFileInputStream(sourceFile,fileConnector.isAutoDelete(),destinationFile);
+      message=createMuleMessage(payload,encoding);
     }
  else {
-      msgAdapter=connector.getMessageAdapter(sourceFile);
+      message=createMuleMessage(sourceFile,encoding);
     }
   }
  catch (  FileNotFoundException e) {
     logger.error("File being read disappeared!",e);
     return;
   }
-  msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+  message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
   if (!fileConnector.isStreaming()) {
-    moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,msgAdapter);
+    moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,message);
   }
  else {
-    msgAdapter.setProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
-    this.routeMessage(new DefaultMuleMessage(msgAdapter,connector.getMuleContext()),endpoint.isSynchronous());
+    message.setProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
+    this.routeMessage(message,endpoint.isSynchronous());
   }
 }

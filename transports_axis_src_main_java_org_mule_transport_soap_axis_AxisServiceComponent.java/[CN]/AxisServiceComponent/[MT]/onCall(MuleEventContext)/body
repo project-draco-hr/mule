@@ -1,5 +1,5 @@
 {
-  WriterMessageAdapter response=new WriterMessageAdapter(new StringWriter(4096));
+  AxisStringWriter response=new AxisStringWriter();
   String method=context.getMessage().getStringProperty(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
   if (HttpConstants.METHOD_GET.equalsIgnoreCase(method)) {
     doGet(context,response);
@@ -7,6 +7,8 @@
  else {
     doPost(context,response);
   }
-  response.getWriter().close();
-  return new DefaultMuleMessage(response,context.getMuleContext());
+  response.close();
+  String payload=response.getWriter().toString();
+  Map<String,Object> properties=response.getProperties();
+  return new DefaultMuleMessage(payload,properties,context.getMuleContext());
 }

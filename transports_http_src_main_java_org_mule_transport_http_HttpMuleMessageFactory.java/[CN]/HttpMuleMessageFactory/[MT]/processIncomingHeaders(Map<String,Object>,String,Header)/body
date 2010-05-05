@@ -1,0 +1,27 @@
+{
+  Map<String,Object> outHeaders=new HashMap<String,Object>();
+  for (  String headerName : headers.keySet()) {
+    Object headerValue=headers.get(headerName);
+    if (headerName.startsWith("X-MULE")) {
+      headerName=headerName.substring(2);
+    }
+ else     if (headerName.equals(HttpConnector.HTTP_COOKIES_PROPERTY)) {
+      if (enableCookies) {
+        CookieSpec cs=CookieHelper.getCookieSpec(cookieSpec);
+        URI u=new URI(uri);
+        Cookie[] cookies=cs.parse(u.getHost(),u.getPort(),u.getPath(),u.getScheme().equalsIgnoreCase("https"),cookieHeader);
+        if (cookies.length > 0) {
+          headerValue=cookies;
+        }
+ else {
+          continue;
+        }
+      }
+ else {
+        continue;
+      }
+    }
+    outHeaders.put(headerName,headerValue);
+  }
+  return outHeaders;
+}

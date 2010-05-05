@@ -1,21 +1,8 @@
 {
-  Object body=null;
-  InputStream is=httpMethod.getResponseBodyAsStream();
-  if (is == null) {
-    body=StringUtils.EMPTY;
-  }
- else {
-    is=new ReleasingInputStream(is,httpMethod);
-    body=is;
-  }
-  Header[] headers=httpMethod.getResponseHeaders();
-  HttpMessageAdapter adapter=new HttpMessageAdapter(new Object[]{body,headers});
-  String status=String.valueOf(httpMethod.getStatusCode());
-  adapter.setProperty(HttpConnector.HTTP_STATUS_PROPERTY,status);
+  MuleMessage message=createMuleMessage(httpMethod);
   if (logger.isDebugEnabled()) {
-    logger.debug("Http response is: " + status);
+    logger.debug("Http response is: " + message.getProperty(HttpConnector.HTTP_STATUS_PROPERTY));
   }
-  MuleMessage m=new DefaultMuleMessage(adapter,connector.getMuleContext());
-  m.setExceptionPayload(ep);
-  return m;
+  message.setExceptionPayload(ep);
+  return message;
 }

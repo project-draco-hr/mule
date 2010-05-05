@@ -1,0 +1,16 @@
+{
+  super.addAttachments(muleMessage,transportMessage);
+  Object content=((Message)transportMessage).getContent();
+  if (content instanceof Multipart) {
+    Multipart multipart=(Multipart)content;
+    TreeMap<String,Part> attachments=new TreeMap<String,Part>();
+    MailUtils.getAttachments(multipart,attachments);
+    log.debug("Received Multipart message. Adding attachments");
+    for (    Map.Entry<String,Part> entry : attachments.entrySet()) {
+      Part part=entry.getValue();
+      String name=entry.getKey().toString();
+      muleMessage.addAttachment(name,part.getDataHandler());
+      addAttachmentHeaders(name,part,muleMessage);
+    }
+  }
+}

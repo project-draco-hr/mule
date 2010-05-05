@@ -16,12 +16,14 @@
       Class srcCls=getPayload().getClass();
       if (transformer.isSourceTypeSupported(srcCls)) {
         Object result=transformer.transform(this);
-        if (originalAdapter == null && muleContext.getConfiguration().isCacheMessageOriginalPayload()) {
-          originalAdapter=adapter;
+        if (originalPayload == null && muleContext.getConfiguration().isCacheMessageOriginalPayload()) {
+          originalPayload=payload;
         }
         if (result instanceof MuleMessage) {
 synchronized (this) {
-            adapter=((MuleMessage)result).getAdapter();
+            MuleMessage resultMessage=(MuleMessage)result;
+            setPayload(resultMessage.getPayload());
+            originalPayload=resultMessage.getOrginalPayload();
           }
         }
  else {

@@ -1,18 +1,18 @@
 {
-  MuleMessage req=new DefaultMuleMessage(new DefaultMessageAdapter(""),connector.getMuleContext());
+  MuleContext muleContext=connector.getMuleContext();
+  MuleMessage request=new DefaultMuleMessage("",muleContext);
   if (etag != null && checkEtag) {
-    Map customHeaders=Collections.singletonMap(HttpConstants.HEADER_IF_NONE_MATCH,etag);
-    req.setProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY,customHeaders);
+    Map<String,String> customHeaders=Collections.singletonMap(HttpConstants.HEADER_IF_NONE_MATCH,etag);
+    request.setProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY,customHeaders);
   }
-  req.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,"GET");
+  request.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,"GET");
   MuleSession session=new DefaultMuleSession(service,connector.getMuleContext());
   if (outboundEndpoint == null) {
-    MuleContext muleContext=endpoint.getMuleContext();
     EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(endpoint);
     endpointBuilder.setTransformers(Collections.EMPTY_LIST);
     outboundEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
   }
-  MuleEvent event=new DefaultMuleEvent(req,outboundEndpoint,session,true);
+  MuleEvent event=new DefaultMuleEvent(request,outboundEndpoint,session,true);
   MuleMessage message=connector.send(outboundEndpoint,event);
   if (message.getIntProperty(HttpConstants.HEADER_CONTENT_LENGTH,-1) == 0 && discardEmptyContent) {
     if (logger.isDebugEnabled()) {
@@ -22,7 +22,7 @@
   }
   int status=message.getIntProperty(HttpConnector.HTTP_STATUS_PROPERTY,0);
   etag=message.getStringProperty(HttpConstants.HEADER_ETAG,null);
-  if ((status != 304 || !checkEtag)) {
+  if ((status != HttpConstants.SC_NOT_MODIFIED || !checkEtag)) {
     routeMessage(message,endpoint.isSynchronous());
   }
 }

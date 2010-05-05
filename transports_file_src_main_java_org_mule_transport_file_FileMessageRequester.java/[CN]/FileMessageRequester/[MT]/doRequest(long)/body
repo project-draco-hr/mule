@@ -28,39 +28,38 @@
         }
       }
       String sourceFileOriginalName=result.getName();
-      DefaultMessageAdapter fileParserMsgAdaptor=new DefaultMessageAdapter(null);
-      fileParserMsgAdaptor.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
       File destinationFile=null;
       String movDir=getMoveDirectory();
       if (movDir != null) {
         String destinationFileName=sourceFileOriginalName;
         String moveToPattern=getMoveToPattern();
         if (moveToPattern != null) {
-          destinationFileName=connector.getFilenameParser().getFilename(fileParserMsgAdaptor,moveToPattern);
+          DefaultMuleMessage parserMesssage=new DefaultMuleMessage(null,connector.getMuleContext());
+          parserMesssage.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+          destinationFileName=connector.getFilenameParser().getFilename(parserMesssage,moveToPattern);
         }
         destinationFile=FileUtils.newFile(movDir,destinationFileName);
       }
-      MessageAdapter msgAdapter=null;
+      MuleMessage returnMessage=null;
+      String encoding=endpoint.getEncoding();
       try {
         if (connector.isStreaming()) {
-          msgAdapter=connector.getMessageAdapter(new ReceiverFileInputStream(result,connector.isAutoDelete(),destinationFile));
+          ReceiverFileInputStream receiverStream=new ReceiverFileInputStream(result,connector.isAutoDelete(),destinationFile);
+          returnMessage=createMuleMessage(receiverStream,encoding);
         }
  else {
-          msgAdapter=connector.getMessageAdapter(result);
+          returnMessage=createMuleMessage(result,encoding);
         }
       }
  catch (      FileNotFoundException e) {
         logger.error("File being read disappeared!",e);
         return null;
       }
-      msgAdapter.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+      returnMessage.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
       if (!connector.isStreaming()) {
         moveOrDelete(result,destinationFile);
-        return new DefaultMuleMessage(msgAdapter,connector.getMuleContext());
       }
- else {
-        return new DefaultMuleMessage(msgAdapter,connector.getMuleContext());
-      }
+      return returnMessage;
     }
   }
   return null;

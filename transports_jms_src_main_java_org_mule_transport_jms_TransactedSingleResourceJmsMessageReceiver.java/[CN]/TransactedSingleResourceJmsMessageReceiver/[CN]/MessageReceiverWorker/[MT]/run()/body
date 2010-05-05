@@ -1,6 +1,7 @@
 {
   try {
     TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig(),connector.getExceptionListener(),connector.getMuleContext());
+    final String encoding=endpoint.getEncoding();
     if (receiveMessagesInTransaction) {
       TransactionCallback cb=new MessageTransactionCallback(message){
         public Object doInTransaction() throws Exception {
@@ -28,8 +29,8 @@
             }
             redeliveryHandler.handleRedelivery(message);
           }
-          MessageAdapter adapter=connector.getMessageAdapter(message);
-          routeMessage(new DefaultMuleMessage(adapter,connector.getMuleContext()));
+          MuleMessage messageToRoute=createMuleMessage(message,encoding);
+          routeMessage(messageToRoute);
           return null;
         }
       }
@@ -37,8 +38,8 @@
       tt.execute(cb);
     }
  else {
-      MessageAdapter adapter=connector.getMessageAdapter(message);
-      routeMessage(new DefaultMuleMessage(adapter,connector.getMuleContext()));
+      MuleMessage messageToRoute=createMuleMessage(message,encoding);
+      routeMessage(messageToRoute);
     }
   }
  catch (  Exception e) {

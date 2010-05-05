@@ -1,14 +1,15 @@
 {
-  HttpRequestMessageAdapter messageAdapter=(HttpRequestMessageAdapter)message.getAdapter();
-  String payloadParam=messageAdapter.getStringProperty(AbstractReceiverServlet.PAYLOAD_PARAMETER_NAME,AbstractReceiverServlet.DEFAULT_PAYLOAD_PARAMETER_NAME);
-  String payload=messageAdapter.getStringProperty(payloadParam,null);
+  String payloadParam=message.getStringProperty(AbstractReceiverServlet.PAYLOAD_PARAMETER_NAME,AbstractReceiverServlet.DEFAULT_PAYLOAD_PARAMETER_NAME);
+  String payload=message.getStringProperty(payloadParam,null);
   if (payload == null) {
-    if (messageAdapter.getContentType() == null || messageAdapter.getContentType().startsWith("text/")) {
+    String contentType=message.getStringProperty(ServletConnector.CONTENT_TYPE_PROPERTY_KEY,null);
+    if ((contentType == null) || contentType.startsWith("text/")) {
       try {
         InputStream is=(InputStream)message.getPayload();
+        String characterEncoding=message.getStringProperty(ServletConnector.CHARACTER_ENCODING_PROPERTY_KEY,null);
         BufferedReader reader;
-        if (messageAdapter.getCharacterEncoding() != null) {
-          reader=new BufferedReader(new InputStreamReader(is,messageAdapter.getCharacterEncoding()));
+        if (characterEncoding != null) {
+          reader=new BufferedReader(new InputStreamReader(is,characterEncoding));
         }
  else {
           reader=new BufferedReader(new InputStreamReader(is));
@@ -26,7 +27,7 @@
         throw new TransformerException(this,e);
       }
     }
- else     if (messageAdapter.getContentType().equals("application/x-www-form-urlencoded")) {
+ else     if (contentType.equals("application/x-www-form-urlencoded")) {
       InputStream is=(InputStream)message.getPayload();
       Properties props=new Properties();
       try {

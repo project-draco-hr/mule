@@ -1,11 +1,10 @@
 {
   try {
-    MessageAdapter adapter=connector.getMessageAdapter(packet);
     if (logger.isDebugEnabled()) {
       logger.debug("Processing XMPP packet from: " + packet.getFrom());
-      logger.debug("MessageAdapter is a: " + adapter.getClass().getName());
     }
-    MuleMessage returnMessage=routeMessage(new DefaultMuleMessage(adapter,connector.getMuleContext()),endpoint.isSynchronous());
+    MuleMessage message=createMuleMessage(packet,endpoint.getEncoding());
+    MuleMessage returnMessage=routeMessage(message,endpoint.isSynchronous());
     if (returnMessage != null && packet instanceof Message) {
       returnMessage.applyTransformers(connector.getDefaultResponseTransformers());
       Packet result=(Packet)returnMessage.getPayload();
