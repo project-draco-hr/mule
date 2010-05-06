@@ -1,17 +1,22 @@
 {
-  checkPhase(phase);
-  int current=getPhaseIndex(currentPhase);
-  int end=getPhaseIndex(phase);
-  LifecyclePhase li;
-  if (end < current) {
-    li=getPhaseForIndex(end);
-    invokePhase(li);
-    return;
+  checkPhase(destinationPhase);
+  if (isDirectTransition(destinationPhase)) {
+    LifecyclePhase phase=lookupPhase(destinationPhase);
+    invokePhase(phase);
   }
-  current++;
-  while (current <= end) {
-    li=getPhaseForIndex(current);
-    invokePhase(li);
+ else {
+    int current=getPhaseIndex(currentPhase);
+    int end=getPhaseIndex(destinationPhase);
+    if (end < current) {
+      LifecyclePhase phase=getPhaseForIndex(end);
+      invokePhase(phase);
+      return;
+    }
     current++;
+    while (current <= end) {
+      LifecyclePhase phase=getPhaseForIndex(current);
+      invokePhase(phase);
+      current++;
+    }
   }
 }
