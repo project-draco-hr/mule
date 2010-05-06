@@ -2,11 +2,15 @@
   MuleContext ctx=ctxBuilder.buildMuleContext();
   ctx.initialise();
   new DefaultsConfigurationBuilder().configure(ctx);
-  final AtomicBoolean stopNotificationFired=new AtomicBoolean(false);
+  final AtomicBoolean stoppingNotifFired=new AtomicBoolean(false);
+  final AtomicBoolean stoppedNotifFired=new AtomicBoolean(false);
   ctx.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
     public void onNotification(    MuleContextNotification notification){
       if (notification.getAction() == MuleContextNotification.CONTEXT_STOPPING) {
-        stopNotificationFired.set(true);
+        stoppingNotifFired.set(true);
+      }
+      if (notification.getAction() == MuleContextNotification.CONTEXT_STOPPED) {
+        stoppedNotifFired.set(true);
       }
     }
   }
@@ -19,5 +23,6 @@
   assertTrue(ctx.isDisposed());
   assertFalse(ctx.isDisposing());
   assertLifecycleManagerDidApplyAllPhases();
-  assertTrue("CONTEXT_STOPPING notification never fired",stopNotificationFired.get());
+  assertTrue("CONTEXT_STOPPING notification never fired",stoppingNotifFired.get());
+  assertTrue("CONTEXT_STOPPED notification never fired",stoppedNotifFired.get());
 }
