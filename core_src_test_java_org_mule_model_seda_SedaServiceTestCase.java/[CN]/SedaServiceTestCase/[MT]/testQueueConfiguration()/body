@@ -3,21 +3,9 @@
   int capacity=345;
   String queueName="test.service";
   QueueManager queueManager=muleContext.getQueueManager();
-  Mock mockTransactionalQueueManager=new Mock(QueueManager.class);
-  mockTransactionalQueueManager.expect("toString");
-  mockTransactionalQueueManager.expect("setQueueConfiguration",new FullConstraintMatcher(C.eq(queueName),C.eq(new QueueConfiguration(capacity,persistent))));
-  mockTransactionalQueueManager.expectAndReturn("hashCode",3456);
-  mockTransactionalQueueManager.expectAndReturn("getQueueSession",queueManager.getQueueSession());
-  mockTransactionalQueueManager.expectAndReturn("getQueueSession",queueManager.getQueueSession());
-  mockTransactionalQueueManager.expectAndReturn("hashCode",3456);
-  mockTransactionalQueueManager.expect("start");
-  mockTransactionalQueueManager.expectAndReturn("hashCode",3456);
-  mockTransactionalQueueManager.expect("stop");
-  mockTransactionalQueueManager.expectAndReturn("hashCode",3456);
-  mockTransactionalQueueManager.expect("dispose");
-  mockTransactionalQueueManager.expectAndReturn("hashCode",3456);
-  mockTransactionalQueueManager.expectAndReturn("hashCode",3456);
-  muleContext.getRegistry().registerObject(MuleProperties.OBJECT_QUEUE_MANAGER,mockTransactionalQueueManager.proxy());
+  QueueManager mockTransactionalQueueManager=mock(QueueManager.class);
+  when(mockTransactionalQueueManager.getQueueSession()).thenReturn(queueManager.getQueueSession());
+  muleContext.getRegistry().registerObject(MuleProperties.OBJECT_QUEUE_MANAGER,mockTransactionalQueueManager);
   service.setQueueProfile(new QueueProfile(capacity,persistent));
   try {
     muleContext.getRegistry().registerService(service);
