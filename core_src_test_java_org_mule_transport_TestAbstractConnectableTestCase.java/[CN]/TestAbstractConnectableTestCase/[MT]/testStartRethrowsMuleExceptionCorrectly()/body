@@ -1,0 +1,21 @@
+{
+  final MuleException someMuleException=mock(MuleException.class);
+  AbstractConnectable connectable=new AbstractConnectable(createDummyEndpoint()){
+    @Override protected void doStart() throws MuleException {
+      throw someMuleException;
+    }
+    @Override protected WorkManager getWorkManager(){
+      return null;
+    }
+  }
+;
+  connectable.initialise();
+  connectable.connect();
+  try {
+    connectable.start();
+    fail("Should have thrown a " + MuleException.class.getSimpleName());
+  }
+ catch (  MuleException e) {
+    assertSame(someMuleException,e);
+  }
+}

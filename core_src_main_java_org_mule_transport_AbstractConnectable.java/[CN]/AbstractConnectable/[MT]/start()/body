@@ -1,18 +1,29 @@
 {
   if (!connected.get() && !connecting.get()) {
-    startOnConnect=true;
-    try {
-      connect();
-    }
- catch (    Exception e) {
-      throw new LifecycleException(e,this);
-    }
-    return;
+    connectAndThenStart();
   }
-  if (started.compareAndSet(false,true)) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Starting: " + this);
+ else {
+    if (started.compareAndSet(false,true)) {
+      try {
+        retryTemplate.execute(new RetryCallback(){
+          public void doWork(          RetryContext context) throws InterruptedException, MuleException {
+            callDoStartWhenItIsConnected();
+          }
+          public String getWorkDescription(){
+            return "starting " + getConnectionDescription();
+          }
+        }
+,getWorkManager());
+      }
+ catch (      MuleException e) {
+        throw e;
+      }
+catch (      Exception e) {
+        throw new StartException(CoreMessages.failedToStart("Connectable: " + this),e,this);
+      }
     }
-    doStart();
+ else {
+      logger.warn("Ignoring an attempt to start a connectable that is already started: " + this);
+    }
   }
 }
