@@ -1,7 +1,6 @@
 {
   if (!transformers.isEmpty()) {
-    for (    Object transformer1 : transformers) {
-      Transformer transformer=(Transformer)transformer1;
+    for (    Transformer transformer : transformers) {
       if (getPayload() == null) {
         if (transformer.isAcceptNull()) {
           setPayload(NullPayload.getInstance());
@@ -13,7 +12,7 @@
           break;
         }
       }
-      Class srcCls=getPayload().getClass();
+      Class<?> srcCls=getPayload().getClass();
       if (transformer.isSourceTypeSupported(srcCls)) {
         Object result=transformer.transform(this);
         if (originalPayload == null && muleContext.getConfiguration().isCacheMessageOriginalPayload()) {
@@ -23,7 +22,9 @@
 synchronized (this) {
             MuleMessage resultMessage=(MuleMessage)result;
             setPayload(resultMessage.getPayload());
-            originalPayload=resultMessage.getOrginalPayload();
+            originalPayload=resultMessage.getOriginalPayload();
+            copyMessageProperties(resultMessage);
+            copyAttachments(resultMessage);
           }
         }
  else {
