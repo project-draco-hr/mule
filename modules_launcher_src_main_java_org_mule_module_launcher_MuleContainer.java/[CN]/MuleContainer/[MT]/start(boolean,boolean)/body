@@ -2,7 +2,10 @@
   if (registerShutdownHook) {
     registerShutdownHook();
   }
+  final ClassLoader oldCl=Thread.currentThread().getContextClassLoader();
   try {
+    ClassLoader appCl=deployer.getDeploymentClassLoader();
+    Thread.currentThread().setContextClassLoader(appCl);
     logger.info("Mule Container initializing...");
     deployer.init();
     logger.info("Mule Container starting...");
@@ -10,5 +13,8 @@
   }
  catch (  Throwable e) {
     shutdown(e);
+  }
+ finally {
+    Thread.currentThread().setContextClassLoader(oldCl);
   }
 }
