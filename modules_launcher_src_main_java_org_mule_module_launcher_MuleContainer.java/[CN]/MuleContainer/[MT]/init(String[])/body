@@ -7,20 +7,24 @@
     throw new IllegalArgumentException(me.toString());
   }
   MuleUrlStreamHandlerFactory.installUrlStreamHandlerFactory();
-  String config=(String)commandlineOptions.get("config");
-  if (config == null && !commandlineOptions.containsKey("idle")) {
-    logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
-    URL configUrl=IOUtils.getResourceAsUrl(DEFAULT_CONFIGURATION,MuleContainer.class,true,false);
+  String application=(String)commandlineOptions.get("app");
+  if (application == null) {
+    application="default";
+  }
+  if (!commandlineOptions.containsKey("idle")) {
+    final String muleHome=System.getProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY);
+    final String configPath=String.format("%s/apps/%s/%s",muleHome,application,DEFAULT_CONFIGURATION);
+    URL configUrl=IOUtils.getResourceAsUrl(configPath,MuleContainer.class,true,false);
     if (configUrl != null) {
-      config=configUrl.toExternalForm();
+      application=configUrl.toExternalForm();
     }
  else {
       System.out.println(CoreMessages.configNotFoundUsage());
       System.exit(-1);
     }
   }
-  if (config != null) {
-    setConfigurationResources(config);
+  if (application != null) {
+    setConfigurationResources(application);
   }
   final String productionMode=(String)commandlineOptions.get("production");
   try {
