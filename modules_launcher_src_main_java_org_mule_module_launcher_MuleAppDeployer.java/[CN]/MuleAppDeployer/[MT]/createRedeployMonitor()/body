@@ -1,0 +1,23 @@
+{
+  if (logger.isInfoEnabled()) {
+    logger.info("Monitoring for hot-deployment: " + configUrl.toExternalForm());
+  }
+  final FileWatcher watcher=new ConfigFileWatcher(new File(configUrl.getFile()));
+  muleContext.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
+    public void onNotification(    MuleContextNotification notification){
+      final int action=notification.getAction();
+switch (action) {
+case MuleContextNotification.CONTEXT_STARTED:
+        System.out.println("ReloadableBuilder.onNotification:: CONTEXT_STARTED");
+      scheduleConfigMonitor(watcher);
+    break;
+case MuleContextNotification.CONTEXT_STOPPING:
+  System.out.println("ReloadableBuilder.onNotification:: CONTEXT_STOPPING");
+watchTimer.shutdownNow();
+muleContext.unregisterListener(this);
+break;
+}
+}
+}
+);
+}
