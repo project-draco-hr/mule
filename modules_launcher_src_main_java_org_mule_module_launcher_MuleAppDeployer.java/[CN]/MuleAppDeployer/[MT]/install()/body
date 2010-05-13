@@ -9,19 +9,16 @@
     System.out.println(CoreMessages.configNotFoundUsage());
     System.exit(-1);
   }
-  final String productionMode=(String)metaData.get("production");
-  try {
-    this.configBuilderClassName=CLASSNAME_DEV_MODE_CONFIG_BUILDER;
-  }
- catch (  Exception e) {
-    logger.fatal(e);
-    final Message message=CoreMessages.failedToLoad("Builder: " + CLASSNAME_DEV_MODE_CONFIG_BUILDER);
-    System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
-    System.exit(1);
+  String builder=(String)metaData.get("builder");
+  if (StringUtils.isBlank(builder)) {
+    builder=CLASSNAME_DEFAULT_CONFIG_BUILDER;
   }
   try {
-    if (configBuilderClassName.equalsIgnoreCase("spring")) {
+    if ("spring".equalsIgnoreCase(builder)) {
       this.configBuilderClassName=CLASSNAME_SPRING_CONFIG_BUILDER;
+    }
+ else {
+      this.configBuilderClassName=builder;
     }
   }
  catch (  Exception e) {
