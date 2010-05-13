@@ -1,0 +1,59 @@
+{
+  Map<String,Object> commandlineOptions;
+  try {
+    commandlineOptions=SystemUtils.getCommandLineOptions(args,CLI_OPTIONS);
+  }
+ catch (  DefaultMuleException me) {
+    throw new IllegalArgumentException(me.toString());
+  }
+  MuleUrlStreamHandlerFactory.installUrlStreamHandlerFactory();
+  String config=(String)commandlineOptions.get("config");
+  if (config == null && !commandlineOptions.containsKey("idle")) {
+    logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
+    URL configUrl=IOUtils.getResourceAsUrl(DEFAULT_CONFIGURATION,MuleContainer.class,true,false);
+    if (configUrl != null) {
+      config=configUrl.toExternalForm();
+    }
+ else {
+      System.out.println(CoreMessages.configNotFoundUsage());
+      System.exit(-1);
+    }
+  }
+  if (config != null) {
+    setConfigurationResources(config);
+  }
+  final String productionMode=(String)commandlineOptions.get("production");
+  try {
+    setConfigBuilderClassName(CLASSNAME_DEV_MODE_CONFIG_BUILDER);
+  }
+ catch (  Exception e) {
+    logger.fatal(e);
+    final Message message=CoreMessages.failedToLoad("Builder: " + CLASSNAME_DEV_MODE_CONFIG_BUILDER);
+    System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
+    System.exit(1);
+  }
+  String cfgBuilderClassName=(String)commandlineOptions.get("builder");
+  if (commandlineOptions.containsKey("idle")) {
+    setConfigurationResources("IDLE");
+    cfgBuilderClassName=CLASSNAME_DEFAULT_IDLE_CONFIG_BUILDER;
+  }
+  if (cfgBuilderClassName != null) {
+    try {
+      if (cfgBuilderClassName.equalsIgnoreCase("spring")) {
+        cfgBuilderClassName=CLASSNAME_SPRING_CONFIG_BUILDER;
+      }
+      setConfigBuilderClassName(cfgBuilderClassName);
+    }
+ catch (    Exception e) {
+      logger.fatal(e);
+      final Message message=CoreMessages.failedToLoad("Builder: " + cfgBuilderClassName);
+      System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
+      System.exit(1);
+    }
+  }
+  String propertiesFile=(String)commandlineOptions.get("props");
+  if (propertiesFile != null) {
+    setStartupPropertiesFile(propertiesFile);
+  }
+  StartupContext.get().setStartupOptions(commandlineOptions);
+}

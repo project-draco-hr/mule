@@ -1,0 +1,31 @@
+{
+  super(new URL[0],parent);
+  try {
+    File domainDir=new File(MuleContainerBootstrapUtils.getMuleHomeFile(),"lib/shared/" + domain);
+    if (!domainDir.exists()) {
+      throw new IllegalArgumentException(String.format("Shared ClassLoader Domain '%s' doesn't exist",domain));
+    }
+    if (!domainDir.canRead()) {
+      throw new IllegalArgumentException(String.format("Shared ClassLoader Domain '%s' is not accessible",domain));
+    }
+    Collection<File> jars=FileUtils.listFiles(domainDir,new String[]{"jar"},false);
+    if (logger.isDebugEnabled()) {
+{
+        StringBuilder sb=new StringBuilder();
+        sb.append("Loading Shared ClassLoader Domain: ").append(domain).append(SystemUtils.LINE_SEPARATOR);
+        sb.append("=============================").append(SystemUtils.LINE_SEPARATOR);
+        for (        File jar : jars) {
+          sb.append(jar.toURI().toURL()).append(SystemUtils.LINE_SEPARATOR);
+        }
+        sb.append("=============================").append(SystemUtils.LINE_SEPARATOR);
+        logger.debug(sb.toString());
+      }
+    }
+    for (    File jar : jars) {
+      addURL(jar.toURI().toURL());
+    }
+  }
+ catch (  Throwable t) {
+    throw new RuntimeException(t);
+  }
+}

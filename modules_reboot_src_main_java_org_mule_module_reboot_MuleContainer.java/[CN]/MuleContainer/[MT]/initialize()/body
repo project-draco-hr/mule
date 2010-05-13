@@ -1,0 +1,27 @@
+{
+  if (configurationResources == null) {
+    logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
+    configurationResources=DEFAULT_CONFIGURATION;
+  }
+  ConfigurationBuilder cfgBuilder;
+  try {
+    cfgBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(getConfigBuilderClassName(),new Object[]{configurationResources},MuleContainer.class);
+  }
+ catch (  Exception e) {
+    throw new ConfigurationException(CoreMessages.failedToLoad(getConfigBuilderClassName()),e);
+  }
+  if (!cfgBuilder.isConfigured()) {
+    List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(2);
+    builders.add(cfgBuilder);
+    if (ClassUtils.isClassOnPath(CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,getClass())) {
+      Object configBuilder=ClassUtils.instanciateClass(CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,ClassUtils.NO_ARGS,getClass());
+      builders.add((ConfigurationBuilder)configBuilder);
+    }
+    Properties startupProperties=null;
+    if (getStartupPropertiesFile() != null) {
+      startupProperties=PropertiesUtils.loadProperties(getStartupPropertiesFile(),getClass());
+    }
+    DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
+    muleContext=muleContextFactory.createMuleContext(cfgBuilder,startupProperties);
+  }
+}
