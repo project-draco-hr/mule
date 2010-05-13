@@ -1,0 +1,30 @@
+{
+  final String muleHome=System.getProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY);
+  final String configPath=String.format("%s/apps/%s/%s",muleHome,getAppName(),MuleAppDeployer.DEFAULT_CONFIGURATION);
+  configUrl=IOUtils.getResourceAsUrl(configPath,getClass(),true,false);
+  if (configUrl == null) {
+    System.out.println(CoreMessages.configNotFoundUsage());
+    System.exit(-1);
+  }
+  final String productionMode=(String)metaData.get("production");
+  try {
+    this.configBuilderClassName=CLASSNAME_DEV_MODE_CONFIG_BUILDER;
+  }
+ catch (  Exception e) {
+    logger.fatal(e);
+    final Message message=CoreMessages.failedToLoad("Builder: " + CLASSNAME_DEV_MODE_CONFIG_BUILDER);
+    System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
+    System.exit(1);
+  }
+  try {
+    if (configBuilderClassName.equalsIgnoreCase("spring")) {
+      this.configBuilderClassName=CLASSNAME_SPRING_CONFIG_BUILDER;
+    }
+  }
+ catch (  Exception e) {
+    logger.fatal(e);
+    final Message message=CoreMessages.failedToLoad("Builder: " + this.configBuilderClassName);
+    System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
+    System.exit(1);
+  }
+}

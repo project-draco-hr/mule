@@ -11,53 +11,12 @@
   if (application == null) {
     application="default";
   }
-  if (!commandlineOptions.containsKey("idle")) {
-    final String muleHome=System.getProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY);
-    final String configPath=String.format("%s/apps/%s/%s",muleHome,application,DEFAULT_CONFIGURATION);
-    URL configUrl=IOUtils.getResourceAsUrl(configPath,MuleContainer.class,true,false);
-    if (configUrl != null) {
-      application=configUrl.toExternalForm();
-    }
- else {
-      System.out.println(CoreMessages.configNotFoundUsage());
-      System.exit(-1);
-    }
-  }
-  if (application != null) {
-    setConfigurationResources(application);
-  }
-  final String productionMode=(String)commandlineOptions.get("production");
-  try {
-    setConfigBuilderClassName(CLASSNAME_DEV_MODE_CONFIG_BUILDER);
-  }
- catch (  Exception e) {
-    logger.fatal(e);
-    final Message message=CoreMessages.failedToLoad("Builder: " + CLASSNAME_DEV_MODE_CONFIG_BUILDER);
-    System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
-    System.exit(1);
-  }
-  String cfgBuilderClassName=(String)commandlineOptions.get("builder");
-  if (commandlineOptions.containsKey("idle")) {
-    setConfigurationResources("IDLE");
-    cfgBuilderClassName=CLASSNAME_DEFAULT_IDLE_CONFIG_BUILDER;
-  }
-  if (cfgBuilderClassName != null) {
-    try {
-      if (cfgBuilderClassName.equalsIgnoreCase("spring")) {
-        cfgBuilderClassName=CLASSNAME_SPRING_CONFIG_BUILDER;
-      }
-      setConfigBuilderClassName(cfgBuilderClassName);
-    }
- catch (    Exception e) {
-      logger.fatal(e);
-      final Message message=CoreMessages.failedToLoad("Builder: " + cfgBuilderClassName);
-      System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
-      System.exit(1);
-    }
-  }
   String propertiesFile=(String)commandlineOptions.get("props");
   if (propertiesFile != null) {
     setStartupPropertiesFile(propertiesFile);
   }
   StartupContext.get().setStartupOptions(commandlineOptions);
+  deployer=new MuleAppDeployer(application);
+  deployer.setMetaData(commandlineOptions);
+  deployer.install();
 }
