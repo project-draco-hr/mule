@@ -1,32 +1,5 @@
 {
-  sendAndCommit(DEFAULT_INPUT_MESSAGE);
-  receiveAndAssertNone();
-  Message message=receive(getJmsConfig().getDeadLetterDestinationName(),getTimeout(),null);
-  Object obj=null;
-  if (message instanceof BytesMessage) {
-    byte[] messageBytes=new byte[(int)((BytesMessage)message).getBodyLength()];
-    ((BytesMessage)message).readBytes(messageBytes);
-    obj=SerializationUtils.deserialize(messageBytes);
-  }
- else   if (message instanceof ObjectMessage) {
-    obj=((ObjectMessage)message).getObject();
-  }
- else {
-    fail("Message is an unexpected type: " + message.getClass().getName());
-  }
-  assertTrue(obj instanceof ExceptionMessage);
-  Object payload=((ExceptionMessage)obj).getPayload();
-  if (payload instanceof TextMessage) {
-    assertEquals(DEFAULT_INPUT_MESSAGE,((TextMessage)payload).getText());
-  }
- else   if (payload instanceof String) {
-    assertEquals(DEFAULT_INPUT_MESSAGE,payload);
-  }
- else {
-    fail("Payload is an unexpected type: " + payload.getClass().getName());
-  }
-  String dest=message.getStringProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
-  if (dest != null) {
-    assertEquals(getJmsConfig().getDeadLetterEndpoint(),dest);
-  }
+  send(scenarioDeadLetter);
+  receive(scenarioNotReceive);
+  receive(scenarioDeadLetter);
 }
