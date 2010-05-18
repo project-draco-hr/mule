@@ -1,0 +1,18 @@
+{
+  StringBuffer buf=new StringBuffer();
+  buf.append(getSessionIDKey()).append("=").append(session.getId());
+  for (Iterator iterator=session.getPropertyNames(); iterator.hasNext(); ) {
+    Object o=iterator.next();
+    buf.append(";");
+    buf.append(o).append("=").append(session.getProperty(o));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Adding property to session header: " + o + "="+ session.getProperty(o));
+    }
+  }
+  String sessionString=buf.toString();
+  if (logger.isDebugEnabled()) {
+    logger.debug("Adding session header to message: " + sessionString);
+  }
+  sessionString=(String)encoder.transform(sessionString);
+  message.setProperty(MuleProperties.MULE_SESSION_PROPERTY,sessionString);
+}

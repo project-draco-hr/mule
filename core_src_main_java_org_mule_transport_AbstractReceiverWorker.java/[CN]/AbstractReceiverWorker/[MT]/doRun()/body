@@ -14,7 +14,27 @@
         if (payload != null) {
           MuleMessage muleMessage=receiver.createMuleMessage(payload,endpoint.getEncoding());
           preRouteMuleMessage(muleMessage);
-          MuleMessage result=receiver.routeMessage(muleMessage,tx,tx != null || endpoint.isSynchronous(),out);
+          SessionHandler handler;
+          if (endpoint.getConnector() instanceof AbstractConnector) {
+            handler=((AbstractConnector)endpoint.getConnector()).getSessionHandler();
+          }
+ else {
+            handler=new MuleSessionHandler();
+          }
+          MuleSession session;
+          try {
+            session=handler.retrieveSessionInfoFromMessage(muleMessage);
+          }
+ catch (          SerializationException e) {
+            session=new LegacySessionHandler().retrieveSessionInfoFromMessage(muleMessage);
+          }
+          MuleMessage result;
+          if (session != null) {
+            result=receiver.routeMessage(muleMessage,session,tx,tx != null || endpoint.isSynchronous(),out);
+          }
+ else {
+            result=receiver.routeMessage(muleMessage,tx,tx != null || endpoint.isSynchronous(),out);
+          }
           if (result != null) {
             payload=postProcessMessage(result);
             if (payload != null) {

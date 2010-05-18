@@ -1,0 +1,24 @@
+{
+  MuleMessage message=new DefaultMuleMessage("Test Message",muleContext);
+  SessionHandler handler=new SerializeAndEncodeSessionHandler();
+  MuleSession session=new DefaultMuleSession(muleContext);
+  String string="bar";
+  session.setProperty("fooString",string);
+  Date date=new Date(0);
+  session.setProperty("fooDate",date);
+  List list=new ArrayList();
+  list.add("bar1");
+  list.add("bar2");
+  session.setProperty("fooList",list);
+  handler.storeSessionInfoToMessage(session,message);
+  session=handler.retrieveSessionInfoFromMessage(message);
+  Object obj=session.getProperty("fooString");
+  assertTrue(obj instanceof String);
+  assertEquals(string,obj);
+  obj=session.getProperty("fooDate");
+  assertTrue("Object should be a Date but is " + obj.getClass().getName(),obj instanceof Date);
+  assertEquals(date,obj);
+  obj=session.getProperty("fooList");
+  assertTrue("Object should be a List but is " + obj.getClass().getName(),obj instanceof List);
+  assertEquals(list,obj);
+}

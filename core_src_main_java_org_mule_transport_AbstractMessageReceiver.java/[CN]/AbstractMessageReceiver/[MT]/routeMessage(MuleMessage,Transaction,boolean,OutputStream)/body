@@ -1,32 +1,3 @@
 {
-  if (connector.isEnableMessageEvents()) {
-    connector.fireNotification(new EndpointMessageNotification(message,endpoint,service.getName(),EndpointMessageNotification.MESSAGE_RECEIVED));
-  }
-  if (message.getBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,false)) {
-    synchronous=true;
-  }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Message Received from: " + endpoint.getEndpointURI());
-  }
-  if (logger.isTraceEnabled()) {
-    try {
-      logger.trace("Message Payload: \n" + StringMessageUtils.truncate(StringMessageUtils.toString(message.getPayload()),200,false));
-      logger.trace("Message detail: \n" + StringMessageUtils.headersToString(message));
-    }
- catch (    Exception e) {
-    }
-  }
-  if (endpoint.getFilter() != null) {
-    if (!endpoint.getFilter().accept(message)) {
-      message=handleUnacceptedFilter(message);
-      RequestContext.setEvent(new DefaultMuleEvent(message,endpoint,new DefaultMuleSession(connector.getMuleContext()),synchronous));
-      return message;
-    }
-  }
-  if (endpoint instanceof InboundEndpointDecorator) {
-    if (!((InboundEndpointDecorator)endpoint).onMessage(message)) {
-      return null;
-    }
-  }
-  return listener.onMessage(message,trans,synchronous,outputStream);
+  return routeMessage(message,new DefaultMuleSession(connector.getMuleContext()),trans,synchronous,outputStream);
 }
