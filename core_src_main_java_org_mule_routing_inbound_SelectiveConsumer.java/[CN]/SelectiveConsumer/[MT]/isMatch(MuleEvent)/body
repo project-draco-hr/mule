@@ -5,17 +5,15 @@
   if (filter == null) {
     return true;
   }
-  MuleMessage message=event.getMessage();
   if (transformFirst) {
     try {
-      Object payload=event.transformMessage();
-      message=new DefaultMuleMessage(payload,message,muleContext);
+      event.transformMessage();
     }
  catch (    TransformerException e) {
       throw new RoutingException(CoreMessages.transformFailedBeforeFilter(),event.getMessage(),event.getEndpoint(),e);
     }
   }
-  boolean result=filter.accept(message);
+  boolean result=filter.accept(event.getMessage());
   if (logger.isDebugEnabled()) {
     logger.debug("MuleEvent " + event.getId() + (result ? " passed filter " : " did not pass filter ")+ filter.getClass().getName());
   }
