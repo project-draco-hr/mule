@@ -3,6 +3,21 @@
     registerShutdownHook();
   }
   try {
+    final Map<String,Object> options=StartupContext.get().getStartupOptions();
+    String application=(String)options.get("app");
+    String[] apps;
+    if (application == null) {
+      apps=MuleContainerBootstrapUtils.getMuleAppsFile().list();
+    }
+ else {
+      apps=application.split(":");
+    }
+    for (    String app : apps) {
+      final DeployerWrapper<Map<String,Object>> d=new DeployerWrapper<Map<String,Object>>(new MuleAppDeployer(app));
+      d.setMetaData(options);
+      ((MultiDeployer)deployer).getDeployers().add(d);
+    }
+    deployer.install();
     logger.info("Mule Container initializing...");
     deployer.init();
     logger.info("Mule Container starting...");
