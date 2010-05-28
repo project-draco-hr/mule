@@ -1,0 +1,30 @@
+{
+  if (logger.isInfoEnabled()) {
+    logger.info("Installing application: " + appName);
+  }
+  final String muleHome=System.getProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY);
+  final String configPath=String.format("%s/apps/%s/%s",muleHome,getAppName(),DefaultMuleApplication.DEFAULT_CONFIGURATION);
+  configUrl=IOUtils.getResourceAsUrl(configPath,getClass(),true,false);
+  if (configUrl == null) {
+    throw new InstallException(CoreMessages.configNotFoundUsage());
+  }
+  String builder=(String)metaData.get("builder");
+  if (StringUtils.isBlank(builder)) {
+    builder=CLASSNAME_DEFAULT_CONFIG_BUILDER;
+  }
+  try {
+    if ("spring".equalsIgnoreCase(builder)) {
+      this.configBuilderClassName=CLASSNAME_SPRING_CONFIG_BUILDER;
+    }
+ else {
+      this.configBuilderClassName=builder;
+    }
+  }
+ catch (  Exception e) {
+    logger.fatal(e);
+    final Message message=CoreMessages.failedToLoad("Builder: " + this.configBuilderClassName);
+    System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
+    throw new InstallException(message,e);
+  }
+  createDeploymentClassLoader();
+}
