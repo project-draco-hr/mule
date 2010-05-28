@@ -1,0 +1,28 @@
+{
+  if (mBeanServer == null) {
+    return;
+  }
+  try {
+    final String domain=jmxSupport.getDomainName(muleContext,false);
+    ObjectName query=jmxSupport.getObjectName(domain + ":*");
+    Set<ObjectName> mbeans=mBeanServer.queryNames(query,null);
+    while (!mbeans.isEmpty()) {
+      ObjectName name=mbeans.iterator().next();
+      try {
+        if (!(containerMode && MuleServiceMBean.DEFAULT_JMX_NAME.equals(name.getCanonicalKeyPropertyListString()))) {
+          mBeanServer.unregisterMBean(name);
+        }
+      }
+ catch (      Exception e) {
+        logger.warn(String.format("Failed to unregister MBean: %s. Error is: %s",name,e.getMessage()));
+      }
+      mbeans=mBeanServer.queryNames(query,null);
+      if (containerMode) {
+        mbeans.remove(jmxSupport.getObjectName(domain + ":" + MuleServiceMBean.DEFAULT_JMX_NAME));
+      }
+    }
+  }
+ catch (  MalformedObjectNameException e) {
+    logger.warn("Failed to create ObjectName query",e);
+  }
+}
