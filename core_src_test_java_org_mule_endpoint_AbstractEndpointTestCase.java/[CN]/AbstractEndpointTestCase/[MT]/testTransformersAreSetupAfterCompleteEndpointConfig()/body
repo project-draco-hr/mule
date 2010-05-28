@@ -1,0 +1,50 @@
+{
+  final Connector mockConnector=mock(Connector.class);
+  final EndpointURI uri=mock(EndpointURI.class);
+  final List<Transformer> inputTransformers=new ArrayList<Transformer>();
+  final List<Transformer> outputTransformers=new ArrayList<Transformer>();
+  final String name="testEndpoint";
+  final Map<String,String> properties=new HashMap<String,String>();
+  final String property1="property1";
+  final String value1="value1";
+  properties.put(property1,value1);
+  final TransactionConfig mockTransactionConfig=mock(TransactionConfig.class);
+  final Filter mockFilter=mock(Filter.class);
+  final boolean deleteUnacceptedMessages=true;
+  final EndpointSecurityFilter mockEndpointSecurityFilter=mock(EndpointSecurityFilter.class);
+  final boolean synchronous=true;
+  final int responseTimeout=5;
+  final String initialState="state1";
+  final String endpointEncoding="enconding1";
+  final String endpointBuilderName="builderName1";
+  final MuleContext muleContext=mock(MuleContext.class);
+  final RetryPolicyTemplate retryPolicyTemplate=mock(RetryPolicyTemplate.class);
+  Transformer mockTransformer=mock(Transformer.class);
+  doAnswer(new Answer<Object>(){
+    public Object answer(    InvocationOnMock invocation) throws Throwable {
+      AbstractEndpoint endpoint=(AbstractEndpoint)invocation.getArguments()[0];
+      assertEquals(mockConnector,endpoint.getConnector());
+      assertEquals(uri,endpoint.getEndpointURI());
+      assertEquals(name,endpoint.getName());
+      assertEquals(value1,endpoint.getProperties().get(property1));
+      assertEquals(mockTransactionConfig,endpoint.getTransactionConfig());
+      assertEquals(mockFilter,endpoint.getFilter());
+      assertEquals(deleteUnacceptedMessages,endpoint.isDeleteUnacceptedMessages());
+      assertEquals(mockEndpointSecurityFilter,endpoint.getSecurityFilter());
+      assertEquals(synchronous,endpoint.isSynchronous());
+      assertEquals(responseTimeout,endpoint.getResponseTimeout());
+      assertEquals(initialState,endpoint.getInitialState());
+      assertEquals(endpointEncoding,endpoint.getEncoding());
+      assertEquals(endpointBuilderName,endpoint.getEndpointBuilderName());
+      assertEquals(muleContext,endpoint.getMuleContext());
+      assertEquals(retryPolicyTemplate,endpoint.getRetryPolicyTemplate());
+      return null;
+    }
+  }
+).when(mockTransformer).setEndpoint(any(ImmutableEndpoint.class));
+  inputTransformers.add(mockTransformer);
+  outputTransformers.add(mockTransformer);
+  new AbstractEndpoint(mockConnector,uri,inputTransformers,outputTransformers,name,properties,mockTransactionConfig,mockFilter,deleteUnacceptedMessages,mockEndpointSecurityFilter,synchronous,responseTimeout,initialState,endpointEncoding,endpointBuilderName,muleContext,retryPolicyTemplate){
+  }
+;
+}
