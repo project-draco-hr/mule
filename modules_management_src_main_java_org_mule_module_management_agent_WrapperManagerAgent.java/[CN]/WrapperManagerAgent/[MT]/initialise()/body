@@ -23,7 +23,16 @@
       unregisterMeQuietly();
       return;
     }
-    wrapperName=jmxSupport.getObjectName(jmxSupport.getDomainName(muleContext) + ":" + WRAPPER_OBJECT_NAME);
+    final boolean containerMode=muleContext.getConfiguration().isContainerMode();
+    if (containerMode) {
+      wrapperName=jmxSupport.getObjectName(JmxSupport.DEFAULT_JMX_DOMAIN_PREFIX + ":" + WRAPPER_JMX_NAME);
+      if (mBeanServer.isRegistered(wrapperName)) {
+        return;
+      }
+    }
+ else {
+      wrapperName=jmxSupport.getObjectName(jmxSupport.getDomainName(muleContext) + ":" + WRAPPER_JMX_NAME);
+    }
     unregisterMBeansIfNecessary();
     mBeanServer.registerMBean(wrapperManagerRef.get(),wrapperName);
   }
