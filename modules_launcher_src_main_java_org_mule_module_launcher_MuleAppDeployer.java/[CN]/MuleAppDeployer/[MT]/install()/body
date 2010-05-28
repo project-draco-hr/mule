@@ -6,8 +6,7 @@
   final String configPath=String.format("%s/apps/%s/%s",muleHome,getAppName(),MuleAppDeployer.DEFAULT_CONFIGURATION);
   configUrl=IOUtils.getResourceAsUrl(configPath,getClass(),true,false);
   if (configUrl == null) {
-    System.out.println(CoreMessages.configNotFoundUsage());
-    System.exit(-1);
+    throw new InstallException(CoreMessages.configNotFoundUsage());
   }
   String builder=(String)metaData.get("builder");
   if (StringUtils.isBlank(builder)) {
@@ -25,7 +24,7 @@
     logger.fatal(e);
     final Message message=CoreMessages.failedToLoad("Builder: " + this.configBuilderClassName);
     System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
-    System.exit(1);
+    throw new InstallException(message,e);
   }
   createDeploymentClassLoader();
 }

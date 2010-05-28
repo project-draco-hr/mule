@@ -1,11 +1,12 @@
 {
   for (  Model model : muleContext.getRegistry().lookupObjects(Model.class)) {
-    ModelServiceMBean serviceMBean=new ModelService(model);
-    String rawName=serviceMBean.getName() + "(" + serviceMBean.getType()+ ")";
+    ModelServiceMBean service=new ModelService(model);
+    String rawName=service.getName() + "(" + service.getType()+ ")";
     String name=jmxSupport.escape(rawName);
     final String jmxName=String.format("%s:%s%s",jmxSupport.getDomainName(muleContext),ModelServiceMBean.DEFAULT_JMX_NAME_PREFIX,name);
     ObjectName on=jmxSupport.getObjectName(jmxName);
+    ClassloaderSwitchingMBeanWrapper mBean=new ClassloaderSwitchingMBeanWrapper(service,ModelServiceMBean.class,muleContext.getExecutionClassLoader());
     logger.debug("Registering model with name: " + on);
-    mBeanServer.registerMBean(serviceMBean,on);
+    mBeanServer.registerMBean(mBean,on);
   }
 }

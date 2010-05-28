@@ -2,12 +2,13 @@
   for (  Connector connector : muleContext.getRegistry().lookupObjects(Connector.class)) {
     if (connector instanceof AbstractConnector) {
       for (      MessageReceiver messageReceiver : ((AbstractConnector)connector).getReceivers().values()) {
-        EndpointServiceMBean mBean=new EndpointService(messageReceiver);
-        String fullName=buildFullyQualifiedEndpointName(mBean,connector);
+        EndpointServiceMBean service=new EndpointService(messageReceiver);
+        String fullName=buildFullyQualifiedEndpointName(service,connector);
         if (logger.isInfoEnabled()) {
           logger.info("Attempting to register service with name: " + fullName);
         }
         ObjectName on=jmxSupport.getObjectName(fullName);
+        ClassloaderSwitchingMBeanWrapper mBean=new ClassloaderSwitchingMBeanWrapper(service,EndpointServiceMBean.class,muleContext.getExecutionClassLoader());
         mBeanServer.registerMBean(mBean,on);
         if (logger.isInfoEnabled()) {
           logger.info("Registered Endpoint Service with name: " + on);
