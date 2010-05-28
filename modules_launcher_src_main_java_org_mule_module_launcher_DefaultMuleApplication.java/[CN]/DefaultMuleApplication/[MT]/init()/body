@@ -6,7 +6,12 @@
     ConfigurationBuilder cfgBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(configBuilderClassName,new Object[]{configUrl.toExternalForm()},getDeploymentClassLoader());
     if (!cfgBuilder.isConfigured()) {
       DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-      this.muleContext=muleContextFactory.createMuleContext(cfgBuilder);
+      this.muleContext=muleContextFactory.createMuleContext(cfgBuilder,new DefaultMuleContextBuilder(){
+        @Override protected DefaultMuleConfiguration createMuleConfiguration(){
+          return new DefaultMuleConfiguration(true);
+        }
+      }
+);
       if (redeploymentEnabled) {
         createRedeployMonitor();
       }
