@@ -2,16 +2,14 @@
   String[] keys=new String[]{"key","null"};
   Iterator<String> keyIterator=IteratorUtils.arrayIterator(keys);
   Enumeration<String> keyEnumeration=new IteratorEnumeration(keyIterator);
-  Mock mockMessage=new Mock(MapMessage.class);
-  mockMessage.expectAndReturn("getMapNames",keyEnumeration);
-  mockMessage.expectAndReturn("getObject",C.eq("key"),"value");
-  mockMessage.expectAndReturn("getObject",C.eq("null"),null);
-  MapMessage message=(MapMessage)mockMessage.proxy();
-  Object result=JmsMessageUtils.toObject(message,JmsConstants.JMS_SPECIFICATION_11,ENCODING);
+  MapMessage mockMessage1=mock(MapMessage.class);
+  when(mockMessage1.getMapNames()).thenReturn(keyEnumeration);
+  when(mockMessage1.getObject("key")).thenReturn("value");
+  when(mockMessage1.getObject("null")).thenReturn(null);
+  Object result=JmsMessageUtils.toObject(mockMessage1,JmsConstants.JMS_SPECIFICATION_11,ENCODING);
   assertNotNull(result);
   assertTrue(result instanceof Map);
   Map map=(Map)result;
   assertEquals("value",map.get("key"));
   assertNull(map.get("null"));
-  mockMessage.verify();
 }
