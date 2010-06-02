@@ -1,3 +1,28 @@
 {
-  return null;
+  try {
+    List<Binding<T>> bindings=injector.findBindingsByType(TypeLiteral.get(type));
+    if (bindings != null && bindings.size() > 0) {
+      Map<String,T> map=new HashMap<String,T>(bindings.size());
+      String name;
+      T object;
+      for (      Binding<T> binding : bindings) {
+        object=binding.getProvider().get();
+        if (binding.getKey().getAnnotation() instanceof Named) {
+          name=((Named)binding.getKey().getAnnotation()).value();
+        }
+ else         if (object instanceof NamedObject) {
+          name=((NamedObject)object).getName();
+        }
+ else {
+          name="_" + object.hashCode();
+        }
+        map.put(name,object);
+      }
+      return map;
+    }
+    return Collections.emptyMap();
+  }
+ catch (  ConfigurationException e) {
+    return Collections.emptyMap();
+  }
 }
