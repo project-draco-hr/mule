@@ -1,8 +1,8 @@
 {
-  if (!(ptype.getRawType() instanceof Class)) {
+  if (!(ptype.getRawType() instanceof Class<?>)) {
     return null;
   }
-  Class rawType=(Class)ptype.getRawType();
+  Class<?> rawType=(Class<?>)ptype.getRawType();
   Type[] paramTypes=ptype.getActualTypeArguments();
   if (nestingLevel - currentLevel > 0) {
     int nextLevel=currentLevel + 1;
@@ -14,7 +14,7 @@
   if (source != null && !source.isAssignableFrom(rawType)) {
     return null;
   }
-  Class fromSuperclassOrInterface=extractTypeFromClass(methodParam,rawType,source,typeIndex,nestingLevel,currentLevel);
+  Class<?> fromSuperclassOrInterface=extractTypeFromClass(methodParam,rawType,source,typeIndex,nestingLevel,currentLevel);
   if (fromSuperclassOrInterface != null) {
     return fromSuperclassOrInterface;
   }
@@ -22,8 +22,8 @@
     return null;
   }
   Type paramType=paramTypes[typeIndex];
-  if (paramType instanceof TypeVariable && methodParam != null && methodParam.typeVariableMap != null) {
-    Type mappedType=methodParam.typeVariableMap.get((TypeVariable)paramType);
+  if (paramType instanceof TypeVariable<?> && methodParam != null && methodParam.typeVariableMap != null) {
+    Type mappedType=methodParam.typeVariableMap.get(paramType);
     if (mappedType != null) {
       paramType=mappedType;
     }
@@ -46,12 +46,13 @@
   }
   if (paramType instanceof GenericArrayType) {
     Type compType=((GenericArrayType)paramType).getGenericComponentType();
-    if (compType instanceof Class) {
-      return Array.newInstance((Class)compType,0).getClass();
+    if (compType instanceof Class<?>) {
+      Class<?> compClass=(Class<?>)compType;
+      return Array.newInstance(compClass,0).getClass();
     }
   }
- else   if (paramType instanceof Class) {
-    return (Class)paramType;
+ else   if (paramType instanceof Class<?>) {
+    return (Class<?>)paramType;
   }
   return null;
 }
