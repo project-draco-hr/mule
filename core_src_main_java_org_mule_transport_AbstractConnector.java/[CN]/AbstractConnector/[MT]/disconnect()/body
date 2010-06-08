@@ -1,3 +1,31 @@
 {
-  disconnect(true);
+  startOnConnect=isStarted();
+  try {
+    if (receivers != null) {
+      for (      MessageReceiver receiver : receivers.values()) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Disconnecting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+        }
+        receiver.disconnect();
+      }
+    }
+    this.doDisconnect();
+  }
+  finally {
+    if (receivers != null) {
+      for (      MessageReceiver receiver : receivers.values()) {
+        if (receiver instanceof AbstractMessageReceiver && ((AbstractMessageReceiver)receiver).isStarted()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Stopping receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+          }
+          receiver.stop();
+        }
+      }
+    }
+  }
+  connected.set(false);
+  if (logger.isInfoEnabled()) {
+    logger.info("Disconnected: " + this.getConnectionDescription());
+  }
+  this.fireNotification(new ConnectionNotification(this,getConnectEventId(),ConnectionNotification.CONNECTION_DISCONNECTED));
 }
