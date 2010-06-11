@@ -1,24 +1,3 @@
 {
-  super(socket,receiver,((TcpConnector)connector).getTcpProtocol().createResponse(socket));
-  this.socket=socket;
-  final TcpConnector tcpConnector=((TcpConnector)connector);
-  protocol=tcpConnector.getTcpProtocol();
-  try {
-    tcpConnector.configureSocket(TcpConnector.SERVER,socket);
-    underlyingIn=new BufferedInputStream(socket.getInputStream());
-    dataIn=new TcpInputStream(underlyingIn){
-      public void close() throws IOException {
-        dataInWorkFinished=true;
-        moreMessages=false;
-synchronized (notify) {
-          notify.notifyAll();
-        }
-      }
-    }
-;
-    dataOut=new BufferedOutputStream(socket.getOutputStream());
-  }
- catch (  IOException e) {
-    logger.error("Failed to set Socket properties: " + e.getMessage(),e);
-  }
+  this(socket,receiver,new DefaultMessageExceptionPolicy());
 }

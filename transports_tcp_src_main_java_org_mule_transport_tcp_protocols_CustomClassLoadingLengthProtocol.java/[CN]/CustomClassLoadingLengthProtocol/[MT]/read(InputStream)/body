@@ -1,0 +1,21 @@
+{
+  byte[] bytes=(byte[])super.read(is);
+  if (bytes == null) {
+    return null;
+  }
+ else {
+    ClassLoaderObjectInputStream classLoaderIS=new ClassLoaderObjectInputStream(this.getClassLoader(),is);
+    try {
+      return classLoaderIS.readObject();
+    }
+ catch (    ClassNotFoundException e) {
+      logger.warn(e.getMessage());
+      IOException iox=new IOException();
+      iox.initCause(e);
+      throw iox;
+    }
+ finally {
+      classLoaderIS.close();
+    }
+  }
+}
