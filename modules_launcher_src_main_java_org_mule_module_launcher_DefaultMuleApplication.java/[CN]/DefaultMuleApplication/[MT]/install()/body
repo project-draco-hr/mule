@@ -9,7 +9,7 @@
     descriptor=bh.fetch(getAppName());
   }
  catch (  IOException e) {
-    e.printStackTrace();
+    throw new InstallException(MessageFactory.createStaticMessage("Failed to parse the application deployment descriptor"),e);
   }
   configUrl=IOUtils.getResourceAsUrl(configPath,getClass(),true,false);
   if (configUrl == null) {
@@ -18,20 +18,6 @@
   String builder=(String)metaData.get("builder");
   if (StringUtils.isBlank(builder)) {
     builder=ApplicationDescriptor.CLASSNAME_DEFAULT_CONFIG_BUILDER;
-  }
-  try {
-    if ("spring".equalsIgnoreCase(builder)) {
-      this.configBuilderClassName=ApplicationDescriptor.CLASSNAME_SPRING_CONFIG_BUILDER;
-    }
- else {
-      this.configBuilderClassName=builder;
-    }
-  }
- catch (  Exception e) {
-    logger.fatal(e);
-    final Message message=CoreMessages.failedToLoad("Builder: " + this.configBuilderClassName);
-    System.err.println(StringMessageUtils.getBoilerPlate("FATAL: " + message.toString()));
-    throw new InstallException(message,e);
   }
   createDeploymentClassLoader();
 }
