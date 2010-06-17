@@ -1,8 +1,12 @@
 {
-  try {
-    return injector.getInstance(type);
-  }
- catch (  ConfigurationException e) {
+  List<Binding<T>> bindings=injector.findBindingsByType(TypeLiteral.get(type));
+  if (bindings.size() == 0) {
     return null;
+  }
+ else   if (bindings.size() == 1) {
+    return bindings.get(0).getProvider().get();
+  }
+ else {
+    throw new RegistrationException("More than one object of type: " + type + ", was found");
   }
 }
