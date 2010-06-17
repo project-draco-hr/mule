@@ -1,28 +1,15 @@
 {
   final String muleHome=System.getProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY);
-  final String deployConfig=String.format("%s/apps/%s/%s",muleHome,appName,"mule-deploy.properties");
-  final Properties p=new Properties();
-  final InputStream is=IOUtils.getResourceAsStream(deployConfig,getClass());
-  if (is == null) {
+  File appDir=new File(String.format("%s/apps/%s",muleHome,appName));
+  @SuppressWarnings("unchecked") Collection<File> deployFiles=FileUtils.listFiles(appDir,new WildcardFileFilter("mule-deploy.*"),null);
+  if (deployFiles.isEmpty()) {
     return new EmptyApplicationDescriptor();
   }
-  p.load(is);
-  return new ApplicationDescriptor(){
-    public String getEncoding(){
-      return p.getProperty("encoding");
-    }
-    public String getConfigurationBuilder(){
-      return p.getProperty("config.builder");
-    }
-    public String getDomainName(){
-      return p.getProperty("domain");
-    }
-    public boolean isParentFirstClassLoader(){
-      return Boolean.parseBoolean(p.getProperty("classloader.parentFirst",Boolean.TRUE.toString()));
-    }
-    public int getDescriptorVersion(){
-      return 1;
-    }
+  for (  File file : deployFiles) {
+    final String ext=FilenameUtils.getExtension(file.getName());
+    System.out.println("ext = " + ext);
   }
-;
+  final String deployConfig=String.format("%s/apps/%s/%s",muleHome,appName,"mule-deploy.properties");
+  ApplicationDescriptor desc=new PropertiesDescriptorParser().parse(new File(deployConfig));
+  return desc;
 }
