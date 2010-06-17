@@ -17,18 +17,7 @@
     ConfigurationBuilder cfgBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(configBuilderClassName,new Object[]{configUrl.toExternalForm()},getDeploymentClassLoader());
     if (!cfgBuilder.isConfigured()) {
       DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-      this.muleContext=muleContextFactory.createMuleContext(cfgBuilder,new DefaultMuleContextBuilder(){
-        @Override protected DefaultMuleConfiguration createMuleConfiguration(){
-          final DefaultMuleConfiguration configuration=new DefaultMuleConfiguration(true);
-          configuration.setId(appName);
-          final String encoding=descriptor.getEncoding();
-          if (StringUtils.isNotBlank(encoding)) {
-            configuration.setDefaultEncoding(encoding);
-          }
-          return configuration;
-        }
-      }
-);
+      this.muleContext=muleContextFactory.createMuleContext(cfgBuilder,new ApplicationMuleContextBuilder(descriptor));
       if (redeploymentEnabled) {
         createRedeployMonitor();
       }
