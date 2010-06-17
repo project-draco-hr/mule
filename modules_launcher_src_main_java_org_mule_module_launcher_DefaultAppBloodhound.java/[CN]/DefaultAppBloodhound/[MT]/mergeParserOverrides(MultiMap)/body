@@ -1,0 +1,28 @@
+{
+  for (  Map.Entry<String,DescriptorParser> entry : parserRegistry.entrySet()) {
+    @SuppressWarnings("unchecked") final Collection<DescriptorParser> candidates=(Collection<DescriptorParser>)overrides.get(entry.getKey());
+    if (candidates == null) {
+      continue;
+    }
+    final ArrayList<DescriptorParser> sorted=new ArrayList<DescriptorParser>(candidates);
+    final Comparator<DescriptorParser> annotationComparator=new Comparator<DescriptorParser>(){
+      public int compare(      DescriptorParser p1,      DescriptorParser p2){
+        final Preferred ann1=p1.getClass().getAnnotation(Preferred.class);
+        final Preferred ann2=p2.getClass().getAnnotation(Preferred.class);
+        if (ann1 == null && ann2 == null) {
+          return 0;
+        }
+        if (ann1 != null && ann2 == null) {
+          return 1;
+        }
+        if (ann1 == null) {
+          return -1;
+        }
+        return new Integer(ann1.weight()).compareTo(ann2.weight());
+      }
+    }
+;
+    Collections.sort(sorted,Collections.reverseOrder(annotationComparator));
+    parserRegistry.put(entry.getKey(),sorted.get(0));
+  }
+}

@@ -5,12 +5,16 @@
   if (deployFiles.isEmpty()) {
     return new EmptyApplicationDescriptor(appName);
   }
-  for (  File file : deployFiles) {
-    final String ext=FilenameUtils.getExtension(file.getName());
-    System.out.println("ext = " + ext);
+  if (deployFiles.size() > 1) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage(String.format("More than one mule-deploy descriptors found in application '%s'",appName)));
   }
-  final String deployConfig=String.format("%s/apps/%s/%s",muleHome,appName,"mule-deploy.properties");
-  ApplicationDescriptor desc=new PropertiesDescriptorParser().parse(new File(deployConfig));
+  final File descriptorFile=deployFiles.iterator().next();
+  final String ext=FilenameUtils.getExtension(descriptorFile.getName());
+  final DescriptorParser descriptorParser=parserRegistry.get(ext);
+  if (descriptorParser == null) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage(String.format("Unsupported deployment descriptor format for app '%s': %s",appName,ext)));
+  }
+  ApplicationDescriptor desc=descriptorParser.parse(descriptorFile);
   desc.setAppName(appName);
   return desc;
 }
