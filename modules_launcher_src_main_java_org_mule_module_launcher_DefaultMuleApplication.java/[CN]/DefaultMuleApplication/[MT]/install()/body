@@ -2,8 +2,6 @@
   if (logger.isInfoEnabled()) {
     logger.info("Installing application: " + appName);
   }
-  final String muleHome=System.getProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY);
-  final String configPath=String.format("%s/apps/%s/%s",muleHome,getAppName(),ApplicationDescriptor.DEFAULT_CONFIGURATION_URL);
   AppBloodhound bh=new DefaultAppBloodhound();
   try {
     descriptor=bh.fetch(getAppName());
@@ -11,9 +9,15 @@
  catch (  IOException e) {
     throw new InstallException(MessageFactory.createStaticMessage("Failed to parse the application deployment descriptor"),e);
   }
-  configUrl=IOUtils.getResourceAsUrl(configPath,getClass(),true,false);
-  if (configUrl == null) {
-    throw new InstallException(CoreMessages.configNotFoundUsage());
+  final String[] configResources=descriptor.getConfigResources();
+  absoluteResourcePaths=new String[configResources.length];
+  for (int i=0; i < configResources.length; i++) {
+    String resource=configResources[i];
+    final File file=toAbsoluteFile(resource);
+    if (!file.exists()) {
+      throw new InstallException(MessageFactory.createStaticMessage(String.format("Config for app '%s' not found: %s",getAppName(),file)));
+    }
+    absoluteResourcePaths[i]=file.getAbsolutePath();
   }
   createDeploymentClassLoader();
 }
