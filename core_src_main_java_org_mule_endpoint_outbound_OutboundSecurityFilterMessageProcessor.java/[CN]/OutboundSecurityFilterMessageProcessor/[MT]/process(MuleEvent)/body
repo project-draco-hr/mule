@@ -1,0 +1,19 @@
+{
+  AbstractConnector connector=(AbstractConnector)endpoint.getConnector();
+  if (endpoint.getSecurityFilter() != null) {
+    try {
+      endpoint.getSecurityFilter().authenticate(event);
+    }
+ catch (    org.mule.api.security.SecurityException e) {
+      logger.warn("Outbound Request was made but was not authenticated: " + e.getMessage(),e);
+      connector.fireNotification(new SecurityNotification(e,SecurityNotification.SECURITY_AUTHENTICATION_FAILED));
+      connector.handleException(e);
+      return event;
+    }
+catch (    Exception e) {
+      connector.handleException(e);
+      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+    }
+  }
+  return processNext(event);
+}

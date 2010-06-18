@@ -25,14 +25,11 @@
   if (logger.isDebugEnabled()) {
     logger.debug("MuleClient sending remote call to: " + action.getResourceIdentifier() + ". At "+ serverEndpoint.toString()+ " . Event is: "+ event);
   }
-  MuleMessage result;
+  MuleMessage result=null;
   try {
-    if (synchronous) {
-      result=serverEndpoint.send(event);
-    }
- else {
-      serverEndpoint.dispatch(event);
-      return null;
+    MuleEvent resultEvent=serverEndpoint.process(event);
+    if (resultEvent != null) {
+      result=resultEvent.getMessage();
     }
     if (result != null && result.getPayload() != null) {
       if (result.getPayload() instanceof NullPayload) {

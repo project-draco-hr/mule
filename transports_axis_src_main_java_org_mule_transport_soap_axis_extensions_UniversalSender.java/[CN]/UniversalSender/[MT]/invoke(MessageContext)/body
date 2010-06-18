@@ -95,7 +95,11 @@
       builder.setSynchronous(true);
       OutboundEndpoint syncEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(builder);
       MuleEvent dispatchEvent=new DefaultMuleEvent(message,syncEndpoint,session,sync);
-      MuleMessage result=endpoint.send(dispatchEvent);
+      MuleMessage result=null;
+      MuleEvent resultEvent=syncEndpoint.process(dispatchEvent);
+      if (resultEvent != null) {
+        result=resultEvent.getMessage();
+      }
       if (result != null) {
         byte[] response=result.getPayloadAsBytes();
         Message responseMessage=new Message(response);
@@ -110,7 +114,7 @@
     }
  else {
       MuleEvent dispatchEvent=new DefaultMuleEvent(message,endpoint,session,sync);
-      endpoint.dispatch(dispatchEvent);
+      endpoint.process(dispatchEvent);
     }
   }
  catch (  AxisFault axisFault) {

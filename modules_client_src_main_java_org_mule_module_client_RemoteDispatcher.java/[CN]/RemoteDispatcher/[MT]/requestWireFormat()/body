@@ -1,6 +1,10 @@
 {
   MuleMessage msg=new DefaultMuleMessage(ServerHandshake.SERVER_HANDSHAKE_PROPERTY,muleContext);
-  MuleMessage result=syncServerEndpoint.send(new DefaultMuleEvent(msg,syncServerEndpoint,new DefaultMuleSession(muleContext),true));
+  MuleMessage result=null;
+  MuleEvent resultEvent=syncServerEndpoint.process(new DefaultMuleEvent(msg,syncServerEndpoint,new DefaultMuleSession(muleContext),true));
+  if (resultEvent != null) {
+    result=resultEvent.getMessage();
+  }
   if (result == null) {
     throw new RemoteDispatcherException(ClientMessages.failedToDispatchActionNoResponseFromServer("request wire format",5000));
   }

@@ -1,0 +1,23 @@
+{
+  if (next == null) {
+    return event;
+  }
+ else {
+    TransactionTemplate tt=new TransactionTemplate(transactionConfig,exceptionListener,muleContext);
+    TransactionCallback cb=new TransactionCallback(){
+      public Object doInTransaction() throws Exception {
+        return next.process(event);
+      }
+    }
+;
+    try {
+      return (MuleEvent)tt.execute(cb);
+    }
+ catch (    MessagingException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new MessagingException(CoreMessages.errorInvokingMessageProcessorWithinTransaction(next,transactionConfig),event.getMessage(),e);
+    }
+  }
+}

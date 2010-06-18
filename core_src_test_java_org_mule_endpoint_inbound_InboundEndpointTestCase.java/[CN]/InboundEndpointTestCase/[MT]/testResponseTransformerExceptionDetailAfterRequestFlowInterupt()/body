@@ -1,0 +1,12 @@
+{
+  receiver=createTestMessageReceiver(null,new TestSecurityFilter(false),null,new ResponseAppendTransformer(),false,null);
+  responseEvent=createTestResponseEvent(receiver);
+  responseEvent.getMessage().setExceptionPayload(new DefaultExceptionPayload(new RuntimeException()));
+  MuleMessage result=receiver.routeMessage(inMessage);
+  assertMessageNotSent();
+  assertNotNull(result);
+  assertEquals(TestSecurityFilter.SECURITY_EXCEPTION_MESSAGE + ResponseAppendTransformer.APPEND_STRING,result.getPayloadAsString());
+  assertEquals(403,result.getIntProperty("status",0));
+  assertNotNull(result.getExceptionPayload());
+  assertTrue(result.getExceptionPayload().getException() instanceof TestSecurityFilter.StaticMessageUnauthorisedException);
+}

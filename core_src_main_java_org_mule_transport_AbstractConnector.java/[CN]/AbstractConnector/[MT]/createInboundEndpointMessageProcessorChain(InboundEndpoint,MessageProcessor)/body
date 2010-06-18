@@ -1,0 +1,14 @@
+{
+  ChainMessageProcessorBuilder requestChainBuilder=new ChainMessageProcessorBuilder();
+  requestChainBuilder.setName("Inbound endpoint request pipeline");
+  requestChainBuilder.chain(new InboundEndpointPropertyMessageProcessor(endpoint),new InboundNotificationMessageProcessor(endpoint),new InboundLoggingMessageProcessor(endpoint),new InboundFilterMessageProcessor(),new InboundSecurityFilterMessageProcessor(endpoint),new TransformerMessageProcessor(endpoint.getTransformers()));
+  requestChainBuilder.chain(listener);
+  customizeInboundEndpointRequestChain(requestChainBuilder);
+  ChainMessageProcessorBuilder responseChainBuilder=new ChainMessageProcessorBuilder();
+  responseChainBuilder.setName("Inbound endpoint response pipeline");
+  responseChainBuilder.chain(new InboundExceptionDetailsMessageProcessor(this),new TransformerMessageProcessor(endpoint.getResponseTransformers()));
+  ChainMessageProcessorBuilder inboundChainBuilder=new ChainMessageProcessorBuilder();
+  inboundChainBuilder.setName("Inbound endpoint request/response composite pipeline");
+  inboundChainBuilder.chain(requestChainBuilder.build(),responseChainBuilder.build());
+  return inboundChainBuilder.build();
+}

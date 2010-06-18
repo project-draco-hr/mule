@@ -10,10 +10,16 @@
   if (outboundEndpoint == null) {
     EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(endpoint);
     endpointBuilder.setTransformers(Collections.EMPTY_LIST);
+    endpointBuilder.setResponseTransformers(Collections.EMPTY_LIST);
+    endpointBuilder.setSynchronous(true);
     outboundEndpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
   }
   MuleEvent event=new DefaultMuleEvent(request,outboundEndpoint,session,true);
-  MuleMessage message=connector.send(outboundEndpoint,event);
+  MuleEvent result=outboundEndpoint.process(event);
+  MuleMessage message=null;
+  if (result != null) {
+    message=result.getMessage();
+  }
   if (message.getIntProperty(HttpConstants.HEADER_CONTENT_LENGTH,-1) == 0 && discardEmptyContent) {
     if (logger.isDebugEnabled()) {
       logger.debug("Received empty message and ignoring from: " + endpoint.getEndpointURI());

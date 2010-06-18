@@ -1,13 +1,25 @@
 {
   for (  OutboundEndpoint endpoint : endpoints) {
     if (isMatch(message)) {
-      DefaultMuleEvent event=new DefaultMuleEvent(message,endpoint,session,endpoint.isSynchronous());
-      if (endpoint.isSynchronous()) {
-        return endpoint.send(event);
-      }
+      try {
+        DefaultMuleEvent event=new DefaultMuleEvent(message,endpoint,session,endpoint.isSynchronous());
+        if (endpoint.isSynchronous()) {
+          MuleEvent resultEvent;
+          resultEvent=endpoint.process(event);
+          if (resultEvent != null) {
+            return resultEvent.getMessage();
+          }
  else {
-        endpoint.dispatch(event);
-        return null;
+            return null;
+          }
+        }
+ else {
+          endpoint.process(event);
+          return null;
+        }
+      }
+ catch (      MuleException e) {
+        throw new MessagingException(e.getI18nMessage(),message,e);
       }
     }
   }

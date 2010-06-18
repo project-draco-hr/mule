@@ -1,0 +1,26 @@
+{
+  if (endpoint == null) {
+    throw new IllegalArgumentException("The endpoint must not be null when you unregister a listener");
+  }
+  Service service=(Service)patternByEndpoint.remove(endpoint.getName());
+  EndpointURI endpointUri=endpoint.getEndpointURI();
+  if (endpointUri == null) {
+    throw new IllegalArgumentException("The endpointUri must not be null when you unregister a listener");
+  }
+  if (logger.isInfoEnabled()) {
+    logger.info("Removing listener on endpointUri: " + endpointUri);
+  }
+  if (receivers != null && !receivers.isEmpty()) {
+    MessageReceiver receiver=receivers.remove(getReceiverKey(service,endpoint));
+    if (receiver != null) {
+      if (isConnected()) {
+        receiver.disconnect();
+      }
+      if (isStarted()) {
+        receiver.stop();
+      }
+      destroyReceiver(receiver,endpoint);
+      doUnregisterListener(service,endpoint,receiver);
+    }
+  }
+}

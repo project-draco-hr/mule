@@ -8,18 +8,14 @@
       message.applyTransformers(endpoint.getTransformers());
     }
     MuleEvent newEvent=new DefaultMuleEvent(message,endpoint,session,getEndpoint().isSynchronous());
-    if (getEndpoint().isSynchronous()) {
-      MuleMessage result=endpoint.send(newEvent);
-      if (statistics != null) {
-        statistics.incrementRoutedMessage(getEndpoint());
-      }
-      return result;
+    MuleEvent result=endpoint.process(newEvent);
+    if (statistics != null) {
+      statistics.incrementRoutedMessage(getEndpoint());
+    }
+    if (result != null) {
+      return result.getMessage();
     }
  else {
-      endpoint.dispatch(newEvent);
-      if (statistics != null) {
-        statistics.incrementRoutedMessage(getEndpoint());
-      }
       return null;
     }
   }

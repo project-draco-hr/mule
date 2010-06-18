@@ -4,26 +4,12 @@
     event.setTimeout(timeout);
   }
   if (event.getEndpoint() instanceof OutboundEndpoint) {
-    try {
-      if (logger.isDebugEnabled()) {
-        logger.debug("sending event: " + event);
-      }
-      Connector connector=event.getEndpoint().getConnector();
-      if (connector instanceof AbstractConnector) {
-        ((AbstractConnector)connector).getSessionHandler().storeSessionInfoToMessage(this,event.getMessage());
-      }
+    MuleEvent resultEvent=((OutboundEndpoint)event.getEndpoint()).process(event);
+    if (resultEvent != null) {
+      return resultEvent.getMessage();
+    }
  else {
-        logger.warn("A session handler could not be obtained, using default.");
-        new MuleSessionHandler().storeSessionInfoToMessage(new DefaultMuleSession(this,muleContext),event.getMessage());
-      }
-      MuleMessage response=((OutboundEndpoint)event.getEndpoint()).send(event);
-      return OptimizedRequestContext.unsafeRewriteEvent(response);
-    }
- catch (    MuleException e) {
-      throw e;
-    }
-catch (    Exception e) {
-      throw new DispatchException(event.getMessage(),event.getEndpoint(),e);
+      return null;
     }
   }
  else   if (service != null) {

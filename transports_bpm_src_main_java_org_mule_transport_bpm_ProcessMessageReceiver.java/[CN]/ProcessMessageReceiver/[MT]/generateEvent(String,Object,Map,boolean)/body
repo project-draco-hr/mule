@@ -14,10 +14,16 @@
     OutboundEndpoint ep=endpointBuilder.buildOutboundEndpoint();
     DefaultMuleEvent event=new DefaultMuleEvent(message,ep,new DefaultMuleSession(service,connector.getMuleContext()),synchronous);
     if (synchronous) {
-      return ep.send(event);
+      MuleEvent resultEvent=ep.process(event);
+      if (resultEvent != null) {
+        return resultEvent.getMessage();
+      }
+ else {
+        return null;
+      }
     }
  else {
-      ep.dispatch(event);
+      ep.process(event);
     }
   }
  else {

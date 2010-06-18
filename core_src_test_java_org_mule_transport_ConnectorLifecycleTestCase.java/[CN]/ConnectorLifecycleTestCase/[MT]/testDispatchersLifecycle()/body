@@ -1,19 +1,18 @@
 {
   OutboundEndpoint out=getTestOutboundEndpoint("out","test://out",null,null,null,connector);
   try {
-    connector.send(out,getTestEvent("data"));
+    out.process(getTestEvent("data"));
     fail("cannot sent on a connector that is not started");
   }
- catch (  DispatchException e) {
-    assertTrue(e.getCause() instanceof LifecycleException);
+ catch (  LifecycleException e) {
   }
   assertEquals(0,connector.dispatchers.getNumIdle());
   assertDispatcherStartedConntected(out,false,false);
   connector.start();
   assertDispatcherStartedConntected(out,true,true);
   OutboundEndpoint out2=getTestOutboundEndpoint("out2","test://out2",null,null,null,connector);
-  connector.send(out2,getTestEvent("data"));
-  assertEquals(2,connector.dispatchers.getNumIdle());
+  out2.process(getTestEvent("data"));
+  assertEquals(1,connector.dispatchers.getNumIdle());
   assertDispatcherStartedConntected(out,true,true);
   assertDispatcherStartedConntected(out2,true,true);
   connector.stop();
@@ -24,7 +23,7 @@
   assertEquals(2,connector.dispatchers.getNumActive() + connector.dispatchers.getNumIdle());
   assertDispatcherStartedConntected(out,true,true);
   assertDispatcherStartedConntected(out2,true,true);
-  connector.send(out,getTestEvent("data"));
+  out.process(getTestEvent("data"));
   assertEquals(2,connector.dispatchers.getNumIdle());
   assertDispatcherStartedConntected(out,true,true);
   connector.dispose();

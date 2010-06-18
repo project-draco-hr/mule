@@ -4,18 +4,19 @@
   }
   MuleRegistry registry=connector.getMuleContext().getRegistry();
   OutboundEndpoint protocolEndpoint;
+  EndpointURIEndpointBuilder builder=new EndpointURIEndpointBuilder(uri,connector.getMuleContext());
+  builder.setSynchronous(true);
   if (muleEndpoint == null) {
     protocolEndpoint=registry.lookupEndpointFactory().getOutboundEndpoint(uri);
   }
  else {
-    EndpointURIEndpointBuilder builder=new EndpointURIEndpointBuilder(uri,connector.getMuleContext());
     String connectorName=(String)muleEndpoint.getProperty("protocolConnector");
     if (connectorName != null) {
       builder.setConnector(registry.lookupConnector(connectorName));
     }
     builder.setResponseTimeout(muleEndpoint.getResponseTimeout());
-    protocolEndpoint=registry.lookupEndpointFactory().getOutboundEndpoint(builder);
   }
+  protocolEndpoint=registry.lookupEndpointFactory().getOutboundEndpoint(builder);
   protocolEndpoints.put(uri,protocolEndpoint);
   return protocolEndpoint;
 }

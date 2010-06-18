@@ -1,6 +1,6 @@
 {
   Object requestBody;
-  Object request=event.transformMessage();
+  Object request=event.getMessage().getPayload();
   String tempUrl=serviceUrl;
   MuleMessage result;
   if (muleContext.getExpressionManager().isValidExpression(serviceUrl)) {
@@ -22,7 +22,10 @@
   tempUrl=urlBuffer.toString();
   logger.info("Invoking REST service: " + tempUrl);
   event.getMessage().setProperty(HTTP_METHOD,httpMethod);
-  result=RequestContext.getEventContext().sendEvent(new DefaultMuleMessage(requestBody,event.getMessage(),muleContext),tempUrl);
+  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(tempUrl,muleContext);
+  endpointBuilder.setSynchronous(true);
+  OutboundEndpoint outboundEndpoint=endpointBuilder.buildOutboundEndpoint();
+  result=RequestContext.getEventContext().sendEvent(new DefaultMuleMessage(requestBody,event.getMessage(),muleContext),outboundEndpoint);
   if (isErrorPayload(result)) {
     handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),result),result);
   }
