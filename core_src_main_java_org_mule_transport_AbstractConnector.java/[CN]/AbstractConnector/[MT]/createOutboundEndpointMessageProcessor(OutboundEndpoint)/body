@@ -1,19 +1,11 @@
 {
   ChainMessageProcessorBuilder outboundChainBuilder=new ChainMessageProcessorBuilder();
   outboundChainBuilder.setName("Outbound endpoint request chain");
-  outboundChainBuilder.chain(new OutboundLoggingMessageProcessor()).chain(new AssertConnectorStartedMessageProcessor());
-  outboundChainBuilder.chain(new TransactionalInterceptingMessageProcessor(endpoint.getTransactionConfig(),this,muleContext));
-  outboundChainBuilder.chain(new OutboundEventTimeoutMessageProcessor());
-  outboundChainBuilder.chain(new OutboundSimpleTryCatchMessageProcessor());
-  outboundChainBuilder.chain(new AsyncInterceptingMessageProcessor(getDispatcherWorkManager(),this));
-  outboundChainBuilder.chain(new OutboundSessionHandlerMessageProcessor(getSessionHandler())).chain(new OutboundEndpointPropertyMessageProcessor());
-  if (endpoint instanceof OutboundEndpointDecorator) {
-    outboundChainBuilder.chain(new OutboundEndpointDecoratorMessageProcessor((OutboundEndpointDecorator)endpoint));
-  }
-  outboundChainBuilder.chain(new OutboundSecurityFilterMessageProcessor(endpoint)).chain(new OutboundTryCatchMessageProcessor(endpoint)).chain(new OutboundResponsePropertiesMessageProcessor(endpoint)).chain(new InternalDispatcherMessageProcessor(endpoint));
+  outboundChainBuilder.chain(createOutboundRequestMessageProcessors(endpoint));
+  outboundChainBuilder.chain(new InternalDispatcherMessageProcessor(endpoint));
   ChainMessageProcessorBuilder responseChainBuilder=new ChainMessageProcessorBuilder();
   responseChainBuilder.setName("Outbound endpoint response chain");
-  responseChainBuilder.chain(new TransformerMessageProcessor(endpoint.getResponseTransformers())).chain(new OutboundRewriteResponseEventMessageProcessor());
+  responseChainBuilder.chain(createOutboundResponseMessageProcessors(endpoint));
   ChainMessageProcessorBuilder compositeChainBuilder=new ChainMessageProcessorBuilder();
   compositeChainBuilder.setName("Outbound endpoint request/response composite chain");
   compositeChainBuilder.chain(outboundChainBuilder.build(),responseChainBuilder.build());
