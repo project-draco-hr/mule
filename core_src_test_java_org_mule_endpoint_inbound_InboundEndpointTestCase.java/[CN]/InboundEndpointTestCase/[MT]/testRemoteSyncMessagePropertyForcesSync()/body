@@ -1,9 +1,10 @@
 {
-  receiver=createTestMessageReceiver(null,null,null,null,false,null);
-  responseEvent=createTestResponseEvent(receiver);
-  inMessage=createTestRequestMessage();
+  endpoint=createTestInboundEndpoint(null,null,null,null,false,null);
   inMessage.setBooleanProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,true);
-  MuleMessage result=receiver.routeMessage(inMessage);
+  requestEvent=createTestRequestEvent(endpoint);
+  responseEvent=createTestResponseEvent(endpoint);
+  MessageProcessor mpChain=createInboundEndpointMessageProcessorChain(endpoint,inboundListener);
+  result=mpChain.process(requestEvent);
   assertMessageSentSame(true);
-  assertEquals(responseEvent.getMessage(),result);
+  assertEquals(responseEvent.getMessage(),result.getMessage());
 }

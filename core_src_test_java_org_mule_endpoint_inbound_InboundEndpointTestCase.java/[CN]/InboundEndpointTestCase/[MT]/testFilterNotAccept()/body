@@ -1,8 +1,10 @@
 {
-  receiver=createTestMessageReceiver(new TestFilter(false),null,null,null,false,null);
-  responseEvent=createTestResponseEvent(receiver);
-  MuleMessage result=receiver.routeMessage(inMessage);
+  endpoint=createTestInboundEndpoint(new TestFilter(false),null,null,null,false,null);
+  requestEvent=createTestRequestEvent(endpoint);
+  responseEvent=createTestResponseEvent(endpoint);
+  MessageProcessor mpChain=createInboundEndpointMessageProcessorChain(endpoint,inboundListener);
+  result=mpChain.process(requestEvent);
   assertMessageNotSent();
-  assertEquals(inMessage,result);
-  assertNull(result.getExceptionPayload());
+  assertEquals(inMessage,result.getMessage());
+  assertNull(result.getMessage().getExceptionPayload());
 }
