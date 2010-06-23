@@ -3,9 +3,10 @@
     throw new IllegalStateException(CoreMessages.objectNotRegistered("javax.transaction.TransactionManager","Transaction Manager").getMessage());
   }
   try {
-    txManager.begin();
+    if (!isExternal)     txManager.begin();
 synchronized (this) {
       transaction=txManager.getTransaction();
+      if (isExternal)       transaction.registerSynchronization(new ExternalTransaction(muleContext));
     }
   }
  catch (  Exception e) {
