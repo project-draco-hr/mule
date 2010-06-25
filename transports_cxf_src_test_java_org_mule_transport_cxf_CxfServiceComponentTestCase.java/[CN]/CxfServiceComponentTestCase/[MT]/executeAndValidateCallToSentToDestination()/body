@@ -1,0 +1,46 @@
+{
+  final MuleEventContext ctx=mock(MuleEventContext.class);
+  final String method="GET";
+  final Server server=mock(Server.class);
+  final Destination destination=mock(Destination.class);
+  final InboundEndpoint endpoint=mock(InboundEndpoint.class);
+  final MessageObserver messageObserver=mock(MessageObserver.class);
+  final String someActionProperty="someActionProperty";
+  final String path="somePath";
+  final String basePath="someBasePath";
+  final MuleMessage muleReqMsg=new DefaultMuleMessage("some object",muleContext);
+  muleReqMsg.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,method);
+  muleReqMsg.setProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY,path);
+  muleReqMsg.setProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY,basePath);
+  muleReqMsg.setProperty(SoapConstants.SOAP_ACTION_PROPERTY,"\"" + someActionProperty + "\"");
+  when(ctx.getMessage()).thenReturn(muleReqMsg);
+  when(ctx.getMuleContext()).thenReturn(muleContext);
+  when(receiver.getServer()).thenReturn(server);
+  when(server.getDestination()).thenReturn(destination);
+  when(receiver.getEndpoint()).thenReturn(endpoint);
+  when(destination.getMessageObserver()).thenReturn(messageObserver);
+  doAnswer(new Answer<Object>(){
+    public Object answer(    InvocationOnMock invocation) throws Throwable {
+      MessageImpl messageImpl=(MessageImpl)invocation.getArguments()[0];
+      assertNotNull(messageImpl);
+      assertSame(muleReqMsg,messageImpl.get(CxfConstants.MULE_MESSAGE));
+      assertEquals(someActionProperty,messageImpl.get(org.mule.transport.soap.SoapConstants.SOAP_ACTION_PROPERTY_CAPS));
+      assertEquals(Boolean.TRUE,messageImpl.get(LocalConduit.DIRECT_DISPATCH));
+      assertSame(RequestContext.getEvent(),messageImpl.get(MuleProperties.MULE_EVENT_PROPERTY));
+      assertSame(destination,messageImpl.getDestination());
+      assertSame(method,messageImpl.get(Message.HTTP_REQUEST_METHOD));
+      assertSame(path,messageImpl.get(Message.PATH_INFO));
+      assertSame(basePath,messageImpl.get(Message.BASE_PATH));
+      messageImpl.getExchange().setOutMessage(outMessage);
+      return null;
+    }
+  }
+).when(messageObserver).onMessage(any(MessageImpl.class));
+  Object result=cxfServiceComponent.sendToDestination(ctx);
+  verify(messageObserver).onMessage(any(MessageImpl.class));
+  assertNotNull(result);
+  assertTrue(result instanceof DefaultMuleMessage);
+  DefaultMuleMessage muleResMsg=(DefaultMuleMessage)result;
+  assertTrue(muleResMsg.getPayload() instanceof OutputHandler);
+  return (OutputHandler)muleResMsg.getPayload();
+}

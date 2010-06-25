@@ -1,0 +1,21 @@
+{
+  BindingFactoryManager bindingFactoryManager=mock(BindingFactoryManager.class);
+  BindingFactory bindingFactory=mock(BindingFactory.class);
+  BindingInfo bindingInfo=mock(BindingInfo.class);
+  Binding binding=mock(Binding.class);
+  when(immutableEndpoint.getProperty(CxfConstants.PROXY)).thenReturn("true");
+  when(bus.getExtension(BindingFactoryManager.class)).thenReturn(bindingFactoryManager);
+  when(bindingFactoryManager.getBindingFactory(any(String.class))).thenReturn(bindingFactory);
+  when(bindingFactory.createBindingInfo(any(org.apache.cxf.service.Service.class),any(String.class),any(Object.class))).thenReturn(bindingInfo);
+  when(bindingFactory.createBinding(bindingInfo)).thenReturn(binding);
+  when(conduitInitiatorManager.getConduitInitiator("http://schemas.xmlsoap.org/wsdl/http/")).thenReturn(conduitInitiator);
+  when(conduitInitiator.getConduit(any(EndpointInfo.class))).thenReturn(conduit);
+  clientWrapper=new ClientWrapper(bus,immutableEndpoint);
+  assertNotNull(clientWrapper.getClient());
+  assertNotNull(clientWrapper.getClient().getInInterceptors());
+  assertEquals(3,clientWrapper.getClient().getInInterceptors().size());
+  assertEquals(4,clientWrapper.getClient().getOutInterceptors().size());
+  verify(conduit).setMessageObserver(any(MessageObserver.class));
+  verify(conduit).setCloseInput(false);
+  commonPostExecutionVerifications();
+}

@@ -1,0 +1,26 @@
+{
+  super.doSetUp();
+  bus=mock(Bus.class);
+  immutableEndpoint=mock(ImmutableEndpoint.class);
+  destinationFactoryManager=mock(DestinationFactoryManager.class);
+  destinationFactory=mock(DestinationFactory.class);
+  destination=mock(Destination.class);
+  chainInitiationObserver=mock(ChainInitiationObserver.class);
+  endpoint=mock(EndpointImpl.class);
+  endpointInfo=mock(EndpointInfo.class);
+  conduitInitiatorManager=mock(ConduitInitiatorManager.class);
+  conduitInitiator=mock(ConduitInitiator.class);
+  conduit=mock(MuleUniversalConduit.class);
+  when(immutableEndpoint.getEndpointURI()).thenReturn(new MuleEndpointURI("http://some.dummy.endpoint",muleContext));
+  when(bus.getExtension(DestinationFactoryManager.class)).thenReturn(destinationFactoryManager);
+  when(destinationFactoryManager.getDestinationFactoryForUri(any(String.class))).thenReturn(destinationFactory);
+  when(destinationFactory.getDestination(any(EndpointInfo.class))).thenReturn(destination);
+  when(destination.getMessageObserver()).thenReturn(chainInitiationObserver);
+  when(chainInitiationObserver.getEndpoint()).thenReturn(endpoint);
+  when(endpoint.getEndpointInfo()).thenReturn(endpointInfo);
+  String transportId="someId";
+  when(endpointInfo.getTransportId()).thenReturn(transportId);
+  when(bus.getExtension(ConduitInitiatorManager.class)).thenReturn(conduitInitiatorManager);
+  when(conduitInitiatorManager.getConduitInitiator(transportId)).thenReturn(conduitInitiator);
+  when(conduitInitiator.getConduit(endpointInfo)).thenReturn(conduit);
+}

@@ -1,9 +1,11 @@
 {
   Endpoint ep=client.getEndpoint();
-  QName q=new QName(ep.getService().getName().getNamespaceURI(),opName);
-  BindingOperationInfo bop=ep.getBinding().getBindingInfo().getOperation(q);
+  BindingOperationInfo bop=getBindingOperationFromEndpoint(ep,opName);
   if (bop == null) {
-    throw new Exception("No such operation: " + opName);
+    bop=tryToGetTheOperationInDotNetNamingConvention(ep,opName);
+    if (bop == null) {
+      throw new Exception("No such operation: " + opName);
+    }
   }
   if (bop.isUnwrappedCapable()) {
     bop=bop.getUnwrappedOperation();

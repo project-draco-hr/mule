@@ -1,0 +1,28 @@
+{
+  String wsdlLocation=(String)endpoint.getProperty(CxfConstants.WSDL_LOCATION);
+  String serviceClassString=(String)endpoint.getProperty(CxfConstants.SERVICE_CLASS);
+  final AegisDatabinding aDB;
+  List<AegisDatabinding> list=(List<AegisDatabinding>)this.endpoint.getProperties().get(CxfConstants.DATA_BINDING);
+  if (list != null && list.size() == 1) {
+    aDB=list.get(0);
+  }
+ else {
+    aDB=new AegisDatabinding();
+  }
+  ClientProxyFactoryBean cpf=new ClientProxyFactoryBean();
+  final Class serviceClass;
+  try {
+    serviceClass=ClassUtils.loadClass(serviceClassString,getClass());
+  }
+ catch (  ClassNotFoundException e) {
+    throw new CreateException(CxfMessages.bothServiceClassAndWsdlUrlAreRequired(),e,this);
+  }
+  cpf.setServiceClass(serviceClass);
+  cpf.setDataBinding(aDB);
+  cpf.setAddress(endpoint.getEndpointURI().getAddress());
+  cpf.setBus(bus);
+  if (wsdlLocation != null) {
+    cpf.setWsdlLocation(wsdlLocation);
+  }
+  this.client=ClientProxy.getClient(cpf.create());
+}

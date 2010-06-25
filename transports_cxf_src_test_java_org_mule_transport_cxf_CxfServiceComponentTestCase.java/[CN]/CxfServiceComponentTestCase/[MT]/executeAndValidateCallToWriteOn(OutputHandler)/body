@@ -1,0 +1,15 @@
+{
+  final MuleEvent event=mock(MuleEvent.class);
+  final OutputStream out=mock(OutputStream.class);
+  final DelegatingOutputStream delegate=mock(DelegatingOutputStream.class);
+  final InterceptorChain interceptorChain=mock(InterceptorChain.class);
+  final InOrder inOrderChecker=inOrder(delegate,out,interceptorChain);
+  outMessage.setContent(DelegatingOutputStream.class,delegate);
+  outMessage.setInterceptorChain(interceptorChain);
+  when(delegate.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+  outputHandlerGottenSendToDestination.write(event,out);
+  inOrderChecker.verify(delegate).getOutputStream();
+  inOrderChecker.verify(out).write(any(byte[].class));
+  inOrderChecker.verify(delegate).setOutputStream(out);
+  inOrderChecker.verify(out).flush();
+}
