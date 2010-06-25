@@ -2,9 +2,10 @@
   TestEndpointMessageNotificationListener<EndpointMessageNotification> listener=new TestEndpointMessageNotificationListener<EndpointMessageNotification>();
   muleContext.registerListener(listener);
   endpoint=createTestInboundEndpoint(null,null,null,null,false,null);
+  endpoint.setListener(inboundListener);
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
-  MessageProcessor mpChain=createInboundEndpointMessageProcessorChain(endpoint,inboundListener);
+  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain();
   result=mpChain.process(requestEvent);
   assertTrue(listener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
   assertEquals(EndpointMessageNotification.MESSAGE_RECEIVED,listener.messageNotification.getAction());
