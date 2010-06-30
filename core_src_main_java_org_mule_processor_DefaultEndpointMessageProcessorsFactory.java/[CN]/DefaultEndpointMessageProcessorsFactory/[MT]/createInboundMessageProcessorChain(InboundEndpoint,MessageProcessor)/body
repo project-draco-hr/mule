@@ -1,0 +1,18 @@
+{
+  ChainMessageProcessorBuilder requestChainBuilder=new ChainMessageProcessorBuilder();
+  requestChainBuilder.setName("Inbound endpoint request pipeline");
+  requestChainBuilder.chain(createInboundMessageProcessors(endpoint));
+  requestChainBuilder.chain(endpoint.getMessageProcessors());
+  if (target == null) {
+    throw new ConfigurationException(MessageFactory.createStaticMessage("No listener (target) has been set for this endpoint"));
+  }
+  requestChainBuilder.chain(target);
+  ChainMessageProcessorBuilder responseChainBuilder=new ChainMessageProcessorBuilder();
+  responseChainBuilder.setName("Inbound endpoint response pipeline");
+  responseChainBuilder.chain(createInboundResponseMessageProcessors(endpoint));
+  responseChainBuilder.chain(endpoint.getResponseMessageProcessors());
+  ChainMessageProcessorBuilder compositeChainBuilder=new ChainMessageProcessorBuilder();
+  compositeChainBuilder.setName("Inbound endpoint request/response composite pipeline");
+  compositeChainBuilder.chain(requestChainBuilder.build(),responseChainBuilder.build());
+  return compositeChainBuilder.build();
+}

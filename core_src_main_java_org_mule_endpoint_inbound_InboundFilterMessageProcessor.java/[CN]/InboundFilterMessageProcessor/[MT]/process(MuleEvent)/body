@@ -1,13 +1,9 @@
 {
   MuleMessage message=event.getMessage();
   InboundEndpoint endpoint=(InboundEndpoint)event.getEndpoint();
-  if (endpoint.getFilter() != null) {
-    if (!endpoint.getFilter().accept(message)) {
-      message=handleUnacceptedFilter(message,endpoint);
-      MuleEvent result=new DefaultMuleEvent(message,event);
-      RequestContext.setEvent(result);
-      return result;
-    }
+  if (endpoint.getFilter() != null && !endpoint.getFilter().accept(message)) {
+    RequestContext.setEvent(new DefaultMuleEvent(message,event));
+    throw new FilterException(CoreMessages.messageRejectedByFilter(),endpoint.getFilter());
   }
   return processNext(event);
 }

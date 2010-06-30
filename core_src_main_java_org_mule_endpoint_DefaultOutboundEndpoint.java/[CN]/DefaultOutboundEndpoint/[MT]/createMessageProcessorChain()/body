@@ -1,16 +1,4 @@
 {
-  MessageProcessorsFactory factory=((AbstractConnector)getConnector()).getMessageProcessorsFactory();
-  ChainMessageProcessorBuilder outboundChainBuilder=new ChainMessageProcessorBuilder();
-  outboundChainBuilder.setName("Outbound endpoint request chain");
-  outboundChainBuilder.chain(factory.createOutboundMessageProcessors(this));
-  outboundChainBuilder.chain(getMessageProcessors());
-  outboundChainBuilder.chain(((AbstractConnector)getConnector()).createDispatcherMessageProcessor(this));
-  ChainMessageProcessorBuilder responseChainBuilder=new ChainMessageProcessorBuilder();
-  responseChainBuilder.setName("Outbound endpoint response chain");
-  responseChainBuilder.chain(factory.createOutboundResponseMessageProcessors(this));
-  responseChainBuilder.chain(getResponseMessageProcessors());
-  ChainMessageProcessorBuilder compositeChainBuilder=new ChainMessageProcessorBuilder();
-  compositeChainBuilder.setName("Outbound endpoint request/response composite chain");
-  compositeChainBuilder.chain(outboundChainBuilder.build(),responseChainBuilder.build());
-  return compositeChainBuilder.build();
+  EndpointMessageProcessorsFactory factory=getMessageProcessorsFactory();
+  return factory.createOutboundMessageProcessorChain(this,((AbstractConnector)getConnector()).createDispatcherMessageProcessor(this));
 }

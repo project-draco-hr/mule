@@ -4,6 +4,12 @@
   }
   MuleEvent muleEvent=createMuleEvent(message,synchronous,outputStream);
   muleEvent=OptimizedRequestContext.unsafeSetEvent(muleEvent);
-  MuleEvent resultEvent=listener.process(muleEvent);
+  MuleEvent resultEvent=null;
+  try {
+    resultEvent=listener.process(muleEvent);
+  }
+ catch (  FilterException e) {
+    return handleUnacceptedFilter(muleEvent.getMessage());
+  }
   return resultEvent != null ? resultEvent.getMessage() : null;
 }

@@ -5,9 +5,12 @@
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
   MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain();
-  result=mpChain.process(requestEvent);
+  try {
+    result=mpChain.process(requestEvent);
+    fail("Filter should have thrown a FilterException");
+  }
+ catch (  FilterException e) {
+  }
   assertFalse(securityFilter.wasCalled());
   assertMessageNotSent();
-  assertEquals(inMessage,result.getMessage());
-  assertNull(result.getMessage().getExceptionPayload());
 }
