@@ -1,13 +1,13 @@
 {
-  MessagePropertiesTransformer t=createTransformerWithExpression(expression);
+  MessagePropertiesTransformer t=new MessagePropertiesTransformer();
+  t.setDeleteProperties(Collections.singletonList("badProperty"));
+  t.setMuleContext(muleContext);
   DefaultMuleMessage msg=new DefaultMuleMessage("message",(Map)null,muleContext);
-  addPropertiesToMessage(validProperties,msg);
-  addPropertiesToMessage(invalidProperties,msg);
+  msg.setProperty("badProperty","badValue");
   DefaultMuleMessage transformed=(DefaultMuleMessage)t.transform(msg,null);
   assertSame(msg,transformed);
   assertEquals(msg.getUniqueId(),transformed.getUniqueId());
   assertEquals(msg.getPayload(),transformed.getPayload());
   assertEquals(msg.getPropertyNames(),transformed.getPropertyNames());
-  assertNotNull(transformed.getPropertyNames());
-  assertMessageContainsExpectedProperties(validProperties,invalidProperties,transformed);
+  assertFalse(transformed.getPropertyNames().contains("badValue"));
 }
