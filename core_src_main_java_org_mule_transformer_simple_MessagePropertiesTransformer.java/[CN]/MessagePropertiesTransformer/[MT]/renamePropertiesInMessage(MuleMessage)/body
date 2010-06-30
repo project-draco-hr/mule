@@ -1,0 +1,29 @@
+{
+  for (Iterator iterator=this.renameProperties.entrySet().iterator(); iterator.hasNext(); ) {
+    Map.Entry entry=(Map.Entry)iterator.next();
+    if (entry.getKey() == null) {
+      logger.error("Setting Null property keys is not supported, this entry is being ignored");
+    }
+ else {
+      final String key=entry.getKey().toString();
+      String value=(String)entry.getValue();
+      if (value == null) {
+        logger.error("Setting Null property values for renameProperties is not supported, this entry is being ignored");
+      }
+ else {
+        if (muleContext.getExpressionManager().isValidExpression(value)) {
+          Object temp=muleContext.getExpressionManager().evaluate(value.toString(),message);
+          if (temp != null) {
+            value=temp.toString();
+          }
+        }
+        if (logger.isDebugEnabled() && message.getProperty(key,scope) == null) {
+          logger.debug("renaming message property " + key + " to "+ value);
+        }
+        Object propValue=message.getProperty(key,scope);
+        message.removeProperty(key,scope);
+        message.setProperty(value,propValue,scope);
+      }
+    }
+  }
+}

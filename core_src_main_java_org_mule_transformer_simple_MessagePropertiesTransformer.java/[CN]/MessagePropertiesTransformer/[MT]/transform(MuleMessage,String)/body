@@ -1,62 +1,12 @@
 {
-  if (deleteProperties != null && deleteProperties.size() > 0) {
-    for (Iterator iterator=deleteProperties.iterator(); iterator.hasNext(); ) {
-      message.removeProperty(iterator.next().toString(),scope);
-    }
+  if (hasPropertiesToRemove()) {
+    removePropertiesFromMessage(message);
   }
-  if (addProperties != null && addProperties.size() > 0) {
-    for (Iterator iterator=addProperties.entrySet().iterator(); iterator.hasNext(); ) {
-      Map.Entry entry=(Map.Entry)iterator.next();
-      if (entry.getKey() == null) {
-        logger.error("Setting Null property keys is not supported, this entry is being ignored");
-      }
- else {
-        final String key=entry.getKey().toString();
-        Object value=entry.getValue();
-        if (muleContext.getExpressionManager().isValidExpression(value.toString())) {
-          value=muleContext.getExpressionManager().evaluate(value.toString(),message);
-        }
-        if (message.getProperty(key,scope) != null) {
-          if (overwrite) {
-            logger.debug("Overwriting message property " + key);
-            message.setProperty(key,value,scope);
-          }
- else {
-            logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,value,scope));
-          }
-        }
- else {
-          message.setProperty(key,value,scope);
-        }
-      }
-    }
+  if (hasPropertiesToAdd()) {
+    addPropertiesToMessage(message);
   }
-  if (this.renameProperties != null && this.renameProperties.size() > 0) {
-    for (Iterator iterator=this.renameProperties.entrySet().iterator(); iterator.hasNext(); ) {
-      Map.Entry entry=(Map.Entry)iterator.next();
-      if (entry.getKey() == null) {
-        logger.error("Setting Null property keys is not supported, this entry is being ignored");
-      }
- else {
-        final String key=entry.getKey().toString();
-        String value=(String)entry.getValue();
-        if (value == null) {
-          logger.error("Setting Null property values for renameProperties is not supported, this entry is being ignored");
-        }
- else {
-          if (muleContext.getExpressionManager().isValidExpression(value)) {
-            Object temp=muleContext.getExpressionManager().evaluate(value.toString(),message);
-            if (temp != null)             value=temp.toString();
-          }
-          if (logger.isDebugEnabled() && message.getProperty(key,scope) == null) {
-            logger.debug("renaming message property " + key + " to "+ value);
-          }
-          Object propValue=message.getProperty(key,scope);
-          message.removeProperty(key,scope);
-          message.setProperty(value,propValue,scope);
-        }
-      }
-    }
+  if (hasPropertiesToRename()) {
+    renamePropertiesInMessage(message);
   }
   if (getProperty != null) {
     Object prop=message.getProperty(getProperty,scope);
