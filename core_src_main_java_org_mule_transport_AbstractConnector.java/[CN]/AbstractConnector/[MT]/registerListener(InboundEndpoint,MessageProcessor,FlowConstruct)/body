@@ -5,30 +5,23 @@
   if (messageProcessorChain == null) {
     throw new IllegalArgumentException("The messageProcessorChain cannot be null when registering a listener");
   }
-  Service service=null;
-  if (flowConstruct != null && flowConstruct instanceof Service) {
-    service=(Service)flowConstruct;
-  }
- else {
-    throw new IllegalArgumentException("Only 'Service' pattern is currently supported");
-  }
   EndpointURI endpointUri=endpoint.getEndpointURI();
   if (endpointUri == null) {
     throw new ConnectorException(CoreMessages.endpointIsNullForListener(),this);
   }
-  logger.info("Registering listener: " + service.getName() + " on endpointUri: "+ endpointUri.toString());
-  if (getReceiver(service,endpoint) != null) {
+  logger.info("Registering listener: " + flowConstruct.getName() + " on endpointUri: "+ endpointUri.toString());
+  if (getReceiver(flowConstruct,endpoint) != null) {
     throw new ConnectorException(CoreMessages.listenerAlreadyRegistered(endpointUri),this);
   }
-  MessageReceiver receiver=createReceiver(service,endpoint);
+  MessageReceiver receiver=createReceiver(flowConstruct,endpoint);
   receiver.setListener(messageProcessorChain);
-  Object receiverKey=getReceiverKey(service,endpoint);
+  Object receiverKey=getReceiverKey(flowConstruct,endpoint);
   receiver.setReceiverKey(receiverKey.toString());
   receiver.initialise();
   receivers.put(receiverKey,receiver);
   flowConstructByEndpoint.put(endpoint.getName(),flowConstruct);
   if (endpoint instanceof InboundEndpointDecorator) {
-    ((InboundEndpointDecorator)endpoint).onListenerAdded(service);
+    ((InboundEndpointDecorator)endpoint).onListenerAdded(flowConstruct);
   }
   if (isConnected()) {
     receiver.connect();

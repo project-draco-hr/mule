@@ -1,0 +1,15 @@
+{
+  if (!(flowConstruct instanceof Service)) {
+    throw new IllegalArgumentException("Only the Service flow constuct is supported by the axis transport");
+  }
+  Service service=(Service)flowConstruct;
+  if (isSplitFeed()) {
+    Filter filter=new EntryLastUpdatedFilter(getLastUpdate());
+    InboundFeedSplitter splitter=new InboundFeedSplitter();
+    splitter.setEntryFilter(filter);
+    splitter.setMuleContext(getMuleContext());
+    splitter.setAcceptedContentTypes(getAcceptedMimeTypes());
+    splitter.initialise();
+    service.getInboundRouter().addRouter(splitter);
+  }
+}

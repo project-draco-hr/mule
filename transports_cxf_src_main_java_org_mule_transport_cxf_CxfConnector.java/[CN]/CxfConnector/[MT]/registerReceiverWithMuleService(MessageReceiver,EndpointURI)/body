@@ -1,10 +1,10 @@
 {
   CxfMessageReceiver cxfReceiver=(CxfMessageReceiver)receiver;
   Server server=cxfReceiver.getServer();
-  Service service=cxfReceiver.getService();
+  String flowConstruct=cxfReceiver.getFlowConstruct().getName();
   uriToServer.put(server.getEndpoint().getEndpointInfo().getAddress(),server);
   SedaService outerProtocolService=new SedaService(muleContext);
-  outerProtocolService.setName(service.getName() + "_cxfComponent");
+  outerProtocolService.setName(flowConstruct + "_cxfComponent");
   outerProtocolService.setModel(muleContext.getRegistry().lookupSystemModel());
   CxfServiceComponent svcComponent=new CxfServiceComponent(this,(CxfMessageReceiver)receiver);
   svcComponent.setBus(bus);
@@ -67,8 +67,8 @@
   receiver.setEndpoint(receiverEndpoint);
   outerProtocolService.setInboundRouter(new DefaultInboundRouterCollection());
   outerProtocolService.getInboundRouter().addEndpoint(protocolEndpoint);
-  if (!serviceToProtocolServices.containsKey(receiver.getService().getName())) {
-    serviceToProtocolServices.put(receiver.getService().getName(),new HashSet());
+  if (!serviceToProtocolServices.containsKey(flowConstruct)) {
+    serviceToProtocolServices.put(flowConstruct,new HashSet());
   }
-  serviceToProtocolServices.get(receiver.getService().getName()).add(outerProtocolService);
+  serviceToProtocolServices.get(flowConstruct).add(outerProtocolService);
 }
