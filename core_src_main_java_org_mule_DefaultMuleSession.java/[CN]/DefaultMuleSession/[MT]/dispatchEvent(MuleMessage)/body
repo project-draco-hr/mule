@@ -1,10 +1,15 @@
 {
-  if (service == null) {
+  if (flowConstruct == null) {
     throw new IllegalStateException(CoreMessages.objectIsNull("Service").getMessage());
   }
-  OutboundRouterCollection router=service.getOutboundRouter();
-  if (router == null) {
-    throw new EndpointNotFoundException(CoreMessages.noOutboundRouterSetOn(service.getName()));
+ else   if (!(flowConstruct instanceof Service)) {
+    throw new UnsupportedOperationException("MuleSession.dispatchEvent is only supported when flow constuct is a Service");
   }
-  router.process(new DefaultMuleEvent(message,RequestContext.getEvent()));
+ else {
+    OutboundRouterCollection router=((Service)flowConstruct).getOutboundRouter();
+    if (router == null) {
+      throw new EndpointNotFoundException(CoreMessages.noOutboundRouterSetOn(flowConstruct.getName()));
+    }
+    router.process(new DefaultMuleEvent(message,RequestContext.getEvent()));
+  }
 }
