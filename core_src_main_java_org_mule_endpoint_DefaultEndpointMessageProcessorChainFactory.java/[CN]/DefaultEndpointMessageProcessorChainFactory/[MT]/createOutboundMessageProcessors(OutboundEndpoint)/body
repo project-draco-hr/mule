@@ -1,4 +1,18 @@
 {
   AbstractConnector connector=((AbstractConnector)endpoint.getConnector());
-  return new MessageProcessor[]{new OutboundLoggingMessageProcessor(),new ProcessIfStartedMessageProcessor(connector,connector.getLifecycleManager().getState()),new TransactionalInterceptingMessageProcessor(endpoint.getTransactionConfig(),connector.getExceptionListener()),new OutboundEventTimeoutMessageProcessor(),new OutboundSimpleTryCatchMessageProcessor(),new OutboundSessionHandlerMessageProcessor(connector.getSessionHandler()),new OutboundEndpointPropertyMessageProcessor(),(endpoint instanceof OutboundEndpointDecorator ? new OutboundEndpointDecoratorMessageProcessor((OutboundEndpointDecorator)endpoint) : new ChainMessageProcessorBuilder.NullMessageProcessor()),new OutboundSecurityFilterMessageProcessor(endpoint),new OutboundTryCatchMessageProcessor(endpoint),new OutboundResponsePropertiesMessageProcessor(endpoint)};
+  List<MessageProcessor> list=new ArrayList<MessageProcessor>();
+  list.add(new OutboundLoggingMessageProcessor());
+  list.add(new ProcessIfStartedMessageProcessor(connector,connector.getLifecycleManager().getState()));
+  list.add(new TransactionalInterceptingMessageProcessor(endpoint.getTransactionConfig(),connector.getExceptionListener()));
+  list.add(new OutboundEventTimeoutMessageProcessor());
+  list.add(new OutboundSimpleTryCatchMessageProcessor());
+  list.add(new OutboundSessionHandlerMessageProcessor(connector.getSessionHandler()));
+  list.add(new OutboundEndpointPropertyMessageProcessor());
+  if (endpoint instanceof OutboundEndpointDecorator) {
+    list.add(new OutboundEndpointDecoratorMessageProcessor((OutboundEndpointDecorator)endpoint));
+  }
+  list.add(new OutboundSecurityFilterMessageProcessor(endpoint));
+  list.add(new OutboundTryCatchMessageProcessor(endpoint));
+  list.add(new OutboundResponsePropertiesMessageProcessor(endpoint));
+  return list;
 }
