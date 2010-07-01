@@ -41,7 +41,9 @@
       correlationIDString=(String)eventMsg.getProperty(JmsConstants.JMS_MESSAGE_ID);
       replyToMessage.setJMSCorrelationID(correlationIDString);
     }
-    event.getService().getStatistics().incSentReplyToEvent();
+    if (event.getService() instanceof Service) {
+      ((Service)event.getService()).getStatistics().incSentReplyToEvent();
+    }
     final ImmutableEndpoint endpoint=event.getEndpoint();
     if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
       connector.getJmsSupport().send(replyToProducer,replyToMessage,topic,endpoint);

@@ -12,7 +12,10 @@
         EventGroup group=(EventGroup)anExpired;
         eventGroups.remove(group.getGroupId());
         locks.remove(group.getGroupId());
-        final Service service=group.toArray()[0].getService();
+        final FlowConstruct service=group.toArray()[0].getService();
+        if (!(service instanceof Service)) {
+          throw new UnsupportedOperationException("EventAggregator is only supported with Service");
+        }
         if (isFailOnTimeout()) {
           context.fireNotification(new RoutingNotification(group.toMessageCollection(),null,RoutingNotification.CORRELATION_TIMEOUT));
           service.getExceptionListener().exceptionThrown(new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.toMessageCollection()));
@@ -24,9 +27,9 @@
           try {
             if (!(group.getCreated() + groupTimeToLive < System.currentTimeMillis())) {
               MuleMessage msg=callback.aggregateEvents(group);
-              MuleEvent newEvent=new DefaultMuleEvent(msg,group.toArray()[0].getEndpoint(),new DefaultMuleSession(service,context),false);
+              MuleEvent newEvent=new DefaultMuleEvent(msg,group.toArray()[0].getEndpoint(),new DefaultMuleSession((Service)service,context),false);
               if (!expiredAndDispatchedGroups.containsKey(group.getGroupId())) {
-                service.dispatchEvent(newEvent);
+                ((Service)service).dispatchEvent(newEvent);
                 expiredAndDispatchedGroups.put(group.getGroupId(),group.getCreated());
               }
  else {

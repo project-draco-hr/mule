@@ -1,6 +1,9 @@
 {
   if (super.process(event) != null) {
-    OutboundRouterCollection router=event.getService().getOutboundRouter();
+    if (!(event.getService() instanceof Service)) {
+      throw new UnsupportedOperationException("ForwardingConsumer is only supported with Service");
+    }
+    OutboundRouterCollection router=((Service)event.getService()).getOutboundRouter();
     event.setStopFurtherProcessing(true);
     if (router == null) {
       logger.debug("Descriptor has no outbound router configured to forward to, continuing with normal processing");
