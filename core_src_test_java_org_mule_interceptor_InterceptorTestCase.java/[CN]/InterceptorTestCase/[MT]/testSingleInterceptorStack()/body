@@ -1,13 +1,13 @@
 {
-  Service service=getTestService();
-  TestComponent component=new TestComponent();
-  service.setComponent(component);
+  Service service=createUninitializedService();
+  TestComponent component=(TestComponent)service.getComponent();
   List interceptors=new ArrayList();
   List stackInterceptors=new ArrayList();
   stackInterceptors.add(new TestInterceptor(INTERCEPTOR_ONE));
   interceptors.add(new InterceptorStack(stackInterceptors));
   component.setInterceptors(interceptors);
+  service.initialise();
   service.start();
-  MuleMessage result=service.sendEvent(getTestInboundEvent(""));
-  assertEquals(SINGLE_INTERCEPTOR_RESULT,result.getPayloadAsString());
+  MuleEvent result=component.process(getTestInboundEvent(""));
+  assertEquals(SINGLE_INTERCEPTOR_RESULT,result.getMessageAsString());
 }

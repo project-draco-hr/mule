@@ -1,2 +1,21 @@
 {
+  stats=createStatistics();
+  stats.setEnabled(muleContext.getStatistics().isEnabled());
+  muleContext.getStatistics().add(stats);
+  if (outboundRouter != null) {
+    stats.setOutboundRouterStat(outboundRouter.getStatistics());
+  }
+  stats.setInboundRouterStat(inboundRouter.getStatistics());
+  stats.setComponentStat(component.getStatistics());
+  buildServiceMessageProcessorChain();
+  inboundMessageSource.setListener(messageProcessorChain);
+  asyncReplyMessageSource.setListener(getResponseRouter());
+  component.initialise();
+  if (messageProcessorChain instanceof Initialisable) {
+    ((Initialisable)messageProcessorChain).initialise();
+  }
+  ((AbstractRouterCollection)responseRouter).setMuleContext(muleContext);
+  responseRouter.initialise();
+  ((AbstractRouterCollection)inboundRouter).setMuleContext(muleContext);
+  inboundRouter.initialise();
 }

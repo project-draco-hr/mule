@@ -1,19 +1,9 @@
 {
-  if (!isStarted() && !isPaused()) {
-    throw new ServiceException(CoreMessages.componentIsStopped(name),event.getMessage(),this);
+  MuleEvent resultEvent=serviceOnlyMessageProcessorChain.process(event);
+  if (resultEvent != null) {
+    return resultEvent.getMessage();
   }
-  try {
-    waitIfPaused(event);
+ else {
+    return null;
   }
- catch (  InterruptedException e) {
-    throw new ServiceException(event.getMessage(),this,e);
-  }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Service: " + name + " has received synchronous event on: "+ event.getEndpoint().getEndpointURI());
-  }
-  if (stats.isEnabled()) {
-    stats.incReceivedEventSync();
-  }
-  event=OptimizedRequestContext.unsafeSetEvent(event);
-  return doSend(event);
 }

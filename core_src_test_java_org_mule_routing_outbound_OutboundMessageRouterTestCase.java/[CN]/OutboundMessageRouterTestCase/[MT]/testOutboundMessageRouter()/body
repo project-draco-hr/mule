@@ -29,14 +29,14 @@
   list.add(router1);
   list.add(router2);
   messageRouter.setRouters(list);
-  MuleMessage message=new DefaultMuleMessage("test event",muleContext);
-  session.expect("dispatchEvent",C.eq(message,endpoint1));
-  messageRouter.route(message,(MuleSession)session.proxy());
+  MuleEvent event=getTestInboundEvent("test event",(MuleSession)session.proxy());
+  session.expect("dispatchEvent",C.eq(event.getMessage(),endpoint1));
+  messageRouter.process(event);
   session.verify();
-  message=new DefaultMuleMessage(new IllegalArgumentException(),muleContext);
+  event=getTestInboundEvent(new IllegalArgumentException(),(MuleSession)session.proxy());
   session.expectAndReturn("getService",getTestService());
-  session.expect("dispatchEvent",C.eq(message,endpoint2));
-  messageRouter.route(message,(MuleSession)session.proxy());
+  session.expect("dispatchEvent",C.eq(event.getMessage(),endpoint2));
+  messageRouter.process(event);
   session.verify();
   FilteringOutboundRouter router3=new FilteringOutboundRouter();
   router3.setFilter(new PayloadTypeFilter(Object.class));
@@ -44,12 +44,12 @@
   endpoints.add(endpoint2);
   router3.setEndpoints(endpoints);
   messageRouter.addRouter(router3);
-  message=new DefaultMuleMessage("testing multiple routing",muleContext);
+  event=getTestInboundEvent("testing multiple routing",(MuleSession)session.proxy());
   session.expectAndReturn("getService",getTestService());
   session.expectAndReturn("getService",getTestService());
   session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.eq(endpoint1)));
   session.expect("dispatchEvent",C.args(C.isA(MuleMessage.class),C.eq(endpoint2)));
   messageRouter.setMatchAll(true);
-  messageRouter.route(message,(MuleSession)session.proxy());
+  messageRouter.process(event);
   session.verify();
 }

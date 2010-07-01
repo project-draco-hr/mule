@@ -1,0 +1,40 @@
+{
+  ExceptionListener exceptionListener=service.getExceptionListener();
+  MuleEvent resultEvent=null;
+  try {
+    Object replyTo=event.getMessage().getReplyTo();
+    ReplyToHandler replyToHandler=getReplyToHandler(event.getMessage(),(InboundEndpoint)event.getEndpoint());
+    event.getMessage().setReplyTo(null);
+    resultEvent=service.getComponent().process(event);
+    resultEvent=processNext(resultEvent);
+    resultEvent=receiveAsyncReplyMessageProcessor.process(resultEvent);
+    if (!event.isSynchronous() || (resultEvent != null && !BooleanUtils.toBoolean((String)resultEvent.getProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY)))) {
+      processReplyTo(event,resultEvent,replyToHandler,replyTo);
+    }
+  }
+ catch (  Exception e) {
+    event.getSession().setValid(false);
+    if (e instanceof MessagingException) {
+      exceptionListener.exceptionThrown(e);
+    }
+ else {
+      exceptionListener.exceptionThrown(new MessagingException(CoreMessages.eventProcessingFailedFor(service.getName()),event.getMessage(),e));
+    }
+    if (event.isSynchronous()) {
+      if (resultEvent == null) {
+        if (exceptionListener != null && exceptionListener instanceof AbstractExceptionListener && ((AbstractExceptionListener)exceptionListener).getReturnMessage() != null) {
+          resultEvent=new DefaultMuleEvent(((AbstractExceptionListener)exceptionListener).getReturnMessage(),event);
+        }
+ else {
+          resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),RequestContext.getEvent().getMessage(),event.getMuleContext()),event);
+        }
+      }
+      ExceptionPayload exceptionPayload=event.getMessage().getExceptionPayload();
+      if (exceptionPayload == null) {
+        exceptionPayload=new DefaultExceptionPayload(e);
+      }
+      resultEvent.getMessage().setExceptionPayload(exceptionPayload);
+    }
+  }
+  return resultEvent;
+}

@@ -22,7 +22,7 @@
   messageRouter.addRouter(filterRouter1);
   messageRouter.addRouter(filterRouter2);
   AbstractCatchAllStrategy strategy=new AbstractCatchAllStrategy(){
-    @Override public MuleMessage doCatchMessage(    MuleMessage message,    MuleSession session) throws RoutingException {
+    @Override public MuleEvent doCatchMessage(    MuleEvent event) throws RoutingException {
       catchAllCount[0]++;
       return null;
     }
@@ -30,15 +30,18 @@
 ;
   messageRouter.setCatchAllStrategy(strategy);
   MuleSession session=getTestSession(getTestService(),muleContext);
-  messageRouter.route(new DefaultMuleMessage("hello",muleContext),session);
+  MuleEvent event=getTestInboundEvent("hello");
+  messageRouter.process(event);
   assertEquals(1,catchAllCount[0]);
   assertEquals(0,count1[0]);
   assertEquals(0,count2[0]);
-  messageRouter.route(new DefaultMuleMessage(new StringBuffer(),muleContext),session);
+  event=getTestInboundEvent(new StringBuffer());
+  messageRouter.process(event);
   assertEquals(1,catchAllCount[0]);
   assertEquals(0,count1[0]);
   assertEquals(1,count2[0]);
-  messageRouter.route(new DefaultMuleMessage(new Exception(),muleContext),session);
+  event=getTestInboundEvent(new Exception());
+  messageRouter.process(event);
   assertEquals(1,catchAllCount[0]);
   assertEquals(1,count1[0]);
   assertEquals(1,count2[0]);

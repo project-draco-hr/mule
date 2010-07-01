@@ -1,0 +1,16 @@
+{
+  if (result instanceof MuleMessage) {
+    return new DefaultMuleEvent((MuleMessage)result,event);
+  }
+ else   if (result instanceof VoidResult) {
+    event.transformMessage();
+    return event;
+  }
+ else   if (result != null) {
+    event.getMessage().applyTransformers(Collections.<Transformer>singletonList(new TransformerTemplate(new TransformerTemplate.OverwitePayloadCallback(result))));
+    return event;
+  }
+ else {
+    return new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),muleContext),event);
+  }
+}

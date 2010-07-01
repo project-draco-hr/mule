@@ -1,0 +1,20 @@
+{
+  if (getEndpoint() == null) {
+    throw new ServiceRoutingException(CoreMessages.noCatchAllEndpointSet(),event.getMessage(),getEndpoint(),event.getService());
+  }
+  try {
+    OutboundEndpoint endpoint=getEndpoint();
+    if (sendTransformed && endpoint.getTransformers() != null) {
+      event.getMessage().applyTransformers(endpoint.getTransformers());
+    }
+    event=new DefaultMuleEvent(event.getMessage(),endpoint,event.getService(),event);
+    MuleEvent result=endpoint.process(event);
+    if (statistics != null) {
+      statistics.incrementRoutedMessage(getEndpoint());
+    }
+    return result;
+  }
+ catch (  Exception e) {
+    throw new RoutingException(event.getMessage(),getEndpoint(),e);
+  }
+}

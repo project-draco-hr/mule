@@ -1,0 +1,29 @@
+{
+  boolean syncNullPayload=event.isSynchronous() && (event.getMessage().getPayload() instanceof NullPayload);
+  if (event.isStopFurtherProcessing()) {
+    logger.debug("MuleEvent stop further processing has been set, no outbound routing will be performed.");
+    return event;
+  }
+ else   if (event != null && !syncNullPayload) {
+    if (service.getOutboundRouter().hasEndpoints()) {
+      MuleEvent outboundEvent;
+      if (event.isSynchronous()) {
+        outboundEvent=new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage().getPayload(),event.getMessage(),service.getMuleContext()),event);
+      }
+ else {
+        outboundEvent=event;
+      }
+      MuleEvent outboundResult=processNext(outboundEvent);
+      if (outboundResult != null) {
+        event=outboundResult;
+      }
+ else       if (service.getComponent() instanceof PassThroughComponent) {
+        event=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),event.getMessage(),service.getMuleContext()),event);
+      }
+    }
+ else {
+      logger.debug("Outbound router on service '" + service.getName() + "' doesn't have any endpoints configured.");
+    }
+  }
+  return event;
+}

@@ -8,5 +8,19 @@
   if (service == null) {
     throw new InitialisationException(MessageFactory.createStaticMessage("Component has not been initialized properly, no service."),this);
   }
+  ChainMessageProcessorBuilder chainBuilder=new ChainMessageProcessorBuilder();
+  for (  Interceptor interceptor : interceptors) {
+    chainBuilder.chain(interceptor);
+  }
+  chainBuilder.chain(new MessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      return invokeInternal(event);
+    }
+  }
+);
+  interceptorChain=chainBuilder.build();
+  if (interceptorChain instanceof Initialisable) {
+    ((Initialisable)interceptorChain).initialise();
+  }
   doInitialise();
 }

@@ -1,0 +1,53 @@
+{
+  DefaultMuleEvent event=null;
+  QueueSession queueSession=muleContext.getQueueManager().getQueueSession();
+  while (!lifecycleState.isStopped()) {
+    try {
+      if (lifecycleState.isPhaseComplete(Pausable.PHASE_NAME)) {
+        waitIfPaused(event);
+        if (lifecycleState.isStopping()) {
+          queueDraining.set(true);
+          if (!isQueuePersistent() && (queueSession != null && getQueueSize() > 0)) {
+            logger.warn(CoreMessages.stopPausedSedaStageNonPeristentQueueMessageLoss(getQueueSize(),getQueueName()));
+          }
+          queueDraining.set(false);
+          break;
+        }
+      }
+      if (lifecycleState.isStopping()) {
+        if (isQueuePersistent() || queueSession == null || getQueueSize() <= 0) {
+          queueDraining.set(false);
+          break;
+        }
+      }
+      event=(DefaultMuleEvent)dequeue();
+      if (event != null) {
+        if (isStatsEnabled()) {
+          queueStatistics.decQueuedEvent();
+        }
+        if (logger.isDebugEnabled()) {
+          logger.debug(MessageFormat.format("{0}: Dequeued event from {1}",getStageDescription(),getQueueName()));
+        }
+        Work work=new SedaStageWorker(event);
+        if (workManager.getThreadingProfile().isDoThreading()) {
+          workManager.scheduleWork(work,WorkManager.INDEFINITE,null,this);
+        }
+ else {
+          work.run();
+        }
+      }
+    }
+ catch (    Exception e) {
+      if (e instanceof InterruptedException) {
+        queueDraining.set(false);
+        break;
+      }
+      if (e instanceof MuleException) {
+        exceptionListener.exceptionThrown(e);
+      }
+ else {
+        exceptionListener.exceptionThrown(new MessagingException(CoreMessages.eventProcessingFailedFor(getStageDescription()),(event == null ? null : event.getMessage()),e));
+      }
+    }
+  }
+}
