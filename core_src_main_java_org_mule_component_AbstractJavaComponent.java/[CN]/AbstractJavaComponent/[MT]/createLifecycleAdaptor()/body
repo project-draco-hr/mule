@@ -2,13 +2,16 @@
   Object object=objectFactory.getInstance(muleContext);
   LifecycleAdapter lifecycleAdapter;
   if (lifecycleAdapterFactory != null) {
-    lifecycleAdapter=lifecycleAdapterFactory.create(object,this,entryPointResolverSet,muleContext);
+    lifecycleAdapter=lifecycleAdapterFactory.create(object,this,flowConstruct,entryPointResolverSet,muleContext);
   }
  else   if (objectFactory.isExternallyManagedLifecycle()) {
-    lifecycleAdapter=new NullLifecycleAdapter(object,this,entryPointResolverSet,muleContext);
+    lifecycleAdapter=new NullLifecycleAdapter(object,this,flowConstruct,entryPointResolverSet,muleContext);
+  }
+ else   if (flowConstruct instanceof Service) {
+    lifecycleAdapter=((Service)flowConstruct).getModel().getLifecycleAdapterFactory().create(object,this,flowConstruct,entryPointResolverSet,muleContext);
   }
  else {
-    lifecycleAdapter=service.getModel().getLifecycleAdapterFactory().create(object,this,entryPointResolverSet,muleContext);
+    lifecycleAdapter=new DefaultComponentLifecycleAdapterFactory().create(object,this,flowConstruct,entryPointResolverSet,muleContext);
   }
   lifecycleAdapter.initialise();
   return lifecycleAdapter;

@@ -1,13 +1,13 @@
 {
   OptimizedRequestContext.unsafeSetEvent(event);
   if (logger.isTraceEnabled()) {
-    logger.trace("Invoking " + this.getClass().getName() + "component for service "+ service.getName());
+    logger.trace("Invoking " + this.getClass().getName() + "component for service "+ flowConstruct.getName());
   }
   if (!(event.getEndpoint() instanceof InboundEndpoint)) {
     throw new IllegalStateException("Unable to process outbound event, components only process incoming events.");
   }
-  if (service.getLifecycleManager().getState().isStopping() || !service.getLifecycleManager().getState().isStarted()) {
-    throw new LifecycleException(CoreMessages.isStopped(service.getName()),this);
+  if (!flowConstruct.getLifecycleState().isStarted() || flowConstruct.getLifecycleState().isStopping()) {
+    throw new LifecycleException(CoreMessages.isStopped(flowConstruct.getName()),this);
   }
   try {
     fireComponentNotification(event.getMessage(),ComponentMessageNotification.COMPONENT_PRE_INVOKE);
@@ -27,6 +27,6 @@
     throw me;
   }
 catch (  Exception e) {
-    throw new ServiceException(CoreMessages.failedToInvoke(this.toString()),event.getMessage(),service,e);
+    throw new ComponentException(CoreMessages.failedToInvoke(this.toString()),event.getMessage(),this,e);
   }
 }
