@@ -1,0 +1,41 @@
+{
+  init();
+  TransactionTemplate tt=createTransactionTemplate(TransactionConfig.ACTION_ALWAYS_JOIN,false);
+  tm.begin();
+  final Transaction tx=tm.getTransaction();
+  final TestResource resource1=new TestResource(tm);
+  tx.enlistResource(resource1);
+  assertNotNull(tx);
+  Exception ex=null;
+  String result;
+  try {
+    result=(String)tt.execute(new TransactionCallback(){
+      public Object doInTransaction() throws Exception {
+        Transaction muleTx=tm.getTransaction();
+        assertSame(tx,muleTx);
+        resource1.setValue(14);
+        return "OK";
+      }
+    }
+);
+  }
+ catch (  Exception e) {
+    ex=e;
+    logger.debug("saw exception " + e.getMessage());
+  }
+  assertNotNull(ex);
+  tm.rollback();
+  try {
+    result=(String)tt.execute(new TransactionCallback(){
+      public Object doInTransaction() throws Exception {
+        return "OK";
+      }
+    }
+);
+  }
+ catch (  Exception e) {
+    ex=e;
+    logger.debug("saw exception " + e.getMessage());
+  }
+  assertNotNull(ex);
+}

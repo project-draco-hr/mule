@@ -1,0 +1,24 @@
+{
+  init();
+  TransactionTemplate tt=createTransactionTemplate(TransactionConfig.ACTION_NEVER,true);
+  tm.begin();
+  final Transaction tx=tm.getTransaction();
+  final TestResource resource1=new TestResource(tm);
+  tx.enlistResource(resource1);
+  assertNotNull(tx);
+  Exception ex=null;
+  try {
+    String result=(String)tt.execute(new TransactionCallback(){
+      public Object doInTransaction() throws Exception {
+        return "OK";
+      }
+    }
+);
+    fail("No exception seen");
+  }
+ catch (  Exception e) {
+    ex=e;
+    logger.debug("saw exception " + e.getMessage());
+  }
+  tm.rollback();
+}

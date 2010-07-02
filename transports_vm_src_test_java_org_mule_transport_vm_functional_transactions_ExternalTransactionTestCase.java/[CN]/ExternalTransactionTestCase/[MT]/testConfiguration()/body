@@ -1,0 +1,15 @@
+{
+  MuleClient client=new MuleClient(muleContext);
+  tm=client.getMuleContext().getTransactionManager();
+  tm.begin();
+  client.send("vm://entry?connector=vm-normal","OK",null);
+  tm.commit();
+  MuleMessage response=client.request("queue2",WAIT);
+  assertNull("Response is not null",response);
+  try {
+    client.send("vm://entry?connector=vm-normal","OK",null);
+    fail("Exception expected");
+  }
+ catch (  Exception ex) {
+  }
+}

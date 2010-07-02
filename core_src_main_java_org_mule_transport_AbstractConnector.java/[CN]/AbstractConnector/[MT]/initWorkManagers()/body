@@ -6,7 +6,9 @@
     }
   }
   if (dispatcherWorkManager.get() == null) {
-    WorkManager newWorkManager=this.getDispatcherThreadingProfile().createWorkManager(getName() + ".dispatcher",muleContext.getConfiguration().getShutdownTimeout());
+    ThreadingProfile dispatcherThreadingProfile=this.getDispatcherThreadingProfile();
+    if (dispatcherThreadingProfile.getMuleContext() == null)     dispatcherThreadingProfile.setMuleContext(muleContext);
+    WorkManager newWorkManager=dispatcherThreadingProfile.createWorkManager(getName() + ".dispatcher",muleContext.getConfiguration().getShutdownTimeout());
     if (dispatcherWorkManager.compareAndSet(null,newWorkManager)) {
       newWorkManager.start();
     }

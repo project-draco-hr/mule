@@ -1,0 +1,35 @@
+{
+  init();
+  TransactionTemplate tt=createTransactionTemplate(TransactionConfig.ACTION_ALWAYS_BEGIN,false);
+  tm.begin();
+  final Transaction tx=tm.getTransaction();
+  final TestResource resource1=new TestResource(tm);
+  tx.enlistResource(resource1);
+  assertNotNull(tx);
+  String result;
+  Exception ex=null;
+  try {
+    result=(String)tt.execute(new TransactionCallback(){
+      public Object doInTransaction() throws Exception {
+        return "OK";
+      }
+    }
+);
+  }
+ catch (  Exception e) {
+    ex=e;
+    logger.debug("saw exception " + e.getMessage());
+  }
+  assertNotNull(ex);
+  tm.rollback();
+  result=(String)tt.execute(new TransactionCallback(){
+    public Object doInTransaction() throws Exception {
+      Transaction muleTx=tm.getTransaction();
+      muleTx.enlistResource(resource1);
+      resource1.setValue(15);
+      return "OK";
+    }
+  }
+);
+  assertEquals(15,resource1.getPersistentValue());
+}

@@ -2,8 +2,16 @@
   if (config == null) {
     return callback.doInTransaction();
   }
+  Transaction joinedExternal=null;
   byte action=(config != null) ? config.getAction() : TransactionConfig.ACTION_DEFAULT;
   Transaction tx=TransactionCoordination.getInstance().getTransaction();
+  if (tx == null && context != null && config != null && config.isInteractWithExternal()) {
+    TransactionFactory tmFactory=config.getFactory();
+    if (tmFactory instanceof ExternalTransactionAwareTransactionFactory) {
+      ExternalTransactionAwareTransactionFactory extmFactory=(ExternalTransactionAwareTransactionFactory)tmFactory;
+      joinedExternal=tx=extmFactory.joinExternalTransaction(context);
+    }
+  }
   Transaction suspendedXATx=null;
   if (action == TransactionConfig.ACTION_NEVER && tx != null) {
     throw new IllegalTransactionStateException(CoreMessages.transactionAvailableButActionIs("Never"));
@@ -81,5 +89,8 @@ catch (  Error e) {
       tx.rollback();
     }
     throw e;
+  }
+ finally {
+    if (joinedExternal != null)     TransactionCoordination.getInstance().unbindTransaction(joinedExternal);
   }
 }
