@@ -1,0 +1,20 @@
+{
+  if (o == null) {
+    return;
+  }
+  if (ignoreType(o.getClass())) {
+    return;
+  }
+  super.applyLifecycle(o);
+  List<AnnotationMetaData> annos=AnnotationUtils.getMethodAnnotations(o.getClass(),PreDestroy.class);
+  if (annos.size() == 0) {
+    return;
+  }
+  AnnotationMetaData anno=annos.get(0);
+  try {
+    ((Method)anno.getMember()).invoke(o);
+  }
+ catch (  Exception e) {
+    throw new LifecycleException(CoreMessages.failedToInvokeLifecycle((anno == null ? "null" : anno.getMember().getName()),o),e,this);
+  }
+}
