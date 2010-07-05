@@ -1,6 +1,11 @@
 {
   ChainMessageProcessorBuilder builder=new ChainMessageProcessorBuilder();
-  builder.chain(new AsyncInterceptingMessageProcessor(getDispatcherWorkManager(),this));
+  builder.chain(new AsyncInterceptingMessageProcessor(new WorkManagerSource(){
+    public WorkManager getWorkManager() throws MuleException {
+      return getDispatcherWorkManager();
+    }
+  }
+,getDispatcherThreadingProfile().isDoThreading(),this));
   builder.chain(new MessageProcessor(){
     private MessageProcessor notificationMessageProcessor;
     public MuleEvent process(    MuleEvent event) throws MuleException {
