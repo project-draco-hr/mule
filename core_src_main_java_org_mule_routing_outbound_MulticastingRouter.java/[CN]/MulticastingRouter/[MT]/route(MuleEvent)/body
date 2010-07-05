@@ -1,0 +1,39 @@
+{
+  MuleMessage message=event.getMessage();
+  MuleSession session=event.getSession();
+  if (endpoints == null || endpoints.size() == 0) {
+    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
+  }
+  if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
+    boolean correlationSet=message.getCorrelationId() != null;
+    if (correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
+      logger.debug("CorrelationId is already set, not setting Correlation group size");
+    }
+ else {
+      message.setCorrelationGroupSize(endpoints.size());
+    }
+  }
+  List results=new ArrayList(endpoints.size());
+  try {
+    OutboundEndpoint endpoint;
+    for (int i=0; i < endpoints.size(); i++) {
+      endpoint=endpoints.get(i);
+      if (endpoint.getFilter() == null || (endpoint.getFilter() != null && endpoint.getFilter().accept(message))) {
+        if (((DefaultMuleMessage)message).isConsumable()) {
+          throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),message);
+        }
+        MuleMessage clonedMessage=new DefaultMuleMessage(message.getPayload(),message,muleContext);
+        if (endpoint.isSynchronous()) {
+          results.add(sendRequest(session,clonedMessage,endpoint,true));
+        }
+ else {
+          sendRequest(session,clonedMessage,endpoint,false);
+        }
+      }
+    }
+  }
+ catch (  MuleException e) {
+    throw new CouldNotRouteOutboundMessageException(message,endpoints.get(0),e);
+  }
+  return resultsHandler.aggregateResults(results,message,muleContext);
+}

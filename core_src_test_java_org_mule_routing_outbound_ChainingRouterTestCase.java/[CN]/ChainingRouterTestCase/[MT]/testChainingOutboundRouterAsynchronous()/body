@@ -3,16 +3,20 @@
   assertNotNull(endpoint1);
   OutboundEndpoint endpoint2=getTestOutboundEndpoint("Test2Provider","test://test");
   assertNotNull(endpoint2);
+  Mock mep1=RouterTestUtils.getMockEndpoint(endpoint1);
+  Mock mep2=RouterTestUtils.getMockEndpoint(endpoint2);
   endpoints.clear();
-  endpoints.add(endpoint1);
-  endpoints.add(endpoint2);
+  endpoints.add((OutboundEndpoint)mep1.proxy());
+  endpoints.add((OutboundEndpoint)mep2.proxy());
   router.setEndpoints(endpoints);
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   assertTrue(router.isMatch(message));
   message=new DefaultMuleMessage("test event",muleContext);
-  session.expectAndReturn("sendEvent",C.eq(message,endpoints.get(0)),message);
-  session.expectAndReturn("dispatchEvent",C.eq(message,endpoints.get(1)),message);
-  final MuleMessage result=router.route(message,(MuleSession)session.proxy());
+  MuleEvent event=new OutboundRoutingTestEvent(message,null);
+  mep1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  mep2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),null);
+  final MuleMessage result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy()));
   assertNull("Async call shouldn't return any result.",result);
-  session.verify();
+  mep1.verify();
+  mep2.verify();
 }

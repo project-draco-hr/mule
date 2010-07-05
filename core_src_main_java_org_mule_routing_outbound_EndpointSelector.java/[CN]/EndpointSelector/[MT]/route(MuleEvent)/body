@@ -1,0 +1,58 @@
+{
+  MuleMessage message=event.getMessage();
+  MuleSession session=event.getSession();
+  List<Object> endpoints;
+  String endpointName;
+  String prop=expressionConfig.getFullExpression(expressionManager);
+  if (!muleContext.getExpressionManager().isValidExpression(prop)) {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionInvalidForProperty("expression",prop),message,null);
+  }
+  Object property=null;
+  try {
+    property=muleContext.getExpressionManager().evaluate(prop,message);
+  }
+ catch (  ExpressionRuntimeException e) {
+    logger.error(e.getMessage());
+  }
+  if (property == null && getDefaultEndpointName() == null) {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.expressionResultWasNull(expressionConfig.getFullExpression(expressionManager)),message,null);
+  }
+ else   if (property == null) {
+    logger.info("Expression: " + prop + " returned null, using default endpoint: "+ getDefaultEndpointName());
+    property=getDefaultEndpointName();
+  }
+  if (property instanceof String) {
+    endpoints=new ArrayList<Object>(1);
+    endpoints.add(property);
+  }
+ else   if (property instanceof List) {
+    endpoints=(List<Object>)property;
+  }
+ else {
+    throw new CouldNotRouteOutboundMessageException(CoreMessages.propertyIsNotSupportedType(expressionConfig.getFullExpression(expressionManager),new Class[]{String.class,List.class},property.getClass()),message,null);
+  }
+  List<MuleMessage> results=new ArrayList<MuleMessage>(endpoints.size());
+  for (Iterator<Object> iterator=endpoints.iterator(); iterator.hasNext(); ) {
+    endpointName=iterator.next().toString();
+    if (StringUtils.isEmpty(endpointName)) {
+      throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + expressionConfig.getFullExpression(expressionManager)),message,null);
+    }
+    OutboundEndpoint ep=null;
+    try {
+      ep=lookupEndpoint(endpointName);
+      if (ep == null) {
+        throw new CouldNotRouteOutboundMessageException(CoreMessages.objectNotFound("Endpoint",endpointName),message,ep);
+      }
+      if (ep.isSynchronous()) {
+        results.add(sendRequest(session,message,ep,true));
+      }
+ else {
+        sendRequest(session,message,ep,false);
+      }
+    }
+ catch (    MuleException e) {
+      throw new CouldNotRouteOutboundMessageException(message,ep,e);
+    }
+  }
+  return resultsHandler.aggregateResults(results,message,muleContext);
+}

@@ -1,0 +1,54 @@
+{
+  MuleMessage message=event.getMessage();
+  MuleSession session=event.getSession();
+  MuleMessage resultToReturn=null;
+  if (endpoints == null || endpoints.size() == 0) {
+    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
+  }
+  final int endpointsCount=endpoints.size();
+  if (logger.isDebugEnabled()) {
+    logger.debug("About to chain " + endpointsCount + " endpoints.");
+  }
+  OutboundEndpoint endpoint=null;
+  try {
+    MuleMessage intermediaryResult=message;
+    for (int i=0; i < endpointsCount; i++) {
+      endpoint=getEndpoint(i,intermediaryResult);
+      boolean lastEndpointInChain=(i == endpointsCount - 1);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Sending Chained message '" + i + "': "+ (intermediaryResult == null ? "null" : intermediaryResult.toString()));
+      }
+      if (!lastEndpointInChain) {
+        MuleMessage localResult=sendRequest(session,intermediaryResult,endpoint,true);
+        if (localResult != null && localResult.getPayload() != NullPayload.getInstance() && intermediaryResult != null) {
+          processIntermediaryResult(localResult,intermediaryResult);
+        }
+        intermediaryResult=localResult;
+        if (logger.isDebugEnabled()) {
+          logger.debug("Received Chain result '" + i + "': "+ (intermediaryResult != null ? intermediaryResult.toString() : "null"));
+        }
+        if (intermediaryResult == null || intermediaryResult.getPayload() == NullPayload.getInstance()) {
+          resultToReturn=intermediaryResult;
+          logger.warn("Chaining router cannot process any further endpoints. " + "There was no result returned from endpoint invocation: " + endpoint);
+          break;
+        }
+      }
+ else {
+        if (endpoint.isSynchronous()) {
+          resultToReturn=sendRequest(session,intermediaryResult,endpoint,true);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Received final Chain result '" + i + "': "+ (resultToReturn == null ? "null" : resultToReturn.toString()));
+          }
+        }
+ else {
+          resultToReturn=null;
+          sendRequest(session,intermediaryResult,endpoint,false);
+        }
+      }
+    }
+  }
+ catch (  MuleException e) {
+    throw new CouldNotRouteOutboundMessageException(message,endpoint,e);
+  }
+  return resultToReturn;
+}

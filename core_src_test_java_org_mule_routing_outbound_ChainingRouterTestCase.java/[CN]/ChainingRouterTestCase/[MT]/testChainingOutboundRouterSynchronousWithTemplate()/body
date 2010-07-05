@@ -1,18 +1,22 @@
 {
   OutboundEndpoint endpoint3=getTestOutboundEndpoint("Test3Provider","test://foo?[barValue]&synchronous=true");
   assertNotNull(endpoint3);
-  router.addEndpoint(endpoint3);
+  mockendpoint3=RouterTestUtils.getMockEndpoint(endpoint3);
+  router.addEndpoint((OutboundEndpoint)mockendpoint3.proxy());
   Map<String,Object> m=new HashMap<String,Object>();
   m.put("barValue","bar");
   MuleMessage message=new DefaultMuleMessage("test event",m,muleContext);
   assertTrue(router.isMatch(message));
+  MuleEvent event=new OutboundRoutingTestEvent(message,null);
   ImmutableEndpoint ep=router.getEndpoint(2,message);
   assertEquals("test://foo?bar&synchronous=true",ep.getEndpointURI().toString());
-  session.expectAndReturn("sendEvent",C.eq(message,router.getEndpoints().get(0)),message);
-  session.expectAndReturn("sendEvent",C.eq(message,router.getEndpoints().get(1)),message);
-  session.expectAndReturn("sendEvent",C.eq(message,new DynamicURIOutboundEndpoint((OutboundEndpoint)router.getEndpoints().get(2),new MuleEndpointURI("test://foo?bar&synchronous=true",muleContext))),message);
-  final MuleMessage result=router.route(message,(MuleSession)session.proxy());
+  mockendpoint1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  mockendpoint2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  mockendpoint3.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  final MuleMessage result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy()));
   assertNotNull("This is a sync call, we need a result returned.",result);
   assertEquals(message,result);
-  session.verify();
+  mockendpoint1.verify();
+  mockendpoint2.verify();
+  mockendpoint3.verify();
 }

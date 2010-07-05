@@ -1,0 +1,44 @@
+{
+  MuleMessage message=event.getMessage();
+  MuleSession session=event.getSession();
+  String correlationId=messageInfoMapping.getCorrelationId(message);
+  List results=new ArrayList();
+  int correlationSequence=1;
+  SplitMessage splitMessage=getMessageParts(message,getEndpoints());
+  Map props=new HashMap();
+  for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
+    String propertyKey=(String)iterator.next();
+    props.put(propertyKey,message.getProperty(propertyKey));
+  }
+  for (int i=0; i < splitMessage.size(); i++) {
+    SplitMessage.MessagePart part=splitMessage.getPart(i);
+    MuleMessage sendMessage;
+    if (part.getPart() instanceof MuleMessage) {
+      sendMessage=(MuleMessage)part.getPart();
+    }
+ else {
+      sendMessage=new org.mule.DefaultMuleMessage(part.getPart(),props,muleContext);
+    }
+    try {
+      if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
+        boolean correlationSet=message.getCorrelationId() != null;
+        if (!correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
+          sendMessage.setCorrelationId(correlationId);
+        }
+        sendMessage.setCorrelationGroupSize(splitMessage.size());
+        sendMessage.setCorrelationSequence(correlationSequence++);
+      }
+      boolean synchronous=part.getEndpoint().isSynchronous();
+      if (synchronous) {
+        results.add(sendRequest(session,sendMessage,part.getEndpoint(),true));
+      }
+ else {
+        sendRequest(session,sendMessage,part.getEndpoint(),false);
+      }
+    }
+ catch (    MuleException e) {
+      throw new CouldNotRouteOutboundMessageException(sendMessage,part.getEndpoint(),e);
+    }
+  }
+  return resultsHandler.aggregateResults(results,message,muleContext);
+}

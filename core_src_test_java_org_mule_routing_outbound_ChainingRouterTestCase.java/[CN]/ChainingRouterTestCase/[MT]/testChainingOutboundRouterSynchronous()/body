@@ -1,11 +1,12 @@
 {
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   assertTrue(router.isMatch(message));
-  message=new DefaultMuleMessage("test event",muleContext);
-  session.expectAndReturn("sendEvent",C.eq(message,endpoints.get(0)),message);
-  session.expectAndReturn("sendEvent",C.eq(message,endpoints.get(1)),message);
-  final MuleMessage result=router.route(message,(MuleSession)session.proxy());
+  MuleEvent event=new OutboundRoutingTestEvent(message,null);
+  mockendpoint1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  mockendpoint2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  final MuleMessage result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy()));
   assertNotNull("This is a sync call, we need a result returned.",result);
   assertEquals(message,result);
-  session.verify();
+  mockendpoint1.verify();
+  mockendpoint2.verify();
 }
