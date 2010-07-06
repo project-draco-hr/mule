@@ -17,7 +17,7 @@
       logger.trace("Request payload: \n(unable to retrieve payload: " + e.getMessage() + "\n outbound transformer is: "+ endpoint.getTransformers());
     }
   }
-  MuleMessage result=null;
+  MuleEvent result=null;
   try {
     result=sendRequestEvent(session,message,endpoint,awaitResponse);
   }
@@ -33,12 +33,15 @@ catch (  Exception e) {
     }
   }
   if (result != null) {
+    MuleMessage resultMessage=result.getMessage();
     if (logger.isTraceEnabled()) {
-      try {
-        logger.trace("Response payload: \n" + StringMessageUtils.truncate(result.getPayloadAsString(),100,false));
-      }
- catch (      Exception e) {
-        logger.trace("Response payload: \n(unable to retrieve payload: " + e.getMessage());
+      if (resultMessage != null) {
+        try {
+          logger.trace("Response payload: \n" + StringMessageUtils.truncate(resultMessage.getPayloadAsString(),100,false));
+        }
+ catch (        Exception e) {
+          logger.trace("Response payload: \n(unable to retrieve payload: " + e.getMessage());
+        }
       }
     }
   }

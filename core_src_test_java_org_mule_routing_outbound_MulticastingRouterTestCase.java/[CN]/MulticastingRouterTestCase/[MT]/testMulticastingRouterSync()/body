@@ -1,6 +1,7 @@
 {
   Mock session=MuleTestUtils.getMockSession();
   session.matchAndReturn("getFlowConstruct",getTestService());
+  session.matchAndReturn("setFlowConstruct",RouterTestUtils.getArgListCheckerFlowConstruct(),null);
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=true");
   assertNotNull(endpoint1);
   OutboundEndpoint endpoint2=getTestOutboundEndpoint("Test2Provider","test://Test2Provider?synchronous=true");
@@ -20,10 +21,12 @@
   MuleEvent event=new OutboundRoutingTestEvent(message,null);
   mockendpoint1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
-  MuleMessage result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy()));
+  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy()));
   assertNotNull(result);
-  assertTrue(result instanceof MuleMessageCollection);
-  assertEquals(2,((MuleMessageCollection)result).size());
+  MuleMessage resultMessage=result.getMessage();
+  assertNotNull(resultMessage);
+  assertTrue(resultMessage instanceof MuleMessageCollection);
+  assertEquals(2,((MuleMessageCollection)resultMessage).size());
   mockendpoint1.verify();
   mockendpoint2.verify();
 }

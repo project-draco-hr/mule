@@ -26,7 +26,7 @@
       message.setCorrelationGroupSize(recipients.size());
     }
   }
-  MuleMessage result=null;
+  MuleEvent result=null;
   OutboundEndpoint endpoint=null;
   MuleMessage request=null;
   boolean success=false;
@@ -39,11 +39,15 @@
     }
     if (!lastEndpoint || endpoint.isSynchronous()) {
       try {
+        MuleMessage resultMessage=null;
         result=sendRequest(session,request,endpoint,true);
         if (result != null) {
-          result.applyTransformers(endpoint.getResponseTransformers());
+          resultMessage=result.getMessage();
         }
-        if (!exceptionPayloadAvailable(result)) {
+        if (resultMessage != null) {
+          resultMessage.applyTransformers(endpoint.getResponseTransformers());
+        }
+        if (!exceptionPayloadAvailable(resultMessage)) {
           if (logger.isDebugEnabled()) {
             logger.debug("Successful invocation detected, stopping further processing.");
           }
