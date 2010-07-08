@@ -1,11 +1,18 @@
 {
   try {
-    disposeObject(messageProcessorChain);
-    disposeObject(inboundMessageSource);
-    doDispose();
-    lifecycleManager.fireLifecycle(Disposable.PHASE_NAME);
+    if (isStarted()) {
+      stop();
+    }
+    lifecycleManager.fireDisposePhase(new LifecycleCallback<FlowConstruct>(){
+      public void onTransition(      String phaseName,      FlowConstruct object) throws MuleException {
+        disposeObject(messageProcessorChain);
+        disposeObject(inboundMessageSource);
+        doDispose();
+      }
+    }
+);
   }
- catch (  MuleException me) {
-    logger.error("Failed to stop: " + this.toString(),me);
+ catch (  MuleException e) {
+    logger.error("Failed to stop service: " + name,e);
   }
 }
