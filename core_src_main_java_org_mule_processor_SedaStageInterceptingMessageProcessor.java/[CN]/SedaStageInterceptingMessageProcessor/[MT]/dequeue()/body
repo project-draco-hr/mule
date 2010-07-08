@@ -2,5 +2,10 @@
   if (logger.isTraceEnabled()) {
     logger.trace(MessageFormat.format("{0}: Polling queue {1}, timeout = {2}",getStageName(),getStageDescription(),queueTimeout));
   }
-  return (MuleEvent)queue.poll(queueTimeout);
+  MuleEvent event=(MuleEvent)queue.poll(queueTimeout);
+  if (event != null && lifecycleState.isPhaseComplete(Pausable.PHASE_NAME)) {
+    queue.untake(event);
+    return null;
+  }
+  return event;
 }
