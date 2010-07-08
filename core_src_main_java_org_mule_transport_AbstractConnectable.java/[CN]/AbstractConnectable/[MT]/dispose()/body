@@ -1,11 +1,20 @@
 {
-  if (!disposed.get()) {
+  try {
     try {
-      this.disconnect();
-      this.stop();
+      disconnect();
     }
  catch (    Exception e) {
       logger.warn(e.getMessage(),e);
     }
+    if (isStarted())     stop();
+    lifecycleManager.fireDisposePhase(new LifecycleCallback<O>(){
+      public void onTransition(      String phaseName,      O object) throws MuleException {
+        doDispose();
+      }
+    }
+);
+  }
+ catch (  Exception e) {
+    logger.warn(e.getMessage(),e);
   }
 }

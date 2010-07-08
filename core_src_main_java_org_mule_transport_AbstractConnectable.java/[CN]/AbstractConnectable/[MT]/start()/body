@@ -3,24 +3,22 @@
     connectAndThenStart();
   }
  else {
-    if (started.compareAndSet(false,true)) {
-      try {
-        retryTemplate.execute(new RetryCallback(){
-          public void doWork(          RetryContext context) throws InterruptedException, MuleException {
-            callDoStartWhenItIsConnected();
-          }
-          public String getWorkDescription(){
-            return "starting " + getConnectionDescription();
-          }
+    try {
+      retryTemplate.execute(new RetryCallback(){
+        public void doWork(        RetryContext context) throws InterruptedException, MuleException {
+          callDoStartWhenItIsConnected();
         }
+        public String getWorkDescription(){
+          return "starting " + getConnectionDescription();
+        }
+      }
 ,getWorkManager());
-      }
- catch (      MuleException e) {
-        throw e;
-      }
-catch (      Exception e) {
-        throw new StartException(CoreMessages.failedToStart("Connectable: " + this),e,this);
-      }
+    }
+ catch (    MuleException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new StartException(CoreMessages.failedToStart("Connectable: " + this),e,AbstractConnectable.this);
     }
   }
 }
