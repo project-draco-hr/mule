@@ -1,18 +1,18 @@
 {
-  lifecycleManager.checkPhase(Startable.PHASE_NAME);
-  if (!beyondInitialState.get() && initialState.equals(AbstractService.INITIAL_STATE_STOPPED)) {
+  if (!isStopped() && initialState.equals(AbstractService.INITIAL_STATE_STOPPED)) {
+    lifecycleManager.fireStartPhase(new EmptyLifecycleCallback<FlowConstruct>());
+    lifecycleManager.fireStopPhase(new EmptyLifecycleCallback<FlowConstruct>());
     logger.info("Service " + name + " has not been started (initial state = 'stopped')");
-    beyondInitialState.set(true);
     return;
   }
-  if (!beyondInitialState.get() && initialState.equals(AbstractService.INITIAL_STATE_PAUSED)) {
-    lifecycleManager.fireLifecycle(Startable.PHASE_NAME);
-    lifecycleManager.fireLifecycle(Pausable.PHASE_NAME);
+  lifecycleManager.fireStartPhase(new LifecycleCallback<FlowConstruct>(){
+    public void onTransition(    String phaseName,    FlowConstruct object) throws MuleException {
+      doStart();
+    }
+  }
+);
+  if (initialState.equals(AbstractService.INITIAL_STATE_PAUSED)) {
+    pause();
     logger.info("Service " + name + " has been started and paused (initial state = 'paused')");
   }
- else {
-    lifecycleManager.fireLifecycle(Startable.PHASE_NAME);
-    logger.info("Service " + name + " has been started successfully");
-  }
-  beyondInitialState.set(true);
 }

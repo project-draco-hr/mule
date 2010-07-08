@@ -1,26 +1,36 @@
 {
-  lifecycleManager.checkPhase(Initialisable.PHASE_NAME);
-  if (retryPolicyTemplate == null) {
-    retryPolicyTemplate=(RetryPolicyTemplate)muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE);
-  }
-  this.initFromServiceDescriptor();
-  configureDispatcherPool();
-  setMaxRequestersActive(getRequesterThreadingProfile().getMaxThreadsActive());
   try {
-    lifecycleManager.fireLifecycle(Initialisable.PHASE_NAME);
+    lifecycleManager.fireInitialisePhase(new LifecycleCallback<Connector>(){
+      public void onTransition(      String phaseName,      Connector object) throws MuleException {
+        if (retryPolicyTemplate == null) {
+          retryPolicyTemplate=(RetryPolicyTemplate)muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE);
+        }
+        initFromServiceDescriptor();
+        configureDispatcherPool();
+        setMaxRequestersActive(getRequesterThreadingProfile().getMaxThreadsActive());
+        doInitialise();
+        if (exceptionListener == null) {
+          exceptionListener=new DefaultExceptionStrategy();
+          ((DefaultExceptionStrategy)exceptionListener).setMuleContext(muleContext);
+          ((DefaultExceptionStrategy)exceptionListener).initialise();
+        }
+        try {
+          initWorkManagers();
+        }
+ catch (        MuleException e) {
+          throw new LifecycleException(e,this);
+        }
+      }
+    }
+);
   }
- catch (  LifecycleException e) {
+ catch (  InitialisationException e) {
+    throw e;
+  }
+catch (  LifecycleException e) {
     throw new InitialisationException(e,this);
   }
-  if (exceptionListener == null) {
-    exceptionListener=new DefaultExceptionStrategy();
-    ((DefaultExceptionStrategy)exceptionListener).setMuleContext(muleContext);
-    ((DefaultExceptionStrategy)exceptionListener).initialise();
-  }
-  try {
-    initWorkManagers();
-  }
- catch (  MuleException e) {
-    throw new InitialisationException(e,this);
+catch (  MuleException e) {
+    e.printStackTrace();
   }
 }

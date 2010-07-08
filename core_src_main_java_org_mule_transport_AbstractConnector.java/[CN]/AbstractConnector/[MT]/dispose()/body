@@ -1,9 +1,17 @@
 {
   try {
-    lifecycleManager.fireLifecycle(Disposable.PHASE_NAME);
+    if (lifecycleManager.getState().isStarted()) {
+      stop();
+    }
+    lifecycleManager.fireDisposePhase(new LifecycleCallback<Connector>(){
+      public void onTransition(      String phaseName,      Connector object) throws MuleException {
+        doDispose();
+        disposeReceivers();
+      }
+    }
+);
   }
- catch (  LifecycleException e) {
+ catch (  MuleException e) {
     logger.warn("Failed to dispose connector: " + name,e);
   }
-  this.disposeReceivers();
 }

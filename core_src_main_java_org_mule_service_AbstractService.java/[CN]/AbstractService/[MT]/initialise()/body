@@ -1,21 +1,29 @@
 {
-  ((MuleContextAware)outboundRouter).setMuleContext(muleContext);
-  if (exceptionListener == null) {
-    exceptionListener=getModel().getExceptionListener();
-  }
-  inboundMessageSource=(((DefaultInboundRouterCollection)inboundRouter).getMessageSource());
-  asyncReplyMessageSource=(((DefaultInboundRouterCollection)responseRouter).getMessageSource());
-  if (inboundMessageSource instanceof FlowConstructAware) {
-    ((FlowConstructAware)inboundMessageSource).setFlowConstruct(this);
-  }
-  if (asyncReplyMessageSource instanceof FlowConstructAware) {
-    ((FlowConstructAware)asyncReplyMessageSource).setFlowConstruct(this);
-  }
-  component.setFlowConstruct(this);
   try {
-    lifecycleManager.fireLifecycle(Initialisable.PHASE_NAME);
+    lifecycleManager.fireInitialisePhase(new LifecycleCallback<FlowConstruct>(){
+      public void onTransition(      String phaseName,      FlowConstruct object) throws MuleException {
+        ((MuleContextAware)outboundRouter).setMuleContext(muleContext);
+        if (exceptionListener == null) {
+          exceptionListener=getModel().getExceptionListener();
+        }
+        inboundMessageSource=(((DefaultInboundRouterCollection)inboundRouter).getMessageSource());
+        asyncReplyMessageSource=(((DefaultInboundRouterCollection)responseRouter).getMessageSource());
+        if (inboundMessageSource instanceof FlowConstructAware) {
+          ((FlowConstructAware)inboundMessageSource).setFlowConstruct(object);
+        }
+        if (asyncReplyMessageSource instanceof FlowConstructAware) {
+          ((FlowConstructAware)asyncReplyMessageSource).setFlowConstruct(object);
+        }
+        component.setFlowConstruct(object);
+        doInitialise();
+      }
+    }
+);
   }
- catch (  LifecycleException e) {
+ catch (  InitialisationException e) {
+    throw e;
+  }
+catch (  MuleException e) {
     throw new InitialisationException(e,this);
   }
 }

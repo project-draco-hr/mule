@@ -1,25 +1,29 @@
 {
-  lifecycleManager.checkPhase(Stoppable.PHASE_NAME);
-  shutdownScheduler();
-  lifecycleManager.fireLifecycle(Stoppable.PHASE_NAME);
-  if (receivers != null) {
-    for (    MessageReceiver receiver : receivers.values()) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Stopping receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+  lifecycleManager.fireStopPhase(new LifecycleCallback<Connector>(){
+    public void onTransition(    String phaseName,    Connector object) throws MuleException {
+      shutdownScheduler();
+      doStop();
+      if (receivers != null) {
+        for (        MessageReceiver receiver : receivers.values()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Stopping receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+          }
+          receiver.stop();
+        }
       }
-      receiver.stop();
+      if (isConnected()) {
+        try {
+          disconnect();
+        }
+ catch (        Exception e) {
+          logger.error("Failed to disconnect: " + e.getMessage(),e);
+        }
+      }
+      disposeWorkManagers();
+      clearDispatchers();
+      clearRequesters();
+      scheduler=null;
     }
   }
-  if (this.isConnected()) {
-    try {
-      this.disconnect();
-    }
- catch (    Exception e) {
-      logger.error("Failed to disconnect: " + e.getMessage(),e);
-    }
-  }
-  this.disposeWorkManagers();
-  this.clearDispatchers();
-  this.clearRequesters();
-  scheduler=null;
+);
 }

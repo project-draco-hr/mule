@@ -3,8 +3,15 @@
     logger.info("Starting: " + this);
   }
   scheduler=createScheduler();
-  initWorkManagers();
-  if (!isStarted())   lifecycleManager.fireLifecycle(Startable.PHASE_NAME);
+  try {
+    initWorkManagers();
+  }
+ catch (  MuleException e) {
+    throw new InitialisationException(e,this);
+  }
+  if (!isStarted()) {
+    doStart();
+  }
   if (receivers != null) {
     for (    MessageReceiver receiver : receivers.values()) {
       final List<MuleException> errors=new ArrayList<MuleException>();

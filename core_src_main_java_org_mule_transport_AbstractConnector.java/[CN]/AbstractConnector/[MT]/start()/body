@@ -1,19 +1,25 @@
 {
-  lifecycleManager.checkPhase(Startable.PHASE_NAME);
   if (isInitialStateStopped()) {
+    lifecycleManager.fireStartPhase(new EmptyLifecycleCallback<Connector>());
+    lifecycleManager.fireStopPhase(new EmptyLifecycleCallback<Connector>());
     logger.info("Connector not started because 'initialStateStopped' is true");
     return;
   }
-  if (!this.isConnected()) {
-    startOnConnect=true;
-    try {
-      connect();
-    }
- catch (    Exception e) {
-      throw new LifecycleException(e,this);
-    }
-  }
+  lifecycleManager.fireStartPhase(new LifecycleCallback<Connector>(){
+    public void onTransition(    String phaseName,    Connector object) throws MuleException {
+      if (!isConnected()) {
+        startOnConnect=true;
+        try {
+          connect();
+        }
+ catch (        Exception e) {
+          throw new LifecycleException(e,this);
+        }
+      }
  else {
-    startAfterConnect();
+        startAfterConnect();
+      }
+    }
   }
+);
 }
