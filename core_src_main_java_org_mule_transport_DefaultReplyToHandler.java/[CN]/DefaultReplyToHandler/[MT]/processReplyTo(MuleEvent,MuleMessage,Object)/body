@@ -7,6 +7,13 @@
   returnMessage.removeProperty(MuleProperties.MULE_REPLY_TO_PROPERTY);
   returnMessage.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
   MuleEvent replyToEvent=new DefaultMuleEvent(returnMessage,endpoint,event.getSession());
+  List<String> responseProperties=endpoint.getResponseProperties();
+  for (  String propertyName : responseProperties) {
+    Object propertyValue=event.getMessage().getProperty(propertyName,PropertyScope.INBOUND);
+    if (propertyValue != null) {
+      replyToEvent.getMessage().setProperty(propertyName,propertyValue,PropertyScope.OUTBOUND);
+    }
+  }
   try {
     ((AbstractService)event.getFlowConstruct()).getStatistics().incSentReplyToEvent();
     endpoint.process(replyToEvent);
