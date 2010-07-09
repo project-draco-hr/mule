@@ -1,0 +1,12 @@
+{
+  MuleClient client=new MuleClient(muleContext);
+  String payload="payload";
+  Map<String,String> headers=new HashMap<String,String>();
+  final String customHeader="X-Custom-Header";
+  headers.put(customHeader,"value");
+  client.sendNoReceive("http://localhost:4444/in",payload,headers);
+  MuleMessage msg=client.request("vm://out",10000);
+  assertNotNull(msg);
+  assertEquals(payload,msg.getPayloadAsString());
+  assertEquals("value",msg.getProperty(customHeader,PropertyScope.OUTBOUND));
+}
