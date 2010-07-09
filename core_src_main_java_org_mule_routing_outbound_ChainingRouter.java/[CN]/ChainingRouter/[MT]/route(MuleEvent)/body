@@ -19,7 +19,8 @@
         logger.debug("Sending Chained message '" + i + "': "+ (intermediaryResult == null ? "null" : intermediaryResult.toString()));
       }
       if (!lastEndpointInChain) {
-        MuleMessage localResult=getMessage(sendRequest(session,intermediaryResult,endpoint,true));
+        MuleEvent event1=sendRequest(session,intermediaryResult,endpoint,true);
+        MuleMessage localResult=event1 == null ? null : event1.getMessage();
         if (localResult != null && localResult.getPayload() != NullPayload.getInstance() && intermediaryResult != null) {
           processIntermediaryResult(localResult,intermediaryResult);
         }
@@ -28,7 +29,7 @@
           logger.debug("Received Chain result '" + i + "': "+ (intermediaryResult != null ? intermediaryResult.toString() : "null"));
         }
         if (intermediaryResult == null || intermediaryResult.getPayload() == NullPayload.getInstance()) {
-          resultToReturn=createEvent(intermediaryResult,event);
+          resultToReturn=intermediaryResult == null ? null : new DefaultMuleEvent(intermediaryResult,event);
           logger.warn("Chaining router cannot process any further endpoints. " + "There was no result returned from endpoint invocation: " + endpoint);
           break;
         }
@@ -37,7 +38,7 @@
         if (endpoint.isSynchronous()) {
           resultToReturn=sendRequest(session,intermediaryResult,endpoint,true);
           if (logger.isDebugEnabled()) {
-            MuleMessage resultMessage=getMessage(resultToReturn);
+            MuleMessage resultMessage=resultToReturn == null ? null : resultToReturn.getMessage();
             logger.debug("Received final Chain result '" + i + "': "+ (resultMessage == null ? "null" : resultMessage.toString()));
           }
         }
