@@ -2,7 +2,7 @@
   MuleMessage message=event.getMessage();
   MuleSession session=event.getSession();
   String correlationId=messageInfoMapping.getCorrelationId(message);
-  List results=new ArrayList();
+  List<MuleEvent> results=new ArrayList<MuleEvent>();
   int correlationSequence=1;
   SplitMessage splitMessage=getMessageParts(message,getEndpoints());
   Map props=new HashMap();
@@ -30,7 +30,7 @@
       }
       boolean synchronous=part.getEndpoint().isSynchronous();
       if (synchronous) {
-        results.add(getMessage(sendRequest(session,sendMessage,part.getEndpoint(),true)));
+        results.add(sendRequest(session,sendMessage,part.getEndpoint(),true));
       }
  else {
         sendRequest(session,sendMessage,part.getEndpoint(),false);
@@ -40,6 +40,5 @@
       throw new CouldNotRouteOutboundMessageException(sendMessage,part.getEndpoint(),e);
     }
   }
-  MuleMessage resultMessage=resultsHandler.aggregateResults(results,message,muleContext);
-  return createEvent(resultMessage,event);
+  return resultsHandler.aggregateResults(results,muleContext,event);
 }

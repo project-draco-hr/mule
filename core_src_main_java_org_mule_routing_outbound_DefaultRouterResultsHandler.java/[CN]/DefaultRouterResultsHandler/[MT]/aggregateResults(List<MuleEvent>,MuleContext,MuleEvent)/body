@@ -1,0 +1,20 @@
+{
+  MuleMessage aggregate;
+  if (results == null || results.size() == 0) {
+    aggregate=null;
+  }
+ else   if (results.size() == 1) {
+    aggregate=AbstractOutboundRouter.getMessage(results.get(0));
+  }
+ else {
+    MuleMessageCollection coll=new DefaultMessageCollection(muleContext);
+    for (    MuleEvent event : results) {
+      MuleMessage muleMessage=AbstractOutboundRouter.getMessage(event);
+      if (muleMessage != null) {
+        coll.addMessage(muleMessage);
+      }
+    }
+    aggregate=coll;
+  }
+  return AbstractOutboundRouter.createEvent(aggregate,previous);
+}

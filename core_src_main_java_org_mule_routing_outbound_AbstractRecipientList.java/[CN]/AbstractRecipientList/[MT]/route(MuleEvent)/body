@@ -2,7 +2,7 @@
   MuleMessage message=event.getMessage();
   MuleSession session=event.getSession();
   List recipients=this.getRecipients(message);
-  List results=new ArrayList();
+  List<MuleEvent> results=new ArrayList<MuleEvent>();
   if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
     boolean correlationSet=message.getCorrelationGroupSize() != -1;
     if (correlationSet && (enableCorrelation == ENABLE_CORRELATION_IF_NOT_SET)) {
@@ -22,7 +22,7 @@
     boolean sync=(this.synchronous == null ? endpoint.isSynchronous() : this.synchronous.booleanValue());
     try {
       if (sync) {
-        results.add(getMessage(sendRequest(session,request,endpoint,true)));
+        results.add(sendRequest(session,request,endpoint,true));
       }
  else {
         sendRequest(session,request,endpoint,false);
@@ -32,5 +32,5 @@
       throw new CouldNotRouteOutboundMessageException(request,endpoint,e);
     }
   }
-  return createEvent(resultsHandler.aggregateResults(results,message,muleContext),event);
+  return resultsHandler.aggregateResults(results,muleContext,event);
 }
