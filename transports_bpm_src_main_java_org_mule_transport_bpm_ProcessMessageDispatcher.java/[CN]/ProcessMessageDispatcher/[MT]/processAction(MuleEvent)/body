@@ -2,13 +2,8 @@
   Object process;
   Map processVariables=new HashMap();
   if (event != null) {
-    String propertyName;
-    for (Iterator iterator=event.getMessage().getPropertyNames().iterator(); iterator.hasNext(); ) {
-      propertyName=(String)iterator.next();
-      if (!propertyName.equals(MuleProperties.MULE_SESSION_PROPERTY)) {
-        processVariables.put(propertyName,event.getMessage().getProperty(propertyName));
-      }
-    }
+    populateProcessVariables(event,processVariables,PropertyScope.INVOCATION);
+    populateProcessVariables(event,processVariables,PropertyScope.OUTBOUND);
     Object payload=event.transformMessage();
     if (payload != null && !(payload instanceof NullPayload)) {
       processVariables.put(ProcessConnector.PROCESS_VARIABLE_INCOMING,payload);
@@ -23,9 +18,12 @@
   Object processId;
   String processIdField=connector.getProcessIdField();
   if (StringUtils.isNotEmpty(processIdField)) {
-    processId=event.getMessage().getProperty(processIdField);
+    processId=event.getMessage().getProperty(processIdField,PropertyScope.INVOCATION);
   }
-  processId=event.getMessage().getProperty(ProcessConnector.PROPERTY_PROCESS_ID,PropertyScope.INVOCATION);
+  processId=event.getMessage().getProperty(ProcessConnector.PROPERTY_PROCESS_ID,PropertyScope.INVOCATION,null);
+  if (processId == null) {
+    processId=event.getMessage().getProperty(ProcessConnector.PROPERTY_PROCESS_ID,PropertyScope.OUTBOUND,null);
+  }
   processVariables.remove(ProcessConnector.PROPERTY_PROCESS_ID);
   String action=event.getMessage().getStringProperty(ProcessConnector.PROPERTY_ACTION,PropertyScope.INVOCATION,ProcessConnector.ACTION_ADVANCE);
   processVariables.remove(ProcessConnector.PROPERTY_ACTION);
