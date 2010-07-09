@@ -8,9 +8,11 @@
     resultEvent=service.getComponent().process(event);
     resultEvent=processNext(resultEvent);
     resultEvent=receiveAsyncReplyMessageProcessor.process(resultEvent);
-    final String replyToStop=(String)resultEvent.getMessage().getProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY,PropertyScope.INVOCATION);
-    if (!event.isSynchronous() || (resultEvent != null && !BooleanUtils.toBoolean(replyToStop))) {
-      processReplyTo(event,resultEvent,replyToHandler,replyTo);
+    if (resultEvent != null) {
+      String replyToStop=(String)resultEvent.getMessage().getProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY,PropertyScope.INVOCATION);
+      if (!event.isSynchronous() || !BooleanUtils.toBoolean(replyToStop)) {
+        processReplyTo(event,resultEvent,replyToHandler,replyTo);
+      }
     }
   }
  catch (  Exception e) {
@@ -27,7 +29,7 @@
           resultEvent=new DefaultMuleEvent(((AbstractExceptionListener)exceptionListener).getReturnMessage(),event);
         }
  else {
-          resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),RequestContext.getEvent().getMessage(),event.getMuleContext()),event);
+          resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),event.getMessage(),event.getMuleContext()),event);
         }
       }
       ExceptionPayload exceptionPayload=event.getMessage().getExceptionPayload();
