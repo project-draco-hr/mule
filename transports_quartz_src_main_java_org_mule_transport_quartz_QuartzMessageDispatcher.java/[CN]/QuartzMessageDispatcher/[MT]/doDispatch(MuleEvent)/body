@@ -7,8 +7,11 @@
   jobDetail.setName(event.getEndpoint().getEndpointURI().getAddress() + "-" + event.getId());
   JobDataMap jobDataMap=new JobDataMap();
   MuleMessage msg=event.getMessage();
-  for (  String propertyKey : msg.getPropertyNames()) {
-    jobDataMap.put(propertyKey,msg.getProperty(propertyKey));
+  for (  String key : msg.getPropertyNames(PropertyScope.INVOCATION)) {
+    jobDataMap.put(key,msg.getProperty(key,PropertyScope.INVOCATION));
+  }
+  for (  String key : msg.getPropertyNames(PropertyScope.OUTBOUND)) {
+    jobDataMap.put(key,msg.getProperty(key,PropertyScope.OUTBOUND));
   }
   if (jobConfig instanceof ScheduledDispatchJobConfig) {
     ScheduledDispatchJobConfig scheduledDispatchJobConfig=(ScheduledDispatchJobConfig)jobConfig;
