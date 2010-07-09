@@ -1,0 +1,14 @@
+{
+  if (chain.isEmpty()) {
+    return new NullMessageProcessor();
+  }
+  InterceptingMessageProcessor first=createInterceptingMessageProcessor(chain.get(0));
+  MessageProcessor composite=new InterceptingChainCompositeMessageProcessor(first,chain,name);
+  InterceptingMessageProcessor current=first;
+  for (int i=1; i < chain.size(); i++) {
+    InterceptingMessageProcessor mp=createInterceptingMessageProcessor(chain.get(i));
+    current.setListener(mp);
+    current=mp;
+  }
+  return composite;
+}
