@@ -1,12 +1,12 @@
 {
   init();
-  TransactionTemplate tt=createTransactionTemplate(TransactionConfig.ACTION_ALWAYS_BEGIN,true);
+  TransactionTemplate<String> tt=createTransactionTemplate(TransactionConfig.ACTION_ALWAYS_BEGIN,true);
   tm.begin();
   final Transaction tx=tm.getTransaction();
   final TestResource resource1=new TestResource(tm);
   assertNotNull(tx);
-  String result=(String)tt.execute(new TransactionCallback(){
-    public Object doInTransaction() throws Exception {
+  String result=tt.execute(new TransactionCallback<String>(){
+    public String doInTransaction() throws Exception {
       Transaction muleTx=tm.getTransaction();
       assertNotSame(tx,muleTx);
       muleTx.enlistResource(resource1);
@@ -20,8 +20,8 @@
   assertEquals(14,resource1.getPersistentValue());
   tm.commit();
   assertEquals(14,resource1.getPersistentValue());
-  result=(String)tt.execute(new TransactionCallback(){
-    public Object doInTransaction() throws Exception {
+  result=tt.execute(new TransactionCallback<String>(){
+    public String doInTransaction() throws Exception {
       Transaction muleTx=tm.getTransaction();
       assertNotSame(tx,muleTx);
       muleTx.enlistResource(resource1);

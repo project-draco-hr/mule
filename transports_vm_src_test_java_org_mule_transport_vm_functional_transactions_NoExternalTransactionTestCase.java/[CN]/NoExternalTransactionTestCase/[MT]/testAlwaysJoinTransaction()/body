@@ -1,6 +1,6 @@
 {
   init();
-  TransactionTemplate tt=createTransactionTemplate(TransactionConfig.ACTION_ALWAYS_JOIN,false);
+  TransactionTemplate<String> tt=createTransactionTemplate(TransactionConfig.ACTION_ALWAYS_JOIN,false);
   tm.begin();
   final Transaction tx=tm.getTransaction();
   final TestResource resource1=new TestResource(tm);
@@ -9,8 +9,8 @@
   Exception ex=null;
   String result;
   try {
-    result=(String)tt.execute(new TransactionCallback(){
-      public Object doInTransaction() throws Exception {
+    result=tt.execute(new TransactionCallback<String>(){
+      public String doInTransaction() throws Exception {
         Transaction muleTx=tm.getTransaction();
         assertSame(tx,muleTx);
         resource1.setValue(14);
@@ -26,8 +26,8 @@
   assertNotNull(ex);
   tm.rollback();
   try {
-    result=(String)tt.execute(new TransactionCallback(){
-      public Object doInTransaction() throws Exception {
+    result=tt.execute(new TransactionCallback<String>(){
+      public String doInTransaction() throws Exception {
         return "OK";
       }
     }

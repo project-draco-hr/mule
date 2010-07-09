@@ -1,6 +1,6 @@
 {
   init();
-  TransactionTemplate tt=createTransactionTemplate(TransactionConfig.ACTION_BEGIN_OR_JOIN,false);
+  TransactionTemplate<String> tt=createTransactionTemplate(TransactionConfig.ACTION_BEGIN_OR_JOIN,false);
   logger.debug("TM is a " + tm.getClass().toString());
   tm.begin();
   final Transaction tx=tm.getTransaction();
@@ -10,8 +10,8 @@
   String result;
   Exception ex=null;
   try {
-    result=(String)tt.execute(new TransactionCallback(){
-      public Object doInTransaction() throws Exception {
+    result=tt.execute(new TransactionCallback<String>(){
+      public String doInTransaction() throws Exception {
         return "OK";
       }
     }
@@ -23,8 +23,8 @@
   }
   assertNotNull(ex);
   tm.rollback();
-  result=(String)tt.execute(new TransactionCallback(){
-    public Object doInTransaction() throws Exception {
+  result=tt.execute(new TransactionCallback<String>(){
+    public String doInTransaction() throws Exception {
       Transaction muleTx=tm.getTransaction();
       muleTx.enlistResource(resource1);
       resource1.setValue(15);

@@ -18,15 +18,15 @@
     if (outboundRouter.isMatch(outboundRouterMessage)) {
       matchfound=true;
       final OutboundRouter router=outboundRouter;
-      TransactionTemplate tt=new TransactionTemplate(outboundRouter.getTransactionConfig(),event.getFlowConstruct().getExceptionListener(),muleContext);
-      TransactionCallback cb=new TransactionCallback(){
-        public Object doInTransaction() throws Exception {
+      TransactionTemplate<MuleEvent> tt=new TransactionTemplate<MuleEvent>(outboundRouter.getTransactionConfig(),event.getFlowConstruct().getExceptionListener(),muleContext);
+      TransactionCallback<MuleEvent> cb=new TransactionCallback<MuleEvent>(){
+        public MuleEvent doInTransaction() throws Exception {
           return router.process(event);
         }
       }
 ;
       try {
-        result=(MuleEvent)tt.execute(cb);
+        result=tt.execute(cb);
       }
  catch (      Exception e) {
         throw new RoutingException(outboundRouterMessage,null,e);

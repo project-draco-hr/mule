@@ -8,14 +8,14 @@
   event.transformMessage();
   MuleMessage message=event.getMessage();
   connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),message);
-  TransactionTemplate tt=new TransactionTemplate(receiver.getEndpoint().getTransactionConfig(),connector.getExceptionListener(),event.getMuleContext());
-  TransactionCallback cb=new TransactionCallback(){
-    public Object doInTransaction() throws Exception {
+  TransactionTemplate<MuleMessage> tt=new TransactionTemplate<MuleMessage>(receiver.getEndpoint().getTransactionConfig(),connector.getExceptionListener(),event.getMuleContext());
+  TransactionCallback<MuleMessage> cb=new TransactionCallback<MuleMessage>(){
+    public MuleMessage doInTransaction() throws Exception {
       return receiver.onCall(event.getMessage(),true);
     }
   }
 ;
-  retMessage=(MuleMessage)tt.execute(cb);
+  retMessage=tt.execute(cb);
   if (logger.isDebugEnabled()) {
     logger.debug("sent event on endpointUri: " + event.getEndpoint().getEndpointURI());
   }
