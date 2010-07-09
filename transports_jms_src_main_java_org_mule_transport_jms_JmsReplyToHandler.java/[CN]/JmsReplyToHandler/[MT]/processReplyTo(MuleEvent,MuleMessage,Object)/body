@@ -38,7 +38,7 @@
     String persistentDeliveryString=(String)eventMsg.removeProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY);
     String correlationIDString=replyToMessage.getJMSCorrelationID();
     if (StringUtils.isBlank(correlationIDString)) {
-      correlationIDString=(String)eventMsg.getProperty(JmsConstants.JMS_MESSAGE_ID);
+      correlationIDString=(String)eventMsg.getProperty(JmsConstants.JMS_MESSAGE_ID,PropertyScope.INBOUND);
       replyToMessage.setJMSCorrelationID(correlationIDString);
     }
     if (event.getFlowConstruct() instanceof Service) {
@@ -60,7 +60,9 @@
       boolean persistent=StringUtils.isNotBlank(persistentDeliveryString) ? Boolean.valueOf(persistentDeliveryString) : connector.isPersistentDelivery();
       connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl,topic,endpoint);
     }
-    logger.info("Reply Message sent to: " + replyToDestination + " with correlationID:"+ correlationIDString);
+    if (logger.isInfoEnabled()) {
+      logger.info(String.format("Reply Message sent to: %s with correlationID:%s",replyToDestination,correlationIDString));
+    }
   }
  catch (  Exception e) {
     throw new DispatchException(JmsMessages.failedToCreateAndDispatchResponse(replyToDestination),returnMessage,null,e);
