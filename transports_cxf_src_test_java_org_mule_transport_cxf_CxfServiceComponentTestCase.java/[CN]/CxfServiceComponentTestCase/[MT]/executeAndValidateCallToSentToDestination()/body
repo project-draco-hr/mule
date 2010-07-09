@@ -9,10 +9,10 @@
   final String path="somePath";
   final String basePath="someBasePath";
   final MuleMessage muleReqMsg=new DefaultMuleMessage("some object",muleContext);
-  muleReqMsg.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,method);
-  muleReqMsg.setProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY,path);
-  muleReqMsg.setProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY,basePath);
-  muleReqMsg.setProperty(SoapConstants.SOAP_ACTION_PROPERTY,"\"" + someActionProperty + "\"");
+  muleReqMsg.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,method,PropertyScope.INBOUND);
+  muleReqMsg.setProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY,path,PropertyScope.INBOUND);
+  muleReqMsg.setProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY,basePath,PropertyScope.INBOUND);
+  muleReqMsg.setProperty(SoapConstants.SOAP_ACTION_PROPERTY,"\"" + someActionProperty + "\"",PropertyScope.INBOUND);
   when(ctx.getMessage()).thenReturn(muleReqMsg);
   when(ctx.getMuleContext()).thenReturn(muleContext);
   when(receiver.getServer()).thenReturn(server);
@@ -24,7 +24,7 @@
       MessageImpl messageImpl=(MessageImpl)invocation.getArguments()[0];
       assertNotNull(messageImpl);
       assertSame(muleReqMsg,messageImpl.get(CxfConstants.MULE_MESSAGE));
-      assertEquals(someActionProperty,messageImpl.get(org.mule.transport.soap.SoapConstants.SOAP_ACTION_PROPERTY_CAPS));
+      assertEquals(someActionProperty,messageImpl.get(SoapConstants.SOAP_ACTION_PROPERTY_CAPS));
       assertEquals(Boolean.TRUE,messageImpl.get(LocalConduit.DIRECT_DISPATCH));
       assertSame(RequestContext.getEvent(),messageImpl.get(MuleProperties.MULE_EVENT_PROPERTY));
       assertSame(destination,messageImpl.getDestination());
