@@ -2,12 +2,12 @@
   EndpointURI endpointUri=event.getEndpoint().getEndpointURI();
   String methodName=MapUtils.getString(endpointUri.getParams(),MuleProperties.MULE_METHOD_PROPERTY,null);
   if (null == methodName) {
-    methodName=(String)event.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY);
+    methodName=(String)event.getMessage().removeProperty(MuleProperties.MULE_METHOD_PROPERTY,PropertyScope.INVOCATION);
     if (null == methodName) {
       throw new DispatchException(RmiMessages.messageParamServiceMethodNotSet(),event.getMessage(),event.getEndpoint());
     }
   }
-  Class[] argTypes=getArgTypes(event.getMessage().getProperty(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES),event);
+  Class[] argTypes=getArgTypes(event.getMessage().getProperty(RmiConnector.PROPERTY_SERVICE_METHOD_PARAM_TYPES,PropertyScope.INVOCATION),event);
   try {
     return remoteObject.getClass().getMethod(methodName,argTypes);
   }
