@@ -5,7 +5,7 @@
   messageRouter.addRouter(router);
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
-  ImmutableEndpoint endpoint=getTestInboundEndpoint(false);
+  ImmutableEndpoint endpoint=getTestInboundEndpoint(MessageExchangePattern.ONE_WAY);
   MuleEvent event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy());
   session.expectAndReturn("getService",testService);
   assertTrue(router.isMatch(event));
@@ -14,7 +14,7 @@
   session.expectAndReturn("getService",testService);
   messageRouter.process(event);
   session.verify();
-  endpoint=getTestInboundEndpoint(true);
+  endpoint=getTestInboundEndpoint(MessageExchangePattern.REQUEST_RESPONSE);
   message=new DefaultMuleMessage("test event",muleContext);
   event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy());
   session.expectAndReturn("sendEvent",C.eq(event),message);
@@ -26,7 +26,7 @@
   session.verify();
   session.expect("toString");
   session.expectAndReturn("getService",testService);
-  endpoint=getTestInboundEndpoint(false);
+  endpoint=getTestInboundEndpoint(MessageExchangePattern.ONE_WAY);
   event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy());
   assertTrue(!router.isMatch(event));
   messageRouter.process(event);

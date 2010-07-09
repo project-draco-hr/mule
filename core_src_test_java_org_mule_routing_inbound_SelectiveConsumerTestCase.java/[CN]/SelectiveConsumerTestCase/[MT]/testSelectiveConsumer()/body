@@ -9,14 +9,14 @@
   router.setFilter(filter);
   assertEquals(filter,router.getFilter());
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
-  ImmutableEndpoint endpoint=getTestInboundEndpoint(false);
+  ImmutableEndpoint endpoint=getTestInboundEndpoint(MessageExchangePattern.ONE_WAY);
   MuleEvent event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy());
   assertTrue(router.isMatch(event));
   session.expect("dispatchEvent",C.eq(event));
   session.expectAndReturn("getService",testService);
   messageRouter.process(event);
   session.verify();
-  endpoint=getTestInboundEndpoint(true);
+  endpoint=getTestInboundEndpoint(MessageExchangePattern.REQUEST_RESPONSE);
   event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy());
   session.expectAndReturn("sendEvent",C.eq(event),message);
   session.expectAndReturn("getService",testService);
@@ -27,7 +27,7 @@
   session.expectAndReturn("getService",testService);
   session.expectAndReturn("toString","");
   message=new DefaultMuleMessage(new Exception(),muleContext);
-  endpoint=getTestInboundEndpoint(false);
+  endpoint=getTestInboundEndpoint(MessageExchangePattern.ONE_WAY);
   event=new DefaultMuleEvent(message,endpoint,(MuleSession)session.proxy());
   assertTrue(!router.isMatch(event));
   messageRouter.process(event);
