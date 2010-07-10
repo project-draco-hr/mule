@@ -1,15 +1,15 @@
 {
   MessagePropertiesTransformer t=new MessagePropertiesTransformer();
-  Map add=new HashMap();
+  Map<String,Object> add=new HashMap<String,Object>();
   add.put("Foo","#[header:public-house]");
   t.setAddProperties(add);
   t.setMuleContext(muleContext);
-  DefaultMuleMessage msg=new DefaultMuleMessage("message",(Map)null,muleContext);
-  msg.setProperty("public-house","Bar");
+  DefaultMuleMessage msg=new DefaultMuleMessage("message",muleContext);
+  msg.setProperty("public-house","Bar",PropertyScope.OUTBOUND);
   DefaultMuleMessage transformed=(DefaultMuleMessage)t.transform(msg,null);
   assertSame(msg,transformed);
   assertEquals(msg.getUniqueId(),transformed.getUniqueId());
   assertEquals(msg.getPayload(),transformed.getPayload());
   assertEquals(msg.getPropertyNames(),transformed.getPropertyNames());
-  assertEquals("Bar",transformed.getProperty("Foo"));
+  assertEquals("Bar",transformed.getProperty("Foo",PropertyScope.OUTBOUND));
 }
