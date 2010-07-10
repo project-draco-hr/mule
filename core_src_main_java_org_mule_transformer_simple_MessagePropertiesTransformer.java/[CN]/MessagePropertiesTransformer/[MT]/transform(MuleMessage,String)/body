@@ -13,20 +13,26 @@
  else {
         final String key=entry.getKey().toString();
         Object value=entry.getValue();
+        Object realValue=value;
         if (muleContext.getExpressionManager().isValidExpression(value.toString())) {
-          value=muleContext.getExpressionManager().evaluate(value.toString(),message);
+          realValue=muleContext.getExpressionManager().evaluate(value.toString(),message);
         }
-        if (message.getProperty(key,scope) != null) {
-          if (overwrite) {
-            logger.debug("Overwriting message property " + key);
-            message.setProperty(key,value,scope);
+        if (realValue != null) {
+          if (message.getProperty(key,scope) != null) {
+            if (overwrite) {
+              logger.debug("Overwriting message property " + key);
+              message.setProperty(key,realValue,scope);
+            }
+ else             if (logger.isDebugEnabled()) {
+              logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,realValue,scope));
+            }
           }
  else {
-            logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,value,scope));
+            message.setProperty(key,realValue,scope);
           }
         }
- else {
-          message.setProperty(key,value,scope);
+ else         if (logger.isInfoEnabled()) {
+          logger.info(MessageFormat.format("Property with key '{0}', not found on message using '{1}'. Since the value was marked optional, nothing was set on the message for this property",key,value));
         }
       }
     }
