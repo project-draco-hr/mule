@@ -1,5 +1,4 @@
 {
-  MuleContext muleContext=event.getMuleContext();
   String tempUrl;
   if (addressFromMessage) {
     tempUrl=event.getMessage().getStringProperty(WS_SERVICE_URL,PropertyScope.INBOUND,null);
@@ -21,7 +20,7 @@
   if (style != null) {
     endpointBuilder.setProperty(AxisConnector.STYLE,style);
   }
-  OutboundEndpoint endpoint=muleContext.getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointBuilder);
-  MuleMessage result=event.getSession().sendEvent(message,endpoint);
-  return result;
+  endpointBuilder.setExchangePattern(MessageExchangePattern.REQUEST_RESPONSE);
+  OutboundEndpoint endpoint=endpointBuilder.buildOutboundEndpoint();
+  return event.getSession().sendEvent(message,endpoint);
 }
