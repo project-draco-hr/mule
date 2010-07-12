@@ -9,9 +9,6 @@
     throw new IllegalArgumentException("Property org.mule.MuleContext not set on Axis MessageContext");
   }
   MuleEvent event=(MuleEvent)call.getProperty(MuleProperties.MULE_EVENT_PROPERTY);
-  if (event == null) {
-    throw new IllegalArgumentException("Property " + MuleProperties.MULE_EVENT_PROPERTY + " not set on Axis MessageContext");
-  }
   if (Boolean.TRUE.equals(call.getProperty("axis.one.way"))) {
     sync=false;
   }
@@ -89,7 +86,13 @@
       props.put(HttpConstants.HEADER_CONTENT_TYPE,contentType);
     }
     MuleMessage message=new DefaultMuleMessage(payload,props,muleContext);
-    MuleSession session=event.getSession();
+    MuleSession session;
+    if (event != null) {
+      session=event.getSession();
+    }
+ else {
+      session=new DefaultMuleSession(muleContext);
+    }
     logger.info("Making Axis soap request on: " + uri);
     if (logger.isDebugEnabled()) {
       logger.debug("Soap request is:\n" + new String((payload instanceof byte[] ? (byte[])payload : payload.toString().getBytes())));
