@@ -21,8 +21,6 @@
   registry.registerTransformer(LoanQuoteRequestToCreditProfileArgs);
   Transformer CreditProfileXmlToCreditProfile=new CreditProfileXmlToCreditProfile();
   registry.registerTransformer(CreditProfileXmlToCreditProfile);
-  Transformer SetLendersAsRecipients=new SetLendersAsRecipients();
-  registry.registerTransformer(SetLendersAsRecipients);
   Transformer ObjectToJMSMessage=new ObjectToJMSMessage();
   registry.registerTransformer(ObjectToJMSMessage);
   EndpointBuilder CustomerRequestsREST=new EndpointURIEndpointBuilder(new URIBuilder("jetty:rest://localhost:8888/loanbroker",muleContext));
@@ -119,7 +117,6 @@
   eb3.setExchangePattern(MessageExchangePattern.REQUEST_RESPONSE);
   lenderGatewayServiceInboundOutboundRouter.addEndpoint(eb3.buildOutboundEndpoint());
   EndpointBuilder eb4=(EndpointBuilder)BankingGateway.clone();
-  eb4.addTransformer(SetLendersAsRecipients);
   eb4.addTransformer(ObjectToJMSMessage);
   lenderGatewayServiceInboundOutboundRouter.addEndpoint(eb4.buildOutboundEndpoint());
   lenderGatewayServiceInboundOutbound.addRouter(lenderGatewayServiceInboundOutboundRouter);
@@ -140,9 +137,9 @@
   bankingGatewayServiceInbound.addEndpoint(BankingGateway.buildInboundEndpoint());
   bankingGatewayService.setInboundRouter(bankingGatewayServiceInbound);
   OutboundRouterCollection bankingGatewayServiceOutbound=new DefaultOutboundRouterCollection();
-  StaticRecipientList staticRecipientList=new StaticRecipientList();
-  staticRecipientList.setReplyTo("LoanQuotes");
-  staticRecipientList.setFilter(new MessagePropertyFilter("recipients!=null"));
+  ExpressionRecipientList recipientList=new ExpressionRecipientList();
+  recipientList.setReplyTo("LoanQuotes");
+  recipientList.setFilter(new MessagePropertyFilter("recipients!=null"));
   registry.registerService(lenderGatewayService);
   Service bank1Service=new SedaService(muleContext);
   bank1Service.setName("TheBank1");
