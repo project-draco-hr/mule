@@ -1,0 +1,28 @@
+{
+  Filter payloadIsOK=new EqualsFilter("OK");
+  Filter payloadIsBad=new EqualsFilter("Bad");
+  MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
+  OutboundEndpoint endpoint2=getTestOutboundEndpoint("Test2Provider","test://Test2Provider?synchronous=false");
+  Mock tap=RouterTestUtils.getMockEndpoint(endpoint2);
+  Mock session=MuleTestUtils.getMockSession();
+  session.expectAndReturn("getFlowConstruct",null);
+  session.expect("setFlowConstruct",C.ANY_ARGS);
+  MuleEvent event=new DefaultMuleEvent(okMessage,endpoint1,(MuleSession)session.proxy());
+  WireTapMessageProcessor wireTap=new WireTapMessageProcessor();
+  wireTap.process(event);
+  tap.verify();
+  wireTap.setTap((OutboundEndpoint)tap.proxy());
+  wireTap.setFilter(payloadIsBad);
+  event=new DefaultMuleEvent(okMessage,endpoint1,(MuleSession)session.proxy());
+  wireTap.process(event);
+  tap.verify();
+  wireTap.setFilter(payloadIsOK);
+  tap.expect("process",C.isA(MuleEvent.class));
+  wireTap.process(event);
+  tap.verify();
+  wireTap.setFilter(null);
+  tap.expect("process",C.isA(MuleEvent.class));
+  wireTap.process(event);
+  tap.verify();
+}

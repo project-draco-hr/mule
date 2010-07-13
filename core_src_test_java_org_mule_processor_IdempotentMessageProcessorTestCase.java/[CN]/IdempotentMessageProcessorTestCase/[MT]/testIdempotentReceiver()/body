@@ -1,0 +1,17 @@
+{
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
+  Mock session=MuleTestUtils.getMockSession();
+  session.matchAndReturn("getFlowConstruct",getTestService());
+  IdempotentMessageProcessor ir=new IdempotentMessageProcessor();
+  ir.setIdExpression("#[header:id]");
+  MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
+  okMessage.setProperty("id","1",PropertyScope.OUTBOUND);
+  MuleEvent event=new DefaultMuleEvent(okMessage,endpoint1,(MuleSession)session.proxy());
+  event=ir.process(event);
+  assertNotNull(event);
+  okMessage=new DefaultMuleMessage("OK",muleContext);
+  okMessage.setProperty("id","1",PropertyScope.OUTBOUND);
+  event=new DefaultMuleEvent(okMessage,endpoint1,(MuleSession)session.proxy());
+  event=ir.process(event);
+  assertNull(event);
+}

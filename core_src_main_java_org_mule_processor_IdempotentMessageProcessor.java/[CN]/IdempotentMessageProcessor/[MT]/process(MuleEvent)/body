@@ -1,0 +1,16 @@
+{
+  String id=this.getIdForEvent(event);
+  if (!isMatch(event,id))   return null;
+  String eventComponentName=event.getFlowConstruct().getName();
+  if (!assignedComponentName.equals(eventComponentName)) {
+    IllegalArgumentException iex=new IllegalArgumentException("This receiver is assigned to service: " + assignedComponentName + " but has received an event for service: "+ eventComponentName+ ". Please check your config to make sure each service"+ "has its own instance of IdempotentReceiver.");
+    throw new RoutingException(event.getMessage(),event.getEndpoint(),iex);
+  }
+  try {
+    store.store(id,id);
+    return event;
+  }
+ catch (  Exception e) {
+    throw new RoutingException(CoreMessages.failedToWriteMessageToStore(id,assignedComponentName),event.getMessage(),event.getEndpoint(),e);
+  }
+}
