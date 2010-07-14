@@ -1,12 +1,15 @@
 {
-  MuleEvent event=getEvent(message,url,true,Integer.valueOf(timeout));
+  OutboundEndpoint endpoint=getOutboundEndpoint(url,true,timeout);
+  MuleEvent event=getEvent(message,endpoint);
   event.setTimeout(timeout);
   try {
-    MuleMessage msg=event.getSession().sendEvent(event);
-    if (msg == null) {
-      msg=new DefaultMuleMessage(NullPayload.getInstance(),muleContext);
+    MuleEvent response=endpoint.process(event);
+    if (response != null) {
+      return response.getMessage();
     }
-    return msg;
+ else {
+      return new DefaultMuleMessage(NullPayload.getInstance(),muleContext);
+    }
   }
  catch (  MuleException e) {
     throw e;

@@ -1,9 +1,15 @@
 {
   MuleMessage message=new DefaultMuleMessage(payload,messageProperties,muleContext);
-  MuleEvent event=getEvent(message,url,true);
-  MuleMessage response;
+  OutboundEndpoint endpoint=getOutboundEndpoint(url,true);
+  MuleEvent event=getEvent(message,endpoint);
   try {
-    response=event.getSession().sendEvent(event);
+    MuleEvent resultEvent=endpoint.process(event);
+    if (resultEvent != null) {
+      return resultEvent.getMessage();
+    }
+ else {
+      return null;
+    }
   }
  catch (  MuleException e) {
     throw e;
@@ -11,5 +17,4 @@
 catch (  Exception e) {
     throw new DispatchException(ClientMessages.failedToDispatchClientEvent(),event.getMessage(),event.getEndpoint(),e);
   }
-  return response;
 }

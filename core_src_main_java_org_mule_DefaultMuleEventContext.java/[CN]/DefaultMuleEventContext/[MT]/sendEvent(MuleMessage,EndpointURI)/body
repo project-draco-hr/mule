@@ -1,4 +1,12 @@
 {
-  OutboundEndpoint endpoint=getMuleContext().getRegistry().lookupEndpointFactory().getOutboundEndpoint(endpointUri);
-  return session.sendEvent(message,endpoint);
+  EndpointBuilder builder=null;
+  if (endpointUri.getEndpointName() != null) {
+    builder=muleContext.getRegistry().lookupEndpointBuilder(endpointUri.getEndpointName());
+  }
+  if (builder == null) {
+    builder=new EndpointURIEndpointBuilder(new URIBuilder(endpointUri));
+  }
+  builder.setExchangePattern(MessageExchangePattern.REQUEST_RESPONSE);
+  OutboundEndpoint endpoint=getMuleContext().getRegistry().lookupEndpointFactory().getOutboundEndpoint(builder);
+  return clientInterface.process(endpoint,message);
 }

@@ -1,0 +1,16 @@
+{
+  if (!endpoint.getConnector().isStarted() && muleContext.isStarted()) {
+    endpoint.getConnector().start();
+  }
+  try {
+    DefaultMuleSession session=new DefaultMuleSession(muleContext);
+    if (user != null) {
+      message.setProperty(MuleProperties.MULE_USER_PROPERTY,MuleCredentials.createHeader(user.getUsername(),user.getPassword()),PropertyScope.OUTBOUND);
+    }
+    DefaultMuleEvent event=new DefaultMuleEvent(message,endpoint,session);
+    return event;
+  }
+ catch (  Exception e) {
+    throw new DispatchException(CoreMessages.failedToCreate("Client event"),message,endpoint,e);
+  }
+}

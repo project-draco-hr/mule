@@ -1,3 +1,11 @@
 {
-  return session.sendEvent(message);
+  if (event.getEndpoint() instanceof OutboundEndpoint) {
+    return clientInterface.process((OutboundEndpoint)event.getEndpoint(),message);
+  }
+ else   if (session.getFlowConstruct() instanceof Service) {
+    return ((Service)session.getFlowConstruct()).sendEvent(new DefaultMuleEvent(message,event.getEndpoint(),session));
+  }
+ else {
+    throw new MessagingException(CoreMessages.createStaticMessage("Current event has 'inbound' endpoint and FlowConstuct is not a 'Service', MuleEventContext cannot  this message"),message);
+  }
 }
