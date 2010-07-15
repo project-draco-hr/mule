@@ -1,6 +1,5 @@
 {
   MuleMessage message=event.getMessage();
-  MuleSession session=event.getSession();
   List<Object> endpoints;
   String endpointName;
   String prop=expressionConfig.getFullExpression(expressionManager);
@@ -37,17 +36,15 @@
     if (StringUtils.isEmpty(endpointName)) {
       throw new CouldNotRouteOutboundMessageException(CoreMessages.objectIsNull("Endpoint Name: " + expressionConfig.getFullExpression(expressionManager)),message,null);
     }
-    OutboundEndpoint ep=null;
+    MessageProcessor ep=null;
     try {
       ep=lookupEndpoint(endpointName);
       if (ep == null) {
-        throw new CouldNotRouteOutboundMessageException(CoreMessages.objectNotFound("Endpoint",endpointName),message,ep);
+        throw new CouldNotRouteOutboundMessageException(CoreMessages.objectNotFound("Endpoint",endpointName),message,null);
       }
-      if (ep.isSynchronous()) {
-        results.add(sendRequest(session,message,ep,true));
-      }
- else {
-        sendRequest(session,message,ep,false);
+      MuleEvent result=sendRequest(event,message,ep,true);
+      if (result != null) {
+        results.add(result);
       }
     }
  catch (    MuleException e) {

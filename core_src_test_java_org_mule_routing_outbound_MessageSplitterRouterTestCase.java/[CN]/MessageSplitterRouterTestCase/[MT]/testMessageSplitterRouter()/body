@@ -15,7 +15,7 @@
   Mock mockendpoint5=RouterTestUtils.getMockEndpoint(endpoint5);
   Mock mockendpoint6=RouterTestUtils.getMockEndpoint(endpoint6);
   AbstractMessageSplitter router=new AbstractMessageSplitter(){
-    @Override protected SplitMessage getMessageParts(    MuleMessage message,    List endpoints){
+    @Override protected SplitMessage getMessageParts(    MuleMessage message,    List<MessageProcessor> endpoints){
       int i=0;
       SplitMessage splitMessage=new SplitMessage();
       for (StringTokenizer tokenizer=new StringTokenizer(message.getPayload().toString(),","); tokenizer.hasMoreTokens(); i++) {
@@ -27,11 +27,11 @@
   }
 ;
   router.setMuleContext(muleContext);
-  List<OutboundEndpoint> endpoints=new ArrayList<OutboundEndpoint>();
+  List<MessageProcessor> endpoints=new ArrayList<MessageProcessor>();
   endpoints.add((OutboundEndpoint)mockendpoint1.proxy());
   endpoints.add((OutboundEndpoint)mockendpoint2.proxy());
   endpoints.add((OutboundEndpoint)mockendpoint3.proxy());
-  router.setEndpoints(endpoints);
+  router.setTargets(endpoints);
   MuleMessage message=new DefaultMuleMessage("test,mule,message",muleContext);
   assertTrue(router.isMatch(message));
   mockendpoint1.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
@@ -41,12 +41,12 @@
   mockendpoint1.verify();
   mockendpoint2.verify();
   mockendpoint3.verify();
-  endpoints=new ArrayList<OutboundEndpoint>();
+  endpoints=new ArrayList<MessageProcessor>();
   endpoints.add((OutboundEndpoint)mockendpoint4.proxy());
   endpoints.add((OutboundEndpoint)mockendpoint5.proxy());
   endpoints.add((OutboundEndpoint)mockendpoint6.proxy());
-  router.getEndpoints().clear();
-  router.setEndpoints(endpoints);
+  router.getTargets().clear();
+  router.setTargets(endpoints);
   message=new DefaultMuleMessage("test,mule,message",muleContext);
   MuleEvent event=new OutboundRoutingTestEvent(message,null);
   mockendpoint4.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);

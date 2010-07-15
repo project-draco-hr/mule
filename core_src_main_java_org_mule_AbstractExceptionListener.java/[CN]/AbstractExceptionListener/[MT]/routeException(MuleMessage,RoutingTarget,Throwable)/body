@@ -1,0 +1,50 @@
+{
+  List endpoints=getEndpoints(t);
+  if (CollectionUtils.isNotEmpty(endpoints)) {
+    try {
+      logger.error("Message being processed is: " + (message == null ? "null" : message.toString()));
+      MuleEventContext ctx=RequestContext.getEventContext();
+      String component="Unknown";
+      EndpointURI endpointUri=null;
+      if (ctx != null) {
+        if (ctx.getFlowConstruct() != null) {
+          component=ctx.getFlowConstruct().getName();
+        }
+        endpointUri=ctx.getEndpointURI();
+      }
+ else       if (target instanceof ImmutableEndpoint) {
+        endpointUri=((ImmutableEndpoint)target).getEndpointURI();
+      }
+      Serializable payload;
+      if (message.getPayload() instanceof Serializable) {
+        payload=(Serializable)message.getPayload();
+      }
+ else {
+        payload=message.getPayloadAsString();
+      }
+      ExceptionMessage msg=new ExceptionMessage(payload,t,component,endpointUri);
+      MuleMessage exceptionMessage;
+      if (ctx == null) {
+        exceptionMessage=new DefaultMuleMessage(msg,muleContext);
+      }
+ else {
+        exceptionMessage=new DefaultMuleMessage(msg,ctx.getMessage(),muleContext);
+      }
+      if (ctx != null && ctx.getFlowConstruct() != null && ctx.getFlowConstruct() instanceof Service) {
+        OutboundRouter router=createOutboundRouter();
+        router.process(new DefaultMuleEvent(exceptionMessage,RequestContext.getEvent()));
+      }
+ else {
+        customRouteExceptionMessage(exceptionMessage);
+      }
+    }
+ catch (    Exception e) {
+      logFatal(message,e);
+      closeStream(message);
+    }
+  }
+ else {
+    handleTransaction(t);
+    closeStream(message);
+  }
+}

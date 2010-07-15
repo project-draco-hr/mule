@@ -1,17 +1,10 @@
 {
   MuleMessage message=theEvent.getMessage();
-  MuleSession session=theEvent.getSession();
-  for (  OutboundEndpoint endpoint : endpoints) {
+  for (  MessageProcessor target : targets) {
     if (isMatch(message)) {
       try {
-        DefaultMuleEvent event=new DefaultMuleEvent(message,endpoint,session);
-        if (endpoint.getMessageExchangePattern().hasResponse()) {
-          return endpoint.process(event);
-        }
- else {
-          endpoint.process(event);
-          return null;
-        }
+        MuleEvent event=RequestContext.cloneAndUpdateEventEndpoint(theEvent,target);
+        return target.process(event);
       }
  catch (      MuleException e) {
         throw new MessagingException(e.getI18nMessage(),message,e);

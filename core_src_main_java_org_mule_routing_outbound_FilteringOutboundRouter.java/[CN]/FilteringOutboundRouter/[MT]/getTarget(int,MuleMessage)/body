@@ -1,0 +1,42 @@
+{
+  if (!useTemplates) {
+    return targets.get(index);
+  }
+ else {
+    MessageProcessor mp=targets.get(index);
+    if (!(mp instanceof ImmutableEndpoint)) {
+      return targets.get(index);
+    }
+    OutboundEndpoint ep=(OutboundEndpoint)mp;
+    String uri=ep.getEndpointURI().getUri().toString();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Uri before parsing is: " + uri);
+    }
+    Map props=new HashMap();
+    props.putAll(ep.getProperties());
+    for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
+      String propertyKey=(String)iterator.next();
+      props.put(propertyKey,message.getProperty(propertyKey));
+    }
+    if (!parser.isContainsTemplate(uri)) {
+      logger.debug("Uri does not contain template(s)");
+      return ep;
+    }
+ else {
+      String newUriString=parser.parse(props,uri);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Uri after parsing is: " + uri);
+      }
+      try {
+        EndpointURI newUri=new MuleEndpointURI(newUriString,muleContext);
+        if (!newUri.getScheme().equalsIgnoreCase(ep.getEndpointURI().getScheme())) {
+          throw new CouldNotRouteOutboundMessageException(CoreMessages.schemeCannotChangeForRouter(ep.getEndpointURI().getScheme(),newUri.getScheme()),message,ep);
+        }
+        return new DynamicURIOutboundEndpoint(ep,newUri);
+      }
+ catch (      EndpointException e) {
+        throw new CouldNotRouteOutboundMessageException(CoreMessages.templateCausedMalformedEndpoint(uri,newUriString),message,ep,e);
+      }
+    }
+  }
+}

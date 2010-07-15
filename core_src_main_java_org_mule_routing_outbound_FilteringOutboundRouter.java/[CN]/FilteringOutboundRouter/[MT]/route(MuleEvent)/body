@@ -1,18 +1,12 @@
 {
   MuleEvent result=null;
   MuleMessage message=event.getMessage();
-  MuleSession session=event.getSession();
-  if (endpoints == null || endpoints.size() == 0) {
+  if (targets == null || targets.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
   }
-  OutboundEndpoint ep=getEndpoint(0,message);
+  MessageProcessor ep=getTarget(0,message);
   try {
-    if (ep.isSynchronous()) {
-      result=sendRequest(session,message,ep,true);
-    }
- else {
-      sendRequest(session,message,ep,false);
-    }
+    result=sendRequest(event,message,ep,true);
   }
  catch (  MuleException e) {
     throw new CouldNotRouteOutboundMessageException(message,ep,e);

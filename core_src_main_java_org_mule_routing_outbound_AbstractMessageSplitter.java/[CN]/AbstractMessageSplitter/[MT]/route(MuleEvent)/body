@@ -1,14 +1,14 @@
 {
   MuleMessage message=event.getMessage();
-  MuleSession session=event.getSession();
   String correlationId=messageInfoMapping.getCorrelationId(message);
   List<MuleEvent> results=new ArrayList<MuleEvent>();
   int correlationSequence=1;
-  SplitMessage splitMessage=getMessageParts(message,getEndpoints());
+  SplitMessage splitMessage=getMessageParts(message,getTargets());
   Map props=new HashMap();
   for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
     String propertyKey=(String)iterator.next();
-    props.put(propertyKey,message.getProperty(propertyKey));
+    Object value=message.getProperty(propertyKey);
+    if (value != null)     props.put(propertyKey,value);
   }
   for (int i=0; i < splitMessage.size(); i++) {
     SplitMessage.MessagePart part=splitMessage.getPart(i);
@@ -30,10 +30,10 @@
       }
       boolean synchronous=part.getEndpoint().isSynchronous();
       if (synchronous) {
-        results.add(sendRequest(session,sendMessage,part.getEndpoint(),true));
+        results.add(sendRequest(event,sendMessage,part.getEndpoint(),true));
       }
  else {
-        sendRequest(session,sendMessage,part.getEndpoint(),false);
+        sendRequest(event,sendMessage,part.getEndpoint(),false);
       }
     }
  catch (    MuleException e) {

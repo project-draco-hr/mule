@@ -1,6 +1,5 @@
 {
   MuleMessage message=event.getMessage();
-  MuleSession session=event.getSession();
   List recipients=null;
   try {
     recipients=getRecipients(message);
@@ -8,10 +7,10 @@
  catch (  RequiredValueException e) {
   }
   if (recipients == null) {
-    int endpointsCount=endpoints.size();
+    int endpointsCount=targets.size();
     recipients=new ArrayList(endpointsCount);
     for (int i=0; i < endpointsCount; i++) {
-      recipients.add(getEndpoint(i,message));
+      recipients.add(getTarget(i,message));
     }
   }
   if (recipients == null || recipients.size() == 0) {
@@ -35,12 +34,12 @@
     endpoint=getRecipientEndpoint(request,iterator.next());
     boolean lastEndpoint=!iterator.hasNext();
     if (!lastEndpoint) {
-      logger.info("Sync mode will be forced for " + endpoint.getEndpointURI() + ", as there are more endpoints available.");
+      logger.info("Sync mode will be forced for " + endpoint.getEndpointURI() + ", as there are more targets available.");
     }
     if (!lastEndpoint || endpoint.isSynchronous()) {
       try {
         MuleMessage resultMessage=null;
-        result=sendRequest(session,request,endpoint,true);
+        result=sendRequest(event,request,endpoint,true);
         if (result != null) {
           resultMessage=result.getMessage();
         }
@@ -64,7 +63,7 @@
     }
  else {
       try {
-        sendRequest(session,request,endpoint,false);
+        sendRequest(event,request,endpoint,false);
         success=true;
         break;
       }

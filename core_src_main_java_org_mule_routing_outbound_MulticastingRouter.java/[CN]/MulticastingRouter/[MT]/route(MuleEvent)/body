@@ -1,7 +1,6 @@
 {
   MuleMessage message=event.getMessage();
-  MuleSession session=event.getSession();
-  if (endpoints == null || endpoints.size() == 0) {
+  if (targets == null || targets.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
   }
   if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
@@ -10,30 +9,28 @@
       logger.debug("CorrelationId is already set, not setting Correlation group size");
     }
  else {
-      message.setCorrelationGroupSize(endpoints.size());
+      message.setCorrelationGroupSize(targets.size());
     }
   }
-  List<MuleEvent> results=new ArrayList<MuleEvent>(endpoints.size());
+  List<MuleEvent> results=new ArrayList<MuleEvent>(targets.size());
   try {
-    OutboundEndpoint endpoint;
-    for (int i=0; i < endpoints.size(); i++) {
-      endpoint=endpoints.get(i);
-      if (endpoint.getFilter() == null || (endpoint.getFilter() != null && endpoint.getFilter().accept(message))) {
+    for (int i=0; i < targets.size(); i++) {
+      MessageProcessor mp=targets.get(i);
+      OutboundEndpoint endpoint=mp instanceof OutboundEndpoint ? (OutboundEndpoint)mp : null;
+      if (endpoint == null || endpoint.getFilter() == null || (endpoint.getFilter() != null && endpoint.getFilter().accept(message))) {
         if (((DefaultMuleMessage)message).isConsumable()) {
           throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),message);
         }
         MuleMessage clonedMessage=new DefaultMuleMessage(message.getPayload(),message,muleContext);
-        if (endpoint.isSynchronous()) {
-          results.add(sendRequest(session,clonedMessage,endpoint,true));
-        }
- else {
-          sendRequest(session,clonedMessage,endpoint,false);
+        MuleEvent result=sendRequest(event,clonedMessage,mp,true);
+        if (result != null) {
+          results.add(result);
         }
       }
     }
   }
  catch (  MuleException e) {
-    throw new CouldNotRouteOutboundMessageException(message,endpoints.get(0),e);
+    throw new CouldNotRouteOutboundMessageException(message,targets.get(0),e);
   }
   return resultsHandler.aggregateResults(results,event,muleContext);
 }

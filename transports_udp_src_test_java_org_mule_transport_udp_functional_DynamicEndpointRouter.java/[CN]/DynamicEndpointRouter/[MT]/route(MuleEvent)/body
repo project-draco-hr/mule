@@ -1,34 +1,30 @@
 {
   MuleMessage message=event.getMessage();
-  MuleSession session=event.getSession();
   MuleEvent result=null;
-  if (endpoints == null || endpoints.size() == 0) {
+  if (targets == null || targets.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
   }
   try {
-    OutboundEndpoint ep=endpoints.get(0);
+    MessageProcessor ep=targets.get(0);
     EndpointURI newUri;
-    for (    String propertyKey : message.getPropertyNames()) {
-      Object propertyValue=message.getProperty(propertyKey);
-      if (propertyKey.equalsIgnoreCase("packet.port")) {
-        int port=((Integer)propertyValue).intValue();
-        newUri=new MuleEndpointURI("udp://localhost:" + port,muleContext);
-        if (logger.isDebugEnabled()) {
-          logger.info("Uri after parsing is: " + newUri.getAddress());
+    if (ep instanceof OutboundEndpoint) {
+      for (      String propertyKey : message.getPropertyNames()) {
+        Object propertyValue=message.getProperty(propertyKey);
+        if (propertyKey.equalsIgnoreCase("packet.port")) {
+          int port=((Integer)propertyValue).intValue();
+          newUri=new MuleEndpointURI("udp://localhost:" + port,muleContext);
+          if (logger.isDebugEnabled()) {
+            logger.info("Uri after parsing is: " + newUri.getAddress());
+          }
+          ep=new DynamicURIOutboundEndpoint((OutboundEndpoint)ep,newUri);
+          break;
         }
-        ep=new DynamicURIOutboundEndpoint(ep,newUri);
-        break;
       }
     }
-    if (ep.isSynchronous()) {
-      result=sendRequest(session,message,ep,true);
-    }
- else {
-      sendRequest(session,message,ep,false);
-    }
+    result=sendRequest(event,message,ep,true);
   }
  catch (  MuleException e) {
-    throw new CouldNotRouteOutboundMessageException(message,endpoints.get(0),e);
+    throw new CouldNotRouteOutboundMessageException(message,targets.get(0),e);
   }
   return result;
 }
