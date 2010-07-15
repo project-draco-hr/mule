@@ -1,0 +1,17 @@
+{
+  List<AnnotationMetaData> annos=AnnotationUtils.getMethodAnnotations(object.getClass(),Transformer.class);
+  if (annos.size() == 0) {
+    return object;
+  }
+  for (  AnnotationMetaData data : annos) {
+    try {
+      Transformer anno=(Transformer)data.getAnnotation();
+      AnnotatedTransformerProxy trans=new AnnotatedTransformerProxy(anno.priorityWeighting(),object,(Method)data.getMember(),anno.sourceTypes(),null,null);
+      muleContext.getRegistry().registerTransformer(trans);
+    }
+ catch (    MuleException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  return object;
+}
