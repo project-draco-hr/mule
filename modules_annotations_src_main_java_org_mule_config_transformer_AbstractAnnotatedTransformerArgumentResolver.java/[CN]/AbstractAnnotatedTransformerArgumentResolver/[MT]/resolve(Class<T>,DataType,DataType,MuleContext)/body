@@ -1,0 +1,31 @@
+{
+  if (!getArgumentClass().isAssignableFrom(type) || isNonMatching(source,result)) {
+    return null;
+  }
+  Class annotatedType=(result instanceof CollectionDataType ? ((CollectionDataType)result).getItemType() : result.getType());
+  boolean isJson=matchingClasses.contains(annotatedType);
+  if (!isJson) {
+    isJson=findAnnotation(annotatedType);
+  }
+  if (!isJson) {
+    annotatedType=source.getType();
+    isJson=matchingClasses.contains(annotatedType);
+    if (!isJson) {
+      isJson=AnnotationUtils.hasAnnotationWithPackage(getAnnotationsPackageName(),annotatedType);
+    }
+  }
+  Object argument=context.getRegistry().lookupObject(getArgumentClass());
+  if (!isJson) {
+    nonMatchingClasses.add(source.getType());
+    nonMatchingClasses.add(result.getType());
+    return (T)argument;
+  }
+ else {
+    matchingClasses.add(annotatedType);
+  }
+  if (argument == null) {
+    logger.info("No common Object of type '" + getArgumentClass() + "' configured, creating a local one for: "+ source+ ", "+ result);
+    argument=createArgument(annotatedType,context);
+  }
+  return (T)argument;
+}
