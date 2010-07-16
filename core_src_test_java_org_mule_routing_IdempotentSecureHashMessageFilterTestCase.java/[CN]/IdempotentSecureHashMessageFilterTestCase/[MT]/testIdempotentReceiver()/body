@@ -1,8 +1,10 @@
 {
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
   Mock session=MuleTestUtils.getMockSession();
-  session.matchAndReturn("getFlowConstruct",getTestService());
-  IdempotentSecureHashMessageProcessor ir=new IdempotentSecureHashMessageProcessor();
+  Service service=getTestService();
+  session.matchAndReturn("getFlowConstruct",service);
+  IdempotentSecureHashMessageFilter ir=new IdempotentSecureHashMessageFilter();
+  ir.setFlowConstruct(service);
   MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
   MuleEvent event=new DefaultMuleEvent(okMessage,endpoint1,(MuleSession)session.proxy());
   event=ir.process(event);
