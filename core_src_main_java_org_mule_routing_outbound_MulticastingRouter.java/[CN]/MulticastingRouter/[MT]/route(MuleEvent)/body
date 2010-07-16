@@ -1,6 +1,6 @@
 {
   MuleMessage message=event.getMessage();
-  if (targets == null || targets.size() == 0) {
+  if (routes == null || routes.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
   }
   if (enableCorrelation != ENABLE_CORRELATION_NEVER) {
@@ -9,13 +9,13 @@
       logger.debug("CorrelationId is already set, not setting Correlation group size");
     }
  else {
-      message.setCorrelationGroupSize(targets.size());
+      message.setCorrelationGroupSize(routes.size());
     }
   }
-  List<MuleEvent> results=new ArrayList<MuleEvent>(targets.size());
+  List<MuleEvent> results=new ArrayList<MuleEvent>(routes.size());
   try {
-    for (int i=0; i < targets.size(); i++) {
-      MessageProcessor mp=targets.get(i);
+    for (int i=0; i < routes.size(); i++) {
+      MessageProcessor mp=routes.get(i);
       OutboundEndpoint endpoint=mp instanceof OutboundEndpoint ? (OutboundEndpoint)mp : null;
       if (endpoint == null || endpoint.getFilter() == null || (endpoint.getFilter() != null && endpoint.getFilter().accept(message))) {
         if (((DefaultMuleMessage)message).isConsumable()) {
@@ -30,7 +30,7 @@
     }
   }
  catch (  MuleException e) {
-    throw new CouldNotRouteOutboundMessageException(message,targets.get(0),e);
+    throw new CouldNotRouteOutboundMessageException(message,routes.get(0),e);
   }
   return resultsHandler.aggregateResults(results,event,muleContext);
 }

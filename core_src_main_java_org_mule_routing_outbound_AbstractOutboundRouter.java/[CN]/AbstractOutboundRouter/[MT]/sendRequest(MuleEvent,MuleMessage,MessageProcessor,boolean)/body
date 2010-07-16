@@ -1,32 +1,32 @@
 {
   if (awaitResponse && replyTo != null) {
-    logger.debug("event was dispatched synchronously, but there is a ReplyTo endpoint set, so using asynchronous dispatch");
+    logger.debug("event was dispatched synchronously, but there is a ReplyTo route set, so using asynchronous dispatch");
     awaitResponse=false;
   }
-  setMessageProperties(routedEvent.getSession().getFlowConstruct(),message,target);
+  setMessageProperties(routedEvent.getSession().getFlowConstruct(),message,route);
   if (logger.isDebugEnabled()) {
-    if (target instanceof OutboundEndpoint) {
-      logger.debug("Message being sent to: " + ((OutboundEndpoint)target).getEndpointURI());
+    if (route instanceof OutboundEndpoint) {
+      logger.debug("Message being sent to: " + ((OutboundEndpoint)route).getEndpointURI());
     }
     logger.debug(message);
   }
   if (logger.isTraceEnabled()) {
     try {
       logger.trace("Request payload: \n" + StringMessageUtils.truncate(message.getPayloadAsString(),100,false));
-      if (target instanceof OutboundEndpoint) {
-        logger.trace("outbound transformer is: " + ((OutboundEndpoint)target).getTransformers());
+      if (route instanceof OutboundEndpoint) {
+        logger.trace("outbound transformer is: " + ((OutboundEndpoint)route).getTransformers());
       }
     }
  catch (    Exception e) {
       logger.trace("Request payload: \n(unable to retrieve payload: " + e.getMessage());
-      if (target instanceof OutboundEndpoint) {
-        logger.trace("outbound transformer is: " + ((OutboundEndpoint)target).getTransformers());
+      if (route instanceof OutboundEndpoint) {
+        logger.trace("outbound transformer is: " + ((OutboundEndpoint)route).getTransformers());
       }
     }
   }
   MuleEvent result;
   try {
-    result=sendRequestEvent(routedEvent,message,target,awaitResponse);
+    result=sendRequestEvent(routedEvent,message,route,awaitResponse);
   }
  catch (  MessagingException me) {
     throw me;
@@ -36,7 +36,7 @@ catch (  Exception e) {
   }
   if (getRouterStatistics() != null) {
     if (getRouterStatistics().isEnabled()) {
-      getRouterStatistics().incrementRoutedMessage(target);
+      getRouterStatistics().incrementRoutedMessage(route);
     }
   }
   if (result != null) {
