@@ -1,0 +1,43 @@
+{
+  MessageHeadersExpressionEvaluator eval=new MessageHeadersExpressionEvaluator();
+  MuleMessage message=new DefaultMuleMessage("test",props,muleContext);
+  message.setProperty("faz","fazvalue",PropertyScope.INVOCATION);
+  Object result=eval.evaluate("OUTBOUND:foo, OUTBOUND:baz",message);
+  assertNotNull(result);
+  assertTrue(result instanceof Map);
+  assertEquals(2,((Map)result).size());
+  assertTrue(((Map)result).values().contains("foovalue"));
+  assertTrue(((Map)result).values().contains("bazvalue"));
+  result=eval.evaluate("OUTBOUND:foo, baz",message);
+  assertNotNull(result);
+  assertTrue(result instanceof Map);
+  assertEquals(2,((Map)result).size());
+  assertTrue(((Map)result).values().contains("foovalue"));
+  assertTrue(((Map)result).values().contains("bazvalue"));
+  result=eval.evaluate("OUTBOUND:foo, OUTBOUND:baz, INVOCATION:faz",message);
+  assertNotNull(result);
+  assertTrue(result instanceof Map);
+  assertEquals(3,((Map)result).size());
+  assertTrue(((Map)result).values().contains("foovalue"));
+  assertTrue(((Map)result).values().contains("bazvalue"));
+  assertTrue(((Map)result).values().contains("fazvalue"));
+  result=eval.evaluate("OUTBOUND:foo, baz, INVOCATION:faz",message);
+  assertNotNull(result);
+  assertTrue(result instanceof Map);
+  assertEquals(3,((Map)result).size());
+  assertTrue(((Map)result).values().contains("foovalue"));
+  assertTrue(((Map)result).values().contains("bazvalue"));
+  assertTrue(((Map)result).values().contains("fazvalue"));
+  try {
+    eval.evaluate("OUTBOUND:foo, baz, faz",message);
+    fail("faz is not in outbound scope and is not optional");
+  }
+ catch (  RequiredValueException e) {
+  }
+  result=eval.evaluate("OUTBOUND:foo, faz?, baz",message);
+  assertNotNull(result);
+  assertTrue(result instanceof Map);
+  assertEquals(2,((Map)result).size());
+  assertTrue(((Map)result).values().contains("foovalue"));
+  assertTrue(((Map)result).values().contains("bazvalue"));
+}

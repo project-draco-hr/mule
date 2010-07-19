@@ -1,19 +1,19 @@
 {
   boolean required;
-  Map result;
-  if (ALL_ARGUMENT.equals(expression)) {
-    result=new HashMap(message.getAttachmentNames().size());
+  Map<String,DataHandler> result;
+  if (expression.contains(ALL_ARGUMENT)) {
+    WildcardFilter filter=new WildcardFilter(expression);
+    result=new HashMap<String,DataHandler>(message.getAttachmentNames().size());
     for (Iterator iterator=message.getAttachmentNames().iterator(); iterator.hasNext(); ) {
       String name=(String)iterator.next();
-      result.put(name,message.getAttachment(name));
+      if (filter.accept(name)) {
+        result.put(name,message.getAttachment(name));
+      }
     }
-  }
- else   if (COUNT_ARGUMENT.equals(expression)) {
-    return message.getAttachmentNames().size();
   }
  else {
     StringTokenizer tokenizer=new StringTokenizer(expression,DELIM);
-    result=new HashMap(tokenizer.countTokens());
+    result=new HashMap<String,DataHandler>(tokenizer.countTokens());
     while (tokenizer.hasMoreTokens()) {
       String s=tokenizer.nextToken();
       s=s.trim();
@@ -24,7 +24,7 @@
  else {
         required=true;
       }
-      Object val=message.getAttachment(s);
+      DataHandler val=message.getAttachment(s);
       if (val != null) {
         result.put(s,val);
       }
@@ -34,9 +34,9 @@
     }
   }
   if (result.size() == 0) {
-    return Collections.emptyMap();
+    return Collections.unmodifiableMap(Collections.<String,DataHandler>emptyMap());
   }
  else {
-    return result;
+    return Collections.unmodifiableMap(result);
   }
 }

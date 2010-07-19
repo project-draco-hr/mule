@@ -4,13 +4,22 @@
   if (o instanceof MuleMessage) {
     MuleMessage mm=(MuleMessage)o;
     type=mm.getPayload().getClass();
-    mime=mm.getStringProperty("Content-Type",null);
-    if (mime != null) {
-      int i=mime.indexOf(";");
-      mime=(i > -1 ? mime.substring(0,i) : mime);
+    mime=mm.getProperty("Content-Type",PropertyScope.INBOUND,null);
+    if (mime == null) {
+      mime=mm.getProperty("ContentType",PropertyScope.INBOUND,null);
     }
   }
-  if (mime == null) {
+ else   if (o instanceof DataHandler) {
+    mime=((DataHandler)o).getContentType();
+  }
+ else   if (o instanceof DataSource) {
+    mime=((DataSource)o).getContentType();
+  }
+  if (mime != null) {
+    int i=mime.indexOf(";");
+    mime=(i > -1 ? mime.substring(0,i) : mime);
+  }
+ else {
     mime=MimeTypes.ANY;
   }
   return create(type,mime);
