@@ -2,7 +2,7 @@
   Service service=new SedaService(muleContext);
   service.setName("moveDeleteBridgeService");
   String url=fileToUrl(inFile.getParentFile()) + "?connector=moveDeleteConnector";
-  org.mule.api.transformer.Transformer transformer=null;
+  Transformer transformer=null;
   if (streaming) {
     if (filePayload) {
       fail("Inconsistant test case: streaming and file payload are not compatible");
@@ -19,13 +19,13 @@
       transformer=new FileMessageFactoryAssertingTransformer(byte[].class);
     }
   }
-  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(new URIBuilder(url,muleContext));
+  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(url,muleContext);
   endpointBuilder.addTransformer(transformer);
   if (filePayload) {
     endpointBuilder.addTransformer(new NoActionTransformer());
   }
-  endpointBuilder.setExchangePattern(MessageExchangePattern.REQUEST_RESPONSE);
-  service.getInboundRouter().addEndpoint(muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder));
+  InboundEndpoint endpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder);
+  service.getInboundRouter().addEndpoint(endpoint);
   final Latch latch=new Latch();
   FunctionalTestComponent testComponent=new FunctionalTestComponent();
   testComponent.setMuleContext(muleContext);
