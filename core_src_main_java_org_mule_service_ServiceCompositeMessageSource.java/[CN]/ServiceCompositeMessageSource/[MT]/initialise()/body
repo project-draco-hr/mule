@@ -1,0 +1,22 @@
+{
+  if (catchAllStrategy != null) {
+    for (    MessageProcessor processor : processors) {
+      if (processor instanceof MessageFilter && ((MessageFilter)processor).getUnacceptedMessageProcessor() == null) {
+        ((MessageFilter)processor).setUnacceptedMessageProcessor(catchAllStrategy);
+      }
+    }
+  }
+  InterceptingChainMessageProcessorBuilder builder=new InterceptingChainMessageProcessorBuilder();
+  builder.chain(processors);
+  builder.chain(new AbstractInterceptingMessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      if (getStatistics().isEnabled()) {
+        getStatistics().incrementRoutedMessage(event.getEndpoint());
+      }
+      return processNext(event);
+    }
+  }
+);
+  builder.chain(listener);
+  listener=builder.build();
+}
