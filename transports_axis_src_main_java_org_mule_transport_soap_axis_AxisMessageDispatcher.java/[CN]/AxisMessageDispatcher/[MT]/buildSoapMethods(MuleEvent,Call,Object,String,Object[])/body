@@ -3,7 +3,7 @@
   for (int i=0; i < args.length; i++) {
     if (args[i] == null) {
       QName qname=call.getTypeMapping().getTypeQName(Object.class);
-      params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+      params.add(String.format("value%d;qname{%s:%s:%s};in",i,qname.getPrefix(),qname.getLocalPart(),qname.getNamespaceURI()));
     }
  else     if (args[i] instanceof DataHandler[]) {
       params.add("attachments;qname{DataHandler:http://xml.apache.org/xml-soap};in");
@@ -13,23 +13,23 @@
         Map.Entry entry=(Map.Entry)iterator.next();
         if (call.getTypeMapping().getTypeQName(entry.getValue().getClass()) != null) {
           QName type=call.getTypeMapping().getTypeQName(entry.getValue().getClass());
-          params.add("qname{" + entry.getKey().toString() + (methodNamespace == null ? "" : ":" + methodNamespace)+ "};qname{"+ type.getPrefix()+ ":"+ type.getLocalPart()+ ":"+ type.getNamespaceURI()+ "};in");
+          params.add(String.format("qname{%s%s};qname{%s:%s:%s};in",entry.getKey().toString(),(methodNamespace == null ? "" : ":" + methodNamespace),type.getPrefix(),type.getLocalPart(),type.getNamespaceURI()));
         }
  else {
-          params.add("value" + i + ";qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
-          params.add("qname{" + entry.getKey().toString() + (methodNamespace == null ? "" : ":" + methodNamespace)+ "};qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+          params.add(String.format("value%d;qname{%s:%s};in",i,Types.getLocalNameFromFullName(args[i].getClass().getName()),Namespaces.makeNamespace(args[i].getClass().getName())));
+          params.add(String.format("qname{%s%s};qname{%s:%s};in",entry.getKey().toString(),(methodNamespace == null ? "" : ":" + methodNamespace),Types.getLocalNameFromFullName(args[i].getClass().getName()),Namespaces.makeNamespace(args[i].getClass().getName())));
         }
       }
     }
  else     if (call.getTypeMapping().getTypeQName(args[i].getClass()) != null) {
       QName qname=call.getTypeMapping().getTypeQName(args[i].getClass());
-      params.add("value" + i + ";qname{"+ qname.getPrefix()+ ":"+ qname.getLocalPart()+ ":"+ qname.getNamespaceURI()+ "};in");
+      params.add(String.format("value%d;qname{%s:%s:%s};in",i,qname.getPrefix(),qname.getLocalPart(),qname.getNamespaceURI()));
     }
  else {
-      params.add("value" + i + ";qname{"+ Types.getLocalNameFromFullName(args[i].getClass().getName())+ ":"+ Namespaces.makeNamespace(args[i].getClass().getName())+ "};in");
+      params.add(String.format("value%d;qname{%s:%s};in",i,Types.getLocalNameFromFullName(args[i].getClass().getName()),Namespaces.makeNamespace(args[i].getClass().getName())));
     }
   }
   HashMap map=new HashMap();
   map.put(method,params);
-  event.getMessage().setProperty(AxisConnector.SOAP_METHODS,map);
+  event.getMessage().setOutboundProperty(AxisConnector.SOAP_METHODS,map);
 }
