@@ -14,14 +14,13 @@
   String endpoint=receiver.getEndpointURI().getAddress();
   String scheme=ep.getScheme().toLowerCase();
   InboundEndpoint originalEndpoint=receiver.getEndpoint();
-  boolean sync=originalEndpoint.isSynchronous();
   if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ssl")|| scheme.equals("tcp")|| scheme.equals("servlet")) {
     originalEndpoint.getProperties().put(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
     originalEndpoint.getProperties().put(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
   }
   QName serviceName=server.getEndpoint().getEndpointInfo().getName();
   EndpointBuilder protocolEndpointBuilder=new EndpointURIEndpointBuilder(endpoint,muleContext);
-  protocolEndpointBuilder.setExchangePattern(MessageExchangePattern.fromSyncFlag(sync));
+  protocolEndpointBuilder.setExchangePattern(originalEndpoint.getExchangePattern());
   protocolEndpointBuilder.setName(ep.getScheme() + ":" + serviceName.getLocalPart());
   protocolEndpointBuilder.setTransactionConfig(originalEndpoint.getTransactionConfig());
   EndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(originalEndpoint);
