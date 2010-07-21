@@ -1,9 +1,11 @@
 {
+  final int THREADS=10;
+  final CountDownLatch latch=new CountDownLatch(THREADS);
   final MuleClient client=new MuleClient(muleContext);
   final byte[] buf=new byte[8192];
   Arrays.fill(buf,(byte)'a');
   client.send("http://localhost:63081/services/Echo",new DefaultMuleMessage(new ByteArrayInputStream(buf),muleContext));
-  for (int i=0; i < 10; i++) {
+  for (int i=0; i < THREADS; i++) {
     new Thread(new Runnable(){
       public void run(){
         Map<String,Object> props=new HashMap<String,Object>();
@@ -16,12 +18,16 @@
  catch (        MuleException e) {
           e.printStackTrace();
         }
+ finally {
+          latch.countDown();
+        }
       }
     }
 ).start();
   }
+  latch.await(40,TimeUnit.SECONDS);
   int count=0;
-  while (client.request("vm://queue",3000) != null) {
+  while (client.request("vm://queue",RECEIVE_TIMEOUT) != null) {
     count++;
   }
   assertEquals(200,count);
