@@ -12,7 +12,7 @@
     entries.addAll(feed.getEntries());
     List<MuleEvent> events=new ArrayList<MuleEvent>();
     for (    SyndEntry entry : entries) {
-      MuleMessage m=new DefaultMuleMessage(entry,getMuleContext());
+      MuleMessage m=new DefaultMuleMessage(entry,muleEvent.getMuleContext());
       if (entryFilter != null && !entryFilter.accept(m)) {
         continue;
       }
@@ -20,9 +20,12 @@
       MuleEvent e=new DefaultMuleEvent(m,muleEvent.getEndpoint(),muleEvent.getFlowConstruct(),muleEvent);
       events.add(e);
     }
-    return events.toArray(new MuleEvent[]{});
+    for (    MuleEvent event : events) {
+      processNext(event);
+    }
   }
  catch (  MuleException e) {
     throw new MessagingException(e.getI18nMessage(),muleEvent.getMessage(),e);
   }
+  return null;
 }

@@ -1,6 +1,13 @@
 {
   try {
     Date date=formatDate(getLastUpdate());
+    if (isSplitFeed()) {
+      Filter filter=new EntryLastUpdatedFilter(date);
+      InboundFeedSplitter splitter=new InboundFeedSplitter();
+      splitter.setEntryFilter(filter);
+      splitter.setAcceptedContentTypes(getAcceptedMimeTypes());
+      addMessageProcessor(splitter);
+    }
     RssInboundEndpoint in=new RssInboundEndpoint(isSplitFeed(),date,getAcceptedMimeTypes(),super.buildInboundEndpoint());
     in.registerSupportedProtocol("http");
     in.registerSupportedProtocol("https");

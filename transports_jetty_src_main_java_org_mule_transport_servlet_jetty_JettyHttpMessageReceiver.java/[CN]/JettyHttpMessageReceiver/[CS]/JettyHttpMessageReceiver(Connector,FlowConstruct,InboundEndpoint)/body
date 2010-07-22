@@ -1,36 +1,3 @@
 {
   super(connector,flowConstruct,endpoint);
-  if (!(flowConstruct instanceof Service)) {
-    throw new UnsupportedOperationException("JettyHttpMessageReceiver is only supported with Service");
-  }
-  Service service=(Service)flowConstruct;
-  if ("rest".equals(endpoint.getEndpointURI().getScheme())) {
-    ServletConnector scon=(ServletConnector)new TransportFactory(connector.getMuleContext()).getConnectorByProtocol("servlet");
-    if (scon == null) {
-      scon=new ServletConnector(connector.getMuleContext());
-      scon.setName(JETTY_SERVLET_CONNECTOR_NAME);
-      scon.setServletUrl(endpoint.getEndpointURI().getAddress());
-      try {
-        connector.getMuleContext().getRegistry().registerConnector(scon);
-      }
- catch (      MuleException e) {
-        throw new CreateException(e,this);
-      }
-    }
-    try {
-      String path=endpoint.getEndpointURI().getPath();
-      if (StringUtils.isEmpty(path)) {
-        path="/";
-      }
-      MuleContext muleContext=connector.getMuleContext();
-      URIBuilder uriBuilder=new URIBuilder("servlet://" + path.substring(1),muleContext);
-      EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(uriBuilder);
-      endpointBuilder.setTransformers(endpoint.getTransformers());
-      InboundEndpoint ep=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(endpointBuilder);
-      scon.registerListener(ep,service.getInboundRouter(),service);
-    }
- catch (    Exception e) {
-      throw new CreateException(e,this);
-    }
-  }
 }

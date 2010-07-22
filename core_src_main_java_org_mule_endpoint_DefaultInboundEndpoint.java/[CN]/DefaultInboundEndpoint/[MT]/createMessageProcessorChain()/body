@@ -1,4 +1,11 @@
 {
   EndpointMessageProcessorChainFactory factory=getMessageProcessorsFactory();
-  return factory.createInboundMessageProcessorChain(this,listener);
+  MessageProcessor processorChain=factory.createInboundMessageProcessorChain(this,listener);
+  if (processorChain instanceof FlowConstructAware) {
+    ((FlowConstructAware)processorChain).setFlowConstruct(flowConstruct);
+  }
+  if (processorChain instanceof Initialisable) {
+    ((Initialisable)processorChain).initialise();
+  }
+  return processorChain;
 }

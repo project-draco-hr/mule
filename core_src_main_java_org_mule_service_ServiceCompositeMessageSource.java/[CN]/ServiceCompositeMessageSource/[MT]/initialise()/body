@@ -6,8 +6,19 @@
       }
     }
   }
+  for (  MessageProcessor processor : processors) {
+    if (processor instanceof Initialisable) {
+      ((Initialisable)processor).initialise();
+    }
+  }
+  for (  MessageProcessor processor : processors) {
+    if (processor instanceof FlowConstructAware) {
+      ((FlowConstructAware)processor).setFlowConstruct(flowConstruct);
+    }
+  }
   InterceptingChainMessageProcessorBuilder builder=new InterceptingChainMessageProcessorBuilder();
   builder.chain(processors);
+  builder.chain(new StopFurtherMessageProcessingMessageProcessor());
   builder.chain(new AbstractInterceptingMessageProcessor(){
     public MuleEvent process(    MuleEvent event) throws MuleException {
       if (getStatistics().isEnabled()) {
