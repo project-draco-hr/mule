@@ -1,6 +1,6 @@
 {
   MuleMessage message=event.getMessage();
-  MuleEvent result=null;
+  MuleEvent result;
   if (routes == null || routes.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
   }
@@ -8,10 +8,10 @@
     MessageProcessor ep=routes.get(0);
     EndpointURI newUri;
     if (ep instanceof OutboundEndpoint) {
-      for (      String propertyKey : message.getPropertyNames()) {
-        Object propertyValue=message.getProperty(propertyKey);
+      for (      String propertyKey : message.getPropertyNames(PropertyScope.OUTBOUND)) {
+        Object propertyValue=message.getOutboundProperty(propertyKey);
         if (propertyKey.equalsIgnoreCase("packet.port")) {
-          int port=((Integer)propertyValue).intValue();
+          int port=(Integer)propertyValue;
           newUri=new MuleEndpointURI("udp://localhost:" + port,muleContext);
           if (logger.isDebugEnabled()) {
             logger.info("Uri after parsing is: " + newUri.getAddress());

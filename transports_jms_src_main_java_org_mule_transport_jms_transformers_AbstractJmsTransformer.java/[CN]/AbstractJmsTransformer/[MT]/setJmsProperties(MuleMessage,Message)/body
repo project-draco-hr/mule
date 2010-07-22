@@ -1,20 +1,20 @@
 {
-  for (Iterator iterator=message.getPropertyNames().iterator(); iterator.hasNext(); ) {
-    String key=iterator.next().toString();
-    if (!JmsConstants.JMS_PROPERTY_NAMES.contains(key)) {
-      Object value=message.getProperty(key);
-      if (MuleProperties.MULE_CORRELATION_ID_PROPERTY.equals(key)) {
-        msg.setJMSCorrelationID(message.getCorrelationId());
+  for (  String key : message.getPropertyNames(PropertyScope.OUTBOUND)) {
+    if (JmsConstants.JMS_PROPERTY_NAMES.contains(key)) {
+      continue;
+    }
+    Object value=message.getOutboundProperty(key);
+    if (MuleProperties.MULE_CORRELATION_ID_PROPERTY.equals(key)) {
+      msg.setJMSCorrelationID(message.getCorrelationId());
+    }
+    if (!(MuleProperties.MULE_REPLY_TO_PROPERTY.equals(key) && value instanceof Destination)) {
+      key=JmsMessageUtils.encodeHeader(key);
+      try {
+        msg.setObjectProperty(key,value);
       }
-      if (!(MuleProperties.MULE_REPLY_TO_PROPERTY.equals(key) && value instanceof Destination)) {
-        key=JmsMessageUtils.encodeHeader(key);
-        try {
-          msg.setObjectProperty(key,value);
-        }
- catch (        JMSException e) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Unable to set property '" + key + "' of type "+ ClassUtils.getSimpleName(value.getClass())+ "': "+ e.getMessage());
-          }
+ catch (      JMSException e) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Unable to set property '" + key + "' of type "+ ClassUtils.getSimpleName(value.getClass())+ "': "+ e.getMessage());
         }
       }
     }
