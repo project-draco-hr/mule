@@ -6,6 +6,9 @@
   message.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,PropertyScope.INBOUND);
   MuleEvent muleEvent=createMuleEvent(message,outputStream);
   muleEvent=OptimizedRequestContext.unsafeSetEvent(muleEvent);
+  if (!endpoint.isDisableTransportTransformer()) {
+    applyInboundTransformers(muleEvent);
+  }
   MuleEvent resultEvent=null;
   try {
     resultEvent=listener.process(muleEvent);
@@ -13,5 +16,8 @@
  catch (  FilterUnacceptedException e) {
     return handleUnacceptedFilter(muleEvent.getMessage());
   }
-  return resultEvent != null ? resultEvent.getMessage() : null;
+  if (resultEvent != null && resultEvent.getMessage() != null && !endpoint.isDisableTransportTransformer()) {
+    applyResponseTransformers(resultEvent);
+  }
+  return (resultEvent != null ? resultEvent.getMessage() : null);
 }

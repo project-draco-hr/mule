@@ -2,6 +2,11 @@
   MuleEvent result=null;
   try {
     connect();
+    String prop=(String)event.getMessage().getProperty(MuleProperties.MULE_DISABLE_TRANSPORT_TRANSFORMER_PROPERTY);
+    boolean disableTransportTransformer=(prop != null && Boolean.parseBoolean(prop)) || endpoint.isDisableTransportTransformer();
+    if (!disableTransportTransformer) {
+      applyOutboundTransformers(event);
+    }
     if (endpoint.getExchangePattern().hasResponse()) {
       MuleMessage resultMessage=doSend(event);
       if (resultMessage != null) {

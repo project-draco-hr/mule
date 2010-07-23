@@ -2,12 +2,23 @@
   prepareToBuildEndpoint();
   EndpointURI endpointURI=uriBuilder.getEndpoint();
   endpointURI.initialise();
+  addTransformersFromUri(endpointURI);
+  addResponseTransformersFromUri(endpointURI);
   Connector connector=getConnector();
   if (connector != null && !connector.supportsProtocol(endpointURI.getFullScheme())) {
     throw new IllegalArgumentException(CoreMessages.connectorSchemeIncompatibleWithEndpointScheme(connector.getProtocol(),endpointURI).getMessage());
   }
-  List<Transformer> transformers=getInboundTransformers(connector,endpointURI);
-  List<Transformer> responseTransformers=getInboundEndpointResponseTransformers(connector,endpointURI);
   checkInboundExchangePattern();
-  return new DefaultInboundEndpoint(connector,endpointURI,transformers,responseTransformers,getName(endpointURI),getProperties(),getTransactionConfig(),getFilter(connector),getDefaultDeleteUnacceptedMessages(connector),getSecurityFilter(),messageExchangePattern,getResponseTimeout(connector),getInitialState(connector),getEndpointEncoding(connector),name,muleContext,getRetryPolicyTemplate(connector),getMessageProcessorsFactory(),messageProcessors,responseMessageProcessors);
+  InboundEndpoint endpoint=new DefaultInboundEndpoint(connector,endpointURI,getName(endpointURI),getProperties(),getTransactionConfig(),getFilter(connector),getDefaultDeleteUnacceptedMessages(connector),getSecurityFilter(),messageExchangePattern,getResponseTimeout(connector),getInitialState(connector),getEndpointEncoding(connector),name,muleContext,getRetryPolicyTemplate(connector),getMessageProcessorsFactory(),messageProcessors,responseMessageProcessors,isDisableTransportTransformer());
+  for (  MessageProcessor mp : messageProcessors) {
+    if (mp instanceof Transformer) {
+      ((Transformer)mp).setEndpoint(endpoint);
+    }
+  }
+  for (  MessageProcessor mp : responseMessageProcessors) {
+    if (mp instanceof Transformer) {
+      ((Transformer)mp).setEndpoint(endpoint);
+    }
+  }
+  return endpoint;
 }

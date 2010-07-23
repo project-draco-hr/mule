@@ -1,0 +1,16 @@
+{
+  if (defaultOutboundTransformer != null) {
+    logger.info("Loading default outbound transformer: " + defaultOutboundTransformer);
+    try {
+      Transformer newTransformer=(Transformer)ClassUtils.instanciateClass(defaultOutboundTransformer,ClassUtils.NO_ARGS,classLoader);
+      newTransformer.setName(newTransformer.getName() + "#" + hashCode());
+      newTransformer.setEndpoint(endpoint);
+      muleContext.getRegistry().registerObject(newTransformer.getName(),newTransformer);
+      return CollectionUtils.singletonList(newTransformer);
+    }
+ catch (    Exception e) {
+      throw new TransportFactoryException(CoreMessages.failedToLoadTransformer("outbound",defaultOutboundTransformer),e);
+    }
+  }
+  return Collections.emptyList();
+}
