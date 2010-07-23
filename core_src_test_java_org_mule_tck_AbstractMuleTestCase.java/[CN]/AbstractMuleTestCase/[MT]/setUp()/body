@@ -16,8 +16,21 @@
       disposeManager();
     }
     muleContext=createMuleContext();
+    final AtomicReference<Latch> contextStartedLatch=new AtomicReference<Latch>();
     if (isStartContext() && null != muleContext && muleContext.isStarted() == false) {
+      contextStartedLatch.set(new Latch());
+      muleContext.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
+        public void onNotification(        MuleContextNotification notification){
+          if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED) {
+            contextStartedLatch.get().countDown();
+          }
+        }
+      }
+);
       muleContext.start();
+    }
+    if (contextStartedLatch.get() != null) {
+      contextStartedLatch.get().await(20,TimeUnit.SECONDS);
     }
     doSetUp();
   }
