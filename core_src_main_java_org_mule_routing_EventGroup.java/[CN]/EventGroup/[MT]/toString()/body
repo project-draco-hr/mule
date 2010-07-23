@@ -4,7 +4,8 @@
   buf.append(" {");
   buf.append("id=").append(groupId);
   buf.append(", expected size=").append(expectedSize);
-synchronized (events) {
+  try {
+    eventsLock.readLock().lock();
     int currentSize=events.size();
     buf.append(", current events=").append(currentSize);
     if (currentSize > 0) {
@@ -19,6 +20,9 @@ synchronized (events) {
       }
       buf.append(']');
     }
+  }
+  finally {
+    eventsLock.readLock().unlock();
   }
   buf.append('}');
   return buf.toString();

@@ -1,6 +1,7 @@
 {
   MuleMessageCollection col;
-synchronized (events) {
+  try {
+    eventsLock.readLock().lock();
     if (events.isEmpty()) {
       col=new DefaultMessageCollection(null);
     }
@@ -8,6 +9,9 @@ synchronized (events) {
     for (    MuleEvent event : events) {
       col.addMessage(event.getMessage());
     }
+  }
+  finally {
+    eventsLock.readLock().unlock();
   }
   return col;
 }
