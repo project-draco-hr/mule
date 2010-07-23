@@ -4,10 +4,14 @@
   t.setMuleContext(muleContext);
   DefaultMuleMessage msg=new DefaultMuleMessage("message",muleContext);
   msg.setOutboundProperty("badProperty","badValue");
+  assertEquals("badValue",msg.<Object>getOutboundProperty("badProperty"));
   DefaultMuleMessage transformed=(DefaultMuleMessage)t.transform(msg,null);
   assertSame(msg,transformed);
   assertEquals(msg.getUniqueId(),transformed.getUniqueId());
   assertEquals(msg.getPayload(),transformed.getPayload());
-  assertEquals(msg.getPropertyNames(),transformed.getPropertyNames());
-  assertFalse(transformed.getPropertyNames().contains("badValue"));
+  compareProperties(msg,transformed);
+  assertFalse(transformed.getPropertyNames(PropertyScope.INVOCATION).contains("badValue"));
+  assertFalse(transformed.getPropertyNames(PropertyScope.INBOUND).contains("badValue"));
+  assertFalse(transformed.getPropertyNames(PropertyScope.OUTBOUND).contains("badValue"));
+  assertFalse(transformed.getPropertyNames(PropertyScope.SESSION).contains("badValue"));
 }
