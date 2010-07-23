@@ -1,26 +1,17 @@
 {
-  String myDirName="myout";
-  String myFileName="out.txt";
   FileInputStream myFileStream=null;
-  File myDir=FileUtils.newFile(myDirName);
-  if (myDir.isDirectory()) {
-    File[] files=myDir.listFiles();
-    for (int i=0; i < files.length; i++) {
-      assertTrue(files[i].delete());
-    }
-    assertTrue(myDir.delete());
-  }
   try {
-    assertFalse(FileUtils.newFile(myDir,myFileName).exists());
+    File myDir=FileUtils.newFile(OUTPUT_DIR);
+    File myFile=FileUtils.newFile(myDir,OUTPUT_FILE);
+    assertFalse(myFile.exists());
     MuleClient client=new MuleClient(muleContext);
     client.send("vm://fileappend","Hello1",null);
     client.send("vm://fileappend","Hello2",null);
-    myFileStream=new FileInputStream(FileUtils.newFile(myDir,myFileName));
+    assertTrue(fileReceiveLatch.await(30,TimeUnit.SECONDS));
+    myFileStream=new FileInputStream(myFile);
     assertEquals("Hello1Hello2",IOUtils.toString(myFileStream));
   }
   finally {
     IOUtils.closeQuietly(myFileStream);
-    assertTrue(FileUtils.newFile(myDir,myFileName).delete());
-    assertTrue(myDir.delete());
   }
 }
