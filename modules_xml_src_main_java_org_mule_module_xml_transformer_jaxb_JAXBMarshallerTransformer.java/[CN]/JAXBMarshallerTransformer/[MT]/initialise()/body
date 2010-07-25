@@ -1,6 +1,20 @@
 {
   super.initialise();
   if (jaxbContext == null) {
-    throw new InitialisationException(CoreMessages.objectIsNull("jaxbContext"),this);
+    if (getSourceClass() != null) {
+      try {
+        jaxbContext=JAXBContext.newInstance(getSourceClass());
+      }
+ catch (      JAXBException e) {
+        throw new InitialisationException(e,this);
+      }
+    }
+ else {
+      throw new InitialisationException(CoreMessages.objectIsNull("jaxbContext"),this);
+    }
+  }
+  if (getSourceClass() != null) {
+    sourceTypes.clear();
+    registerSourceType(getSourceClass());
   }
 }
