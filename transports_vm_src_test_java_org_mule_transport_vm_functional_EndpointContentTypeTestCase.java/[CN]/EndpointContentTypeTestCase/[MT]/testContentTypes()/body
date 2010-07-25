@@ -1,0 +1,28 @@
+{
+  MuleMessage response;
+  Map messageProperties=new HashMap();
+  messageProperties.put("content-type","text/xml");
+  MuleClient client=new MuleClient(muleContext);
+  try {
+    response=client.send("vm://in1?connector=vm-in1","<OK/>",messageProperties);
+    fail("Invalid mime type was not rejected");
+  }
+ catch (  Exception ex) {
+    System.out.println("Saw " + ex.getClass() + " as expected.");
+  }
+  messageProperties.put("content-type","text/plain");
+  EchoComponent.setExpectedContentType("text/plain");
+  response=client.send("vm://in1?connector=vm-in1","OK",messageProperties);
+  assertNotNull(response);
+  assertEquals("OK",response.getPayload());
+  messageProperties.remove("content-type");
+  EchoComponent.setExpectedContentType("text/plain");
+  response=client.send("vm://in1?connector=vm-in1","OK",messageProperties);
+  assertNotNull(response);
+  assertEquals("OK",response.getPayload());
+  messageProperties.put("content-type","text/plain");
+  EchoComponent.setExpectedContentType("text/xml");
+  response=client.send("vm://in2?connector=vm-in2","OK",messageProperties);
+  assertNotNull(response);
+  assertEquals("OK",response.getPayload());
+}
