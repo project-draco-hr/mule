@@ -1,0 +1,34 @@
+{
+  final AsyncReplyInterceptingMessageProcessor asyncReplyMP=new DefaultAsyncReplyInterceptingMessageProcessor(RECEIVE_TIMEOUT);
+  SensingNullMessageProcessor target=getSensingNullMessageProcessor();
+  target.setWaitTime(50);
+  AsyncInterceptingMessageProcessor asyncMP=new AsyncInterceptingMessageProcessor(new WorkManagerSource(){
+    public WorkManager getWorkManager() throws MuleException {
+      return muleContext.getWorkManager();
+    }
+  }
+,true,DefaultAsyncReplyInterceptingMessageProcessorTestCase.this);
+  asyncMP.setListener(target);
+  asyncReplyMP.setListener(asyncMP);
+  asyncReplyMP.setReplySource(target.getMessageSource());
+  final InboundEndpoint inboundEndpoint=getTestInboundEndpoint(MessageExchangePattern.ONE_WAY);
+  for (int i=0; i < 500; i++) {
+    muleContext.getWorkManager().scheduleWork(new Work(){
+      public void run(){
+        MuleEvent event;
+        try {
+          event=getTestEvent(TEST_MESSAGE,(Service)null,inboundEndpoint);
+          MuleEvent resultEvent=asyncReplyMP.process(event);
+          assertEquals(event.getMessageAsString(),resultEvent.getMessageAsString());
+          assertEquals(event.getMessage().getUniqueId(),resultEvent.getMessage().getUniqueId());
+        }
+ catch (        Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+      public void release(){
+      }
+    }
+);
+  }
+}

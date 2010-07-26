@@ -1,0 +1,17 @@
+{
+  AsyncReplyInterceptingMessageProcessor asyncReplyMP=new DefaultAsyncReplyInterceptingMessageProcessor(RECEIVE_TIMEOUT);
+  SensingNullMessageProcessor target=getSensingNullMessageProcessor();
+  AsyncInterceptingMessageProcessor asyncMP=new AsyncInterceptingMessageProcessor(new WorkManagerSource(){
+    public WorkManager getWorkManager() throws MuleException {
+      return muleContext.getWorkManager();
+    }
+  }
+,true,DefaultAsyncReplyInterceptingMessageProcessorTestCase.this);
+  asyncMP.setListener(target);
+  asyncReplyMP.setListener(asyncMP);
+  asyncReplyMP.setReplySource(target.getMessageSource());
+  MuleEvent event=getTestEvent(TEST_MESSAGE,(Service)null,getTestInboundEndpoint(MessageExchangePattern.ONE_WAY));
+  MuleEvent resultEvent=asyncReplyMP.process(event);
+  assertEquals(event.getMessageAsString(),resultEvent.getMessageAsString());
+  assertEquals(event.getMessage().getUniqueId(),resultEvent.getMessage().getUniqueId());
+}
