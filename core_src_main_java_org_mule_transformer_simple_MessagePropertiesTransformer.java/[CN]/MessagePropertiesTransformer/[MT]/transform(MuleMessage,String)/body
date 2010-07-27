@@ -1,8 +1,6 @@
 {
   if (deleteProperties != null && deleteProperties.size() > 0) {
-    for (    String key : deleteProperties) {
-      message.removeProperty(key,scope);
-    }
+    deleteProperties(message);
   }
   if (addProperties != null && addProperties.size() > 0) {
     for (    Map.Entry<String,Object> entry : addProperties.entrySet()) {
@@ -37,43 +35,7 @@
     }
   }
   if (this.renameProperties != null && this.renameProperties.size() > 0) {
-    for (    Map.Entry<String,String> entry : this.renameProperties.entrySet()) {
-      if (entry.getKey() == null) {
-        logger.error("Setting Null property keys is not supported, this entry is being ignored");
-      }
- else {
-        final String key=entry.getKey();
-        String value=entry.getValue();
-        if (value == null) {
-          logger.error("Setting Null property values for renameProperties is not supported, this entry is being ignored");
-        }
- else {
-          if (muleContext.getExpressionManager().isValidExpression(value)) {
-            Object temp=muleContext.getExpressionManager().evaluate(value,message);
-            if (temp != null) {
-              value=temp.toString();
-            }
-          }
-          if (logger.isDebugEnabled() && message.getProperty(key,scope) == null) {
-            logger.debug("renaming message property " + key + " to "+ value);
-          }
-          if (scope == null) {
-            if (message.getInvocationPropertyNames().contains(key)) {
-              renameInScope(key,value,PropertyScope.INVOCATION,message);
-            }
- else             if (message.getOutboundPropertyNames().contains(key)) {
-              renameInScope(key,value,PropertyScope.OUTBOUND,message);
-            }
- else             if (message.getInboundPropertyNames().contains(key)) {
-              throw new TransformerException(CoreMessages.cannotRenameInboundScopeProperty(key,value));
-            }
-          }
- else {
-            renameInScope(key,value,scope,message);
-          }
-        }
-      }
-    }
+    renameProperties(message);
   }
   if (getProperty != null) {
     Object prop=message.getProperty(getProperty,scope);
