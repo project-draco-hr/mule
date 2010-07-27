@@ -1,0 +1,20 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Retrieving WSDL from web service");
+  }
+  String wsdlString;
+  final MuleContext muleContext=event.getMuleContext();
+  final InboundEndpoint webServiceEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(wsdlAddress);
+  final MuleMessage replyWSDL=webServiceEndpoint.request(event.getTimeout());
+  wsdlString=replyWSDL.getPayloadAsString();
+  final String realWsdlAddress=wsdlAddress.split("\\?")[0];
+  final String proxyWsdlAddress=event.getEndpoint().getEndpointURI().getUri().toString();
+  wsdlString=wsdlString.replaceAll(realWsdlAddress,proxyWsdlAddress);
+  if (wsdlString.indexOf(LOCALHOST) > -1) {
+    wsdlString=wsdlString.replaceAll(LOCALHOST,InetAddress.getLocalHost().getHostName());
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("WSDL retrieved successfully");
+  }
+  return wsdlString;
+}
