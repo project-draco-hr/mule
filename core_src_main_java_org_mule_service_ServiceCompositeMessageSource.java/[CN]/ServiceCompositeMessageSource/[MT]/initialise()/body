@@ -1,4 +1,5 @@
 {
+  statistics=new RouterStatistics(RouterStatistics.TYPE_INBOUND);
   if (catchAllStrategy != null) {
     for (    MessageProcessor processor : processors) {
       if (processor instanceof MessageFilter && ((MessageFilter)processor).getUnacceptedMessageProcessor() == null) {
@@ -6,6 +7,7 @@
       }
     }
   }
+  createMessageProcessorChain();
   for (  MessageProcessor processor : processors) {
     if (processor instanceof FlowConstructAware) {
       ((FlowConstructAware)processor).setFlowConstruct(flowConstruct);
@@ -16,18 +18,4 @@
       ((Initialisable)processor).initialise();
     }
   }
-  InterceptingChainMessageProcessorBuilder builder=new InterceptingChainMessageProcessorBuilder();
-  builder.chain(processors);
-  builder.chain(new StopFurtherMessageProcessingMessageProcessor());
-  builder.chain(new AbstractInterceptingMessageProcessor(){
-    public MuleEvent process(    MuleEvent event) throws MuleException {
-      if (getStatistics().isEnabled()) {
-        getStatistics().incrementRoutedMessage(event.getEndpoint());
-      }
-      return processNext(event);
-    }
-  }
-);
-  builder.chain(listener);
-  listener=builder.build();
 }

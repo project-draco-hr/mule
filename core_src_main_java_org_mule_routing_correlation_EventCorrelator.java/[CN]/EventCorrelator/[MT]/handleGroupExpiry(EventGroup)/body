@@ -1,0 +1,38 @@
+{
+  removeEventGroup(group);
+  final FlowConstruct service=group.toArray()[0].getFlowConstruct();
+  if (isFailOnTimeout()) {
+    final MuleMessageCollection messageCollection=group.toMessageCollection();
+    context.fireNotification(new RoutingNotification(messageCollection,null,RoutingNotification.CORRELATION_TIMEOUT));
+    service.getExceptionListener().exceptionThrown(new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),messageCollection));
+  }
+ else {
+    if (logger.isDebugEnabled()) {
+      logger.debug(MessageFormat.format("Aggregator expired, but ''failOnTimeOut'' is false. Forwarding {0} events out of {1} " + "total for group ID: {2}",group.size(),group.expectedSize(),group.getGroupId()));
+    }
+    try {
+      if (!(group.getCreated() + groupTimeToLive < System.currentTimeMillis())) {
+        MuleEvent newEvent=callback.aggregateEvents(group);
+        newEvent.getMessage().setCorrelationId(group.getGroupId().toString());
+        if (!expiredAndDispatchedGroups.containsKey(group.getGroupId())) {
+          if (timeoutMessageProcessor != null) {
+            timeoutMessageProcessor.process(newEvent);
+          }
+ else {
+            if (!(service instanceof Service)) {
+              throw new UnsupportedOperationException("EventAggregator is only supported with Service");
+            }
+            ((Service)service).dispatchEvent(newEvent);
+          }
+          expiredAndDispatchedGroups.put(group.getGroupId(),group.getCreated());
+        }
+ else {
+          logger.warn(MessageFormat.format("Discarding group {0}",group.getGroupId()));
+        }
+      }
+    }
+ catch (    Exception e) {
+      service.getExceptionListener().exceptionThrown(e);
+    }
+  }
+}

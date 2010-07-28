@@ -1,8 +1,14 @@
 {
   eventCorrelator=new EventCorrelator(getCorrelatorCallback(muleContext),next,flowConstruct.getMessageInfoMapping(),muleContext);
+  if (flowConstruct instanceof Service) {
+    Service service=(Service)flowConstruct;
+    if (service.getAsyncReplyMessageSource().getMessageProcessors().contains(this)) {
+      failOnTimeout=service.getAsyncReplyMessageSource().isFailOnTimeout();
+    }
+  }
+  eventCorrelator.setTimeout(timeout);
+  eventCorrelator.setFailOnTimeout(isFailOnTimeout());
   if (timeout != 0) {
-    eventCorrelator.setTimeout(timeout);
-    eventCorrelator.setFailOnTimeout(isFailOnTimeout());
     try {
       eventCorrelator.enableTimeoutMonitor();
     }

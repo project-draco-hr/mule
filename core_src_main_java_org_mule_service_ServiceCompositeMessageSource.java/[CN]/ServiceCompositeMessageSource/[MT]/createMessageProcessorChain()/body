@@ -1,0 +1,16 @@
+{
+  InterceptingChainMessageProcessorBuilder builder=new InterceptingChainMessageProcessorBuilder();
+  builder.chain(processors);
+  builder.chain(new StopFurtherMessageProcessingMessageProcessor());
+  builder.chain(new AbstractInterceptingMessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      if (getStatistics().isEnabled()) {
+        getStatistics().incrementRoutedMessage(event.getEndpoint());
+      }
+      return processNext(event);
+    }
+  }
+);
+  builder.chain(listener);
+  listener=builder.build();
+}

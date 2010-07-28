@@ -1,11 +1,54 @@
 {
-  addEvent(event);
-  Object correlationId=messageInfoMapping.getCorrelationId(event.getMessage());
-  if (locks.get(correlationId) != null) {
-    locks.remove(correlationId);
-    return (MuleMessage)responseMessages.remove(correlationId);
+  final String groupId=messageInfoMapping.getCorrelationId(event.getMessage());
+  if (logger.isTraceEnabled()) {
+    try {
+      logger.trace(String.format("Received async reply message for correlationID: %s%n%s%n%s",groupId,StringMessageUtils.truncate(StringMessageUtils.toString(event.getMessage().getPayload()),200,false),StringMessageUtils.headersToString(event.getMessage())));
+    }
+ catch (    Exception e) {
+    }
   }
+  if (groupId == null || groupId.equals("-1")) {
+    throw new RoutingException(CoreMessages.noCorrelationId(),event.getMessage(),event.getEndpoint());
+  }
+  boolean lookupMiss=false;
+  while (true) {
+    if (lookupMiss) {
+      try {
+        Thread.sleep(1);
+      }
+ catch (      InterruptedException interrupted) {
+        Thread.currentThread().interrupt();
+      }
+    }
+    if (isGroupAlreadyProcessed(groupId)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("An event was received for an event group that has already been processed, " + "this is probably because the async-reply timed out. Correlation Id is: " + groupId + ". Dropping event");
+      }
+      context.fireNotification(new RoutingNotification(event.getMessage(),event.getEndpoint().getEndpointURI().toString(),RoutingNotification.MISSED_AGGREGATION_GROUP_EVENT));
+      return null;
+    }
+    EventGroup group=this.getEventGroup(groupId);
+    if (group == null) {
+      group=this.addEventGroup(callback.createEventGroup(event,groupId));
+    }
+synchronized (groupsLock) {
+      if (group != this.getEventGroup(groupId)) {
+        lookupMiss=true;
+        continue;
+      }
+      if (logger.isDebugEnabled()) {
+        logger.debug("Adding event to aggregator group: " + groupId);
+      }
+      group.addEvent(event);
+      if (callback.shouldAggregateEvents(group)) {
+        MuleEvent returnEvent=callback.aggregateEvents(group);
+        returnEvent.getMessage().setCorrelationId(groupId);
+        this.removeEventGroup(group);
+        return returnEvent;
+      }
  else {
-    return null;
+        return null;
+      }
+    }
   }
 }

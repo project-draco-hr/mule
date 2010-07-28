@@ -1,12 +1,10 @@
 {
-  MuleEvent receivedEvent=events.iterator().next();
-  MuleMessage result=super.aggregateEvents(events);
-  MuleEvent event=new DefaultMuleEvent(result,receivedEvent.getEndpoint(),receivedEvent.getFlowConstruct(),receivedEvent);
+  MuleEvent event=super.aggregateEvents(events);
   if (!(event.getFlowConstruct() instanceof Service)) {
     throw new UnsupportedOperationException("CollectionResponseWithCallbackCorrelator is only supported with Service");
   }
   try {
-    return ((Service)event.getFlowConstruct()).getComponent().process(event).getMessage();
+    return ((Service)event.getFlowConstruct()).getComponent().process(event);
   }
  catch (  MuleException e) {
     throw new AggregationException(AnnotationsMessages.failedToInvokeReplyMethod(callback),events,event.getEndpoint());

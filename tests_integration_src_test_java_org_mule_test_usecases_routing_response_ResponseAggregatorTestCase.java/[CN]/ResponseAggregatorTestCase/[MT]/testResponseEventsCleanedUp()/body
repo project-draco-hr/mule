@@ -1,15 +1,14 @@
 {
-  RelaxedResponseAggregator aggregator=new RelaxedResponseAggregator();
+  RelaxedAsyncReplyMP mp=new RelaxedAsyncReplyMP();
   MuleEvent event=getTestEvent("message1");
   final MuleMessage message=event.getMessage();
   final String id=message.getUniqueId();
   message.setCorrelationId(id);
   message.setCorrelationGroupSize(1);
-  aggregator.setMuleContext(muleContext);
-  aggregator.setFlowConstruct(getTestService());
-  aggregator.initialise();
-  aggregator.process(event);
-  aggregator.getResponse(event);
-  Map responseEvents=aggregator.getResponseEvents();
+  SensingNullMessageProcessor listener=getSensingNullMessageProcessor();
+  mp.setListener(listener);
+  mp.setReplySource(listener.getMessageSource());
+  mp.process(event);
+  Map responseEvents=mp.getResponseEvents();
   assertTrue("Response events should be cleaned up.",responseEvents.isEmpty());
 }
