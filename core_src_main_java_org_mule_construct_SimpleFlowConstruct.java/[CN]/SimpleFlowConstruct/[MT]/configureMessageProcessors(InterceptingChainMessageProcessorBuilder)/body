@@ -1,8 +1,13 @@
 {
-  if (messageProcessors != null) {
-    builder.chain((MessageProcessor[])messageProcessors.toArray());
-  }
+  for (  Object processor : messageProcessors) {
+    if (processor instanceof MessageProcessor) {
+      builder.chain((MessageProcessor)processor);
+    }
+ else     if (processor instanceof MessageProcessorBuilder) {
+      builder.chain((MessageProcessorBuilder)processor);
+    }
  else {
-    builder.chain(new NullMessageProcessor());
+      throw new IllegalArgumentException("MessageProcessorBuilder should only have MessageProcessor's or MessageProcessorBuilder's configured");
+    }
   }
 }
