@@ -1,17 +1,23 @@
 {
-  RequestReplyRequesterMessageProcessor asyncReplyMP=new SimpleAsyncRequestReplyRequester();
+  TestAsyncRequestReplyRequester asyncReplyMP=new TestAsyncRequestReplyRequester();
+  asyncReplyMP.setTimeout(1);
   SensingNullMessageProcessor target=getSensingNullMessageProcessor();
+  target.setWaitTime(50);
   AsyncInterceptingMessageProcessor asyncMP=new AsyncInterceptingMessageProcessor(new WorkManagerSource(){
     public WorkManager getWorkManager() throws MuleException {
       return muleContext.getWorkManager();
     }
   }
-,true,SimpleAsyncRequestReplyRequesterTestCase.this);
+,true,AsyncRequestReplyRequesterTestCase.this);
   asyncMP.setListener(target);
   asyncReplyMP.setListener(asyncMP);
   asyncReplyMP.setReplySource(target.getMessageSource());
   MuleEvent event=getTestEvent(TEST_MESSAGE,getTestService(),getTestInboundEndpoint(MessageExchangePattern.ONE_WAY));
-  MuleEvent resultEvent=asyncReplyMP.process(event);
-  assertEquals(event.getMessageAsString(),resultEvent.getMessageAsString());
-  assertEquals(event.getMessage().getUniqueId(),resultEvent.getMessage().getUniqueId());
+  try {
+    asyncReplyMP.process(event);
+    fail("ResponseTimeoutException expected");
+  }
+ catch (  Exception e) {
+    assertEquals(ResponseTimeoutException.class,e.getClass());
+  }
 }
