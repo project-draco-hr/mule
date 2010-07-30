@@ -1,0 +1,14 @@
+{
+  OutboundEndpoint endpoint=createEndpoint("test://#[header:host]:#[header:port]");
+  assertTrue(endpoint instanceof DynamicOutboundEndpoint);
+  assertTrue(endpoint.getConnector() instanceof NullConnector);
+  MuleEvent event=getTestEvent("test");
+  event.getMessage().setOutboundProperty("port",12345);
+  try {
+    endpoint.process(event);
+    fail("A required header is missing on the message");
+  }
+ catch (  DispatchException e) {
+    assertTrue(e.getCause() instanceof RequiredValueException);
+  }
+}

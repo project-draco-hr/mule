@@ -1,0 +1,24 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Uri before parsing is: " + uriTemplate);
+  }
+  String newUriString=uriTemplate;
+  try {
+    newUriString=parseURIString(newUriString,message);
+  }
+ catch (  ExpressionRuntimeException e) {
+    throw new DispatchException(message,this,e);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Uri after parsing is: " + newUriString);
+  }
+  try {
+    MuleEndpointURI uri=new MuleEndpointURI(newUriString,getMuleContext());
+    setEndpointURI(uri);
+    getEndpointURI().initialise();
+    return getEndpointURI();
+  }
+ catch (  Exception e) {
+    throw new DispatchException(CoreMessages.templateCausedMalformedEndpoint(uriTemplate,newUriString),message,this,e);
+  }
+}

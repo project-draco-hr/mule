@@ -1,0 +1,18 @@
+{
+  OutboundEndpoint endpoint=createEndpoint("test://#[header:host]:#[header:port]");
+  assertTrue(endpoint instanceof DynamicOutboundEndpoint);
+  assertTrue(endpoint.getConnector() instanceof NullConnector);
+  MuleEvent event=getTestEvent("test");
+  event.getMessage().setOutboundProperty("port",12345);
+  event.getMessage().setOutboundProperty("host","localhost");
+  endpoint.process(event);
+  assertEquals(MessageExchangePattern.ONE_WAY,endpoint.getExchangePattern());
+  endpoint=createEndpoint("test://#[header:host]:#[header:port]?exchangePattern=REQUEST_RESPONSE");
+  assertTrue(endpoint instanceof DynamicOutboundEndpoint);
+  assertTrue(endpoint.getConnector() instanceof NullConnector);
+  event=getTestEvent("test");
+  event.getMessage().setOutboundProperty("port",12345);
+  event.getMessage().setOutboundProperty("host","localhost");
+  endpoint.process(event);
+  assertEquals(MessageExchangePattern.REQUEST_RESPONSE,endpoint.getExchangePattern());
+}
