@@ -1,0 +1,30 @@
+{
+  try {
+    parser.validate(expression);
+  }
+ catch (  IllegalArgumentException e) {
+    throw new InvalidExpressionException(expression,e.getMessage());
+  }
+  final AtomicBoolean valid=new AtomicBoolean(true);
+  final AtomicBoolean match=new AtomicBoolean(false);
+  final StringBuffer message=new StringBuffer();
+  parser.parse(new TemplateParser.TemplateCallback(){
+    public Object match(    String token){
+      match.set(true);
+      if (token.indexOf(":") == -1) {
+        if (valid.get()) {
+          valid.compareAndSet(true,false);
+        }
+        message.append(token).append(" is invalid\n");
+      }
+      return null;
+    }
+  }
+,expression);
+  if (message.length() > 0) {
+    throw new InvalidExpressionException(expression,message.toString());
+  }
+ else   if (!match.get()) {
+    throw new InvalidExpressionException(expression,"Expression string is not an expression.  Use isExpression(String) to validate first");
+  }
+}
