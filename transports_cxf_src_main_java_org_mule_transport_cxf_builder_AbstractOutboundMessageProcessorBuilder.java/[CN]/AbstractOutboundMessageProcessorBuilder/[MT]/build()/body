@@ -1,0 +1,34 @@
+{
+  if (muleContext == null) {
+    throw new IllegalStateException("MuleContext must be supplied.");
+  }
+  if (configuration == null) {
+    configuration=CxfConfiguration.getConfiguration(muleContext);
+  }
+  try {
+    client=createClient();
+  }
+ catch (  Exception e) {
+    throw new DefaultMuleException(e);
+  }
+  addInterceptors(client.getInInterceptors(),inInterceptors);
+  addInterceptors(client.getInFaultInterceptors(),inFaultInterceptors);
+  addInterceptors(client.getOutInterceptors(),outInterceptors);
+  addInterceptors(client.getOutFaultInterceptors(),outFaultInterceptors);
+  client.setThreadLocalRequestContext(true);
+  configureClient(client);
+  if (features != null) {
+    for (    AbstractFeature f : features) {
+      f.initialize(client,getBus());
+    }
+  }
+  if (mtomEnabled) {
+    client.getEndpoint().put(Message.MTOM_ENABLED,mtomEnabled);
+  }
+  addMuleInterceptors();
+  CxfOutboundMessageProcessor processor=createMessageProcessor();
+  processor.setOperation(operation);
+  configureMessageProcessor(processor);
+  processor.setPayloadToArguments(payloadToArguments);
+  return processor;
+}

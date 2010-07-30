@@ -1,0 +1,24 @@
+{
+  ClientProxyFactoryBean cpf=new ClientProxyFactoryBean();
+  cpf.setServiceClass(ProxyService.class);
+  cpf.setDataBinding(new StaxDataBinding());
+  cpf.getFeatures().add(new StaxDataBindingFeature());
+  cpf.setAddress(getAddress());
+  cpf.setBus(getBus());
+  cpf.setProperties(properties);
+  if (wsdlLocation != null) {
+    cpf.setWsdlLocation(wsdlLocation);
+  }
+  Client client=ClientProxy.getClient(cpf.create());
+  Binding binding=client.getEndpoint().getBinding();
+  CxfUtils.removeInterceptor(binding.getOutInterceptors(),WrappedOutInterceptor.class.getName());
+  CxfUtils.removeInterceptor(binding.getInInterceptors(),Soap11FaultInInterceptor.class.getName());
+  CxfUtils.removeInterceptor(binding.getInInterceptors(),Soap12FaultInInterceptor.class.getName());
+  CxfUtils.removeInterceptor(binding.getInInterceptors(),CheckFaultInterceptor.class.getName());
+  if (isProxyEnvelope()) {
+    CxfUtils.removeInterceptor(binding.getOutInterceptors(),SoapOutInterceptor.class.getName());
+    client.getInInterceptors().add(new ReversibleStaxInInterceptor());
+    client.getInInterceptors().add(new ResetStaxInterceptor());
+  }
+  return client;
+}

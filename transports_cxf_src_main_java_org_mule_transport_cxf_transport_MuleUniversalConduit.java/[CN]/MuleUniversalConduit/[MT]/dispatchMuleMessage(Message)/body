@@ -1,23 +1,21 @@
 {
-  String uri=setupURL(m);
-  LOGGER.info("Sending message to " + uri);
   try {
-    OutboundEndpoint protocolEndpoint=getProtocolEndpoint(uri);
-    MuleMessage req=(MuleMessage)m.getExchange().get(CxfConstants.MULE_MESSAGE);
-    req.setProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,uri,PropertyScope.INVOCATION);
+    MuleEvent reqEvent=(MuleEvent)m.getExchange().get(CxfConstants.MULE_EVENT);
+    MuleMessage req=reqEvent.getMessage();
     req.setOutboundProperty(HttpConnector.HTTP_DISABLE_STATUS_CODE_EXCEPTION_CHECK,Boolean.TRUE.toString());
-    MuleMessage result=sendStream(req,protocolEndpoint,m.getExchange());
-    if (result == null) {
+    MuleEvent resEvent=processNext(reqEvent,m.getExchange());
+    if (resEvent == null) {
       m.getExchange().put(ClientImpl.FINISHED,Boolean.TRUE);
       return;
     }
+    MuleMessage result=resEvent.getMessage();
     InputStream is=getResponseBody(m,result);
     if (is != null) {
       Message inMessage=new MessageImpl();
       String contentType=result.getOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
       inMessage.put(Message.CONTENT_TYPE,contentType);
       inMessage.put(Message.ENCODING,result.getEncoding());
-      inMessage.put(CxfConstants.MULE_MESSAGE,result);
+      inMessage.put(CxfConstants.MULE_EVENT,resEvent);
       inMessage.setContent(InputStream.class,is);
       inMessage.setExchange(m.getExchange());
       getMessageObserver().onMessage(inMessage);

@@ -25,12 +25,23 @@
   }
 ;
   MuleEvent event=(MuleEvent)message.getExchange().get(MULE_EVENT_PROPERTY);
-  MuleMessage req;
   if (event == null) {
-    req=new DefaultMuleMessage(handler,connector.getMuleContext());
+    MuleContext muleContext=configuration.getMuleContext();
+    MuleMessage muleMsg=new DefaultMuleMessage(handler,muleContext);
+    MuleSession session=new DefaultMuleSession(muleContext);
+    String url=setupURL(message);
+    try {
+      OutboundEndpoint ep=getEndpoint(muleContext,url);
+      event=new DefaultMuleEvent(muleMsg,ep,session);
+    }
+ catch (    Exception e) {
+      throw new Fault(e);
+    }
+    event.setTimeout(MuleEvent.TIMEOUT_NOT_SET_VALUE);
+    RequestContext.setEvent(event);
   }
  else {
-    req=new DefaultMuleMessage(handler,event.getMessage(),connector.getMuleContext());
+    event.getMessage().setPayload(handler);
   }
-  message.getExchange().put(CxfConstants.MULE_MESSAGE,req);
+  message.getExchange().put(CxfConstants.MULE_EVENT,event);
 }

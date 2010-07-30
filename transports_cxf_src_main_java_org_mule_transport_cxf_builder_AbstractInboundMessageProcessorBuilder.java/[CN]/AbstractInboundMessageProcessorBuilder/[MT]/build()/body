@@ -1,0 +1,84 @@
+{
+  if (muleContext == null) {
+    throw new IllegalStateException("MuleContext must be supplied.");
+  }
+  if (configuration == null) {
+    configuration=CxfConfiguration.getConfiguration(muleContext);
+  }
+  if (configuration == null) {
+    throw new IllegalStateException("A CxfConfiguration object must be supplied.");
+  }
+  ServerFactoryBean sfb;
+  try {
+    sfb=createServerFactory();
+  }
+ catch (  Exception e) {
+    throw new DefaultMuleException(e);
+  }
+  if (bindingId != null) {
+    sfb.setBindingId(bindingId);
+  }
+  if (features != null) {
+    sfb.getFeatures().addAll(features);
+  }
+  if (mtomEnabled != null) {
+    Map<String,Object> properties=sfb.getProperties();
+    if (properties == null) {
+      properties=new HashMap<String,Object>();
+      sfb.setProperties(properties);
+    }
+    properties.put("mtom-enabled",mtomEnabled);
+    properties.put(AttachmentOutInterceptor.WRITE_ATTACHMENTS,true);
+  }
+  if (inInterceptors != null) {
+    sfb.getInInterceptors().addAll(inInterceptors);
+  }
+  if (inFaultInterceptors != null) {
+    sfb.getInFaultInterceptors().addAll(inFaultInterceptors);
+  }
+  if (outInterceptors != null) {
+    sfb.getOutInterceptors().addAll(outInterceptors);
+  }
+  if (outFaultInterceptors != null) {
+    sfb.getOutFaultInterceptors().addAll(outFaultInterceptors);
+  }
+  if (enableMuleSoapHeaders) {
+    sfb.getInInterceptors().add(new MuleHeadersInInterceptor());
+    sfb.getInFaultInterceptors().add(new MuleHeadersInInterceptor());
+    sfb.getOutInterceptors().add(new MuleHeadersOutInterceptor());
+    sfb.getOutFaultInterceptors().add(new MuleHeadersOutInterceptor());
+  }
+  sfb.getOutInterceptors().add(new MuleProtocolHeadersOutInterceptor());
+  sfb.getOutFaultInterceptors().add(new MuleProtocolHeadersOutInterceptor());
+  sfb.setAddress(getAddress());
+  if (wsdlLocation != null) {
+    sfb.setWsdlURL(wsdlLocation);
+  }
+  ReflectionServiceFactoryBean svcFac=sfb.getServiceFactory();
+  addIgnoredMethods(svcFac,Callable.class.getName());
+  addIgnoredMethods(svcFac,Initialisable.class.getName());
+  addIgnoredMethods(svcFac,Disposable.class.getName());
+  addIgnoredMethods(svcFac,ServiceAware.class.getName());
+  initServiceName(getServiceClass(),service,namespace,svcFac);
+  CxfInboundMessageProcessor processor=new CxfInboundMessageProcessor();
+  configureMessageProcessor(sfb,processor);
+  sfb.setStart(false);
+  Bus bus=configuration.getCxfBus();
+  sfb.setBus(bus);
+  sfb.getServiceFactory().setBus(bus);
+  Configurer configurer=bus.getExtension(Configurer.class);
+  if (null != configurer) {
+    configurer.configureBean(sfb.getServiceFactory().getEndpointName().toString(),sfb);
+  }
+  sfb.setProperties(properties);
+  sfb.setInvoker(new MuleInvoker(processor,getServiceClass()));
+  server=sfb.create();
+  CxfUtils.removeInterceptor(server.getEndpoint().getService().getInInterceptors(),OneWayProcessorInterceptor.class.getName());
+  configureServer(server);
+  processor.setBus(sfb.getBus());
+  processor.setServer(server);
+  processor.setProxy(isProxy());
+  processor.initialise();
+  processor.start();
+  return processor;
+}

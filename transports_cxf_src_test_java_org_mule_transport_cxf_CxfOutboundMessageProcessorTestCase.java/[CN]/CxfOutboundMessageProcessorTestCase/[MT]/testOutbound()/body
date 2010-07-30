@@ -1,0 +1,33 @@
+{
+  CxfConfiguration config=new CxfConfiguration();
+  config.setMuleContext(muleContext);
+  config.initialise();
+  SimpleClientMessageProcessorBuilder builder=new SimpleClientMessageProcessorBuilder();
+  builder.setConfiguration(config);
+  builder.setServiceClass(EchoService.class);
+  builder.setOperation("echo");
+  builder.setMuleContext(muleContext);
+  CxfOutboundMessageProcessor processor=builder.build();
+  MessageProcessor messageProcessor=new MessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      payload=event.getMessage().getPayload();
+      try {
+        System.out.println(event.getMessage().getPayloadAsString());
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+      }
+      event.getMessage().setPayload(msg);
+      gotEvent=true;
+      return event;
+    }
+  }
+;
+  processor.setListener(messageProcessor);
+  MuleEvent event=getTestEvent("hello",getTestInboundEndpoint("test"));
+  MuleEvent response=processor.process(event);
+  Object payload=response.getMessage().getPayload();
+  assertTrue(payload instanceof String);
+  assertEquals("hello",payload);
+  assertTrue(gotEvent);
+}
