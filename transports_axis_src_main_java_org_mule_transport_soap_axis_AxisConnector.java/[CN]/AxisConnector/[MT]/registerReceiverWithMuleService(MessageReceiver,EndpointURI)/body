@@ -24,8 +24,11 @@
   serviceEndpointbuilder.setResponseTransformers(receiver.getEndpoint().getResponseTransformers().isEmpty() ? null : receiver.getEndpoint().getResponseTransformers());
   serviceEndpointbuilder.addMessageProcessor(new MessageFilter(receiver.getEndpoint().getFilter()));
   serviceEndpointbuilder.setSecurityFilter(receiver.getEndpoint().getSecurityFilter());
-  EndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(receiver.getEndpoint());
-  ((AbstractEndpointBuilder)receiverEndpointBuilder).setFilters(null);
+  AbstractEndpointBuilder receiverEndpointBuilder=new EndpointURIEndpointBuilder(receiver.getEndpoint());
+  List<MessageProcessor> procs=receiverEndpointBuilder.getMessageProcessors();
+  CollectionUtils.removeType(procs,MessageFilter.class);
+  CollectionUtils.removeType(procs,EndpointSecurityFilter.class);
+  receiverEndpointBuilder.setMessageProcessors(procs);
   receiverEndpointBuilder.setSecurityFilter(null);
   InboundEndpoint serviceEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(serviceEndpointbuilder);
   InboundEndpoint receiverEndpoint=muleContext.getRegistry().lookupEndpointFactory().getInboundEndpoint(receiverEndpointBuilder);
