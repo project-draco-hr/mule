@@ -1,12 +1,16 @@
 {
   ContinuationCometdServlet servlet=new MuleAjaxServlet();
-  Context context=new Context(this.getHttpServer(),"/",Context.NO_SESSIONS);
+  Context context=new Context(this.getHttpServer(),"/",Context.NO_SECURITY);
   context.setConnectorNames(new String[]{connector.getName()});
   context.addEventListener(new AjaxServletContextListener(muleContext,getName()));
   ServletHolder holder=new ServletHolder();
   holder.setServlet(servlet);
-  context.setResourceBase(endpoint.getEndpointURI().getPath());
-  context.addServlet(holder,"/ajax/*");
+  String resourceBase=(String)endpoint.getProperty(RESOURCE_BASE_PROPERTY);
+  if (resourceBase != null) {
+    context.setResourceBase(resourceBase);
+  }
+  context.addServlet(MuleJarResourcesServlet.class,MuleJarResourcesServlet.DEFAULT_PATH_SPEC);
+  context.addServlet(holder,SERVLET_PATH_SPEC);
   context.addServlet(DefaultServlet.class,"/");
   if (getInterval() != INT_VALUE_NOT_SET)   holder.setInitParameter("interval",Integer.toString(getInterval()));
   holder.setInitParameter("JSONCommented",Boolean.toString(isJsonCommented()));
