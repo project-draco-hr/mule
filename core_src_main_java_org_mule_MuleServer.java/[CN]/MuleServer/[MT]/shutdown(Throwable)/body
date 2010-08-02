@@ -1,8 +1,12 @@
 {
+  doShutdown();
+  unregisterShutdownHook();
   Message msg=CoreMessages.fatalErrorWhileRunning();
   MuleException muleException=ExceptionHelper.getRootMuleException(e);
+  int exitCode=1;
   if (muleException != null) {
     logger.fatal(muleException.getDetailedMessage());
+    exitCode=muleException.getExceptionCode();
   }
  else {
     logger.fatal(msg.toString() + " " + e.getMessage(),e);
@@ -15,6 +19,5 @@
   msgs.add(CoreMessages.fatalErrorInShutdown().getMessage());
   String shutdownMessage=StringMessageUtils.getBoilerPlate(msgs,'*',80);
   logger.fatal(shutdownMessage);
-  unregisterShutdownHook();
-  doShutdown();
+  System.exit(exitCode);
 }
