@@ -1,15 +1,16 @@
 {
   MuleClient client=new MuleClient(muleContext);
   MuleMessage response=client.send("vm://order.validation","OK",null);
-  assertNotNull(response);
-  assertEquals("OK(rejected!-1)",response.getPayloadAsString());
+  assertTrue(response.getPayload() instanceof NullPayload);
+  assertEquals("OK(rejected!-1)",rejectMesage);
   response=client.send("vm://order.validation","OK-ABC",null);
-  assertNotNull(response);
-  assertEquals("OK-ABC(rejected!-2)",response.getPayloadAsString());
+  assertEquals("OK-ABC",response.getPayload());
+  assertEquals("OK-ABC(rejected!-2)",rejectMesage);
   response=client.send("vm://order.validation","OK-DEF",null);
-  assertNotNull(response);
-  assertEquals("OK-DEF(rejected!-1)",response.getPayloadAsString());
+  assertTrue(response.getPayload() instanceof NullPayload);
+  assertEquals("OK-DEF(rejected!-1)",rejectMesage);
+  rejectMesage=null;
   response=client.send("vm://order.validation","OK-ABC-DEF",null);
-  assertNotNull(response);
-  assertEquals("OK-ABC-DEF",response.getPayloadAsString());
+  assertEquals("OK-ABC-DEF(success)",response.getPayloadAsString());
+  assertNull(rejectMesage);
 }
