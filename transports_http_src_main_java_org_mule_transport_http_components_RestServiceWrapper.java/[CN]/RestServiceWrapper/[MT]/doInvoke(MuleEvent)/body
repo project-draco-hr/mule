@@ -3,7 +3,8 @@
   Object request=event.getMessage().getPayload();
   String tempUrl=serviceUrl;
   MuleMessage result;
-  if (muleContext.getExpressionManager().isValidExpression(serviceUrl)) {
+  if (muleContext.getExpressionManager().isExpression(serviceUrl)) {
+    muleContext.getExpressionManager().validateExpression(serviceUrl);
     tempUrl=muleContext.getExpressionManager().parse(serviceUrl,event.getMessage(),true);
   }
   StringBuffer urlBuffer=new StringBuffer(tempUrl);
@@ -14,18 +15,19 @@
   }
  else {
     StringBuffer requestBodyBuffer=new StringBuffer();
-    event.getMessage().setOutboundProperty(CONTENT_TYPE,CONTENT_TYPE_VALUE);
+    event.getMessage().setOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE,CONTENT_TYPE_VALUE);
     setRESTParams(urlBuffer,event.getMessage(),request,requiredParams,false,requestBodyBuffer);
     setRESTParams(urlBuffer,event.getMessage(),request,optionalParams,true,requestBodyBuffer);
     requestBody=requestBodyBuffer.toString();
   }
   tempUrl=urlBuffer.toString();
   logger.info("Invoking REST service: " + tempUrl);
-  event.getMessage().setOutboundProperty(HTTP_METHOD,httpMethod);
+  event.getMessage().setOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,httpMethod);
   EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(tempUrl,muleContext);
   endpointBuilder.setExchangePattern(MessageExchangePattern.REQUEST_RESPONSE);
   OutboundEndpoint outboundEndpoint=endpointBuilder.buildOutboundEndpoint();
-  result=RequestContext.getEventContext().sendEvent(new DefaultMuleMessage(requestBody,event.getMessage(),muleContext),outboundEndpoint);
+  MuleEventContext eventContext=new DefaultMuleEventContext(event);
+  result=eventContext.sendEvent(new DefaultMuleMessage(requestBody,event.getMessage(),muleContext),outboundEndpoint);
   if (isErrorPayload(result)) {
     handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),result),result);
   }
