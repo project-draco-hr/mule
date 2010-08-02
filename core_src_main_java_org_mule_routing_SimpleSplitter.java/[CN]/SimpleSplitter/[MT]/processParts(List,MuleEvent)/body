@@ -1,0 +1,24 @@
+{
+  String correlationId=event.getFlowConstruct().getMessageInfoMapping().getCorrelationId(event.getMessage());
+  List<MuleEvent> resultEvents=new ArrayList<MuleEvent>();
+  int correlationSequence=1;
+  for (  Object part : parts) {
+    MuleMessage message;
+    if (part instanceof MuleMessage) {
+      message=(MuleMessage)part;
+    }
+ else {
+      message=new DefaultMuleMessage(part,muleContext);
+    }
+    if (enableCorrelation != CorrelationMode.NEVER) {
+      boolean correlationSet=message.getCorrelationId() != null;
+      if ((!correlationSet && (enableCorrelation == CorrelationMode.IF_NOT_SET)) || (enableCorrelation == CorrelationMode.ALWAYS)) {
+        message.setCorrelationId(correlationId);
+      }
+      message.setCorrelationGroupSize(parts.size());
+      message.setCorrelationSequence(correlationSequence++);
+    }
+    resultEvents.add(processNext(new DefaultMuleEvent(message,event)));
+  }
+  return resultEvents;
+}

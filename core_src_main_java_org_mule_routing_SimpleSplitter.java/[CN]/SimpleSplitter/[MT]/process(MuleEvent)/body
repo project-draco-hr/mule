@@ -1,0 +1,18 @@
+{
+  List results=new ArrayList(4);
+  Object result=event.getMuleContext().getExpressionManager().evaluate(config.getFullExpression(expressionManager),event.getMessage());
+  if (result instanceof List) {
+    return resultsHandler.aggregateResults(processParts((List)result,event),event,muleContext);
+  }
+ else {
+    logger.warn("Splitter only returned a single result. If this is not expected, please check your split expression");
+    MuleEvent resultEvent;
+    if (result instanceof MuleMessage) {
+      resultEvent=new DefaultMuleEvent((MuleMessage)result,event);
+    }
+ else {
+      resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(result,muleContext),event);
+    }
+    return processNext(event);
+  }
+}

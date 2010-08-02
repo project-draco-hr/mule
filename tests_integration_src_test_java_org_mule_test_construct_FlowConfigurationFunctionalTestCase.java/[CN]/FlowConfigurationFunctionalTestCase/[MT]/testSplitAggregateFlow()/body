@@ -1,0 +1,20 @@
+{
+  Apple apple=new Apple();
+  Banana banana=new Banana();
+  Orange orange=new Orange();
+  FruitBowl fruitBowl=new FruitBowl(apple,banana);
+  fruitBowl.addFruit(orange);
+  muleContext.getClient().send("vm://split-aggregate-in",new DefaultMuleMessage(fruitBowl,muleContext));
+  MuleMessage result=muleContext.getClient().request("vm://split-aggregate-out",RECEIVE_TIMEOUT);
+  assertNotNull(result);
+  assertTrue(result instanceof MuleMessageCollection);
+  MuleMessageCollection coll=(MuleMessageCollection)result;
+  assertEquals(3,coll.size());
+  List<?> results=(List<?>)coll.getPayload();
+  assertTrue(apple.isBitten());
+  assertTrue(banana.isBitten());
+  assertTrue(orange.isBitten());
+  assertTrue(results.contains(apple));
+  assertTrue(results.contains(banana));
+  assertTrue(results.contains(orange));
+}
