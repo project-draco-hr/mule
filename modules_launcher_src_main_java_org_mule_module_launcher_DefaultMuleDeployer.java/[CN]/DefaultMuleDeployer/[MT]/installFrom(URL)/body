@@ -1,0 +1,23 @@
+{
+  if (!url.toString().endsWith(".zip")) {
+    throw new IllegalArgumentException("Only Mule application zips are supported: " + url);
+  }
+  final File appsDir=MuleContainerBootstrapUtils.getMuleAppsFile();
+  String appName;
+  try {
+    final String fullPath=url.toURI().toString();
+    appName=FilenameUtils.getBaseName(fullPath);
+    File appDir=new File(appsDir,appName);
+    final File source=new File(url.toURI());
+    FileUtils.unzip(source,appDir);
+    if ("file".equals(url.getProtocol())) {
+      FileUtils.deleteQuietly(source);
+    }
+  }
+ catch (  URISyntaxException e) {
+    final IOException ex=new IOException(e.getMessage());
+    ex.fillInStackTrace();
+    throw ex;
+  }
+  return new ApplicationWrapper<Map<String,Object>>(new DefaultMuleApplication(appName));
+}
