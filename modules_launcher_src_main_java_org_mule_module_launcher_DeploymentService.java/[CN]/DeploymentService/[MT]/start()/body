@@ -3,7 +3,17 @@
   String appString=(String)options.get("app");
   final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
   String[] apps;
-  if (appString == null) {
+  final boolean explicitAppSet=appString != null;
+  if (!explicitAppSet) {
+    final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
+    for (    String zip : zips) {
+      try {
+        deployer.installFromAppDir(zip);
+      }
+ catch (      IOException e) {
+        e.printStackTrace();
+      }
+    }
     apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
   }
  else {
@@ -14,7 +24,6 @@
     a.setMetaData(options);
     applications.add(a);
   }
-  deployer=new DefaultMuleDeployer();
   for (  Application application : applications) {
     try {
       deployer.deploy(application);
@@ -23,7 +32,7 @@
       t.printStackTrace();
     }
   }
-  if (appString == null) {
+  if (!explicitAppSet) {
     scheduleChangeMonitor(appsDir);
   }
 }
