@@ -1,14 +1,22 @@
 {
   final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
   final String[] apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
-  final Collection removedApps=CollectionUtils.subtract(Arrays.asList(deployedApps),Arrays.asList(apps));
-  final Collection addedApps=CollectionUtils.subtract(Arrays.asList(apps),Arrays.asList(deployedApps));
+  @SuppressWarnings("unchecked") final Collection<String> removedApps=CollectionUtils.subtract(Arrays.asList(deployedApps),Arrays.asList(apps));
   for (  String zip : zips) {
     try {
       onNewApplicationArchive(new File(appsDir,zip));
     }
  catch (    Throwable t) {
       logger.error("Failed to deploy application archive: " + zip,t);
+    }
+  }
+  @SuppressWarnings("unchecked") final Collection<String> addedApps=CollectionUtils.subtract(Arrays.asList(apps),Arrays.asList(deployedApps));
+  for (  String addedApp : addedApps) {
+    try {
+      onNewExplodedApplication(addedApp);
+    }
+ catch (    Throwable t) {
+      logger.error("Failed to deploy exploded application: " + addedApp,t);
     }
   }
   deployedApps=apps;
