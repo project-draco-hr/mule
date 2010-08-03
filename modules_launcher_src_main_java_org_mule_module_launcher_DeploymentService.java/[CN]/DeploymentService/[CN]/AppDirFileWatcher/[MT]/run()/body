@@ -1,7 +1,19 @@
 {
   final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
   String[] apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
-  @SuppressWarnings("unchecked") final Collection<String> removedApps=CollectionUtils.subtract(Arrays.asList(deployedApps),Arrays.asList(apps));
+  final String anchorSuffix="-anchor.txt";
+  String[] currentAnchors=appsDir.list(new SuffixFileFilter(anchorSuffix));
+  @SuppressWarnings("unchecked") final Collection<String> deletedAnchors=CollectionUtils.subtract(Arrays.asList(appAnchors),Arrays.asList(currentAnchors));
+  for (  String deletedAnchor : deletedAnchors) {
+    String appName=StringUtils.removeEnd(deletedAnchor,anchorSuffix);
+    try {
+      onApplicationUndeployRequested(appName);
+    }
+ catch (    Throwable t) {
+      logger.error("Failed to undeploy application: " + appName,t);
+    }
+  }
+  appAnchors=currentAnchors;
   for (  String zip : zips) {
     try {
       onNewApplicationArchive(new File(appsDir,zip));
