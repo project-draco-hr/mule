@@ -1,0 +1,25 @@
+{
+  super.validateConstruct();
+  if (!(messageSource instanceof InboundEndpoint)) {
+    throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("Bridge only works with an inbound endpoint as its message source."),this);
+  }
+  inboundEndpoint=(InboundEndpoint)messageSource;
+  if (inboundEndpoint.getExchangePattern() != exchangePattern) {
+    throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("Inconsistent bridge inbound endpoint exchange pattern, expected " + exchangePattern + " but was "+ inboundEndpoint.getExchangePattern()),this);
+  }
+  if (outboundEndpoint.getExchangePattern() != exchangePattern) {
+    throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("Inconsistent bridge outbound endpoint exchange pattern, expected " + exchangePattern + " but was "+ outboundEndpoint.getExchangePattern()),this);
+  }
+  if (transacted && !inboundEndpoint.getTransactionConfig().isConfigured()) {
+    throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("A transacted bridge requires a transacted inbound endpoint"),this);
+  }
+  if (!transacted && inboundEndpoint.getTransactionConfig().isConfigured()) {
+    throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("A non-transacted bridge requires a non-transacted inbound endpoint"),this);
+  }
+  if (transacted && !outboundEndpoint.getTransactionConfig().isConfigured()) {
+    throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("A transacted bridge requires a transacted outbound endpoint"),this);
+  }
+  if (!transacted && outboundEndpoint.getTransactionConfig().isConfigured()) {
+    throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("A non-transacted bridge requires a non-transacted outbound endpoint"),this);
+  }
+}
