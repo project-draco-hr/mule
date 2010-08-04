@@ -12,7 +12,6 @@
   }
   if (!cfgBuilder.isConfigured()) {
     List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(2);
-    builders.add(cfgBuilder);
     if (ClassUtils.isClassOnPath(CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,getClass())) {
       Object configBuilder=ClassUtils.instanciateClass(CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,ClassUtils.NO_ARGS,getClass());
       builders.add((ConfigurationBuilder)configBuilder);
@@ -21,7 +20,9 @@
     if (getStartupPropertiesFile() != null) {
       startupProperties=PropertiesUtils.loadProperties(getStartupPropertiesFile(),getClass());
     }
+    builders.add(new SimpleConfigurationBuilder(startupProperties));
+    builders.add(cfgBuilder);
     DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-    muleContext=muleContextFactory.createMuleContext(cfgBuilder,startupProperties);
+    muleContext=muleContextFactory.createMuleContext(builders,new DefaultMuleContextBuilder());
   }
 }
