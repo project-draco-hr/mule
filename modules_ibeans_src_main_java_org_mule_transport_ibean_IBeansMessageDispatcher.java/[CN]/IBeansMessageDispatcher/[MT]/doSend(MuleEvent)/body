@@ -1,0 +1,24 @@
+{
+  Object payload=event.getMessage().getPayload();
+  Object[] params;
+  if (payload.getClass().isArray()) {
+    params=(Object[])payload;
+  }
+ else {
+    params=new Object[]{payload};
+  }
+  Class<?>[] types=new Class[params.length];
+  for (int i=0; i < params.length; i++) {
+    types[i]=params[i].getClass();
+  }
+  Method callMethod;
+  String methodName=event.getMessage().getInvocationProperty(MuleProperties.MULE_METHOD_PROPERTY,method);
+  try {
+    callMethod=ibean.getClass().getMethod(methodName,types);
+  }
+ catch (  Throwable e) {
+    throw new DispatchException(IBeansMessages.ibeanMethodNotFound(ibeanName,methodName,types),event.getMessage(),this,e);
+  }
+  Object result=callMethod.invoke(ibean,params);
+  return new DefaultMuleMessage(result,event.getMessage(),event.getMuleContext());
+}
