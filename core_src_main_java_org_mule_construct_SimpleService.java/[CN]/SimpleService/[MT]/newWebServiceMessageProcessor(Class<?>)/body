@@ -1,0 +1,15 @@
+{
+  try {
+    @SuppressWarnings("unchecked") boolean jaxwsService=componentClass.getAnnotation((Class<Annotation>)Thread.currentThread().getContextClassLoader().loadClass("javax.jws.WebService")) != null;
+    MessageProcessorBuilder wsmpb=(MessageProcessorBuilder)ClassUtils.instanciateClass("org.mule.transport.cxf.builder.WebServiceMessageProcessorBuilder");
+    Method setServiceClassMethod=ClassUtils.getMethod(wsmpb.getClass(),"setServiceClass",new Class<?>[]{Class.class});
+    setServiceClassMethod.invoke(wsmpb,new Object[]{componentClass});
+    Method setFrontendMethod=ClassUtils.getMethod(wsmpb.getClass(),"setFrontend",new Class<?>[]{String.class});
+    setFrontendMethod.invoke(wsmpb,new Object[]{jaxwsService ? "jaxws" : "simple"});
+    ((MuleContextAware)wsmpb).setMuleContext(muleContext);
+    return wsmpb.build();
+  }
+ catch (  Exception e) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage("Failed to configure the required web service infrastructure: are you missing the Mule CXF Module?"),e);
+  }
+}
