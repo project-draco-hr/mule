@@ -1,0 +1,23 @@
+{
+  boolean supports=clazz.isInterface();
+  if (supports) {
+    supports=annotation instanceof Call;
+  }
+  if (supports) {
+    if (ExceptionListenerAware.class.isAssignableFrom(clazz)) {
+      supports=true;
+    }
+ else {
+      Class[] exceptionTypes=((Method)member).getExceptionTypes();
+      boolean hasValidExceptionType=false;
+      for (int i=0; i < exceptionTypes.length; i++) {
+        Class exceptionType=exceptionTypes[i];
+        hasValidExceptionType=exceptionType.equals(Exception.class) || exceptionType.isAssignableFrom(CallException.class) || clazz.isAssignableFrom(ExceptionListener.class);
+      }
+      if (!hasValidExceptionType) {
+        throw new IllegalArgumentException(IBeansMessages.illegalCallMethod((Method)member).getMessage());
+      }
+    }
+  }
+  return supports;
+}

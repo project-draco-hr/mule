@@ -1,0 +1,27 @@
+{
+  InterfaceBinding router=routers.get(ctx.getMethod().toString());
+  if (router == null) {
+    throw new IllegalArgumentException(CoreMessages.cannotFindBindingForMethod(ctx.getMethod().getName()).toString());
+  }
+  router.getEndpoint().getProperties().putAll(ctx.getIBeanDefaultConfig().getPropertyParams());
+  Request req=ctx.getRequest();
+  MuleMessage message=((MuleRequestMessage)req).getMessage();
+  if (logger.isTraceEnabled()) {
+    try {
+      logger.trace("Message Before invoking " + ctx.getMethod() + ": \n"+ StringMessageUtils.truncate(StringMessageUtils.toString(message.getPayload()),2000,false));
+      logger.trace("Message Headers: \n" + StringMessageUtils.headersToString(message));
+    }
+ catch (    Exception e) {
+    }
+  }
+  MuleMessage reply;
+  MuleSession session=null;
+  try {
+    reply=router.route(message,session);
+  }
+ catch (  Throwable e) {
+    reply=new DefaultMuleMessage(NullPayload.getInstance(),muleContext);
+    reply.setExceptionPayload(new DefaultExceptionPayload(e));
+  }
+  return new MuleResponseMessage(reply);
+}

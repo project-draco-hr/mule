@@ -1,0 +1,22 @@
+{
+  MuleRequestMessage request;
+  Object payload=(data.getPayloads().size() == 1 ? data.getPayloads().get(0) : data.getPayloads());
+  MuleMessage message=new DefaultMuleMessage(payload,muleContext);
+  for (  Map.Entry<String,Object> entry : data.getHeaderParams().entrySet()) {
+    if (entry.getValue() != null) {
+      message.setOutboundProperty(entry.getKey(),entry.getValue());
+    }
+  }
+  message.setOutboundProperty(CHANNEL.URI_PARAM_PROPERTIES,data.getUriParams());
+  for (  DataSource dataSource : data.getAttachments()) {
+    try {
+      message.addAttachment(dataSource.getName(),new DataHandler(dataSource));
+    }
+ catch (    Exception e) {
+      throw new IBeansException(e);
+    }
+  }
+  request=new MuleRequestMessage(data,message);
+  request.setTimeout(Utils.getInt(data.getPropertyParams().get(CHANNEL.TIMEOUT),-1));
+  return request;
+}

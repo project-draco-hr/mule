@@ -1,0 +1,22 @@
+{
+  this.ctx=ctx;
+  Method method=ctx.getMethod();
+  Object result;
+  if (method.getName().startsWith("ibean")) {
+    result=method.invoke(this,ctx.getArgs());
+  }
+ else {
+    result=ctx.getMethod().invoke(mock,ctx.getArgs());
+  }
+  Response response=(result instanceof Response ? (Response)result : plugin.createResponse(result,null,null));
+  if (callback != null) {
+    try {
+      callback.onMessage(response);
+    }
+  finally {
+      callback=null;
+      this.ctx=null;
+    }
+  }
+  return response;
+}
