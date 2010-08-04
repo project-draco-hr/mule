@@ -16,8 +16,18 @@
     }
     ConfigurationBuilder cfgBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(configBuilderClassName,new Object[]{absoluteResourcePaths},getDeploymentClassLoader());
     if (!cfgBuilder.isConfigured()) {
+      List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(2);
+      if (descriptor.getAppProperties() != null) {
+        Properties props=PropertiesUtils.loadProperties(descriptor.getAppProperties(),getClass());
+        builders.add(new SimpleConfigurationBuilder(props));
+      }
+      if (ClassUtils.isClassOnPath(MuleServer.CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,getClass())) {
+        Object configBuilder=ClassUtils.instanciateClass(MuleServer.CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,ClassUtils.NO_ARGS,getClass());
+        builders.add((ConfigurationBuilder)configBuilder);
+      }
+      builders.add(cfgBuilder);
       DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-      this.muleContext=muleContextFactory.createMuleContext(cfgBuilder,new ApplicationMuleContextBuilder(descriptor));
+      this.muleContext=muleContextFactory.createMuleContext(builders,new ApplicationMuleContextBuilder(descriptor));
       if (descriptor.isRedeploymentEnabled()) {
         createRedeployMonitor();
       }
