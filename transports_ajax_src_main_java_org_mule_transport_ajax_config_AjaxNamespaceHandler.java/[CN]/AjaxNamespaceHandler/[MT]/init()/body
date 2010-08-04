@@ -1,8 +1,13 @@
 {
-  registerMetaTransportEndpoints(AjaxConnector.PROTOCOL);
+  MuleDefinitionParserConfiguration mdp=registerStandardTransportEndpoints(AjaxConnector.PROTOCOL,new String[]{"channel"});
+  mdp.addAlias(AjaxConnector.CHANNEL_PROPERTY,URIBuilder.PATH);
   registerConnectorDefinitionParser(AjaxConnector.class);
+  registerBeanDefinitionParser("key-store",new KeyStoreDefinitionParser());
+  registerBeanDefinitionParser("client",new ClientKeyStoreDefinitionParser());
+  registerBeanDefinitionParser("server",new TrustStoreDefinitionParser());
+  registerBeanDefinitionParser("protocol-handler",new ProtocolHandlerDefinitionParser());
   registerBeanDefinitionParser("servlet-connector",new MuleOrphanDefinitionParser(AjaxServletConnector.class,true));
-  registerBeanDefinitionParser("servlet-endpoint",new TransportGlobalEndpointDefinitionParser(AjaxServletConnector.PROTOCOL,false,getGlobalEndpointBuilderBeanClass(),new String[]{"path"},new String[]{}));
-  registerBeanDefinitionParser("servlet-inbound-endpoint",new TransportEndpointDefinitionParser(AjaxServletConnector.PROTOCOL,false,getInboundEndpointFactoryBeanClass(),new String[]{"path"},new String[]{}));
-  registerBeanDefinitionParser("servlet-outbound-endpoint",new TransportEndpointDefinitionParser(AjaxServletConnector.PROTOCOL,false,getOutboundEndpointFactoryBeanClass(),new String[]{"path"},new String[]{}));
+  registerBeanDefinitionParser("servlet-endpoint",createServletGlobalEndpointParser(getGlobalEndpointBuilderBeanClass()));
+  registerBeanDefinitionParser("servlet-inbound-endpoint",createServletEndpointParser(getInboundEndpointFactoryBeanClass()));
+  registerBeanDefinitionParser("servlet-outbound-endpoint",createServletEndpointParser(getOutboundEndpointFactoryBeanClass()));
 }

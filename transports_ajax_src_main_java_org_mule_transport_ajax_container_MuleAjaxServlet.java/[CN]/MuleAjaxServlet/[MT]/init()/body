@@ -4,12 +4,12 @@
   if (muleContext == null) {
     throw new ServletException("Attribute " + MuleProperties.MULE_CONTEXT_PROPERTY + " not set on ServletContext");
   }
-  String servletConnectorName=getServletConfig().getInitParameter(AJAX_CONNECTOR_NAME_PROPERTY);
+  String servletConnectorName=getServletConfig().getInitParameter(MuleServletContextListener.CONNECTOR_NAME);
   if (servletConnectorName == null) {
-    servletConnectorName=(String)getServletContext().getAttribute(AJAX_CONNECTOR_NAME_PROPERTY);
+    servletConnectorName=(String)getServletContext().getAttribute(MuleServletContextListener.CONNECTOR_NAME);
   }
   if (servletConnectorName == null) {
-    connector=(AjaxServletConnector)new TransportFactory(muleContext).getConnectorByProtocol(getConnectorProtocol());
+    connector=new TransportFactory(muleContext).getConnectorByProtocol(getConnectorProtocol());
     if (connector == null) {
       connector=new AjaxServletConnector(muleContext);
       connector.setName("ajax.servlet." + getServletContext().getServerInfo());
@@ -22,12 +22,12 @@
     }
   }
  else {
-    connector=(AjaxServletConnector)muleContext.getRegistry().lookupConnector(servletConnectorName);
+    connector=muleContext.getRegistry().lookupConnector(servletConnectorName);
     if (connector == null) {
-      throw new ServletException(AjaxMessages.noAjaxConnectorWithName(servletConnectorName,AJAX_CONNECTOR_NAME_PROPERTY).toString());
+      throw new ServletException(AjaxMessages.noAjaxConnectorWithName(servletConnectorName,MuleServletContextListener.CONNECTOR_NAME).toString());
     }
   }
-  connector.setBayeux(getBayeux());
+  ((BayeuxAware)connector).setBayeux(getBayeux());
   jsonTransformer=new ObjectToJson();
   try {
     connector.getMuleContext().getRegistry().applyProcessorsAndLifecycle(jsonTransformer);
