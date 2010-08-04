@@ -1,3 +1,13 @@
 {
-  return receiverServlet.removeReceiver(receiver);
+  String connectorKey=getHolderKey(receiver.getEndpoint());
+synchronized (this) {
+    ConnectorHolder connectorRef=holders.get(connectorKey);
+    if (connectorRef != null) {
+      if (!connectorRef.isReferenced()) {
+        getHttpServer().removeConnector(connectorRef.getConnector());
+        holders.remove(connectorKey);
+        connectorRef.stop();
+      }
+    }
+  }
 }

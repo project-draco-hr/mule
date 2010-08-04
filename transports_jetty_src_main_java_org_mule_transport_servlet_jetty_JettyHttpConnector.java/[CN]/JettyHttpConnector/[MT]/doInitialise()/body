@@ -1,18 +1,5 @@
 {
   httpServer=new Server();
-  if (getReceiverServlet() == null) {
-    setServletClass((useContinuations ? JettyContinuationsReceiverServlet.class : JettyReceiverServlet.class));
-  }
-  Context root=new Context(httpServer,"/",Context.SESSIONS);
-  holder=root.addServlet(getServletClass(),"/*");
-  root.addEventListener(new ServletContextListener(){
-    public void contextInitialized(    ServletContextEvent sce){
-      sce.getServletContext().setAttribute(MuleProperties.MULE_CONTEXT_PROPERTY,muleContext);
-    }
-    public void contextDestroyed(    ServletContextEvent sce){
-    }
-  }
-);
   if (configFile != null) {
     try {
       InputStream is=IOUtils.getResourceAsStream(configFile,getClass());
@@ -22,5 +9,24 @@
  catch (    Exception e) {
       throw new InitialisationException(e,this);
     }
+  }
+  try {
+    muleContext.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
+      public void onNotification(      MuleContextNotification notification){
+        if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED) {
+          setInitialStateStopped(false);
+          try {
+            start();
+          }
+ catch (          MuleException e) {
+            throw new MuleRuntimeException(CoreMessages.failedToStart(getName()),e);
+          }
+        }
+      }
+    }
+);
+  }
+ catch (  NotificationException e) {
+    throw new InitialisationException(e,this);
   }
 }

@@ -1,0 +1,25 @@
+{
+  String connectorKey=getHolderKey(endpoint);
+  ConnectorHolder holder;
+synchronized (this) {
+    holder=holders.get(connectorKey);
+    if (holder == null) {
+      Connector connector=createJettyConnector();
+      connector.setPort(endpoint.getEndpointURI().getPort());
+      connector.setHost(endpoint.getEndpointURI().getHost());
+      if ("localhost".equalsIgnoreCase(endpoint.getEndpointURI().getHost())) {
+        logger.warn("You use localhost interface! It means that no external connections will be available." + " Don't you want to use 0.0.0.0 instead (all network interfaces)?");
+      }
+      getHttpServer().addConnector(connector);
+      holder=createContextHolder(connector,receiver.getEndpoint(),receiver);
+      holders.put(connectorKey,holder);
+      if (isStarted()) {
+        holder.start();
+      }
+    }
+ else {
+      holder.addReceiver(receiver);
+    }
+  }
+  return holder;
+}
