@@ -5,7 +5,15 @@
   d.setEncoding(p.getProperty("encoding"));
   d.setConfigurationBuilder(p.getProperty("config.builder"));
   d.setDomain(p.getProperty("domain"));
-  d.setAppProperties(p.getProperty("app.properties"));
+  final File appPropsFile=new File(descriptor.getParent(),"mule-app.properties");
+  if (appPropsFile.exists() && appPropsFile.canRead()) {
+    final Properties props=PropertiesUtils.loadProperties(appPropsFile.toURI().toURL());
+    Map<String,String> m=new HashMap<String,String>(props.size());
+    for (    String key : m.keySet()) {
+      m.put(key,props.getProperty(key));
+    }
+    d.setAppProperties(m);
+  }
   d.setParentFirstClassLoader(BooleanUtils.toBoolean(p.getProperty("classloader.parentFirst",Boolean.TRUE.toString())));
   final String resProps=p.getProperty("config.resources");
   String[] urls;
