@@ -1,0 +1,17 @@
+{
+  InterceptingChainMessageProcessorBuilder builder=new InterceptingChainMessageProcessorBuilder();
+  TransactionalInterceptingMessageProcessor txProcessor=new TransactionalInterceptingMessageProcessor(transactionConfig,new DefaultServiceExceptionStrategy());
+  builder.chain(txProcessor);
+  for (  Object processor : messageProcessors) {
+    if (processor instanceof MessageProcessor) {
+      builder.chain((MessageProcessor)processor);
+    }
+ else     if (processor instanceof MessageProcessorBuilder) {
+      builder.chain((MessageProcessorBuilder)processor);
+    }
+ else {
+      throw new IllegalArgumentException("MessageProcessorBuilder should only have MessageProcessor's or MessageProcessorBuilder's configured");
+    }
+  }
+  return builder.build();
+}

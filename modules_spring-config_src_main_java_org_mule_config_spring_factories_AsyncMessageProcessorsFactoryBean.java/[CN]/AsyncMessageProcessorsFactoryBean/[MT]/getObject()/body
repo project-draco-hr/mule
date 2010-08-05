@@ -1,0 +1,22 @@
+{
+  InterceptingChainMessageProcessorBuilder builder=new InterceptingChainMessageProcessorBuilder();
+  AsyncInterceptingMessageProcessor asyncProcessor=new AsyncInterceptingMessageProcessor(new WorkManagerSource(){
+    public WorkManager getWorkManager() throws MuleException {
+      return threadingProfile.createWorkManager(name,muleContext.getConfiguration().getShutdownTimeout());
+    }
+  }
+,threadingProfile.isDoThreading(),new DefaultServiceExceptionStrategy());
+  builder.chain(asyncProcessor);
+  for (  Object processor : messageProcessors) {
+    if (processor instanceof MessageProcessor) {
+      builder.chain((MessageProcessor)processor);
+    }
+ else     if (processor instanceof MessageProcessorBuilder) {
+      builder.chain((MessageProcessorBuilder)processor);
+    }
+ else {
+      throw new IllegalArgumentException("MessageProcessorBuilder should only have MessageProcessor's or MessageProcessorBuilder's configured");
+    }
+  }
+  return builder.build();
+}
