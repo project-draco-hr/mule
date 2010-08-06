@@ -2,10 +2,9 @@
   Method method=null;
   Object[] payload=getPayloadFromMessage(context);
   if (payload == null) {
-    return new InvocationResult(this,InvocationResult.STATE_INVOKE_NOT_SUPPORTED);
+    return new InvocationResult(this,InvocationResult.State.NOT_SUPPORTED);
   }
-  for (Iterator iterator=methods.iterator(); iterator.hasNext(); ) {
-    String methodName=(String)iterator.next();
+  for (  String methodName : methods) {
     method=getMethodByName(methodName,context);
     if (method == null) {
       method=ClassUtils.getMethod(component.getClass(),methodName,getMethodArgumentTypes(payload));
@@ -20,7 +19,7 @@
       Class<?>[] argTypes=getMethodArgumentTypes(payload);
       List<Method> methods=ClassUtils.getSatisfiableMethods(component.getClass(),argTypes,isAcceptVoidMethods(),false,getIgnoredMethods(),filter);
       if (methods.size() > 1) {
-        InvocationResult result=new InvocationResult(this,InvocationResult.STATE_INVOKED_FAILED);
+        InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
         result.setErrorTooManyMatchingMethods(component,argTypes,StringMessageUtils.toString(methods));
         return result;
       }
@@ -28,13 +27,13 @@
         method=this.addMethodByArguments(component,methods.get(0),getPayloadFromMessage(context));
       }
  else {
-        InvocationResult result=new InvocationResult(this,InvocationResult.STATE_INVOKED_FAILED);
+        InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
         result.setErrorNoMatchingMethods(component,ClassUtils.NO_ARGS_TYPE);
         return result;
       }
     }
  else {
-      InvocationResult result=new InvocationResult(this,InvocationResult.STATE_INVOKED_FAILED);
+      InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
       result.setErrorNoMatchingMethodsCalled(component,StringMessageUtils.toString(methods));
       return result;
     }

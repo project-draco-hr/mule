@@ -5,15 +5,15 @@
   Object[] payload=getPayloadFromMessage(context);
   Class<?>[] classTypes=ClassUtils.getClassTypes(payload);
   Method method=null;
-  for (Iterator iterator=methods.iterator(); iterator.hasNext(); ) {
-    String methodName=(String)iterator.next();
+  for (Iterator<String> iterator=methods.iterator(); iterator.hasNext(); ) {
+    String methodName=iterator.next();
     method=getMethodByName(methodName,context);
     if (method == null) {
       method=ClassUtils.getMethod(component.getClass(),methodName,classTypes);
     }
     if (method != null) {
       addMethodByName(method,context);
-      Class[] parameterTypes=method.getParameterTypes();
+      Class<?>[] parameterTypes=method.getParameterTypes();
       if (ClassUtils.compare(parameterTypes,classTypes,false)) {
         break;
       }
@@ -23,7 +23,7 @@
     }
   }
   if (method == null) {
-    InvocationResult result=new InvocationResult(this,InvocationResult.STATE_INVOKED_FAILED);
+    InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
     result.setErrorNoMatchingMethods(component,classTypes);
     return result;
   }
