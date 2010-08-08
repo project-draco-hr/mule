@@ -5,5 +5,14 @@
   if (delegate instanceof OutboundEndpoint) {
     event=new DefaultMuleEvent(event.getMessage(),(OutboundEndpoint)delegate,event.getSession());
   }
-  return processNext(delegate.process(event));
+  MuleEvent delegateResult=delegate.process(event);
+  if (delegateResult != null) {
+    return processNext(delegateResult);
+  }
+ else   if (event.getFlowConstruct() instanceof SimpleFlowConstruct) {
+    return processNext(OptimizedRequestContext.criticalSetEvent(event));
+  }
+ else {
+    return null;
+  }
 }
