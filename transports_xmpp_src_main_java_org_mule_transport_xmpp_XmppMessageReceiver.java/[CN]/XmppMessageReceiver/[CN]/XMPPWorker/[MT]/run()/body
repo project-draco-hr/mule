@@ -4,9 +4,10 @@
       logger.debug("Processing XMPP packet from: " + packet.getFrom());
     }
     MuleMessage message=createMuleMessage(packet,endpoint.getEncoding());
-    MuleMessage returnMessage=routeMessage(message);
+    MuleEvent event=routeMessage(message);
+    MuleMessage returnMessage=event == null ? null : event.getMessage();
     if (returnMessage != null && packet instanceof Message) {
-      returnMessage.applyTransformers(connector.getDefaultResponseTransformers(endpoint));
+      returnMessage.applyTransformers(event,connector.getDefaultResponseTransformers(endpoint));
       Packet result=(Packet)returnMessage.getPayload();
     }
   }

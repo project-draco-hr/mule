@@ -1,0 +1,108 @@
+{
+  Object src=msg.getPayload();
+  String endpointString=msg.getOutboundProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
+  if (endpointString == null) {
+    endpointString=msg.getInvocationProperty(MuleProperties.MULE_ENDPOINT_PROPERTY);
+  }
+  if (endpointString == null) {
+    throw new TransformerMessagingException(HttpMessages.eventPropertyNotSetCannotProcessRequest(MuleProperties.MULE_ENDPOINT_PROPERTY),event,this);
+  }
+  String method=msg.getInvocationProperty(HttpConnector.HTTP_METHOD_PROPERTY);
+  if (method == null) {
+    method=msg.getOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
+  }
+  try {
+    endpointString=endpointString.replaceAll("%23","#");
+    endpointString=muleContext.getExpressionManager().parse(endpointString,msg,true);
+    URI uri=new URI(endpointString);
+    HttpMethod httpMethod;
+    if (HttpConstants.METHOD_GET.equals(method)) {
+      httpMethod=new GetMethod(uri.toString());
+      String getBodyParam=msg.getInvocationProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY);
+      if (getBodyParam == null) {
+        msg.getOutboundProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY);
+      }
+      String paramName=URLEncoder.encode(getBodyParam,outputEncoding);
+      String paramValue;
+      Boolean encode=msg.getInvocationProperty(HttpConnector.HTTP_ENCODE_PARAMVALUE);
+      if (encode == null) {
+        encode=msg.getOutboundProperty(HttpConnector.HTTP_ENCODE_PARAMVALUE,true);
+      }
+      if (encode) {
+        paramValue=URLEncoder.encode(src.toString(),outputEncoding);
+      }
+ else {
+        paramValue=src.toString();
+      }
+      String query=uri.getRawQuery();
+      if (!(src instanceof NullPayload) && !StringUtils.EMPTY.equals(src)) {
+        if (query == null) {
+          query=paramName + "=" + paramValue;
+        }
+ else {
+          query+="&" + paramName + "="+ paramValue;
+        }
+      }
+      httpMethod.setQueryString(query);
+    }
+ else     if (HttpConstants.METHOD_POST.equalsIgnoreCase(method)) {
+      PostMethod postMethod=new PostMethod(uri.toString());
+      String paramName=msg.getOutboundProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
+      if (paramName == null) {
+        paramName=msg.getInvocationProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
+      }
+      if (src instanceof Map) {
+        for (Iterator iterator=((Map)src).entrySet().iterator(); iterator.hasNext(); ) {
+          Map.Entry entry=(Map.Entry)iterator.next();
+          postMethod.addParameter(entry.getKey().toString(),entry.getValue().toString());
+        }
+      }
+ else       if (paramName != null) {
+        postMethod.addParameter(paramName,src.toString());
+      }
+ else {
+        addParameters(uri.getQuery(),postMethod,msg);
+        setupEntityMethod(src,outputEncoding,msg,uri,postMethod);
+      }
+      httpMethod=postMethod;
+    }
+ else     if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
+      PutMethod putMethod=new PutMethod(uri.toString());
+      setupEntityMethod(src,outputEncoding,msg,uri,putMethod);
+      httpMethod=putMethod;
+    }
+ else     if (HttpConstants.METHOD_DELETE.equalsIgnoreCase(method)) {
+      httpMethod=new DeleteMethod(uri.toString());
+    }
+ else     if (HttpConstants.METHOD_HEAD.equalsIgnoreCase(method)) {
+      httpMethod=new HeadMethod(uri.toString());
+    }
+ else     if (HttpConstants.METHOD_OPTIONS.equalsIgnoreCase(method)) {
+      httpMethod=new OptionsMethod(uri.toString());
+    }
+ else     if (HttpConstants.METHOD_TRACE.equalsIgnoreCase(method)) {
+      httpMethod=new TraceMethod(uri.toString());
+    }
+ else {
+      throw new TransformerException(HttpMessages.unsupportedMethod(method));
+    }
+    HttpMethodParams params=(HttpMethodParams)msg.removeProperty(HttpConnector.HTTP_PARAMS_PROPERTY);
+    if (params != null) {
+      httpMethod.setParams(params);
+    }
+ else {
+      String httpVersion=msg.getOutboundProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+      if (HttpConstants.HTTP10.equals(httpVersion)) {
+        httpMethod.getParams().setVersion(HttpVersion.HTTP_1_0);
+      }
+ else {
+        httpMethod.getParams().setVersion(HttpVersion.HTTP_1_1);
+      }
+    }
+    setHeaders(httpMethod,msg);
+    return httpMethod;
+  }
+ catch (  Exception e) {
+    throw new TransformerMessagingException(event,this,e);
+  }
+}

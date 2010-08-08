@@ -1,0 +1,37 @@
+{
+  Object bean;
+  try {
+    bean=getBeanFactory().getInstance(muleContext);
+  }
+ catch (  Exception e) {
+    throw new TransformerMessagingException(event,this,e);
+  }
+  Map<String,Object> args=new HashMap<String,Object>(arguments.size());
+  for (Iterator<ExpressionArgument> iterator=arguments.iterator(); iterator.hasNext(); ) {
+    ExpressionArgument argument=iterator.next();
+    Object value=null;
+    try {
+      value=argument.evaluate(message);
+    }
+ catch (    RequiredValueException e) {
+      logger.warn(e.getMessage());
+    }
+catch (    ExpressionRuntimeException e) {
+      throw new TransformerMessagingException(event,this,e);
+    }
+    if (!argument.isOptional() && value == null) {
+      throw new TransformerMessagingException(CoreMessages.expressionEvaluatorReturnedNull(argument.getExpressionConfig().getEvaluator(),argument.getExpressionConfig().getExpression()),event,this);
+    }
+    args.put(argument.getName(),value);
+  }
+  try {
+    BeanUtils.populate(bean,args);
+  }
+ catch (  IllegalAccessException e) {
+    throw new TransformerMessagingException(event,this,e);
+  }
+catch (  InvocationTargetException e) {
+    throw new TransformerMessagingException(event,this,e.getTargetException());
+  }
+  return bean;
+}

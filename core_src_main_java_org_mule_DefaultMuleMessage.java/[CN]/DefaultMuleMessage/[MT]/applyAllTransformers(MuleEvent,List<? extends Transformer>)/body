@@ -1,0 +1,56 @@
+{
+  if (!transformers.isEmpty()) {
+    for (    Transformer transformer : transformers) {
+      if (getPayload() == null) {
+        if (transformer.isAcceptNull()) {
+          setPayload(NullPayload.getInstance());
+          setDataType(null);
+        }
+ else {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Transformer " + transformer + " doesn't support the null payload, exiting from transformer chain.");
+          }
+          break;
+        }
+      }
+      Class<?> srcCls=getPayload().getClass();
+      if (transformer.isSourceDataTypeSupported(DataTypeFactory.create(srcCls))) {
+        Object result;
+        if (transformer instanceof MessageTransformer) {
+          result=((MessageTransformer)transformer).transform(this,event);
+        }
+ else {
+          result=transformer.transform(this);
+        }
+        RequestContext.internalRewriteEvent(this,false);
+        if (originalPayload == null && muleContext.getConfiguration().isCacheMessageOriginalPayload()) {
+          originalPayload=payload;
+        }
+        if (result instanceof MuleMessage) {
+synchronized (this) {
+            MuleMessage resultMessage=(MuleMessage)result;
+            setPayload(resultMessage.getPayload());
+            originalPayload=resultMessage.getOriginalPayload();
+            copyMessageProperties(resultMessage);
+            copyAttachments(resultMessage);
+          }
+        }
+ else {
+          setPayload(result);
+        }
+        setDataType(transformer.getReturnDataType());
+      }
+ else {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Transformer " + transformer + " doesn't support the source payload: "+ srcCls);
+        }
+        if (!transformer.isIgnoreBadInput()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Exiting from transformer chain (ignoreBadInput = false)");
+          }
+          break;
+        }
+      }
+    }
+  }
+}

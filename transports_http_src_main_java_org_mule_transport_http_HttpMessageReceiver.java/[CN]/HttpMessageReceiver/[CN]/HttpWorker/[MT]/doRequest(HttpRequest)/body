@@ -15,7 +15,8 @@
   if (receiver != null) {
     message.setInboundProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY,HttpConnector.normalizeUrl(receiver.getEndpointURI().getPath()));
     preRouteMessage(message);
-    MuleMessage returnMessage=receiver.routeMessage(message);
+    MuleEvent returnEvent=receiver.routeMessage(message);
+    MuleMessage returnMessage=returnEvent == null ? null : returnEvent.getMessage();
     Object tempResponse;
     if (returnMessage != null) {
       tempResponse=returnMessage.getPayload();
@@ -27,7 +28,7 @@
       response=(HttpResponse)tempResponse;
     }
  else {
-      response=transformResponse(returnMessage);
+      response=transformResponse(returnMessage,returnEvent);
     }
     response.setupKeepAliveFromRequestVersion(request.getRequestLine().getHttpVersion());
     HttpConnector httpConnector=(HttpConnector)connector;
