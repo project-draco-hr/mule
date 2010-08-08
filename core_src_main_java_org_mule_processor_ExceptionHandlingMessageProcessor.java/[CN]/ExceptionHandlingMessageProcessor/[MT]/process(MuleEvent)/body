@@ -1,0 +1,24 @@
+{
+  try {
+    return processNext(event);
+  }
+ catch (  Exception e) {
+    ExceptionListener exceptionListener;
+    if (event.getFlowConstruct() != null) {
+      exceptionListener=event.getFlowConstruct().getExceptionListener();
+    }
+ else {
+      logger.warn("FlowContruct is not set on MuleEvent, this is probably a bug");
+      exceptionListener=event.getMuleContext().getExceptionListener();
+    }
+    exceptionListener.exceptionThrown(e);
+    if (exceptionListener instanceof AbstractExceptionListener) {
+      return new DefaultMuleEvent(((AbstractExceptionListener)exceptionListener).getReturnMessage(e),event);
+    }
+ else {
+      event.getMessage().setPayload(NullPayload.getInstance());
+      event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+      return event;
+    }
+  }
+}

@@ -2,11 +2,8 @@
   OutboundEndpoint endpoint=createOutboundEndpoint(null,null,null,null,MessageExchangePattern.REQUEST_RESPONSE,null);
   testOutboundEvent=createTestOutboundEvent(endpoint);
   endpoint.getConnector().stop();
-  try {
-    endpoint.process(testOutboundEvent);
-    fail("exception expected");
-  }
- catch (  Exception e) {
-    assertEquals(LifecycleException.class,e.getClass());
-  }
+  MuleEvent responseEvent=endpoint.process(testOutboundEvent);
+  assertNotNull(responseEvent);
+  assertNotNull("Exception expected",responseEvent.getMessage().getExceptionPayload());
+  assertTrue(responseEvent.getMessage().getExceptionPayload().getException() instanceof LifecycleException);
 }

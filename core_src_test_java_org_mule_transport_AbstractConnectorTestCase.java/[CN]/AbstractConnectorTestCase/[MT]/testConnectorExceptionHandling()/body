@@ -2,15 +2,15 @@
   Connector connector=getConnectorAndAssert();
   Mock ehandlerMock=new Mock(ExceptionListener.class,"exceptionHandler");
   ehandlerMock.expect("exceptionThrown",C.isA(Exception.class));
-  assertNotNull(connector.getExceptionListener());
-  connector.setExceptionListener((ExceptionListener)ehandlerMock.proxy());
+  assertNotNull(muleContext.getExceptionListener());
+  muleContext.setExceptionListener((ExceptionListener)ehandlerMock.proxy());
   connector.handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
   if (connector instanceof AbstractConnector) {
     ehandlerMock.expect("exceptionThrown",C.isA(Exception.class));
     ((AbstractConnector)connector).exceptionThrown(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
   }
   ehandlerMock.verify();
-  connector.setExceptionListener(null);
+  muleContext.setExceptionListener(null);
   try {
     connector.handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
     fail("Should have thrown exception as no strategy is set");

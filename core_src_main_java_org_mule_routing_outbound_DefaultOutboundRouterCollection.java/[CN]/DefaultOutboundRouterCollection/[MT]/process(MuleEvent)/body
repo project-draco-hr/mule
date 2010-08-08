@@ -3,12 +3,12 @@
   MuleSession session=event.getSession();
   MuleEvent result;
   boolean matchfound=false;
-  for (Iterator iterator=getRouters().iterator(); iterator.hasNext(); ) {
+  for (Iterator<Router> iterator=getRouters().iterator(); iterator.hasNext(); ) {
     OutboundRouter outboundRouter=(OutboundRouter)iterator.next();
     final MuleMessage outboundRouterMessage;
     if (iterator.hasNext() && (isMatchAll() || outboundRouter.isRequiresNewMessage())) {
       if (((DefaultMuleMessage)message).isConsumable()) {
-        throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),message);
+        throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),event);
       }
       outboundRouterMessage=new DefaultMuleMessage(message.getPayload(),message,muleContext);
     }
@@ -18,7 +18,7 @@
     if (outboundRouter.isMatch(outboundRouterMessage)) {
       matchfound=true;
       final OutboundRouter router=outboundRouter;
-      TransactionTemplate<MuleEvent> tt=new TransactionTemplate<MuleEvent>(outboundRouter.getTransactionConfig(),event.getFlowConstruct().getExceptionListener(),muleContext);
+      TransactionTemplate<MuleEvent> tt=new TransactionTemplate<MuleEvent>(outboundRouter.getTransactionConfig(),muleContext);
       TransactionCallback<MuleEvent> cb=new TransactionCallback<MuleEvent>(){
         public MuleEvent doInTransaction() throws Exception {
           return router.process(event);

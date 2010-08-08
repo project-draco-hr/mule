@@ -1,9 +1,8 @@
 {
   MuleClient client=new MuleClient(muleContext);
-  try {
-    client.send("cxf:http://localhost:63181/services/CxfWithExceptionStrategy?method=testNonCxfException","TEST",null);
-  }
- catch (  DispatchException e) {
-    assertTrue(e.getCause().getCause() instanceof Fault);
-  }
+  MuleMessage result=client.send("cxf:http://localhost:63181/services/CxfWithExceptionStrategy?method=testNonCxfException","TEST",null);
+  assertNotNull(result);
+  assertNotNull("Exception expected",result.getExceptionPayload());
+  assertTrue(result.getExceptionPayload().getException() instanceof MessagingException);
+  assertTrue(result.getExceptionPayload().getRootException() instanceof Fault);
 }

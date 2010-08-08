@@ -9,11 +9,8 @@
   if (!endpoint.isDisableTransportTransformer()) {
     applyInboundTransformers(muleEvent);
   }
-  MuleEvent resultEvent=null;
-  try {
-    resultEvent=listener.process(muleEvent);
-  }
- catch (  FilterUnacceptedException e) {
+  MuleEvent resultEvent=listener.process(muleEvent);
+  if (resultEvent != null && resultEvent.getMessage() != null && resultEvent.getMessage().getExceptionPayload() != null && resultEvent.getMessage().getExceptionPayload().getException() instanceof FilterUnacceptedException) {
     return handleUnacceptedFilter(muleEvent.getMessage());
   }
   if (resultEvent != null && resultEvent.getMessage() != null && !endpoint.isDisableTransportTransformer()) {

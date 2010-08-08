@@ -7,14 +7,14 @@
     creds=strategy.decrypt(creds,null);
   }
  catch (  Exception e1) {
-    throw new UnauthorisedException(CoreMessages.failedToReadPayload(),event.getMessage(),e1);
+    throw new UnauthorisedException(CoreMessages.failedToReadPayload(),event,e1);
   }
   Authentication authentication;
   try {
     authentication=new PGPAuthentication(userId,decodeMsgRaw(creds));
   }
  catch (  Exception e1) {
-    throw new UnauthorisedException(CoreMessages.failedToReadPayload(),event.getMessage(),e1);
+    throw new UnauthorisedException(CoreMessages.failedToReadPayload(),event,e1);
   }
   final Authentication authResult;
   try {
@@ -24,7 +24,7 @@
     if (logger.isDebugEnabled()) {
       logger.debug("Authentication request for user: " + userId + " failed: "+ e.toString());
     }
-    throw new UnauthorisedException(CoreMessages.authFailedForUser(userId),event.getMessage(),e);
+    throw new UnauthorisedException(CoreMessages.authFailedForUser(userId),event,e);
   }
   if (logger.isDebugEnabled()) {
     logger.debug("Authentication success: " + authResult.toString());
@@ -35,6 +35,6 @@
     updatePayload(message,getUnencryptedMessageWithoutSignature((PGPAuthentication)authResult));
   }
  catch (  Exception e2) {
-    throw new UnauthorisedException(event.getMessage(),context,event.getEndpoint(),this);
+    throw new UnauthorisedException(event,context,event.getEndpoint(),this);
   }
 }

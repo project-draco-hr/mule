@@ -33,7 +33,9 @@
  catch (      IOException ioException) {
       }
     }
-    Exception ex=new RoutingException(FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful")),new DefaultMuleMessage(message,connector.getMuleContext()),endpoint,e);
-    this.handleException(ex);
+    Message msg=FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful"));
+    MuleEvent event=new DefaultMuleEvent(message,endpoint,null);
+    Exception ex=new RoutingException(msg,event,endpoint,e);
+    getFlowConstruct().getExceptionListener().exceptionThrown(ex);
   }
 }

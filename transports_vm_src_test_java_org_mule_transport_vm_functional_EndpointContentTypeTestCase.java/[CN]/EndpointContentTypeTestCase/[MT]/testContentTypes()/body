@@ -3,13 +3,10 @@
   Map messageProperties=new HashMap();
   messageProperties.put("content-type","text/xml");
   MuleClient client=new MuleClient(muleContext);
-  try {
-    response=client.send("vm://in1?connector=vm-in1","<OK/>",messageProperties);
-    fail("Invalid mime type was not rejected");
-  }
- catch (  Exception ex) {
-    System.out.println("Saw " + ex.getClass() + " as expected.");
-  }
+  response=client.send("vm://in1?connector=vm-in1","<OK/>",messageProperties);
+  assertNotNull(response);
+  assertNotNull("Invalid mime type was not rejected",response.getExceptionPayload());
+  assertTrue(response.getExceptionPayload().getException() instanceof MessagingException);
   messageProperties.put("content-type","text/plain");
   EchoComponent.setExpectedContentType("text/plain");
   response=client.send("vm://in1?connector=vm-in1","OK",messageProperties);

@@ -1,0 +1,15 @@
+{
+  TestSecurityFilter securityFilter=new TestSecurityFilter(false);
+  InboundEndpoint endpoint=createTestInboundEndpoint(null,securityFilter,MessageExchangePattern.REQUEST_RESPONSE,null);
+  InterceptingMessageProcessor mp=new SecurityFilterMessageProcessor(securityFilter);
+  TestListener listner=new TestListener();
+  mp.setListener(listner);
+  MuleEvent inEvent=createTestInboundEvent(endpoint);
+  RequestContext.setEvent(inEvent);
+  MuleEvent resultEvent=mp.process(inEvent);
+  assertNull(listner.sensedEvent);
+  assertNotNull(resultEvent);
+  assertEquals(TestSecurityFilter.SECURITY_EXCEPTION_MESSAGE,resultEvent.getMessageAsString());
+  assertNotNull(resultEvent.getMessage().getExceptionPayload());
+  assertTrue(resultEvent.getMessage().getExceptionPayload().getException() instanceof TestSecurityFilter.StaticMessageUnauthorisedException);
+}

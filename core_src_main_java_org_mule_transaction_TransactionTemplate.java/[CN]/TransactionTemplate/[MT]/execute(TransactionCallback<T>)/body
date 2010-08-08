@@ -56,17 +56,8 @@
   }
  catch (  Exception e) {
     tx=TransactionCoordination.getInstance().getTransaction();
-    if (isExceptionHandledAtThisLevel(tx)) {
-      logger.info("Exception Caught in Transaction template.  Handing off to exception handler: " + exceptionListener);
-      exceptionListener.exceptionThrown(e);
-    }
- else {
-      logger.info("Exception Caught in Transaction template without any exception listeners defined, exception is rethrown.");
-      if (tx != null) {
-        tx.setRollbackOnly();
-      }
-    }
     if (tx != null) {
+      tx.setRollbackOnly();
       if (tx.isRollbackOnly()) {
         logger.debug("Exception caught: rollback transaction",e);
       }
@@ -76,12 +67,7 @@
       resumeXATransaction(suspendedXATx);
       return null;
     }
- else     if (isExceptionHandledAtThisLevel(tx)) {
-      return null;
-    }
- else {
-      throw e;
-    }
+    throw e;
   }
 catch (  Error e) {
     if (tx != null) {

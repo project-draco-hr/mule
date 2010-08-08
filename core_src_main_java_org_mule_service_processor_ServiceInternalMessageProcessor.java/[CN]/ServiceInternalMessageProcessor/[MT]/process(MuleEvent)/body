@@ -1,5 +1,4 @@
 {
-  ExceptionListener exceptionListener=service.getExceptionListener();
   MuleEvent resultEvent=null;
   try {
     Object replyTo=event.getMessage().getReplyTo();
@@ -13,30 +12,15 @@
         processReplyTo(event,resultEvent,replyToHandler,replyTo);
       }
     }
+    return resultEvent;
   }
  catch (  Exception e) {
     event.getSession().setValid(false);
-    if (e instanceof MessagingException) {
-      exceptionListener.exceptionThrown(e);
+    if (e instanceof MuleException) {
+      throw (MuleException)e;
     }
  else {
-      exceptionListener.exceptionThrown(new MessagingException(CoreMessages.eventProcessingFailedFor(service.getName()),event.getMessage(),e));
-    }
-    if (event.getEndpoint().getExchangePattern().hasResponse()) {
-      if (resultEvent == null) {
-        if (exceptionListener != null && exceptionListener instanceof AbstractExceptionListener && ((AbstractExceptionListener)exceptionListener).getReturnMessage() != null) {
-          resultEvent=new DefaultMuleEvent(((AbstractExceptionListener)exceptionListener).getReturnMessage(),event);
-        }
- else {
-          resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),event.getMessage(),event.getMuleContext()),event);
-        }
-      }
-      ExceptionPayload exceptionPayload=event.getMessage().getExceptionPayload();
-      if (exceptionPayload == null) {
-        exceptionPayload=new DefaultExceptionPayload(e);
-      }
-      resultEvent.getMessage().setExceptionPayload(exceptionPayload);
+      throw new MessagingException(event,e);
     }
   }
-  return resultEvent;
 }

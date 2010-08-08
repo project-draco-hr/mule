@@ -1,16 +1,14 @@
 {
   TestSecurityFilter securityFilter=new TestSecurityFilter(false);
-  endpoint=createTestInboundEndpoint(new TestFilter(false),securityFilter,null,null,MessageExchangePattern.ONE_WAY,null);
+  endpoint=createTestInboundEndpoint(new TestFilter(false),securityFilter,null,null,MessageExchangePattern.REQUEST_RESPONSE,null);
   endpoint.setListener(inboundListener);
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
   MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain();
-  try {
-    result=mpChain.process(requestEvent);
-    fail("Filter should have thrown a FilterException");
-  }
- catch (  FilterUnacceptedException e) {
-  }
+  result=mpChain.process(requestEvent);
+  assertNotNull(result);
+  assertNotNull("Filter should have thrown a FilterException",result.getMessage().getExceptionPayload());
+  assertTrue(result.getMessage().getExceptionPayload().getException() instanceof FilterUnacceptedException);
   assertFalse(securityFilter.wasCalled());
   assertMessageNotSent();
 }

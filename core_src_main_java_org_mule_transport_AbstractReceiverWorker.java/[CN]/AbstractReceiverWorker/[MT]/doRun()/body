@@ -1,6 +1,6 @@
 {
   final MuleContext muleContext=receiver.getConnector().getMuleContext();
-  TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig(),endpoint.getConnector().getExceptionListener(),muleContext);
+  TransactionTemplate tt=new TransactionTemplate(endpoint.getTransactionConfig(),muleContext);
   TransactionCallback<?> cb=new TransactionCallback(){
     public Object doInTransaction() throws Exception {
       Transaction tx=TransactionCoordination.getInstance().getTransaction();
@@ -51,7 +51,7 @@
     handleResults(results);
   }
  catch (  Exception e) {
-    handleException(e);
+    receiver.getFlowConstruct().getExceptionListener().exceptionThrown(e);
   }
  finally {
     messages.clear();

@@ -1,7 +1,7 @@
 {
   MuleMessage message=event.getMessage();
   if (routes == null || routes.size() == 0) {
-    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),message,null);
+    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),event,null);
   }
   if (enableCorrelation != CorrelationMode.NEVER) {
     boolean correlationSet=message.getCorrelationId() != null;
@@ -19,7 +19,7 @@
       OutboundEndpoint endpoint=mp instanceof OutboundEndpoint ? (OutboundEndpoint)mp : null;
       if (endpoint == null || endpoint.getFilter() == null || (endpoint.getFilter() != null && endpoint.getFilter().accept(message))) {
         if (((DefaultMuleMessage)message).isConsumable()) {
-          throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),message);
+          throw new MessagingException(CoreMessages.cannotCopyStreamPayload(message.getPayload().getClass().getName()),event);
         }
         MuleMessage clonedMessage=new DefaultMuleMessage(message.getPayload(),message,muleContext);
         MuleEvent result=sendRequest(event,clonedMessage,mp,true);
@@ -30,7 +30,7 @@
     }
   }
  catch (  MuleException e) {
-    throw new CouldNotRouteOutboundMessageException(message,routes.get(0),e);
+    throw new CouldNotRouteOutboundMessageException(event,routes.get(0),e);
   }
   return resultsHandler.aggregateResults(results,event,muleContext);
 }
