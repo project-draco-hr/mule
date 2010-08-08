@@ -1,0 +1,14 @@
+{
+  try {
+    int timeout=event.getMessage().getInboundProperty(CHANNEL.TIMEOUT,event.getMuleContext().getConfiguration().getDefaultResponseTimeout());
+    if (inboundEndpoint instanceof DynamicRequestEndpoint) {
+      return new DefaultMuleEvent(((DynamicRequestEndpoint)inboundEndpoint).request(timeout,event.getMessage()),event);
+    }
+ else {
+      return new DefaultMuleEvent(inboundEndpoint.request(event.getMuleContext().getConfiguration().getDefaultResponseTimeout()),event);
+    }
+  }
+ catch (  Exception e) {
+    throw new MessagingException(CoreMessages.failedToInvoke("inboundEndpoint.request()"),event.getMessage(),e);
+  }
+}
