@@ -2,8 +2,10 @@
   stats=createStatistics();
   stats.setEnabled(muleContext.getStatistics().isEnabled());
   muleContext.getStatistics().add(stats);
-  if (outboundRouter != null) {
-    stats.setOutboundRouterStat(outboundRouter.getRouterStatistics());
+  if (outboundRouter != null && outboundRouter instanceof RouterStatisticsRecorder) {
+    RouterStatistics routerStatistics=new RouterStatistics(RouterStatistics.TYPE_OUTBOUND);
+    ((RouterStatisticsRecorder)outboundRouter).setRouterStatistics(routerStatistics);
+    stats.setOutboundRouterStat(routerStatistics);
   }
   stats.setInboundRouterStat(messageSource.getRouterStatistics());
   stats.setComponentStat(component.getStatistics());

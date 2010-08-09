@@ -3,7 +3,7 @@
   MuleSession session=event.getSession();
   MuleEvent result;
   boolean matchfound=false;
-  for (Iterator<OutboundRouter> iterator=getRouters().iterator(); iterator.hasNext(); ) {
+  for (Iterator<MatchableMessageProcessor> iterator=getRoutes().iterator(); iterator.hasNext(); ) {
     OutboundRouter outboundRouter=(OutboundRouter)iterator.next();
     final MuleMessage outboundRouterMessage;
     if (iterator.hasNext() && (isMatchAll() || ((outboundRouter instanceof TransformingMatchable) && ((TransformingMatchable)outboundRouter).isTransformBeforeMatch()))) {
@@ -18,21 +18,14 @@
     if (outboundRouter.isMatch(outboundRouterMessage)) {
       matchfound=true;
       final OutboundRouter router=outboundRouter;
-      TransactionTemplate<MuleEvent> tt=new TransactionTemplate<MuleEvent>(outboundRouter.getTransactionConfig(),muleContext);
-      TransactionCallback<MuleEvent> cb=new TransactionCallback<MuleEvent>(){
-        public MuleEvent doInTransaction() throws Exception {
-          return router.process(event);
-        }
-      }
-;
       try {
-        result=tt.execute(cb);
+        result=router.process(event);
       }
- catch (      RoutingException e) {
+ catch (      MessagingException e) {
         throw e;
       }
 catch (      Exception e) {
-        throw new RoutingException(outboundRouterMessage,null,e);
+        throw new RoutingException(event,router,e);
       }
       if (!isMatchAll()) {
         return result;

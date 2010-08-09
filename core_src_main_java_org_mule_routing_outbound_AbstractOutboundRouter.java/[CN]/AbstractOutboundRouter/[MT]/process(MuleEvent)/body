@@ -1,3 +1,18 @@
 {
-  return route(event);
+  TransactionTemplate<MuleEvent> tt=new TransactionTemplate<MuleEvent>(getTransactionConfig(),muleContext);
+  TransactionCallback<MuleEvent> cb=new TransactionCallback<MuleEvent>(){
+    public MuleEvent doInTransaction() throws Exception {
+      return route(event);
+    }
+  }
+;
+  try {
+    return tt.execute(cb);
+  }
+ catch (  RoutingException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new RoutingException(event,this,e);
+  }
 }
