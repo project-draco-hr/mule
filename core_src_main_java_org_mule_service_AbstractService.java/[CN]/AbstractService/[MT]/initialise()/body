@@ -2,11 +2,15 @@
   try {
     lifecycleManager.fireInitialisePhase(new LifecycleCallback<FlowConstruct>(){
       public void onTransition(      String phaseName,      FlowConstruct object) throws MuleException {
-        ((MuleContextAware)outboundRouter).setMuleContext(muleContext);
+        if (outboundRouter instanceof MuleContextAware) {
+          ((MuleContextAware)outboundRouter).setMuleContext(muleContext);
+        }
         if (exceptionListener == null) {
           exceptionListener=getModel().getExceptionListener();
         }
-        messageSource.setFlowConstruct(object);
+        if (messageSource instanceof FlowConstructAware) {
+          ((FlowConstructAware)messageSource).setFlowConstruct(object);
+        }
         asyncReplyMessageSource.setFlowConstruct(object);
         component.setFlowConstruct(object);
         doInitialise();

@@ -2,12 +2,16 @@
   stats=createStatistics();
   stats.setEnabled(muleContext.getStatistics().isEnabled());
   muleContext.getStatistics().add(stats);
+  RouterStatistics routerStatistics=new RouterStatistics(RouterStatistics.TYPE_OUTBOUND);
+  stats.setOutboundRouterStat(routerStatistics);
   if (outboundRouter != null && outboundRouter instanceof RouterStatisticsRecorder) {
-    RouterStatistics routerStatistics=new RouterStatistics(RouterStatistics.TYPE_OUTBOUND);
     ((RouterStatisticsRecorder)outboundRouter).setRouterStatistics(routerStatistics);
-    stats.setOutboundRouterStat(routerStatistics);
   }
-  stats.setInboundRouterStat(messageSource.getRouterStatistics());
+  RouterStatistics inboundRouterStatistics=new RouterStatistics(RouterStatistics.TYPE_INBOUND);
+  stats.setInboundRouterStat(inboundRouterStatistics);
+  if (messageSource instanceof RouterStatisticsRecorder) {
+    ((RouterStatisticsRecorder)messageSource).setRouterStatistics(inboundRouterStatistics);
+  }
   stats.setComponentStat(component.getStatistics());
   try {
     buildServiceMessageProcessorChain();
@@ -22,7 +26,9 @@
   if (messageProcessorChain instanceof Initialisable) {
     ((Initialisable)messageProcessorChain).initialise();
   }
-  messageSource.initialise();
+  if (messageSource instanceof Initialisable) {
+    ((Initialisable)messageSource).initialise();
+  }
   if (asyncReplyMessageSource.getEndpoints().size() > 0) {
     asyncReplyMessageSource.initialise();
   }

@@ -1,7 +1,7 @@
 {
   Service service=muleContext.getRegistry().lookupService("orangeComponent");
-  assertEquals(1,service.getOutboundRouter().getRoutes().size());
-  OutboundRouter router=(OutboundRouter)service.getOutboundRouter().getRoutes().get(0);
+  assertEquals(1,((OutboundRouterCollection)service.getOutboundMessageProcessor()).getRoutes().size());
+  OutboundRouter router=(OutboundRouter)((OutboundRouterCollection)service.getOutboundMessageProcessor()).getRoutes().get(0);
   assertEquals(1,router.getRoutes().size());
   MessageProcessor mp=router.getRoutes().get(0);
   assertNotNull(mp);
@@ -11,13 +11,13 @@
   assertEquals("appleInEndpoint",endpoint.getName());
   assertNotNull(endpoint.getTransformers());
   assertTrue(TransformerUtils.firstOrNull(endpoint.getTransformers()) instanceof TestCompressionTransformer);
-  assertEquals(2,service.getMessageSource().getEndpoints().size());
-  assertNotNull(service.getMessageSource().getCatchAllStrategy());
-  assertTrue(service.getMessageSource().getCatchAllStrategy() instanceof ForwardingCatchAllStrategy);
-  ForwardingCatchAllStrategy fcas=(ForwardingCatchAllStrategy)service.getMessageSource().getCatchAllStrategy();
+  assertEquals(2,((ServiceCompositeMessageSource)service.getMessageSource()).getEndpoints().size());
+  assertNotNull(((ServiceCompositeMessageSource)service.getMessageSource()).getCatchAllStrategy());
+  assertTrue(((ServiceCompositeMessageSource)service.getMessageSource()).getCatchAllStrategy() instanceof ForwardingCatchAllStrategy);
+  ForwardingCatchAllStrategy fcas=(ForwardingCatchAllStrategy)((ServiceCompositeMessageSource)service.getMessageSource()).getCatchAllStrategy();
   assertNotNull(fcas.getEndpoint());
   assertEquals("test://catch.all",fcas.getEndpoint().getEndpointURI().toString());
-  endpoint=service.getMessageSource().getEndpoint("orangeEndpoint");
+  endpoint=((ServiceCompositeMessageSource)service.getMessageSource()).getEndpoint("orangeEndpoint");
   assertNotNull(endpoint);
   assertEquals("orangeEndpoint",endpoint.getName());
   assertEquals("orangeQ",endpoint.getEndpointURI().getAddress());

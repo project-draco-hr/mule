@@ -1,5 +1,8 @@
 {
-  ImmutableEndpoint endpoint=(ImmutableEndpoint)service.getMessageSource().getEndpoints().get(0);
+  if (!(service.getMessageSource() instanceof ServiceCompositeMessageSource)) {
+    throw new IllegalStateException("Only 'CompositeMessageSource' is supported with MuleClient.sendDirect() and MuleClient.dispatchDirect()");
+  }
+  ImmutableEndpoint endpoint=(ImmutableEndpoint)((ServiceCompositeMessageSource)service.getMessageSource()).getEndpoints().get(0);
   if (endpoint != null) {
     if (endpoint.getTransformers() != null) {
       if (TransformerUtils.isSourceTypeSupportedByFirst(endpoint.getTransformers(),payload.getClass())) {

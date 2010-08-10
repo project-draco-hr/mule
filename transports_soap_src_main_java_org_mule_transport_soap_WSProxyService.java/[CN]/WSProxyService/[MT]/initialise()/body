@@ -1,6 +1,15 @@
 {
   if (service != null) {
-    OutboundRouter router=(OutboundRouter)service.getOutboundRouter().getRoutes().get(0);
+    OutboundRouter router=null;
+    if (service.getOutboundMessageProcessor() instanceof OutboundRouterCollection) {
+      router=(OutboundRouter)((OutboundRouterCollection)service.getOutboundMessageProcessor()).getRoutes().get(0);
+    }
+ else     if (service.getOutboundMessageProcessor() instanceof OutboundRouter) {
+      router=(OutboundRouter)service.getOutboundMessageProcessor();
+    }
+ else {
+      throw new IllegalStateException("WSProxyService is only supported when using an OutboundRouter");
+    }
     ImmutableEndpoint endpoint=(ImmutableEndpoint)router.getRoutes().get(0);
     this.urlWebservice=endpoint.getEndpointURI().getAddress();
     int paramIndex;
