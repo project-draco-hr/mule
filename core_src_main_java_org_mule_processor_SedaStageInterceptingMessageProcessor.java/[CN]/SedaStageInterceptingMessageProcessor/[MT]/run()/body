@@ -21,7 +21,22 @@
         }
       }
       event=(DefaultMuleEvent)dequeue();
-      if (event != null) {
+    }
+ catch (    InterruptedException ie) {
+      queueDraining.set(false);
+      break;
+    }
+catch (    Exception e) {
+      SystemExceptionHandler exceptionListener=muleContext.getExceptionListener();
+      if (e instanceof MuleException) {
+        exceptionListener.handleException(e);
+      }
+ else {
+        exceptionListener.handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getStageDescription()),event,e));
+      }
+    }
+    if (event != null) {
+      try {
         if (isStatsEnabled()) {
           queueStatistics.decQueuedEvent();
         }
@@ -36,18 +51,8 @@
           work.run();
         }
       }
-    }
- catch (    Exception e) {
-      ExceptionListener exceptionListener=muleContext.getExceptionListener();
-      if (e instanceof InterruptedException) {
-        queueDraining.set(false);
-        break;
-      }
-      if (e instanceof MuleException) {
-        exceptionListener.exceptionThrown(e);
-      }
- else {
-        exceptionListener.exceptionThrown(new MessagingException(CoreMessages.eventProcessingFailedFor(getStageDescription()),event,e));
+ catch (      Exception e) {
+        event.getFlowConstruct().getExceptionListener().handleException(e,event);
       }
     }
   }

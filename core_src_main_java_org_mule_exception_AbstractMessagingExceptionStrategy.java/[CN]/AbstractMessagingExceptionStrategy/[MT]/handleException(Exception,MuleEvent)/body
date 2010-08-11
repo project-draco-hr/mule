@@ -1,0 +1,42 @@
+{
+  if (enableNotifications) {
+    fireNotification(new ExceptionNotification(e));
+  }
+  logException(e);
+  handleTransaction(e);
+  Throwable t=getExceptionType(e,RoutingException.class);
+  if (t != null) {
+    RoutingException re=(RoutingException)t;
+    handleRoutingException(re.getMuleMessage(),re.getRoute(),e);
+    event.getMessage().setPayload(NullPayload.getInstance());
+    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+    return event;
+  }
+  t=getExceptionType(e,MessagingException.class);
+  if (t != null) {
+    MessagingException me=(MessagingException)t;
+    handleMessagingException(me.getMuleMessage(),e);
+    event.getMessage().setPayload(NullPayload.getInstance());
+    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+    return event;
+  }
+  t=getExceptionType(e,LifecycleException.class);
+  if (t != null) {
+    LifecycleException le=(LifecycleException)t;
+    handleLifecycleException(le.getComponent(),e);
+    if (RequestContext.getEventContext() != null) {
+      handleMessagingException(RequestContext.getEventContext().getMessage(),e);
+    }
+ else {
+      logger.info("There is no current event available, routing Null message with the exception");
+      handleMessagingException(new DefaultMuleMessage(NullPayload.getInstance(),muleContext),e);
+    }
+    event.getMessage().setPayload(NullPayload.getInstance());
+    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+    return event;
+  }
+  handleStandardException(e);
+  event.getMessage().setPayload(NullPayload.getInstance());
+  event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+  return event;
+}
