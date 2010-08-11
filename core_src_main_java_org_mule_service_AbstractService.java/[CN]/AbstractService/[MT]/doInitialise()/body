@@ -19,7 +19,12 @@
  catch (  MuleException e) {
     throw new InitialisationException(e,this);
   }
-  messageSource.setListener(messageProcessorChain);
+  messageSource.setListener(new AbstractInterceptingMessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      return messageProcessorChain.process(event);
+    }
+  }
+);
   if (component instanceof Initialisable) {
     ((Initialisable)component).initialise();
   }

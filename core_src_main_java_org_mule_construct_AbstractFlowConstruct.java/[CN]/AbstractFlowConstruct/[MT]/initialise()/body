@@ -4,7 +4,12 @@
       public void onTransition(      String phaseName,      FlowConstruct object) throws MuleException {
         createMessageProcessor();
         if (messageSource != null) {
-          messageSource.setListener(messageProcessorChain);
+          messageSource.setListener(new AbstractInterceptingMessageProcessor(){
+            public MuleEvent process(            MuleEvent event) throws MuleException {
+              return messageProcessorChain.process(event);
+            }
+          }
+);
         }
         injectFlowConstructMuleContext(messageSource);
         injectFlowConstructMuleContext(messageProcessorChain);
