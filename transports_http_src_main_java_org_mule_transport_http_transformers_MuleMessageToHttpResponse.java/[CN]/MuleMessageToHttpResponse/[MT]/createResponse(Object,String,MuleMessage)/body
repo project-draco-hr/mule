@@ -43,13 +43,7 @@
   }
   Map customHeaders=msg.getOutboundProperty(HttpConnector.HTTP_CUSTOM_HEADERS_MAP_PROPERTY);
   if (customHeaders != null) {
-    Map.Entry entry;
-    for (Iterator iterator=customHeaders.entrySet().iterator(); iterator.hasNext(); ) {
-      entry=(Map.Entry)iterator.next();
-      if (entry.getValue() != null) {
-        response.setHeader(new Header(entry.getKey().toString(),entry.getValue().toString()));
-      }
-    }
+    throw new TransformerException(HttpMessages.customHeaderMapDeprecated(),this);
   }
   for (  String headerName : msg.getOutboundPropertyNames()) {
     Object v=msg.getOutboundProperty(headerName);
@@ -69,6 +63,11 @@
   if (msg.getReplyTo() != null) {
     response.setHeader(new Header(CUSTOM_HEADER_PREFIX + MuleProperties.MULE_REPLY_TO_PROPERTY,msg.getReplyTo().toString()));
   }
-  response.setBody(msg);
+  try {
+    response.setBody(msg);
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
   return response;
 }

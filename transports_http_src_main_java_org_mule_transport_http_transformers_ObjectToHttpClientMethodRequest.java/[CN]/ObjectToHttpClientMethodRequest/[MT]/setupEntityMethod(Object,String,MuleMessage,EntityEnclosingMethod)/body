@@ -1,0 +1,58 @@
+{
+  if (!(msg.getPayload() instanceof NullPayload)) {
+    String mimeType=(String)msg.getProperty(HttpConstants.HEADER_CONTENT_TYPE,PropertyScope.OUTBOUND);
+    if (mimeType == null) {
+      mimeType=HttpConstants.DEFAULT_CONTENT_TYPE;
+      logger.info("Content-Type not set on outgoing request, defaulting to: " + mimeType);
+    }
+    if (encoding != null && !"UTF-8".equals(encoding.toUpperCase()) && mimeType.indexOf("charset") == -1) {
+      mimeType+="; charset=" + encoding;
+    }
+    String httpVersion=msg.getOutboundProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+    if (HttpConstants.HTTP10.equals(httpVersion)) {
+      try {
+        src=msg.getPayloadAsBytes();
+      }
+ catch (      Exception e) {
+        throw new TransformerException(this,e);
+      }
+    }
+    if (msg.getOutboundAttachmentNames() != null && msg.getOutboundAttachmentNames().size() > 0) {
+      try {
+        postMethod.setRequestEntity(createMultiPart(msg,postMethod));
+        return;
+      }
+ catch (      Exception e) {
+        throw new TransformerException(this,e);
+      }
+    }
+    if (src instanceof String) {
+      postMethod.setRequestEntity(new StringRequestEntity(src.toString(),mimeType,encoding));
+      return;
+    }
+    if (src instanceof InputStream) {
+      postMethod.setRequestEntity(new InputStreamRequestEntity((InputStream)src,mimeType));
+    }
+ else     if (src instanceof byte[]) {
+      postMethod.setRequestEntity(new ByteArrayRequestEntity((byte[])src,mimeType));
+    }
+ else     if (src instanceof OutputHandler) {
+      MuleEvent event=RequestContext.getEvent();
+      postMethod.setRequestEntity(new StreamPayloadRequestEntity((OutputHandler)src,event));
+    }
+ else {
+      byte[] buffer=SerializationUtils.serialize((Serializable)src);
+      postMethod.setRequestEntity(new ByteArrayRequestEntity(buffer,mimeType));
+    }
+  }
+ else   if (msg.getOutboundAttachmentNames() != null && msg.getOutboundAttachmentNames().size() > 0) {
+    try {
+      postMethod.setRequestEntity(createMultiPart(msg,postMethod));
+    }
+ catch (    Exception e) {
+      throw new TransformerException(this,e);
+    }
+  }
+ else {
+  }
+}

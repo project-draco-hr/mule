@@ -1,8 +1,17 @@
 {
-  setHeadersScoped(httpMethod,msg,PropertyScope.INVOCATION);
-  setHeadersScoped(httpMethod,msg,PropertyScope.OUTBOUND);
-  Set attNams=msg.getAttachmentNames();
-  if (msg.getPayload() instanceof InputStream && attNams != null && attNams.size() > 0) {
-    httpMethod.addRequestHeader(HttpConstants.HEADER_CONTENT_TYPE,"multipart/related");
+  String headerValue;
+  for (  String headerName : msg.getOutboundPropertyNames()) {
+    headerValue=ObjectUtils.getString(msg.getOutboundProperty(headerName),null);
+    if (headerName.startsWith(MuleProperties.PROPERTY_PREFIX)) {
+      headerName=new StringBuffer(30).append("X-").append(headerName).toString();
+      httpMethod.addRequestHeader(headerName,headerValue);
+    }
+ else     if (!HttpConstants.RESPONSE_HEADER_NAMES.containsKey(headerName) && !HttpConnector.HTTP_INBOUND_PROPERTIES.contains(headerName)) {
+      httpMethod.addRequestHeader(headerName,headerValue);
+      System.out.println("Added header: " + headerName);
+    }
+ else {
+      System.err.println("Ignorring header: " + headerName);
+    }
   }
 }

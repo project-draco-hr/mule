@@ -1,0 +1,34 @@
+{
+  Part[] parts;
+  int i=0;
+  if (msg.getPayload() instanceof NullPayload) {
+    parts=new Part[msg.getOutboundAttachmentNames().size()];
+  }
+ else {
+    parts=new Part[msg.getOutboundAttachmentNames().size() + 1];
+    parts[i++]=new FilePart("payload",new ByteArrayPartSource("payload",msg.getPayloadAsBytes()));
+  }
+  for (Iterator<String> iterator=msg.getOutboundAttachmentNames().iterator(); iterator.hasNext(); i++) {
+    String name=iterator.next();
+    String fileName=name;
+    DataHandler dh=msg.getOutboundAttachment(name);
+    if (dh.getDataSource() instanceof StringDataSource) {
+      StringDataSource ds=(StringDataSource)dh.getDataSource();
+      parts[i]=new StringPart(ds.getName(),IOUtils.toString(ds.getInputStream()));
+    }
+ else {
+      if (dh.getDataSource() instanceof FileDataSource) {
+        fileName=((FileDataSource)dh.getDataSource()).getFile().getName();
+      }
+ else       if (dh.getDataSource() instanceof URLDataSource) {
+        fileName=((URLDataSource)dh.getDataSource()).getURL().getFile();
+        int x=fileName.lastIndexOf("/");
+        if (x > -1) {
+          fileName=fileName.substring(x + 1);
+        }
+      }
+      parts[i]=new FilePart(dh.getName(),new ByteArrayPartSource(fileName,IOUtils.toByteArray(dh.getInputStream())),dh.getContentType(),null);
+    }
+  }
+  return new MultipartRequestEntity(parts,method.getParams());
+}
