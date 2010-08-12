@@ -1,0 +1,27 @@
+{
+  try {
+    if (notification.getAction() == MuleContextNotification.CONTEXT_STARTED) {
+      if (muleContext.getRegistry().lookupService(AXIS_SERVICE_PROPERTY + getName()) == null) {
+        if (axisComponent == null) {
+          axisComponent=getOrCreateAxisComponent();
+        }
+        muleContext.getRegistry().registerService(axisComponent);
+        for (Iterator iterator=servletServices.iterator(); iterator.hasNext(); ) {
+          SOAPService service=(SOAPService)iterator.next();
+          ServletConnector servletConnector=(ServletConnector)new TransportFactory(muleContext).getConnectorByProtocol("servlet");
+          String url=servletConnector.getServletUrl();
+          if (url != null) {
+            service.getServiceDescription().setEndpointURL(url + "/" + service.getName());
+          }
+ else {
+            logger.error("The servletUrl property on the ServletConntector has not been set this means that wsdl generation for service '" + service.getName() + "' may be incorrect");
+          }
+        }
+        servletServices.clear();
+      }
+    }
+  }
+ catch (  MuleException e) {
+    handleException(e);
+  }
+}
