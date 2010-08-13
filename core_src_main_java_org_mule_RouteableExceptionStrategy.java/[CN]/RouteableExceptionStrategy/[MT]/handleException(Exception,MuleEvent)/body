@@ -1,0 +1,77 @@
+{
+  int currentRootExceptionHashCode=0;
+  int originalRootExceptionHashCode=0;
+  MuleMessage msg=null;
+  StringBuffer logInfo=new StringBuffer();
+  try {
+    logInfo.append("****++******Alternate Exception Strategy******++*******\n");
+    logInfo.append("Current Thread = " + Thread.currentThread().toString() + "\n");
+    if (event != null && event.getFlowConstruct() != null) {
+      String serviceName=event.getFlowConstruct().getName();
+      logInfo.append("serviceName = " + serviceName + "\n");
+      int eventHashCode=event.hashCode();
+      logInfo.append("eventHashCode = " + eventHashCode + "\n");
+    }
+    if (event != null && event.isStopFurtherProcessing()) {
+      logInfo.append("MuleEvent stop further processing has been set, This is probably the same exception being routed again. no Exception routing will be performed.\n" + e + "\n");
+      event.getMessage().setPayload(NullPayload.getInstance());
+      event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+      return event;
+    }
+    Throwable root=ExceptionUtils.getRootCause(e);
+    currentRootExceptionHashCode=root == null ? -1 : root.hashCode();
+    msg=event == null ? null : event.getMessage();
+    if (msg != null) {
+      int msgHashCode=msg.hashCode();
+      logInfo.append("msgHashCode = " + msgHashCode + "\n");
+      if (msg.getExceptionPayload() != null) {
+        Throwable t=msg.getExceptionPayload().getRootException();
+        if (t != null && t.hashCode() == currentRootExceptionHashCode) {
+          logInfo.append("*#*#*#*#*\n");
+          logInfo.append("This error has already been handeled, returning without doing anything: " + e.getMessage() + "\n");
+          logInfo.append("*#*#*#*#*\n");
+          originalRootExceptionHashCode=currentRootExceptionHashCode;
+          event.getMessage().setPayload(NullPayload.getInstance());
+          event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+          return event;
+        }
+      }
+      originalRootExceptionHashCode=msg.getIntProperty("RootExceptionHashCode",0);
+      logInfo.append("Original RootExceptionHashCode: " + originalRootExceptionHashCode + "\n");
+      logInfo.append("Current  RootExceptionHashCode: " + currentRootExceptionHashCode + "\n");
+      if (originalRootExceptionHashCode == 0) {
+        msg.setIntProperty("RootExceptionHashCode",currentRootExceptionHashCode);
+        originalRootExceptionHashCode=currentRootExceptionHashCode;
+      }
+ else       if (originalRootExceptionHashCode == currentRootExceptionHashCode) {
+        logInfo.append("*#*#*#*#*\n");
+        logInfo.append("This error has already been handeled, returning without doing anything: " + e.getMessage() + "\n");
+        logInfo.append("*#*#*#*#*\n");
+        event.getMessage().setPayload(NullPayload.getInstance());
+        event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+        return event;
+      }
+ else {
+        msg.setIntProperty("RootExceptionHashCode",currentRootExceptionHashCode);
+      }
+    }
+    logInfo.append(e.getMessage());
+    StackTraceElement[] st=e.getStackTrace();
+    for (int i=0; i < st.length; i++) {
+      if (st[i].getClassName().equals("org.mule.AlternateExceptionStrategy")) {
+        logger.warn("*#*#*#*#*\n" + "Recursive error in AlternateExceptionStrategy " + e + "\n"+ "*#*#*#*#*");
+        event.getMessage().setPayload(NullPayload.getInstance());
+        event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+        return event;
+      }
+      logger.debug(st[i].toString());
+    }
+    return super.handleException(e,event);
+  }
+  finally {
+    if (event != null && this.stopFurtherProcessing)     event.setStopFurtherProcessing(true);
+    if (msg != null && currentRootExceptionHashCode != 0 && currentRootExceptionHashCode != originalRootExceptionHashCode)     msg.setIntProperty("RootExceptionHashCode",currentRootExceptionHashCode);
+    logInfo.append("****__******Alternate Exception Strategy******__*******\n");
+    logger.debug(logInfo.toString());
+  }
+}

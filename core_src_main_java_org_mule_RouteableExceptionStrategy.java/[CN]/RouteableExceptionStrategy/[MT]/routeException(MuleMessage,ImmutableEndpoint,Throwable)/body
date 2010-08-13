@@ -1,0 +1,19 @@
+{
+  MuleMessage contextMsg=null;
+  MuleEvent exceptionEvent=RequestContext.getEvent();
+  contextMsg=exceptionEvent == null ? msg : exceptionEvent.getMessage();
+  if (contextMsg == null) {
+    contextMsg=new DefaultMuleMessage(NullPayload.getInstance(),muleContext);
+    contextMsg.setExceptionPayload(new DefaultExceptionPayload(t));
+  }
+  if (exceptionEvent == null) {
+    exceptionEvent=new DefaultMuleEvent(contextMsg,failedEndpoint,new DefaultMuleSession(muleContext));
+  }
+  DefaultMuleMessage messageCopy=new DefaultMuleMessage(contextMsg.getPayload(),contextMsg,muleContext);
+  try {
+    router.process(exceptionEvent);
+  }
+ catch (  MuleException e) {
+    logFatal(messageCopy,e);
+  }
+}
