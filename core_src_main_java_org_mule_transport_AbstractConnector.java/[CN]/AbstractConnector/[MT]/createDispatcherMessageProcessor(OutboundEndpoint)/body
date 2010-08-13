@@ -7,31 +7,6 @@
     }
   }
 ,getDispatcherThreadingProfile().isDoThreading()));
-  builder.chain(new MessageProcessor(){
-    private MessageProcessor notificationMessageProcessor;
-    public MuleEvent process(    MuleEvent event) throws MuleException {
-      OutboundEndpoint endpoint=(OutboundEndpoint)event.getEndpoint();
-      MessageDispatcher dispatcher=null;
-      try {
-        dispatcher=getDispatcher(endpoint);
-        MuleEvent result=dispatcher.process(event);
-        if (notificationMessageProcessor == null) {
-          notificationMessageProcessor=new OutboundNotificationMessageProcessor(endpoint);
-        }
-        notificationMessageProcessor.process(event);
-        return result;
-      }
- catch (      DispatchException dex) {
-        throw dex;
-      }
-catch (      MuleException ex) {
-        throw new DispatchException(event,endpoint,ex);
-      }
- finally {
-        returnDispatcher(endpoint,dispatcher);
-      }
-    }
-  }
-);
+  builder.chain(new DispatcherMessageProcessor());
   return builder.build();
 }
