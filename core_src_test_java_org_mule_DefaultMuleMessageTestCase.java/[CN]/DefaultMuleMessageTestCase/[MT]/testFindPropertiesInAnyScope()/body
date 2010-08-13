@@ -1,19 +1,25 @@
 {
   MuleMessage message=createMuleMessage();
   message.removeProperty("MuleMessage",PropertyScope.OUTBOUND);
+  RequestContext.setEvent(new DefaultMuleEvent(message,getTestInboundEndpoint("foo"),new DefaultMuleSession(muleContext)));
   message.setOutboundProperty("foo","fooOutbound");
   message.setInvocationProperty("bar","barInvocation");
   message.setInvocationProperty("foo","fooInvocation");
   message.setInboundProperty("foo","fooInbound");
+  message.setSessionProperty("foo","fooSession");
   assertEquals(2,message.getInvocationPropertyNames().size());
   assertEquals(1,message.getOutboundPropertyNames().size());
   assertEquals(1,message.getInboundPropertyNames().size());
+  assertEquals(1,message.getSessionPropertyNames().size());
   String value=message.findPropertyInAnyScope("foo",null);
   assertEquals("fooOutbound",value);
   message.removeProperty("foo",PropertyScope.OUTBOUND);
   value=message.findPropertyInAnyScope("foo",null);
   assertEquals("fooInvocation",value);
   message.removeProperty("foo",PropertyScope.INVOCATION);
+  value=message.findPropertyInAnyScope("foo",null);
+  assertEquals("fooSession",value);
+  message.removeProperty("foo",PropertyScope.SESSION);
   value=message.findPropertyInAnyScope("foo",null);
   assertEquals("fooInbound",value);
   value=message.findPropertyInAnyScope("bar",null);
