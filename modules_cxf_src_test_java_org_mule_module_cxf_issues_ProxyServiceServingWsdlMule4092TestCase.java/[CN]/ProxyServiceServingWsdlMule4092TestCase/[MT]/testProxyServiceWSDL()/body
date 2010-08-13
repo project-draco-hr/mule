@@ -2,5 +2,21 @@
   String expected=getXML("issues/" + expectedWsdlFileName);
   URL url=new URL("http://localhost:8777/services/onlinestore?wsdl");
   String wsdlFromService=IOUtils.toString(url.openStream());
-  assertTrue(compareResults(expected,wsdlFromService));
+  Document expectedDom=buildDOM(expected);
+  Document actualDom=buildDOM(wsdlFromService);
+  Element topElement=expectedDom.getDocumentElement();
+  String wsdlNamespace=topElement.getNamespaceURI();
+  assertEquals(wsdlNamespace,actualDom.getDocumentElement().getNamespaceURI());
+  assertEquals(topElement.getLocalName(),actualDom.getDocumentElement().getLocalName());
+  Element expectedService=(Element)expectedDom.getElementsByTagNameNS(wsdlNamespace,"service").item(0);
+  Element actualService=(Element)actualDom.getElementsByTagNameNS(wsdlNamespace,"service").item(0);
+  assertNotNull(actualService);
+  assertEquals(expectedService.getAttribute("name"),actualService.getAttribute("name"));
+  Element expectedPort=(Element)expectedDom.getElementsByTagNameNS(wsdlNamespace,"port").item(0);
+  Element actualPort=(Element)actualDom.getElementsByTagNameNS(wsdlNamespace,"port").item(0);
+  assertNotNull(actualPort);
+  assertEquals(expectedPort.getAttribute("name"),actualPort.getAttribute("name"));
+  int expectedNumberOfMessages=expectedDom.getElementsByTagNameNS(wsdlNamespace,"message").getLength();
+  int actualNumberOfmMessages=actualDom.getElementsByTagNameNS(wsdlNamespace,"message").getLength();
+  assertEquals(expectedNumberOfMessages,actualNumberOfmMessages);
 }
