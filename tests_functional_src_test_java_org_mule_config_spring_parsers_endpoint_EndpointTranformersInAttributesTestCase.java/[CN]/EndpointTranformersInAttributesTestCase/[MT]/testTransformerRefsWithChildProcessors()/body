@@ -1,0 +1,25 @@
+{
+  Service service=muleContext.getRegistry().lookupService("transformerRefsWithChildProcessors");
+  ImmutableEndpoint endpoint=((ServiceCompositeMessageSource)service.getMessageSource()).getEndpoints().get(0);
+  List<MessageProcessor> processors=endpoint.getMessageProcessors();
+  assertNotNull(processors);
+  assertEquals(2,processors.size());
+  assertTrue(processors.get(0) instanceof StringAppendTransformer);
+  assertTrue(processors.get(1) instanceof TestInboundTransformer);
+  processors=endpoint.getResponseMessageProcessors();
+  assertNotNull(processors);
+  assertEquals(2,processors.size());
+  assertTrue(processors.get(0) instanceof StringAppendTransformer);
+  assertTrue(processors.get(1) instanceof TestResponseTransformer);
+  endpoint=(ImmutableEndpoint)((OutboundPassThroughRouter)((OutboundRouterCollection)service.getOutboundMessageProcessor()).getRoutes().get(0)).getRoutes().get(0);
+  processors=endpoint.getMessageProcessors();
+  assertNotNull(processors);
+  assertEquals(2,processors.size());
+  assertTrue(processors.get(0) instanceof MessagePropertiesTransformer);
+  assertTrue(processors.get(1) instanceof TestInboundTransformer);
+  processors=endpoint.getResponseMessageProcessors();
+  assertNotNull(processors);
+  assertEquals(2,processors.size());
+  assertTrue(processors.get(0) instanceof MessagePropertiesTransformer);
+  assertTrue(processors.get(1) instanceof TestResponseTransformer);
+}
