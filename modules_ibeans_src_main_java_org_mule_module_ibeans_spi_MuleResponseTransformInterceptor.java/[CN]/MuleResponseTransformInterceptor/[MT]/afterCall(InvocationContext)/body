@@ -27,8 +27,14 @@
       finalResult=result;
     }
  else {
-      Transformer transformer=muleContext.getRegistry().lookupTransformer(DataTypeFactory.createFromObject(result.getMessage()),requiredType);
-      finalResult=transformer.transform(result.getPayload());
+      DataType sourceType=DataTypeFactory.createFromObject(result.getMessage());
+      if (requiredType.isCompatibleWith(sourceType)) {
+        finalResult=result.getPayload();
+      }
+ else {
+        Transformer transformer=muleContext.getRegistry().lookupTransformer(sourceType,requiredType);
+        finalResult=transformer.transform(result.getPayload());
+      }
     }
   }
   invocationContext.setResult(finalResult);
