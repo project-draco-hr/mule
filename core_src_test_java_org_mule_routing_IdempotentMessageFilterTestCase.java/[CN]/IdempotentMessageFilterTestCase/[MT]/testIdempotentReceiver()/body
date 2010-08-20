@@ -1,11 +1,12 @@
 {
-  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?synchronous=false");
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?exchangePattern=one-way");
   Mock session=MuleTestUtils.getMockSession();
   Service service=getTestService();
   session.matchAndReturn("getFlowConstruct",service);
   IdempotentMessageFilter ir=new IdempotentMessageFilter();
   ir.setIdExpression("#[header:id]");
   ir.setFlowConstruct(service);
+  ir.setThrowOnUnaccepted(false);
   MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
   okMessage.setOutboundProperty("id","1");
   MuleEvent event=new DefaultMuleEvent(okMessage,endpoint1,(MuleSession)session.proxy());
