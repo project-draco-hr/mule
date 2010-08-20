@@ -1,11 +1,14 @@
 {
   Object replyTo=message.getReplyTo();
-  ReplyToHandler replyToHandler=null;
   if (replyTo != null) {
-    replyToHandler=((AbstractConnector)endpoint.getConnector()).getReplyToHandler(endpoint);
-    if (endpoint.getResponseTransformers() != null) {
-      replyToHandler.setTransformers(endpoint.getResponseTransformers());
+    if (cachedReplyToHandler.get() == null) {
+      ReplyToHandler replyToHandler=((AbstractConnector)endpoint.getConnector()).getReplyToHandler(endpoint);
+      if (endpoint.getResponseTransformers() != null) {
+        replyToHandler.setTransformers(endpoint.getResponseTransformers());
+      }
+      cachedReplyToHandler.compareAndSet(null,replyToHandler);
     }
+    return cachedReplyToHandler.get();
   }
-  return replyToHandler;
+  return null;
 }
