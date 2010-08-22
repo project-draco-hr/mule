@@ -1,30 +1,18 @@
 {
-  Object result=null;
-  Object payload=message.getPayload();
-  JXPathContext context=JXPathContext.newContext(message.getPayload());
-  if (namespaceManager != null) {
-    addNamespaces(namespaceManager,context);
-  }
-  Document doc;
+  Document document;
   try {
-    doc=XMLUtils.toDocument(payload,muleContext);
+    document=XMLUtils.toW3cDocument(message.getPayload());
   }
  catch (  Exception e) {
     logger.error(e);
     return null;
   }
-  if (doc != null) {
-    result=doc.valueOf(name);
+  JXPathContext context;
+  if (document != null) {
+    context=createContextForXml(document);
   }
  else {
-    try {
-      result=context.getValue(name);
-    }
- catch (    Exception e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("failed to process JXPath expression: " + name,e);
-      }
-    }
+    context=createContextForBean(message.getPayload());
   }
-  return result;
+  return getExpressionValue(context,expression);
 }
