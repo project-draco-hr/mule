@@ -1,0 +1,25 @@
+{
+  LocalMuleClient client=muleContext.getClient();
+  client.send("vm://in","FAIL",null);
+  final Latch latch=new Latch();
+  TestExceptionStrategy connectorExceptionListener=(TestExceptionStrategy)muleContext.getExceptionListener();
+  connectorExceptionListener.setExceptionCallback(new ExceptionCallback(){
+    public void onException(    Throwable t){
+      connectorExceptionCounter.incrementAndGet();
+      latch.countDown();
+    }
+  }
+);
+  TestExceptionStrategy serviceExceptionListener=(TestExceptionStrategy)muleContext.getRegistry().lookupService("SomeService").getExceptionListener();
+  serviceExceptionListener.setExceptionCallback(new ExceptionCallback(){
+    public void onException(    Throwable t){
+      serviceExceptionCounter.incrementAndGet();
+      latch.countDown();
+    }
+  }
+);
+  latch.await();
+  Thread.sleep(1000);
+  assertEquals(0,serviceExceptionCounter.get());
+  assertEquals(1,connectorExceptionCounter.get());
+}
