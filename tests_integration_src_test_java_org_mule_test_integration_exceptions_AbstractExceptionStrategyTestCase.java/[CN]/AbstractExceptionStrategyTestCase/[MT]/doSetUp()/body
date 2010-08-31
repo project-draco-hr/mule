@@ -1,0 +1,24 @@
+{
+  super.doSetUp();
+  client=muleContext.getClient();
+  systemExceptionCounter.set(0);
+  serviceExceptionCounter.set(0);
+  latch=new Latch();
+  TestExceptionStrategy systemExceptionListener=new TestExceptionStrategy();
+  systemExceptionListener.setExceptionCallback(new ExceptionCallback(){
+    public void onException(    Throwable t){
+      systemExceptionCounter.incrementAndGet();
+      latch.countDown();
+    }
+  }
+);
+  muleContext.setExceptionListener(systemExceptionListener);
+  TestExceptionStrategy serviceExceptionListener=(TestExceptionStrategy)muleContext.getRegistry().lookupModel("TestModel").getExceptionListener();
+  serviceExceptionListener.setExceptionCallback(new ExceptionCallback(){
+    public void onException(    Throwable t){
+      serviceExceptionCounter.incrementAndGet();
+      latch.countDown();
+    }
+  }
+);
+}
