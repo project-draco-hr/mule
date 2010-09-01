@@ -1,6 +1,7 @@
 {
-  final String wsdl=new String(FileCopyUtils.copyToByteArray((InputStream)muleClient.request("http://localhost:6099/weather-forecast?wsdl",getTestTimeoutSecs() * 1000L).getPayload()));
-  assertTrue(wsdl.contains("GetWeatherByZipCode"));
-  final String weatherForecast=muleClient.send("wsdl-cxf:http://localhost:6099/weather-forecast?wsdl&method=GetWeatherByZipCode","95050",null,getTestTimeoutSecs() * 1000).getPayloadAsString();
-  assertEquals(new WeatherForecaster().getByZipCode("95050"),weatherForecast);
+  final Map<String,Object> props=new HashMap<String,Object>();
+  props.put(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_POST);
+  props.put(HttpConstants.HEADER_CONTENT_TYPE,"application/xml");
+  final MuleMessage result=muleClient.send("http://localhost:6099/rest/weather-report","<fake_report/>",props);
+  assertEquals((Integer)201,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
 }
