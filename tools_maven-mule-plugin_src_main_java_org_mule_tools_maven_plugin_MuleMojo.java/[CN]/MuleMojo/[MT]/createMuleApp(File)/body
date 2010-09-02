@@ -1,0 +1,44 @@
+{
+  final MuleArchiver archiver=new MuleArchiver();
+  final File muleConfig=new File(appDirectory,"mule-config.xml");
+  if (!muleConfig.exists()) {
+    final String message="No muleConfig.xml available at: " + muleConfig;
+    getLog().error(message);
+    throw new MojoExecutionException(message);
+  }
+  archiver.addResources(appDirectory);
+  if (!this.archiveClasses) {
+    getLog().info("Copying classes directly");
+    archiver.addClasses(this.classesDirectory,null,null);
+  }
+ else {
+    getLog().info("Copying classes as a jar");
+    final JarArchiver jarArchiver=new JarArchiver();
+    jarArchiver.addDirectory(this.classesDirectory,null,null);
+    final File jar=new File(this.outputDirectory,this.finalName + ".jar");
+    jarArchiver.setDestFile(jar);
+    try {
+      jarArchiver.createArchive();
+      archiver.addLib(jar);
+    }
+ catch (    IOException e) {
+      final String message="Cannot create project jar";
+      getLog().error(message,e);
+      throw new MojoExecutionException(message,e);
+    }
+  }
+  for (  final Artifact artifact : (Set<Artifact>)this.project.getArtifacts()) {
+    if (Artifact.SCOPE_COMPILE.equals(artifact.getScope()) || Artifact.SCOPE_RUNTIME.equals(artifact.getScope())) {
+      getLog().info("Adding <" + artifact.getGroupId() + ":"+ artifact.getArtifactId()+ ":"+ artifact.getVersion()+ "> as a lib");
+      archiver.addLib(artifact.getFile());
+    }
+  }
+  archiver.setDestFile(app);
+  try {
+    app.delete();
+    archiver.createArchive();
+  }
+ catch (  IOException e) {
+    getLog().error("Cannot create archive",e);
+  }
+}
