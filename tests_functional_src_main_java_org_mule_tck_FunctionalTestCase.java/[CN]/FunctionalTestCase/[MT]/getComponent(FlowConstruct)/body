@@ -5,7 +5,13 @@
  else   if (flowConstruct instanceof SimpleService) {
     return getComponentObject(((SimpleService)flowConstruct).getComponent());
   }
- else {
-    throw new RegistrationException(MessageFactory.createStaticMessage("Can't get component from flow construct " + flowConstruct.getName()));
+ else   if (flowConstruct instanceof SimpleFlowConstruct) {
+    SimpleFlowConstruct flow=(SimpleFlowConstruct)flowConstruct;
+    for (    MessageProcessor processor : flow.getMessageProcessors()) {
+      if (processor instanceof Component) {
+        return getComponentObject(((Component)processor));
+      }
+    }
   }
+  throw new RegistrationException(MessageFactory.createStaticMessage("Can't get component from flow construct " + flowConstruct.getName()));
 }
