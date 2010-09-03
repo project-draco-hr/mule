@@ -1,0 +1,32 @@
+{
+  setMuleContext(event.getMuleContext());
+  List<MuleMessage> messages=new ArrayList<MuleMessage>();
+  if (event.getMessage().getInboundProperty("Content-Length",-1) == 0) {
+    logger.info("Feed has no content, ignoring");
+    return messages;
+  }
+  try {
+    Object payload=event.getMessage().getPayload();
+    SyndFeed feed;
+    if (payload instanceof SyndFeed) {
+      feed=(SyndFeed)payload;
+    }
+ else {
+      feed=(SyndFeed)objectToFeed.transform(event.getMessage().getPayload());
+    }
+    Set<SyndEntry> entries=new TreeSet<SyndEntry>(new EntryComparator());
+    entries.addAll(feed.getEntries());
+    for (    SyndEntry entry : entries) {
+      MuleMessage m=new DefaultMuleMessage(entry,event.getMuleContext());
+      if (entryFilter != null && !entryFilter.accept(m)) {
+        continue;
+      }
+      m.setProperty(FEED_PROPERTY,feed,PropertyScope.INVOCATION);
+      messages.add(m);
+    }
+    return messages;
+  }
+ catch (  MuleException e) {
+    throw new MessagingException(e.getI18nMessage(),event,e);
+  }
+}
