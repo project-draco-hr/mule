@@ -1,0 +1,30 @@
+{
+  if (!accept(event)) {
+    throw new MessagingException(CoreMessages.unexpectedMIMEType(event.getMessage().getInboundProperty("Content-Type",""),acceptedContentTypes.toString()),event);
+  }
+  try {
+    Object payload=event.getMessage().getPayload();
+    Feed feed;
+    if (payload instanceof Feed) {
+      feed=(Feed)payload;
+    }
+ else {
+      feed=(Feed)objectToFeed.transform(event.getMessage().getPayload());
+    }
+    List<MuleMessage> messages=new ArrayList<MuleMessage>();
+    Set<Entry> entries=new TreeSet<Entry>(new EntryComparator());
+    entries.addAll(feed.getEntries());
+    for (    Entry entry : entries) {
+      MuleMessage m=new DefaultMuleMessage(entry,event.getMuleContext());
+      if (entryFilter != null && !entryFilter.accept(m)) {
+        continue;
+      }
+      m.setInvocationProperty(FEED_PROPERTY,feed);
+      messages.add(m);
+    }
+    return messages;
+  }
+ catch (  TransformerException e) {
+    throw new MessagingException(e.getI18nMessage(),event,e);
+  }
+}
