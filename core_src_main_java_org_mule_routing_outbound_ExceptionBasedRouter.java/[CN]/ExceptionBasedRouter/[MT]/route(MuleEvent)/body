@@ -33,10 +33,10 @@
     request=new DefaultMuleMessage(message.getPayload(),message,muleContext);
     endpoint=getRecipientEndpoint(request,iterator.next());
     boolean lastEndpoint=!iterator.hasNext();
-    if (!lastEndpoint) {
-      logger.info("Sync mode will be forced for " + endpoint.getEndpointURI() + ", as there are more targets available.");
+    if (!lastEndpoint && !endpoint.getExchangePattern().hasResponse()) {
+      throw new CouldNotRouteOutboundMessageException(MessageFactory.createStaticMessage("The ExceptionBasedRouter does not support asynchronous endpoints, make sure all endpoints on the router are configured as synchronous"),event,endpoint);
     }
-    if (!lastEndpoint || endpoint.getExchangePattern().hasResponse()) {
+    if (endpoint.getExchangePattern().hasResponse()) {
       try {
         MuleMessage resultMessage=null;
         result=sendRequest(event,request,endpoint,true);
