@@ -1,8 +1,9 @@
 {
-  MuleClient client=muleContext.getClient();
-  MuleMessage result=client.send("ibean://hostip.getHostInfo",new StringBuffer(),null);
-  assertNotNull(result);
-  assertNotNull("Local call should throw exception since there will be no matching method called getHostInfo(StringBuffer)",result.getExceptionPayload());
-  assertTrue(result.getExceptionPayload().getException() instanceof DispatchException);
-  assertTrue(result.getExceptionPayload().getRootException() instanceof NoSuchMethodException);
+  try {
+    muleContext.getClient().send("ibean://hostip.getHostInfo",new StringBuffer(),null);
+    fail("Local call should throw exception since there will be no matching method called getHostInfo(StringBuffer)");
+  }
+ catch (  DispatchException e) {
+    assertTrue(e.getCause() instanceof NoSuchMethodException);
+  }
 }

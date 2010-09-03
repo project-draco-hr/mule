@@ -1,12 +1,14 @@
 {
   MuleClient client=new MuleClient(muleContext);
-  MuleMessage result=client.send("cxf:http://localhost:63181/services/CxfWithExceptionStrategy?method=testCxfException","TEST",null);
-  assertNotNull(result);
-  assertNotNull("Exception expected",result.getExceptionPayload());
-  assertTrue(result.getExceptionPayload().getException() instanceof MessagingException);
-  assertTrue(result.getExceptionPayload().getRootException() instanceof CxfEnabledFaultMessage);
-  CxfEnabledFaultMessage cxfMsg=(CxfEnabledFaultMessage)result.getExceptionPayload().getRootException();
-  CustomFault fault=cxfMsg.getFaultInfo();
-  assertNotNull(fault);
-  assertEquals("Custom Exception Message",fault.getDescription());
+  try {
+    client.send("cxf:http://localhost:63181/services/CxfWithExceptionStrategy?method=testCxfException","TEST",null);
+    fail("Exception expected");
+  }
+ catch (  MessagingException e) {
+    Throwable t=e.getCause().getCause();
+    assertTrue(t instanceof CxfEnabledFaultMessage);
+    CustomFault fault=((CxfEnabledFaultMessage)t).getFaultInfo();
+    assertNotNull(fault);
+    assertEquals("Custom Exception Message",fault.getDescription());
+  }
 }

@@ -1,12 +1,13 @@
 {
   MuleClient client=new MuleClient(muleContext);
-  if (!canSendWithoutReceiver) {
-    MuleMessage result=client.send(endpoint,"Test Client Send message",null);
-    assertNotNull(result);
-    assertNotNull("There is no receiver for this endpointUri",result.getExceptionPayload());
-    Throwable e=result.getExceptionPayload().getException();
-    assertTrue(e instanceof DispatchException);
-    assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+  try {
+    client.send(endpoint,"Test Client Send message",null);
+  }
+ catch (  DispatchException e) {
+    if (!canSendWithoutReceiver) {
+      assertTrue(e instanceof DispatchException);
+      assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+    }
   }
   Service c=muleContext.getRegistry().lookupService(component);
   c.start();
@@ -14,12 +15,13 @@
   assertNotNull(message);
   assertEquals("Received: Test Client Send message",message.getPayloadAsString());
   c.stop();
-  if (!canSendWithoutReceiver) {
-    MuleMessage result=client.send(endpoint,"Test Client Send message",null);
-    assertNotNull(result);
-    assertNotNull("There is no receiver for this endpointUri",result.getExceptionPayload());
-    Throwable e=result.getExceptionPayload().getException();
-    assertTrue(e instanceof DispatchException);
-    assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+  try {
+    client.send(endpoint,"Test Client Send message",null);
+  }
+ catch (  DispatchException e) {
+    if (!canSendWithoutReceiver) {
+      assertTrue(e instanceof DispatchException);
+      assertTrue(e.getCause() instanceof NoReceiverForEndpointException);
+    }
   }
 }

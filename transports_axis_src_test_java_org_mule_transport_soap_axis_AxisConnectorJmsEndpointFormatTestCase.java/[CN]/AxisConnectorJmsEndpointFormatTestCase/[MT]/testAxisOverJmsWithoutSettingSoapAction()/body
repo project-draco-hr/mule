@@ -1,9 +1,10 @@
 {
-  MuleClient client=new MuleClient(muleContext);
-  MuleMessage result=client.send("noSoapActionDefined",new DefaultMuleMessage("test4",muleContext));
-  assertNotNull(result);
-  assertNotNull("Exception expected",result.getExceptionPayload());
-  assertTrue(result.getExceptionPayload().getException() instanceof DispatchException);
-  assertTrue(result.getExceptionPayload().getRootException() instanceof AxisFault);
-  assertTrue(result.getExceptionPayload().getRootException().getMessage().startsWith("The AXIS engine could not find a target service to invoke!"));
+  try {
+    new MuleClient(muleContext).send("noSoapActionDefined",new DefaultMuleMessage("test4",muleContext));
+    fail("Exception expected");
+  }
+ catch (  DispatchException e) {
+    assertTrue(e.getCause() instanceof AxisFault);
+    assertTrue(e.getCause().getMessage().startsWith("The AXIS engine could not find a target service to invoke!"));
+  }
 }
