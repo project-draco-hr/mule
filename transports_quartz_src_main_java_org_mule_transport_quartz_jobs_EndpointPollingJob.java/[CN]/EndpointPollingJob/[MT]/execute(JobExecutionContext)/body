@@ -29,16 +29,23 @@
   }
   try {
     logger.debug("Attempting to receive event on: " + jobConfig.getEndpointRef());
-    final EndpointBuilder epBuilder=muleContext.getRegistry().lookupEndpointBuilder(jobConfig.getEndpointRef());
-    final boolean pollGlobalEndpoint=epBuilder != null;
-    InboundEndpoint endpoint=null;
     TransactionTemplate<Void> tt;
-    if (pollGlobalEndpoint) {
-      endpoint=epBuilder.buildInboundEndpoint();
-      tt=new TransactionTemplate<Void>(endpoint.getTransactionConfig(),muleContext);
+    final AtomicBoolean pollGlobalEndpoint=new AtomicBoolean(false);
+    InboundEndpoint endpoint=muleContext.getRegistry().lookupObject(jobConfig.getEndpointRef() + ".quartz-job");
+    if (endpoint == null) {
+      final EndpointBuilder epBuilder=muleContext.getRegistry().lookupEndpointBuilder(jobConfig.getEndpointRef());
+      pollGlobalEndpoint.set(epBuilder != null);
+      if (pollGlobalEndpoint.get()) {
+        endpoint=epBuilder.buildInboundEndpoint();
+        muleContext.getRegistry().registerObject(jobConfig.getEndpointRef() + ".quartz-job",endpoint);
+        tt=new TransactionTemplate<Void>(endpoint.getTransactionConfig(),muleContext);
+      }
+ else {
+        tt=new TransactionTemplate<Void>(new MuleTransactionConfig(),muleContext);
+      }
     }
  else {
-      tt=new TransactionTemplate<Void>(new MuleTransactionConfig(),muleContext);
+      tt=new TransactionTemplate<Void>(endpoint.getTransactionConfig(),muleContext);
     }
     final InboundEndpoint finalEndpoint=endpoint;
     TransactionCallback<Void> cb=new TransactionCallback<Void>(){
@@ -48,7 +55,7 @@
           tx.begin();
         }
         MuleMessage result=null;
-        if (pollGlobalEndpoint) {
+        if (pollGlobalEndpoint.get()) {
           result=finalEndpoint.getConnector().request(finalEndpoint,jobConfig.getTimeout());
         }
  else {
@@ -59,7 +66,7 @@
           if (logger.isDebugEnabled()) {
             logger.debug("Received event on: " + jobConfig.getEndpointRef());
           }
-          if (pollGlobalEndpoint) {
+          if (pollGlobalEndpoint.get()) {
             result.applyTransformers(null,finalEndpoint.getTransformers());
           }
           result=(MuleMessage)((ThreadSafeAccess)result).newThreadCopy();
