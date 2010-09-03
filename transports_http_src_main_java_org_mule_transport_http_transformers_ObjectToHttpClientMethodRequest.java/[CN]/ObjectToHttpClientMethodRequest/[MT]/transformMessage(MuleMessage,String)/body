@@ -1,9 +1,5 @@
 {
   Object src=msg.getPayload();
-  String endpoint=msg.getOutboundProperty(MuleProperties.MULE_ENDPOINT_PROPERTY,null);
-  if (endpoint == null) {
-    throw new TransformerException(HttpMessages.eventPropertyNotSetCannotProcessRequest(MuleProperties.MULE_ENDPOINT_PROPERTY),this);
-  }
   String method=(String)msg.getProperty(HttpConnector.HTTP_METHOD_PROPERTY,PropertyScope.OUTBOUND);
   if (method == null) {
     method=msg.getOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,null);
@@ -12,54 +8,13 @@
     }
   }
   try {
-    endpoint=endpoint.replaceAll("%23","#");
-    endpoint=muleContext.getExpressionManager().parse(endpoint,msg,true);
-    URI uri=new URI(endpoint);
+    URI uri=getURI(msg);
     HttpMethod httpMethod;
     if (HttpConstants.METHOD_GET.equals(method)) {
-      httpMethod=new GetMethod(uri.toString());
-      String paramName=URLEncoder.encode(msg.getOutboundProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY),outputEncoding);
-      String paramValue;
-      Boolean encode=msg.getInvocationProperty(HttpConnector.HTTP_ENCODE_PARAMVALUE);
-      if (encode == null) {
-        encode=msg.getOutboundProperty(HttpConnector.HTTP_ENCODE_PARAMVALUE,true);
-      }
-      if (encode) {
-        paramValue=URLEncoder.encode(src.toString(),outputEncoding);
-      }
- else {
-        paramValue=src.toString();
-      }
-      String query=uri.getRawQuery();
-      if (!(src instanceof NullPayload) && !StringUtils.EMPTY.equals(src)) {
-        if (query == null) {
-          query=paramName + "=" + paramValue;
-        }
- else {
-          query+="&" + paramName + "="+ paramValue;
-        }
-      }
-      httpMethod.setQueryString(query);
+      httpMethod=createGetMethod(msg,outputEncoding);
     }
  else     if (HttpConstants.METHOD_POST.equalsIgnoreCase(method)) {
-      PostMethod postMethod=new PostMethod(uri.toString());
-      String paramName=msg.getOutboundProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY,null);
-      if (paramName == null) {
-        paramName=msg.getInvocationProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
-      }
-      if (src instanceof Map) {
-        for (Iterator iterator=((Map)src).entrySet().iterator(); iterator.hasNext(); ) {
-          Map.Entry entry=(Map.Entry)iterator.next();
-          postMethod.addParameter(entry.getKey().toString(),entry.getValue().toString());
-        }
-      }
- else       if (paramName != null) {
-        postMethod.addParameter(paramName,src.toString());
-      }
- else {
-        setupEntityMethod(src,outputEncoding,msg,postMethod);
-      }
-      httpMethod=postMethod;
+      httpMethod=createPostMethod(msg,outputEncoding);
     }
  else     if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
       PutMethod putMethod=new PutMethod(uri.toString());

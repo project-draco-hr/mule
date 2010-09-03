@@ -1,0 +1,22 @@
+{
+  Object src=msg.getPayload();
+  URI uri=getURI(msg);
+  PostMethod postMethod=new PostMethod(uri.toString());
+  String paramName=msg.getOutboundProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY,null);
+  if (paramName == null) {
+    paramName=msg.getInvocationProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
+  }
+  if (src instanceof Map) {
+    for (Iterator iterator=((Map)src).entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      postMethod.addParameter(entry.getKey().toString(),entry.getValue().toString());
+    }
+  }
+ else   if (paramName != null) {
+    postMethod.addParameter(paramName,src.toString());
+  }
+ else {
+    setupEntityMethod(src,outputEncoding,msg,postMethod);
+  }
+  return postMethod;
+}
