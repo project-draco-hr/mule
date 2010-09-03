@@ -1,6 +1,9 @@
 {
-  if (!accept(event)) {
-    throw new MessagingException(CoreMessages.unexpectedMIMEType(event.getMessage().getInboundProperty("Content-Type",""),acceptedContentTypes.toString()),event);
+  setMuleContext(event.getMuleContext());
+  List<MuleMessage> messages=new ArrayList<MuleMessage>();
+  if (event.getMessage().getInboundProperty("Content-Length",-1) == 0) {
+    logger.info("Feed has no content, ignoring");
+    return messages;
   }
   try {
     Object payload=event.getMessage().getPayload();
@@ -11,7 +14,6 @@
  else {
       feed=(Feed)objectToFeed.transform(event.getMessage().getPayload());
     }
-    List<MuleMessage> messages=new ArrayList<MuleMessage>();
     Set<Entry> entries=new TreeSet<Entry>(new EntryComparator());
     entries.addAll(feed.getEntries());
     for (    Entry entry : entries) {
