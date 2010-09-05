@@ -8,14 +8,18 @@
     properties.put(name,message.getOutboundProperty(name));
   }
   DefaultMuleMessage newMessage=new DefaultMuleMessage(message.getPayload(),message,connector.getMuleContext());
-  newMessage.clearProperties(PropertyScope.INBOUND);
-  newMessage.clearProperties(PropertyScope.INVOCATION);
-  newMessage.clearProperties(PropertyScope.OUTBOUND);
+  if (reinitialize) {
+    newMessage.clearProperties(PropertyScope.INBOUND);
+    newMessage.clearProperties(PropertyScope.INVOCATION);
+    newMessage.clearProperties(PropertyScope.OUTBOUND);
+  }
   for (  String s : properties.keySet()) {
     newMessage.setInboundProperty(s,properties.get(s));
   }
-  for (  String s : newMessage.getOutboundAttachmentNames()) {
-    newMessage.removeAttachment(s);
+  if (reinitialize) {
+    for (    String s : newMessage.getOutboundAttachmentNames()) {
+      newMessage.removeAttachment(s);
+    }
   }
   for (  String s : attachments.keySet()) {
     newMessage.addInboundAttachment(s,attachments.get(s));

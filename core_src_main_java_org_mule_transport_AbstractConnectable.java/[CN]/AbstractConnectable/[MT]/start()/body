@@ -2,6 +2,14 @@
   if (!connected.get() && !connecting.get()) {
     connectAndThenStart();
   }
+ else   if (connecting.get() && isDoStartMustFollowDoConnect()) {
+    try {
+      callDoStartWhenItIsConnected();
+    }
+ catch (    InterruptedException e) {
+      throw new StartException(CoreMessages.failedToStart("Connectable: " + this),e,AbstractConnectable.this);
+    }
+  }
  else {
     try {
       lifecycleManager.fireStartPhase(new LifecycleCallback<O>(){
