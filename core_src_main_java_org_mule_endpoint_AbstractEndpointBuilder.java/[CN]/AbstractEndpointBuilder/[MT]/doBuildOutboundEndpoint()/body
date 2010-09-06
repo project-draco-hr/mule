@@ -12,14 +12,12 @@
   prepareToBuildEndpoint();
   EndpointURI endpointURI=uriBuilder.getEndpoint();
   endpointURI.initialise();
-  addTransformersFromUri(endpointURI);
-  addResponseTransformersFromUri(endpointURI);
-  addTransformers();
-  addResponseTransformers();
+  List<MessageProcessor> mergedProcessors=addTransformerProcessors(endpointURI);
+  List<MessageProcessor> mergedResponseProcessors=addResponseTransformerProcessors(endpointURI);
   Connector connector=getConnector();
   if (connector != null && !connector.supportsProtocol(getScheme())) {
     throw new IllegalArgumentException(CoreMessages.connectorSchemeIncompatibleWithEndpointScheme(connector.getProtocol(),endpointURI).getMessage());
   }
   checkOutboundExchangePattern();
-  return new DefaultOutboundEndpoint(connector,endpointURI,getName(endpointURI),getProperties(),getTransactionConfig(),getDefaultDeleteUnacceptedMessages(connector),messageExchangePattern,getResponseTimeout(connector),getInitialState(connector),getEndpointEncoding(connector),name,muleContext,getRetryPolicyTemplate(connector),responsePropertiesList,getMessageProcessorsFactory(),messageProcessors,responseMessageProcessors,isDisableTransportTransformer(),mimeType);
+  return new DefaultOutboundEndpoint(connector,endpointURI,getName(endpointURI),getProperties(),getTransactionConfig(),getDefaultDeleteUnacceptedMessages(connector),messageExchangePattern,getResponseTimeout(connector),getInitialState(connector),getEndpointEncoding(connector),name,muleContext,getRetryPolicyTemplate(connector),responsePropertiesList,getMessageProcessorsFactory(),mergedProcessors,mergedResponseProcessors,isDisableTransportTransformer(),mimeType);
 }
