@@ -1,0 +1,12 @@
+{
+  final Service service=muleContext.getRegistry().lookupService("CXFProxyService");
+  ServiceCompositeMessageSource messageSource=(ServiceCompositeMessageSource)service.getMessageSource();
+  List<InboundEndpoint> endpoints=messageSource.getEndpoints();
+  DefaultInboundEndpoint inboundEndpoint=(DefaultInboundEndpoint)endpoints.get(0);
+  List<MessageProcessor> processors=inboundEndpoint.getMessageProcessors();
+  FlowConfiguringMessageProcessor wrapper=(FlowConfiguringMessageProcessor)processors.get(0);
+  CxfInboundMessageProcessor cxfProcessor=(CxfInboundMessageProcessor)wrapper.getWrappedMessageProcessor();
+  Server server=cxfProcessor.getServer();
+  EndpointInfo endpointInfo=server.getEndpoint().getEndpointInfo();
+  assertEquals("The local part of the endpoing name must be the one supplied as the endpointName parameter on the cxf:inbound-endpoint","ListsSoap",endpointInfo.getName().getLocalPart());
+}

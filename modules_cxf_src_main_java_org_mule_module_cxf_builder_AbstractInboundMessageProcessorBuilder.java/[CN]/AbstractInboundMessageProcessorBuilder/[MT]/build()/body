@@ -55,20 +55,16 @@
     sfb.setWsdlURL(wsdlLocation);
   }
   ReflectionServiceFactoryBean svcFac=sfb.getServiceFactory();
-  addIgnoredMethods(svcFac,Callable.class.getName());
-  addIgnoredMethods(svcFac,Initialisable.class.getName());
-  addIgnoredMethods(svcFac,Disposable.class.getName());
-  addIgnoredMethods(svcFac,ServiceAware.class.getName());
-  initServiceName(getServiceClass(),service,namespace,svcFac);
+  initServiceFactory(svcFac);
   CxfInboundMessageProcessor processor=new CxfInboundMessageProcessor();
   configureMessageProcessor(sfb,processor);
   sfb.setStart(false);
   Bus bus=configuration.getCxfBus();
   sfb.setBus(bus);
-  sfb.getServiceFactory().setBus(bus);
+  svcFac.setBus(bus);
   Configurer configurer=bus.getExtension(Configurer.class);
   if (null != configurer) {
-    configurer.configureBean(sfb.getServiceFactory().getEndpointName().toString(),sfb);
+    configurer.configureBean(svcFac.getEndpointName().toString(),sfb);
   }
   sfb.setProperties(properties);
   sfb.setInvoker(new MuleInvoker(processor,getServiceClass()));
