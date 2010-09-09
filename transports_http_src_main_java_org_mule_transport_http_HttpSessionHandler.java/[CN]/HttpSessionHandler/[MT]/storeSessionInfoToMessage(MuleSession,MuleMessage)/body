@@ -10,5 +10,9 @@
   if (logger.isDebugEnabled()) {
     logger.debug("Adding serialized and base64-encoded Session header to message: " + serializedEncodedSession);
   }
-  message.setOutboundProperty(HttpConnector.HTTP_COOKIES_PROPERTY,new Cookie[]{new Cookie(null,MuleProperties.MULE_SESSION_PROPERTY,serializedEncodedSession)});
+  final Object preExistentCookies=message.getOutboundProperty(HttpConnector.HTTP_COOKIES_PROPERTY);
+  final String cookieName=MuleProperties.MULE_SESSION_PROPERTY;
+  final String cookieValue=serializedEncodedSession;
+  Object mergedCookies=CookieHelper.putAndMergeCookie(preExistentCookies,cookieName,cookieValue);
+  message.setOutboundProperty(HttpConnector.HTTP_COOKIES_PROPERTY,mergedCookies);
 }
