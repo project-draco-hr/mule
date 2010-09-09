@@ -7,20 +7,29 @@
     Object payload=event.getMessage().getPayload();
     if (payload != null && !(payload instanceof NullPayload)) {
       processVariables.put(ProcessConnector.PROCESS_VARIABLE_INCOMING,payload);
-      String originatingEndpoint=event.getMessage().getOutboundProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY);
+      String originatingEndpoint=event.getMessage().getInboundProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY);
       if (StringUtils.isNotEmpty(originatingEndpoint)) {
         processVariables.put(ProcessConnector.PROCESS_VARIABLE_INCOMING_SOURCE,originatingEndpoint);
       }
     }
   }
-  Object processType=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_PROCESS_TYPE);
+  Object processType=event.getMessage().getSessionProperty(ProcessConnector.PROPERTY_PROCESS_TYPE);
+  if (processType == null) {
+    processType=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_PROCESS_TYPE);
+  }
+  if (processType == null) {
+    processType=event.getMessage().getInboundProperty(ProcessConnector.PROPERTY_PROCESS_TYPE);
+  }
   processVariables.remove(ProcessConnector.PROPERTY_PROCESS_TYPE);
   Object processId;
   String processIdField=connector.getProcessIdField();
   if (StringUtils.isNotEmpty(processIdField)) {
     processId=event.getMessage().getInvocationProperty(processIdField);
   }
-  processId=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_PROCESS_ID);
+  processId=event.getMessage().getSessionProperty(ProcessConnector.PROPERTY_PROCESS_ID);
+  if (processId == null) {
+    processId=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_PROCESS_ID);
+  }
   if (processId == null) {
     processId=event.getMessage().getInboundProperty(ProcessConnector.PROPERTY_PROCESS_ID);
   }
@@ -44,6 +53,7 @@
     }
     processId=temp;
   }
+  logger.debug("Message received: payload = " + event.getMessage().getPayload().getClass().getName() + " processType = "+ processType+ " processId = "+ processId+ " action = "+ action);
   if (processId == null || action.equals(ProcessConnector.ACTION_START)) {
     if (processType != null) {
       process=connector.getBpms().startProcess(processType,transition,processVariables);

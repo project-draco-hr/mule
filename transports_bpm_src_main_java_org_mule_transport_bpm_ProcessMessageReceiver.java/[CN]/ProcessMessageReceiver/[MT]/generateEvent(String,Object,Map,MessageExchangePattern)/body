@@ -6,11 +6,19 @@
  else {
     message=createMuleMessage(payload,this.endpoint.getEncoding());
   }
-  message.addProperties(messageProperties);
+  message.addProperties(messageProperties,PropertyScope.INBOUND);
+  message.addProperties(messageProperties,PropertyScope.INVOCATION);
   EndpointBuilder endpointBuilder=connector.getMuleContext().getRegistry().lookupEndpointFactory().getEndpointBuilder(endpoint);
   endpointBuilder.setExchangePattern(exchangePattern);
   OutboundEndpoint ep=endpointBuilder.buildOutboundEndpoint();
   DefaultMuleEvent event=new DefaultMuleEvent(message,ep,new DefaultMuleSession(flowConstruct,connector.getMuleContext()));
+  RequestContext.setEvent(event);
+  if (messageProperties.get(ProcessConnector.PROPERTY_PROCESS_TYPE) != null) {
+    event.getMessage().setSessionProperty(ProcessConnector.PROPERTY_PROCESS_TYPE,messageProperties.get(ProcessConnector.PROPERTY_PROCESS_TYPE));
+  }
+  if (messageProperties.get(ProcessConnector.PROPERTY_PROCESS_ID) != null) {
+    event.getMessage().setSessionProperty(ProcessConnector.PROPERTY_PROCESS_ID,messageProperties.get(ProcessConnector.PROPERTY_PROCESS_ID));
+  }
   MuleEvent resultEvent=ep.process(event);
   MuleMessage response=null;
   if (resultEvent != null) {
