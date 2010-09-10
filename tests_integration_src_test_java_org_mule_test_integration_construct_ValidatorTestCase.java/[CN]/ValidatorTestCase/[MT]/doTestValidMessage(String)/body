@@ -1,12 +1,15 @@
 {
+  final FunctionalTestComponent ftc=getFunctionalTestComponent("test-service");
+  final Latch latch=new Latch();
+  ftc.setEventCallback(new EventCallback(){
+    public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      latch.countDown();
+    }
+  }
+);
   final Integer payload=RandomUtils.nextInt();
   assertEquals("GOOD:" + payload + "@"+ serviceName,muleClient.send("vm://" + serviceName + ".in",payload,null).getPayload());
-  int i=0;
-  final FunctionalTestComponent ftc=getFunctionalTestComponent("test-service");
-  while (ftc.getReceivedMessagesCount() == 0 && i++ < 10) {
-    Thread.sleep(250L);
-    System.err.print(".");
-  }
+  latch.await(15,TimeUnit.SECONDS);
   assertEquals(1,ftc.getReceivedMessagesCount());
   assertEquals(payload,ftc.getLastReceivedMessage());
   ftc.initialise();
