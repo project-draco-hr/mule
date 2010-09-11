@@ -1,15 +1,3 @@
 {
-  final FunctionalTestComponent ftc=getFunctionalTestComponent("dlg-file-picker");
-  final Latch latch=new Latch();
-  ftc.setEventCallback(new EventCallback(){
-    public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
-      latch.countDown();
-    }
-  }
-);
-  final String payload=RandomStringUtils.randomAlphabetic(10);
-  muleClient.dispatch("jms://myDlq",payload,new HashMap<Object,Object>(Collections.singletonMap("aKey",123)));
-  latch.await(getTestTimeoutSecs(),TimeUnit.SECONDS);
-  assertEquals(1,ftc.getReceivedMessagesCount());
-  assertEquals(payload,new String((byte[])ftc.getReceivedMessage(1)));
+  doJmsBasedTest("jms://myDlq","dlq-file-picker");
 }
