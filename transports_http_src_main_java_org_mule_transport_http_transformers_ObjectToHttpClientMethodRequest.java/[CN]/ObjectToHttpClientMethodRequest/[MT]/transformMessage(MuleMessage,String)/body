@@ -1,14 +1,11 @@
 {
-  Object src=msg.getPayload();
-  String method=(String)msg.getProperty(HttpConnector.HTTP_METHOD_PROPERTY,PropertyScope.OUTBOUND);
+  final Object src=msg.getPayload();
+  String method=msg.getOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,null);
   if (method == null) {
-    method=msg.getOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,null);
-    if (method == null) {
-      method=msg.getInvocationProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
-    }
+    method=msg.getInvocationProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
   }
   try {
-    URI uri=getURI(msg);
+    final URI uri=getURI(msg);
     HttpMethod httpMethod;
     if (HttpConstants.METHOD_GET.equals(method)) {
       httpMethod=createGetMethod(msg,outputEncoding);
@@ -17,7 +14,7 @@
       httpMethod=createPostMethod(msg,outputEncoding);
     }
  else     if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
-      PutMethod putMethod=new PutMethod(uri.toString());
+      final PutMethod putMethod=new PutMethod(uri.toString());
       setupEntityMethod(src,outputEncoding,msg,putMethod);
       httpMethod=putMethod;
     }
@@ -36,12 +33,12 @@
  else {
       throw new TransformerException(HttpMessages.unsupportedMethod(method));
     }
-    HttpMethodParams params=(HttpMethodParams)msg.removeProperty(HttpConnector.HTTP_PARAMS_PROPERTY,PropertyScope.OUTBOUND);
+    final HttpMethodParams params=(HttpMethodParams)msg.removeProperty(HttpConnector.HTTP_PARAMS_PROPERTY,PropertyScope.OUTBOUND);
     if (params != null) {
       httpMethod.setParams(params);
     }
  else {
-      String httpVersion=msg.getOutboundProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+      final String httpVersion=msg.getOutboundProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
       if (HttpConstants.HTTP10.equals(httpVersion)) {
         httpMethod.getParams().setVersion(HttpVersion.HTTP_1_0);
       }
@@ -52,7 +49,7 @@
     setHeaders(httpMethod,msg);
     return httpMethod;
   }
- catch (  Exception e) {
+ catch (  final Exception e) {
     throw new TransformerException(this,e);
   }
 }
