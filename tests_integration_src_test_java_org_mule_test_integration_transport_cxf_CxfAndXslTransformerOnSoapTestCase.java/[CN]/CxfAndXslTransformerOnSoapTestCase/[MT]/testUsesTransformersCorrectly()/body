@@ -1,0 +1,20 @@
+{
+  TestExceptionStrategy exceptionStrategy=new TestExceptionStrategy();
+  muleContext.setExceptionListener(exceptionStrategy);
+  MuleClient client=new MuleClient(muleContext);
+  MuleMessage result=client.send("http://localhost:28181/ScratchCardServiceV1",msg,null);
+  assertNotNull("The result shouln't have been null",result);
+  final String payloadAsString=result.getPayloadAsString();
+  assertNotNull("The payloadAsString shouln't have been null",payloadAsString);
+  assertFalse("There shouldn't be a fault in the payload: " + payloadAsString,payloadAsString.contains("<soap:Fault>"));
+  final Latch latch=new Latch();
+  exceptionStrategy.setExceptionCallback(new ExceptionCallback(){
+    public void onException(    Throwable t){
+      connectorExceptionCounter.incrementAndGet();
+      latch.countDown();
+    }
+  }
+);
+  latch.await(500,TimeUnit.MILLISECONDS);
+  assertEquals("There shouldn't have been any exceptions",0,connectorExceptionCounter.get());
+}
