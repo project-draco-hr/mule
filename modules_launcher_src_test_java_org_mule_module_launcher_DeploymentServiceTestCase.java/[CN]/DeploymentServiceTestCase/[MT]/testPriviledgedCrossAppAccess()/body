@@ -1,0 +1,20 @@
+{
+  URL url=getClass().getResource("/priviledged-dummy-app.zip");
+  assertNotNull("Test app file not found " + url,url);
+  addAppArchive(url);
+  url=getClass().getResource("/dummy-app.zip");
+  assertNotNull("Test app file not found " + url,url);
+  addAppArchive(url);
+  deploymentService.start();
+  assertTrue("Deployer never invoked",deployLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertAppsDir(NONE,new String[]{"dummy-app","priviledged-dummy-app"});
+  final Application privApp=findApp("priviledged-dummy-app",2);
+  final Application dummyApp=findApp("dummy-app",2);
+  assertTrue(((ApplicationWrapper)privApp).getDelegate() instanceof PriviledgedMuleApplication);
+  final MuleContext muleContext1=privApp.getMuleContext();
+  System.out.println("muleContext1 = " + muleContext1);
+  assertNotSame(muleContext1,muleContext);
+  assertNotSame(privApp.getDeploymentClassLoader(),dummyApp.getDeploymentClassLoader());
+  final Collection<FlowConstruct> flowConstructs=dummyApp.getMuleContext().getRegistry().lookupObjects(FlowConstruct.class);
+  assertFalse("No FlowConstructs found in the sibling app",flowConstructs.isEmpty());
+}
