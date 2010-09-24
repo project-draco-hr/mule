@@ -2,6 +2,7 @@
   Object src=message.getPayload();
   Object returnValue;
   InputStream is=null;
+  Reader reader=null;
   try {
     if (src instanceof InputStream) {
       is=(InputStream)src;
@@ -32,11 +33,12 @@
       }
     }
  else {
+      reader=new InputStreamReader(is,outputEncoding);
       if (getReturnClass().equals(JsonData.class)) {
-        returnValue=new JsonData(is);
+        returnValue=new JsonData(reader);
       }
  else {
-        returnValue=getMapper().readValue(is,getReturnClass());
+        returnValue=getMapper().readValue(reader,getReturnClass());
       }
     }
     return returnValue;
@@ -45,8 +47,7 @@
     throw new TransformerException(CoreMessages.transformFailed("json",getReturnClass().getName()),this,e);
   }
  finally {
-    if (is != null) {
-      IOUtils.closeQuietly(is);
-    }
+    IOUtils.closeQuietly(reader);
+    IOUtils.closeQuietly(is);
   }
 }
