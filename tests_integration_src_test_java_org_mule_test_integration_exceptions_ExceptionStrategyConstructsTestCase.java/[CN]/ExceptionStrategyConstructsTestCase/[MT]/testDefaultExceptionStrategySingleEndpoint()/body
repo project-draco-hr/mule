@@ -1,0 +1,17 @@
+{
+  MuleClient mc=new MuleClient(muleContext);
+  mc.dispatch("vm://inservice2","test",null);
+  assertExceptionMessage(mc.request("vm://modelout",RECEIVE_TIMEOUT));
+  mc.dispatch("vm://inservice1","test",null);
+  assertExceptionMessage(mc.request("vm://service1out",RECEIVE_TIMEOUT));
+  assertNull(mc.request("vm://modelout",RECEIVE_TIMEOUT));
+  mc.dispatch("vm://inflow1","test",null);
+  assertExceptionMessage(mc.request("vm://flow1out",RECEIVE_TIMEOUT));
+  assertNull(mc.request("vm://modelout",RECEIVE_TIMEOUT));
+  mc.send("vm://inss1","test",null);
+  assertExceptionMessage(mc.request("vm://ss1out",RECEIVE_TIMEOUT));
+  assertNull(mc.request("vm://modelout",RECEIVE_TIMEOUT));
+  mc.send("vm://inss2","test",null);
+  MuleMessage modelError=mc.request("vm://modelout",RECEIVE_TIMEOUT);
+  assertEquals(null,modelError);
+}
