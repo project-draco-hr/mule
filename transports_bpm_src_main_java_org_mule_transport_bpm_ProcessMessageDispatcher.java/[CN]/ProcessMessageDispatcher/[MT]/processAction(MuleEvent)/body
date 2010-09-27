@@ -6,38 +6,38 @@
     populateProcessVariables(event,processVariables,PropertyScope.OUTBOUND);
     Object payload=event.getMessage().getPayload();
     if (payload != null && !(payload instanceof NullPayload)) {
-      processVariables.put(ProcessConnector.PROCESS_VARIABLE_INCOMING,payload);
+      processVariables.put(Process.PROCESS_VARIABLE_INCOMING,payload);
       String originatingEndpoint=event.getMessage().getInboundProperty(MuleProperties.MULE_ORIGINATING_ENDPOINT_PROPERTY);
       if (StringUtils.isNotEmpty(originatingEndpoint)) {
-        processVariables.put(ProcessConnector.PROCESS_VARIABLE_INCOMING_SOURCE,originatingEndpoint);
+        processVariables.put(Process.PROCESS_VARIABLE_INCOMING_SOURCE,originatingEndpoint);
       }
     }
   }
-  Object processType=event.getMessage().getSessionProperty(ProcessConnector.PROPERTY_PROCESS_TYPE);
+  Object processType=event.getMessage().getSessionProperty(Process.PROPERTY_PROCESS_TYPE);
   if (processType == null) {
-    processType=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_PROCESS_TYPE);
+    processType=event.getMessage().getInvocationProperty(Process.PROPERTY_PROCESS_TYPE);
   }
   if (processType == null) {
-    processType=event.getMessage().getInboundProperty(ProcessConnector.PROPERTY_PROCESS_TYPE);
+    processType=event.getMessage().getInboundProperty(Process.PROPERTY_PROCESS_TYPE);
   }
-  processVariables.remove(ProcessConnector.PROPERTY_PROCESS_TYPE);
-  Object processId;
+  processVariables.remove(Process.PROPERTY_PROCESS_TYPE);
   String processIdField=connector.getProcessIdField();
-  if (StringUtils.isNotEmpty(processIdField)) {
+  if (StringUtils.isEmpty(processIdField)) {
+    processIdField=Process.PROPERTY_PROCESS_ID;
+  }
+  Object processId;
+  processId=event.getMessage().getSessionProperty(processIdField);
+  if (processId == null) {
     processId=event.getMessage().getInvocationProperty(processIdField);
   }
-  processId=event.getMessage().getSessionProperty(ProcessConnector.PROPERTY_PROCESS_ID);
   if (processId == null) {
-    processId=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_PROCESS_ID);
+    processId=event.getMessage().getInboundProperty(processIdField);
   }
-  if (processId == null) {
-    processId=event.getMessage().getInboundProperty(ProcessConnector.PROPERTY_PROCESS_ID);
-  }
-  processVariables.remove(ProcessConnector.PROPERTY_PROCESS_ID);
-  String action=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_ACTION,ProcessConnector.ACTION_ADVANCE);
-  processVariables.remove(ProcessConnector.PROPERTY_ACTION);
-  Object transition=event.getMessage().getInvocationProperty(ProcessConnector.PROPERTY_TRANSITION);
-  processVariables.remove(ProcessConnector.PROPERTY_TRANSITION);
+  processVariables.remove(processIdField);
+  String action=event.getMessage().getInvocationProperty(Process.PROPERTY_ACTION,Process.ACTION_ADVANCE);
+  processVariables.remove(Process.PROPERTY_ACTION);
+  Object transition=event.getMessage().getInvocationProperty(Process.PROPERTY_TRANSITION);
+  processVariables.remove(Process.PROPERTY_TRANSITION);
   String temp;
   temp=event.getEndpoint().getEndpointURI().getHost();
   if (StringUtils.isNotEmpty(temp)) {
@@ -54,7 +54,7 @@
     processId=temp;
   }
   logger.debug("Message received: payload = " + event.getMessage().getPayload().getClass().getName() + " processType = "+ processType+ " processId = "+ processId+ " action = "+ action);
-  if (processId == null || action.equals(ProcessConnector.ACTION_START)) {
+  if (processId == null || action.equals(Process.ACTION_START)) {
     if (processType != null) {
       process=connector.getBpms().startProcess(processType,transition,processVariables);
       if ((process != null) && logger.isInfoEnabled()) {
@@ -65,7 +65,7 @@
       throw new IllegalArgumentException("Process type is missing, cannot start a new process.");
     }
   }
- else   if (action.equals(ProcessConnector.ACTION_UPDATE)) {
+ else   if (action.equals(Process.ACTION_UPDATE)) {
     if (processId != null) {
       process=connector.getBpms().updateProcess(processId,processVariables);
       if ((process != null) && logger.isInfoEnabled()) {
@@ -76,7 +76,7 @@
       throw new IllegalArgumentException("Process ID is missing, cannot update process.");
     }
   }
- else   if (action.equals(ProcessConnector.ACTION_ABORT)) {
+ else   if (action.equals(Process.ACTION_ABORT)) {
     if (processId != null) {
       connector.getBpms().abortProcess(processId);
       process=NullPayload.getInstance();

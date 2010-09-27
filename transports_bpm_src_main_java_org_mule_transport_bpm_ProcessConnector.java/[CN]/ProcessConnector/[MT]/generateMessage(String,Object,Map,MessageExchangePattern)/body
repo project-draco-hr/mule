@@ -1,0 +1,16 @@
+{
+  String processName=(String)messageProperties.get(Process.PROPERTY_PROCESS_TYPE);
+  Object processId=messageProperties.get(Process.PROPERTY_PROCESS_ID);
+  ProcessMessageReceiver receiver=lookupReceiver(processName,processId);
+  if (receiver == null) {
+    throw new ConfigurationException(MessageFactory.createStaticMessage("No corresponding receiver found for processName = " + processName + ", processId = "+ processId));
+  }
+  logger.debug("Generating Mule message for process name = " + processName + " id = "+ processId+ ", synchronous = "+ mep.hasResponse());
+  if (mep.hasResponse()) {
+    return receiver.generateSynchronousEvent(endpoint,payloadObject,messageProperties);
+  }
+ else {
+    receiver.generateAsynchronousEvent(endpoint,payloadObject,messageProperties);
+    return null;
+  }
+}

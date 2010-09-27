@@ -1,10 +1,11 @@
 {
-  MuleMessage response;
-  ProcessInstance process;
+  ProcessConnector connector=(ProcessConnector)muleContext.getRegistry().lookupConnector("bpmConnector");
+  BPMS bpms=connector.getBpms();
+  assertNotNull(bpms);
   MuleClient client=new MuleClient(muleContext);
   try {
-    response=client.send("bpm://fork","data",null);
-    process=(ProcessInstance)response.getPayload();
+    MuleMessage response=client.send("bpm://fork","data",null);
+    ProcessInstance process=(ProcessInstance)response.getPayload();
     String state=(String)bpms.getState(process);
     assertTrue(state.contains("waitForResponseA"));
     assertTrue(state.contains("waitForResponseB"));

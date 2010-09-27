@@ -1,11 +1,11 @@
 {
-  MuleMessage response;
-  Object process;
+  ProcessConnector connector=(ProcessConnector)muleContext.getRegistry().lookupConnector("bpmConnector");
   BPMS bpms=connector.getBpms();
+  assertNotNull(bpms);
   MuleClient client=new MuleClient(muleContext);
   try {
-    response=client.send("bpm://simple","data",null);
-    process=response.getPayload();
+    MuleMessage response=client.send("bpm://simple","data",null);
+    Object process=response.getPayload();
     String processId=(String)bpms.getId(process);
     assertFalse(processId == null);
     assertEquals("dummyState",bpms.getState(process));

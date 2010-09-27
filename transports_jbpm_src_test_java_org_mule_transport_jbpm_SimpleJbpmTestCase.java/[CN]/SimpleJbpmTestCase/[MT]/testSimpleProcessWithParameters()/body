@@ -1,15 +1,14 @@
 {
-  MuleMessage response;
-  Object process;
+  ProcessConnector connector=(ProcessConnector)muleContext.getRegistry().lookupConnector("bpmConnector");
   BPMS bpms=connector.getBpms();
   MuleClient client=new MuleClient(muleContext);
   try {
-    response=client.send("bpm://?" + ProcessConnector.PROPERTY_ACTION + "="+ ProcessConnector.ACTION_START+ "&"+ ProcessConnector.PROPERTY_PROCESS_TYPE+ "=simple","data",null);
-    process=response.getPayload();
+    MuleMessage response=client.send("bpm://?" + Process.PROPERTY_ACTION + "="+ Process.ACTION_START+ "&"+ Process.PROPERTY_PROCESS_TYPE+ "=simple","data",null);
+    Object process=response.getPayload();
     Object processId=bpms.getId(process);
     assertNotNull(processId);
     assertEquals("dummyState",bpms.getState(process));
-    response=client.send("bpm://?" + ProcessConnector.PROPERTY_ACTION + "="+ ProcessConnector.ACTION_ADVANCE+ "&"+ ProcessConnector.PROPERTY_PROCESS_TYPE+ "=simple&"+ ProcessConnector.PROPERTY_PROCESS_ID+ "="+ processId,"data",null);
+    response=client.send("bpm://?" + Process.PROPERTY_ACTION + "="+ Process.ACTION_ADVANCE+ "&"+ Process.PROPERTY_PROCESS_TYPE+ "=simple&"+ Process.PROPERTY_PROCESS_ID+ "="+ processId,"data",null);
     process=response.getPayload();
     assertTrue(bpms.hasEnded(process));
   }

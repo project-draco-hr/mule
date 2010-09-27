@@ -1,0 +1,21 @@
+{
+  BPMS bpms=muleContext.getRegistry().lookupObject(BPMS.class);
+  assertNotNull(bpms);
+  MuleClient client=new MuleClient(muleContext);
+  try {
+    MuleMessage response=client.send("vm://message","data",null);
+    Object process=response.getPayload();
+    assertTrue(bpms.isProcess(process));
+    String processId=(String)bpms.getId(process);
+    assertFalse(processId == null);
+    assertEquals("waitForResponse",bpms.getState(process));
+    Map props=new HashMap<String,Object>();
+    props.put(Process.PROPERTY_PROCESS_ID,processId);
+    response=client.send("vm://message","data",props);
+    process=response.getPayload();
+    assertTrue(bpms.hasEnded(process));
+  }
+  finally {
+    client.dispose();
+  }
+}
