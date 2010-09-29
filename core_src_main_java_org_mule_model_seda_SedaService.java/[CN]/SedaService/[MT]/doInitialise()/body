@@ -5,7 +5,10 @@
   ChainedThreadingProfile threadingProfile=new ChainedThreadingProfile(this.threadingProfile);
   threadingProfile.setMuleContext(muleContext);
   threadingProfile.setMaxThreadsActive(threadingProfile.getMaxThreadsActive() + 1);
-  workManager=threadingProfile.createWorkManager(getName(),muleContext.getConfiguration().getShutdownTimeout());
+  final MuleConfiguration config=muleContext.getConfiguration();
+  final boolean containerMode=config.isContainerMode();
+  final String threadPrefix=containerMode ? String.format("[%s].%s",config.getId(),getName()) : getName();
+  workManager=threadingProfile.createWorkManager(threadPrefix,config.getShutdownTimeout());
   if (queueProfile == null) {
     queueProfile=((SedaModel)model).getQueueProfile();
   }
