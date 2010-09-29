@@ -1,0 +1,22 @@
+{
+  BPMS bpms=muleContext.getRegistry().lookupObject(BPMS.class);
+  assertNotNull(bpms);
+  MuleClient client=new MuleClient(muleContext);
+  try {
+    MuleMessage response=client.send("vm://fork","data",null);
+    ProcessInstance process=(ProcessInstance)response.getPayload();
+    String state=(String)bpms.getState(process);
+    assertTrue(state.contains("waitForResponseA"));
+    assertTrue(state.contains("waitForResponseB"));
+    Thread.sleep(2000);
+    process=(ProcessInstance)bpms.lookupProcess(process.getId());
+    assertEquals("waitForResponseA",bpms.getState(process));
+    muleContext.getRegistry().lookupService("ServiceA").resume();
+    Thread.sleep(2000);
+    process=(ProcessInstance)bpms.lookupProcess(process.getId());
+    assertTrue("Process should have ended, but is in state " + bpms.getState(process),bpms.hasEnded(process));
+  }
+  finally {
+    client.dispose();
+  }
+}
