@@ -1,6 +1,9 @@
 {
+  final boolean containerMode=muleContext.getConfiguration().isContainerMode();
+  final String id=muleContext.getConfiguration().getId();
   if (receiverWorkManager.get() == null) {
-    WorkManager newWorkManager=this.getReceiverThreadingProfile().createWorkManager(getName() + ".receiver",muleContext.getConfiguration().getShutdownTimeout());
+    final String threadPrefix=containerMode ? String.format("[%s].%s.receiver",id,getName()) : String.format("%s.receiver",getName());
+    WorkManager newWorkManager=this.getReceiverThreadingProfile().createWorkManager(threadPrefix,muleContext.getConfiguration().getShutdownTimeout());
     if (receiverWorkManager.compareAndSet(null,newWorkManager)) {
       newWorkManager.start();
     }
@@ -10,13 +13,15 @@
     if (dispatcherThreadingProfile.getMuleContext() == null) {
       dispatcherThreadingProfile.setMuleContext(muleContext);
     }
-    WorkManager newWorkManager=dispatcherThreadingProfile.createWorkManager(getName() + ".dispatcher",muleContext.getConfiguration().getShutdownTimeout());
+    final String threadPrefix=containerMode ? String.format("[%s].%s.dispatcher",id,getName()) : String.format("%s.dispatcher",getName());
+    WorkManager newWorkManager=dispatcherThreadingProfile.createWorkManager(threadPrefix,muleContext.getConfiguration().getShutdownTimeout());
     if (dispatcherWorkManager.compareAndSet(null,newWorkManager)) {
       newWorkManager.start();
     }
   }
   if (requesterWorkManager.get() == null) {
-    WorkManager newWorkManager=this.getRequesterThreadingProfile().createWorkManager(getName() + ".requester",muleContext.getConfiguration().getShutdownTimeout());
+    final String threadPrefix=containerMode ? String.format("[%s].%s.requester",id,getName()) : String.format("%s.requester",getName());
+    WorkManager newWorkManager=this.getRequesterThreadingProfile().createWorkManager(threadPrefix,muleContext.getConfiguration().getShutdownTimeout());
     if (requesterWorkManager.compareAndSet(null,newWorkManager)) {
       newWorkManager.start();
     }
