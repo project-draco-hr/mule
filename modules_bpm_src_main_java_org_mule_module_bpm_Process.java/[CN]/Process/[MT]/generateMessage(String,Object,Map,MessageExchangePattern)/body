@@ -1,0 +1,31 @@
+{
+  MuleMessage message;
+  if (payload instanceof MuleMessage) {
+    message=(MuleMessage)payload;
+  }
+ else {
+    message=new DefaultMuleMessage(payload,flowConstruct.getMuleContext());
+  }
+  message.addProperties(messageProperties,PropertyScope.INBOUND);
+  message.addProperties(messageProperties,PropertyScope.INVOCATION);
+  EndpointBuilder endpointBuilder=flowConstruct.getMuleContext().getRegistry().lookupEndpointFactory().getEndpointBuilder(endpoint);
+  endpointBuilder.setExchangePattern(exchangePattern);
+  OutboundEndpoint ep=endpointBuilder.buildOutboundEndpoint();
+  DefaultMuleEvent event=new DefaultMuleEvent(message,ep,new DefaultMuleSession(flowConstruct,flowConstruct.getMuleContext()));
+  RequestContext.setEvent(event);
+  if (messageProperties.get(PROPERTY_PROCESS_TYPE) != null) {
+    event.getMessage().setSessionProperty(PROPERTY_PROCESS_TYPE,messageProperties.get(PROPERTY_PROCESS_TYPE));
+  }
+  if (messageProperties.get(PROPERTY_PROCESS_ID) != null) {
+    event.getMessage().setSessionProperty(PROPERTY_PROCESS_ID,messageProperties.get(PROPERTY_PROCESS_ID));
+  }
+  MuleEvent resultEvent=ep.process(event);
+  MuleMessage response=null;
+  if (resultEvent != null) {
+    response=resultEvent.getMessage();
+    if (response.getExceptionPayload() != null) {
+      throw new DispatchException(MessageFactory.createStaticMessage("Unable to send or route message"),event,ep,response.getExceptionPayload().getRootException());
+    }
+  }
+  return response;
+}
