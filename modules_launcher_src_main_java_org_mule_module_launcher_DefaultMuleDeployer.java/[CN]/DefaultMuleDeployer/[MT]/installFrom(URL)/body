@@ -2,9 +2,13 @@
   if (!url.toString().endsWith(".zip")) {
     throw new IllegalArgumentException("Only Mule application zips are supported: " + url);
   }
-  final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
+  final ReentrantLock lock=deploymentService.getLock();
   String appName;
   try {
+    if (!lock.tryLock(0,TimeUnit.SECONDS)) {
+      throw new IOException("Another deployment operation is in progress");
+    }
+    final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
     final String fullPath=url.toURI().toString();
     if (logger.isInfoEnabled()) {
       logger.info("Exploding a Mule application archive: " + fullPath);
@@ -21,6 +25,13 @@
     final IOException ex=new IOException(e.getMessage());
     ex.fillInStackTrace();
     throw ex;
+  }
+catch (  InterruptedException e) {
+    Thread.currentThread().interrupt();
+    throw new IOException("Install operation has been interrupted");
+  }
+ finally {
+    lock.unlock();
   }
   return deploymentService.getAppFactory().createApp(appName);
 }

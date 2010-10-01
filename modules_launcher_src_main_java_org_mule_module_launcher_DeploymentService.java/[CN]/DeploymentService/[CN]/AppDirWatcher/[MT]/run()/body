@@ -1,43 +1,54 @@
 {
-  final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
-  String[] apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
-  String[] currentAnchors=appsDir.list(new SuffixFileFilter(APP_ANCHOR_SUFFIX));
-  @SuppressWarnings("unchecked") final Collection<String> deletedAnchors=CollectionUtils.subtract(Arrays.asList(appAnchors),Arrays.asList(currentAnchors));
-  for (  String deletedAnchor : deletedAnchors) {
-    String appName=StringUtils.removeEnd(deletedAnchor,APP_ANCHOR_SUFFIX);
-    try {
-      onApplicationUndeployRequested(appName);
+  try {
+    if (!lock.tryLock(0,TimeUnit.SECONDS)) {
+      return;
     }
- catch (    Throwable t) {
-      logger.error("Failed to undeploy application: " + appName,t);
-    }
-  }
-  appAnchors=currentAnchors;
-  for (  String zip : zips) {
-    try {
-      final String appName=StringUtils.removeEnd(zip,".zip");
-      Application app=(Application)CollectionUtils.find(applications,new BeanPropertyValueEqualsPredicate("appName",appName));
-      if (app != null) {
+    final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
+    String[] apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
+    String[] currentAnchors=appsDir.list(new SuffixFileFilter(APP_ANCHOR_SUFFIX));
+    @SuppressWarnings("unchecked") final Collection<String> deletedAnchors=CollectionUtils.subtract(Arrays.asList(appAnchors),Arrays.asList(currentAnchors));
+    for (    String deletedAnchor : deletedAnchors) {
+      String appName=StringUtils.removeEnd(deletedAnchor,APP_ANCHOR_SUFFIX);
+      try {
         onApplicationUndeployRequested(appName);
       }
-      onNewApplicationArchive(new File(appsDir,zip));
+ catch (      Throwable t) {
+        logger.error("Failed to undeploy application: " + appName,t);
+      }
     }
- catch (    Throwable t) {
-      logger.error("Failed to deploy application archive: " + zip,t);
+    appAnchors=currentAnchors;
+    for (    String zip : zips) {
+      try {
+        final String appName=StringUtils.removeEnd(zip,".zip");
+        Application app=(Application)CollectionUtils.find(applications,new BeanPropertyValueEqualsPredicate("appName",appName));
+        if (app != null) {
+          onApplicationUndeployRequested(appName);
+        }
+        onNewApplicationArchive(new File(appsDir,zip));
+      }
+ catch (      Throwable t) {
+        logger.error("Failed to deploy application archive: " + zip,t);
+      }
     }
-  }
-  if (zips.length > 0) {
-    apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
+    if (zips.length > 0) {
+      apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
+      deployedApps=apps;
+    }
+    @SuppressWarnings("unchecked") final Collection<String> addedApps=CollectionUtils.subtract(Arrays.asList(apps),Arrays.asList(deployedApps));
+    for (    String addedApp : addedApps) {
+      try {
+        onNewExplodedApplication(addedApp);
+      }
+ catch (      Throwable t) {
+        logger.error("Failed to deploy exploded application: " + addedApp,t);
+      }
+    }
     deployedApps=apps;
   }
-  @SuppressWarnings("unchecked") final Collection<String> addedApps=CollectionUtils.subtract(Arrays.asList(apps),Arrays.asList(deployedApps));
-  for (  String addedApp : addedApps) {
-    try {
-      onNewExplodedApplication(addedApp);
-    }
- catch (    Throwable t) {
-      logger.error("Failed to deploy exploded application: " + addedApp,t);
-    }
+ catch (  InterruptedException e) {
+    Thread.currentThread().interrupt();
   }
-  deployedApps=apps;
+ finally {
+    lock.unlock();
+  }
 }

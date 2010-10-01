@@ -1,5 +1,9 @@
 {
+  final ReentrantLock lock=deploymentService.getLock();
   try {
+    if (!lock.tryLock(0,TimeUnit.SECONDS)) {
+      return;
+    }
     app.stop();
     app.dispose();
     final File appDir=new File(MuleContainerBootstrapUtils.getMuleAppsDir(),app.getAppName());
@@ -8,7 +12,14 @@
     marker.delete();
     Introspector.flushCaches();
   }
- catch (  Throwable t) {
+ catch (  InterruptedException e) {
+    Thread.currentThread().interrupt();
+    return;
+  }
+catch (  Throwable t) {
     t.printStackTrace();
+  }
+ finally {
+    lock.unlock();
   }
 }

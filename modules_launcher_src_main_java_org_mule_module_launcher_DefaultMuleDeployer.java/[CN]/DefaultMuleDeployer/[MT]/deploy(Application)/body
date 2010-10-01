@@ -1,10 +1,21 @@
 {
+  final ReentrantLock lock=deploymentService.getLock();
   try {
+    if (!lock.tryLock(0,TimeUnit.SECONDS)) {
+      return;
+    }
     app.install();
     app.init();
     app.start();
   }
- catch (  Throwable t) {
+ catch (  InterruptedException e) {
+    Thread.currentThread().interrupt();
+    return;
+  }
+catch (  Throwable t) {
     t.printStackTrace();
+  }
+ finally {
+    lock.unlock();
   }
 }
