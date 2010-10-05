@@ -1,16 +1,43 @@
 {
   try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Checking for changes...");
+    }
     if (!lock.tryLock(0,TimeUnit.SECONDS)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Another deployment operation in progress, will skip this cycle. Owner thread: " + ((DebuggableReentrantLock)lock).getOwner());
+      }
       return;
     }
     final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
     String[] apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
     String[] currentAnchors=appsDir.list(new SuffixFileFilter(APP_ANCHOR_SUFFIX));
+    if (logger.isDebugEnabled()) {
+      StringBuilder sb=new StringBuilder();
+      sb.append(String.format("Current anchors:%n"));
+      for (      String currentAnchor : currentAnchors) {
+        sb.append(String.format("  %s%n",currentAnchor));
+      }
+      logger.debug(sb.toString());
+    }
     @SuppressWarnings("unchecked") final Collection<String> deletedAnchors=CollectionUtils.subtract(Arrays.asList(appAnchors),Arrays.asList(currentAnchors));
+    if (logger.isDebugEnabled()) {
+      StringBuilder sb=new StringBuilder();
+      sb.append(String.format("Deleted anchors:%n"));
+      for (      String deletedAnchor : deletedAnchors) {
+        sb.append(String.format("  %s%n",deletedAnchor));
+      }
+      logger.debug(sb.toString());
+    }
     for (    String deletedAnchor : deletedAnchors) {
       String appName=StringUtils.removeEnd(deletedAnchor,APP_ANCHOR_SUFFIX);
       try {
-        onApplicationUndeployRequested(appName);
+        if (findApplication(appName) != null) {
+          undeploy(appName);
+        }
+ else         if (logger.isDebugEnabled()) {
+          logger.debug(String.format("Application [%s] has already been undeployed via API",appName));
+        }
       }
  catch (      Throwable t) {
         logger.error("Failed to undeploy application: " + appName,t);
@@ -22,19 +49,19 @@
         final String appName=StringUtils.removeEnd(zip,".zip");
         Application app=(Application)CollectionUtils.find(applications,new BeanPropertyValueEqualsPredicate("appName",appName));
         if (app != null) {
-          onApplicationUndeployRequested(appName);
+          undeploy(appName);
         }
-        onNewApplicationArchive(new File(appsDir,zip));
+        deploy(new File(appsDir,zip).toURI().toURL());
       }
  catch (      Throwable t) {
         logger.error("Failed to deploy application archive: " + zip,t);
       }
     }
-    if (zips.length > 0) {
+    if (zips.length > 0 || dirty) {
       apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
-      deployedApps=apps;
     }
-    @SuppressWarnings("unchecked") final Collection<String> addedApps=CollectionUtils.subtract(Arrays.asList(apps),Arrays.asList(deployedApps));
+    Collection deployedAppNames=CollectionUtils.collect(applications,new BeanToPropertyValueTransformer("appName"));
+    @SuppressWarnings("unchecked") final Collection<String> addedApps=CollectionUtils.subtract(Arrays.asList(apps),deployedAppNames);
     for (    String addedApp : addedApps) {
       try {
         onNewExplodedApplication(addedApp);
@@ -43,12 +70,12 @@
         logger.error("Failed to deploy exploded application: " + addedApp,t);
       }
     }
-    deployedApps=apps;
   }
  catch (  InterruptedException e) {
     Thread.currentThread().interrupt();
   }
  finally {
     lock.unlock();
+    dirty=false;
   }
 }
