@@ -1,12 +1,11 @@
 {
-  CountDownLatch cdl=new CountDownLatch(1);
-  setupAssertIncomingMessage(method,cdl,expectedContentType);
+  Latch latch=new Latch();
+  setupAssertIncomingMessage(method,latch,expectedContentType);
   MuleClient client=new MuleClient(muleContext);
   MuleMessage reply=client.send("vm://sendBy" + method,messagePayload,messageProperties);
+  assertTrue(latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
   assertNotNull(reply);
-  assertEquals("200",reply.getProperty(HttpConnector.HTTP_STATUS_PROPERTY));
-  assertEquals("text/plain;charset=EUC-JP",reply.getProperty(HttpConstants.HEADER_CONTENT_TYPE).toString());
+  assertEquals(expectedContentType,reply.getInvocationProperty(HttpConstants.HEADER_CONTENT_TYPE));
   assertEquals("EUC-JP",reply.getEncoding());
   assertEquals(getTestMessage(Locale.JAPAN) + " Received",reply.getPayloadAsString());
-  cdl.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
 }

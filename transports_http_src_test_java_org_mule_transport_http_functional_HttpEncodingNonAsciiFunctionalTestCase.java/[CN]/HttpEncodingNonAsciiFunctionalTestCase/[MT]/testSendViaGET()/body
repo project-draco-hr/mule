@@ -1,0 +1,15 @@
+{
+  Latch latch=new Latch();
+  setupAssertIncomingMessage(HttpConstants.METHOD_GET,latch,CONTENT_TYPE_HEADER);
+  String testMessage=getTestMessage(Locale.JAPAN);
+  String encodedPayload=URLEncoder.encode(testMessage,"ISO-2022-JP");
+  String url=String.format("http://localhost:60224/get?%1s=%2s",HttpConnector.DEFAULT_HTTP_GET_BODY_PARAM_PROPERTY,encodedPayload);
+  GetMethod method=new GetMethod(url);
+  method.addRequestHeader(HttpConstants.HEADER_CONTENT_TYPE,CONTENT_TYPE_HEADER);
+  int status=new HttpClient().executeMethod(method);
+  assertEquals(HttpConstants.SC_OK,status);
+  assertTrue(latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+  String expected=testMessage + " Received";
+  String response=method.getResponseBodyAsString();
+  assertEquals(expected,response);
+}

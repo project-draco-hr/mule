@@ -1,9 +1,5 @@
 {
-  final Object src=msg.getPayload();
-  String method=msg.getOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,null);
-  if (method == null) {
-    method=msg.getInvocationProperty(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
-  }
+  String method=detectHttpMethod(msg);
   try {
     final URI uri=getURI(msg);
     HttpMethod httpMethod;
@@ -15,7 +11,8 @@
     }
  else     if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
       final PutMethod putMethod=new PutMethod(uri.toString());
-      setupEntityMethod(src,outputEncoding,msg,putMethod);
+      Object payload=msg.getPayload();
+      setupEntityMethod(payload,outputEncoding,msg,putMethod);
       httpMethod=putMethod;
     }
  else     if (HttpConstants.METHOD_DELETE.equalsIgnoreCase(method)) {
