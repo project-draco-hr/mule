@@ -7,24 +7,10 @@
     String pass=(uri.getPassword() != null ? URLDecoder.decode(uri.getPassword(),encoding) : null);
     store.connect(uri.getHost(),uri.getPort(),user,pass);
     folder=store.getFolder(castConnector().getMailboxFolder());
-    if (!folder.isOpen()) {
-      try {
-        folder.open(Folder.READ_WRITE);
-      }
- catch (      MessagingException e) {
-        logger.warn("Failed to open folder: " + folder.getFullName() + " This is not an exception since some server implementations do not require the flder to be open",e);
-      }
-    }
+    ensureFolderIsOpen(folder);
     if (castConnector().getMoveToFolder() != null) {
       moveToFolder=store.getFolder(castConnector().getMoveToFolder());
-      if (!moveToFolder.isOpen()) {
-        try {
-          moveToFolder.open(Folder.READ_WRITE);
-        }
- catch (        MessagingException e) {
-          logger.warn("Failed to open folder: " + moveToFolder.getFullName() + " This is not an exception since some server implementations do not require the flder to be open",e);
-        }
-      }
+      ensureFolderIsOpen(moveToFolder);
     }
   }
 }
