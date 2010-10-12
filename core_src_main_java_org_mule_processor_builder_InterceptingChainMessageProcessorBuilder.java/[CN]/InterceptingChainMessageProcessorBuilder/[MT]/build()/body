@@ -1,14 +1,21 @@
 {
-  if (processors.isEmpty()) {
-    return new NullMessageProcessor();
+  LinkedList<MessageProcessor> tempList=new LinkedList<MessageProcessor>();
+  for (int i=processors.size() - 1; i >= 0; i--) {
+    MessageProcessor processor=initializeMessageProcessor(processors.get(i));
+    if ((processors.get(i)) instanceof InterceptingMessageProcessor) {
+      if (i + 1 < processors.size()) {
+        if (tempList.isEmpty()) {
+          ((InterceptingMessageProcessor)processor).setListener(initializeMessageProcessor(processors.get(i + 1)));
+        }
+ else {
+          ((InterceptingMessageProcessor)processor).setListener(new IteratingListCompositeMessageProcessor(new ArrayList<MessageProcessor>(tempList)));
+        }
+      }
+      tempList=new LinkedList<MessageProcessor>(Collections.singletonList(processor));
+    }
+ else {
+      tempList.addFirst(initializeMessageProcessor(processor));
+    }
   }
-  InterceptingMessageProcessor first=createInterceptingMessageProcessor(initializeMessageProcessor(processors.get(0)));
-  MessageProcessor composite=new InterceptingChainCompositeMessageProcessor(first,processors,name);
-  InterceptingMessageProcessor current=first;
-  for (int i=1; i < processors.size(); i++) {
-    InterceptingMessageProcessor mp=createInterceptingMessageProcessor(initializeMessageProcessor(processors.get(i)));
-    current.setListener(mp);
-    current=mp;
-  }
-  return composite;
+  return new InterceptingChainCompositeMessageProcessor(new IteratingListCompositeMessageProcessor(new ArrayList<MessageProcessor>(tempList)),processors,"");
 }
