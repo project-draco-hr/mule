@@ -2,11 +2,25 @@
   if (outboundEndpoint == null) {
     throw new FlowConstructInvalidException(MessageFactory.createStaticMessage("outboundEndpoint can't be null"));
   }
-  String urlWebservice=outboundEndpoint.getEndpointURI().getUri().toString();
-  final int paramIndex=urlWebservice.indexOf("?");
-  if (paramIndex != -1) {
-    urlWebservice=urlWebservice.substring(0,paramIndex);
+  final String wsAddress=outboundEndpoint.getAddress();
+  if (outboundEndpoint instanceof DynamicOutboundEndpoint) {
+    wsdlAddressProvider=new WsdlAddressProvider(){
+      public String get(      MuleEvent event){
+        final String resolvedWsAddress=event.getMuleContext().getExpressionManager().parse(wsAddress,event.getMessage(),true);
+        return makeWsdlAddress(resolvedWsAddress);
+      }
+    }
+;
+    logger.info("Using dynamic WSDL with service address: " + wsAddress);
   }
-  wsdlAddress=urlWebservice.concat("?wsdl");
-  logger.info("Setting WSDL address to: " + wsdlAddress);
+ else {
+    final String wsdlAddress=makeWsdlAddress(wsAddress);
+    wsdlAddressProvider=new WsdlAddressProvider(){
+      public String get(      MuleEvent event){
+        return wsdlAddress;
+      }
+    }
+;
+    logger.info("Setting WSDL address to: " + wsdlAddress);
+  }
 }
