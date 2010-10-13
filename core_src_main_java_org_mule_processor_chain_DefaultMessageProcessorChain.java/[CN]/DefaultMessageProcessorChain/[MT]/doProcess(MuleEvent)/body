@@ -1,0 +1,19 @@
+{
+  FlowConstruct flowConstruct=event.getFlowConstruct();
+  MuleEvent currentEvent=event;
+  for (  MessageProcessor processor : processors) {
+    if (processor instanceof OutboundEndpoint) {
+      currentEvent=new DefaultMuleEvent(currentEvent.getMessage(),(OutboundEndpoint)processor,currentEvent.getSession());
+    }
+    currentEvent=processor.process(currentEvent);
+    if (currentEvent == null) {
+      if (flowConstruct instanceof SimpleFlowConstruct) {
+        currentEvent=processNext(OptimizedRequestContext.criticalSetEvent(currentEvent));
+      }
+ else {
+        return null;
+      }
+    }
+  }
+  return currentEvent;
+}

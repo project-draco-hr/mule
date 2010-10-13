@@ -1,0 +1,17 @@
+{
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
+  DefaultMessageProcessorChainBuilder nestedBuilder=new DefaultMessageProcessorChainBuilder();
+  AppendingMP mp1=new AppendingInterceptingMP("1");
+  AppendingMP mp2=new AppendingInterceptingMP("2");
+  AppendingMP mpa=new AppendingInterceptingMP("a");
+  AppendingMP mpb=new AppendingInterceptingMP("b");
+  MessageProcessor chain=builder.chain(mp1,nestedBuilder.chain(mpa,mpb).build(),mp2).build();
+  ((Lifecycle)chain).initialise();
+  ((Lifecycle)chain).start();
+  ((Lifecycle)chain).stop();
+  ((Lifecycle)chain).dispose();
+  assertLifecycle(mp1);
+  assertLifecycle(mp2);
+  assertLifecycle(mpa);
+  assertLifecycle(mpb);
+}
