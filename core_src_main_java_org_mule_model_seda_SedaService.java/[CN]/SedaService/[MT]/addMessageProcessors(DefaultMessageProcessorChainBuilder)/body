@@ -2,12 +2,14 @@
   builder.chain(new ServiceLoggingMessageObserver(this));
   builder.chain(new ServiceStatisticsMessageObserver(this));
   builder.chain(new ServiceSetEventRequestContextMessageObserver());
-  builder.chain(new SedaStageInterceptingMessageProcessor(getName(),queueProfile,queueTimeout,new WorkManagerSource(){
-    public WorkManager getWorkManager() throws MuleException {
-      return workManager;
+  if (getThreadingProfile().isDoThreading()) {
+    builder.chain(new SedaStageInterceptingMessageProcessor(getName(),queueProfile,queueTimeout,new WorkManagerSource(){
+      public WorkManager getWorkManager() throws MuleException {
+        return workManager;
+      }
     }
+,lifecycleManager.getState(),stats,muleContext));
   }
-,getThreadingProfile().isDoThreading(),lifecycleManager.getState(),stats,muleContext));
   builder.chain(new ServiceInternalMessageProcessor(this));
   if (asyncReplyMessageSource.getEndpoints().size() > 0) {
     builder.chain(createAsyncReplyProcessor());

@@ -1,11 +1,16 @@
 {
-  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
-  builder.chain(new AsyncInterceptingMessageProcessor(new WorkManagerSource(){
-    public WorkManager getWorkManager() throws MuleException {
-      return getDispatcherWorkManager();
-    }
+  if (endpoint.getExchangePattern().hasResponse() || !getDispatcherThreadingProfile().isDoThreading()) {
+    return new DispatcherMessageProcessor();
   }
-,getDispatcherThreadingProfile().isDoThreading()));
-  builder.chain(new DispatcherMessageProcessor());
-  return builder.build();
+ else {
+    DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
+    builder.chain(new OptionalAsyncInterceptingMessageProcessor(new WorkManagerSource(){
+      public WorkManager getWorkManager() throws MuleException {
+        return getDispatcherWorkManager();
+      }
+    }
+));
+    builder.chain(new DispatcherMessageProcessor());
+    return builder.build();
+  }
 }
