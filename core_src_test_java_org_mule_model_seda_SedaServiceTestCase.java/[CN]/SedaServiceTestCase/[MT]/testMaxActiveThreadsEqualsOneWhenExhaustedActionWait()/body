@@ -6,13 +6,15 @@
   threadingProfile.setThreadWaitTimeout(200);
   threadingProfile.setPoolExhaustedAction(ThreadingProfile.WHEN_EXHAUSTED_WAIT);
   service.setThreadingProfile(threadingProfile);
-  service.setComponent(new SimpleCallableJavaComponent(new Callable(){
+  final SimpleCallableJavaComponent component=new SimpleCallableJavaComponent(new Callable(){
     public Object onCall(    MuleEventContext eventContext) throws Exception {
       latch.countDown();
       return null;
     }
   }
-));
+);
+  component.setMuleContext(muleContext);
+  service.setComponent(component);
   muleContext.getRegistry().registerService(service);
   service.dispatchEvent(MuleTestUtils.getTestInboundEvent("test",service,muleContext));
   assertTrue(latch.await(200,TimeUnit.MILLISECONDS));
