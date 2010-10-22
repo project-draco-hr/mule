@@ -5,14 +5,24 @@
     if (key.startsWith(HttpConstants.X_PROPERTY_PREFIX)) {
       realKey=key.substring(2);
     }
-    String value=request.getHeader(key);
     if (HttpConstants.HEADER_HOST.equalsIgnoreCase(key)) {
       realKey=HttpConstants.HEADER_HOST;
+      String value=request.getHeader(key);
       int port=request.getLocalPort();
       if (!value.contains(":") && port != 80 && port != 443) {
         value=value + ":" + port;
       }
+      messageProperties.put(realKey,value);
     }
-    messageProperties.put(realKey,value);
+ else {
+      Enumeration<?> valueEnum=request.getHeaders(key);
+      List<?> values=EnumerationUtils.toList(valueEnum);
+      if (values.size() > 1) {
+        messageProperties.put(realKey,values.toArray());
+      }
+ else {
+        messageProperties.put(realKey,values.get(0));
+      }
+    }
   }
 }
