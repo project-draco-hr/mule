@@ -5,5 +5,19 @@
   if (event == null) {
     return null;
   }
-  return processNext(doProcess(event));
+  final AroundPolicy policy=getPolicies().iterator().next();
+  MuleEvent result;
+  if (policy != null) {
+    PolicyInvocation invocation=new PolicyInvocation(event,new MessageProcessor(){
+      public MuleEvent process(      MuleEvent event) throws MuleException {
+        return doProcess(event);
+      }
+    }
+);
+    result=policy.invoke(invocation);
+  }
+ else {
+    result=doProcess(event);
+  }
+  return processNext(result);
 }

@@ -1,0 +1,28 @@
+{
+  AroundPolicy ap=new AroundPolicy(){
+    public MuleEvent invoke(    PolicyInvocation invocation) throws MuleException {
+      new StringAppendTransformer(" {before} ").process(invocation.getEvent());
+      final MuleEvent result=invocation.proceed();
+      new StringAppendTransformer(" {after}").process(invocation.getEvent());
+      return result;
+    }
+    public String getName(){
+      return "test around policy";
+    }
+  }
+;
+  DefaultMessageProcessorChain chain=new DefaultMessageProcessorChain(new StringAppendTransformer("first"),new StringAppendTransformer(" second"));
+  initialiseObject(chain);
+  assertEquals("No policies should have been registered.",0,chain.getPolicies().size());
+  chain.add(ap);
+  assertSame("Policy has not been registered.",ap,chain.getPolicies().iterator().next());
+  System.out.println(chain);
+  final MuleEvent result=chain.process(getTestEvent("main"));
+  assertNotNull(result);
+  final MuleMessage message=result.getMessage();
+  assertNotNull(message);
+  assertEquals("main {before} first second {after}",message.getPayload());
+  final AroundPolicy policy=chain.removePolicy(ap.getName());
+  assertSame("Wrong policy returned?",ap,policy);
+  assertEquals("No policies should have been registered.",0,chain.getPolicies().size());
+}
