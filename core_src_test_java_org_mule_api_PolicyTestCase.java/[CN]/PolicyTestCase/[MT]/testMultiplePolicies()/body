@@ -1,0 +1,20 @@
+{
+  DefaultMessageProcessorChain chain=new DefaultMessageProcessorChain(new StringAppendTransformer("first"),new StringAppendTransformer(" second"));
+  initialiseObject(chain);
+  assertEquals("No policies should have been registered.",0,chain.getActivePolicies().size());
+  AroundPolicy policy1=new TestPolicy("test around policy 1");
+  chain.add(policy1);
+  final TestPolicy policy2=new TestPolicy("test around policy 2");
+  chain.add(policy2);
+  assertEquals("Wrong policies count.",2,chain.getActivePolicies().size());
+  System.out.println(chain);
+  final MuleEvent result=chain.process(getTestEvent("payload "));
+  assertNotNull(result);
+  final MuleMessage message=result.getMessage();
+  assertNotNull(message);
+  assertEquals("payload {before} {before} first second {after} {after}",message.getPayload());
+  final AroundPolicy policy=chain.removePolicy(policy1.getName());
+  assertSame("Wrong policy returned?",policy1,policy);
+  chain.removePolicy(policy2.getName());
+  assertEquals("No policies should have been registered.",0,chain.getActivePolicies().size());
+}
