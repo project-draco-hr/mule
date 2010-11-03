@@ -6,16 +6,16 @@
     return null;
   }
   final List<AroundPolicy> activePolicies=policies.list();
-  final AroundPolicy policy=activePolicies.isEmpty() ? null : activePolicies.iterator().next();
   MuleEvent result;
-  if (policy != null) {
-    PolicyInvocation invocation=new PolicyInvocation(event,policies.list(),new MessageProcessor(){
+  if (!activePolicies.isEmpty()) {
+    PolicyInvocation invocation=new PolicyInvocation(event,activePolicies,new MessageProcessor(){
       public MuleEvent process(      MuleEvent event) throws MuleException {
         return doProcess(event);
       }
     }
 );
-    result=policy.invoke(invocation);
+    final AroundPolicy entryPoint=activePolicies.get(0);
+    result=entryPoint.invoke(invocation);
   }
  else {
     result=doProcess(event);
