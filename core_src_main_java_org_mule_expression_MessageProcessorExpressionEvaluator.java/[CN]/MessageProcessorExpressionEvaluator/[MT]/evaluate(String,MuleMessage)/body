@@ -1,0 +1,27 @@
+{
+  MuleContext muleContext=message.getMuleContext();
+  String processorName;
+  String processorArgExpression=null;
+  MuleMessage messageToProcess=message;
+  if (expression == null || expression.isEmpty()) {
+    return message;
+  }
+  boolean isNestedExpression=expression.indexOf(':') > 0;
+  if (!isNestedExpression) {
+    processorName=expression;
+  }
+ else {
+    processorName=expression.substring(0,expression.indexOf(':'));
+    processorArgExpression=expression.substring(expression.indexOf(':') + 1,expression.length());
+  }
+  if (processorArgExpression != null) {
+    messageToProcess=evaluateProcessorArgument(message,processorArgExpression);
+  }
+  MessageProcessor processor=lookupMessageProcessor(processorName,muleContext);
+  try {
+    return processor.process(new DefaultMuleEvent(messageToProcess,RequestContext.getEvent())).getMessage();
+  }
+ catch (  MuleException e) {
+    throw new ExpressionRuntimeException(CoreMessages.createStaticMessage("Exception invoking MessageProcessor '" + processorName + "'"),e);
+  }
+}
