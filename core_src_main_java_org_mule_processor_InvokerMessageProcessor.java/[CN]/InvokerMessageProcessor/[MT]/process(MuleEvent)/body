@@ -1,0 +1,21 @@
+{
+  MuleEvent resultEvent=event;
+  ExpressionManager expressionManager=event.getMuleContext().getExpressionManager();
+  Object[] args=new Object[argumentExpressions.length];
+  for (int i=0; i < args.length; i++) {
+    args[i]=expressionManager.evaluate(argumentExpressions[i],event.getMessage());
+    if (!(method.getParameterTypes()[i].isAssignableFrom(args[i].getClass()))) {
+      args[i]=event.getMuleContext().getRegistry().lookupTransformer(args[i].getClass(),method.getParameterTypes()[i]).transform(args[i]);
+    }
+  }
+  try {
+    Object result=method.invoke(object,args);
+    if (!method.getReturnType().equals(void.class)) {
+      resultEvent=createResultEvent(event,result);
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  return resultEvent;
+}
