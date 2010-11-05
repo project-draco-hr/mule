@@ -1,0 +1,27 @@
+{
+  final byte[] payload=createPayload();
+  while (--requestCount >= 0) {
+    try {
+      final MuleMessage outbound=client.send("vm://test.inbound.sync",payload,null);
+      assertNull(outbound.getExceptionPayload());
+      assertNotNull(outbound.getPayload());
+      byte[] bytes=null;
+      if (outbound.getPayload() instanceof byte[]) {
+        bytes=(byte[])outbound.getPayload();
+      }
+ else       if (outbound.getPayload() instanceof List) {
+        final List<?> list=(List<?>)outbound.getPayload();
+        assertEquals(1,list.size());
+        assertTrue(list.get(0) instanceof byte[]);
+        bytes=(byte[])list.get(0);
+      }
+ else {
+        fail("unexpected payload type");
+      }
+      assertEquals(Base64.encodeBytes(payload),Base64.encodeBytes(bytes));
+    }
+ catch (    Exception e) {
+      fail("failed with exception: " + e);
+    }
+  }
+}
