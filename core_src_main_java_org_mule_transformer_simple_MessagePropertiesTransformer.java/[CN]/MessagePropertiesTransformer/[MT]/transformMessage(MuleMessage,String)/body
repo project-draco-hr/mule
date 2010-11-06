@@ -3,36 +3,7 @@
     deleteProperties(message);
   }
   if (addProperties != null && addProperties.size() > 0) {
-    for (    Map.Entry<String,Object> entry : addProperties.entrySet()) {
-      if (entry.getKey() == null) {
-        logger.error("Setting Null property keys is not supported, this entry is being ignored");
-      }
- else {
-        final String key=entry.getKey();
-        Object value=entry.getValue();
-        Object realValue=value;
-        if (muleContext.getExpressionManager().isExpression(value.toString())) {
-          realValue=muleContext.getExpressionManager().evaluate(value.toString(),message);
-        }
-        if (realValue != null) {
-          if (message.getProperty(key,scope) != null) {
-            if (overwrite) {
-              logger.debug("Overwriting message property " + key);
-              message.setProperty(key,realValue,scope);
-            }
- else             if (logger.isDebugEnabled()) {
-              logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,realValue,scope));
-            }
-          }
- else {
-            message.setProperty(key,realValue,scope);
-          }
-        }
- else         if (logger.isInfoEnabled()) {
-          logger.info(MessageFormat.format("Property with key '{0}', not found on message using '{1}'. Since the value was marked optional, nothing was set on the message for this property",key,value));
-        }
-      }
-    }
+    addProperties(message);
   }
   if (this.renameProperties != null && this.renameProperties.size() > 0) {
     renameProperties(message);
