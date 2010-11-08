@@ -1,0 +1,16 @@
+{
+  MuleSession session=getTestSession(getTestService(),muleContext);
+  FirstSuccessful fs=new FirstSuccessful();
+  List<MessageProcessor> routes=new ArrayList<MessageProcessor>();
+  routes.add(new TestProcessor("abc"));
+  routes.add(new TestProcessor("def"));
+  routes.add(new TestProcessor("ghi"));
+  fs.setMessageProcessors(routes);
+  assertEquals("No abc",getPayload(fs,session,""));
+  assertEquals("No def",getPayload(fs,session,"abc"));
+  assertEquals("No ghi",getPayload(fs,session,"abcdef"));
+  assertEquals(EXCEPTION_SEEN,getPayload(fs,session,"abcdefghi"));
+  assertEquals("No def",getPayload(fs,session,"ABC"));
+  assertEquals("No ghi",getPayload(fs,session,"ABCDEF"));
+  assertEquals(EXCEPTION_SEEN,getPayload(fs,session,"ABCDEFGHI"));
+}

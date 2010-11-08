@@ -1,0 +1,20 @@
+{
+  client=new MuleClient(muleContext);
+  List<Thread> writers=new ArrayList<Thread>();
+  for (int i=0; i < NUMBER_OF_WRITERS; i++) {
+    writers.add(new Thread(new MessageWriter(i)));
+  }
+  for (  Thread writer : writers) {
+    writer.start();
+  }
+  for (  Thread writer : writers) {
+    writer.join();
+  }
+  for (int i=0, j=0; i < NUMBER_OF_WRITERS * NUMBER_OF_MESSAGES; i++) {
+    String path="vm://output" + j;
+    MuleMessage msg=client.request(path,0);
+    assertNotNull(msg);
+    logger.debug(path + ": " + msg.getPayloadAsString());
+    j=(j + 1) % NUMBER_OF_ENDPOINTS;
+  }
+}

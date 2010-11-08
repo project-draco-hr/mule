@@ -1,0 +1,17 @@
+{
+  int index=getAndIncrementModuloN(routes.size());
+  if (index < 0) {
+    throw new CouldNotRouteOutboundMessageException(event,this);
+  }
+  MessageProcessor mp=routes.get(index);
+  MuleEvent toProcess=event;
+  if (mp instanceof OutboundEndpoint) {
+    toProcess=new DefaultMuleEvent(event.getMessage(),(OutboundEndpoint)mp,event.getSession());
+  }
+  try {
+    return mp.process(toProcess);
+  }
+ catch (  MuleException ex) {
+    throw new RoutingException(event,this,ex);
+  }
+}
