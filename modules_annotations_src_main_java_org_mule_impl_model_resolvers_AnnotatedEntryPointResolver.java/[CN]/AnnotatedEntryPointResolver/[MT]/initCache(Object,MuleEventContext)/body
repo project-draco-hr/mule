@@ -1,8 +1,19 @@
 {
-  for (int i=0; i < component.getClass().getMethods().length; i++) {
-    Method method=component.getClass().getMethods()[i];
-    if (AnnotationUtils.getParamAnnotationsWithMeta(method,Evaluator.class).size() > 0) {
-      this.addMethodByName(method,context);
+  if (!cacheBuilt.get()) {
+synchronized (this) {
+      try {
+        if (!cacheBuilt.get()) {
+          for (int i=0; i < component.getClass().getMethods().length; i++) {
+            Method method=component.getClass().getMethods()[i];
+            if (AnnotationUtils.getParamAnnotationsWithMeta(method,Evaluator.class).size() > 0) {
+              this.addMethodByName(method,context);
+            }
+          }
+        }
+      }
+  finally {
+        cacheBuilt.set(true);
+      }
     }
   }
 }
