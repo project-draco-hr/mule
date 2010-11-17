@@ -1,0 +1,12 @@
+{
+  for (  AbstractFlowConstruct flowConstruct : muleContext.getRegistry().lookupObjects(AbstractFlowConstruct.class)) {
+    final String rawName=flowConstruct.getName();
+    final String name=jmxSupport.escape(rawName);
+    final String jmxName=String.format("%s:type=%s,name=%s",jmxSupport.getDomainName(muleContext,!containerMode),flowConstruct.getConstructType(),name);
+    ObjectName on=jmxSupport.getObjectName(jmxName);
+    FlowConstructServiceMBean fcMBean=new FlowConstructService(flowConstruct.getConstructType(),rawName,muleContext,flowConstruct.getStatistics());
+    ClassloaderSwitchingMBeanWrapper wrapper=new ClassloaderSwitchingMBeanWrapper(fcMBean,FlowConstructServiceMBean.class,muleContext.getExecutionClassLoader());
+    logger.debug("Registering service with name: " + on);
+    mBeanServer.registerMBean(wrapper,on);
+  }
+}

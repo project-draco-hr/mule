@@ -1,6 +1,15 @@
 {
-  MuleEvent resultEvent=before(event);
-  resultEvent=processNext(resultEvent);
-  resultEvent=after(resultEvent);
+  boolean exceptionWasThrown=true;
+  long startTime=System.currentTimeMillis();
+  MuleEvent resultEvent=event;
+  try {
+    resultEvent=before(event);
+    resultEvent=processNext(resultEvent);
+    resultEvent=after(resultEvent);
+    exceptionWasThrown=false;
+  }
+  finally {
+    resultEvent=last(resultEvent,startTime,exceptionWasThrown);
+  }
   return resultEvent;
 }
