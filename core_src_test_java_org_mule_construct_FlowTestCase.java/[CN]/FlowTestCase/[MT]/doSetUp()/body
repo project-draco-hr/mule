@@ -1,0 +1,22 @@
+{
+  super.doSetUp();
+  sensingMessageProcessor=getSensingNullMessageProcessor();
+  flow=new SimpleFlowConstruct("test-flow",muleContext);
+  flow.setMessageSource(directInboundMessageSource);
+  List<MessageProcessor> processors=new ArrayList<MessageProcessor>();
+  processors.add(new ResponseMessageProcessorAdapter(new StringAppendTransformer("f")));
+  processors.add(new ResponseMessageProcessorAdapter(new StringAppendTransformer("e")));
+  processors.add(new ResponseMessageProcessorAdapter(new StringAppendTransformer("d")));
+  processors.add(new StringAppendTransformer("a"));
+  processors.add(new StringAppendTransformer("b"));
+  processors.add(new StringAppendTransformer("c"));
+  processors.add(new MessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      event.getMessage().setOutboundProperty("thread",Thread.currentThread());
+      return event;
+    }
+  }
+);
+  processors.add(sensingMessageProcessor);
+  flow.setMessageProcessors(processors);
+}
