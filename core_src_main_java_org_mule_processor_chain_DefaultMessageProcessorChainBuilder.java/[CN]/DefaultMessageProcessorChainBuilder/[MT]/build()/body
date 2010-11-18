@@ -1,26 +1,23 @@
 {
-  InterceptingMessageProcessorChain finalChain=new InterceptingMessageProcessorChain(null,null,"");
   LinkedList<MessageProcessor> tempList=new LinkedList<MessageProcessor>();
   for (int i=processors.size() - 1; i >= 0; i--) {
-    MessageProcessor processor=decorateMessageProcessorForCallbacks(initializeMessageProcessor(processors.get(i)),finalChain);
+    MessageProcessor processor=initializeMessageProcessor(processors.get(i));
     if ((processors.get(i)) instanceof InterceptingMessageProcessor) {
       if (i + 1 < processors.size()) {
         if (tempList.isEmpty()) {
-          ((InterceptingMessageProcessor)processor).setListener(decorateMessageProcessorForCallbacks(initializeMessageProcessor(processors.get(i + 1)),finalChain));
+          ((InterceptingMessageProcessor)processor).setListener(initializeMessageProcessor(processors.get(i + 1)));
         }
  else {
-          final IteratingCompositeMessageProcessor chain=new IteratingCompositeMessageProcessor(new ArrayList<MessageProcessor>(tempList));
+          final DefaultMessageProcessorChain chain=new DefaultMessageProcessorChain(new ArrayList<MessageProcessor>(tempList));
           ((InterceptingMessageProcessor)processor).setListener(chain);
         }
       }
       tempList=new LinkedList<MessageProcessor>(Collections.singletonList(processor));
     }
  else {
-      tempList.addFirst(processor);
+      tempList.addFirst(initializeMessageProcessor(processor));
     }
   }
-  final IteratingCompositeMessageProcessor chain=new IteratingCompositeMessageProcessor(new ArrayList<MessageProcessor>(tempList));
-  finalChain.setFirstInChain(chain);
-  finalChain.setMessageProcessors(processors);
-  return finalChain;
+  final DefaultMessageProcessorChain chain=new DefaultMessageProcessorChain(new ArrayList<MessageProcessor>(tempList));
+  return new InterceptingChainLifecycleWrapper(chain,processors,"");
 }
