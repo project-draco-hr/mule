@@ -1,22 +1,22 @@
 {
-  final Object src=msg.getPayload();
-  final URI uri=getURI(msg);
-  final PostMethod postMethod=new PostMethod(uri.toString());
-  String paramName=msg.getOutboundProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY,null);
-  if (paramName == null) {
-    paramName=msg.getInvocationProperty(HttpConnector.HTTP_POST_BODY_PARAM_PROPERTY);
-  }
+  URI uri=getURI(msg);
+  PostMethod postMethod=new PostMethod(uri.toString());
+  String bodyParameterName=getBodyParameterName(msg);
+  Object src=msg.getPayload();
   if (src instanceof Map) {
-    for (final Iterator iterator=((Map)src).entrySet().iterator(); iterator.hasNext(); ) {
-      final Map.Entry entry=(Map.Entry)iterator.next();
+    for (    Map.Entry<?,?> entry : ((Map<?,?>)src).entrySet()) {
       postMethod.addParameter(entry.getKey().toString(),entry.getValue().toString());
     }
   }
- else   if (paramName != null) {
-    postMethod.addParameter(paramName,src.toString());
+ else   if (bodyParameterName != null) {
+    postMethod.addParameter(bodyParameterName,src.toString());
   }
  else {
     setupEntityMethod(src,outputEncoding,msg,postMethod);
+  }
+  String outgoingContentType=msg.getInvocationProperty(HttpConstants.HEADER_CONTENT_TYPE);
+  if (outgoingContentType != null) {
+    postMethod.setRequestHeader(HttpConstants.HEADER_CONTENT_TYPE,outgoingContentType);
   }
   return postMethod;
 }
