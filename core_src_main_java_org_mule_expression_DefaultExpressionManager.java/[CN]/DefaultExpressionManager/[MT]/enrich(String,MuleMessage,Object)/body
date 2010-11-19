@@ -1,0 +1,23 @@
+{
+  String enricherName;
+  if (expression == null) {
+    throw new IllegalArgumentException(CoreMessages.objectIsNull("expression").getMessage());
+  }
+  if (expression.startsWith(DEFAULT_EXPRESSION_PREFIX)) {
+    expression=expression.substring(2,expression.length() - 1);
+  }
+  int i=expression.indexOf(":");
+  if (i > -1) {
+    enricherName=expression.substring(0,i);
+    expression=expression.substring(i + DEFAULT_EXPRESSION_POSTFIX.length());
+  }
+ else {
+    enricherName=expression;
+    expression=null;
+  }
+  ExpressionEnricher enricher=(ExpressionEnricher)enrichers.get(enricherName);
+  if (enricher == null) {
+    throw new IllegalArgumentException(CoreMessages.expressionEnricherNotRegistered(enricherName).getMessage());
+  }
+  enricher.enrich(expression,message,object);
+}
