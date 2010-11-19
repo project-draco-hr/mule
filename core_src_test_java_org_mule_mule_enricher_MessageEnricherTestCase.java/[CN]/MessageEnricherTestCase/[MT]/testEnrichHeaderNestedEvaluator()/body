@@ -1,0 +1,16 @@
+{
+  muleContext.getRegistry().registerObject("appender",new StringAppendTransformer(" append"));
+  MessageEnricher enricher=new MessageEnricher();
+  enricher.setEnricherExpression("header:myHeader");
+  enricher.setEvaluatorExpression("#[process:appender:#[header:header1]]");
+  enricher.setEnrichmentMessageProcessor(new MessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      event.getMessage().setProperty("header1","test");
+      return event;
+    }
+  }
+);
+  MuleEvent event=getTestEvent("");
+  RequestContext.setEvent(event);
+  assertEquals("test append",enricher.process(event).getMessage().getProperty("myHeader"));
+}
