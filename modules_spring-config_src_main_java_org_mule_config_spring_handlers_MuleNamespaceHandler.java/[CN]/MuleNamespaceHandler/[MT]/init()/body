@@ -72,7 +72,8 @@
   registerBeanDefinitionParser("response",new ResponseDefinitionParser());
   registerMuleBeanDefinitionParser("message-filter",new MessageFilterDefinitionParser());
   registerMuleBeanDefinitionParser("invoke",new MessageProcessorDefinitionParser(InvokerMessageProcessor.class)).addAlias("method","methodName").addAlias("methodArguments","argumentExpressionsString").addAlias("methodArgumentTypes","ArgumentTypes");
-  registerMuleBeanDefinitionParser("message-enricher",new MessageProcessorDefinitionParser(MessageEnricher.class)).addAlias("with","evaluatorExpression").addAlias("enrich","enricherExpression");
+  registerMuleBeanDefinitionParser("message-enricher",new MessageEnricherDefinitionParser("messageProcessor",MessageEnricher.class)).addIgnored("source").addIgnored("target").registerPreProcessor(new CheckExclusiveAttributesAndChildren(new String[]{"source","target"},new String[]{"enrich"})).addCollection("enrichExpressionPairs");
+  registerMuleBeanDefinitionParser("enrich",new ChildDefinitionParser("enrichExpressionPair",EnrichExpressionPair.class));
   registerBeanDefinitionParser("async",new ChildDefinitionParser("messageProcessor",AsyncMessageProcessorsFactoryBean.class));
   registerBeanDefinitionParser("transactional",new ChildDefinitionParser("messageProcessor",TransactionalMessageProcessorsFactoryBean.class));
   registerBeanDefinitionParser("composite-source",new ChildDefinitionParser("messageSource",CompositeMessageSourceFactoryBean.class));

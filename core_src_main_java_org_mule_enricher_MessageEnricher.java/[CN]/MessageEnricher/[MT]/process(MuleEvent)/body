@@ -1,19 +1,10 @@
 {
-  MuleContext muleContext=event.getMuleContext();
-  ExpressionManager expressionManager=muleContext.getExpressionManager();
-  Object enrichmentObject=null;
+  ExpressionManager expressionManager=event.getMuleContext().getExpressionManager();
   MuleMessage enrichmentMessage=enrichmentProcessor.process(event).getMessage();
   if (enrichmentMessage != null) {
-    if (evaluatorExpression != null) {
-      enrichmentObject=expressionManager.evaluate(evaluatorExpression,enrichmentMessage);
-      if (enrichmentObject instanceof MuleMessage) {
-        enrichmentObject=((MuleMessage)enrichmentObject).getPayload();
-      }
+    for (    EnrichExpressionPair pair : enrichExpressionPairs) {
+      enrich(event.getMessage(),enrichmentMessage,pair.getSource(),pair.getTarget(),expressionManager);
     }
- else {
-      enrichmentObject=enrichmentMessage.getPayload();
-    }
-    expressionManager.enrich(enricherExpression,event.getMessage(),enrichmentObject);
   }
   return event;
 }
