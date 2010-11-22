@@ -6,9 +6,12 @@
   final boolean containerMode=config.isContainerMode();
   final String threadPrefix=containerMode ? String.format("[%s].flow.%s",config.getId(),getName()) : String.format("flow.%s",getName());
   builder.chain(new ProcessIfStartedMessageProcessor(this,getLifecycleState()));
+  builder.chain(new ProcessingTimerInterceptor());
   builder.chain(new LoggingInterceptor());
   builder.chain(new FlowConstructStatisticsMessageProcessor());
-  builder.chain(new OptionalAsyncInterceptingMessageProcessor(threadingProfile,threadPrefix,muleContext.getConfiguration().getShutdownTimeout()));
+  if (messageSource != null) {
+    builder.chain(new OptionalAsyncInterceptingMessageProcessor(threadingProfile,threadPrefix,muleContext.getConfiguration().getShutdownTimeout()));
+  }
   for (  Object processor : messageProcessors) {
     if (processor instanceof MessageProcessor) {
       builder.chain((MessageProcessor)processor);

@@ -1,5 +1,12 @@
 {
-  MuleEvent newEvent=new DefaultMuleEvent(event.getMessage(),event.getEndpoint(),this,event);
+  FlowConstruct flowConstruct=event.getFlowConstruct();
+  MuleEvent newEvent=new DefaultMuleEvent(event.getMessage(),event.getEndpoint(),this,event,true);
   RequestContext.setEvent(newEvent);
-  return messageProcessorChain.process(newEvent);
+  try {
+    return messageProcessorChain.process(newEvent);
+  }
+  finally {
+    event.getSession().setFlowConstruct(flowConstruct);
+    RequestContext.setEvent(event);
+  }
 }
