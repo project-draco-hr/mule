@@ -1,0 +1,40 @@
+{
+  int count=readShort();
+  for (int i=0; i < count; i++) {
+    int nameIndex=readShort();
+    int attrLen=readInt();
+    int curPos=pos;
+    String attrName=resolveUtf8(nameIndex);
+    Method m=attrMethods.get(attrName);
+    if (m != null) {
+      try {
+        m.invoke(this,new Object[]{});
+      }
+ catch (      IllegalAccessException e) {
+        pos=curPos;
+        skipFully(attrLen);
+      }
+catch (      InvocationTargetException e) {
+        try {
+          throw e.getTargetException();
+        }
+ catch (        Error ex) {
+          throw ex;
+        }
+catch (        RuntimeException ex) {
+          throw ex;
+        }
+catch (        IOException ex) {
+          throw ex;
+        }
+catch (        Throwable ex) {
+          pos=curPos;
+          skipFully(attrLen);
+        }
+      }
+    }
+ else {
+      skipFully(attrLen);
+    }
+  }
+}

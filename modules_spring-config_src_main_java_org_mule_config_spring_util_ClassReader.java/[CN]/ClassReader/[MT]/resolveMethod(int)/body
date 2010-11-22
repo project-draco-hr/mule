@@ -1,0 +1,39 @@
+{
+  int oldPos=pos;
+  try {
+    Member m=(Member)cpool[index];
+    if (m == null) {
+      pos=cpoolIndex[index];
+      Class owner=resolveClass(readShort());
+      NameAndType nt=resolveNameAndType(readShort());
+      String signature=nt.name + nt.type;
+      if ("<init>".equals(nt.name)) {
+        Constructor[] ctors=owner.getConstructors();
+        for (int i=0; i < ctors.length; i++) {
+          String sig=getSignature(ctors[i],ctors[i].getParameterTypes());
+          if (sig.equals(signature)) {
+            cpool[index]=ctors[i];
+            m=ctors[i];
+            return m;
+          }
+        }
+      }
+ else {
+        Method[] methods=owner.getDeclaredMethods();
+        for (int i=0; i < methods.length; i++) {
+          String sig=getSignature(methods[i],methods[i].getParameterTypes());
+          if (sig.equals(signature)) {
+            cpool[index]=methods[i];
+            m=methods[i];
+            return m;
+          }
+        }
+      }
+      throw new NoSuchMethodException(signature);
+    }
+    return m;
+  }
+  finally {
+    pos=oldPos;
+  }
+}

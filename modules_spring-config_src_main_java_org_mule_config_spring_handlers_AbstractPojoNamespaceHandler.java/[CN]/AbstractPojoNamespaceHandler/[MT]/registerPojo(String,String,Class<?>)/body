@@ -1,0 +1,17 @@
+{
+  OrphanDefinitionParser parser=new OrphanDefinitionParser(cls,true);
+  parser.addIgnored("name");
+  registerMuleBeanDefinitionParser(configElementName,parser);
+  try {
+    ParamReader paramReader=new ParamReader(cls);
+    for (    Method m : cls.getDeclaredMethods()) {
+      if (!m.getName().startsWith("set")) {
+        String[] parameterNames=paramReader.getParameterNames(m);
+        registerMuleBeanDefinitionParser(m.getName(),new InvokerMethodDefinitionParser("messageProcessor",m.getName(),parameterNames));
+      }
+    }
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+}
