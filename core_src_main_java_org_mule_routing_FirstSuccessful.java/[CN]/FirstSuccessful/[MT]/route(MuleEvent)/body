@@ -1,5 +1,5 @@
 {
-  MuleEvent retval=null;
+  MuleEvent returnEvent=null;
   boolean failed=true;
   for (  MessageProcessor mp : routes) {
     try {
@@ -7,22 +7,24 @@
       if (mp instanceof OutboundEndpoint) {
         toProcess=new DefaultMuleEvent(event.getMessage(),(OutboundEndpoint)mp,event.getSession());
       }
-      retval=mp.process(toProcess);
-      if (retval == null) {
+      returnEvent=mp.process(toProcess);
+      if (returnEvent == null) {
         failed=false;
       }
  else {
-        MuleMessage msg=retval.getMessage();
-        failed=msg != null && msg.getExceptionPayload() != null;
+        MuleMessage msg=returnEvent.getMessage();
+        failed=(msg != null) && (msg.getExceptionPayload() != null);
       }
     }
  catch (    Exception ex) {
       failed=true;
     }
-    if (!failed)     break;
+    if (!failed) {
+      break;
+    }
   }
   if (failed) {
     throw new CouldNotRouteOutboundMessageException(event,this);
   }
-  return retval;
+  return returnEvent;
 }
