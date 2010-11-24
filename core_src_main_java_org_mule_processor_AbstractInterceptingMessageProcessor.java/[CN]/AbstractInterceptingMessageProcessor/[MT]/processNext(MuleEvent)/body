@@ -6,9 +6,12 @@
     if (logger.isTraceEnabled()) {
       logger.trace("Invoking next MessageProcessor: '" + next.getClass().getName() + "' ");
     }
+    fireNotification(event,next,MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE);
     if (next instanceof OutboundEndpoint) {
       event=new DefaultMuleEvent(event.getMessage(),(OutboundEndpoint)next,event.getSession());
     }
-    return next.process(event);
+    final MuleEvent result=next.process(event);
+    fireNotification(event,next,MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE);
+    return result;
   }
 }
