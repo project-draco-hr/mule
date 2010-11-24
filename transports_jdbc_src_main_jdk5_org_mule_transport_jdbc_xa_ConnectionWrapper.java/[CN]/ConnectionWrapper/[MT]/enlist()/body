@@ -18,15 +18,14 @@
   if (!(transaction instanceof XaTransaction)) {
     throw new IllegalTransactionStateException(CoreMessages.notMuleXaTransaction(transaction));
   }
-  if (!isEnlisted()) {
-    final XAResource xaResource;
-    try {
-      xaResource=xaConnection.getXAResource();
+synchronized (enlistedXAResourceLock) {
+    if (!isEnlisted()) {
+      final XAResource xaResource=getXAResourceFromXATransaction();
+      boolean wasAbleToEnlist=((XaTransaction)transaction).enlistResource(xaResource);
+      if (wasAbleToEnlist) {
+        enlistedXAResource=xaResource;
+      }
     }
- catch (    SQLException e) {
-      throw new TransactionException(e);
-    }
-    enlisted=((XaTransaction)transaction).enlistResource(xaResource);
   }
-  return enlisted;
+  return isEnlisted();
 }
