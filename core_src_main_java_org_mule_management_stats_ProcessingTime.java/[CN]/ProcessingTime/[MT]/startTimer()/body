@@ -1,0 +1,29 @@
+{
+synchronized (ProcessingTime.class) {
+    if (timer == null) {
+      timer=new Timer("ProcessingTimeMonitor",true);
+      timer.schedule(new TimerTask(){
+        @Override public void run(){
+          try {
+            Reference ref;
+            do {
+              ref=(Reference)queue.poll();
+              if (ref != null) {
+                refs.remove(ref);
+                FlowConstructStatistics stats=ref.getStatistics();
+                if (stats.isEnabled()) {
+                  stats.addCompleteFlowExecutionTime(ref.getAccumulator().longValue());
+                }
+              }
+            }
+ while (ref != null);
+          }
+ catch (          Exception ex) {
+            logger.error(this,ex);
+          }
+        }
+      }
+,TIMER_PERIOD,TIMER_PERIOD);
+    }
+  }
+}
