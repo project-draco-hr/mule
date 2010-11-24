@@ -1,38 +1,16 @@
 {
-  byte[] buf;
+  InputStream input;
   if (src instanceof String) {
-    buf=src.toString().getBytes();
+    input=new ByteArrayInputStream(src.toString().getBytes());
   }
  else   if (src instanceof InputStream) {
-    InputStream input=(InputStream)src;
-    try {
-      buf=IOUtils.toByteArray(input);
-    }
-  finally {
-      IOUtils.closeQuietly(input);
-    }
+    input=(InputStream)src;
   }
  else {
-    buf=(byte[])src;
+    input=new ByteArrayInputStream((byte[])src);
   }
   try {
-    byte[] result=getTransformedBytes(buf);
-    if (getReturnDataType().equals(DataTypeFactory.STRING)) {
-      if (outputEncoding != null) {
-        try {
-          return new String(result,outputEncoding);
-        }
- catch (        UnsupportedEncodingException ex) {
-          return new String(result);
-        }
-      }
- else {
-        return new String(result);
-      }
-    }
- else {
-      return result;
-    }
+    return this.primTransform(input);
   }
  catch (  CryptoFailureException e) {
     throw new TransformerException(this,e);

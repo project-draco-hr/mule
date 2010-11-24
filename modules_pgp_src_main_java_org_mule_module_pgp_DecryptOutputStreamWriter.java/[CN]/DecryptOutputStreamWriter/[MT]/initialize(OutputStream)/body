@@ -1,0 +1,50 @@
+{
+  InputStream decodedInputStream=PGPUtil.getDecoderStream(this.toBeDecrypted);
+  PGPObjectFactory pgpF=new PGPObjectFactory(decodedInputStream);
+  Object o=pgpF.nextObject();
+  if (o == null) {
+    throw new IllegalArgumentException("Invalid PGP message");
+  }
+  PGPEncryptedDataList enc;
+  if (o instanceof PGPEncryptedDataList) {
+    enc=(PGPEncryptedDataList)o;
+  }
+ else {
+    enc=(PGPEncryptedDataList)pgpF.nextObject();
+  }
+  Iterator it=enc.getEncryptedDataObjects();
+  PGPPublicKeyEncryptedData pbe=null;
+  PGPPrivateKey privateKey=null;
+  while (privateKey == null && it.hasNext()) {
+    pbe=(PGPPublicKeyEncryptedData)it.next();
+    privateKey=getPrivateKey(pbe.getKeyID(),this.password);
+    if (privateKey == null) {
+      throw new IllegalArgumentException("Failed to find private key with ID " + pbe.getKeyID());
+    }
+  }
+  clearStream=pbe.getDataStream(privateKey,"BC");
+  PGPObjectFactory plainFact=new PGPObjectFactory(clearStream);
+  o=plainFact.nextObject();
+  PGPOnePassSignature signature=null;
+  if (o instanceof PGPOnePassSignatureList) {
+    PGPOnePassSignatureList list=(PGPOnePassSignatureList)o;
+    signature=list.get(0);
+    signature.initVerify(this.publicKey,"BC");
+    o=plainFact.nextObject();
+  }
+  compressedStream=null;
+  if (o instanceof PGPCompressedData) {
+    PGPCompressedData cData=(PGPCompressedData)o;
+    compressedStream=new BufferedInputStream(cData.getDataStream());
+    PGPObjectFactory pgpFact=new PGPObjectFactory(compressedStream);
+    Object streamData=pgpFact.nextObject();
+    o=streamData;
+  }
+  if (o instanceof PGPLiteralData) {
+    PGPLiteralData ld=(PGPLiteralData)o;
+    uncStream=ld.getInputStream();
+  }
+ else {
+    throw new PGPException("input is not PGPLiteralData - type unknown.");
+  }
+}

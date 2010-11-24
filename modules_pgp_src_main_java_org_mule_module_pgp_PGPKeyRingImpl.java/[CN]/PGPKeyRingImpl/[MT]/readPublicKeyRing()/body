@@ -1,17 +1,17 @@
 {
-  logger.debug(System.getProperties().get("user.dir"));
-  InputStream in=IOUtils.getResourceAsStream(publicKeyRingFileName,getClass());
-  ExtendedKeyStore ring=(ExtendedKeyStore)ExtendedKeyStore.getInstance("OpenPGP/KeyRing");
-  ring.load(in,null);
+  InputStream in=IOUtils.getResourceAsStream(getPublicKeyRingFileName(),getClass());
+  PGPPublicKeyRingCollection collection=new PGPPublicKeyRingCollection(in);
   in.close();
-  for (Enumeration e=ring.aliases(); e.hasMoreElements(); ) {
-    String aliasId=(String)e.nextElement();
-    KeyBundle bundle=ring.getKeyBundle(aliasId);
-    if (bundle != null) {
-      for (Iterator users=bundle.getPrincipals(); users.hasNext(); ) {
-        Principal princ=(Principal)users.next();
-        principalsKeyBundleMap.put(princ.getName(),bundle);
+  for (Iterator iterator=collection.getKeyRings(); iterator.hasNext(); ) {
+    PGPPublicKeyRing ring=(PGPPublicKeyRing)iterator.next();
+    String userID="";
+    for (Iterator iterator2=ring.getPublicKeys(); iterator2.hasNext(); ) {
+      PGPPublicKey publicKey=(PGPPublicKey)iterator2.next();
+      Iterator userIDs=publicKey.getUserIDs();
+      if (userIDs.hasNext()) {
+        userID=(String)userIDs.next();
       }
+      principalsKeyBundleMap.put(userID,publicKey);
     }
   }
 }

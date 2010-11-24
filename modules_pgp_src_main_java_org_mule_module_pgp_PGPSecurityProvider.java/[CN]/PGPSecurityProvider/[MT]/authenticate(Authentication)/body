@@ -4,22 +4,22 @@
   if (userId == null) {
     throw new UnauthorisedException(CoreMessages.objectIsNull("UserId"));
   }
-  KeyBundle userKeyBundle=keyManager.getKeyBundle(userId);
-  if (userKeyBundle == null) {
+  PGPPublicKey publicKey=keyManager.getPublicKey(userId);
+  if (publicKey == null) {
     throw new UnauthorisedException(PGPMessages.noPublicKeyForUser(userId));
   }
   Message msg=(Message)auth.getCredentials();
   if (msg instanceof SignedMessage) {
     try {
-      if (!((SignedMessage)msg).verify(userKeyBundle)) {
+      if (!((SignedMessage)msg).verify()) {
         throw new UnauthorisedException(PGPMessages.invalidSignature());
       }
     }
- catch (    MessageException e) {
+ catch (    Exception e) {
       throw new UnauthorisedException(PGPMessages.errorVerifySignature(),e);
     }
   }
   auth.setAuthenticated(true);
-  auth.setDetails(userKeyBundle);
+  auth.setDetails(publicKey);
   return auth;
 }
