@@ -1,0 +1,17 @@
+{
+  Object value=null;
+  boolean foundValue=false;
+  boolean validExpression=muleContext.getExpressionManager().isValidExpression(param);
+  if (message != null && validExpression) {
+    value=muleContext.getExpressionManager().evaluate(param,message);
+    foundValue=value != null;
+  }
+  if (!foundValue) {
+    String name=getNameFromParam(param);
+    if (!validExpression) {
+      logger.warn(MessageFormat.format("Config is using the legacy param format {0} (no evaluator defined)." + " This expression can be replaced with {1}header:{2}{3}",param,ExpressionManager.DEFAULT_EXPRESSION_PREFIX,name,ExpressionManager.DEFAULT_EXPRESSION_POSTFIX));
+    }
+    value=endpoint.getProperty(name);
+  }
+  return value;
+}
