@@ -4,30 +4,17 @@
   try {
     con=this.connector.getConnection();
     MuleMessage muleMessage=createMuleMessage(message,endpoint.getEncoding());
-    if (this.ackStmt != null) {
+    if (hasAckStatement()) {
       if (aggregateResult) {
-        List rows=(List)message;
-        Object[][] paramValuesArray=new Object[rows.size()][];
-        HashMap record;
-        for (int i=0; i < rows.size(); i++) {
-          record=(HashMap)rows.get(i);
-          paramValuesArray[i]=connector.getParams(endpoint,this.ackParams,new DefaultMuleMessage(record,connector.getMuleContext()),this.endpoint.getEndpointURI().getAddress());
-        }
-        if (logger.isDebugEnabled()) {
-          logger.debug("SQL UPDATE: " + ackStmt + ", params = "+ ArrayUtils.toString(ackParams));
-        }
-        int[] nbRows=connector.getQueryRunnerFor(endpoint).batch(con,this.ackStmt,paramValuesArray);
+        List<MuleMessage> messages=createMuleMessages((List)message);
+        int[] nbRows=executeBatchAckStatement(con,messages);
         if (nbRows[0] == 0) {
           logger.warn(".ack statement did not update any rows");
         }
         aggregateResult=false;
       }
  else {
-        Object[] paramValues=connector.getParams(endpoint,this.ackParams,muleMessage,this.endpoint.getEndpointURI().getAddress());
-        if (logger.isDebugEnabled()) {
-          logger.debug("SQL UPDATE: " + ackStmt + ", params = "+ ArrayUtils.toString(paramValues));
-        }
-        int nbRows=connector.getQueryRunnerFor(endpoint).update(con,this.ackStmt,paramValues);
+        int nbRows=executeAckStatement(con,muleMessage);
         if (nbRows == 0) {
           logger.warn(".ack statement did not update any rows");
         }
