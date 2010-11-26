@@ -1,10 +1,35 @@
 {
+  Connectable connectable=null;
+  if (e instanceof InvocationTargetException) {
+    Throwable t=e.getCause();
+    e=t instanceof Exception ? (Exception)t : new Exception(t);
+  }
   if (enableNotifications) {
     fireNotification(new ExceptionNotification(e));
+  }
+  if (e instanceof ConnectException) {
+    logger.info("Exception caught is a ConnectException, attempting to reconnect...");
+    connectable=((ConnectException)e).getFailed();
+    try {
+      logger.debug("Disconnecting " + connectable.getClass().getName());
+      connectable.disconnect();
+    }
+ catch (    Exception e1) {
+      logger.error(e1.getMessage());
+    }
   }
   logException(e);
   handleTransaction(e);
   if (RequestContext.getEvent() != null) {
     RequestContext.setExceptionPayload(new DefaultExceptionPayload(e));
+  }
+  if (connectable != null) {
+    try {
+      logger.debug("Reconnecting " + connectable.getClass().getName());
+      connectable.connect();
+    }
+ catch (    Exception e2) {
+      logger.error(e2.getMessage());
+    }
   }
 }

@@ -10,42 +10,13 @@
   }
   RetryCallback callback=new RetryCallback(){
     public void doWork(    RetryContext context) throws Exception {
-      if (validateConnections && !validateConnection(context).isOk()) {
-        throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect to resource"),context.getLastFailure(),null);
+      if (validateConnections && context.getLastFailure() instanceof ConnectException) {
+        Connectable failed=((ConnectException)context.getLastFailure()).getFailed();
+        if (!failed.validateConnection(context).isOk()) {
+          throw new ConnectException(MessageFactory.createStaticMessage("Still unable to connect to resource " + failed.getClass().getName()),context.getLastFailure(),failed);
+        }
       }
       doConnect();
-      Map<Object,Object> info=context.getMetaInfo();
-      if (info.get(RetryContext.FAILED_RECEIVER) != null) {
-        String receiverKey=(String)info.get(RetryContext.FAILED_RECEIVER);
-        MessageReceiver receiver=receivers.get(receiverKey);
-        if (validateConnections && !receiver.validateConnection(context).isOk()) {
-          throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect receiver to resource"),context.getLastFailure(),receiver);
-        }
-      }
- else       if (info.get(RetryContext.FAILED_DISPATCHER) != null) {
-        OutboundEndpoint endpoint=(OutboundEndpoint)info.get(RetryContext.FAILED_DISPATCHER);
-        MessageDispatcher dispatcher=(MessageDispatcher)dispatchers.borrowObject(endpoint);
-        try {
-          if (validateConnections && !dispatcher.validateConnection(context).isOk()) {
-            throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect dispatcher to resource"),context.getLastFailure(),null);
-          }
-        }
-  finally {
-          dispatchers.returnObject(endpoint,dispatcher);
-        }
-      }
- else       if (info.get(RetryContext.FAILED_REQUESTER) != null) {
-        InboundEndpoint endpoint=(InboundEndpoint)info.get(RetryContext.FAILED_REQUESTER);
-        MessageRequester requester=(MessageRequester)requesters.borrowObject(endpoint);
-        try {
-          if (validateConnections && !requester.validateConnection(context).isOk()) {
-            throw new ConnectException(MessageFactory.createStaticMessage("Unable to connect requester to resource"),context.getLastFailure(),null);
-          }
-        }
-  finally {
-          requesters.returnObject(endpoint,requester);
-        }
-      }
       setConnected(true);
       logger.info("Connected: " + getWorkDescription());
       if (startOnConnect) {
