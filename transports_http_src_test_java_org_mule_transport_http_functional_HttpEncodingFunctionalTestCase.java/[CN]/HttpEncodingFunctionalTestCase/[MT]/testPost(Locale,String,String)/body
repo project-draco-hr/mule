@@ -1,0 +1,14 @@
+{
+  MuleClient client=new MuleClient(muleContext);
+  Map<String,Object> messageProperties=new HashMap<String,Object>();
+  String contentType="text/plain;charset=" + encoding;
+  messageProperties.put(HttpConstants.HEADER_CONTENT_TYPE,contentType);
+  messageProperties.put(HttpConnector.HTTP_METHOD_PROPERTY,"POST");
+  String endpointUri="clientEndpoint." + encoding;
+  MuleMessage reply=client.send(endpointUri,payload,messageProperties);
+  assertNotNull(reply);
+  assertEquals("200",reply.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY));
+  assertEquals(payload + " Received",reply.getPayloadAsString());
+  assertEquals("text/plain;charset=" + encoding,reply.getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE).toString());
+  assertEquals(encoding,reply.getEncoding());
+}
