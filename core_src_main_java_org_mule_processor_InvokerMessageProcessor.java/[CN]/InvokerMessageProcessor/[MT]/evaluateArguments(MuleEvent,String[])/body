@@ -3,15 +3,18 @@
   Object[] args=new Object[expressions.length];
   try {
     for (int i=0; i < args.length; i++) {
-      Object arg=expressionManager.evaluate(expressions[i],event.getMessage());
-      if (arg instanceof MuleMessage) {
-        arg=((MuleMessage)arg).getPayload();
-      }
-      if (!(argumentTypes[i].isAssignableFrom(arg.getClass()))) {
-        DataType<?> source=DataTypeFactory.create(arg.getClass());
-        DataType<?> target=DataTypeFactory.create(argumentTypes[i]);
-        Transformer t=event.getMuleContext().getRegistry().lookupTransformer(source,target);
-        arg=t.transform(arg);
+      Object arg=null;
+      if (expressions[i] != null) {
+        arg=expressionManager.evaluate(expressions[i],event.getMessage());
+        if (arg instanceof MuleMessage) {
+          arg=((MuleMessage)arg).getPayload();
+        }
+        if (!(argumentTypes[i].isAssignableFrom(arg.getClass()))) {
+          DataType<?> source=DataTypeFactory.create(arg.getClass());
+          DataType<?> target=DataTypeFactory.create(argumentTypes[i]);
+          Transformer t=event.getMuleContext().getRegistry().lookupTransformer(source,target);
+          arg=t.transform(arg);
+        }
       }
       args[i]=arg;
     }
