@@ -24,7 +24,18 @@
     }
     String soapAction=getSoapAction(event.getMessage());
     m.put(org.mule.module.cxf.SoapConstants.SOAP_ACTION_PROPERTY_CAPS,soapAction);
-    org.apache.cxf.transport.Destination d=server.getDestination();
+    org.apache.cxf.transport.Destination d;
+    if (server != null) {
+      d=server.getDestination();
+    }
+ else {
+      String serviceUri=getUri(event);
+      DestinationFactoryManager dfm=bus.getExtension(DestinationFactoryManager.class);
+      DestinationFactory df=dfm.getDestinationFactoryForUri(serviceUri);
+      EndpointInfo ei=new EndpointInfo();
+      ei.setAddress(serviceUri);
+      d=df.getDestination(ei);
+    }
     m.put(LocalConduit.DIRECT_DISPATCH,Boolean.TRUE);
     m.put(MuleProperties.MULE_EVENT_PROPERTY,RequestContext.getEvent());
     m.setDestination(d);

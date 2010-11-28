@@ -30,5 +30,18 @@
   processor.setOperation(operation);
   configureMessageProcessor(processor);
   processor.setPayloadToArguments(payloadToArguments);
+  if (decoupledEndpoint != null) {
+    processor.setDecoupledEndpoint(decoupledEndpoint);
+    CxfInboundMessageProcessor cxfInboundMP=new CxfInboundMessageProcessor();
+    cxfInboundMP.setMuleContext(muleContext);
+    cxfInboundMP.setBus(getBus());
+    List<MessageProcessor> mps=new ArrayList<MessageProcessor>();
+    mps.add(cxfInboundMP);
+    EndpointBuilder ep=muleContext.getRegistry().lookupEndpointFactory().getEndpointBuilder(decoupledEndpoint);
+    SimpleFlowConstruct flow=new SimpleFlowConstruct("decoupled-" + ep.toString(),muleContext);
+    flow.setMessageProcessors(mps);
+    flow.setMessageSource(ep.buildInboundEndpoint());
+    muleContext.getRegistry().registerObject(flow.getName(),flow);
+  }
   return processor;
 }
