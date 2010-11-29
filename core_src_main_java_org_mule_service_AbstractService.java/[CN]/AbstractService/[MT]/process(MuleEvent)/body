@@ -1,5 +1,11 @@
 {
-  MuleEvent newEvent=new DefaultMuleEvent(event.getMessage(),event.getEndpoint(),this,event);
+  MuleSession calledSession=new DefaultMuleSession(event.getSession(),this);
+  MuleEvent newEvent=new DefaultMuleEvent(event.getMessage(),event.getEndpoint(),event,calledSession);
   RequestContext.setEvent(newEvent);
-  return messageProcessorChain.process(newEvent);
+  try {
+    return messageProcessorChain.process(newEvent);
+  }
+  finally {
+    RequestContext.setEvent(event);
+  }
 }
