@@ -1,5 +1,16 @@
 {
   httpServer=new Server();
+  if (webappsConfiguration != null) {
+    deployer=new WebAppDeployer();
+    deployer.setWebAppDir(webappsConfiguration.getDirectory());
+    deployer.setExtract(true);
+    org.mortbay.jetty.AbstractConnector connector=createJettyConnector();
+    connector.setHost(webappsConfiguration.getHost());
+    connector.setPort(webappsConfiguration.getPort());
+    deployer.setContexts(httpServer);
+    httpServer.addConnector(connector);
+    httpServer.addLifeCycle(deployer);
+  }
   initialiseFromConfigFile();
   try {
     muleContext.registerListener(new MuleContextNotificationListener<MuleContextNotification>(){
