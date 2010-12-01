@@ -7,34 +7,12 @@
     }
     return result;
   }
-  Object result;
   ClassLoader originalContextClassLoader=Thread.currentThread().getContextClassLoader();
   try {
     Thread.currentThread().setContextClassLoader(expressionEvaluationClassLoader);
-    result=muleContext.getExpressionManager().evaluate(expr,message,false);
+    return muleContext.getExpressionManager().evaluateBoolean(expr,message,false);
   }
   finally {
     Thread.currentThread().setContextClassLoader(originalContextClassLoader);
-  }
-  if (result == null) {
-    return nullReturnsTrue;
-  }
- else   if (result instanceof Boolean) {
-    return (Boolean)result;
-  }
- else   if (result instanceof String) {
-    if (result.toString().toLowerCase().equalsIgnoreCase("false")) {
-      return false;
-    }
- else     if (result.toString().toLowerCase().equalsIgnoreCase("true")) {
-      return true;
-    }
- else {
-      return !nullReturnsTrue;
-    }
-  }
- else {
-    logger.warn("Expression: " + expr + ", returned an non-boolean result. Returning: "+ !nullReturnsTrue);
-    return !nullReturnsTrue;
   }
 }
