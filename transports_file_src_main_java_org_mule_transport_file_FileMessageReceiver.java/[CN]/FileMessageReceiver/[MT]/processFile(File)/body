@@ -26,7 +26,7 @@
   DefaultMuleMessage fileParserMessasge=new DefaultMuleMessage(null,connector.getMuleContext());
   fileParserMessasge.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
   File workFile=null;
-  if (workDir != null && (moveDir == null || (moveDir != null && fileConnector.isStreaming()))) {
+  if (workDir != null) {
     String workFileName=sourceFileOriginalName;
     workFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
     workFile=FileUtils.newFile(workDir,workFileName);
@@ -57,6 +57,9 @@
     return;
   }
   message.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+  if (forceSync) {
+    message.setInvocationProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,Boolean.TRUE);
+  }
   if (!fileConnector.isStreaming()) {
     moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,message);
   }
