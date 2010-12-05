@@ -1,0 +1,34 @@
+{
+  if (referenceThread == null) {
+    referenceThread=new Thread(new Runnable(){
+      /** 
+ * As weak references to completed ProcessingTimes are delivered, record them
+ */
+      public void run(){
+        try {
+          while (true) {
+            if (Thread.currentThread() != referenceThread) {
+              break;
+            }
+            Object temp=queue.remove();
+            Reference ref=(Reference)temp;
+            refs.remove(ref);
+            FlowConstructStatistics stats=ref.getStatistics();
+            if (stats.isEnabled()) {
+              stats.addCompleteFlowExecutionTime(ref.getAccumulator().longValue());
+            }
+          }
+        }
+ catch (        InterruptedException ex) {
+          ;
+        }
+catch (        Exception ex) {
+          logger.error(this,ex);
+        }
+      }
+    }
+,"ProcessingTimeMonitor");
+    referenceThread.setDaemon(true);
+    referenceThread.start();
+  }
+}
