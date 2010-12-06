@@ -1,0 +1,17 @@
+{
+  FirstSuccessful fs=new FirstSuccessful();
+  fs.setFailureExpression("#[payload-type:java.lang.Integer]");
+  List<MessageProcessor> routes=new ArrayList<MessageProcessor>();
+  routes.add(new MessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      event.getMessage().setPayload(Integer.valueOf(1));
+      return event;
+    }
+  }
+);
+  routes.add(new StringAppendTransformer("abc"));
+  fs.setMessageProcessors(routes);
+  fs.setMuleContext(muleContext);
+  fs.initialise();
+  assertEquals("abc",fs.process(getTestEvent("")).getMessageAsString());
+}
