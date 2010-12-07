@@ -1,0 +1,44 @@
+{
+  Object[] args=new Object[argumentTemplates.size()];
+  MuleMessage message=event.getMessage();
+  try {
+    for (int i=0; i < args.length; i++) {
+      Object arg=null;
+      Object argumentTemplate=argumentTemplates.get(i);
+      if (argumentTemplate != null) {
+        if (argumentTemplate instanceof Collection<?>) {
+          Collection<Object> collectionTemplate=(Collection<Object>)argumentTemplate;
+          Collection<Object> newCollection=new ArrayList<Object>();
+          for (          Object object : collectionTemplate) {
+            newCollection.add(evaluateExpressionCandidate(object,message));
+          }
+          arg=newCollection;
+        }
+ else         if (argumentTemplate instanceof Map<?,?>) {
+          Map<Object,Object> mapTemplate=(Map<Object,Object>)argumentTemplate;
+          Map<Object,Object> newMap=new HashMap<Object,Object>();
+          for (          Entry<Object,Object> entry : mapTemplate.entrySet()) {
+            newMap.put(evaluateExpressionCandidate(entry.getKey(),message),evaluateExpressionCandidate(entry.getValue(),message));
+          }
+          arg=newMap;
+        }
+ else         if (argumentTemplate instanceof String[]) {
+          String[] stringArrayTemplate=(String[])argumentTemplate;
+          Object[] newArray=new String[stringArrayTemplate.length];
+          for (int j=0; j < stringArrayTemplate.length; j++) {
+            newArray[j]=evaluateExpressionCandidate(stringArrayTemplate[j],message);
+          }
+          arg=newArray;
+        }
+ else {
+          arg=evaluateExpressionCandidate((String)argumentTemplate,message);
+        }
+        args[i]=transformArgument(arg,argumentTypes[i]);
+      }
+    }
+    return args;
+  }
+ catch (  TransformerException e) {
+    throw new MessagingException(event,e);
+  }
+}
