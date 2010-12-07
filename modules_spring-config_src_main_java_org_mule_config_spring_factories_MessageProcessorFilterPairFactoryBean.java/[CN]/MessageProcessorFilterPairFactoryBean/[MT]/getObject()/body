@@ -1,3 +1,15 @@
 {
-  return filter == null ? new MessageProcessorFilterPair(messageProcessor,AcceptAllFilter.INSTANCE) : new MessageProcessorFilterPair(messageProcessor,filter);
+  MessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
+  for (  Object processor : messageProcessors) {
+    if (processor instanceof MessageProcessor) {
+      builder.chain((MessageProcessor)processor);
+    }
+ else     if (processor instanceof MessageProcessorBuilder) {
+      builder.chain((MessageProcessorBuilder)processor);
+    }
+ else {
+      throw new IllegalArgumentException("MessageProcessorBuilder should only have MessageProcessor's or MessageProcessorBuilder's configured");
+    }
+  }
+  return filter == null ? new MessageProcessorFilterPair(builder.build(),AcceptAllFilter.INSTANCE) : new MessageProcessorFilterPair(builder.build(),filter);
 }
