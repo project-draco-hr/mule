@@ -1,15 +1,18 @@
 {
-  MuleClient client=new MuleClient(muleContext);
+  final MuleClient client=muleContext.getClient();
   Customer c=new Customer("Ross Mason",1234);
   CustomerQuoteRequest[] requests=new CustomerQuoteRequest[3];
   requests[0]=new CustomerQuoteRequest(c,100000,48);
   requests[1]=new CustomerQuoteRequest(c,1000,12);
   requests[2]=new CustomerQuoteRequest(c,10,24);
-  long start=System.currentTimeMillis();
+  long start=0;
   int numRequests=getNumberOfRequests();
   int i=0;
   try {
     for (; i < numRequests; i++) {
+      if (i == 501) {
+        start=System.currentTimeMillis();
+      }
       CustomerQuoteRequest loanRequest=requests[i % 3];
       MuleMessage result=client.send("CustomerRequests",loanRequest,null);
       assertNotNull(result);
