@@ -9,6 +9,9 @@
     public void onNotification(    ExceptionNotification notification){
       if (notification.getException() instanceof MessageRedeliveredException) {
         mrexFired.countDown();
+        assertEquals(DESTINATION,((MessageRedeliveredException)notification.getException()).getEndpoint().getEndpointURI().toString());
+        assertEquals(MAX_REDELIVERY,((MessageRedeliveredException)notification.getException()).getMaxRedelivery());
+        assertTrue(((MessageRedeliveredException)notification.getException()).getMuleMessage().getPayload() instanceof javax.jms.Message);
       }
     }
   }
@@ -22,9 +25,15 @@
   }
 ;
   ftc.setEventCallback(callback);
-  client.dispatch(DESTINATION,"test",null);
+  client.dispatch(DESTINATION,TEST_MESSAGE,null);
   Thread.sleep(2000);
   mrexFired.await(timeout,TimeUnit.MILLISECONDS);
   assertEquals("MessageRedeliveredException never fired.",0,mrexFired.getCount());
-  assertEquals("Wrong number of delivery attempts",4,callback.getCallbackCount());
+  assertEquals("Wrong number of delivery attempts",MAX_REDELIVERY + 1,callback.getCallbackCount());
+  MuleMessage dl=client.request("jms://dead.letter",1000);
+  assertNotNull(dl);
+  assertTrue(dl.getPayload() instanceof ExceptionMessage);
+  ExceptionMessage em=(ExceptionMessage)dl.getPayload();
+  assertNotNull(em.getException());
+  assertTrue(em.getException() instanceof MessageRedeliveredException);
 }
