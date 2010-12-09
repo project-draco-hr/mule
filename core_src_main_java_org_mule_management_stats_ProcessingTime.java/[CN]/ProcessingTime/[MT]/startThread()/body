@@ -10,20 +10,25 @@
             if (Thread.currentThread() != referenceThread) {
               break;
             }
-            Object temp=queue.remove();
-            Reference ref=(Reference)temp;
-            refs.remove(ref);
-            FlowConstructStatistics stats=ref.getStatistics();
-            if (stats.isEnabled()) {
-              stats.addCompleteFlowExecutionTime(ref.getAccumulator().longValue());
+            try {
+              Object temp=queue.remove();
+              Reference ref=(Reference)temp;
+              refs.remove(ref);
+              FlowConstructStatistics stats=ref.getStatistics();
+              if (stats.isEnabled()) {
+                stats.addCompleteFlowExecutionTime(ref.getAccumulator().longValue());
+              }
+            }
+ catch (            InterruptedException ex) {
+              break;
+            }
+catch (            Exception ex) {
+              logger.error(this,ex);
             }
           }
         }
- catch (        InterruptedException ex) {
-          ;
-        }
-catch (        Exception ex) {
-          logger.error(this,ex);
+  finally {
+          referenceThread=null;
         }
       }
     }
