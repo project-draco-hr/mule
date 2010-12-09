@@ -1,6 +1,10 @@
 {
   MuleMessage request=new DefaultMuleMessage(StringUtils.EMPTY,(Map<String,Object>)null,connector.getMuleContext());
-  MuleEvent event=new DefaultMuleEvent(request,endpoint,new DefaultMuleSession(flowConstruct,connector.getMuleContext()));
+  ImmutableEndpoint ep=endpoint;
+  if (sourceMessageProcessor instanceof ImmutableEndpoint) {
+    ep=(ImmutableEndpoint)sourceMessageProcessor;
+  }
+  MuleEvent event=new DefaultMuleEvent(request,ep,new DefaultMuleSession(flowConstruct,connector.getMuleContext()));
   MuleEvent sourceEvent=sourceMessageProcessor.process(event);
   if (sourceEvent != null) {
     routeMessage(sourceEvent.getMessage());
