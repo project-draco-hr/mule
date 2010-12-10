@@ -1,17 +1,20 @@
 {
-  Transformer trans;
-  List<TransformerResolver> resolvers=(List<TransformerResolver>)lookupObjects(TransformerResolver.class);
-  Collections.sort(resolvers,new TransformerResolverComparator());
-  for (  TransformerResolver resolver : resolvers) {
-    try {
-      trans=resolver.resolve(source,result);
-      if (trans != null) {
-        return trans;
-      }
+  final String dataTypePairHash=getDataTypeSourceResultPairHash(source,result);
+  Transformer cachedTransformer=(Transformer)exactTransformerCache.get(dataTypePairHash);
+  if (cachedTransformer != null) {
+    return cachedTransformer;
+  }
+  Transformer trans=resolveTransformer(source,result);
+  if (trans != null) {
+    Transformer concurrentlyAddedTransformer=(Transformer)exactTransformerCache.putIfAbsent(dataTypePairHash,trans);
+    if (concurrentlyAddedTransformer != null) {
+      return concurrentlyAddedTransformer;
     }
- catch (    ResolverException e) {
-      throw new TransformerException(CoreMessages.noTransformerFoundForMessage(source,result),e);
+ else {
+      return trans;
     }
   }
-  throw new TransformerException(CoreMessages.noTransformerFoundForMessage(source,result));
+ else {
+    throw new TransformerException(CoreMessages.noTransformerFoundForMessage(source,result));
+  }
 }

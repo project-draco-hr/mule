@@ -1,6 +1,9 @@
 {
   super.doInitialise();
   sourceMessageProcessor=(MessageProcessor)endpoint.getProperty(SOURCE_MESSAGE_PROCESSOR_PROPERTY_NAME);
+  if (sourceMessageProcessor instanceof OutboundEndpoint && !((OutboundEndpoint)sourceMessageProcessor).getExchangePattern().hasResponse()) {
+    throw new InitialisationException(CoreMessages.createStaticMessage(String.format("The endpoint %s does not return responses and therefore can't be used for polling.",sourceMessageProcessor)),this);
+  }
   Long tempPolling=(Long)endpoint.getProperties().get(AbstractConnector.PROPERTY_POLLING_FREQUENCY);
   if (tempPolling != null) {
     setFrequency(tempPolling);

@@ -1,5 +1,6 @@
 {
-  List<Transformer> results=transformerListCache.get(source.toString() + result.toString());
+  final String dataTypePairHash=getDataTypeSourceResultPairHash(source,result);
+  List<Transformer> results=(List<Transformer>)transformerListCache.get(dataTypePairHash);
   if (results != null) {
     return results;
   }
@@ -14,6 +15,11 @@
       results.add(t);
     }
   }
-  transformerListCache.put(source.toString() + result.toString(),results);
-  return results;
+  List<Transformer> concurrentlyAddedTransformers=(List<Transformer>)transformerListCache.putIfAbsent(dataTypePairHash,results);
+  if (concurrentlyAddedTransformers != null) {
+    return concurrentlyAddedTransformers;
+  }
+ else {
+    return results;
+  }
 }
