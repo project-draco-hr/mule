@@ -1,5 +1,9 @@
 {
-  assertExceptionStrategyHasNumberOfEndpoints("testService1",1);
+  Service service=muleContext.getRegistry().lookupService("testService1");
+  assertNotNull(service);
+  assertNotNull(service.getExceptionListener());
+  assertTrue(service.getExceptionListener() instanceof DefaultServiceExceptionStrategy);
+  assertEquals(1,((DefaultServiceExceptionStrategy)service.getExceptionListener()).getMessageProcessors().size());
   MuleClient mc=new MuleClient(muleContext);
   mc.dispatch("vm://in1","test",null);
   assertExceptionMessage(mc.request("vm://out1",RECEIVE_TIMEOUT));
