@@ -1,40 +1,42 @@
 {
-  if (referenceThread == null) {
-    referenceThread=new Thread(new Runnable(){
-      /** 
+synchronized (ProcessingTime.class) {
+    if (referenceThread == null) {
+      referenceThread=new Thread(new Runnable(){
+        /** 
  * As weak references to completed ProcessingTimes are delivered, record them
  */
-      public void run(){
-        try {
-          while (true) {
-            if (Thread.currentThread() != referenceThread) {
-              break;
-            }
-            try {
-              Object temp=queue.remove();
-              Reference ref=(Reference)temp;
-              refs.remove(ref);
-              FlowConstructStatistics stats=ref.getStatistics();
-              if (stats.isEnabled()) {
-                stats.addCompleteFlowExecutionTime(ref.getAccumulator().longValue());
+        public void run(){
+          try {
+            while (true) {
+              if (Thread.currentThread() != referenceThread) {
+                break;
+              }
+              try {
+                Object temp=queue.remove();
+                Reference ref=(Reference)temp;
+                refs.remove(ref);
+                FlowConstructStatistics stats=ref.getStatistics();
+                if (stats.isEnabled()) {
+                  stats.addCompleteFlowExecutionTime(ref.getAccumulator().longValue());
+                }
+              }
+ catch (              InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                break;
+              }
+catch (              Exception ex) {
+                logger.error(this,ex);
               }
             }
- catch (            InterruptedException ex) {
-              Thread.currentThread().interrupt();
-              break;
-            }
-catch (            Exception ex) {
-              logger.error(this,ex);
-            }
+          }
+  finally {
+            referenceThread=null;
           }
         }
-  finally {
-          referenceThread=null;
-        }
       }
-    }
 ,this.threadName);
-    referenceThread.setDaemon(true);
-    referenceThread.start();
+      referenceThread.setDaemon(true);
+      referenceThread.start();
+    }
   }
 }
