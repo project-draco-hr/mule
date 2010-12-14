@@ -4,10 +4,13 @@
   addAppArchive(url);
   deploymentService.start();
   assertTrue("Install never invoked",installLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
+  Thread.sleep(1000);
   assertAppsDir(new String[]{"broken-app.zip"},NONE,true);
   assertAppsDir(NONE,new String[]{"dummy-app"},false);
   assertEquals("No apps should have been registered with Mule.",0,deploymentService.getApplications().size());
-  final List<URL> zombieURLs=deploymentService.getZombieURLs();
-  assertEquals("Wrong number of zombie apps registered.",1,zombieURLs.size());
-  assertEquals("Wrong URL tagged as zombie.","broken-app.zip",new File(zombieURLs.get(0).getFile()).getName());
+  final Map<URL,Long> zombieMap=deploymentService.getZombieMap();
+  assertEquals("Wrong number of zombie apps registered.",1,zombieMap.size());
+  final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
+  assertEquals("Wrong URL tagged as zombie.","broken-app.zip",new File(zombie.getKey().getFile()).getName());
+  assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
 }
