@@ -45,16 +45,19 @@
     }
     appAnchors=currentAnchors;
     for (    String zip : zips) {
+      URL url=null;
       try {
         final String appName=StringUtils.removeEnd(zip,".zip");
         Application app=(Application)CollectionUtils.find(applications,new BeanPropertyValueEqualsPredicate("appName",appName));
         if (app != null) {
           undeploy(appName);
         }
-        deploy(new File(appsDir,zip).toURI().toURL());
+        url=new File(appsDir,zip).toURI().toURL();
+        deploy(url);
       }
  catch (      Throwable t) {
         logger.error("Failed to deploy application archive: " + zip,t);
+        addZombie(url);
       }
     }
     if (zips.length > 0 || dirty) {
@@ -68,6 +71,14 @@
       }
  catch (      Throwable t) {
         logger.error("Failed to deploy exploded application: " + addedApp,t);
+        try {
+          addZombie(new File(appsDir,addedApp).toURI().toURL());
+        }
+ catch (        MalformedURLException e) {
+          if (logger.isDebugEnabled()) {
+            logger.debug(e);
+          }
+        }
       }
     }
   }

@@ -1,5 +1,16 @@
 {
-  final Application application=deployer.installFrom(appArchiveUrl);
-  applications.add(application);
-  deployer.deploy(application);
+  final Application application;
+  try {
+    application=deployer.installFrom(appArchiveUrl);
+    applications.add(application);
+    deployer.deploy(application);
+  }
+ catch (  Throwable t) {
+    addZombie(appArchiveUrl);
+    if (t instanceof DeploymentException) {
+      throw ((DeploymentException)t);
+    }
+    final String msg="Failed to deploy from URL: " + appArchiveUrl;
+    throw new DeploymentException(MessageFactory.createStaticMessage(msg),t);
+  }
 }

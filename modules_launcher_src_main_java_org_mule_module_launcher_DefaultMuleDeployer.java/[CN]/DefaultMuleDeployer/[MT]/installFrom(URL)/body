@@ -4,6 +4,8 @@
   }
   final ReentrantLock lock=deploymentService.getLock();
   String appName;
+  File appDir=null;
+  boolean errorEncountered=false;
   try {
     if (!lock.tryLock(0,TimeUnit.SECONDS)) {
       throw new IOException("Another deployment operation is in progress");
@@ -14,7 +16,7 @@
       logger.info("Exploding a Mule application archive: " + fullPath);
     }
     appName=FilenameUtils.getBaseName(fullPath);
-    File appDir=new File(appsDir,appName);
+    appDir=new File(appsDir,appName);
     final File source=new File(url.toURI());
     FileUtils.unzip(source,appDir);
     if ("file".equals(url.getProtocol())) {
@@ -22,15 +24,29 @@
     }
   }
  catch (  URISyntaxException e) {
+    errorEncountered=true;
     final IOException ex=new IOException(e.getMessage());
     ex.fillInStackTrace();
     throw ex;
   }
 catch (  InterruptedException e) {
+    errorEncountered=true;
     Thread.currentThread().interrupt();
     throw new IOException("Install operation has been interrupted");
   }
+catch (  IOException e) {
+    errorEncountered=true;
+    throw e;
+  }
+catch (  Throwable t) {
+    errorEncountered=true;
+    final String msg="Failed to install app from URL: " + url;
+    throw new DeploymentInitException(MessageFactory.createStaticMessage(msg),t);
+  }
  finally {
+    if (errorEncountered && appDir != null && appDir.exists()) {
+      final boolean couldNotDelete=FileUtils.deleteTree(appDir);
+    }
     if (lock.isHeldByCurrentThread()) {
       lock.unlock();
     }

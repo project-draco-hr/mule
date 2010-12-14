@@ -1,0 +1,13 @@
+{
+  final URL url=getClass().getResource("/broken-app.zip");
+  assertNotNull("Test app file not found " + url,url);
+  addAppArchive(url);
+  deploymentService.start();
+  assertTrue("Install never invoked",installLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertAppsDir(new String[]{"broken-app.zip"},NONE,true);
+  assertAppsDir(NONE,new String[]{"dummy-app"},false);
+  assertEquals("No apps should have been registered with Mule.",0,deploymentService.getApplications().size());
+  final List<URL> zombieURLs=deploymentService.getZombieURLs();
+  assertEquals("Wrong number of zombie apps registered.",1,zombieURLs.size());
+  assertEquals("Wrong URL tagged as zombie.","broken-app.zip",new File(zombieURLs.get(0).getFile()).getName());
+}
