@@ -2,22 +2,34 @@
   final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
   File appDir=new File(appsDir,appName);
   if (!appDir.exists()) {
-    throw new MuleRuntimeException(MessageFactory.createStaticMessage(String.format("Application directory does not exist '%s'",appName)));
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage(String.format("Application directory does not exist: '%s'",appDir)));
   }
   @SuppressWarnings("unchecked") Collection<File> deployFiles=FileUtils.listFiles(appDir,new WildcardFileFilter("mule-deploy.*"),null);
-  if (deployFiles.isEmpty()) {
-    return new EmptyApplicationDescriptor(appName);
-  }
   if (deployFiles.size() > 1) {
     throw new MuleRuntimeException(MessageFactory.createStaticMessage(String.format("More than one mule-deploy descriptors found in application '%s'",appName)));
   }
-  final File descriptorFile=deployFiles.iterator().next();
-  final String ext=FilenameUtils.getExtension(descriptorFile.getName());
-  final DescriptorParser descriptorParser=parserRegistry.get(ext);
-  if (descriptorParser == null) {
-    throw new MuleRuntimeException(MessageFactory.createStaticMessage(String.format("Unsupported deployment descriptor format for app '%s': %s",appName,ext)));
+  ApplicationDescriptor desc;
+  if (deployFiles.isEmpty()) {
+    desc=new EmptyApplicationDescriptor(appName);
   }
-  ApplicationDescriptor desc=descriptorParser.parse(descriptorFile);
-  desc.setAppName(appName);
+ else {
+    final File descriptorFile=deployFiles.iterator().next();
+    final String ext=FilenameUtils.getExtension(descriptorFile.getName());
+    final DescriptorParser descriptorParser=parserRegistry.get(ext);
+    if (descriptorParser == null) {
+      throw new MuleRuntimeException(MessageFactory.createStaticMessage(String.format("Unsupported deployment descriptor format for app '%s': %s",appName,ext)));
+    }
+    desc=descriptorParser.parse(descriptorFile);
+    desc.setAppName(appName);
+  }
+  final File appPropsFile=new File(appDir,ApplicationDescriptor.DEFAULT_APP_PROPERTIES_RESOURCE);
+  if (appPropsFile.exists() && appPropsFile.canRead()) {
+    final Properties props=PropertiesUtils.loadProperties(appPropsFile.toURI().toURL());
+    Map<String,String> m=new HashMap<String,String>(props.size());
+    for (    Object key : props.keySet()) {
+      m.put(key.toString(),props.getProperty(key.toString()));
+    }
+    desc.setAppProperties(m);
+  }
   return desc;
 }
