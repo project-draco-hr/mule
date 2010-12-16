@@ -1,0 +1,11 @@
+{
+  MuleClient client=new MuleClient(muleContext);
+  MuleMessage messageProcessCreated=client.request("vm://processCreated",10000);
+  String processDefinitionId=messageProcessCreated.getPayloadAsString();
+  assertEquals("financialReport:1",processDefinitionId);
+  MuleMessage messageClaimedTask=client.request("vm://claimedTask",10000);
+  Map selectedTask=(Map)messageClaimedTask.getPayload();
+  assertFalse(selectedTask.isEmpty());
+  assertNotNull(selectedTask.get("taskId"));
+  assertEquals(Operation.CLAIM,selectedTask.get("operation"));
+}
