@@ -1,11 +1,11 @@
 {
   preProcess(element);
-  setParserContext(parserContext);
-  setRegistry(parserContext.getRegistry());
+  setParserContext(context);
+  setRegistry(context.getRegistry());
   checkElementNameUnique(element);
-  Class beanClass=getClassInternal(element);
+  Class<?> beanClass=getClassInternal(element);
   BeanDefinitionBuilder builder=createBeanDefinitionBuilder(element,beanClass);
-  builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
+  builder.getRawBeanDefinition().setSource(context.extractSource(element));
   builder.setScope(isSingleton() ? BeanDefinition.SCOPE_SINGLETON : BeanDefinition.SCOPE_PROTOTYPE);
   if (!Component.class.isAssignableFrom(beanClass) && !MessageSource.class.isAssignableFrom(beanClass) && !OutboundRouterCollection.class.isAssignableFrom(beanClass)&& !OutboundRouter.class.isAssignableFrom(beanClass)&& !AbstractExceptionListener.class.isAssignableFrom(beanClass)) {
     if (Initialisable.class.isAssignableFrom(beanClass)) {
@@ -15,9 +15,9 @@
       builder.setDestroyMethodName(Disposable.PHASE_NAME);
     }
   }
-  if (parserContext.isNested()) {
-    builder.setScope(parserContext.getContainingBeanDefinition().isSingleton() ? BeanDefinition.SCOPE_SINGLETON : BeanDefinition.SCOPE_PROTOTYPE);
+  if (context.isNested()) {
+    builder.setScope(context.getContainingBeanDefinition().isSingleton() ? BeanDefinition.SCOPE_SINGLETON : BeanDefinition.SCOPE_PROTOTYPE);
   }
-  doParse(element,parserContext,builder);
+  doParse(element,context,builder);
   return builder.getBeanDefinition();
 }
