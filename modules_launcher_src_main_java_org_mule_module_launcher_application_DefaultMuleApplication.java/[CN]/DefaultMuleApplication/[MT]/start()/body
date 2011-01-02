@@ -1,10 +1,16 @@
 {
-  super.start();
+  if (logger.isInfoEnabled()) {
+    logger.info("Starting application: " + appName);
+  }
   try {
+    this.muleContext.start();
     File marker=new File(MuleContainerBootstrapUtils.getMuleAppsDir(),String.format("%s-anchor.txt",getAppName()));
     FileUtils.writeStringToFile(marker,ANCHOR_FILE_BLURB);
   }
- catch (  IOException e) {
+ catch (  MuleException e) {
+    throw new DeploymentStartException(MessageFactory.createStaticMessage(appName),e);
+  }
+catch (  IOException e) {
     throw new DeploymentStartException(MessageFactory.createStaticMessage(appName),e);
   }
 }
