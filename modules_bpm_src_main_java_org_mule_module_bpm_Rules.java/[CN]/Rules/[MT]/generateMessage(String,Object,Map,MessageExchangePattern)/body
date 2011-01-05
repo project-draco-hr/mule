@@ -1,0 +1,25 @@
+{
+  MuleMessage message;
+  if (payload instanceof MuleMessage) {
+    message=(MuleMessage)payload;
+  }
+ else {
+    message=new DefaultMuleMessage(payload,muleContext);
+  }
+  message.addProperties(messageProperties,PropertyScope.INBOUND);
+  message.addProperties(messageProperties,PropertyScope.INVOCATION);
+  EndpointBuilder endpointBuilder=muleContext.getEndpointFactory().getEndpointBuilder(endpoint);
+  endpointBuilder.setExchangePattern(exchangePattern);
+  OutboundEndpoint ep=endpointBuilder.buildOutboundEndpoint();
+  DefaultMuleEvent event=new DefaultMuleEvent(message,ep,new DefaultMuleSession(flowConstruct,muleContext));
+  RequestContext.setEvent(event);
+  MuleEvent resultEvent=ep.process(event);
+  MuleMessage response=null;
+  if (resultEvent != null) {
+    response=resultEvent.getMessage();
+    if (response.getExceptionPayload() != null) {
+      throw new DispatchException(MessageFactory.createStaticMessage("Unable to send or route message"),event,ep,response.getExceptionPayload().getRootException());
+    }
+  }
+  return response;
+}
