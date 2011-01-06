@@ -1,31 +1,9 @@
 {
-  Class preferredMarker=null;
-  if (extensionsAvailable) {
-    try {
-      preferredMarker=ClassUtils.loadClass(PREFERRED_CONFIG_CLASSNAME,ThreadPoolFactory.class);
-    }
- catch (    ClassNotFoundException e) {
-      extensionsAvailable=false;
-      if (logger.isDebugEnabled()) {
-        logger.debug("Failed to load EE extensions",e);
-      }
-    }
+  final Iterator<ThreadPoolFactory> servicesIterator=ServiceRegistry.lookupProviders(ThreadPoolFactory.class);
+  PreferredObjectSelector<ThreadPoolFactory> selector=new PreferredObjectSelector<ThreadPoolFactory>();
+  ThreadPoolFactory threadPoolFactory=selector.select(servicesIterator);
+  if (threadPoolFactory == null) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage("Couldn't find config via SPI mechanism. Corrupted Mule core jar?"));
   }
-  final Iterator<ThreadPoolFactory> it=ServiceRegistry.lookupProviders(ThreadPoolFactory.class);
-  ThreadPoolFactory candidate=null;
-  while (it.hasNext()) {
-    ThreadPoolFactory threadPoolFactory=it.next();
-    if (extensionsAvailable && preferredMarker.isAssignableFrom(threadPoolFactory.getClass())) {
-      return threadPoolFactory;
-    }
- else {
-      if (candidate == null) {
-        candidate=threadPoolFactory;
-      }
-    }
-  }
-  if (candidate != null) {
-    return candidate;
-  }
-  throw new MuleRuntimeException(MessageFactory.createStaticMessage("Couldn't find config via SPI mechanism. Corrupted Mule core jar?"));
+  return threadPoolFactory;
 }
