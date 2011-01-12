@@ -1,5 +1,11 @@
 {
   if (verifyContextNotInitialized()) {
-    this.workingDirectory=FileUtils.newFile(workingDirectory).getAbsolutePath().replaceAll("\\\\","/");
+    try {
+      File canonicalFile=FileUtils.openDirectory(workingDirectory);
+      this.workingDirectory=canonicalFile.getCanonicalPath();
+    }
+ catch (    IOException e) {
+      throw new IllegalArgumentException(CoreMessages.initialisationFailure("Invalid working directory").getMessage(),e);
+    }
   }
 }
