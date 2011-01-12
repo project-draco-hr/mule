@@ -1,8 +1,13 @@
 {
   Transaction transaction=mock(Transaction.class);
   TransactionCoordination.getInstance().bindTransaction(transaction);
-  JmsConnector connector=new JmsConnector(muleContext);
-  Session session=mock(Session.class);
-  connector.closeSessionIfNoTransactionActive(session);
-  verify(session,never()).close();
+  try {
+    JmsConnector connector=new JmsConnector(muleContext);
+    Session session=mock(Session.class);
+    connector.closeSessionIfNoTransactionActive(session);
+    verify(session,never()).close();
+  }
+  finally {
+    TransactionCoordination.getInstance().unbindTransaction(transaction);
+  }
 }
