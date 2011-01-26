@@ -5,11 +5,16 @@
     if (result instanceof String) {
       return result;
     }
- else {
-      MimeMultipart part=(MimeMultipart)result;
-      String transMsg=(String)part.getBodyPart(0).getContent();
-      return transMsg;
+ else     if (result instanceof MimeMultipart) {
+      BodyPart firstBodyPart=((MimeMultipart)result).getBodyPart(0);
+      if (firstBodyPart != null && firstBodyPart.getContentType().startsWith("text/")) {
+        Object content=firstBodyPart.getContent();
+        if (content instanceof String) {
+          return content;
+        }
+      }
     }
+    return "";
   }
  catch (  Exception e) {
     throw new TransformerException(this,e);
