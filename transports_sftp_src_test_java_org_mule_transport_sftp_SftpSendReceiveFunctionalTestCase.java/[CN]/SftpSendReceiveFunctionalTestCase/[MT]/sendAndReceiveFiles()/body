@@ -1,0 +1,33 @@
+{
+  final CountDownLatch latch=new CountDownLatch(sendFiles.size());
+  final AtomicInteger loopCount=new AtomicInteger(0);
+  MuleClient client=new MuleClient(muleContext);
+  assertTrue("muleContext is not started",muleContext.isStarted());
+  receiveFiles=new ArrayList<String>();
+  EventCallback callback=new EventCallback(){
+    public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      logger.info("called " + loopCount.incrementAndGet() + " times");
+      SftpInputStream inputStream=(SftpInputStream)context.getMessage().getPayload();
+      String o=IOUtils.toString(inputStream);
+      if (sendFiles.contains(o)) {
+        receiveFiles.add(o);
+      }
+ else {
+        fail("The received file was not sent. Received: '" + o + "'");
+      }
+      latch.countDown();
+      inputStream.close();
+    }
+  }
+;
+  getFunctionalTestComponent("receiving").setEventCallback(callback);
+  for (  String sendFile : sendFiles) {
+    HashMap<String,String> props=new HashMap<String,String>(1);
+    props.put(SftpConnector.PROPERTY_FILENAME,sendFile + ".txt");
+    client.dispatch("vm://test.upload",sendFile,props);
+  }
+  latch.await(TIMEOUT,TimeUnit.MILLISECONDS);
+  logger.debug("Number of files sent: " + sendFiles.size());
+  logger.debug("Number of files received: " + receiveFiles.size());
+  assertTrue("expected " + sendFiles.size() + " but got "+ receiveFiles.size(),sendFiles.size() == receiveFiles.size());
+}

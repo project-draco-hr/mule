@@ -1,0 +1,17 @@
+{
+  MuleClient muleClient=new MuleClient(muleContext);
+  assertTrue(muleContext.isStarted());
+  final Exception exception=dispatchAndWaitForException(new DispatchParameters(INBOUND_ENDPOINT_NAME,null),"sftp","service");
+  assertNotNull(exception);
+  assertTrue("expected DispatchException, but got " + exception.getClass().toString(),exception instanceof DispatchException);
+  assertTrue("expected IOException, but got " + exception.getCause().getClass().toString(),exception.getCause() instanceof IOException);
+  assertTrue("wrong message : " + exception.getCause().getMessage(),exception.getCause().getMessage().startsWith("Error during login to"));
+  SftpClient sftpClient=getSftpClient(muleClient,INBOUND_ENDPOINT_NAME);
+  try {
+    ImmutableEndpoint endpoint=(ImmutableEndpoint)muleClient.getProperty(INBOUND_ENDPOINT_NAME);
+    assertTrue("The inbound file should still exist",super.verifyFileExists(sftpClient,endpoint.getEndpointURI(),FILE_NAME));
+  }
+  finally {
+    sftpClient.disconnect();
+  }
+}

@@ -1,0 +1,19 @@
+{
+  MuleClient muleClient=new MuleClient(muleContext);
+  SftpClient sftpClient=getSftpClient(muleClient,endpointName);
+  try {
+    ChannelSftp channelSftp=sftpClient.getChannelSftp();
+    try {
+      recursiveDelete(muleClient,sftpClient,endpointName,"");
+    }
+ catch (    IOException e) {
+      if (logger.isErrorEnabled())       logger.error("Failed to recursivly delete endpoint " + endpointName,e);
+    }
+    String path=getPathByEndpoint(muleClient,sftpClient,endpointName);
+    channelSftp.mkdir(path);
+  }
+  finally {
+    sftpClient.disconnect();
+    if (logger.isDebugEnabled())     logger.debug("Done init endpoint directory: " + endpointName);
+  }
+}

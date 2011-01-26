@@ -1,0 +1,23 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Closing the stream for the file " + fileName);
+  }
+  try {
+    super.close();
+    if (autoDelete && !errorOccured) {
+      client.deleteFile(fileName);
+    }
+  }
+ catch (  IOException e) {
+    logger.error("Error occured while closing file " + fileName,e);
+    throw e;
+  }
+ finally {
+    try {
+      ((SftpConnector)endpoint.getConnector()).releaseClient(endpoint,client);
+    }
+ catch (    Exception e) {
+      logger.error(e.getMessage(),e);
+    }
+  }
+}

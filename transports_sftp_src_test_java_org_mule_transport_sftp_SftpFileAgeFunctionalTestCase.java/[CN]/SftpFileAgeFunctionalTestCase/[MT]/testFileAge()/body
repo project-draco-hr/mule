@@ -1,0 +1,38 @@
+{
+  final CountDownLatch latch=new CountDownLatch(1);
+  final AtomicReference message=new AtomicReference();
+  final AtomicInteger loopCount=new AtomicInteger(0);
+  EventCallback callback=new EventCallback(){
+    public synchronized void eventReceived(    MuleEventContext context,    Object component){
+      try {
+        logger.info("called " + loopCount.incrementAndGet() + " times");
+        if (1 == latch.getCount()) {
+          String o=IOUtils.toString((SftpInputStream)context.getMessage().getPayload());
+          message.set(o);
+          latch.countDown();
+        }
+      }
+ catch (      Exception e) {
+        logger.error(e.getMessage(),e);
+      }
+    }
+  }
+;
+  MuleClient client=new MuleClient(muleContext);
+  Object component=getComponent("testComponent");
+  assertTrue("FunctionalTestComponent expected",component instanceof FunctionalTestComponent);
+  FunctionalTestComponent ftc=(FunctionalTestComponent)component;
+  assertNotNull(ftc);
+  ftc.setEventCallback(callback);
+  Map properties=new HashMap();
+  long startTime=System.currentTimeMillis();
+  logger.debug("before dispatch");
+  client.dispatch(getAddressByEndpoint(client,INBOUND_ENDPOINT_NAME),TEST_MESSAGE,properties);
+  logger.debug("before retrieve");
+  latch.await(TIMEOUT,TimeUnit.MILLISECONDS);
+  long time=System.currentTimeMillis() - startTime;
+  int maxTimeDiff=1000;
+  int expectedMinTime=2000 - maxTimeDiff;
+  assertTrue("The total time should never be less the 'fileAge' ms (was " + time + ", expected "+ expectedMinTime+ ")",time > expectedMinTime);
+  assertEquals(TEST_MESSAGE,message.get());
+}
