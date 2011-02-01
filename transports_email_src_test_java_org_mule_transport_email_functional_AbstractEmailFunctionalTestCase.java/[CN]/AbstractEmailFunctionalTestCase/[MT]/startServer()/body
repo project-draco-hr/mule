@@ -1,7 +1,13 @@
 {
   logger.debug("starting server on port " + port);
-  ServerSetup setup=new ServerSetup(port,null,protocol);
-  server=new GreenMail(setup);
+  setup=new ServerSetup(port,null,protocol);
+  if (addSmtp) {
+    smtpSetup=new ServerSetup(smtpPort,null,"smtp");
+    server=new GreenMail(new ServerSetup[]{setup,smtpSetup});
+  }
+ else {
+    server=new GreenMail(setup);
+  }
   server.start();
   if (protocol.startsWith(Pop3Connector.POP3) || protocol.startsWith(ImapConnector.IMAP)) {
     GreenMailUtilities.storeEmail(server.getManagers().getUserManager(),email,user,password,GreenMailUtilities.toMessage(message,email,charset));
