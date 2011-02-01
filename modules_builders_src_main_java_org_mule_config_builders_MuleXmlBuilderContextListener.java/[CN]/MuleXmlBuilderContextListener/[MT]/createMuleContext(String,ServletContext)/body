@@ -1,15 +1,20 @@
 {
-  final String serverId=StringUtils.defaultIfEmpty(context.getInitParameter("mule.serverId"),null);
-  WebappMuleXmlConfigurationBuilder builder=new WebappMuleXmlConfigurationBuilder(context,configResource);
+  String serverId=StringUtils.defaultIfEmpty(servletContext.getInitParameter("mule.serverId"),null);
+  if (serverId == null) {
+    final File tempDir=(File)servletContext.getAttribute(ATTR_JAVAX_SERVLET_CONTEXT_TEMPDIR);
+    final String contextName=FilenameUtils.getBaseName(tempDir.toString());
+    serverId=contextName;
+  }
+  WebappMuleXmlConfigurationBuilder builder=new WebappMuleXmlConfigurationBuilder(servletContext,configResource);
   MuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-  String muleAppConfig=context.getInitParameter(INIT_PARAMETER_MULE_APP_CONFIG) != null ? context.getInitParameter(INIT_PARAMETER_MULE_APP_CONFIG) : PropertiesMuleConfigurationFactory.getMuleAppConfiguration(configResource);
+  String muleAppConfig=servletContext.getInitParameter(INIT_PARAMETER_MULE_APP_CONFIG) != null ? servletContext.getInitParameter(INIT_PARAMETER_MULE_APP_CONFIG) : PropertiesMuleConfigurationFactory.getMuleAppConfiguration(configResource);
   DefaultMuleConfiguration muleConfiguration=new PropertiesMuleConfigurationFactory(muleAppConfig).createConfiguration();
   if (serverId != null) {
     muleConfiguration.setId(serverId);
   }
   MuleContextBuilder muleContextBuilder=new DefaultMuleContextBuilder();
   muleContextBuilder.setMuleConfiguration(muleConfiguration);
-  final ApplicationContext parentContext=(ApplicationContext)context.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+  final ApplicationContext parentContext=(ApplicationContext)servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
   if (parentContext != null) {
     builder.setParentContext(parentContext);
   }
