@@ -1,6 +1,8 @@
 {
   String file=getBasepath() + req.getPathInfo();
-  if (file.startsWith("/"))   file=file.substring(1);
+  if (file.startsWith("/")) {
+    file=file.substring(1);
+  }
   InputStream in=IOUtils.getResourceAsStream(file,getClass(),false,false);
   if (in == null) {
     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -22,6 +24,12 @@
     resp.setContentType(mimetype);
     resp.setContentLength(buffer.length);
     resp.setHeader("Content-Disposition","attachment; filename=\"" + req.getPathInfo() + "\"");
+    for (    String extension : templateExtensions) {
+      if (mimetype.endsWith(extension)) {
+        buffer=parser.parse(props,new String(buffer)).getBytes();
+        break;
+      }
+    }
     resp.getOutputStream().write(buffer);
   }
   finally {

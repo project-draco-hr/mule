@@ -1,0 +1,11 @@
+{
+  muleContext.start();
+  LocalMuleClient client=muleContext.getClient();
+  MuleMessage m=client.request("http://localhost:" + getPorts().get(0) + "/mule-resource/files/foo.xml",3000);
+  String result=m.getPayloadAsString();
+  assertTrue(result.contains("${bar}"));
+  muleContext.getRegistry().registerObject("bar","hello bar");
+  m=client.request("http://localhost:" + getPorts().get(0) + "/mule-resource/files/foo.xml",3000);
+  result=m.getPayloadAsString();
+  assertTrue(result.contains("hello bar"));
+}
