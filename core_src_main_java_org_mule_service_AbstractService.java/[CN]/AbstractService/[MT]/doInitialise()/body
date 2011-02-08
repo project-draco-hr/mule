@@ -2,7 +2,13 @@
   stats=createStatistics();
   stats.setEnabled(muleContext.getStatistics().isEnabled());
   muleContext.getStatistics().add(stats);
-  RouterStatistics routerStatistics=new RouterStatistics(RouterStatistics.TYPE_OUTBOUND);
+  RouterStatistics routerStatistics=null;
+  if (outboundRouter instanceof OutboundRouterCollection) {
+    routerStatistics=((OutboundRouterCollection)outboundRouter).getRouterStatistics();
+  }
+  if (routerStatistics == null) {
+    routerStatistics=new RouterStatistics(RouterStatistics.TYPE_OUTBOUND);
+  }
   stats.setOutboundRouterStat(routerStatistics);
   if (outboundRouter != null && outboundRouter instanceof RouterStatisticsRecorder) {
     ((RouterStatisticsRecorder)outboundRouter).setRouterStatistics(routerStatistics);
