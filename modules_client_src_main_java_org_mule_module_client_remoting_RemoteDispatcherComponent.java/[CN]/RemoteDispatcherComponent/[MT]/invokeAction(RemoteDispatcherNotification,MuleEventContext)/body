@@ -9,22 +9,31 @@
     destComponent=endpoint;
   }
   if (destComponent != null) {
-    Service service=muleContext.getRegistry().lookupService(destComponent);
-    MuleSession session=new DefaultMuleSession(service,muleContext);
+    Object fc=muleContext.getRegistry().lookupObject(destComponent);
+    if (!(fc instanceof FlowConstruct)) {
+      return handleException(null,new DefaultMuleException(ClientMessages.noSuchFlowConstruct(destComponent)));
+    }
+    FlowConstruct flowConstruct=(FlowConstruct)fc;
+    MuleSession session=new DefaultMuleSession(flowConstruct,muleContext);
     EndpointBuilder builder=new EndpointURIEndpointBuilder(RequestContext.getEvent().getEndpoint());
     builder.setTransformers(new LinkedList());
     ImmutableEndpoint ep=muleContext.getEndpointFactory().getInboundEndpoint(builder);
     MuleEvent event=new DefaultMuleEvent(action.getMessage(),ep,context.getSession());
     event=RequestContext.setEvent(event);
     if (context.getExchangePattern().hasResponse()) {
-      MuleEvent resultEvent=service.sendEvent(event);
+      MuleEvent resultEvent=flowConstruct.getMessageProcessorChain().process(event);
       result=resultEvent == null ? null : resultEvent.getMessage();
-      ByteArrayOutputStream out=new ByteArrayOutputStream();
-      wireFormat.write(out,result,getEncoding());
-      return out.toByteArray();
+      if (result == null) {
+        return null;
+      }
+ else {
+        ByteArrayOutputStream out=new ByteArrayOutputStream();
+        wireFormat.write(out,result,getEncoding());
+        return out.toByteArray();
+      }
     }
  else {
-      service.dispatchEvent(event);
+      flowConstruct.getMessageProcessorChain().process(event);
       return null;
     }
   }
