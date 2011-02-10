@@ -11,8 +11,9 @@
     }
   }
 ;
-  MuleEvent event=(MuleEvent)message.getExchange().get(MULE_EVENT_PROPERTY);
-  if (event == null) {
+  MuleEvent event=(MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT);
+  boolean decoupled=event != null && message.getExchange().getInMessage() != null;
+  if (event == null || decoupled) {
     MuleContext muleContext=configuration.getMuleContext();
     MuleMessage muleMsg=new DefaultMuleMessage(handler,muleContext);
     MuleSession session=new DefaultMuleSession(muleContext);
@@ -24,14 +25,15 @@
  catch (    Exception e) {
       throw new Fault(e);
     }
-    message.getExchange().put(CxfConstants.MULE_EVENT,event);
     event.setTimeout(MuleEvent.TIMEOUT_NOT_SET_VALUE);
-    RequestContext.setEvent(event);
   }
  else {
     event.getMessage().setPayload(handler);
+  }
+  if (!decoupled) {
     message.getExchange().put(CxfConstants.MULE_EVENT,event);
   }
+  message.put(CxfConstants.MULE_EVENT,event);
   final MuleEvent finalEvent=event;
   AbstractPhaseInterceptor<Message> i=new AbstractPhaseInterceptor<Message>(Phase.PRE_STREAM){
     public void handleMessage(    Message m) throws Fault {
@@ -44,6 +46,5 @@
     }
   }
 ;
-  i.getAfter().add(MuleProtocolHeadersOutInterceptor.class.getName());
   message.getInterceptorChain().add(i);
 }
