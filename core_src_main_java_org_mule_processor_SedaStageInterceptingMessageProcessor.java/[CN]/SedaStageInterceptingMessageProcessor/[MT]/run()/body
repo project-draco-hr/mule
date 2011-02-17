@@ -1,29 +1,26 @@
 {
   DefaultMuleEvent event=null;
   QueueSession queueSession=muleContext.getQueueManager().getQueueSession();
-  while (!lifecycleState.isStopped()) {
+  running.set(true);
+  while (!lifecycleManager.getState().isStopped()) {
     try {
-      if (lifecycleState.isPhaseComplete(Pausable.PHASE_NAME)) {
+      if (lifecycleManager.isPhaseComplete(Pausable.PHASE_NAME)) {
         waitIfPaused();
-        if (lifecycleState.isStopping()) {
-          queueDraining.set(true);
+        if (lifecycleManager.getState().isStopping()) {
           if (!isQueuePersistent() && (queueSession != null && getQueueSize() > 0)) {
             logger.warn(CoreMessages.stopPausedSedaStageNonPeristentQueueMessageLoss(getQueueSize(),getQueueName()));
           }
-          queueDraining.set(false);
           break;
         }
       }
-      if (lifecycleState.isStopping()) {
+      if (lifecycleManager.getState().isStopping()) {
         if (isQueuePersistent() || queueSession == null || getQueueSize() <= 0) {
-          queueDraining.set(false);
           break;
         }
       }
       event=(DefaultMuleEvent)dequeue();
     }
  catch (    InterruptedException ie) {
-      queueDraining.set(false);
       break;
     }
 catch (    Exception e) {
@@ -56,4 +53,5 @@ catch (    Exception e) {
       }
     }
   }
+  running.set(false);
 }

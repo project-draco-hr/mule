@@ -1,0 +1,17 @@
+{
+  if (muleContext != null && muleContext.isStarted()) {
+    return muleContext.getQueueManager().getQueueSession().getQueue(name).size();
+  }
+ else {
+    MuleContext localMuleContext=new DefaultMuleContextBuilder().buildMuleContext();
+    QueueManager queueManager=new TransactionalQueueManager();
+    FilePersistenceStrategy persistenceStrategy=new FilePersistenceStrategy();
+    persistenceStrategy.setMuleContext(localMuleContext);
+    queueManager.setPersistenceStrategy(persistenceStrategy);
+    queueManager.start();
+    int size=queueManager.getQueueSession().getQueue(name).size();
+    queueManager.stop();
+    localMuleContext=null;
+    return size;
+  }
+}

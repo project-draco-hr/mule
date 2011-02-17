@@ -6,9 +6,14 @@
     if (logger.isTraceEnabled()) {
       logger.trace("Invoking next MessageProcessor: '" + next.getClass().getName() + "' ");
     }
-    fireNotification(event,next,MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE);
+    boolean fireNotification=!(next instanceof MessageProcessorChain);
+    if (fireNotification) {
+      fireNotification(event.getFlowConstruct(),event,next,MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE);
+    }
     final MuleEvent result=next.process(event);
-    fireNotification(event,next,MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE);
+    if (fireNotification) {
+      fireNotification(event.getFlowConstruct(),result,next,MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE);
+    }
     return result;
   }
 }

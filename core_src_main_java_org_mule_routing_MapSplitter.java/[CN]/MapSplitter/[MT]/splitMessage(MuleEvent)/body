@@ -1,0 +1,16 @@
+{
+  MuleMessage message=event.getMessage();
+  if (message.getPayload() instanceof Map<?,?>) {
+    List<MuleMessage> list=new LinkedList<MuleMessage>();
+    Set<Map.Entry<?,?>> set=((Map)message.getPayload()).entrySet();
+    for (    Entry<?,?> entry : set) {
+      MuleMessage splitMessage=new DefaultMuleMessage(entry.getValue(),muleContext);
+      splitMessage.setInvocationProperty(MAP_ENTRY_KEY,entry.getKey());
+      list.add(splitMessage);
+    }
+    return list;
+  }
+ else {
+    throw new IllegalArgumentException(CoreMessages.objectNotOfCorrectType(message.getPayload().getClass(),Map.class).getMessage());
+  }
+}

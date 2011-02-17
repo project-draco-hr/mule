@@ -1,28 +1,29 @@
 {
-  if (logger.isInfoEnabled()) {
-    logger.info("Initialising: " + this);
-  }
   if (flowConstruct == null) {
-    throw new InitialisationException(MessageFactory.createStaticMessage("Component has not been initialized properly, no service."),this);
+    throw new InitialisationException(MessageFactory.createStaticMessage("Component has not been initialized properly, no flow constuct."),this);
   }
-  DefaultMessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder(flowConstruct);
-  for (  Interceptor interceptor : interceptors) {
-    chainBuilder.chain(interceptor);
-  }
-  chainBuilder.chain(new MessageProcessor(){
-    public MuleEvent process(    MuleEvent event) throws MuleException {
-      return invokeInternal(event);
+  lifecycleManager.fireInitialisePhase(new LifecycleCallback<Component>(){
+    public void onTransition(    String phaseName,    Component object) throws MuleException {
+      DefaultMessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder(flowConstruct);
+      chainBuilder.setName("Component interceptor processor chain for :" + getName());
+      for (      Interceptor interceptor : interceptors) {
+        chainBuilder.chain(interceptor);
+      }
+      chainBuilder.chain(new MessageProcessor(){
+        public MuleEvent process(        MuleEvent event) throws MuleException {
+          return invokeInternal(event);
+        }
+      }
+);
+      interceptorChain=chainBuilder.build();
+      if (interceptorChain instanceof MuleContextAware) {
+        ((MuleContextAware)interceptorChain).setMuleContext(muleContext);
+      }
+      if (interceptorChain instanceof Initialisable) {
+        ((Initialisable)interceptorChain).initialise();
+      }
+      doInitialise();
     }
   }
 );
-  try {
-    interceptorChain=chainBuilder.build();
-    if (interceptorChain instanceof Initialisable) {
-      ((Initialisable)interceptorChain).initialise();
-    }
-  }
- catch (  MuleException e) {
-    throw new InitialisationException(e,this);
-  }
-  doInitialise();
 }
