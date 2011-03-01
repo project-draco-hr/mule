@@ -1,0 +1,23 @@
+{
+  final ClassLoader ccl=Thread.currentThread().getContextClassLoader();
+  ConcurrentMap<String,Log> loggerMap=repositories.get(ccl);
+  if (loggerMap == null) {
+    loggerMap=new ConcurrentHashMap<String,Log>();
+    repositories.put(ccl,loggerMap);
+  }
+  Log instance=loggerMap.get(name);
+  if (instance == null) {
+    Logger logger=LoggerFactory.getLogger(name);
+    if (logger instanceof LocationAwareLogger) {
+      instance=new MuleLocationAwareLog((LocationAwareLogger)logger);
+    }
+ else {
+      instance=new MuleLog(logger);
+    }
+    final Log previous=loggerMap.putIfAbsent(name,instance);
+    if (previous != null) {
+      instance=previous;
+    }
+  }
+  return instance;
+}
