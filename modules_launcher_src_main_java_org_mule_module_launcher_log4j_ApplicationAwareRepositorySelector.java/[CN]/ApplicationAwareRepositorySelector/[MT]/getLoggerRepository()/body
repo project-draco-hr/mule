@@ -8,19 +8,24 @@
       String logName;
       if (ccl instanceof MuleApplicationClassLoader) {
         MuleApplicationClassLoader muleCL=(MuleApplicationClassLoader)ccl;
-        logName="-app-" + muleCL.getAppName();
-        File logDir=new File(MuleContainerBootstrapUtils.getMuleHome(),"logs");
-        File logFile=new File(logDir,"mule" + logName + ".log");
-        RollingFileAppender fileAppender=new RollingFileAppender(new PatternLayout(PATTERN_LAYOUT),logFile.getAbsolutePath(),true);
-        fileAppender.setMaxBackupIndex(1);
-        fileAppender.setMaximumFileSize(1000000);
-        fileAppender.activateOptions();
-        root.addAppender(fileAppender);
+        final URL appLogConfig=muleCL.findResource("log4j.properties");
+        if (appLogConfig == null) {
+          logName="-app-" + muleCL.getAppName();
+          File logDir=new File(MuleContainerBootstrapUtils.getMuleHome(),"logs");
+          File logFile=new File(logDir,"mule" + logName + ".log");
+          RollingFileAppender fileAppender=new RollingFileAppender(new PatternLayout(PATTERN_LAYOUT),logFile.getAbsolutePath(),true);
+          fileAppender.setMaxBackupIndex(100);
+          fileAppender.setMaximumFileSize(1000000);
+          fileAppender.activateOptions();
+          root.addAppender(fileAppender);
+        }
+ else {
+          new PropertyConfigurator().doConfigure(appLogConfig,repository);
+        }
       }
  else {
-        final ConsoleAppender appender=new ConsoleAppender(new PatternLayout(PATTERN_LAYOUT));
-        appender.activateOptions();
-        root.addAppender(appender);
+        final File defaultSystemLog=new File(MuleContainerBootstrapUtils.getMuleHome(),"conf/log4j.properties");
+        new PropertyConfigurator().doConfigure(defaultSystemLog.getAbsolutePath(),repository);
       }
       final LoggerRepository previous=this.repository.putIfAbsent(ccl.hashCode(),repository);
       if (previous != null) {
