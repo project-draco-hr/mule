@@ -19,10 +19,13 @@
       appender.setMaxBackupIndex(1);
       appender.setMaximumFileSize(1000000);
       root.addAppender(appender);
-      repos.put(ccl,repository);
+      final LoggerRepository previous=repos.putIfAbsent(ccl,repository);
+      if (previous != null) {
+        repository=previous;
+      }
     }
  catch (    IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
   }
   return repository;
