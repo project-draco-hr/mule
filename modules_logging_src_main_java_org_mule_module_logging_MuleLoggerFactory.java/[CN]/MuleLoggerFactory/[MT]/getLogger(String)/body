@@ -3,7 +3,10 @@
   ConcurrentMap<String,Logger> loggerMap=repositories.get(ccl);
   if (loggerMap == null) {
     loggerMap=new ConcurrentHashMap<String,Logger>();
-    repositories.put(ccl,loggerMap);
+    final ConcurrentMap<String,Logger> previous=repositories.putIfAbsent(ccl,loggerMap);
+    if (previous != null) {
+      loggerMap=previous;
+    }
   }
   Logger slf4jLogger=loggerMap.get(name);
   if (slf4jLogger == null) {
