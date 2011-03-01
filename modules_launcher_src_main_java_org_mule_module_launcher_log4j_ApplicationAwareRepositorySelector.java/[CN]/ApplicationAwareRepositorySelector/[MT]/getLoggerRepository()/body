@@ -1,0 +1,29 @@
+{
+  final ClassLoader ccl=Thread.currentThread().getContextClassLoader();
+  LoggerRepository repository=repos.get(ccl);
+  if (repository == null) {
+    final RootLogger root=new RootLogger(Level.INFO);
+    repository=new Hierarchy(root);
+    repos.put(ccl,repository);
+    try {
+      String logName;
+      if (ccl instanceof MuleApplicationClassLoader) {
+        MuleApplicationClassLoader muleCL=(MuleApplicationClassLoader)ccl;
+        logName=muleCL.getAppName();
+      }
+ else {
+        logName="container";
+      }
+      File logDir=new File(MuleContainerBootstrapUtils.getMuleHome(),"log");
+      File logFile=new File(logDir,"mule-" + logName + "-log.txt");
+      RollingFileAppender appender=new RollingFileAppender(new PatternLayout("%-5p %d [%t] %c: %m%n"),logFile.getAbsolutePath(),true);
+      appender.setMaxBackupIndex(1);
+      appender.setMaximumFileSize(1000000);
+      root.addAppender(appender);
+    }
+ catch (    IOException e) {
+      e.printStackTrace();
+    }
+  }
+  return repository;
+}
