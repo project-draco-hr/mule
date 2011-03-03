@@ -1,6 +1,6 @@
 {
   final ClassLoader ccl=Thread.currentThread().getContextClassLoader();
-  LoggerRepository repository=this.repository.get(ccl.hashCode());
+  LoggerRepository repository=this.repository.get(ccl == null ? NO_CCL_CLASSLOADER : ccl.hashCode());
   if (repository == null) {
     final RootLogger root=new RootLogger(Level.INFO);
     repository=new Hierarchy(root);
@@ -46,7 +46,7 @@
           new PropertyConfigurator().doConfigure(defaultSystemLog.getAbsolutePath(),repository);
         }
       }
-      final LoggerRepository previous=this.repository.putIfAbsent(ccl.hashCode(),repository);
+      final LoggerRepository previous=this.repository.putIfAbsent(ccl == null ? NO_CCL_CLASSLOADER : ccl.hashCode(),repository);
       if (previous != null) {
         repository=previous;
       }
