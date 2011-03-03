@@ -5,14 +5,16 @@
     final RootLogger root=new RootLogger(Level.INFO);
     repository=new Hierarchy(root);
     try {
+      ConfigWatchDog configWatchDog=null;
       if (ccl instanceof MuleApplicationClassLoader) {
         MuleApplicationClassLoader muleCL=(MuleApplicationClassLoader)ccl;
         URL appLogConfig=muleCL.findResource("log4j.xml");
         if (appLogConfig == null) {
           appLogConfig=muleCL.findResource("log4j.properties");
         }
+        final String appName=muleCL.getAppName();
         if (appLogConfig == null) {
-          String logName=String.format("mule-app-%s.log",muleCL.getAppName());
+          String logName=String.format("mule-app-%s.log",appName);
           File logDir=new File(MuleContainerBootstrapUtils.getMuleHome(),"logs");
           File logFile=new File(logDir,logName);
           RollingFileAppender fileAppender=new RollingFileAppender(new PatternLayout(PATTERN_LAYOUT),logFile.getAbsolutePath(),true);
@@ -22,11 +24,15 @@
           root.addAppender(fileAppender);
         }
  else {
-          if (appLogConfig.toExternalForm().endsWith(".xml")) {
-            new DOMConfigurator().doConfigure(appLogConfig,repository);
+          configureFrom(appLogConfig,repository);
+          if (appLogConfig.toExternalForm().startsWith("file:")) {
+            configWatchDog=new ConfigWatchDog(appLogConfig.getFile(),repository);
+            configWatchDog.setName(String.format("[%s].log4j.config.watchdog",appName));
           }
  else {
-            new PropertyConfigurator().doConfigure(appLogConfig,repository);
+            if (logger.isInfoEnabled()) {
+              logger.info(String.format("Logging config %s is not an external file, will not be monitored for changes",appLogConfig));
+            }
           }
         }
       }
@@ -43,6 +49,9 @@
       final LoggerRepository previous=this.repository.putIfAbsent(ccl.hashCode(),repository);
       if (previous != null) {
         repository=previous;
+      }
+      if (configWatchDog != null) {
+        configWatchDog.start();
       }
     }
  catch (    IOException e) {
