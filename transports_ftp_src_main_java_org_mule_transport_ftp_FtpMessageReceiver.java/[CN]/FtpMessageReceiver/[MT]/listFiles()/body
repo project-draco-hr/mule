@@ -7,20 +7,24 @@
  catch (    Exception e) {
       throw new ConnectException(e,this);
     }
-    FTPFile[] files=client.listFiles();
-    if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
-      throw new IOException("Failed to list files. Ftp error: " + client.getReplyCode());
-    }
-    if (files == null || files.length == 0) {
-      return files;
-    }
+    FTPListParseEngine engine=client.initiateListParsing();
+    FTPFile[] files=null;
     List<FTPFile> v=new ArrayList<FTPFile>();
-    for (    FTPFile file : files) {
-      if (file.isFile()) {
-        if (filenameFilter == null || filenameFilter.accept(null,file.getName())) {
-          v.add(file);
+    while (engine.hasNext()) {
+      files=engine.getNext(FTP_LIST_PAGE_SIZE);
+      if (files == null || files.length == 0) {
+        return files;
+      }
+      for (      FTPFile file : files) {
+        if (file.isFile()) {
+          if (filenameFilter == null || filenameFilter.accept(null,file.getName())) {
+            v.add(file);
+          }
         }
       }
+    }
+    if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+      throw new IOException("Failed to list files. Ftp error: " + client.getReplyCode());
     }
     return v.toArray(new FTPFile[v.size()]);
   }

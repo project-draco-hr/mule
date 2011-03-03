@@ -1,6 +1,11 @@
 {
-  FTPFile[] files=listFiles(client);
-  if (files != null) {
+  FTPListParseEngine engine=client.initiateListParsing();
+  FTPFile[] files=null;
+  while (engine.hasNext()) {
+    files=engine.getNext(FTP_LIST_PAGE_SIZE);
+    if (files == null) {
+      break;
+    }
     FilenameFilter filenameFilter=getFilenameFilter();
     for (int i=0; i < files.length; i++) {
       FTPFile file=files[i];
@@ -12,6 +17,9 @@
         }
       }
     }
+  }
+  if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+    throw new IOException("Ftp error: " + client.getReplyCode());
   }
   return null;
 }
