@@ -7,7 +7,10 @@
     try {
       if (ccl instanceof MuleApplicationClassLoader) {
         MuleApplicationClassLoader muleCL=(MuleApplicationClassLoader)ccl;
-        final URL appLogConfig=muleCL.findResource("log4j.properties");
+        URL appLogConfig=muleCL.findResource("log4j.xml");
+        if (appLogConfig == null) {
+          appLogConfig=muleCL.findResource("log4j.properties");
+        }
         if (appLogConfig == null) {
           String logName=String.format("mule-app-%s.log",muleCL.getAppName());
           File logDir=new File(MuleContainerBootstrapUtils.getMuleHome(),"logs");
@@ -19,12 +22,23 @@
           root.addAppender(fileAppender);
         }
  else {
-          new PropertyConfigurator().doConfigure(appLogConfig,repository);
+          if (appLogConfig.toExternalForm().endsWith(".xml")) {
+            new DOMConfigurator().doConfigure(appLogConfig,repository);
+          }
+ else {
+            new PropertyConfigurator().doConfigure(appLogConfig,repository);
+          }
         }
       }
  else {
-        final File defaultSystemLog=new File(MuleContainerBootstrapUtils.getMuleHome(),"conf/log4j.properties");
-        new PropertyConfigurator().doConfigure(defaultSystemLog.getAbsolutePath(),repository);
+        File defaultSystemLog=new File(MuleContainerBootstrapUtils.getMuleHome(),"conf/log4j.xml");
+        if (defaultSystemLog.exists() && defaultSystemLog.canRead()) {
+          new DOMConfigurator().doConfigure(defaultSystemLog.getAbsolutePath(),repository);
+        }
+ else {
+          defaultSystemLog=new File(MuleContainerBootstrapUtils.getMuleHome(),"conf/log4j.properties");
+          new PropertyConfigurator().doConfigure(defaultSystemLog.getAbsolutePath(),repository);
+        }
       }
       final LoggerRepository previous=this.repository.putIfAbsent(ccl.hashCode(),repository);
       if (previous != null) {
