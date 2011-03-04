@@ -1,17 +1,19 @@
 {
-  if (muleContext == null) {
-    if (logger.isInfoEnabled()) {
-      logger.info("MuleContext not created, nothing to dispose of");
+  final ClassLoader originalCl=Thread.currentThread().getContextClassLoader();
+  try {
+    ClassLoader appCl=getDeploymentClassLoader();
+    if (appCl != null) {
+      Thread.currentThread().setContextClassLoader(appCl);
     }
-    return;
+    doDispose();
+    if (appCl != null) {
+      if (appCl instanceof GoodCitizenClassLoader) {
+        GoodCitizenClassLoader classLoader=(GoodCitizenClassLoader)appCl;
+        classLoader.close();
+      }
+    }
   }
-  if (muleContext.isStarted() && !muleContext.isDisposed()) {
-    stop();
+  finally {
+    Thread.currentThread().setContextClassLoader(originalCl);
   }
-  if (logger.isInfoEnabled()) {
-    logger.info("Disposing application: " + appName);
-  }
-  muleContext.dispose();
-  muleContext=null;
-  Thread.currentThread().setContextClassLoader(null);
 }
