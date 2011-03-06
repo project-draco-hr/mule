@@ -1,21 +1,23 @@
 {
   super.postRegister(registrationDone);
   try {
-    RouterStatistics is=this.statistics.getInboundRouterStat();
+    RouterStatistics is=statistics.getInboundRouterStat();
     if (is != null) {
-      inboundName=new ObjectName(name.getDomain() + ":type=org.mule.Statistics,service=" + statistics.getName()+ ",router=inbound");
-      if (this.server.isRegistered(inboundName)) {
-        this.server.unregisterMBean(inboundName);
+      String quotedStatsName=ObjectName.quote(statistics.getName());
+      inboundName=new ObjectName(name.getDomain() + ":type=org.mule.Statistics,service=" + quotedStatsName+ ",router=inbound");
+      if (server.isRegistered(inboundName)) {
+        server.unregisterMBean(inboundName);
       }
-      this.server.registerMBean(new RouterStats(is),this.inboundName);
+      server.registerMBean(new RouterStats(is),this.inboundName);
     }
     RouterStatistics os=this.statistics.getOutboundRouterStat();
     if (os != null) {
-      outboundName=new ObjectName(name.getDomain() + ":type=org.mule.Statistics,service=" + statistics.getName()+ ",router=outbound");
-      if (this.server.isRegistered(outboundName)) {
-        this.server.unregisterMBean(outboundName);
+      String quotedStatsName=ObjectName.quote(statistics.getName());
+      outboundName=new ObjectName(name.getDomain() + ":type=org.mule.Statistics,service=" + quotedStatsName+ ",router=outbound");
+      if (server.isRegistered(outboundName)) {
+        server.unregisterMBean(outboundName);
       }
-      this.server.registerMBean(new RouterStats(os),this.outboundName);
+      server.registerMBean(new RouterStats(os),this.outboundName);
     }
   }
  catch (  Exception e) {
