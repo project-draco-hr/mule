@@ -1,8 +1,13 @@
 {
   Message messages[]=event.getMessages();
+  List<Message> processedMessages=new ArrayList<Message>();
   if (messages != null) {
     MuleMessage message=null;
     for (int i=0; i < messages.length; i++) {
+      if (getLifecycleState().isStopping()) {
+        break;
+      }
+      processedMessages.add(messages[i]);
       try {
         if (!messages[i].getFlags().contains(Flags.Flag.DELETED) && !messages[i].getFlags().contains(Flags.Flag.SEEN)) {
           MimeMessage mimeMessage=new MimeMessage((MimeMessage)messages[i]);
@@ -41,7 +46,7 @@ catch (      Exception e) {
     }
     if (moveToFolder != null) {
       try {
-        folder.copyMessages(messages,moveToFolder);
+        folder.copyMessages(processedMessages.toArray(new Message[processedMessages.size()]),moveToFolder);
       }
  catch (      MessagingException e) {
         getConnector().getMuleContext().getExceptionListener().handleException(e);
