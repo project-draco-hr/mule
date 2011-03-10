@@ -1,11 +1,10 @@
 {
-  String key=uri + ":" + mep.name();
-  InboundEndpoint endpoint=(InboundEndpoint)inboundEndpointCache.get(key);
+  InboundEndpoint endpoint=(InboundEndpoint)inboundEndpointCache.get(uri + ":" + mep.toString());
   if (endpoint == null) {
     EndpointBuilder endpointBuilder=muleContext.getRegistry().lookupEndpointFactory().getEndpointBuilder(uri);
     endpointBuilder.setExchangePattern(mep);
     endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilder);
-    InboundEndpoint concurrentlyAddedEndpoint=(InboundEndpoint)inboundEndpointCache.putIfAbsent(key,endpoint);
+    InboundEndpoint concurrentlyAddedEndpoint=(InboundEndpoint)inboundEndpointCache.putIfAbsent(uri + ":" + mep.toString(),endpoint);
     if (concurrentlyAddedEndpoint != null) {
       return concurrentlyAddedEndpoint;
     }
