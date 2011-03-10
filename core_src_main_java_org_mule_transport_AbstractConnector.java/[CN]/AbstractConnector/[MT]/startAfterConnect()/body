@@ -1,35 +1,34 @@
 {
+  startOnConnect=false;
   if (logger.isInfoEnabled()) {
     logger.info("Starting: " + this);
   }
-  scheduler=createScheduler();
-  try {
-    initWorkManagers();
-  }
- catch (  MuleException e) {
-    throw new InitialisationException(e,this);
-  }
-  if (!isStarted()) {
-    doStart();
-  }
-  if (receivers != null) {
-    for (    MessageReceiver receiver : receivers.values()) {
-      final List<MuleException> errors=new ArrayList<MuleException>();
-      try {
-        if (logger.isDebugEnabled()) {
-          logger.debug("Starting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+  lifecycleManager.fireStartPhase(new LifecycleCallback<Connector>(){
+    public void onTransition(    String phaseName,    Connector object) throws MuleException {
+      initWorkManagers();
+      scheduler=createScheduler();
+      doStart();
+      if (receivers != null) {
+        for (        MessageReceiver receiver : receivers.values()) {
+          final List<MuleException> errors=new ArrayList<MuleException>();
+          try {
+            if (logger.isDebugEnabled()) {
+              logger.debug("Starting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+            }
+            if (receiver.getFlowConstruct().getLifecycleState().isStarted()) {
+              receiver.start();
+            }
+          }
+ catch (          MuleException e) {
+            logger.error(e);
+            errors.add(e);
+          }
+          if (!errors.isEmpty()) {
+            throw errors.get(0);
+          }
         }
-        if (receiver.getFlowConstruct().getLifecycleState().isStarted()) {
-          receiver.start();
-        }
-      }
- catch (      MuleException e) {
-        logger.error(e);
-        errors.add(e);
-      }
-      if (!errors.isEmpty()) {
-        throw errors.get(0);
       }
     }
   }
+);
 }

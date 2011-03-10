@@ -2,31 +2,21 @@
   if (isStarted() || isStarting()) {
     return;
   }
-  if (!connected.get() && !connecting.get()) {
-    connectAndThenStart();
-  }
- else   if (connecting.get() && isDoStartMustFollowDoConnect()) {
+  if (!isConnected()) {
     try {
-      callDoStartWhenItIsConnected();
+      connect();
     }
- catch (    InterruptedException e) {
-      throw new StartException(CoreMessages.failedToStart("Connectable: " + this),e,this);
-    }
-  }
- else {
-    try {
-      lifecycleManager.fireStartPhase(new LifecycleCallback<O>(){
-        public void onTransition(        String phaseName,        O object) throws MuleException {
-          doStart();
-        }
-      }
-);
-    }
- catch (    MuleException e) {
-      throw e;
+ catch (    MuleException me) {
+      throw me;
     }
 catch (    Exception e) {
-      throw new StartException(CoreMessages.failedToStart("Connectable: " + this),e,this);
+      throw new ConnectException(e,this);
     }
   }
+  lifecycleManager.fireStartPhase(new LifecycleCallback<O>(){
+    public void onTransition(    String phaseName,    O object) throws MuleException {
+      doStart();
+    }
+  }
+);
 }

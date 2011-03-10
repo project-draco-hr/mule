@@ -3,21 +3,19 @@
     logger.info("Connector not started because 'initialStateStopped' is true");
     return;
   }
-  lifecycleManager.fireStartPhase(new LifecycleCallback<Connector>(){
-    public void onTransition(    String phaseName,    Connector object) throws MuleException {
-      if (!isConnected()) {
-        startOnConnect=true;
-        try {
-          connect();
-        }
- catch (        Exception e) {
-          throw new LifecycleException(e,this);
-        }
-      }
- else {
-        startAfterConnect();
-      }
+  if (!isConnected()) {
+    try {
+      startOnConnect=true;
+      connect();
+    }
+ catch (    MuleException me) {
+      throw me;
+    }
+catch (    Exception e) {
+      throw new ConnectException(e,this);
     }
   }
-);
+ else {
+    startAfterConnect();
+  }
 }

@@ -1,39 +1,16 @@
 {
-  if (connected.get() || connecting.get()) {
+  if (connected.get()) {
     return;
   }
   if (getLifecycleState().isDisposed()) {
     throw new IllegalStateException("Requester/dispatcher has been disposed; cannot connect to resource:" + this);
   }
-  if (!connecting.compareAndSet(false,true)) {
-    return;
-  }
   if (logger.isDebugEnabled()) {
     logger.debug("Connecting: " + this);
   }
-  retryTemplate.execute(new RetryCallback(){
-    public void doWork(    RetryContext context) throws Exception {
-      try {
-        doConnect();
-        connected.set(true);
-        connecting.set(false);
-        if (logger.isDebugEnabled()) {
-          logger.debug("Connected: " + getWorkDescription());
-        }
-        if (startOnConnect) {
-          start();
-        }
-      }
- catch (      Exception e) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("exception in doWork",e);
-        }
-        throw e;
-      }
-    }
-    public String getWorkDescription(){
-      return getConnectionDescription();
-    }
+  doConnect();
+  connected.set(true);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Connected: " + getConnectionDescription());
   }
-,getWorkManager());
 }

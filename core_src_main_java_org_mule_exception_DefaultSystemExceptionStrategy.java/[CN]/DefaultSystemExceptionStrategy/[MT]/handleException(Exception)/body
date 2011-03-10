@@ -1,5 +1,5 @@
 {
-  Connectable connectable=null;
+  AbstractConnector connector=null;
   if (e instanceof InvocationTargetException) {
     Throwable t=e.getCause();
     e=t instanceof Exception ? (Exception)t : new Exception(t);
@@ -7,12 +7,13 @@
   if (enableNotifications) {
     fireNotification(new ExceptionNotification(e));
   }
-  if (e instanceof ConnectException) {
+  if (e instanceof ConnectException && ((AbstractConnector)((ConnectException)e).getFailed()).isReconnecting() == false) {
     logger.info("Exception caught is a ConnectException, attempting to reconnect...");
-    connectable=((ConnectException)e).getFailed();
+    connector=(AbstractConnector)((ConnectException)e).getFailed();
+    connector.setReconnecting(true);
     try {
-      logger.debug("Disconnecting " + connectable.getClass().getName());
-      connectable.disconnect();
+      logger.debug("Disconnecting " + connector.getName());
+      connector.disconnect();
     }
  catch (    Exception e1) {
       logger.error(e1.getMessage());
@@ -23,10 +24,11 @@
   if (RequestContext.getEvent() != null) {
     RequestContext.setExceptionPayload(new DefaultExceptionPayload(e));
   }
-  if (connectable != null) {
+  if (connector != null) {
     try {
-      logger.debug("Reconnecting " + connectable.getClass().getName());
-      connectable.connect();
+      logger.debug("Reconnecting " + connector.getName());
+      connector.connect();
+      connector.setReconnecting(false);
     }
  catch (    Exception e2) {
       logger.error(e2.getMessage());
