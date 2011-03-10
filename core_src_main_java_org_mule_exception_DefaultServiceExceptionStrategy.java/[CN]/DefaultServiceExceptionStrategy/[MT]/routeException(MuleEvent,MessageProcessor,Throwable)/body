@@ -1,0 +1,12 @@
+{
+  super.routeException(event,target,t);
+  List<MessageProcessor> processors=getMessageProcessors();
+  if (CollectionUtils.isNotEmpty(processors) && getFlowConstructStatistics(event.getFlowConstruct()) instanceof ServiceStatistics) {
+    ServiceStatistics statistics=getServiceStatistics(event.getFlowConstruct());
+    if (statistics.isEnabled()) {
+      for (      MessageProcessor endpoint : processors) {
+        statistics.getOutboundRouterStat().incrementRoutedMessage(endpoint);
+      }
+    }
+  }
+}

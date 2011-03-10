@@ -3,33 +3,14 @@
     fireNotification(new ExceptionNotification(e));
   }
   logException(e);
+  doHandleException(e,event);
   handleTransaction(e);
-  Throwable t=getExceptionType(e,RoutingException.class);
-  if (t != null) {
-    RoutingException re=(RoutingException)t;
-    handleRoutingException(re.getMuleMessage(),re.getRoute(),e);
-    event.getMessage().setPayload(NullPayload.getInstance());
-    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
-    return event;
-  }
-  t=getExceptionType(e,MessagingException.class);
-  if (t != null) {
-    MessagingException me=(MessagingException)t;
-    handleMessagingException(me.getMuleMessage(),e);
-    event.getMessage().setPayload(NullPayload.getInstance());
-    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
-    return event;
-  }
-  t=getExceptionType(e,LifecycleException.class);
-  if (t != null) {
-    LifecycleException le=(LifecycleException)t;
-    handleLifecycleException(le.getComponent(),e);
-    event.getMessage().setPayload(NullPayload.getInstance());
-    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
-    return event;
-  }
-  handleStandardException(e);
+  closeStream(event.getMessage());
   event.getMessage().setPayload(NullPayload.getInstance());
-  event.getMessage().setExceptionPayload(new DefaultExceptionPayload(e));
+  ExceptionPayload exceptionPayload=new DefaultExceptionPayload(e);
+  event.getMessage().setExceptionPayload(exceptionPayload);
+  if (RequestContext.getEvent() != null) {
+    RequestContext.setExceptionPayload(exceptionPayload);
+  }
   return event;
 }
