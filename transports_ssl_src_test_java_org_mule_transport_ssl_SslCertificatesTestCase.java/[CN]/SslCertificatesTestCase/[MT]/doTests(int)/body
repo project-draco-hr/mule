@@ -1,17 +1,13 @@
 {
-  FunctionalTestComponent ftc=(FunctionalTestComponent)getComponent("service");
-  assertNotNull(ftc);
-  assertNotNull(ftc.getEventCallback());
-  SaveCertificatesCallback callback=(SaveCertificatesCallback)ftc.getEventCallback();
-  callback.clear();
+  SaveCertificatesCallback callback=setupEventCallback();
   MuleClient client=new MuleClient(muleContext);
-  for (int i=0; i < n; ++i) {
-    String msg=TEST_MESSAGE + n;
+  for (int i=0; i < numberOfMessages; ++i) {
+    String msg=TEST_MESSAGE + i;
     MuleMessage result=client.send("in",msg,null);
     assertEquals(msg + " Received",result.getPayloadAsString());
   }
   Iterator<Certificate[]> certificates=callback.getCertificates().iterator();
-  for (int i=0; i < n; ++i) {
+  for (int i=0; i < numberOfMessages; ++i) {
     assertTrue("No cert at " + i,certificates.hasNext());
     assertNotNull("Null cert at " + i,certificates.next());
   }
