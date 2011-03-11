@@ -1,0 +1,16 @@
+{
+  final Service service=muleContext.getRegistry().lookupService("testService5");
+  MuleClient mc=new MuleClient(muleContext);
+  mc.dispatch("vm://in5","test",null);
+  assertExceptionMessage(mc.request("vm://out5",FunctionalTestCase.RECEIVE_TIMEOUT));
+  Prober prober=new PollingProber(5000,100);
+  prober.check(new Probe(){
+    public boolean isSatisfied(){
+      return !service.isStarted();
+    }
+    public String describeFailure(){
+      return "Service was not stopped after processing the exception";
+    }
+  }
+);
+}
