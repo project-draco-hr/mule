@@ -1,0 +1,43 @@
+{
+  Service fc=getTestService();
+  MuleSession session=getTestSession(fc,muleContext);
+  Map<String,Object> inboundProps=new HashMap();
+  inboundProps.put("inbound1","1");
+  inboundProps.put("inbound2",2);
+  inboundProps.put("inbound3",session);
+  Map<String,Object> outboundProps=new HashMap();
+  inboundProps.put("outbound1","3");
+  inboundProps.put("outbound2",4);
+  inboundProps.put("outbound3",session);
+  Map<String,Object> invocationProps=new HashMap();
+  inboundProps.put("invoke1","5");
+  inboundProps.put("invoke2",6);
+  inboundProps.put("invoke3",session);
+  List<String> payload=Arrays.asList("abc","def","ghi");
+  MuleMessage toSplit=new DefaultMuleMessage(payload,inboundProps,outboundProps,null,muleContext);
+  for (  Map.Entry<String,Object> entry : invocationProps.entrySet()) {
+    toSplit.setInvocationProperty(entry.getKey(),entry.getValue());
+  }
+  CollectionSplitter splitter=new CollectionSplitter();
+  splitter.setMuleContext(muleContext);
+  Grabber grabber=new Grabber();
+  splitter.setListener(grabber);
+  DefaultMuleEvent event=new DefaultMuleEvent(toSplit,getTestOutboundEndpoint("ep"),session);
+  splitter.process(event);
+  List<MuleMessage> splits=grabber.getMessages();
+  assertEquals(3,splits.size());
+  for (  MuleMessage msg : splits) {
+    assertTrue(msg.getPayload() instanceof String);
+    String str=(String)msg.getPayload();
+    assertTrue(payload.contains(str));
+    for (    String key : inboundProps.keySet()) {
+      assertEquals(msg.getInboundProperty(key),inboundProps.get(key));
+    }
+    for (    String key : outboundProps.keySet()) {
+      assertEquals(msg.getOutboundProperty(key),outboundProps.get(key));
+    }
+    for (    String key : invocationProps.keySet()) {
+      assertEquals(msg.getInvocationProperty(key),invocationProps.get(key));
+    }
+  }
+}
