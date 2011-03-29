@@ -1,14 +1,14 @@
 {
   readOnly=false;
   if (added != null) {
-    List queueAdded=(List)added.get(queue);
+    List<Object> queueAdded=added.get(queue);
     if (queueAdded != null) {
       return queueAdded.remove(queueAdded.size() - 1);
     }
   }
-  Object o;
+  Object object;
   try {
-    o=queue.poll(timeout);
+    object=queue.poll(pollTimeout);
   }
  catch (  InterruptedException e) {
     if (transactionalQueueManager.getMuleContext().isStopping()) {
@@ -16,17 +16,17 @@
     }
     return null;
   }
-  if (o != null) {
+  if (object != null) {
     if (removed == null) {
-      removed=new HashMap();
+      removed=new HashMap<QueueInfo,List<Object>>();
     }
-    List queueRemoved=(List)removed.get(queue);
+    List<Object> queueRemoved=removed.get(queue);
     if (queueRemoved == null) {
-      queueRemoved=new ArrayList();
+      queueRemoved=new ArrayList<Object>();
       removed.put(queue,queueRemoved);
     }
-    queueRemoved.add(o);
-    o=transactionalQueueManager.doLoad(queue,o);
+    queueRemoved.add(object);
+    object=transactionalQueueManager.doLoad(queue,object);
   }
-  return o;
+  return object;
 }
