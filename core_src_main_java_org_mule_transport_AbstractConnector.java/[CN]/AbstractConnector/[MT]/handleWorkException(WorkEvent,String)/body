@@ -10,10 +10,14 @@
     e=e.getCause();
   }
   logger.error("Work caused exception on '" + type + "'. Work being executed was: "+ event.getWork().toString());
-  if (e instanceof Exception) {
-    this.handleException((Exception)e);
+  if (e instanceof MessagingException) {
+    MuleEvent failedEvent=((MessagingException)e).getEvent();
+    failedEvent.getFlowConstruct().getExceptionListener().handleException((MessagingException)e,failedEvent);
+  }
+ else   if (e instanceof Exception) {
+    muleContext.getExceptionListener().handleException((Exception)e);
   }
  else {
-    throw new MuleRuntimeException(CoreMessages.connectorCausedError(this.getName()),e);
+    muleContext.getExceptionListener().handleException(new MuleRuntimeException(CoreMessages.connectorCausedError(this.getName()),e));
   }
 }

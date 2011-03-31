@@ -4,7 +4,7 @@
   if (isFailOnTimeout()) {
     final MuleMessageCollection messageCollection=group.toMessageCollection();
     muleContext.fireNotification(new RoutingNotification(messageCollection,null,RoutingNotification.CORRELATION_TIMEOUT));
-    service.getExceptionListener().handleException(new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.getMessageCollectionEvent()),group.getMessageCollectionEvent());
+    throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.getMessageCollectionEvent());
   }
  else {
     if (logger.isDebugEnabled()) {
@@ -31,8 +31,11 @@
         }
       }
     }
- catch (    Exception e) {
-      service.getExceptionListener().handleException(e,group.getMessageCollectionEvent());
+ catch (    MessagingException me) {
+      throw me;
+    }
+catch (    Exception e) {
+      throw new MessagingException(group.getMessageCollectionEvent(),e);
     }
   }
 }
