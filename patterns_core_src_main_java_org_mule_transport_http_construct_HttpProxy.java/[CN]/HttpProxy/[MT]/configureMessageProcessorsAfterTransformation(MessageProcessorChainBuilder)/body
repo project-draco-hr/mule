@@ -2,5 +2,20 @@
   final TransformerTemplate copyInboundToOutboundPropertiesTransformer=new TransformerTemplate(new CopyInboundToOutboundPropertiesTransformerCallback());
   builder.chain(copyInboundToOutboundPropertiesTransformer);
   builder.chain(new ResponseMessageProcessorAdapter(copyInboundToOutboundPropertiesTransformer));
-  builder.chain(outboundEndpoint);
+  if (outboundEndpoint instanceof DynamicURIOutboundEndpoint) {
+    builder.chain(outboundEndpoint);
+  }
+ else {
+    builder.chain(new TransformerTemplate(new TransformerCallback(){
+      public Object doTransform(      final MuleMessage message) throws Exception {
+        final String pathExtension=StringUtils.substringAfter((String)message.getInboundProperty("http.request"),(String)message.getInboundProperty("http.context.path"));
+        message.setInvocationProperty("http.path.extension",StringUtils.defaultString(pathExtension));
+        return message;
+      }
+    }
+));
+    final String uriTemplate=outboundEndpoint.getEndpointURI().getUri().toString() + "#[variable:http.path.extension]";
+    final DynamicOutboundEndpoint dynamicOutboundEndpoint=new DynamicOutboundEndpoint(muleContext,new EndpointURIEndpointBuilder(outboundEndpoint),uriTemplate);
+    builder.chain(dynamicOutboundEndpoint);
+  }
 }
