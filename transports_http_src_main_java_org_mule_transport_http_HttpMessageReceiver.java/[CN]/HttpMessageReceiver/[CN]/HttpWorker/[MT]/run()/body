@@ -10,10 +10,19 @@
       if (request == null) {
         break;
       }
-      ((HttpConnector)connector).getKeepAliveMonitor().removeExpirable(this);
-      conn.writeResponse(processRequest(request));
-      if (request.getBody() != null) {
-        request.getBody().close();
+      try {
+        conn.writeResponse(processRequest(request));
+      }
+ catch (      Exception e) {
+        conn.writeResponse(buildFailureResponse(request.getRequestLine().getHttpVersion(),HttpConstants.SC_INTERNAL_SERVER_ERROR,e.getMessage()));
+        getConnector().getMuleContext().getExceptionListener().handleException(e);
+        break;
+      }
+ finally {
+        ((HttpConnector)connector).getKeepAliveMonitor().removeExpirable(this);
+        if (request.getBody() != null) {
+          request.getBody().close();
+        }
       }
     }
  while (conn.isKeepAlive());
@@ -26,7 +35,6 @@
     if (conn.isOpen()) {
       conn.close();
       conn=null;
-      ((HttpConnector)connector).getKeepAliveMonitor().removeExpirable(this);
     }
   }
 }
