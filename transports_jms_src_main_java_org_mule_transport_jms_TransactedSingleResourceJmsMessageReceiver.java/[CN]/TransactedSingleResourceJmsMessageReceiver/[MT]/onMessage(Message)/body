@@ -1,8 +1,14 @@
 {
   try {
-    getWorkManager().scheduleWork(new MessageReceiverWorker(message,this));
+    processMessages(message,this);
+    message.acknowledge();
   }
- catch (  WorkException e) {
+ catch (  MessagingException e) {
+    getFlowConstruct().getExceptionListener().handleException(e,e.getEvent());
+    throw new MuleRuntimeException(e);
+  }
+catch (  Exception e) {
+    getConnector().getMuleContext().getExceptionListener().handleException(e);
     throw new MuleRuntimeException(e);
   }
 }
