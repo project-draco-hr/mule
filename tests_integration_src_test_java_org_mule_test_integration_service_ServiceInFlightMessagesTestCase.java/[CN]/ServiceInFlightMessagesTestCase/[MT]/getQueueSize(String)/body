@@ -4,13 +4,9 @@
   }
  else {
     MuleContext localMuleContext=new DefaultMuleContextBuilder().buildMuleContext();
-    QueuePersistenceObjectStore<Serializable> store=new QueuePersistenceObjectStore<Serializable>(localMuleContext);
-    QueueManager queueManager=new TransactionalQueueManager();
-    queueManager.setPersistentObjectStore(store);
-    queueManager.start();
-    int size=queueManager.getQueueSession().getQueue(name).size();
-    queueManager.stop();
-    localMuleContext=null;
-    return size;
+    String workingDirectory=localMuleContext.getConfiguration().getWorkingDirectory();
+    String path=workingDirectory + File.separator + QueuePersistenceObjectStore.DEFAULT_QUEUE_STORE+ File.separator+ name;
+    File[] filesInQueue=new File(path).listFiles();
+    return filesInQueue.length;
   }
 }
