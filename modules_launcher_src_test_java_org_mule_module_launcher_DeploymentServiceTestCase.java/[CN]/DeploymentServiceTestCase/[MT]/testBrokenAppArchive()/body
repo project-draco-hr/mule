@@ -4,6 +4,7 @@
   addAppArchive(url);
   deploymentService.start();
   assertTrue("Install never invoked",installLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
+  installLatch=new Latch();
   Thread.sleep(1000);
   assertAppsDir(new String[]{"broken-app.zip"},NONE,true);
   assertAppsDir(NONE,new String[]{"dummy-app"},false);
@@ -13,4 +14,5 @@
   final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
   assertEquals("Wrong URL tagged as zombie.","broken-app.zip",new File(zombie.getKey().getFile()).getName());
   assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
+  assertFalse("Install was invoked again for the broken application file",installLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
 }
