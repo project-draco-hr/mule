@@ -6,6 +6,14 @@
     this.muleContext.start();
     File marker=new File(MuleContainerBootstrapUtils.getMuleAppsDir(),String.format("%s-anchor.txt",getAppName()));
     FileUtils.writeStringToFile(marker,ANCHOR_FILE_BLURB);
+    final ClassLoader oldCl=Thread.currentThread().getContextClassLoader();
+    try {
+      Thread.currentThread().setContextClassLoader(null);
+      deployLogger.info(miniSplash(String.format("Started app '%s'",appName)));
+    }
+  finally {
+      Thread.currentThread().setContextClassLoader(oldCl);
+    }
   }
  catch (  MuleException e) {
     logger.error(null,ExceptionUtils.getRootCause(e));
