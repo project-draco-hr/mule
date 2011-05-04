@@ -8,16 +8,22 @@
   }
   String[] apps;
   final boolean explicitAppSet=appString != null;
+  DeploymentStatusTracker deploymentStatusTracker=new DeploymentStatusTracker();
+  addDeploymentListener(deploymentStatusTracker);
+  StartupSummaryDeploymentListener summaryDeploymentListener=new StartupSummaryDeploymentListener(deploymentStatusTracker);
+  addStartupListener(summaryDeploymentListener);
   if (!explicitAppSet) {
     final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
     Arrays.sort(zips);
     for (    String zip : zips) {
+      String appName=StringUtils.removeEnd(zip,".zip");
       try {
+        fireOnNewDeploymentDetected(appName);
         deployer.installFromAppDir(zip);
       }
  catch (      Throwable t) {
         logger.error(String.format("Failed to install app from archive '%s'",zip),t);
-        applicationStatusTracker.addZombie(StringUtils.removeEnd(zip,".zip"));
+        fireOnDeploymentFailure(appName,t);
         File appFile=new File(appsDir,zip);
         try {
           addZombie(appFile.toURL());
@@ -36,7 +42,6 @@
     apps=appString.split(":");
   }
   for (  String app : apps) {
-    applicationStatusTracker.addApplication(app);
     final Application a;
     try {
       final File appZip=new File(appsDir,app + ".zip");
@@ -54,9 +59,12 @@
   }
   for (  Application application : applications) {
     try {
+      fireOnDeploymentStart(application.getAppName());
       deployer.deploy(application);
+      fireOnDeploymentSuccess(application.getAppName());
     }
  catch (    Throwable t) {
+      fireOnDeploymentFailure(application.getAppName(),t);
       final String msg=miniSplash(String.format("Failed to deploy app '%s', see below",application.getAppName()));
       logger.error(msg);
       logger.error(t);
