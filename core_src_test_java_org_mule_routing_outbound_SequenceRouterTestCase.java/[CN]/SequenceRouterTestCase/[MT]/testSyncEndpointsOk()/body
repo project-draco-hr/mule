@@ -1,0 +1,14 @@
+{
+  MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,muleContext);
+  MuleEvent event=new OutboundRoutingTestEvent(message,null);
+  mockEndpoint1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  mockEndpoint2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy()));
+  assertNotNull(result);
+  MuleMessage resultMessage=result.getMessage();
+  assertNotNull(resultMessage);
+  assertTrue(resultMessage instanceof MuleMessageCollection);
+  assertEquals(2,((MuleMessageCollection)resultMessage).size());
+  mockEndpoint1.verify();
+  mockEndpoint2.verify();
+}
