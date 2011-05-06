@@ -1,0 +1,15 @@
+{
+  final MuleMessage message=event.getMessage();
+  final Integer deliveryAttemptCount=message.getInvocationProperty(DELIVERY_ATTEMPT_COUNT_PROPERTY_NAME,0);
+  if (deliveryAttemptCount >= getGuaranteedDeliveryPolicy().getMaxDeliveryAttempts()) {
+    deschedule(event);
+    return false;
+  }
+  if (deliveryAttemptCount > 0) {
+    final long nextDeliveryAttemptTime=System.currentTimeMillis() + getGuaranteedDeliveryPolicy().getMillisecondsBetweenDeliveries();
+    event.getMessage().setInvocationProperty(NEXT_DELIVERY_ATTEMPT_TIME_PROPERTY_NAME,nextDeliveryAttemptTime);
+  }
+  message.setInvocationProperty(DELIVERY_ATTEMPT_COUNT_PROPERTY_NAME,deliveryAttemptCount + 1);
+  getGuaranteedDeliveryPolicy().getObjectStore().store(getStoreKey(event),event);
+  return true;
+}

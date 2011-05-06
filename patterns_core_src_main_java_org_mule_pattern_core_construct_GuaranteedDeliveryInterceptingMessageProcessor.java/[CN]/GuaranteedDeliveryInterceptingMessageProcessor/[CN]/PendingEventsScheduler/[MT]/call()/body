@@ -1,0 +1,11 @@
+{
+  for (  final Serializable key : guaranteedDeliveryPolicy.getObjectStore().allKeys()) {
+    if (isOwnedStoreKey((String)key)) {
+      final MuleEvent event=guaranteedDeliveryPolicy.getObjectStore().retrieve(key);
+      if (isDueForRedelivery(event)) {
+        getMuleContext().getWorkManager().scheduleWork(new PendingEventWorker(event));
+      }
+    }
+  }
+  return null;
+}

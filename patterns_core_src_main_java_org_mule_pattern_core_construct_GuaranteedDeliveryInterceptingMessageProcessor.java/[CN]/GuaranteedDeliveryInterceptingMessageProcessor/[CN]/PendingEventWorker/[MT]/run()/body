@@ -1,0 +1,20 @@
+{
+  try {
+    processNext(event);
+    deschedule(event);
+  }
+ catch (  final Throwable t) {
+    try {
+      final boolean successfullyScheduled=scheduleForProcessing(event);
+      if (successfullyScheduled) {
+        logger.warn("Event processing raised an exception, redelivery will be attempted again: " + event,t);
+      }
+ else {
+        logger.error("Event processing raised an exception, redelivery has failed to many times and is aborted: " + event,t);
+      }
+    }
+ catch (    final ObjectStoreException ose) {
+      logger.error("Error when dealing with the object store while processing event: " + event,ose);
+    }
+  }
+}

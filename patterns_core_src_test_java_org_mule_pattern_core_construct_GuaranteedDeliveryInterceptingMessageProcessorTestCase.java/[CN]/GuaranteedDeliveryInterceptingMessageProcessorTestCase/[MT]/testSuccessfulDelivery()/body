@@ -1,0 +1,23 @@
+{
+  final GuaranteedDeliveryInterceptingMessageProcessor gdimp=new GuaranteedDeliveryInterceptingMessageProcessor();
+  gdimp.setMuleContext(muleContext);
+  gdimp.setFlowConstruct(getTestService());
+  final GuaranteedDeliveryPolicy gdp=new GuaranteedDeliveryPolicy();
+  gdp.setMaxDeliveryAttempts(1);
+  gdp.setMillisecondsBetweenDeliveries(100L);
+  final SimpleMemoryObjectStore<MuleEvent> objectStore=new SimpleMemoryObjectStore<MuleEvent>();
+  gdp.setObjectStore(objectStore);
+  gdimp.setGuaranteedDeliveryPolicy(gdp);
+  gdimp.initialise();
+  final ConfigurableMessageProcessor cmp=new ConfigurableMessageProcessor();
+  gdimp.setListener(cmp);
+  final MuleEvent testEvent=getTestEvent("some data");
+  gdimp.process(testEvent);
+  assertEquals(1,objectStore.allKeys().size());
+  while (objectStore.allKeys().size() == 1) {
+    Thread.yield();
+    Thread.sleep(250L);
+  }
+  assertEquals(0,objectStore.allKeys().size());
+  assertEquals(testEvent,cmp.getEventReceived());
+}
