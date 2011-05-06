@@ -1,0 +1,25 @@
+{
+  MuleMessage msg=event.getMessage();
+  List<Object> payload=new ArrayList<Object>();
+  if (msg instanceof MuleMessageCollection) {
+    MuleMessageCollection collection=(MuleMessageCollection)msg;
+    collection.getPayload();
+    for (    MuleMessage child : collection.getMessagesAsArray()) {
+      Object childPayload=child.getPayload();
+      if (childPayload instanceof Collection) {
+        payload.addAll((Collection)childPayload);
+      }
+ else {
+        payload.add(childPayload);
+      }
+    }
+  }
+ else   if (msg.getPayload() instanceof Collection) {
+    add(payload,(Collection)msg.getPayload());
+  }
+ else {
+    payload.add(msg.getPayload());
+  }
+  DefaultMuleMessage listMessage=new DefaultMuleMessage(payload,msg,msg.getMuleContext());
+  return new DefaultMuleEvent(listMessage,event);
+}
