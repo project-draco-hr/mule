@@ -1,8 +1,10 @@
 {
   props.remove("foo");
-  MuleClient client=new MuleClient(muleContext);
-  MuleMessage message=client.send("vm://headers",null,props);
-  assertNotNull("return message from MuleClient.send() should not be null",message);
-  assertNotNull(message.getExceptionPayload());
-  assertTrue(message.getExceptionPayload().getRootException() instanceof RequiredValueException);
+  try {
+    muleContext.getClient().send("vm://headers",null,null);
+    fail("Exception expected");
+  }
+ catch (  Exception e) {
+    assertTrue(ExceptionUtils.getRootCause(e) instanceof RequiredValueException);
+  }
 }

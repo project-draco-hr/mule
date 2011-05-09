@@ -6,12 +6,11 @@
   responseEvent.getMessage().setExceptionPayload(new DefaultExceptionPayload(new RuntimeException()));
   MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(requestEvent.getFlowConstruct());
   RequestContext.setEvent(requestEvent);
-  result=mpChain.process(requestEvent);
+  try {
+    result=mpChain.process(requestEvent);
+    fail("Exception expected");
+  }
+ catch (  TestSecurityFilter.StaticMessageUnauthorisedException e) {
+  }
   assertMessageNotSent();
-  assertNotNull(result);
-  assertEquals(TestSecurityFilter.SECURITY_EXCEPTION_MESSAGE + ResponseAppendTransformer.APPEND_STRING,result.getMessage().getPayloadAsString());
-  final int status=result.getMessage().getOutboundProperty("status",0);
-  assertEquals(403,status);
-  assertNotNull(result.getMessage().getExceptionPayload());
-  assertTrue(result.getMessage().getExceptionPayload().getException() instanceof TestSecurityFilter.StaticMessageUnauthorisedException);
 }

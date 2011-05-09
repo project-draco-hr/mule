@@ -4,9 +4,11 @@
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
   MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(requestEvent.getFlowConstruct());
-  result=mpChain.process(requestEvent);
-  assertNotNull(result);
-  assertNotNull("Filter should have thrown a FilterException",result.getMessage().getExceptionPayload());
-  assertTrue(result.getMessage().getExceptionPayload().getException() instanceof FilterUnacceptedException);
+  try {
+    result=mpChain.process(requestEvent);
+    fail("Filter should have thrown a FilterException");
+  }
+ catch (  FilterUnacceptedException e) {
+  }
   assertMessageNotSent();
 }

@@ -9,10 +9,11 @@
   }
 );
   String message="test";
-  MuleClient client=new MuleClient(muleContext);
-  MuleMessage result=client.send("vm://distributor.queue",message,null);
-  assertNotNull(result);
-  assertNotNull(result.getExceptionPayload());
-  assertTrue(result.getExceptionPayload().getException() instanceof CorrelationTimeoutException);
+  try {
+    muleContext.getClient().send("vm://distributor.queue",message,null);
+  }
+ catch (  Exception e) {
+    assertTrue(ExceptionUtils.getRootCause(e) instanceof CorrelationTimeoutException);
+  }
   assertTrue(latch.await(3000,TimeUnit.MILLISECONDS));
 }

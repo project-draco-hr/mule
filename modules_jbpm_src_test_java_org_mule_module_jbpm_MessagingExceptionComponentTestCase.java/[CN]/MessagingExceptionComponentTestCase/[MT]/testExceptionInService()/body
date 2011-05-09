@@ -1,8 +1,12 @@
 {
   MuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://exception","testExceptionInService",null);
-  assertNotNull("Should have thrown an exception",response.getExceptionPayload());
-  assertTrue(ExceptionUtils.getRootCause(response.getExceptionPayload().getException()) instanceof FunctionalTestException);
+  try {
+    client.send("vm://exception","testExceptionInService",null);
+    fail("Should have thrown an exception");
+  }
+ catch (  Exception e) {
+    assertTrue(ExceptionUtils.getRootCause(e) instanceof FunctionalTestException);
+  }
   assertNotNull(client.request("vm://queueC",1000));
   assertNull(client.request("vm://queueD",1000));
 }

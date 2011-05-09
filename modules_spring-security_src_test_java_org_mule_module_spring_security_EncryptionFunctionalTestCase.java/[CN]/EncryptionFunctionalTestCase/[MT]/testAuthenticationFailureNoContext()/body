@@ -1,7 +1,9 @@
 {
-  MuleClient client=new MuleClient(muleContext);
-  MuleMessage m=client.send("vm://my.queue","foo",null);
-  assertNotNull(m);
-  assertNotNull(m.getExceptionPayload());
-  assertEquals(ExceptionHelper.getErrorCode(CredentialsNotSetException.class),m.getExceptionPayload().getCode());
+  try {
+    muleContext.getClient().send("vm://my.queue","foo",null);
+    fail("Exception expected");
+  }
+ catch (  Exception e) {
+    assertTrue(ExceptionUtils.getRootCause(e) instanceof CredentialsNotSetException);
+  }
 }

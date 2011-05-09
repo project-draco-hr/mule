@@ -24,32 +24,37 @@
       break;
     }
 catch (    Exception e) {
-      SystemExceptionHandler exceptionListener=muleContext.getExceptionListener();
-      if (e instanceof MuleException) {
-        exceptionListener.handleException(e);
-      }
- else {
-        exceptionListener.handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getStageDescription()),event,e));
-      }
+      muleContext.getExceptionListener().handleException(e);
     }
     if (event != null) {
-      try {
-        if (isStatsEnabled()) {
-          queueStatistics.decQueuedEvent();
-        }
-        if (logger.isDebugEnabled()) {
-          logger.debug(MessageFormat.format("{0}: Dequeued event from {1}",getStageDescription(),getQueueName()));
-        }
-        Work work=new SedaStageWorker(event);
-        if (doThreading) {
+      if (isStatsEnabled()) {
+        queueStatistics.decQueuedEvent();
+      }
+      if (logger.isDebugEnabled()) {
+        logger.debug(MessageFormat.format("{0}: Dequeued event from {1}",getStageDescription(),getQueueName()));
+      }
+      SedaStageWorker work=new SedaStageWorker(event);
+      if (doThreading) {
+        try {
           workManagerSource.getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,this);
         }
- else {
-          work.run();
+ catch (        Exception e) {
+          event.getFlowConstruct().getExceptionListener().handleException(e,event);
         }
       }
- catch (      Exception e) {
-        event.getFlowConstruct().getExceptionListener().handleException(e,event);
+ else {
+        try {
+          work.doWork();
+        }
+ catch (        MuleException e) {
+          MessagingExceptionHandler exceptionListener=event.getFlowConstruct().getExceptionListener();
+          if (e instanceof MessagingException) {
+            exceptionListener.handleException(e,event);
+          }
+ else {
+            exceptionListener.handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getStageDescription()),event,e),event);
+          }
+        }
       }
     }
   }

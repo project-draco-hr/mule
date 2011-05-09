@@ -1,0 +1,15 @@
+{
+  super.doSetUp();
+  ((DefaultSystemExceptionStrategy)muleContext.getExceptionListener()).setRedeliver(true);
+  Model model=muleContext.getRegistry().lookupModel("default");
+  ((DefaultServiceExceptionStrategy)model.getExceptionListener()).setRedeliver(true);
+  messageRedelivered=new Latch();
+  muleContext.registerListener(new ExceptionNotificationListener<ExceptionNotification>(){
+    public void onNotification(    ExceptionNotification notification){
+      if (notification.getException() instanceof MessageRedeliveredException) {
+        messageRedelivered.countDown();
+      }
+    }
+  }
+);
+}
