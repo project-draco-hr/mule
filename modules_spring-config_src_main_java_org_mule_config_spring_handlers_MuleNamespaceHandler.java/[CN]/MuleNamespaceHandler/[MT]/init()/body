@@ -14,7 +14,12 @@
   registerBeanDefinitionParser("commit-transaction",new ExceptionTXFilterDefinitionParser("commitTxFilter"));
   registerBeanDefinitionParser("rollback-transaction",new ExceptionTXFilterDefinitionParser("rollbackTxFilter"));
   registerBeanDefinitionParser("custom-agent",new DefaultNameMuleOrphanDefinitionParser());
-  registerBeanDefinitionParser("custom-queue-store",new DefaultNameMuleOrphanDefinitionParser(true));
+  registerMuleBeanDefinitionParser("queue-store",new ParentDefinitionParser()).addAlias(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF,"queue-store");
+  registerMuleBeanDefinitionParser("custom-queue-store",new QueueStoreDefinitionParser()).addIgnored("name");
+  registerBeanDefinitionParser("default-in-memory-queue-store",new QueueStoreDefinitionParser(DefaultInMemoryObjectStore.class));
+  registerBeanDefinitionParser("default-persistent-queue-store",new QueueStoreDefinitionParser(DefaultPersistentObjectStore.class));
+  registerBeanDefinitionParser("simple-in-memory-queue-store",new QueueStoreDefinitionParser(MemoryObjectStore.class));
+  registerBeanDefinitionParser("file-queue-store",new QueueStoreDefinitionParser(FileObjectStore.class));
   registerBeanDefinitionParser("routeable-exception-strategy",new ChildDefinitionParser("exceptionListener",RouteableExceptionStrategy.class));
   registerBeanDefinitionParser("pooling-profile",new PoolingProfileDefinitionParser());
   registerBeanDefinitionParser("queue-profile",new ChildDefinitionParser("queueProfile",QueueProfile.class));
