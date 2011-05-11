@@ -3,28 +3,16 @@
     logger.warn("A configuration file was not set, using default: " + DEFAULT_CONFIGURATION);
     configurationResources=DEFAULT_CONFIGURATION;
   }
-  ConfigurationBuilder cfgBuilder;
-  try {
-    cfgBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(getConfigBuilderClassName(),new Object[]{configurationResources},MuleServer.class);
-  }
- catch (  Exception e) {
-    throw new ConfigurationException(CoreMessages.failedToLoad(getConfigBuilderClassName()),e);
-  }
+  ConfigurationBuilder cfgBuilder=createConfigurationBuilder();
   if (!cfgBuilder.isConfigured()) {
-    List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(2);
-    if (ClassUtils.isClassOnPath(CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,getClass())) {
-      Object configBuilder=ClassUtils.instanciateClass(CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,ClassUtils.NO_ARGS,getClass());
-      builders.add((ConfigurationBuilder)configBuilder);
-    }
-    Properties startupProperties=null;
-    if (getStartupPropertiesFile() != null) {
-      startupProperties=PropertiesUtils.loadProperties(getStartupPropertiesFile(),getClass());
-    }
-    builders.add(new SimpleConfigurationBuilder(startupProperties));
-    builders.add(cfgBuilder);
-    DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-    String muleAppConfig=this.appConfigurationResource == null ? PropertiesMuleConfigurationFactory.getMuleAppConfiguration(this.configurationResources) : this.appConfigurationResource;
-    MuleConfiguration configuration=new PropertiesMuleConfigurationFactory(muleAppConfig).createConfiguration();
-    muleContext=muleContextFactory.createMuleContext(cfgBuilder,new Properties(),configuration);
+    List<ConfigurationBuilder> configBuilders=new ArrayList<ConfigurationBuilder>(3);
+    addAnnotationsConfigBuilder(configBuilders);
+    addStartupPropertiesConfigBuilder(configBuilders);
+    configBuilders.add(cfgBuilder);
+    MuleConfiguration configuration=createMuleConfiguration();
+    MuleContextBuilder contextBuilder=new DefaultMuleContextBuilder();
+    contextBuilder.setMuleConfiguration(configuration);
+    MuleContextFactory contextFactory=new DefaultMuleContextFactory();
+    muleContext=contextFactory.createMuleContext(configBuilders,contextBuilder);
   }
 }
