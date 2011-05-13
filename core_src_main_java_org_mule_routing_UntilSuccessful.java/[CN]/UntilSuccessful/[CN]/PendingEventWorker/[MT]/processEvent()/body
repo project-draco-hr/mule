@@ -1,0 +1,22 @@
+{
+  try {
+    MuleEvent returnEvent=routes.get(0).process(event);
+    if (returnEvent == null) {
+      return true;
+    }
+    MuleMessage msg=returnEvent.getMessage();
+    if (msg == null) {
+      logger.warn("No message found in response to processing, which is therefore considered failed for event: " + event);
+      return false;
+    }
+    boolean errorDetected=failureExpressionFilter.accept(msg);
+    if (errorDetected) {
+      logger.warn("Failure as been detected when processing event: " + event);
+    }
+    return !errorDetected;
+  }
+ catch (  final Exception e) {
+    logger.warn("Processing failed for event: " + event,e);
+    return false;
+  }
+}

@@ -1,0 +1,23 @@
+{
+  if (routes.isEmpty()) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("One message processor must be configured within UntilSuccessful."),this);
+  }
+  if (routes.size() > 1) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Only one message processor is allowed within UntilSuccessful." + " Use a Processor Chain to group several message processors into one."),this);
+  }
+  if (objectStore == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("A ListableObjectStore must be configured on UntilSuccessful."),this);
+  }
+  super.initialise();
+  if (failureExpression != null) {
+    failureExpressionFilter=new ExpressionFilter(failureExpression);
+  }
+ else {
+    failureExpressionFilter=new ExpressionFilter("exception-type:");
+  }
+  failureExpressionFilter.setMuleContext(muleContext);
+  if ((ackExpression != null) && (!muleContext.getExpressionManager().isExpression(ackExpression))) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Invalid ackExpression: " + ackExpression),this);
+  }
+  eventKeyPrefix=flowConstruct.getName() + "@" + muleContext.getConfiguration().getClusterId()+ ":";
+}
