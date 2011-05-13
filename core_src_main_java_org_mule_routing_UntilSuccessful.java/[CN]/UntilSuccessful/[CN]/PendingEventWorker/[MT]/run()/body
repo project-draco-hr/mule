@@ -1,4 +1,8 @@
 {
+  String mutex=acquireMutex();
+  if (mutex == null) {
+    return;
+  }
   try {
     if (processEvent()) {
       deschedule(event);
@@ -15,5 +19,8 @@
   }
  catch (  final ObjectStoreException ose) {
     logger.error("Error when dealing with the object store while processing event: " + event,ose);
+  }
+ finally {
+    eventProcessMutex.remove(mutex);
   }
 }
