@@ -4,22 +4,22 @@
     worker.processMessages();
   }
  catch (  Exception e) {
-    boolean redeliver;
+    RollbackMethod rollbackMethod=new RollbackMethod(){
+      public void rollback(){
+        try {
+          session.recover();
+        }
+ catch (        JMSException jmsEx) {
+          logger.error(jmsEx);
+        }
+      }
+    }
+;
     if (e instanceof MessagingException) {
-      getFlowConstruct().getExceptionListener().handleException(e,((MessagingException)e).getEvent());
-      redeliver=getFlowConstruct().getExceptionListener().isRedeliver();
+      getFlowConstruct().getExceptionListener().handleException(e,((MessagingException)e).getEvent(),rollbackMethod);
     }
  else {
-      getConnector().getMuleContext().getExceptionListener().handleException(e);
-      redeliver=getConnector().getMuleContext().getExceptionListener().isRedeliver();
-    }
-    if (redeliver && !(e instanceof MessageRedeliveredException)) {
-      try {
-        session.recover();
-      }
- catch (      JMSException jmsEx) {
-        logger.error(jmsEx);
-      }
+      getConnector().getMuleContext().getExceptionListener().handleException(e,rollbackMethod);
     }
   }
 }

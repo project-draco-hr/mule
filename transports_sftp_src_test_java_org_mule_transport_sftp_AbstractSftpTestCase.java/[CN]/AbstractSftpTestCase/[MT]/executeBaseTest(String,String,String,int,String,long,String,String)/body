@@ -32,26 +32,26 @@
   final ValueHolder<Exception> exceptionHolder=new ValueHolder<Exception>();
   if (expectedFailingConnector != null) {
     muleContext.setExceptionListener(new SystemExceptionHandler(){
-      public void handleException(      Exception e){
+      public void handleException(      Exception e,      RollbackMethod rollbackMethod){
         if (logger.isInfoEnabled())         logger.info("expected exception occurred: " + e,e);
         exceptionHolder.value=e;
         latch.countDown();
       }
-      public boolean isRedeliver(){
-        return false;
+      public void handleException(      Exception exception){
+        handleException(exception,null);
       }
     }
 );
     if (serviceName != null && !(serviceName.length() == 0)) {
       muleContext.getRegistry().lookupService(serviceName).setExceptionListener(new MessagingExceptionHandler(){
-        public MuleEvent handleException(        Exception e,        MuleEvent event){
+        public MuleEvent handleException(        Exception e,        MuleEvent event,        RollbackMethod rollbackMethod){
           if (logger.isInfoEnabled())           logger.info("expected exception occurred: " + e,e);
           exceptionHolder.value=e;
           latch.countDown();
           return event;
         }
-        public boolean isRedeliver(){
-          return false;
+        public MuleEvent handleException(        Exception exception,        MuleEvent event){
+          return handleException(exception,event,null);
         }
       }
 );

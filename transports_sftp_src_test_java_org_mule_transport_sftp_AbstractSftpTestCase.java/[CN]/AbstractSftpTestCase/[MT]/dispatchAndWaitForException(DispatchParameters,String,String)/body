@@ -10,25 +10,25 @@
   try {
     if (localMuleClient)     muleClient=new MuleClient(muleContext);
     listener=new SystemExceptionHandler(){
-      public void handleException(      Exception e){
+      public void handleException(      Exception e,      RollbackMethod rollbackMethod){
         exceptionHolder.value=e;
         if (logger.isDebugEnabled())         logger.debug("Expected exception occurred: " + e.getMessage() + ", time to countdown the latch");
         latch.countDown();
       }
-      public boolean isRedeliver(){
-        return false;
+      public void handleException(      Exception exception){
+        handleException(exception,null);
       }
     }
 ;
     messagingListener=new MessagingExceptionHandler(){
-      public MuleEvent handleException(      Exception e,      MuleEvent event){
+      public MuleEvent handleException(      Exception e,      MuleEvent event,      RollbackMethod rollbackMethod){
         exceptionHolder.value=e;
         if (logger.isDebugEnabled())         logger.debug("Expected exception occurred: " + e.getMessage() + ", time to countdown the latch");
         latch.countDown();
         return event;
       }
-      public boolean isRedeliver(){
-        return false;
+      public MuleEvent handleException(      Exception exception,      MuleEvent event){
+        return handleException(exception,event,null);
       }
     }
 ;

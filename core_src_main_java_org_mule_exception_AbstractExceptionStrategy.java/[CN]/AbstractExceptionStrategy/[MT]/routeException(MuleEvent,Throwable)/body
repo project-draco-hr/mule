@@ -1,0 +1,34 @@
+{
+  if (!messageProcessors.isEmpty()) {
+    try {
+      logger.error("Message being processed is: " + (event.getMessage().getPayloadForLogging()));
+      String component="Unknown";
+      if (event.getFlowConstruct() != null) {
+        component=event.getFlowConstruct().getName();
+      }
+      EndpointURI endpointUri=event.getEndpoint().getEndpointURI();
+      ExceptionMessage msg=new ExceptionMessage(event,t,component,endpointUri);
+      MuleMessage exceptionMessage=new DefaultMuleMessage(msg,event.getMessage(),muleContext);
+      MulticastingRouter router=new MulticastingRouter(){
+        @Override protected void setMessageProperties(        FlowConstruct session,        MuleMessage message,        MessageProcessor target){
+        }
+      }
+;
+      router.setRoutes(getMessageProcessors());
+      router.setMuleContext(muleContext);
+      router.process(new DefaultMuleEvent(exceptionMessage,event));
+    }
+ catch (    Exception e) {
+      logFatal(event,e);
+    }
+  }
+  List<MessageProcessor> processors=getMessageProcessors();
+  FlowConstructStatistics statistics=event.getFlowConstruct().getStatistics();
+  if (CollectionUtils.isNotEmpty(processors) && statistics instanceof ServiceStatistics) {
+    if (statistics.isEnabled()) {
+      for (      MessageProcessor endpoint : processors) {
+        ((ServiceStatistics)statistics).getOutboundRouterStat().incrementRoutedMessage(endpoint);
+      }
+    }
+  }
+}
