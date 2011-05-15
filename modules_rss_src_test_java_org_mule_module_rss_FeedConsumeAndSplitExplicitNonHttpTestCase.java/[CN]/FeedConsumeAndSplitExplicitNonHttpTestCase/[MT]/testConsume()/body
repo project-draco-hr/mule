@@ -1,8 +1,14 @@
 {
-  LocalMuleClient client=muleContext.getClient();
   String feed=loadResourceAsString("sample-feed.rss");
-  client.dispatch("vm://feed.in",feed,null);
-  Thread.sleep(2000);
-  int count=counter.getCallbackCount();
-  assertEquals(25,count);
+  muleContext.getClient().dispatch("vm://feed.in",feed,null);
+  Prober prober=new PollingProber(10000,100);
+  prober.check(new Probe(){
+    public boolean isSatisfied(){
+      return counter.getCallbackCount() == ENTRIES_IN_RSS_FEED;
+    }
+    public String describeFailure(){
+      return String.format("Did not receive %d feed entries (only got %d)",ENTRIES_IN_RSS_FEED,counter.getCallbackCount());
+    }
+  }
+);
 }
