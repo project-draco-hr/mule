@@ -6,8 +6,7 @@
   builder.setName("'async' child chain");
   final MuleConfiguration config=muleContext.getConfiguration();
   final String threadPrefix=ThreadNameHelper.asyncProcessor(muleContext,name);
-  AsyncInterceptingMessageProcessor asyncProcessor=new AsyncInterceptingMessageProcessor(threadingProfile,threadPrefix,config.getShutdownTimeout());
-  builder.chain(asyncProcessor);
+  AsyncDelegateMessageProcessor asyncProcessor=new AsyncDelegateMessageProcessor(threadingProfile,threadPrefix,config.getShutdownTimeout());
   for (  Object processor : messageProcessors) {
     if (processor instanceof MessageProcessor) {
       builder.chain((MessageProcessor)processor);
@@ -19,5 +18,6 @@
       throw new IllegalArgumentException("MessageProcessorBuilder should only have MessageProcessor's or MessageProcessorBuilder's configured");
     }
   }
-  return builder.build();
+  asyncProcessor.setDelegate(builder.build());
+  return asyncProcessor;
 }

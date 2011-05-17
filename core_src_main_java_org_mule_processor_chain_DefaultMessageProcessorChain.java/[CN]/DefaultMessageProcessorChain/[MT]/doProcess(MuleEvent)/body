@@ -2,20 +2,29 @@
   FlowConstruct flowConstruct=event.getFlowConstruct();
   MuleEvent currentEvent=event;
   MuleEvent resultEvent;
-  for (  MessageProcessor processor : processors) {
+  MuleEvent copy=null;
+  Iterator<MessageProcessor> processorIterator=processors.iterator();
+  while (processorIterator.hasNext()) {
+    MessageProcessor processor=processorIterator.next();
     fireNotification(event.getFlowConstruct(),event,processor,MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE);
+    if (flowConstruct instanceof SimpleFlowConstruct && processorIterator.hasNext() && processorMayReturnNull(processor)) {
+      copy=OptimizedRequestContext.criticalSetEvent(currentEvent);
+    }
     resultEvent=processor.process(currentEvent);
     fireNotification(event.getFlowConstruct(),resultEvent,processor,MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE);
     if (resultEvent != null) {
       currentEvent=resultEvent;
     }
+ else     if (flowConstruct instanceof SimpleFlowConstruct && processorIterator.hasNext()) {
+      if (copy != null) {
+        currentEvent=copy;
+      }
  else {
-      if (flowConstruct instanceof SimpleFlowConstruct) {
         currentEvent=OptimizedRequestContext.criticalSetEvent(currentEvent);
       }
+    }
  else {
-        return null;
-      }
+      return null;
     }
   }
   return currentEvent;

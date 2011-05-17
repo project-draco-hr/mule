@@ -1,8 +1,15 @@
 {
-  if (responseProcessor == null) {
+  if (responseProcessor == null || event == null) {
     return event;
   }
  else {
-    return responseProcessor.process(event);
+    MuleEvent copy=(MuleEvent)((ThreadSafeAccess)event).newThreadCopy();
+    MuleEvent result=responseProcessor.process(event);
+    if (result == null) {
+      return copy;
+    }
+ else {
+      return result;
+    }
   }
 }

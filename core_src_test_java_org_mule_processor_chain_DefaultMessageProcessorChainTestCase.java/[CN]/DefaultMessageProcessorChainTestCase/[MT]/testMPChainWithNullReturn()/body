@@ -1,0 +1,16 @@
+{
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
+  AppendingMP mp1=new AppendingMP("1");
+  AppendingMP mp2=new AppendingMP("2");
+  ReturnNullMP nullmp=new ReturnNullMP();
+  AppendingMP mp3=new AppendingMP("3");
+  builder.chain(mp1,mp2,nullmp,mp3);
+  assertEquals("0123",builder.build().process(getTestEventUsingFlow("0")).getMessageAsString());
+  assertNotSame(mp1.event,mp1.resultEvent);
+  assertEquals(mp1.resultEvent,mp2.event);
+  assertNotSame(mp2.event,mp2.resultEvent);
+  assertEquals(mp2.resultEvent,nullmp.event);
+  assertNotSame(mp3.event,mp3.resultEvent);
+  assertNotSame(nullmp.event,mp3.event);
+  assertEquals(mp3.event.getMessageAsString(),"012");
+}
