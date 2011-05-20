@@ -5,9 +5,6 @@
   if (isConnected()) {
     return;
   }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Connecting: " + this);
-  }
   RetryCallback callback=new RetryCallback(){
     public void doWork(    RetryContext context) throws Exception {
       if (validateConnections && context.getLastFailure() instanceof ConnectException) {
@@ -36,6 +33,7 @@
         }
       }
       setConnected(true);
+      setConnecting(false);
       logger.info("Connected: " + getWorkDescription());
       if (startOnConnect && !isStarted() && !isStarting()) {
         startAfterConnect();
@@ -46,5 +44,10 @@
     }
   }
 ;
-  retryPolicyTemplate.execute(callback,muleContext.getWorkManager());
+  if (connecting.compareAndSet(false,true)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Connecting: " + this);
+    }
+    retryPolicyTemplate.execute(callback,muleContext.getWorkManager());
+  }
 }
