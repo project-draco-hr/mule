@@ -1,0 +1,32 @@
+{
+  Enumeration<?> e=ClassUtils.getResources(SERVICE_PATH + CORE_EXTENSION_PROPERTIES,getClass());
+  List<Properties> extensions=new LinkedList<Properties>();
+  while (e.hasMoreElements()) {
+    try {
+      URL url=(URL)e.nextElement();
+      if (logger.isDebugEnabled()) {
+        logger.debug("Reading extension file: " + url.toString());
+      }
+      Properties p=new Properties();
+      p.load(url.openStream());
+      extensions.add(p);
+    }
+ catch (    Exception ex) {
+      throw new DefaultMuleException("Error loading Mule core extensions",ex);
+    }
+  }
+  for (  Properties extProps : extensions) {
+    for (    Map.Entry entry : extProps.entrySet()) {
+      String extName=(String)entry.getKey();
+      String extClass=(String)entry.getValue();
+      try {
+        MuleCoreExtension extension=(MuleCoreExtension)ClassUtils.instanciateClass(extClass);
+        extension.initialise();
+        coreExtensions.put(extension.getClass(),extension);
+      }
+ catch (      Exception ex) {
+        throw new DefaultMuleException("Error starting Mule core extension " + extName,ex);
+      }
+    }
+  }
+}
