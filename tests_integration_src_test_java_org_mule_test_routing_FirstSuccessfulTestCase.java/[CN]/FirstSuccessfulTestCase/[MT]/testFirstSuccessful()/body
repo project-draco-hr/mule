@@ -1,5 +1,5 @@
 {
-  MuleClient client=new MuleClient(muleContext);
+  MuleClient client=muleContext.getClient();
   MuleMessage response=client.send("vm://input","XYZ",null);
   assertEquals("XYZ is a string",response.getPayloadAsString());
   response=client.send("vm://input",Integer.valueOf(9),null);
@@ -7,10 +7,9 @@
   response=client.send("vm://input",Long.valueOf(42),null);
   assertEquals("42 is a number",response.getPayloadAsString());
   try {
-    client.send("vm://input",Boolean.TRUE,null);
-    fail("Exception expected");
+    response=client.send("vm://input",Boolean.TRUE,null);
+    fail("DispatchException expected");
   }
- catch (  Exception e) {
-    assertTrue(e instanceof MessagingException);
+ catch (  DispatchException e) {
   }
 }
