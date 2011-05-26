@@ -4,7 +4,13 @@
     processFile(file);
   }
  catch (  Exception e) {
-    getConnector().getMuleContext().getExceptionListener().handleException(e);
+    if (e instanceof MessagingException) {
+      MuleEvent event=((MessagingException)e).getEvent();
+      event.getFlowConstruct().getExceptionListener().handleException(e,event);
+    }
+ else {
+      getConnector().getMuleContext().getExceptionListener().handleException(e);
+    }
   }
  finally {
     currentFiles.remove(name);
