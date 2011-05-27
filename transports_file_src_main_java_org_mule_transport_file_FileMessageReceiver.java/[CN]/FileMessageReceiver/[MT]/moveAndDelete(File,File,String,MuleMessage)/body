@@ -1,39 +1,23 @@
 {
-  boolean fileWasMoved=false;
-  try {
-    if (destinationFile != null) {
-      try {
-        FileUtils.moveFile(sourceFile,destinationFile);
-      }
- catch (      IOException e) {
-        throw new DefaultMuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
-      }
-      message=createMuleMessage(destinationFile,endpoint.getEncoding());
-      message.setOutboundProperty(FileConnector.PROPERTY_FILENAME,destinationFile.getName());
-      message.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+  if (destinationFile != null) {
+    try {
+      FileUtils.moveFile(sourceFile,destinationFile);
     }
-    this.routeMessage(message);
-    if (((FileConnector)connector).isAutoDelete()) {
-      if (destinationFile == null) {
-        if (!sourceFile.delete()) {
-          throw new DefaultMuleException(FileMessages.failedToDeleteFile(sourceFile));
-        }
-      }
- else {
-      }
+ catch (    IOException e) {
+      throw new DefaultMuleException(FileMessages.failedToMoveFile(sourceFile.getAbsolutePath(),destinationFile.getAbsolutePath()));
     }
+    message=createMuleMessage(destinationFile,endpoint.getEncoding());
+    message.setOutboundProperty(FileConnector.PROPERTY_FILENAME,destinationFile.getName());
+    message.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
   }
- catch (  Exception e) {
-    boolean fileWasRolledBack=false;
-    if (fileWasMoved) {
-      try {
-        rollbackFileMove(destinationFile,sourceFile.getAbsolutePath());
-        fileWasRolledBack=true;
-      }
- catch (      IOException ioException) {
+  this.routeMessage(message);
+  if (((FileConnector)connector).isAutoDelete()) {
+    if (destinationFile == null) {
+      if (!sourceFile.delete()) {
+        throw new DefaultMuleException(FileMessages.failedToDeleteFile(sourceFile));
       }
     }
-    Message msg=FileMessages.exceptionWhileProcessing(sourceFile.getName(),(fileWasRolledBack ? "successful" : "unsuccessful"));
-    throw new MessagingException(msg,message,e);
+ else {
+    }
   }
 }

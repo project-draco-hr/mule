@@ -1,41 +1,45 @@
 {
-  FileConnector fileConnector=(FileConnector)connector;
-  boolean checkFileAge=fileConnector.getCheckFileAge();
+  boolean checkFileAge=((FileConnector)connector).getCheckFileAge();
   if (checkFileAge) {
     long fileAge=((FileConnector)connector).getFileAge();
-    long lastMod=sourceFile.lastModified();
+    long lastMod=file.lastModified();
     long now=System.currentTimeMillis();
     long thisFileAge=now - lastMod;
     if (thisFileAge < fileAge) {
       if (logger.isDebugEnabled()) {
-        logger.debug("The file has not aged enough yet, will return nothing for: " + sourceFile);
+        logger.debug("The file has not aged enough yet, will return nothing for: " + file);
       }
       return;
     }
   }
-  String sourceFileOriginalName=sourceFile.getName();
-  if (!(sourceFile.canRead() && sourceFile.exists() && sourceFile.isFile())) {
-    throw new DefaultMuleException(FileMessages.fileDoesNotExist(sourceFileOriginalName));
+  if (!(file.canRead() && file.exists() && file.isFile())) {
+    throw new DefaultMuleException(FileMessages.fileDoesNotExist(file.getName()));
   }
-  if (!attemptFileLock(sourceFile)) {
+  if (!attemptFileLock(file)) {
     return;
   }
  else   if (logger.isInfoEnabled()) {
-    logger.info("Lock obtained on file: " + sourceFile.getAbsolutePath());
+    logger.info("Lock obtained on file: " + file.getAbsolutePath());
   }
   DefaultMuleMessage fileParserMessasge=new DefaultMuleMessage(null,connector.getMuleContext());
-  fileParserMessasge.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-  File workFile=null;
+  fileParserMessasge.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,file.getName());
+  final String originalSourceFile=file.getAbsolutePath();
+  final String originalSourceFileName=file.getName();
+  final File sourceFile;
   if (workDir != null) {
-    String workFileName=sourceFileOriginalName;
-    workFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
-    workFile=FileUtils.newFile(workDir,workFileName);
-    move(sourceFile,workFile);
+    String workFileName=file.getName();
+    workFileName=((FileConnector)connector).getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
+    File workFile=FileUtils.newFile(workDir,workFileName);
+    move(file,workFile);
     sourceFile=workFile;
   }
+ else {
+    sourceFile=file;
+  }
+  file=null;
   File destinationFile=null;
   if (moveDir != null) {
-    String destinationFileName=sourceFileOriginalName;
+    String destinationFileName=originalSourceFileName;
     if (moveToPattern != null) {
       destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(fileParserMessasge,moveToPattern);
     }
@@ -44,8 +48,8 @@
   MuleMessage message=null;
   String encoding=endpoint.getEncoding();
   try {
-    if (fileConnector.isStreaming()) {
-      ReceiverFileInputStream payload=new ReceiverFileInputStream(sourceFile,fileConnector.isAutoDelete(),destinationFile);
+    if (((FileConnector)connector).isStreaming()) {
+      ReceiverFileInputStream payload=new ReceiverFileInputStream(sourceFile,((FileConnector)connector).isAutoDelete(),destinationFile);
       message=createMuleMessage(payload,encoding);
     }
  else {
@@ -56,15 +60,36 @@
     logger.error("File being read disappeared!",e);
     return;
   }
-  message.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
+  message.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName);
   if (forceSync) {
     message.setProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,Boolean.TRUE,PropertyScope.INBOUND);
   }
-  if (!fileConnector.isStreaming()) {
-    moveAndDelete(sourceFile,destinationFile,sourceFileOriginalName,message);
-  }
+  try {
+    if (!((FileConnector)connector).isStreaming()) {
+      moveAndDelete(sourceFile,destinationFile,originalSourceFileName,message);
+    }
  else {
-    message.setOutboundProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
-    this.routeMessage(message);
+      message.setOutboundProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
+      this.routeMessage(message);
+    }
+  }
+ catch (  Exception e) {
+    RollbackMethod rollbackMethod=new RollbackMethod(){
+      @Override public void rollback(){
+        try {
+          rollbackFileMove(sourceFile,originalSourceFile);
+        }
+ catch (        IOException e) {
+          logger.warn(e);
+        }
+      }
+    }
+;
+    if (!sourceFile.getAbsolutePath().equals(originalSourceFile)) {
+      connector.getMuleContext().getExceptionListener().handleException(e,rollbackMethod);
+    }
+ else {
+      connector.getMuleContext().getExceptionListener().handleException(e);
+    }
   }
 }
