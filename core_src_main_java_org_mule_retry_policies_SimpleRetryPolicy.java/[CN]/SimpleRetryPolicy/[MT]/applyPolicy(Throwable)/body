@@ -1,0 +1,18 @@
+{
+  if (isExhausted() || !isApplicableTo(cause)) {
+    return PolicyStatus.policyExhausted(cause);
+  }
+ else {
+    if (logger.isInfoEnabled()) {
+      logger.info("Waiting for " + frequency + "ms before reconnecting. Failed attempt "+ (retryCounter.current().get() + 1)+ " of "+ (count != SimpleRetryPolicyTemplate.RETRY_COUNT_FOREVER ? String.valueOf(count) : "unlimited"));
+    }
+    try {
+      retryCounter.current().getAndIncrement();
+      Thread.sleep(frequency);
+      return PolicyStatus.policyOk();
+    }
+ catch (    InterruptedException e) {
+      return PolicyStatus.policyExhausted(e);
+    }
+  }
+}

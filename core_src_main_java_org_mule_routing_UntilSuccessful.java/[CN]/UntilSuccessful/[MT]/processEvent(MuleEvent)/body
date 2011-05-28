@@ -1,0 +1,23 @@
+{
+  if (routes.isEmpty()) {
+    return;
+  }
+  MuleEvent returnEvent;
+  try {
+    returnEvent=routes.get(0).process(event);
+  }
+ catch (  MuleException me) {
+    throw new MuleRuntimeException(me);
+  }
+  if (returnEvent == null) {
+    return;
+  }
+  MuleMessage msg=returnEvent.getMessage();
+  if (msg == null) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage("No message found in response to processing, which is therefore considered failed for event: " + event));
+  }
+  boolean errorDetected=failureExpressionFilter.accept(msg);
+  if (errorDetected) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage("Failure expression positive when processing event: " + event));
+  }
+}
