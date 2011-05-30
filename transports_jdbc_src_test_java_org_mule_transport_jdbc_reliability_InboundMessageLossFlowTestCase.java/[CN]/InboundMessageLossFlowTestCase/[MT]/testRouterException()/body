@@ -1,6 +1,18 @@
 {
   assertEquals(1,qr.update(jdbcConnector.getConnection(),"INSERT INTO TEST(TYPE, DATA, ACK, RESULT) VALUES (3, '" + TEST_MESSAGE + "', NULL, NULL)"));
-  Thread.sleep(DELAY);
-  Object[] queryResult=(Object[])qr.query(jdbcConnector.getConnection(),"SELECT DATA FROM TEST WHERE TYPE = 3 AND ACK IS NULL",new ArrayHandler());
-  assertNull(queryResult);
+  prober.check(new Probe(){
+    public boolean isSatisfied(){
+      try {
+        Object[] queryResult=(Object[])qr.query(jdbcConnector.getConnection(),"SELECT DATA FROM TEST WHERE TYPE = 3 AND ACK IS NULL",new ArrayHandler());
+        return (queryResult == null);
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+    public String describeFailure(){
+      return "Row should be acknowledged (marked read)";
+    }
+  }
+);
 }
