@@ -10,10 +10,10 @@
   }
   if (destComponent != null) {
     Object fc=muleContext.getRegistry().lookupObject(destComponent);
-    if (!(fc instanceof FlowConstruct)) {
+    if (!(fc instanceof SimpleFlowConstruct)) {
       return handleException(null,new DefaultMuleException(ClientMessages.noSuchFlowConstruct(destComponent)));
     }
-    FlowConstruct flowConstruct=(FlowConstruct)fc;
+    SimpleFlowConstruct flowConstruct=(SimpleFlowConstruct)fc;
     MuleSession session=new DefaultMuleSession(flowConstruct,muleContext);
     EndpointBuilder builder=new EndpointURIEndpointBuilder(RequestContext.getEvent().getEndpoint());
     builder.setTransformers(new LinkedList());
@@ -21,7 +21,7 @@
     MuleEvent event=new DefaultMuleEvent(action.getMessage(),ep,context.getSession());
     event=RequestContext.setEvent(event);
     if (context.getExchangePattern().hasResponse()) {
-      MuleEvent resultEvent=flowConstruct.getMessageProcessorChain().process(event);
+      MuleEvent resultEvent=flowConstruct.process(event);
       result=resultEvent == null ? null : resultEvent.getMessage();
       if (result == null) {
         return null;
@@ -33,7 +33,7 @@
       }
     }
  else {
-      flowConstruct.getMessageProcessorChain().process(event);
+      flowConstruct.process(event);
       return null;
     }
   }
