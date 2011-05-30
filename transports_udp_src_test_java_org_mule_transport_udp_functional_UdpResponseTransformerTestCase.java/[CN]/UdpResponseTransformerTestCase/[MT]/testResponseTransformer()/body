@@ -1,0 +1,21 @@
+{
+  DatagramSocket socket=null;
+  try {
+    socket=new DatagramSocket();
+    socket.setSoTimeout(RECEIVE_TIMEOUT);
+    byte[] buf=TEST_MESSAGE.getBytes();
+    int port=getPorts().get(0).intValue();
+    DatagramPacket packet=new DatagramPacket(buf,buf.length,InetAddress.getByName("localhost"),port);
+    socket.send(packet);
+    packet=new DatagramPacket(new byte[128],128);
+    socket.receive(packet);
+    String expected=TEST_MESSAGE + " In Out Out2";
+    String result=new String(packet.getData()).trim();
+    assertEquals(expected,result);
+  }
+  finally {
+    if (socket != null) {
+      socket.close();
+    }
+  }
+}
