@@ -1,5 +1,24 @@
 {
   builder.addConstructorArgValue(element.getAttribute(ATTRIBUTE_NAME));
   builder.addConstructorArgReference(MuleProperties.OBJECT_MULE_CONTEXT);
+  String processingStrategy=element.getAttribute(PROCESSING_STRATEGY_ATTRIBUTE_NAME);
+  if (SYNC_PROCESSING_STRATEGY.equals(processingStrategy)) {
+    builder.addPropertyValue(PROCESSING_STRATEGY_ATTRIBUTE_NAME,new SynchronousProcessingStrategy());
+  }
+ else   if (ASYNC_PROCESSING_STRATEGY.equals(processingStrategy)) {
+    builder.addPropertyValue(PROCESSING_STRATEGY_ATTRIBUTE_NAME,new AsynchronousProcessingStrategy());
+  }
+ else   if (QUEUED_ASYNC_PROCESSING_STRATEGY.equals(processingStrategy)) {
+    builder.addPropertyValue(PROCESSING_STRATEGY_ATTRIBUTE_NAME,new QueuedAsynchronousProcessingStrategy());
+  }
+ else   if (THREAD_PER_PROCESSOR_PROCESSING_STRATEGY.equals(processingStrategy)) {
+    builder.addPropertyValue(PROCESSING_STRATEGY_ATTRIBUTE_NAME,new ThreadPerProcessorProcessingStrategy());
+  }
+ else   if (QUEUED_THREAD_PER_PROCESSOR_PROCESSING_STRATEGY.equals(processingStrategy)) {
+    builder.addPropertyValue(PROCESSING_STRATEGY_ATTRIBUTE_NAME,new QueuedThreadPerProcessorProcessingStrategy());
+  }
+ else   if (null != processingStrategy) {
+    builder.addPropertyValue(PROCESSING_STRATEGY_ATTRIBUTE_NAME,new RuntimeBeanNameReference(processingStrategy));
+  }
   super.doParse(element,parserContext,builder);
 }
