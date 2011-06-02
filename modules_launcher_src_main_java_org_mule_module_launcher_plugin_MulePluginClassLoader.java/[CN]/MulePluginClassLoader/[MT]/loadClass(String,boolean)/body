@@ -1,0 +1,43 @@
+{
+  Class<?> result=findLoadedClass(name);
+  if (result != null) {
+    return result;
+  }
+  if (parentFirst) {
+    boolean overrideMatch=false;
+    for (    String override : overrides) {
+      if (name.startsWith(override)) {
+        overrideMatch=true;
+        break;
+      }
+    }
+    if (overrideMatch) {
+      try {
+        result=findClass(name);
+      }
+ catch (      ClassNotFoundException e) {
+        result=findParentClass(name);
+      }
+    }
+ else {
+      try {
+        result=findParentClass(name);
+      }
+ catch (      ClassNotFoundException e) {
+        result=findClass(name);
+        if (resolve) {
+          resolveClass(result);
+        }
+      }
+    }
+  }
+ else {
+    try {
+      result=findClass(name);
+    }
+ catch (    ClassNotFoundException e) {
+      result=findParentClass(name);
+    }
+  }
+  return result;
+}
