@@ -7,15 +7,13 @@
   URL[] parentUrls=new URL[]{f.toURI().toURL()};
   URLClassLoader parent=new URLClassLoader(parentUrls,Thread.currentThread().getContextClassLoader());
   assertNotNull(parent.loadClass("mypackage.SneakyChatter"));
-  f=new File(classPathRoot.getPath(),"../../../test-02-plugin-impl-2/target/classes/");
-  System.out.println("f = " + f);
-  assertTrue("Dependent test classes not found, has required IT test modules been run before?",f.exists());
-  URL[] childUrls=new URL[]{f.toURI().toURL()};
   Set<String> overrides=new HashSet<String>();
   overrides.add("-mypackage");
-  MulePluginClassLoader ext=new MulePluginClassLoader(childUrls,parent,overrides);
-  Class c=ext.loadClass("mypackage.SneakyChatter");
-  final Method methodHi=c.getMethod("hi");
-  final Object result=methodHi.invoke(c.newInstance());
-  assertEquals("Wrong implementation loaded","Bye",result);
+  FineGrainedControlClassLoader ext=new FineGrainedControlClassLoader(new URL[0],parent,overrides);
+  try {
+    ext.loadClass("mypackage.SneakyChatter");
+    fail("Should have failed to load the class");
+  }
+ catch (  ClassNotFoundException e) {
+  }
 }
