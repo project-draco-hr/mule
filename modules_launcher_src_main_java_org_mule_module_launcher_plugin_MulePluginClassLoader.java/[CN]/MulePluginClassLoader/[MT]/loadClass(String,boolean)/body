@@ -3,19 +3,21 @@
   if (result != null) {
     return result;
   }
-  boolean overrideMatch=false;
-  for (  String override : overrides) {
-    if (name.startsWith(override)) {
-      overrideMatch=true;
-      break;
-    }
-  }
+  boolean overrideMatch=isOverridden(name);
   if (overrideMatch) {
-    try {
+    System.out.printf("Name: %s Overridden: %s",name,overrideMatch);
+    boolean blockedMatch=isBlocked(name);
+    System.out.printf("Name: %s Blocked: %s",name,blockedMatch);
+    if (blockedMatch) {
       result=findClass(name);
     }
- catch (    ClassNotFoundException e) {
-      result=findParentClass(name);
+ else {
+      try {
+        result=findClass(name);
+      }
+ catch (      ClassNotFoundException e) {
+        result=findParentClass(name);
+      }
     }
   }
  else {
@@ -24,10 +26,10 @@
     }
  catch (    ClassNotFoundException e) {
       result=findClass(name);
-      if (resolve) {
-        resolveClass(result);
-      }
     }
+  }
+  if (resolve) {
+    resolveClass(result);
   }
   return result;
 }
