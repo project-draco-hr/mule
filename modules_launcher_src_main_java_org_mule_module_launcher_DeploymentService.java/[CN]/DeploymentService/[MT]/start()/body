@@ -23,15 +23,8 @@
  catch (      Throwable t) {
         logger.error(String.format("Failed to install app from archive '%s'",zip),t);
         fireOnDeploymentFailure(appName,t);
-        File appFile=new File(appsDir,zip);
-        try {
-          addZombie(appFile.toURL());
-        }
- catch (        MalformedURLException muex) {
-          if (logger.isDebugEnabled()) {
-            logger.debug(muex);
-          }
-        }
+        File appZip=new File(appsDir,zip);
+        addZombie(appZip);
       }
     }
     apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
@@ -52,8 +45,10 @@
       }
       applications.add(a);
     }
- catch (    IOException e) {
-      logger.error(String.format("Failed to create application [%s]",app),e);
+ catch (    Throwable t) {
+      fireOnDeploymentFailure(app,t);
+      addZombie(new File(appsDir,app));
+      logger.error(String.format("Failed to create application [%s]",app),t);
     }
   }
   for (  Application application : applications) {

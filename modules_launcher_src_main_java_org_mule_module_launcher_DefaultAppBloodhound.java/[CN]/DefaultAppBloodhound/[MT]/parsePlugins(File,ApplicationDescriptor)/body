@@ -1,7 +1,7 @@
 {
   final File pluginsDir=new File(appDir,"plugins");
   String[] pluginZips=pluginsDir.list(new SuffixFileFilter(".zip"));
-  if (pluginZips.length == 0) {
+  if (pluginZips == null || pluginZips.length == 0) {
     return Collections.emptySet();
   }
   Arrays.sort(pluginZips);
@@ -9,12 +9,7 @@
   for (  String pluginZip : pluginZips) {
     final String pluginName=StringUtils.removeEnd(pluginZip,".zip");
     final File tmpDir=new File(MuleContainerBootstrapUtils.getMuleTmpDir(),desc.getAppName() + "/plugins/" + pluginName);
-    try {
-      FileUtils.unzip(new File(pluginsDir,pluginZip),tmpDir);
-    }
- catch (    IOException e) {
-      throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("Failed to parse plugins for application [%s]",desc.getAppName())));
-    }
+    FileUtils.unzip(new File(pluginsDir,pluginZip),tmpDir);
     final PluginDescriptor pd=new PluginDescriptor();
     pd.setName(pluginName);
     PluginClasspath cp=PluginClasspath.from(tmpDir);
