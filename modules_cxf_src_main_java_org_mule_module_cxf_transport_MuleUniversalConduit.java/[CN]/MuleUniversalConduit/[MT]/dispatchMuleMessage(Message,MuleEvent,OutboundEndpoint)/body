@@ -1,0 +1,34 @@
+{
+  try {
+    MuleMessage req=reqEvent.getMessage();
+    req.setOutboundProperty(HttpConnector.HTTP_DISABLE_STATUS_CODE_EXCEPTION_CHECK,Boolean.TRUE.toString());
+    MuleEvent resEvent=processNext(reqEvent,m.getExchange(),endpoint);
+    if (resEvent == null) {
+      m.getExchange().put(ClientImpl.FINISHED,Boolean.TRUE);
+      return;
+    }
+    MuleMessage result=resEvent.getMessage();
+    InputStream is=getResponseBody(m,result);
+    if (is != null) {
+      Message inMessage=new MessageImpl();
+      String encoding=result.getEncoding();
+      inMessage.put(Message.ENCODING,encoding);
+      String contentType=result.getOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
+      if (encoding != null && contentType.indexOf("charset") < 0) {
+        contentType+="; charset=" + result.getEncoding();
+      }
+      inMessage.put(Message.CONTENT_TYPE,contentType);
+      inMessage.setContent(InputStream.class,is);
+      inMessage.setExchange(m.getExchange());
+      getMessageObserver().onMessage(inMessage);
+    }
+  }
+ catch (  Exception e) {
+    if (e instanceof IOException) {
+      throw (IOException)e;
+    }
+    IOException ex=new IOException("Could not send message to Mule.");
+    ex.initCause(e);
+    throw ex;
+  }
+}

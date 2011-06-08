@@ -7,13 +7,13 @@
   m.put("barValue","bar");
   MuleMessage message=new DefaultMuleMessage("test event",m,muleContext);
   assertTrue(router.isMatch(message));
-  MuleEvent event=new OutboundRoutingTestEvent(message,null);
+  MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
   ImmutableEndpoint ep=(ImmutableEndpoint)router.getRoute(2,event);
   assertEquals("test://foo?bar&exchangePattern=request-response",ep.getEndpointURI().toString());
   mockendpoint1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint3.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
-  final MuleEvent result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy()));
+  final MuleEvent result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
   assertNotNull("This is a sync call, we need a result returned.",result);
   assertEquals(message,result.getMessage());
   mockendpoint1.verify();

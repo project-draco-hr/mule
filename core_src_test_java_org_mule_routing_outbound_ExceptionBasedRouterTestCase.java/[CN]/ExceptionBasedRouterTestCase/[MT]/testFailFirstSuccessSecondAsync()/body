@@ -11,14 +11,14 @@
   router.addRoute((OutboundEndpoint)mockendpoint2.proxy());
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   MuleMessage expectedResultMessage=new DefaultMuleMessage("Return event",muleContext);
-  MuleEvent event=new OutboundRoutingTestEvent(expectedResultMessage,null);
+  MuleEvent event=new OutboundRoutingTestEvent(expectedResultMessage,null,muleContext);
   assertTrue(router.isMatch(message));
   final MuleSession session=(MuleSession)mockSession.proxy();
   MuleEvent eventToThrow=new DefaultMuleEvent(message,endpoint1,session);
   MuleException rex=new RoutingException(eventToThrow,endpoint1);
   mockendpoint1.expectAndThrow("process",RouterTestUtils.getArgListCheckerMuleEvent(),rex);
   mockendpoint2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
-  MuleEvent actualResult=router.route(new OutboundRoutingTestEvent(message,session));
+  MuleEvent actualResult=router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   assertNull("Async call should not return any results.",actualResult);
   mockendpoint1.verify();
   mockendpoint2.verify();

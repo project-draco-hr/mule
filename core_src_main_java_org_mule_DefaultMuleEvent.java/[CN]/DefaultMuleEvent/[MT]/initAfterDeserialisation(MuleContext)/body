@@ -9,19 +9,13 @@
     ((DefaultMuleMessage)message).initAfterDeserialisation(muleContext);
   }
   int endpointHashcode=(Integer)serializedData.get("endpointHashcode");
-  boolean isInboundEndpoint=(Boolean)serializedData.get("isInboundEndpoint");
   String endpointBuilderName=(String)serializedData.get("endpointBuilderName");
   String endpointUri=(String)serializedData.get("endpointUri");
   List<String> transformerNames=(List<String>)serializedData.get("transformers");
   endpoint=(ImmutableEndpoint)muleContext.getRegistry().lookupObject(DefaultEndpointFactory.ENDPOINT_REGISTRY_PREFIX + endpointHashcode);
   if (endpoint == null) {
     if ((endpointBuilderName != null) && muleContext.getRegistry().lookupEndpointBuilder(endpointBuilderName) != null) {
-      if (isInboundEndpoint) {
-        endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilderName);
-      }
- else {
-        endpoint=muleContext.getEndpointFactory().getOutboundEndpoint(endpointBuilderName);
-      }
+      endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilderName);
     }
  else {
       List<Transformer> transformers=new LinkedList<Transformer>();
@@ -38,12 +32,7 @@
       TransportServiceDescriptor tsd=(TransportServiceDescriptor)muleContext.getRegistry().lookupServiceDescriptor(ServiceType.TRANSPORT,uri.getFullScheme(),null);
       EndpointBuilder endpointBuilder=tsd.createEndpointBuilder(endpointUri);
       endpointBuilder.setTransformers(transformers);
-      if (isInboundEndpoint) {
-        endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilder);
-      }
- else {
-        endpoint=muleContext.getEndpointFactory().getOutboundEndpoint(endpointBuilder);
-      }
+      endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilder);
     }
   }
   serializedData=null;

@@ -1,17 +1,19 @@
 {
   if (endpoint.getExchangePattern().hasResponse() || !getDispatcherThreadingProfile().isDoThreading()) {
-    return new DispatcherMessageProcessor();
+    return new DispatcherMessageProcessor(endpoint);
   }
  else {
     DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
     builder.setName("dispatcher processor chain for '" + endpoint.getAddress() + "'");
-    builder.chain(new OptionalAsyncInterceptingMessageProcessor(new WorkManagerSource(){
+    OptionalAsyncInterceptingMessageProcessor async=new OptionalAsyncInterceptingMessageProcessor(new WorkManagerSource(){
       public WorkManager getWorkManager() throws MuleException {
         return getDispatcherWorkManager();
       }
     }
-));
-    builder.chain(new DispatcherMessageProcessor());
+);
+    ((EndpointAware)async).setEndpoint(endpoint);
+    builder.chain(async);
+    builder.chain(new DispatcherMessageProcessor(endpoint));
     return builder.build();
   }
 }

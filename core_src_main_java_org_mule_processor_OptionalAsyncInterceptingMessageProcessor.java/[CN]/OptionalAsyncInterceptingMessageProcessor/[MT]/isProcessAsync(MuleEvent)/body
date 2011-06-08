@@ -1,7 +1,15 @@
 {
   Object messageProperty=event.getMessage().getInboundProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY);
   boolean forceSync=Boolean.TRUE.equals(messageProperty);
-  boolean hasResponse=event.getEndpoint().getExchangePattern().hasResponse();
-  boolean isTransacted=event.getEndpoint().getTransactionConfig().isTransacted();
+  boolean hasResponse;
+  boolean isTransacted;
+  if (endpoint != null) {
+    hasResponse=endpoint.getExchangePattern().hasResponse();
+    isTransacted=endpoint.getTransactionConfig().isTransacted();
+  }
+ else {
+    hasResponse=event.getEndpoint().getExchangePattern().hasResponse();
+    isTransacted=event.getEndpoint().getTransactionConfig().isTransacted();
+  }
   return !forceSync && doThreading && !hasResponse&& !isTransacted;
 }
