@@ -1,9 +1,9 @@
 {
   RetryCallback callback=new RetryCallback(){
-    public String getWorkDescription(){
+    @Override public String getWorkDescription(){
       return "Until successful processing of event stored under key: " + eventStoreKey;
     }
-    public void doWork(    RetryContext context) throws Exception {
+    @Override public void doWork(    RetryContext context) throws Exception {
       retrieveAndProcessEvent(eventStoreKey);
     }
   }
@@ -11,10 +11,10 @@
   SimpleRetryPolicyTemplate simpleRetryPolicyTemplate=new SimpleRetryPolicyTemplate(TimeUnit.SECONDS.toMillis(secondsBetweenRetries),maxRetries);
   RetryPolicyTemplate retryPolicyTemplate=new AsynchronousRetryTemplate(simpleRetryPolicyTemplate);
   retryPolicyTemplate.setNotifier(new RetryNotifier(){
-    public void onSuccess(    RetryContext context){
+    @Override public void onSuccess(    RetryContext context){
       removeFromStore(eventStoreKey);
     }
-    public void onFailure(    RetryContext context,    Throwable e){
+    @Override public void onFailure(    RetryContext context,    Throwable e){
       incrementProcessAttemptCountOrRemoveFromStore(eventStoreKey);
     }
   }

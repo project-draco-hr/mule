@@ -1,6 +1,6 @@
 {
   MuleMessage message=event.getMessage();
-  List recipients=this.getRecipients(event);
+  List<Object> recipients=getRecipients(event);
   List<MuleEvent> results=new ArrayList<MuleEvent>();
   if (enableCorrelation != CorrelationMode.NEVER) {
     boolean correlationSet=message.getCorrelationGroupSize() != -1;
@@ -12,10 +12,8 @@
     }
   }
   OutboundEndpoint endpoint=null;
-  MuleMessage request;
-  for (Iterator iterator=recipients.iterator(); iterator.hasNext(); ) {
-    Object recipient=iterator.next();
-    request=new DefaultMuleMessage(message.getPayload(),message,muleContext);
+  for (  Object recipient : recipients) {
+    MuleMessage request=new DefaultMuleMessage(message.getPayload(),message,muleContext);
     try {
       endpoint=getRecipientEndpoint(request,recipient);
       boolean sync=(this.synchronous == null ? endpoint.getExchangePattern().hasResponse() : this.synchronous.booleanValue());
