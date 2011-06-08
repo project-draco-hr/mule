@@ -1,0 +1,33 @@
+{
+  final File pluginsDir=new File(appDir,"plugins");
+  String[] pluginZips=pluginsDir.list(new SuffixFileFilter(".zip"));
+  if (pluginZips == null || pluginZips.length == 0) {
+    return Collections.emptySet();
+  }
+  Arrays.sort(pluginZips);
+  Set<PluginDescriptor> pds=new HashSet<PluginDescriptor>(pluginZips.length);
+  for (  String pluginZip : pluginZips) {
+    final String pluginName=StringUtils.removeEnd(pluginZip,".zip");
+    final File tmpDir=new File(MuleContainerBootstrapUtils.getMuleTmpDir(),appDescriptor.getAppName() + "/plugins/" + pluginName);
+    FileUtils.unzip(new File(pluginsDir,pluginZip),tmpDir);
+    final PluginDescriptor pd=new PluginDescriptor();
+    pd.setName(pluginName);
+    pd.setAppDescriptor(appDescriptor);
+    final File pluginPropsFile=new File(tmpDir,"plugin.properties");
+    if (pluginPropsFile.exists()) {
+      Properties props=new Properties();
+      props.load(new FileReader(pluginPropsFile));
+      final String overrideString=props.getProperty(PROPERTY_LOADER_OVERRIDE);
+      if (StringUtils.isNotBlank(overrideString)) {
+        Set<String> values=new HashSet<String>();
+        final String[] overrides=overrideString.split(",");
+        Collections.addAll(values,overrides);
+        pd.setLoaderOverride(values);
+      }
+    }
+    PluginClasspath cp=PluginClasspath.from(tmpDir);
+    pd.setClasspath(cp);
+    pds.add(pd);
+  }
+  return pds;
+}
