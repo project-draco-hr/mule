@@ -2,25 +2,11 @@
   if (logger.isInfoEnabled()) {
     logger.info(miniSplash(String.format("Initializing app '%s'",appName)));
   }
-  String configBuilderClassName=null;
   try {
-    final String builderFromDesc=descriptor.getConfigurationBuilder();
-    if ("spring".equalsIgnoreCase(builderFromDesc)) {
-      configBuilderClassName=ApplicationDescriptor.CLASSNAME_SPRING_CONFIG_BUILDER;
-    }
- else     if (builderFromDesc == null) {
-      configBuilderClassName=AutoConfigurationBuilder.class.getName();
-    }
- else {
-      configBuilderClassName=builderFromDesc;
-    }
-    ConfigurationBuilder cfgBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(configBuilderClassName,new Object[]{absoluteResourcePaths},getDeploymentClassLoader());
+    ConfigurationBuilder cfgBuilder=createConfigurationBuiler();
     if (!cfgBuilder.isConfigured()) {
-      List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(2);
-      final Map<String,String> appProperties=descriptor.getAppProperties();
-      appProperties.put(MuleProperties.APP_HOME_DIRECTORY_PROPERTY,new File(MuleContainerBootstrapUtils.getMuleAppsDir(),getAppName()).getAbsolutePath());
-      appProperties.put(MuleProperties.APP_NAME_PROPERTY,getAppName());
-      builders.add(new SimpleConfigurationBuilder(appProperties));
+      List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(3);
+      builders.add(createConfigurationBuilderFromApplicationProperties());
       if (ClassUtils.isClassOnPath(MuleServer.CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,getClass())) {
         Object configBuilder=ClassUtils.instanciateClass(MuleServer.CLASSNAME_ANNOTATIONS_CONFIG_BUILDER,ClassUtils.NO_ARGS,getClass());
         builders.add((ConfigurationBuilder)configBuilder);
