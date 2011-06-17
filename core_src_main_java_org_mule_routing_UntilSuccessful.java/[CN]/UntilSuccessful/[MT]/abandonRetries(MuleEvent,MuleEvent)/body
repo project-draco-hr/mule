@@ -1,0 +1,13 @@
+{
+  if (dlqEndpoint == null) {
+    logger.info("Retry attempts exhausted and no DLQ endpoint defined, dropping message: " + event);
+    return;
+  }
+  try {
+    logger.info("Retry attempts exhausted, routing message to DLQ endpoint: " + dlqEndpoint);
+    dlqEndpoint.process(mutableEvent);
+  }
+ catch (  MuleException me) {
+    logger.error("Failed to route message to DLQ endpoint: " + dlqEndpoint + ", dropping message: "+ event,me);
+  }
+}
