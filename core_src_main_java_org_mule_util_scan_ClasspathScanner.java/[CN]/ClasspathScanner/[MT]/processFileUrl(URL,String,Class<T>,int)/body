@@ -1,5 +1,5 @@
 {
-  Set<Class> set=new HashSet<Class>();
+  Set<Class<T>> set=new HashSet<Class<T>>();
   String urlBase=url.getFile();
   urlBase=urlBase.replaceAll("%20"," ");
   File dir=new File(urlBase);
@@ -7,7 +7,7 @@
     logger.warn("Cannot process File URL: " + url + ". Path is not a directory");
     return set;
   }
-  Collection<File> files=FileUtils.listFiles(new File(urlBase),new String[]{"class"},true);
+  @SuppressWarnings("unchecked") Collection<File> files=FileUtils.listFiles(new File(urlBase),new String[]{"class"},true);
   for (  File file : files) {
     try {
       if (file.getName().contains("$") && !hasFlag(flags,INCLUDE_INNER)) {
@@ -18,7 +18,8 @@
       ClassScanner visitor=getScanner(clazz);
       reader.accept(visitor,0);
       if (visitor.isMatch()) {
-        addClassToSet(loadClass(visitor.getClassName()),set,flags);
+        @SuppressWarnings("unchecked") Class<T> loadedClass=(Class<T>)loadClass(visitor.getClassName());
+        addClassToSet(loadedClass,set,flags);
       }
     }
  catch (    IOException e) {

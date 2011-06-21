@@ -1,10 +1,10 @@
 {
-  Set<Class> set=new HashSet<Class>();
+  Set<Class<T>> set=new HashSet<Class<T>>();
   String path=url.getFile().substring(5,url.getFile().indexOf("!"));
   path=path.replaceAll("%20"," ");
   JarFile jar=new JarFile(path);
-  for (Enumeration entries=jar.entries(); entries.hasMoreElements(); ) {
-    JarEntry entry=(JarEntry)entries.nextElement();
+  for (Enumeration<JarEntry> entries=jar.entries(); entries.hasMoreElements(); ) {
+    JarEntry entry=entries.nextElement();
     if (entry.getName().startsWith(basepath) && entry.getName().endsWith(".class")) {
       try {
         String name=entry.getName();
@@ -17,7 +17,8 @@
         ClassScanner visitor=getScanner(clazz);
         reader.accept(visitor,0);
         if (visitor.isMatch()) {
-          addClassToSet(loadClass(visitor.getClassName()),set,flags);
+          @SuppressWarnings("unchecked") Class<T> loadedClass=(Class<T>)loadClass(visitor.getClassName());
+          addClassToSet(loadedClass,set,flags);
         }
       }
  catch (      Exception e) {

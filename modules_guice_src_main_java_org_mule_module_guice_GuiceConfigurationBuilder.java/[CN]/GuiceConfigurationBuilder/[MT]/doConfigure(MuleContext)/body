@@ -6,8 +6,8 @@
   }
   if (modules == null) {
     ClasspathScanner scanner=new ClasspathScanner(classLoader,basepath);
-    Set<Class> classes=scanner.scanFor(Module.class);
-    Set<Class> factories=scanner.scanFor(GuiceModuleFactory.class);
+    Set<Class<Module>> classes=scanner.scanFor(Module.class);
+    Set<Class<GuiceModuleFactory>> factories=scanner.scanFor(GuiceModuleFactory.class);
     if (classes.size() == 0 && factories.size() == 0) {
       try {
         basepath=getClass().getClassLoader().getResources(basepath).toString();
@@ -18,11 +18,11 @@
       logger.warn(new ConfigurationException(CoreMessages.createStaticMessage("There are no Guice modules or module factories on the classpath under: " + basepath)));
       return;
     }
-    for (    Class moduleClass : classes) {
-      allModules.add((Module)ClassUtils.instanciateClass(moduleClass,ClassUtils.NO_ARGS));
+    for (    Class<Module> moduleClass : classes) {
+      allModules.add(ClassUtils.instanciateClass(moduleClass,ClassUtils.NO_ARGS));
     }
-    for (    Class factoryClass : factories) {
-      GuiceModuleFactory factory=(GuiceModuleFactory)ClassUtils.instanciateClass(factoryClass,ClassUtils.NO_ARGS);
+    for (    Class<GuiceModuleFactory> factoryClass : factories) {
+      GuiceModuleFactory factory=ClassUtils.instanciateClass(factoryClass,ClassUtils.NO_ARGS);
       allModules.add(factory.createModule());
     }
   }
