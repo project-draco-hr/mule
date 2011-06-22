@@ -1,0 +1,17 @@
+{
+  if (authenticationState == AUTHENTICATION_STATE.UNINITIATED) {
+    throw new IllegalStateException("NTLM authentication process has not been initiated");
+  }
+  NtlmMessage response;
+  NTCredentials ntcredentials=getNTCredentials(credentials);
+  if (authenticationState == AUTHENTICATION_STATE.INITIATED || authenticationState == AUTHENTICATION_STATE.FAILED) {
+    response=ntlmMessageFactory.createType1Message(null,null);
+    authenticationState=AUTHENTICATION_STATE.TYPE1_MSG_GENERATED;
+  }
+ else {
+    Type2Message type2MessageFromChallenge=ntlmMessageFactory.createType2Message(receivedNtlmChallenge);
+    response=ntlmMessageFactory.createType3Message(ntcredentials,type2MessageFromChallenge);
+    authenticationState=AUTHENTICATION_STATE.TYPE3_MSG_GENERATED;
+  }
+  return ntlmMessageToString(response);
+}
