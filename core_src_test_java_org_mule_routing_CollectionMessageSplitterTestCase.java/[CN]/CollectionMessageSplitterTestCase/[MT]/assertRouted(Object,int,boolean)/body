@@ -6,14 +6,17 @@
   inboundProps.put("inbound2",2);
   inboundProps.put("inbound3",session);
   Map<String,Object> outboundProps=new HashMap();
-  inboundProps.put("outbound1","3");
-  inboundProps.put("outbound2",4);
-  inboundProps.put("outbound3",session);
+  outboundProps.put("outbound1","3");
+  outboundProps.put("outbound2",4);
+  outboundProps.put("outbound3",session);
   Map<String,Object> invocationProps=new HashMap();
-  inboundProps.put("invoke1","5");
-  inboundProps.put("invoke2",6);
-  inboundProps.put("invoke3",session);
-  List<String> payload=Arrays.asList("abc","def","ghi");
+  invocationProps.put("invoke1","5");
+  invocationProps.put("invoke2",6);
+  invocationProps.put("invoke3",session);
+  Set expectedSequences=new HashSet();
+  for (int i=1; i <= count; i++) {
+    expectedSequences.add(i);
+  }
   MuleMessage toSplit=new DefaultMuleMessage(payload,inboundProps,outboundProps,null,muleContext);
   for (  Map.Entry<String,Object> entry : invocationProps.entrySet()) {
     toSplit.setInvocationProperty(entry.getKey(),entry.getValue());
@@ -25,11 +28,14 @@
   DefaultMuleEvent event=new DefaultMuleEvent(toSplit,getTestInboundEndpoint("ep"),session);
   splitter.process(event);
   List<MuleMessage> splits=grabber.getMessages();
-  assertEquals(3,splits.size());
+  assertEquals(count,splits.size());
+  Set actualSequences=new HashSet();
   for (  MuleMessage msg : splits) {
     assertTrue(msg.getPayload() instanceof String);
+    assertEquals(counted ? count : -1,msg.getProperty(MuleProperties.MULE_CORRELATION_GROUP_SIZE_PROPERTY));
+    actualSequences.add(msg.getProperty(MuleProperties.MULE_CORRELATION_SEQUENCE_PROPERTY));
     String str=(String)msg.getPayload();
-    assertTrue(payload.contains(str));
+    assertTrue(TEST_LIST.contains(str));
     for (    String key : inboundProps.keySet()) {
       assertEquals(msg.getInboundProperty(key),inboundProps.get(key));
     }
@@ -40,4 +46,5 @@
       assertEquals(msg.getInvocationProperty(key),invocationProps.get(key));
     }
   }
+  assertEquals(expectedSequences,actualSequences);
 }

@@ -1,0 +1,18 @@
+{
+  Object payload=event.getMessage().getPayload();
+  if (payload instanceof MessageSequence<?>) {
+    return ((MessageSequence<?>)payload);
+  }
+  if (payload instanceof Iterator<?>) {
+    return new IteratorMessageSequence<Object>(((Iterator<Object>)payload));
+  }
+  if (payload instanceof Collection) {
+    return new CollectionMessageSequence(new LinkedList((Collection)payload));
+  }
+  if (payload instanceof Iterable<?>) {
+    return new IteratorMessageSequence<Object>(((Iterable<Object>)payload).iterator());
+  }
+ else {
+    throw new IllegalArgumentException(CoreMessages.objectNotOfCorrectType(payload.getClass(),new Class[]{Iterable.class,Iterator.class,MessageSequence.class,Collection.class}).getMessage());
+  }
+}

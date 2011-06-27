@@ -4,26 +4,24 @@
   }
   String correlationId=messageInfoMapping.getCorrelationId(event.getMessage());
   List<MuleEvent> resultEvents=new ArrayList<MuleEvent>();
-  int correlationSequence=1;
-  MuleMessage originalMessage=event.getMessage();
-  for (  Object part : parts) {
-    MuleMessage message;
-    if (part instanceof MuleMessage) {
-      message=(MuleMessage)part;
-    }
- else {
-      message=new DefaultMuleMessage(originalMessage,muleContext);
-      message.setPayload(part);
-    }
+  int correlationSequence=0;
+  int count=seq.size();
+  for (; seq.hasNext(); ) {
+    Object payload=seq.next();
+    MuleMessage message=createMessage(payload,event.getMessage());
+    correlationSequence++;
     if (enableCorrelation != CorrelationMode.NEVER) {
       boolean correlationSet=message.getCorrelationId() != null;
       if ((!correlationSet && (enableCorrelation == CorrelationMode.IF_NOT_SET)) || (enableCorrelation == CorrelationMode.ALWAYS)) {
         message.setCorrelationId(correlationId);
       }
-      message.setCorrelationGroupSize(parts.size());
-      message.setCorrelationSequence(correlationSequence++);
+      message.setCorrelationGroupSize(count);
+      message.setCorrelationSequence(correlationSequence);
     }
     resultEvents.add(processNext(new DefaultMuleEvent(message,event)));
+  }
+  if (correlationSequence == 1) {
+    logger.warn("Splitter only returned a single result. If this is not expected, please check your split expression");
   }
   return resultEvents;
 }
