@@ -1,6 +1,14 @@
 {
-  Service service=muleContext.getRegistry().lookupService("component1");
-  MuleSession session=new DefaultMuleSession(service,muleContext);
-  MuleEvent event=new DefaultMuleEvent(new DefaultMuleMessage("Test MuleEvent",muleContext),((ServiceCompositeMessageSource)service.getMessageSource()).getEndpoints().get(0),session);
-  service.sendEvent(event);
+  if (variant.equals(ConfigVariant.FLOW)) {
+    Flow flow=muleContext.getRegistry().lookupObject("component1");
+    MuleSession session=new DefaultMuleSession(flow,muleContext);
+    MuleEvent event=new DefaultMuleEvent(new DefaultMuleMessage("Test MuleEvent",muleContext),((InboundEndpoint)flow.getMessageSource()),session);
+    flow.process(event);
+  }
+ else {
+    Service service=muleContext.getRegistry().lookupService("component1");
+    MuleSession session=new DefaultMuleSession(service,muleContext);
+    MuleEvent event=new DefaultMuleEvent(new DefaultMuleMessage("Test MuleEvent",muleContext),((ServiceCompositeMessageSource)service.getMessageSource()).getEndpoints().get(0),session);
+    service.sendEvent(event);
+  }
 }
