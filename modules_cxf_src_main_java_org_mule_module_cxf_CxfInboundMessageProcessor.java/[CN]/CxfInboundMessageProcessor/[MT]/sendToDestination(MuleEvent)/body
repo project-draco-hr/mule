@@ -42,6 +42,15 @@
     exchange.setInMessage(m);
     exchange.put(CxfConstants.MULE_EVENT,event);
     d.getMessageObserver().onMessage(m);
+    if (isOnFaultInvokeStrategy()) {
+      Object o=exchange.get(Exception.class);
+      if (o != null) {
+        if (o instanceof Exception) {
+          Exception newEx=(Exception)o;
+          throw new DefaultMuleException(newEx);
+        }
+      }
+    }
     MuleEvent responseEvent=(MuleEvent)exchange.get(CxfConstants.MULE_EVENT);
     if (responseEvent == null || !event.getExchangePattern().hasResponse()) {
       return null;
