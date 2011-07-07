@@ -1,6 +1,6 @@
 {
   final Latch latch=new Latch();
-  Service service=muleContext.getRegistry().lookupService("TestService");
+  FlowConstruct service=muleContext.getRegistry().lookupFlowConstruct("TestService");
   FunctionalTestComponent testComponent=(FunctionalTestComponent)getComponent(service);
   testComponent.setEventCallback(new EventCallback(){
     public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
@@ -9,8 +9,16 @@
     }
   }
 );
-  service.dispatchEvent(getTestEvent("test"));
-  Thread.sleep(200);
-  service.dispose();
-  assertTrue(latch.await(1000,TimeUnit.MILLISECONDS));
+  if (variant.equals(ConfigVariant.FLOW)) {
+    ((Flow)service).process(getTestEvent("test"));
+    Thread.sleep(200);
+    ((Flow)service).dispose();
+    assertTrue(latch.await(1000,TimeUnit.MILLISECONDS));
+  }
+ else {
+    ((Service)service).dispatchEvent(getTestEvent("test"));
+    Thread.sleep(200);
+    ((Service)service).dispose();
+    assertTrue(latch.await(1000,TimeUnit.MILLISECONDS));
+  }
 }
