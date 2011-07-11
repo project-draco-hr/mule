@@ -6,7 +6,7 @@
   List<Transformer> transformers=new ArrayList<Transformer>();
   transformers.add(trans1);
   transformers.add(trans2);
-  InboundEndpoint endpoint=getTestInboundEndpoint("Test",null,transformers,new PayloadTypeFilter(Object.class),null);
+  InboundEndpoint endpoint=getTestInboundEndpoint("Test",null,transformers,new PayloadTypeFilter(Object.class),null,null);
   MuleEvent event=RequestContext.setEvent(getTestEvent("payload",endpoint));
   Serializable serialized=(Serializable)new SerializableToByteArray().transform(event);
   assertNotNull(serialized);
@@ -22,9 +22,9 @@
   assertSame(event.getSession().getFlowConstruct(),deserialized.getSession().getFlowConstruct());
   assertNotNull(deserialized.getEndpoint());
   assertEquals(endpoint,deserialized.getEndpoint());
-  List deserializedTransformers=deserialized.getEndpoint().getTransformers();
+  List<Transformer> deserializedTransformers=deserialized.getEndpoint().getTransformers();
   assertEquals(2,deserializedTransformers.size());
-  assertEquals(trans1.getName(),((Transformer)deserializedTransformers.get(0)).getName());
-  assertEquals(trans2.getName(),((Transformer)deserializedTransformers.get(1)).getName());
+  assertEquals(trans1.getName(),deserializedTransformers.get(0).getName());
+  assertEquals(trans2.getName(),deserializedTransformers.get(1).getName());
   assertEquals(PayloadTypeFilter.class,deserialized.getEndpoint().getFilter().getClass());
 }
