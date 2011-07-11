@@ -1,6 +1,5 @@
 {
-  Object serviceFlow=null;
-  serviceFlow=muleContext.getRegistry().lookupObject("test for xml");
+  Object serviceFlow=muleContext.getRegistry().lookupObject("test for xml");
   if (serviceFlow instanceof Service) {
     List routers=((OutboundRouterCollection)((Service)serviceFlow).getOutboundMessageProcessor()).getRoutes();
     assertEquals(2,routers.size());
@@ -11,9 +10,16 @@
     assertTrue(((NotFilter)((FilteringOutboundRouter)routers.get(1)).getFilter()).getFilter() instanceof IsXmlFilter);
   }
  else   if (serviceFlow instanceof Flow) {
+    Object notXmlSubFlowWrapper;
+    Field f;
+    MessageProcessorChain notXmlSubFlow;
     List outEndpoints=new ArrayList(2);
     outEndpoints.add(((Flow)serviceFlow).getMessageProcessors().get(0));
-    outEndpoints.add(((Flow)serviceFlow).getMessageProcessors().get(2));
+    notXmlSubFlowWrapper=muleContext.getRegistry().lookupObject("notXml");
+    f=notXmlSubFlowWrapper.getClass().getDeclaredField("delegate");
+    f.setAccessible(true);
+    notXmlSubFlow=(MessageProcessorChain)f.get(notXmlSubFlowWrapper);
+    outEndpoints.add((notXmlSubFlow.getMessageProcessors().get(0)));
     assertEquals(2,outEndpoints.size());
     assertTrue(outEndpoints.get(0).getClass().getName(),outEndpoints.get(0) instanceof MessageFilter);
     assertTrue(((MessageFilter)outEndpoints.get(0)).getFilter() instanceof IsXmlFilter);
