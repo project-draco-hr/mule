@@ -6,7 +6,7 @@
   threadingProfile.setDoThreading(true);
   service.setThreadingProfile(threadingProfile);
   final SimpleCallableJavaComponent component=new SimpleCallableJavaComponent(new Callable(){
-    public Object onCall(    MuleEventContext eventContext) throws Exception {
+    @Override public Object onCall(    MuleEventContext eventContext) throws Exception {
       assertTrue(Thread.currentThread().getName().startsWith("seda." + serviceName));
       latch.countDown();
       return null;
@@ -16,6 +16,6 @@
   component.setMuleContext(muleContext);
   service.setComponent(component);
   muleContext.getRegistry().registerService(service);
-  service.dispatchEvent(MuleTestUtils.getTestEvent("test",getTestInboundEndpoint(MessageExchangePattern.ONE_WAY),muleContext));
+  service.process(MuleTestUtils.getTestEvent("test",getTestInboundEndpoint(MessageExchangePattern.ONE_WAY),muleContext));
   assertTrue(latch.await(200,TimeUnit.MILLISECONDS));
 }
