@@ -5,7 +5,7 @@
   final AtomicInteger totalReceivedSize=new AtomicInteger(0);
   final int testByte=42;
   EventCallback callback=new EventCallback(){
-    public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
       if (logger.isInfoEnabled())       logger.info("called " + loopCount.incrementAndGet() + " times");
       InputStream sftpInputStream=(InputStream)context.getMessage().getPayload();
       BufferedInputStream bif=new BufferedInputStream(sftpInputStream);
@@ -32,25 +32,25 @@
   final ValueHolder<Exception> exceptionHolder=new ValueHolder<Exception>();
   if (expectedFailingConnector != null) {
     muleContext.setExceptionListener(new SystemExceptionHandler(){
-      public void handleException(      Exception e,      RollbackMethod rollbackMethod){
+      @Override public void handleException(      Exception e,      RollbackMethod rollbackMethod){
         if (logger.isInfoEnabled())         logger.info("expected exception occurred: " + e,e);
         exceptionHolder.value=e;
         latch.countDown();
       }
-      public void handleException(      Exception exception){
+      @Override public void handleException(      Exception exception){
         handleException(exception,null);
       }
     }
 );
     if (serviceName != null && !(serviceName.length() == 0)) {
       muleContext.getRegistry().lookupService(serviceName).setExceptionListener(new MessagingExceptionHandler(){
-        public MuleEvent handleException(        Exception e,        MuleEvent event,        RollbackMethod rollbackMethod){
+        @Override public MuleEvent handleException(        Exception e,        MuleEvent event,        RollbackMethod rollbackMethod){
           if (logger.isInfoEnabled())           logger.info("expected exception occurred: " + e,e);
           exceptionHolder.value=e;
           latch.countDown();
           return event;
         }
-        public MuleEvent handleException(        Exception exception,        MuleEvent event){
+        @Override public MuleEvent handleException(        Exception exception,        MuleEvent event){
           return handleException(exception,event,null);
         }
       }
@@ -59,7 +59,7 @@
   }
   InputStream os=new InputStream(){
     int totSize=0;
-    public int read() throws IOException {
+    @Override public int read() throws IOException {
       totSize++;
       if (totSize <= size) {
         return testByte;

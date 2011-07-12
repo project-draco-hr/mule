@@ -10,24 +10,24 @@
   try {
     if (localMuleClient)     muleClient=new MuleClient(muleContext);
     listener=new SystemExceptionHandler(){
-      public void handleException(      Exception e,      RollbackMethod rollbackMethod){
+      @Override public void handleException(      Exception e,      RollbackMethod rollbackMethod){
         exceptionHolder.value=e;
         if (logger.isDebugEnabled())         logger.debug("Expected exception occurred: " + e.getMessage() + ", time to countdown the latch");
         latch.countDown();
       }
-      public void handleException(      Exception exception){
+      @Override public void handleException(      Exception exception){
         handleException(exception,null);
       }
     }
 ;
     messagingListener=new MessagingExceptionHandler(){
-      public MuleEvent handleException(      Exception e,      MuleEvent event,      RollbackMethod rollbackMethod){
+      @Override public MuleEvent handleException(      Exception e,      MuleEvent event,      RollbackMethod rollbackMethod){
         exceptionHolder.value=e;
         if (logger.isDebugEnabled())         logger.debug("Expected exception occurred: " + e.getMessage() + ", time to countdown the latch");
         latch.countDown();
         return event;
       }
-      public MuleEvent handleException(      Exception exception,      MuleEvent event){
+      @Override public MuleEvent handleException(      Exception exception,      MuleEvent event){
         return handleException(exception,event,null);
       }
     }
@@ -57,5 +57,5 @@
     muleContext.setExceptionListener(currentExceptionListener);
     muleContext.getRegistry().lookupService(serviceName).setExceptionListener(currentMessagingListener);
   }
-  return (Exception)exceptionHolder.value;
+  return exceptionHolder.value;
 }
