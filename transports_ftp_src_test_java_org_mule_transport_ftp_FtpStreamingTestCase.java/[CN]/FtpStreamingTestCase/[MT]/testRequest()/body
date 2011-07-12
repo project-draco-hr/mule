@@ -1,8 +1,8 @@
 {
   final CountDownLatch latch=new CountDownLatch(1);
-  final AtomicReference messageHolder=new AtomicReference();
+  final AtomicReference<MuleMessage> messageHolder=new AtomicReference<MuleMessage>();
   EventCallback callback=new EventCallback(){
-    public synchronized void eventReceived(    MuleEventContext context,    Object component){
+    @Override public synchronized void eventReceived(    MuleEventContext context,    Object component){
       try {
         if (1 == latch.getCount()) {
           messageHolder.set(context.getMessage());
@@ -21,7 +21,7 @@
   ftc.setEventCallback(callback,TEST_MESSAGE.length());
   createFileOnFtpServer("input.txt");
   assertTrue(latch.await(getTimeout(),TimeUnit.MILLISECONDS));
-  MuleMessage message=(MuleMessage)messageHolder.get();
+  MuleMessage message=messageHolder.get();
   assertNotNull(message);
   assertTrue(message.getPayload() instanceof InputStream);
 }
