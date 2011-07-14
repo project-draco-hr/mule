@@ -2,7 +2,7 @@
   Object serviceFlow=null;
   serviceFlow=muleContext.getRegistry().lookupObject("filter xml for content");
   if (serviceFlow instanceof Service) {
-    List routers=((OutboundRouterCollection)((Service)serviceFlow).getOutboundMessageProcessor()).getRoutes();
+    List<MatchableMessageProcessor> routers=((OutboundRouterCollection)((Service)serviceFlow).getOutboundMessageProcessor()).getRoutes();
     assertEquals(1,routers.size());
     assertTrue(routers.get(0).getClass().getName(),routers.get(0) instanceof FilteringOutboundRouter);
     assertTrue(((FilteringOutboundRouter)routers.get(0)).getFilter() instanceof JXPathFilter);
@@ -10,13 +10,13 @@
     assertEquals("filter xml for content",filter.getExpectedValue());
     assertEquals("/mule:mule/mule:model/mule:service[2]/@name",filter.getPattern());
     assertNotNull(filter.getNamespaces());
-    Map namespaces=filter.getNamespaces();
+    Map<?,?> namespaces=filter.getNamespaces();
     assertEquals(2,namespaces.size());
     assertEquals("http://www.springframework.org/schema/beans",namespaces.get("spring"));
     assertTrue(namespaces.get("mule").toString().startsWith("http://www.mulesoft.org/schema/mule/core"));
   }
  else   if (serviceFlow instanceof Flow) {
-    List outEndpoints=new ArrayList(1);
+    List<MessageProcessor> outEndpoints=new ArrayList<MessageProcessor>(1);
     outEndpoints.add(((Flow)serviceFlow).getMessageProcessors().get(0));
     assertEquals(1,outEndpoints.size());
     assertTrue(outEndpoints.get(0).getClass().getName(),outEndpoints.get(0) instanceof MessageFilter);
@@ -25,7 +25,7 @@
     assertEquals("filter xml for content",filter.getExpectedValue());
     assertEquals("/mule:mule/mule:model/mule:service[2]/@name",filter.getPattern());
     assertNotNull(filter.getNamespaces());
-    Map namespaces=filter.getNamespaces();
+    Map<?,?> namespaces=filter.getNamespaces();
     assertEquals(2,namespaces.size());
     assertEquals("http://www.springframework.org/schema/beans",namespaces.get("spring"));
     assertTrue(namespaces.get("mule").toString().startsWith("http://www.mulesoft.org/schema/mule/core"));
