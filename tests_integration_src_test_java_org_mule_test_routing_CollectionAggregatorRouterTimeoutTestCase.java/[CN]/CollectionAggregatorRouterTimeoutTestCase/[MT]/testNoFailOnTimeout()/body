@@ -1,7 +1,7 @@
 {
   final AtomicInteger correlationTimeoutCount=new AtomicInteger(0);
   muleContext.registerListener(new RoutingNotificationListener<RoutingNotification>(){
-    public void onNotification(    RoutingNotification notification){
+    @Override public void onNotification(    RoutingNotification notification){
       if (notification.getAction() == RoutingNotification.CORRELATION_TIMEOUT) {
         correlationTimeoutCount.incrementAndGet();
       }
@@ -11,7 +11,7 @@
   FunctionalTestComponent vortex=(FunctionalTestComponent)getComponent("vortex");
   FunctionalTestComponent aggregator=(FunctionalTestComponent)getComponent("aggregator");
   MuleClient client=new MuleClient(muleContext);
-  List list=Arrays.asList("first","second");
+  List<String> list=Arrays.asList("first","second");
   client.dispatch("vm://splitter",list,null);
   Thread.sleep(5000);
   assertEquals("Correlation timeout should not have happened.",0,correlationTimeoutCount.intValue());
