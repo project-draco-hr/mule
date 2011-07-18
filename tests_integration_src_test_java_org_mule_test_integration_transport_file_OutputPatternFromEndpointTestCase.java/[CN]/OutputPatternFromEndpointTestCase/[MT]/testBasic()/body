@@ -1,9 +1,9 @@
 {
   String myFirstDirName="FirstWrite";
   String mySecondDirName="SecondWrite";
-  String myFileName1="export.txt";
-  String myFileName2="export.txt.OK";
-  File myDir=FileUtils.newFile(myFirstDirName);
+  final String myFileName1="export.txt";
+  final String myFileName2="export.txt.OK";
+  final File myDir=FileUtils.newFile(myFirstDirName);
   if (myDir.isDirectory()) {
     File[] files=myDir.listFiles();
     for (int i=0; i < files.length; i++) {
@@ -11,7 +11,7 @@
     }
     assertTrue(myDir.delete());
   }
-  File myDir2=FileUtils.newFile(mySecondDirName);
+  final File myDir2=FileUtils.newFile(mySecondDirName);
   if (myDir2.isDirectory()) {
     File[] files=myDir2.listFiles();
     for (int i=0; i < files.length; i++) {
@@ -25,8 +25,16 @@
     MuleClient client=new MuleClient(muleContext);
     client.send("vm://filesend","Hello",null);
     assertTrue(fileReceiveLatch.await(30,TimeUnit.SECONDS));
-    assertTrue(FileUtils.newFile(myDir,myFileName1).exists());
-    assertTrue(FileUtils.newFile(myDir2,myFileName2).exists());
+    Prober prober=new PollingProber(2000,50);
+    prober.check(new Probe(){
+      @Override public boolean isSatisfied(){
+        return FileUtils.newFile(myDir,myFileName1).exists() && FileUtils.newFile(myDir2,myFileName2).exists();
+      }
+      @Override public String describeFailure(){
+        return "Failed to create the expected files";
+      }
+    }
+);
   }
  catch (  AssertionFailedError e1) {
     e1.printStackTrace();

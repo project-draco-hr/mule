@@ -7,7 +7,7 @@
   tx.enlistResource(resource1);
   assertNotNull(tx);
   String result=tt.execute(new TransactionCallback<String>(){
-    public String doInTransaction() throws Exception {
+    @Override public String doInTransaction() throws Exception {
       Transaction muleTx=tm.getTransaction();
       assertSame(tx,muleTx);
       resource1.setValue(14);
@@ -20,10 +20,9 @@
   assertEquals(0,resource1.getPersistentValue());
   tm.commit();
   assertEquals(14,resource1.getPersistentValue());
-  Exception ex=null;
   try {
     result=tt.execute(new TransactionCallback<String>(){
-      public String doInTransaction() throws Exception {
+      @Override public String doInTransaction() throws Exception {
         return "OK";
       }
     }
@@ -31,7 +30,6 @@
     fail("No exception seen");
   }
  catch (  Exception e) {
-    ex=e;
     logger.debug("saw exception " + e.getMessage());
   }
 }
