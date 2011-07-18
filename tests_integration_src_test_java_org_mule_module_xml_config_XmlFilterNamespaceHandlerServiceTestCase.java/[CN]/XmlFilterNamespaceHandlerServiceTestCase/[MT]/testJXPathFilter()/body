@@ -1,0 +1,15 @@
+{
+  Service service=muleContext.getRegistry().lookupService("filter xml for content");
+  List<MatchableMessageProcessor> routers=((OutboundRouterCollection)((Service)service).getOutboundMessageProcessor()).getRoutes();
+  assertEquals(1,routers.size());
+  assertTrue(routers.get(0).getClass().getName(),routers.get(0) instanceof FilteringOutboundRouter);
+  assertTrue(((FilteringOutboundRouter)routers.get(0)).getFilter() instanceof JXPathFilter);
+  JXPathFilter filter=(JXPathFilter)((FilteringOutboundRouter)routers.get(0)).getFilter();
+  assertEquals("filter xml for content",filter.getExpectedValue());
+  assertEquals("/mule:mule/mule:model/mule:service[2]/@name",filter.getPattern());
+  assertNotNull(filter.getNamespaces());
+  Map<?,?> namespaces=filter.getNamespaces();
+  assertEquals(2,namespaces.size());
+  assertEquals("http://www.springframework.org/schema/beans",namespaces.get("spring"));
+  assertTrue(namespaces.get("mule").toString().startsWith("http://www.mulesoft.org/schema/mule/core"));
+}
