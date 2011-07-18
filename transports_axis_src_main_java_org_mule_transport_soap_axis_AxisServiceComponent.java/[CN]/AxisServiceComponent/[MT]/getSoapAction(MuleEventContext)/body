@@ -4,7 +4,15 @@
     logger.debug("Header Soap Action:" + soapAction);
   }
   if (StringUtils.isEmpty(soapAction)) {
-    soapAction=context.getEndpointURI().getAddress();
+    EndpointURI endpointUri;
+    try {
+      endpointUri=new MuleEndpointURI(context.getEndpointURI().toString(),context.getMuleContext());
+      endpointUri.initialise();
+    }
+ catch (    Exception e) {
+      throw new AxisFault(e.getMessage(),e);
+    }
+    soapAction=endpointUri.getAddress();
   }
   return soapAction;
 }
