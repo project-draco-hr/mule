@@ -10,7 +10,11 @@
     ret=returnMessage.getExceptionPayload().getMessage();
   }
  else {
-    returnMessage.applyTransformers(event,getTransformers());
+    EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(event.getMessageSourceURI().toString(),muleContext);
+    endpointBuilder.setConnector(connector);
+    OutboundEndpoint tempEndpoint=muleContext.getEndpointFactory().getOutboundEndpoint(endpointBuilder);
+    List<Transformer> defaultTransportTransformers=((org.mule.transport.AbstractConnector)connector).getDefaultOutboundTransformers(tempEndpoint);
+    returnMessage.applyTransformers(event,defaultTransportTransformers);
     ret=returnMessage.getPayload();
   }
   for (  Client client : channel.getSubscribers()) {
