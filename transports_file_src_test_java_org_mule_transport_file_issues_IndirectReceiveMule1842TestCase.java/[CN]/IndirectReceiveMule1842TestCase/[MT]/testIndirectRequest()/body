@@ -1,13 +1,18 @@
 {
   File target=initForRequest();
-  Service relay=muleContext.getRegistry().lookupService("relay");
+  Object relay=muleContext.getRegistry().lookupObject("relay");
   assertNotNull(relay);
   String url=fileToUrl(target) + "?connector=receiveConnector";
   logger.debug(url);
   InboundEndpoint endpoint=muleContext.getEndpointFactory().getInboundEndpoint(url);
-  ((CompositeMessageSource)relay.getMessageSource()).addSource(endpoint);
-  relay.stop();
-  relay.start();
+  if (variant.equals(ConfigVariant.FLOW)) {
+    ((CompositeMessageSource)((Flow)relay).getMessageSource()).addSource(endpoint);
+  }
+ else {
+    ((CompositeMessageSource)((Service)relay).getMessageSource()).addSource(endpoint);
+  }
+  ((Stoppable)relay).stop();
+  ((Startable)relay).start();
   MuleClient client=new MuleClient(muleContext);
   MuleMessage message=client.request("receive",3000);
   checkReceivedMessage(message);
