@@ -1,0 +1,12 @@
+{
+  muleContext.getRegistry().registerObject(MuleProperties.OBJECT_STORE_DEFAULT_IN_MEMORY_NAME,new PartitionedInMemoryObjectStore());
+  ObjectStoreManager manager=muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_STORE_MANAGER);
+  ListableObjectStore store=manager.getObjectStore("inMemoryPart2",false);
+  assertTrue(store instanceof ObjectStorePartition);
+  ObjectStore baseStore=((ObjectStorePartition)store).getBaseStore();
+  assertTrue(baseStore instanceof PartitionedInMemoryObjectStore);
+  assertSame(baseStore,muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_STORE_DEFAULT_IN_MEMORY_NAME));
+  testObjectStore(store);
+  testObjectStoreExpiry(manager.getObjectStore("inMemoryExpPart2",false,-1,500,200));
+  testObjectStoreMaxEntries((ListableObjectStore)manager.getObjectStore("inMemoryMaxPart2",false,10,10000,200));
+}

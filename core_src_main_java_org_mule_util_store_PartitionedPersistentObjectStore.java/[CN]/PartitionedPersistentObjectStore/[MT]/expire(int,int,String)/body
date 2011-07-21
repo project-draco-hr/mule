@@ -1,0 +1,26 @@
+{
+  File partitionFolder=FileUtils.newFile(storeDirectory,partitionName);
+  File[] files=partitionFolder.listFiles();
+  if (files == null) {
+    return;
+  }
+  Arrays.sort(files,new Comparator<File>(){
+    public int compare(    File f1,    File f2){
+      return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+    }
+  }
+);
+  int startIndex=trimToMaxSize(files,maxEntries);
+  final long now=System.nanoTime();
+  for (int i=startIndex; i < files.length; i++) {
+    if (files[i].getName().endsWith(FILE_EXTENSION)) {
+      Long lastModified=files[i].lastModified();
+      if ((TimeUnit.NANOSECONDS.toMillis(now) - lastModified) >= entryTTL) {
+        deleteStoreFile(files[i]);
+      }
+ else {
+        break;
+      }
+    }
+  }
+}
