@@ -1,4 +1,9 @@
 {
-  EventGroup previous=(EventGroup)eventGroups.putIfAbsent(group.getGroupId(),group);
-  return (previous != null ? previous : group);
+  try {
+    eventGroups.store((Serializable)group.getGroupId(),group);
+    return group;
+  }
+ catch (  ObjectAlreadyExistsException e) {
+    return (EventGroup)eventGroups.retrieve((Serializable)group.getGroupId());
+  }
 }

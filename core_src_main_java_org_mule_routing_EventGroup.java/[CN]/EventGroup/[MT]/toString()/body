@@ -4,21 +4,27 @@
   buf.append(" {");
   buf.append("id=").append(groupId);
   buf.append(", expected size=").append(expectedSize);
+  try {
 synchronized (events) {
-    int currentSize=events.size();
-    buf.append(", current events=").append(currentSize);
-    if (currentSize > 0) {
-      buf.append(" [");
-      Iterator<MuleEvent> i=events.iterator();
-      while (i.hasNext()) {
-        MuleEvent event=i.next();
-        buf.append(event.getMessage().getUniqueId());
-        if (i.hasNext()) {
-          buf.append(", ");
+      int currentSize;
+      currentSize=events.allKeys().size();
+      buf.append(", current events=").append(currentSize);
+      if (currentSize > 0) {
+        buf.append(" [");
+        Iterator<Serializable> i=events.allKeys().iterator();
+        while (i.hasNext()) {
+          Serializable id=i.next();
+          buf.append(events.retrieve(id).getMessage().getUniqueId());
+          if (i.hasNext()) {
+            buf.append(", ");
+          }
         }
+        buf.append(']');
       }
-      buf.append(']');
     }
+  }
+ catch (  ObjectStoreException e) {
+    buf.append("ObjectStoreException " + e + " caught:"+ e.getMessage());
   }
   buf.append('}');
   return buf.toString();

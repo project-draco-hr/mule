@@ -5,11 +5,16 @@
       break;
     }
     List<EventGroup> expired=new ArrayList<EventGroup>(1);
-    for (    Object o : eventGroups.values()) {
-      EventGroup group=(EventGroup)o;
-      if ((group.getCreated() + getTimeout() * MILLI_TO_NANO_MULTIPLIER) < System.nanoTime()) {
-        expired.add(group);
+    try {
+      for (      Serializable o : eventGroups.allKeys()) {
+        EventGroup group=(EventGroup)eventGroups.retrieve(o);
+        if ((group.getCreated() + getTimeout() * MILLI_TO_NANO_MULTIPLIER) < System.nanoTime()) {
+          expired.add(group);
+        }
       }
+    }
+ catch (    ObjectStoreException e) {
+      logger.warn("expiry failed dues to ObjectStoreException " + e);
     }
     if (expired.size() > 0) {
       for (      Object anExpired : expired) {

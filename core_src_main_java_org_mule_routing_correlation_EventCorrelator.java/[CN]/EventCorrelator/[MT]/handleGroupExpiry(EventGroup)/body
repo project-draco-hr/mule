@@ -1,8 +1,18 @@
 {
-  removeEventGroup(group);
-  final FlowConstruct service=group.toArray()[0].getFlowConstruct();
+  try {
+    removeEventGroup(group);
+  }
+ catch (  ObjectStoreException e) {
+    throw new MessagingException(group.getMessageCollectionEvent(),e);
+  }
   if (isFailOnTimeout()) {
-    final MuleMessageCollection messageCollection=group.toMessageCollection();
+    MuleMessageCollection messageCollection;
+    try {
+      messageCollection=group.toMessageCollection();
+    }
+ catch (    ObjectStoreException e) {
+      throw new MessagingException(group.getMessageCollectionEvent(),e);
+    }
     muleContext.fireNotification(new RoutingNotification(messageCollection,null,RoutingNotification.CORRELATION_TIMEOUT));
     throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.getMessageCollectionEvent());
   }
@@ -14,17 +24,18 @@
       if (!(group.getCreated() + groupTimeToLive < System.currentTimeMillis())) {
         MuleEvent newEvent=callback.aggregateEvents(group);
         newEvent.getMessage().setCorrelationId(group.getGroupId().toString());
-        if (!expiredAndDispatchedGroups.containsKey(group.getGroupId())) {
+        if (!expiredAndDispatchedGroups.contains((Serializable)group.getGroupId())) {
           if (timeoutMessageProcessor != null) {
             timeoutMessageProcessor.process(newEvent);
           }
  else {
+            final FlowConstruct service=group.toArray()[0].getFlowConstruct();
             if (!(service instanceof Service)) {
               throw new UnsupportedOperationException("EventAggregator is only supported with Service");
             }
             ((Service)service).dispatchEvent(newEvent);
           }
-          expiredAndDispatchedGroups.put(group.getGroupId(),group.getCreated());
+          expiredAndDispatchedGroups.store((Serializable)group.getGroupId(),group.getCreated());
         }
  else {
           logger.warn(MessageFormat.format("Discarding group {0}",group.getGroupId()));

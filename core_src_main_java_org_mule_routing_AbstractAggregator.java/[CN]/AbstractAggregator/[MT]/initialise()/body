@@ -2,7 +2,10 @@
   if (messageInfoMapping == null) {
     messageInfoMapping=flowConstruct.getMessageInfoMapping();
   }
-  eventCorrelator=new EventCorrelator(getCorrelatorCallback(muleContext),next,messageInfoMapping,muleContext,flowConstruct.getName());
+  if (storePrefix == null) {
+    storePrefix=String.format("%s%s.%s.",ThreadNameHelper.getPrefix(muleContext),flowConstruct.getName(),this.getClass().getName());
+  }
+  eventCorrelator=new EventCorrelator(getCorrelatorCallback(muleContext),next,messageInfoMapping,muleContext,flowConstruct.getName(),persistentStores,storePrefix);
   if (flowConstruct instanceof Service) {
     Service service=(Service)flowConstruct;
     if (service.getAsyncReplyMessageSource().getMessageProcessors().contains(this)) {

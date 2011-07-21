@@ -20,30 +20,52 @@
         Thread.currentThread().interrupt();
       }
     }
-    if (isGroupAlreadyProcessed(groupId)) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An event was received for an event group that has already been processed, " + "this is probably because the async-reply timed out. Correlation Id is: " + groupId + ". Dropping event");
+    try {
+      if (isGroupAlreadyProcessed(groupId)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("An event was received for an event group that has already been processed, " + "this is probably because the async-reply timed out. Correlation Id is: " + groupId + ". Dropping event");
+        }
+        muleContext.fireNotification(new RoutingNotification(event.getMessage(),event.getMessageSourceURI().toString(),RoutingNotification.MISSED_AGGREGATION_GROUP_EVENT));
+        return null;
       }
-      muleContext.fireNotification(new RoutingNotification(event.getMessage(),event.getMessageSourceURI().toString(),RoutingNotification.MISSED_AGGREGATION_GROUP_EVENT));
-      return null;
     }
-    EventGroup group=this.getEventGroup(groupId);
+ catch (    ObjectStoreException e) {
+      throw new RoutingException(event,timeoutMessageProcessor,e);
+    }
+    EventGroup group;
+    try {
+      group=this.getEventGroup(groupId);
+    }
+ catch (    ObjectStoreException e) {
+      throw new RoutingException(event,timeoutMessageProcessor,e);
+    }
     if (group == null) {
-      group=this.addEventGroup(callback.createEventGroup(event,groupId));
+      try {
+        group=this.addEventGroup(callback.createEventGroup(event,groupId));
+      }
+ catch (      ObjectStoreException e) {
+        throw new RoutingException(event,timeoutMessageProcessor,e);
+      }
     }
 synchronized (groupsLock) {
-      if (group != this.getEventGroup(groupId)) {
-        lookupMiss=true;
-        continue;
-      }
       if (logger.isDebugEnabled()) {
         logger.debug("Adding event to aggregator group: " + groupId);
       }
-      group.addEvent(event);
+      try {
+        group.addEvent(event);
+      }
+ catch (      ObjectStoreException e) {
+        throw new RoutingException(event,timeoutMessageProcessor,e);
+      }
       if (callback.shouldAggregateEvents(group)) {
         MuleEvent returnEvent=callback.aggregateEvents(group);
         returnEvent.getMessage().setCorrelationId(groupId);
-        this.removeEventGroup(group);
+        try {
+          this.removeEventGroup(group);
+        }
+ catch (        ObjectStoreException e) {
+          throw new RoutingException(event,timeoutMessageProcessor,e);
+        }
         return returnEvent;
       }
  else {

@@ -1,9 +1,14 @@
 {
-  for (  Object o : expiredAndDispatchedGroups.keySet()) {
-    Long time=(Long)expiredAndDispatchedGroups.get(o);
-    if (time + groupTimeToLive < System.currentTimeMillis()) {
-      expiredAndDispatchedGroups.remove(o);
-      logger.warn(MessageFormat.format("Discarding group {0}",o));
+  try {
+    for (    Serializable o : expiredAndDispatchedGroups.allKeys()) {
+      Long time=(Long)expiredAndDispatchedGroups.retrieve(o);
+      if (time + groupTimeToLive < System.currentTimeMillis()) {
+        expiredAndDispatchedGroups.remove(o);
+        logger.warn(MessageFormat.format("Discarding group {0}",o));
+      }
     }
+  }
+ catch (  ObjectStoreException e) {
+    logger.warn("Expiration of objects failed due to ObjectStoreException " + e + ".");
   }
 }

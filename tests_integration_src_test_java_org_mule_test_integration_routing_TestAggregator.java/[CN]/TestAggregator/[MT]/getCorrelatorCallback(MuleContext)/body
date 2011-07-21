@@ -1,15 +1,20 @@
 {
-  return new CollectionCorrelatorCallback(muleContext){
+  return new CollectionCorrelatorCallback(muleContext,false,storePrefix){
     @Override public MuleEvent aggregateEvents(    EventGroup events) throws AggregationException {
       StringBuffer buffer=new StringBuffer(128);
-      for (Iterator<MuleEvent> iterator=events.iterator(); iterator.hasNext(); ) {
-        MuleEvent event=iterator.next();
-        try {
-          buffer.append(event.transformMessageToString());
+      try {
+        for (Iterator<MuleEvent> iterator=events.iterator(); iterator.hasNext(); ) {
+          MuleEvent event=iterator.next();
+          try {
+            buffer.append(event.transformMessageToString());
+          }
+ catch (          TransformerException e) {
+            throw new AggregationException(events,null,e);
+          }
         }
- catch (        TransformerException e) {
-          throw new AggregationException(events,null,e);
-        }
+      }
+ catch (      ObjectStoreException e) {
+        throw new AggregationException(events,null,e);
       }
       logger.debug("event payload is: " + buffer.toString());
       return new DefaultMuleEvent(new DefaultMuleMessage(buffer.toString(),muleContext),events.getMessageCollectionEvent());
