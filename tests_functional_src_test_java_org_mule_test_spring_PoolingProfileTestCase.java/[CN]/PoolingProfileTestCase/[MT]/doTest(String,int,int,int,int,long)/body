@@ -1,8 +1,15 @@
 {
-  Service c=muleContext.getRegistry().lookupService(service);
-  assertNotNull(service,c);
-  assertTrue(c.getComponent() instanceof PooledJavaComponent);
-  PooledJavaComponent pjc=(PooledJavaComponent)c.getComponent();
+  Object o=muleContext.getRegistry().lookupObject(serviceFlow);
+  assertNotNull(serviceFlow,o);
+  PooledJavaComponent pjc=null;
+  if (variant.equals(ConfigVariant.SERVICE)) {
+    assertTrue(((Service)o).getComponent() instanceof PooledJavaComponent);
+    pjc=(PooledJavaComponent)((Service)o).getComponent();
+  }
+ else {
+    assertTrue(((Flow)o).getMessageProcessors().get(0) instanceof PooledJavaComponent);
+    pjc=(PooledJavaComponent)((Flow)o).getMessageProcessors().get(0);
+  }
   PoolingProfile profile=pjc.getPoolingProfile();
   assertNotNull(profile);
   assertEquals("exhausted:",exhausted,profile.getExhaustedAction());
