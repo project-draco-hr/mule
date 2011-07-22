@@ -1,0 +1,45 @@
+{
+  if (StringUtils.isEmpty(resourceBase)) {
+    throw new ConfigurationException(HttpMessages.noResourceBaseDefined());
+  }
+  String path=event.getMessage().getInboundProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY);
+  String contextPath=event.getMessage().getInboundProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY);
+  path=path.substring(contextPath.length());
+  File file=new File(resourceBase + path);
+  MuleEvent resultEvent=event;
+  if (file.isDirectory() && path.endsWith("/")) {
+    file=new File(resourceBase + path + defaultFile);
+  }
+ else   if (file.isDirectory()) {
+    resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),event.getMuleContext()),event);
+    resultEvent.getMessage().setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_MOVED_TEMPORARILY));
+    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_CONTENT_LENGTH,0);
+    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_LOCATION,event.getMessage().getInboundProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY) + "/");
+    return resultEvent;
+  }
+  InputStream in=null;
+  try {
+    in=new FileInputStream(file);
+    byte[] buffer;
+    if (in == null) {
+      resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),event.getMuleContext()),event);
+      resultEvent.getMessage().setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_NOT_FOUND));
+      return resultEvent;
+    }
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    IOUtils.copyLarge(in,baos);
+    buffer=baos.toByteArray();
+    String mimetype=mimeTypes.getContentType(file);
+    if (mimetype == null) {
+      mimetype=DEFAULT_MIME_TYPE;
+    }
+    resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(buffer,event.getMuleContext()),event);
+    resultEvent.getMessage().setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_OK));
+    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE,mimetype);
+    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_CONTENT_LENGTH,buffer.length);
+  }
+ catch (  IOException e) {
+    throw new ResourceNotFoundException(HttpMessages.fileNotFound(resourceBase + path));
+  }
+  return resultEvent;
+}
