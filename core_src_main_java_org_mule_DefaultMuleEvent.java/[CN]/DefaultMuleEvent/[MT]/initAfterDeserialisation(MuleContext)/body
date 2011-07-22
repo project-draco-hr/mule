@@ -1,7 +1,4 @@
 {
-  if (serializedData == null) {
-    return;
-  }
   if (session instanceof DefaultMuleSession) {
     ((DefaultMuleSession)session).initAfterDeserialisation(muleContext);
   }
@@ -11,32 +8,4 @@
   if (replyToHandler instanceof DefaultReplyToHandler) {
     ((DefaultReplyToHandler)replyToHandler).initAfterDeserialisation(muleContext);
   }
-  int endpointHashcode=(Integer)serializedData.get("endpointHashcode");
-  String endpointBuilderName=(String)serializedData.get("endpointBuilderName");
-  String endpointUri=(String)serializedData.get("endpointUri");
-  List<String> transformerNames=(List<String>)serializedData.get("transformers");
-  endpoint=(InboundEndpoint)muleContext.getRegistry().lookupObject(DefaultEndpointFactory.ENDPOINT_REGISTRY_PREFIX + endpointHashcode);
-  if (endpoint == null) {
-    if ((endpointBuilderName != null) && muleContext.getRegistry().lookupEndpointBuilder(endpointBuilderName) != null) {
-      endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilderName);
-    }
- else {
-      List<Transformer> transformers=new LinkedList<Transformer>();
-      for (      String name : transformerNames) {
-        Transformer next=muleContext.getRegistry().lookupTransformer(name);
-        if (next == null) {
-          throw new IllegalStateException(CoreMessages.objectNotFound(name).toString());
-        }
- else {
-          transformers.add(next);
-        }
-      }
-      EndpointURI uri=new MuleEndpointURI(endpointUri,muleContext);
-      TransportServiceDescriptor tsd=(TransportServiceDescriptor)muleContext.getRegistry().lookupServiceDescriptor(ServiceType.TRANSPORT,uri.getFullScheme(),null);
-      EndpointBuilder endpointBuilder=tsd.createEndpointBuilder(endpointUri);
-      endpointBuilder.setTransformers(transformers);
-      endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilder);
-    }
-  }
-  serializedData=null;
 }
