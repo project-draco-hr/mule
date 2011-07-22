@@ -14,19 +14,8 @@
         conn.writeResponse(processRequest(request));
       }
  catch (      Exception e) {
-        int httpStatus;
-        if (e instanceof NotPermittedException) {
-          httpStatus=HttpConstants.SC_METHOD_NOT_ALLOWED;
-        }
- else         if (e instanceof UnauthorisedException) {
-          httpStatus=HttpConstants.SC_UNAUTHORIZED;
-        }
- else         if (e instanceof FilterUnacceptedException || e instanceof RoutePathNotFoundException) {
-          httpStatus=HttpConstants.SC_NOT_ACCEPTABLE;
-        }
- else {
-          httpStatus=HttpConstants.SC_INTERNAL_SERVER_ERROR;
-        }
+        String temp=ExceptionHelper.getErrorMapping(connector.getProtocol(),e.getClass());
+        int httpStatus=Integer.valueOf(temp);
         conn.writeResponse(buildFailureResponse(request.getRequestLine().getHttpVersion(),httpStatus,e.getMessage()));
         if (e instanceof MessagingException) {
           MuleEvent event=((MessagingException)e).getEvent();
