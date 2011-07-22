@@ -14,7 +14,14 @@
       throw new MessagingException(group.getMessageCollectionEvent(),e);
     }
     muleContext.fireNotification(new RoutingNotification(messageCollection,null,RoutingNotification.CORRELATION_TIMEOUT));
-    throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),group.getMessageCollectionEvent());
+    MuleEvent groupCollectionEvent=group.getMessageCollectionEvent();
+    try {
+      group.clear();
+    }
+ catch (    ObjectStoreException e) {
+      logger.warn("Failed to clear group with id " + group.getGroupId() + " since underlying ObjectStore threw Exception:"+ e.getMessage());
+    }
+    throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),groupCollectionEvent);
   }
  else {
     if (logger.isDebugEnabled()) {
