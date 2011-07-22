@@ -13,7 +13,7 @@
       long youngest=Long.MAX_VALUE;
       for (      Serializable key : keys) {
         StoredObject<T> obj=getStore().retrieve(key);
-        if (TimeUnit.NANOSECONDS.toMillis(now - obj.getTimestamp()) >= entryTTL) {
+        if (entryTTL > 0 && TimeUnit.NANOSECONDS.toMillis(now - obj.getTimestamp()) >= entryTTL) {
           remove(key);
           excess--;
           if (excess > 0 && q.size() > excess) {
@@ -38,10 +38,12 @@
       }
     }
  else {
-      for (      Serializable key : keys) {
-        StoredObject<T> obj=getStore().retrieve(key);
-        if (TimeUnit.NANOSECONDS.toMillis(now - obj.getTimestamp()) >= entryTTL) {
-          remove(key);
+      if (entryTTL > 0) {
+        for (        Serializable key : keys) {
+          StoredObject<T> obj=getStore().retrieve(key);
+          if (TimeUnit.NANOSECONDS.toMillis(now - obj.getTimestamp()) >= entryTTL) {
+            remove(key);
+          }
         }
       }
     }
