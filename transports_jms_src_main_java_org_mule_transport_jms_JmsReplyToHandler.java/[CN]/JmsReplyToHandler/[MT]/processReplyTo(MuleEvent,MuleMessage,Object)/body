@@ -12,23 +12,23 @@
     }
     Class srcType=returnMessage.getPayload().getClass();
     EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder("jms://temporary",muleContext);
-    endpointBuilder.setConnector(connector);
+    endpointBuilder.setConnector(jmsConnector);
     OutboundEndpoint tempEndpoint=muleContext.getEndpointFactory().getOutboundEndpoint(endpointBuilder);
-    List<Transformer> defaultTransportTransformers=((org.mule.transport.AbstractConnector)connector).getDefaultOutboundTransformers(tempEndpoint);
+    List<Transformer> defaultTransportTransformers=((org.mule.transport.AbstractConnector)jmsConnector).getDefaultOutboundTransformers(tempEndpoint);
     returnMessage.applyTransformers(event,defaultTransportTransformers);
     Object payload=returnMessage.getPayload();
-    if (replyToDestination instanceof Topic && replyToDestination instanceof Queue && connector.getJmsSupport() instanceof Jms102bSupport) {
+    if (replyToDestination instanceof Topic && replyToDestination instanceof Queue && jmsConnector.getJmsSupport() instanceof Jms102bSupport) {
       logger.error(StringMessageUtils.getBoilerPlate("ReplyTo destination implements both Queue and Topic " + "while complying with JMS 1.0.2b specification. " + "Please report your application server or JMS vendor name and version "+ "to dev<_at_>mule.codehaus.org or http://mule.mulesoft.org/jira"));
     }
-    final boolean topic=connector.getTopicResolver().isTopic(replyToDestination);
-    session=connector.getSession(false,topic);
+    final boolean topic=jmsConnector.getTopicResolver().isTopic(replyToDestination);
+    session=jmsConnector.getSession(false,topic);
     Message replyToMessage=JmsMessageUtils.toMessage(payload,session);
     toJmsMessage.setJmsProperties(returnMessage,replyToMessage);
     processMessage(replyToMessage,event);
     if (logger.isDebugEnabled()) {
       logger.debug("Sending jms reply to: " + replyToDestination + " ("+ replyToDestination.getClass().getName()+ ")");
     }
-    replyToProducer=connector.getJmsSupport().createProducer(session,replyToDestination,topic);
+    replyToProducer=jmsConnector.getJmsSupport().createProducer(session,replyToDestination,topic);
     MuleMessage eventMsg=event.getMessage();
     String ttlString=(String)eventMsg.getOutboundProperty(JmsConstants.TIME_TO_LIVE_PROPERTY);
     String priorityString=(String)eventMsg.getOutboundProperty(JmsConstants.PRIORITY_PROPERTY);
@@ -45,7 +45,7 @@
       }
     }
     if (ttlString == null && priorityString == null && persistentDeliveryString == null) {
-      connector.getJmsSupport().send(replyToProducer,replyToMessage,topic,null);
+      jmsConnector.getJmsSupport().send(replyToProducer,replyToMessage,topic,null);
     }
  else {
       long ttl=Message.DEFAULT_TIME_TO_LIVE;
@@ -56,8 +56,8 @@
       if (priorityString != null) {
         priority=Integer.parseInt(priorityString);
       }
-      boolean persistent=StringUtils.isNotBlank(persistentDeliveryString) ? Boolean.valueOf(persistentDeliveryString) : connector.isPersistentDelivery();
-      connector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl,topic,null);
+      boolean persistent=StringUtils.isNotBlank(persistentDeliveryString) ? Boolean.valueOf(persistentDeliveryString) : jmsConnector.isPersistentDelivery();
+      jmsConnector.getJmsSupport().send(replyToProducer,replyToMessage,persistent,priority,ttl,topic,null);
     }
     if (logger.isInfoEnabled()) {
       logger.info(String.format("Reply Message sent to: %s with correlationID:%s",replyToDestination,correlationIDString));
@@ -67,7 +67,7 @@
     throw new DispatchException(JmsMessages.failedToCreateAndDispatchResponse(replyToDestination),event,null,e);
   }
  finally {
-    connector.closeQuietly(replyToProducer);
-    connector.closeSessionIfNoTransactionActive(session);
+    jmsConnector.closeQuietly(replyToProducer);
+    jmsConnector.closeSessionIfNoTransactionActive(session);
   }
 }
