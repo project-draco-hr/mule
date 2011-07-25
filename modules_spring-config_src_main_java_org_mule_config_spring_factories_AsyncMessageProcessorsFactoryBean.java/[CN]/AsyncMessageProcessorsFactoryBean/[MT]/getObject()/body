@@ -1,12 +1,6 @@
 {
-  if (threadingProfile == null) {
-    threadingProfile=muleContext.getDefaultThreadingProfile();
-  }
   DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
   builder.setName("'async' child chain");
-  final MuleConfiguration config=muleContext.getConfiguration();
-  final String threadPrefix=ThreadNameHelper.asyncProcessor(muleContext,name);
-  AsyncDelegateMessageProcessor asyncProcessor=new AsyncDelegateMessageProcessor(threadingProfile,threadPrefix,config.getShutdownTimeout());
   for (  Object processor : messageProcessors) {
     if (processor instanceof MessageProcessor) {
       builder.chain((MessageProcessor)processor);
@@ -18,6 +12,10 @@
       throw new IllegalArgumentException("MessageProcessorBuilder should only have MessageProcessor's or MessageProcessorBuilder's configured");
     }
   }
-  asyncProcessor.setDelegate(builder.build());
-  return asyncProcessor;
+  return new AsyncDelegateMessageProcessor(builder.build(),processingStrategy,new ProcessingStrategy.ThreadNameSource(){
+    @Override public String getName(){
+      return name;
+    }
+  }
+);
 }
