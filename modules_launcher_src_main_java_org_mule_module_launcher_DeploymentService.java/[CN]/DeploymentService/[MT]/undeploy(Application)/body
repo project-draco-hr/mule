@@ -2,6 +2,13 @@
   if (logger.isInfoEnabled()) {
     logger.info("================== Request to Undeploy Application: " + app.getAppName());
   }
-  applications.remove(app);
-  deployer.undeploy(app);
+  try {
+    fireOnUndeploymentStart(app.getAppName());
+    applications.remove(app);
+    deployer.undeploy(app);
+    fireOnUndeploymentSuccess(app.getAppName());
+  }
+ catch (  Throwable t) {
+    fireOnUndeploymentFailure(app.getAppName(),t);
+  }
 }
