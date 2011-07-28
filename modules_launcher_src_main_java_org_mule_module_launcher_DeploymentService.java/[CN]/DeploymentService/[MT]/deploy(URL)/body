@@ -3,7 +3,15 @@
   try {
     application=deployer.installFrom(appArchiveUrl);
     applications.add(application);
-    deployer.deploy(application);
+    try {
+      fireOnDeploymentStart(application.getAppName());
+      deployer.deploy(application);
+      fireOnDeploymentSuccess(application.getAppName());
+    }
+ catch (    Throwable t) {
+      fireOnDeploymentFailure(application.getAppName(),t);
+      throw t;
+    }
   }
  catch (  Throwable t) {
     addZombie(FileUtils.toFile(appArchiveUrl));

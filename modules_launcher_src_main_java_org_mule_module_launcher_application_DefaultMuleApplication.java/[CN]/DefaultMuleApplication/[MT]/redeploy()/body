@@ -2,11 +2,27 @@
   if (logger.isInfoEnabled()) {
     logger.info(miniSplash(String.format("Redeploying app '%s'",descriptor.getAppName())));
   }
-  dispose();
+  String appName=getAppName();
+  this.deploymentService.fireOnUndeploymentStart(appName);
+  try {
+    dispose();
+    this.deploymentService.fireOnUndeploymentSuccess(appName);
+  }
+ catch (  RuntimeException e) {
+    this.deploymentService.fireOnUndeploymentFailure(appName,e);
+    throw e;
+  }
   install();
   final ClassLoader cl=getDeploymentClassLoader();
   Thread.currentThread().setContextClassLoader(cl);
-  init();
-  start();
+  this.deploymentService.fireOnDeploymentStart(appName);
+  try {
+    init();
+    start();
+    this.deploymentService.fireOnDeploymentSuccess(appName);
+  }
+ catch (  Throwable cause) {
+    this.deploymentService.fireOnDeploymentFailure(appName,cause);
+  }
   Thread.currentThread().setContextClassLoader(null);
 }

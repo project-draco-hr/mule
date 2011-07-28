@@ -17,7 +17,11 @@
     return;
   }
 catch (  Throwable t) {
-    logger.error(t);
+    if (t instanceof DeploymentException) {
+      throw ((DeploymentException)t);
+    }
+    final String msg=String.format("Failed to undeploy application [%s]",app.getAppName());
+    throw new DeploymentException(MessageFactory.createStaticMessage(msg),t);
   }
  finally {
     if (lock.isHeldByCurrentThread()) {
