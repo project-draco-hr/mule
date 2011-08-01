@@ -11,14 +11,10 @@
     boolean forceSync=Boolean.TRUE.equals(forceSyncPropertyValue);
     boolean hasResponse=endpoint.getExchangePattern().hasResponse();
     boolean isTransacted=endpoint.getTransactionConfig().isTransacted();
-    connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),event.getMessage());
     if (forceSync || hasResponse || isTransacted) {
       MuleMessage resultMessage=doSend(event);
       if (hasResponse && resultMessage != null) {
-        MuleSession storedSession=connector.getSessionHandler().retrieveSessionInfoFromMessage(resultMessage);
-        event.getSession().merge(storedSession);
         resultEvent=new DefaultMuleEvent(resultMessage,event);
-        RequestContext.setEvent(resultEvent);
       }
     }
  else {
