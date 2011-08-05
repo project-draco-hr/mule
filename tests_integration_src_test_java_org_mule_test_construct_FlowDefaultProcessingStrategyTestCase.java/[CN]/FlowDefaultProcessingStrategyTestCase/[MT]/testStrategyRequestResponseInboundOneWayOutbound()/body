@@ -1,0 +1,12 @@
+{
+  MuleClient client=muleContext.getClient();
+  MuleMessage response=client.send("vm://requestresponse-oneway-in","a",null);
+  assertNull(response);
+  MuleMessage result=client.request("vm://requestresponse-oneway-out",RECEIVE_TIMEOUT);
+  assertNotNull(result);
+  String flowThread=result.getOutboundProperty("processor-thread");
+  String outboundEndpointThread=result.getOutboundProperty("outbound-endpoint-thread");
+  assertEquals(Thread.currentThread().getName(),flowThread);
+  assertEquals(Thread.currentThread().getName(),outboundEndpointThread);
+  assertEquals(flowThread,outboundEndpointThread);
+}

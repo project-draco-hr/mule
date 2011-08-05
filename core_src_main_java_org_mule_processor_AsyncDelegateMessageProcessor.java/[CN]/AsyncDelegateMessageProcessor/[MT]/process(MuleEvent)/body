@@ -1,6 +1,10 @@
 {
+  if (event.isTransacted()) {
+    throw new MessagingException(CoreMessages.asyncDoesNotSupportTransactions(),event);
+  }
   if (target != null) {
-    target.process((MuleEvent)((ThreadSafeAccess)event).newThreadCopy());
+    MuleEvent newEvent=new DefaultMuleEvent((MuleMessage)((ThreadSafeAccess)event.getMessage()).newThreadCopy(),event,event.getSession(),false);
+    target.process(newEvent);
   }
   return event;
 }
