@@ -1,0 +1,22 @@
+{
+  Serializable key=generateKey(request);
+  MuleEvent cachedResponse=lookupEventInCache(key);
+  MuleEvent response;
+  if (cachedResponse != null) {
+    response=responseGenerator.create(request,cachedResponse);
+  }
+ else {
+    MuleEvent result;
+    try {
+      result=messageProcessor.process(request);
+    }
+ catch (    Exception e) {
+      throw new DefaultMuleException(e);
+    }
+    response=result;
+    if (response == null || consumableFilter.accept(response.getMessage())) {
+      store(key,response);
+    }
+  }
+  return response;
+}
