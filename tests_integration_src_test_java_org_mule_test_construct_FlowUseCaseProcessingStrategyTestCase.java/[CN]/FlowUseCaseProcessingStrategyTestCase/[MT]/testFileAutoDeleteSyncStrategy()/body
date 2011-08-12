@@ -1,9 +1,18 @@
 {
-  File file=FileUtils.newFile("./test/deleteMe");
+  Prober prober=new PollingProber(10000,100,false);
+  final File file=File.createTempFile("mule-file-test-",".txt");
+  file.deleteOnExit();
   file.createNewFile();
   FileOutputStream fos=new FileOutputStream(file);
   IOUtils.write("The quick brown fox jumps over the lazy dog",fos);
   IOUtils.closeQuietly(fos);
-  Thread.sleep(5000);
-  assertTrue(file.exists());
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return !file.exists();
+    }
+    @Override public String describeFailure(){
+      return "File should still exist";
+    }
+  }
+);
 }
