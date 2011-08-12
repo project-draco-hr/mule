@@ -1,8 +1,24 @@
 {
-  Transaction tx=TransactionCoordination.getInstance().getTransaction();
-  boolean joinPossible=(action != ACTION_JOIN_IF_POSSIBLE || (action == ACTION_JOIN_IF_POSSIBLE && tx != null));
-  if (action != ACTION_NEVER && action != ACTION_NONE && factory == null) {
-    throw new MuleRuntimeException(CoreMessages.transactionFactoryIsMandatory(getActionAsString()));
+  if (action == ACTION_NEVER || action == ACTION_NONE) {
+    return false;
   }
-  return action != ACTION_NEVER && action != ACTION_NONE && factory.isTransacted() && joinPossible;
+  if (factory == null) {
+    if (action != ACTION_INDIFFERENT) {
+      throw new MuleRuntimeException(CoreMessages.transactionFactoryIsMandatory(getActionAsString()));
+    }
+  }
+ else   if (!factory.isTransacted()) {
+    return false;
+  }
+switch (action) {
+case ACTION_ALWAYS_BEGIN:
+case ACTION_ALWAYS_JOIN:
+case ACTION_BEGIN_OR_JOIN:
+    return true;
+case ACTION_JOIN_IF_POSSIBLE:
+case ACTION_INDIFFERENT:
+  return TransactionCoordination.getInstance().getTransaction() != null;
+default :
+return false;
+}
 }
