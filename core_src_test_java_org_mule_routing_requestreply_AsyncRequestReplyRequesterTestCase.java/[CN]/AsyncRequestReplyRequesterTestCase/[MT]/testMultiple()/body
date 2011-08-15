@@ -1,5 +1,5 @@
 {
-  final TestAsyncRequestReplyRequester asyncReplyMP=new TestAsyncRequestReplyRequester();
+  asyncReplyMP=new TestAsyncRequestReplyRequester(muleContext);
   SensingNullMessageProcessor target=getSensingNullMessageProcessor();
   target.setWaitTime(50);
   LaxAsyncInterceptingMessageProcessor asyncMP=new LaxAsyncInterceptingMessageProcessor(new WorkManagerSource(){
@@ -13,6 +13,7 @@
   asyncReplyMP.setReplySource(target.getMessageSource());
   final InboundEndpoint inboundEndpoint=getTestInboundEndpoint(MessageExchangePattern.ONE_WAY);
   final Service service=getTestService();
+  final AtomicInteger count=new AtomicInteger();
   for (int i=0; i < 500; i++) {
     muleContext.getWorkManager().scheduleWork(new Work(){
       public void run(){
@@ -22,6 +23,8 @@
           MuleEvent resultEvent=asyncReplyMP.process(event);
           assertEquals(event.getMessageAsString(),resultEvent.getMessageAsString());
           assertEquals(event.getMessage().getUniqueId(),resultEvent.getMessage().getUniqueId());
+          count.incrementAndGet();
+          logger.debug("Finished " + count.get());
         }
  catch (        Exception e) {
           throw new RuntimeException(e);
@@ -31,5 +34,8 @@
       }
     }
 );
+  }
+  while (count.get() < 500) {
+    Thread.sleep(10);
   }
 }

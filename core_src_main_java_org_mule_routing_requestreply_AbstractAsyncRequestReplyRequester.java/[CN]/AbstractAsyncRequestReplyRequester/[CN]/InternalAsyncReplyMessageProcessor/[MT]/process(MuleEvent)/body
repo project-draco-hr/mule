@@ -1,23 +1,6 @@
 {
   String messageId=getAsyncReplyCorrelationId(event);
-  if (isAlreadyProcessed(messageId)) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("An event was received for an event group that has already been processed, " + "this is probably because the async-reply timed out. Correlation Id is: " + messageId + ". Dropping event");
-    }
-    event.getMuleContext().fireNotification(new RoutingNotification(event.getMessage(),event.getMessageSourceURI().toString(),RoutingNotification.MISSED_ASYNC_REPLY));
-    return null;
-  }
-  addProcessed(messageId);
-  MuleEvent previousResult=responseEvents.putIfAbsent(messageId,event);
-  if (previousResult != null) {
-    throw new IllegalStateException("Detected duplicate result message with id: " + messageId);
-  }
-  Latch l=locks.get(messageId);
-  if (l != null) {
-    l.countDown();
-  }
- else {
-    logger.warn("Unexpected  message with id " + messageId + " received.   This message will be discarded.");
-  }
+  store.store(messageId,event);
+  replyThread.processNow();
   return null;
 }
