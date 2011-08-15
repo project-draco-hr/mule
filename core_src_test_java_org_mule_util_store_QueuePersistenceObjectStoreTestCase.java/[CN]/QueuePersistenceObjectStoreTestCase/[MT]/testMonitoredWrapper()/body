@@ -1,0 +1,17 @@
+{
+  QueuePersistenceObjectStore<Serializable> store=getObjectStore();
+  String id=UUID.getUUID();
+  QueueKey key=new QueueKey(QUEUE_NAME,id);
+  MuleMessage msg=new DefaultMuleMessage("Hello",mockMuleContext);
+  MuleEvent event=new DefaultMuleEvent(msg,MessageExchangePattern.ONE_WAY,new DefaultMuleSession(mockMuleContext));
+  ListableObjectStore<Serializable> monitored=new MonitoredObjectStoreWrapper(store);
+  monitored.store(key,event);
+  MonitoredObjectStoreWrapper.StoredObject retrieved=(MonitoredObjectStoreWrapper.StoredObject)store.retrieve(key);
+  Object item=retrieved.getItem();
+  assertTrue(item instanceof MuleEvent);
+  MuleEvent newEvent=(MuleEvent)item;
+  MuleMessage newMessage=newEvent.getMessage();
+  assertNotNull(newMessage);
+  assertEquals(mockMuleContext,newMessage.getMuleContext());
+  assertEquals("Hello",newMessage.getPayload());
+}
