@@ -1,6 +1,6 @@
 {
   final ClassLoader ccl=Thread.currentThread().getContextClassLoader();
-  LoggerRepository repository=this.repository.get(ccl == null ? NO_CCL_CLASSLOADER : ccl.hashCode());
+  LoggerRepository repository=cache.getLoggerRepository(ccl);
   if (repository == null) {
     final RootLogger root=new RootLogger(Level.INFO);
     repository=new Hierarchy(root);
@@ -44,7 +44,7 @@
         configWatchDog=new ConfigWatchDog(ccl,defaultSystemLog.getAbsolutePath(),repository);
         configWatchDog.setName("Mule.system.log4j.config.monitor");
       }
-      final LoggerRepository previous=this.repository.putIfAbsent(ccl == null ? NO_CCL_CLASSLOADER : ccl.hashCode(),repository);
+      final LoggerRepository previous=cache.storeLoggerRepository(ccl,repository);
       if (previous != null) {
         repository=previous;
       }
