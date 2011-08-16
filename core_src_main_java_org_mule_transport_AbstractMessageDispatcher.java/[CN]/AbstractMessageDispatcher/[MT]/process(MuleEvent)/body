@@ -8,10 +8,14 @@
       applyOutboundTransformers(event);
     }
     boolean hasResponse=endpoint.getExchangePattern().hasResponse();
+    connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),event.getMessage());
     if (hasResponse) {
       MuleMessage resultMessage=doSend(event);
       if (resultMessage != null) {
+        MuleSession storedSession=connector.getSessionHandler().retrieveSessionInfoFromMessage(resultMessage);
+        event.getSession().merge(storedSession);
         resultEvent=new DefaultMuleEvent(resultMessage,event);
+        RequestContext.setEvent(resultEvent);
       }
     }
  else {
