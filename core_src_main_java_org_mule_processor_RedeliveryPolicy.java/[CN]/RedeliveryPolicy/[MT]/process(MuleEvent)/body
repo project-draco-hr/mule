@@ -1,0 +1,41 @@
+{
+  boolean exceptionSeen=false;
+  boolean tooMany=false;
+  AtomicInteger counter=null;
+  String messageId=null;
+  try {
+    messageId=getIdForEvent(event);
+  }
+ catch (  Exception ex) {
+    exceptionSeen=true;
+  }
+  if (!exceptionSeen) {
+    counter=getCounter(messageId,null,false);
+    tooMany=counter != null && counter.get() > maxRedeliveryCount;
+  }
+  if (tooMany || exceptionSeen) {
+    try {
+      return failedMessageProcessor.process(event);
+    }
+ catch (    Exception ex) {
+      logger.info("Exception thrown from failed message processing for message " + messageId,ex);
+    }
+    return null;
+  }
+  try {
+    MuleEvent returnEvent=processNext(event);
+    counter=getCounter(messageId,counter,false);
+    if (counter != null) {
+      counter.set(0);
+    }
+    return returnEvent;
+  }
+ catch (  MuleException ex) {
+    incrementCounter(messageId,counter);
+    throw ex;
+  }
+catch (  RuntimeErrorException ex) {
+    incrementCounter(messageId,counter);
+    throw ex;
+  }
+}

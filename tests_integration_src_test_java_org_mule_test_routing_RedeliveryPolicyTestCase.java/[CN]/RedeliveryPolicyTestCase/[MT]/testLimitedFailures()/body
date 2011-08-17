@@ -1,0 +1,19 @@
+{
+  int success=0;
+  int failure=0;
+  for (int i=0; i < 100; i++) {
+    MuleClient client=new MuleClient(muleContext);
+    try {
+      MuleMessage msg=client.send("vm://limitedFailures","hello",null);
+      if (msg.getPayload().equals("hello")) {
+        success++;
+      }
+    }
+ catch (    Exception ex) {
+      failure++;
+    }
+  }
+  checkNumberOfMessages("vm://dead-letter-queue",0,1000);
+  assertEquals(25,success);
+  assertEquals(75,failure);
+}
