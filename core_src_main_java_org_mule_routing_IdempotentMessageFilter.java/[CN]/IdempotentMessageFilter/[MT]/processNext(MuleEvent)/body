@@ -2,10 +2,15 @@
   String id=getIdForEvent(event);
   String value=getValueForEvent(event);
   try {
-    store.store(id,value);
+    try {
+      store.store(id,value);
+    }
+ catch (    ObjectAlreadyExistsException ex) {
+      logger.debug("Possible duplicate message due to race condition: " + id);
+    }
     return super.processNext(event);
   }
  catch (  Exception e) {
-    throw new RoutingException(CoreMessages.failedToWriteMessageToStore(id,assignedComponentName),event,this,e);
+    throw new RoutingException(CoreMessages.failedToWriteMessageToStore(id,storePrefix),event,this,e);
   }
 }
