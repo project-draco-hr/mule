@@ -1,8 +1,14 @@
 {
-  return new MessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      return ((MessageProcessor)applicationContext.getBean(refName)).process(event);
+  final MessageProcessor processor=((MessageProcessor)applicationContext.getBean(refName));
+  if (processor instanceof FlowConstruct) {
+    return new MessageProcessor(){
+      public MuleEvent process(      MuleEvent event) throws MuleException {
+        return processor.process(event);
+      }
     }
-  }
 ;
+  }
+ else {
+    return processor;
+  }
 }
