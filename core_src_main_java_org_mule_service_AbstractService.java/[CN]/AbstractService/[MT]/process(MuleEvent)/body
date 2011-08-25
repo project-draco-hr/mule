@@ -3,12 +3,17 @@
   MuleEvent newEvent=new DefaultMuleEvent(event.getMessage(),event,calledSession);
   RequestContext.setEvent(newEvent);
   try {
-    return messageProcessorChain.process(newEvent);
+    MuleEvent result=messageProcessorChain.process(newEvent);
+    if (result != null) {
+      result.getMessage().release();
+    }
+    return result;
   }
  catch (  Exception e) {
     return getExceptionListener().handleException(e,newEvent);
   }
  finally {
     RequestContext.setEvent(event);
+    event.getMessage().release();
   }
 }
