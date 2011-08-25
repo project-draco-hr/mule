@@ -1,9 +1,13 @@
 {
+  MuleEvent event=null;
   try {
-    MuleEvent event=routeMessage(message);
+    event=routeMessage(message);
     return event == null ? null : event.getMessage();
   }
  catch (  Exception e) {
-    throw new DefaultMuleException(e);
+    if (event == null) {
+      event=createMuleEvent(message,null);
+    }
+    return flowConstruct.getExceptionListener().handleException(e,event).getMessage();
   }
 }

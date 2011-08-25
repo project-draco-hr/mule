@@ -1,12 +1,9 @@
 {
   MuleClient client=muleContext.getClient();
-  try {
-    client.send("vm://exception","testExceptionInTransformer",null);
-    fail("Should have thrown an exception");
-  }
- catch (  Exception e) {
-    assertTrue(ExceptionUtils.getRootCause(e) instanceof TransformerException);
-  }
+  MuleMessage result=client.send("vm://exception","testExceptionInTransformer",null);
+  assertNotNull(result);
+  assertNotNull(result.getExceptionPayload());
+  assertTrue(ExceptionUtils.getRootCause(result.getExceptionPayload().getException()) instanceof TransformerException);
   assertNotNull(client.request("vm://queueC",1000));
   assertNull(client.request("vm://queueD",1000));
 }

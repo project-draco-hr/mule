@@ -1,10 +1,7 @@
 {
   props.remove("foo");
-  try {
-    muleContext.getClient().send("vm://headers",null,null);
-    fail("Exception expected");
-  }
- catch (  Exception e) {
-    assertTrue(ExceptionUtils.getRootCause(e) instanceof RequiredValueException);
-  }
+  MuleMessage message=muleContext.getClient().send("vm://headers",null,null);
+  assertNotNull(message);
+  assertNotNull(message.getExceptionPayload());
+  assertEquals(RequiredValueException.class,ExceptionUtils.getRootCause(message.getExceptionPayload().getException()).getClass());
 }

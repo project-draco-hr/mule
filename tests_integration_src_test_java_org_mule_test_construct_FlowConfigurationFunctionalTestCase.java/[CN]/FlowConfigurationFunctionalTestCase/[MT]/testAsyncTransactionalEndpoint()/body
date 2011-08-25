@@ -1,10 +1,8 @@
 {
-  try {
-    muleContext.getClient().send("vm://async-tx-in",new DefaultMuleMessage("0",muleContext));
-    fail("Exception expected");
-  }
- catch (  DispatchException e) {
-  }
+  MuleMessage message=muleContext.getClient().send("vm://async-tx-in",new DefaultMuleMessage("0",muleContext));
+  assertNotNull(message);
+  assertNotNull(message.getExceptionPayload());
+  assertEquals(MessagingException.class,message.getExceptionPayload().getException().getClass());
   final MuleMessage result=muleContext.getClient().request("vm://async-requestresponse-out",RECEIVE_TIMEOUT);
   final MuleMessage asyncResult=muleContext.getClient().request("vm://async-async-oneway-out",RECEIVE_TIMEOUT);
   assertNull(result);

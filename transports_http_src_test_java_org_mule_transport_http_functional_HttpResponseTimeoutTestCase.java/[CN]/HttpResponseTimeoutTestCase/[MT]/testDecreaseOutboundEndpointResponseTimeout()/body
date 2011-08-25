@@ -1,12 +1,9 @@
 {
   Date beforeCall=new Date();
-  try {
-    muleClient.send("vm://decreaseTimeoutRequest",getPayload(),null);
-    fail("Exception expected");
-  }
- catch (  Exception e) {
-    assertTrue(ExceptionUtils.getRootCause(e) instanceof SocketTimeoutException);
-  }
+  MuleMessage result=muleClient.send("vm://decreaseTimeoutRequest",getPayload(),null);
+  assertNotNull(result);
+  assertNotNull(result.getExceptionPayload());
+  assertEquals(DispatchException.class,result.getExceptionPayload().getException().getClass());
   Date afterCall=new Date();
   assertTrue((afterCall.getTime() - beforeCall.getTime()) < DEFAULT_RESPONSE_TIMEOUT);
 }

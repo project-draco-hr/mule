@@ -1,10 +1,7 @@
 {
-  try {
-    muleContext.getClient().send("vm://service","hello",null);
-    fail("Exception expected");
-  }
- catch (  Exception e) {
-    assertTrue(ExceptionUtils.getRootCause(e) instanceof EntryPointNotFoundException);
-    assertTrue(ExceptionUtils.getRootCauseMessage(e).indexOf("Found too many possible methods on object") > -1);
-  }
+  MuleMessage message=muleContext.getClient().send("vm://service","hello",null);
+  assertNotNull(message);
+  assertNotNull(message.getExceptionPayload());
+  assertEquals(EntryPointNotFoundException.class,message.getExceptionPayload().getRootException().getClass());
+  assertTrue(ExceptionUtils.getRootCauseMessage(message.getExceptionPayload().getException()).indexOf("Found too many possible methods on object") > -1);
 }

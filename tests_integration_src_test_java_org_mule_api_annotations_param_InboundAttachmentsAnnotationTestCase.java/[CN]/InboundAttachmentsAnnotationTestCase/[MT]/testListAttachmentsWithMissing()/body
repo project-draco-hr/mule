@@ -3,11 +3,8 @@
   attachments.put("foo",new DataHandler(new StringDataSource("fooValue")));
   attachments.put("baz",new DataHandler(new StringDataSource("bazValue")));
   muleMessage=createMessage(null,attachments);
-  try {
-    muleContext.getClient().send("vm://attachmentsListOptional",muleMessage);
-    fail("Exception expected");
-  }
- catch (  Exception e) {
-    assertTrue(ExceptionUtils.getRootCause(e) instanceof RequiredValueException);
-  }
+  MuleMessage result=muleContext.getClient().send("vm://attachmentsListOptional",muleMessage);
+  assertNotNull(result);
+  assertNotNull(result.getExceptionPayload());
+  assertEquals(RequiredValueException.class,ExceptionUtils.getRootCause(result.getExceptionPayload().getException()).getClass());
 }

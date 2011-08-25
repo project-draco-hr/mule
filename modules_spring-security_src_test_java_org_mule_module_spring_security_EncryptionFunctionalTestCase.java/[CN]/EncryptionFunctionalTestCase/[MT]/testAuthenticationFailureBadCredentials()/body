@@ -1,10 +1,7 @@
 {
   Map<String,Object> props=createMessagePropertiesWithCredentials("anonX","anonX");
-  try {
-    muleContext.getClient().send("vm://my.queue","foo",props);
-    fail("Exception expected");
-  }
- catch (  Exception e) {
-    assertTrue(ExceptionUtils.getRootCause(e) instanceof BadCredentialsException);
-  }
+  MuleMessage result=muleContext.getClient().send("vm://my.queue","foo",null);
+  assertNotNull(result);
+  assertNotNull(result.getExceptionPayload());
+  assertEquals(CredentialsNotSetException.class,result.getExceptionPayload().getException().getClass());
 }
