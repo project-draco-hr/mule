@@ -2,5 +2,15 @@
 synchronized (events) {
     Serializable key=event.getId() + event.getMessage().getCorrelationSequence();
     events.store(key,event);
+    if (!hasNoCommonRootId) {
+      String rootId=event.getMessage().getMessageRootId();
+      if (commonRootId == null) {
+        commonRootId=rootId;
+      }
+ else       if (!commonRootId.equals(rootId)) {
+        hasNoCommonRootId=true;
+        commonRootId=null;
+      }
+    }
   }
 }

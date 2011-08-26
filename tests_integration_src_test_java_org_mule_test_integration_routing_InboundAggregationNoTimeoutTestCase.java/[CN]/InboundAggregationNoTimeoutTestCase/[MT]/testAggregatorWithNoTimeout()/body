@@ -1,7 +1,7 @@
 {
-  String message="test";
+  MuleMessage message=new DefaultMuleMessage("test",muleContext);
   MuleClient client=new MuleClient(muleContext);
-  client.dispatch("vm://distributor.queue",message,null);
+  client.dispatch("vm://distributor.queue",message);
   MuleMessage result=client.request("vm://results",10000);
   assertNotNull(result);
   assertTrue(result instanceof MuleMessageCollection);
@@ -10,5 +10,7 @@
   for (int i=0; i < mc.getMessagesAsArray().length; i++) {
     MuleMessage msg=mc.getMessagesAsArray()[i];
     assertEquals("test Received",msg.getPayload());
+    assertEquals(message.getMessageRootId(),msg.getMessageRootId());
   }
+  assertEquals(message.getMessageRootId(),result.getMessageRootId());
 }
