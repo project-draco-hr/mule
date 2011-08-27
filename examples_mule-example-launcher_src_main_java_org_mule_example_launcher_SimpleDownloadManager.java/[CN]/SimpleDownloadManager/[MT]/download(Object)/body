@@ -1,0 +1,26 @@
+{
+  String fileUrl=null;
+  Map<String,Object> response=new HashMap<String,Object>();
+  if (data instanceof Map<?,?>) {
+    Map<?,?> params=(Map<?,?>)data;
+    fileUrl=String.valueOf(params.get(URL_KEY));
+  }
+ else   if (data instanceof String) {
+    fileUrl=(String)data;
+  }
+  if (fileUrl != null) {
+    try {
+      URL url=new URL(fileUrl);
+      URLConnection conn=url.openConnection();
+      response.put("is",conn.getInputStream());
+      response.put("filename",getFilenameFromUrl(fileUrl));
+    }
+ catch (    Exception ex) {
+      response.put("error","Error downloading " + fileUrl + " -> "+ ex.getMessage());
+    }
+  }
+ else {
+    response.put("error","Not able to get URL to download");
+  }
+  return response;
+}
