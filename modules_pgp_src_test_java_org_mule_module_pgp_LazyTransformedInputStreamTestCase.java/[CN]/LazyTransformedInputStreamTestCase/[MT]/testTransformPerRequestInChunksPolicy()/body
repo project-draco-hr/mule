@@ -1,0 +1,12 @@
+{
+  int chunkSize=4;
+  LazyTransformedInputStream transformedInputStream=new LazyTransformedInputStream(new TransformPerRequestInChunksPolicy(chunkSize),simpleTransformer);
+  for (int i=0; i < message.length(); i++) {
+    int read=transformedInputStream.read();
+    assertEquals(message.charAt(i) + 1,read);
+    int shouldBeTransformed=(int)Math.min(message.length(),Math.ceil((double)simpleTransformer.bytesRead / (double)chunkSize) * chunkSize);
+    assertEquals(shouldBeTransformed,simpleTransformer.bytesRead);
+    Thread.sleep(50);
+    assertEquals(shouldBeTransformed,simpleTransformer.bytesRead);
+  }
+}

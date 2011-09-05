@@ -1,0 +1,11 @@
+{
+  getTransformer().initialize(getInputStream().getOut());
+  boolean finishWriting=false;
+  while (!finishWriting && !isClosed) {
+    writeSemaphore.acquire();
+    long requested=bytesActuallyRequested;
+    long updatedRequest=(long)(Math.ceil((double)requested / (double)chunkSize) * chunkSize);
+    getBytesRequested().set(updatedRequest);
+    finishWriting=getTransformer().write(getInputStream().getOut(),getBytesRequested());
+  }
+}
