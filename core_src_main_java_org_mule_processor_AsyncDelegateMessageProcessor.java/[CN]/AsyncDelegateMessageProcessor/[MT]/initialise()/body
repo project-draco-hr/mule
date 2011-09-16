@@ -5,11 +5,15 @@
   if (processingStrategy == null) {
     throw new InitialisationException(CoreMessages.objectIsNull("processingStrategy"),this);
   }
-  if (threadNameSource == null) {
-    threadNameSource=((Flow)flowConstruct).getAsyncThreadNameSource();
+  StageNameSource nameSource=null;
+  if (name != null) {
+    nameSource=((Flow)flowConstruct).getAsyncStageNameSource(name);
+  }
+ else {
+    nameSource=((Flow)flowConstruct).getAsyncStageNameSource();
   }
   MessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder(flowConstruct);
-  processingStrategy.configureProcessors(Collections.singletonList(delegate),threadNameSource,builder,muleContext);
+  processingStrategy.configureProcessors(Collections.singletonList(delegate),nameSource,builder,muleContext);
   try {
     target=builder.build();
   }
