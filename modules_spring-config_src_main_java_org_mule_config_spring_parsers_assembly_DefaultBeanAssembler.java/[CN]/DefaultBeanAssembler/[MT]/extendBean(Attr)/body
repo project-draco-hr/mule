@@ -18,7 +18,18 @@
  else {
       name=new QName(attribute.getNamespaceURI(),attribute.getLocalName());
     }
-    addAnnotationValue(beanDefinition.getPropertyValues(),name,beanConfig.translateValue(oldName,oldValue));
+    Object value=beanConfig.translateValue(oldName,oldValue);
+    addAnnotationValue(beanDefinition.getPropertyValues(),name,value);
+    MuleContext muleContext=MuleApplicationContext.getCurrentMuleContext().get();
+    if (muleContext != null) {
+      Map<QName,Set<Object>> annotations=muleContext.getConfigurationAnnotations();
+      Set<Object> values=annotations.get(name);
+      if (values == null) {
+        values=new HashSet<Object>();
+        annotations.put(name,values);
+      }
+      values.add(value);
+    }
   }
  else {
     if (logger.isWarnEnabled()) {

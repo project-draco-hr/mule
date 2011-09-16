@@ -9,12 +9,20 @@
     throw new InitialisationException(MessageFactory.createStaticMessage("A ListableObjectStore must be configured on UntilSuccessful."),this);
   }
   super.initialise();
-  if (dlqEndpointBuilder != null) {
-    try {
-      dlqEndpoint=dlqEndpointBuilder.buildOutboundEndpoint();
+  if (deadLetterQueue != null) {
+    if (deadLetterQueue instanceof EndpointBuilder) {
+      try {
+        dlqMP=((EndpointBuilder)deadLetterQueue).buildOutboundEndpoint();
+      }
+ catch (      EndpointException ee) {
+        throw new InitialisationException(MessageFactory.createStaticMessage("deadLetterQueue-ref is not a valid endpoint builder: " + deadLetterQueue),ee,this);
+      }
     }
- catch (    EndpointException ee) {
-      throw new InitialisationException(MessageFactory.createStaticMessage("Invalid DQL endpoint builder: " + dlqEndpointBuilder),ee,this);
+ else     if (deadLetterQueue instanceof MessageProcessor) {
+      dlqMP=(MessageProcessor)deadLetterQueue;
+    }
+ else {
+      throw new InitialisationException(MessageFactory.createStaticMessage("deadLetterQueue-ref is not a valid mesage processor: " + deadLetterQueue),null,this);
     }
   }
   if (failureExpression != null) {
