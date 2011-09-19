@@ -5,10 +5,13 @@
       payload=message.getPayload(DataTypeFactory.create(Document.class));
     }
     XPath xpath=getXPath(expression,payload);
-    if (namespaceManager != null) {
-      addNamespaces(namespaceManager,xpath);
+    List<?> result;
+synchronized (xpath) {
+      if (namespaceManager != null) {
+        addNamespaces(namespaceManager,xpath);
+      }
+      result=xpath.selectNodes(payload);
     }
-    List<?> result=xpath.selectNodes(payload);
     result=extractResultsFromNodes(result);
     if (result.size() == 1) {
       return result.get(0);
