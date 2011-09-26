@@ -2,11 +2,13 @@
   MessageDispatcher dispatcher=null;
   try {
     dispatcher=getDispatcher(endpoint);
-    MuleEvent result=dispatcher.process(event);
     if (notificationMessageProcessor == null) {
       notificationMessageProcessor=new OutboundNotificationMessageProcessor(endpoint);
     }
-    notificationMessageProcessor.process(event);
+    EndpointMessageNotification beginNotification=notificationMessageProcessor.createBeginNotification(event);
+    MuleEvent result=dispatcher.process(event);
+    notificationMessageProcessor.dispatchNotification(beginNotification);
+    notificationMessageProcessor.process(result != null ? result : event);
     return result;
   }
  catch (  DispatchException dex) {

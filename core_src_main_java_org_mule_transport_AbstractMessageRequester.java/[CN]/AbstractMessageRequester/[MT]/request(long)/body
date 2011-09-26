@@ -1,13 +1,24 @@
 {
   try {
+    EndpointMessageNotification beginNotification=null;
+    if (connector.isEnableMessageEvents()) {
+      MuleMessage dummyMessage=new DefaultMuleMessage(NullPayload.getInstance(),connector.getMuleContext());
+      beginNotification=new EndpointMessageNotification(dummyMessage,endpoint,null,EndpointMessageNotification.MESSAGE_REQUEST_BEGIN);
+    }
     connect();
     MuleMessage result=null;
     result=doRequest(timeout);
-    if (result != null && !endpoint.isDisableTransportTransformer()) {
-      applyInboundTransformers(result);
-    }
-    if (result != null && connector.isEnableMessageEvents()) {
-      connector.fireNotification(new EndpointMessageNotification(result,endpoint,null,EndpointMessageNotification.MESSAGE_REQUESTED));
+    if (result != null) {
+      if (beginNotification != null) {
+        result.propagateRootId(beginNotification.getSource());
+      }
+      if (!endpoint.isDisableTransportTransformer()) {
+        applyInboundTransformers(result);
+      }
+      if (beginNotification != null) {
+        connector.fireNotification(beginNotification);
+        connector.fireNotification(new EndpointMessageNotification(result,endpoint,null,EndpointMessageNotification.MESSAGE_REQUEST_END));
+      }
     }
     return result;
   }
