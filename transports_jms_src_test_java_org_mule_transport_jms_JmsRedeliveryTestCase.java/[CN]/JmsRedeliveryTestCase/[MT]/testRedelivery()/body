@@ -4,12 +4,12 @@
     logger.warn("Destination " + DESTINATION + " isn't empty, draining it");
   }
   FunctionalTestComponent ftc=getFunctionalTestComponent("Bouncer");
-  final Latch mrexFired=new Latch();
+  final Latch messageRedeliveryExceptionFired=new Latch();
   muleContext.registerListener(new ExceptionNotificationListener<ExceptionNotification>(){
     public void onNotification(    ExceptionNotification notification){
       logger.debug("onNotification() = " + notification.getException().getClass().getName());
       if (notification.getException() instanceof MessageRedeliveredException) {
-        mrexFired.countDown();
+        messageRedeliveryExceptionFired.countDown();
         assertEquals(DESTINATION,((MessageRedeliveredException)notification.getException()).getEndpoint().getEndpointURI().toString());
         assertEquals(MAX_REDELIVERY,((MessageRedeliveredException)notification.getException()).getMaxRedelivery());
         assertTrue(((MessageRedeliveredException)notification.getException()).getMuleMessage().getPayload() instanceof javax.jms.Message);
@@ -28,7 +28,9 @@
   ftc.setEventCallback(callback);
   client.dispatch(DESTINATION,TEST_MESSAGE,null);
   Thread.sleep(2000);
-  mrexFired.await(timeout,TimeUnit.MILLISECONDS);
-  assertEquals("MessageRedeliveredException never fired.",0,mrexFired.getCount());
+  if (!messageRedeliveryExceptionFired.await(timeout,TimeUnit.MILLISECONDS)) {
+    fail("Exception from FunctionalTestComponent was not triggered three times");
+  }
+  assertEquals("MessageRedeliveredException never fired.",0,messageRedeliveryExceptionFired.getCount());
   assertEquals("Wrong number of delivery attempts",MAX_REDELIVERY + 1,callback.getCallbackCount());
 }
