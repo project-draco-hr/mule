@@ -33,7 +33,7 @@ catch (    Exception e) {
       if (logger.isDebugEnabled()) {
         logger.debug(MessageFormat.format("{0}: Dequeued event from {1}",getStageDescription(),getQueueName()));
       }
-      SedaStageWorker work=new SedaStageWorker(event);
+      AsyncMessageProcessorWorker work=new AsyncMessageProcessorWorker(event);
       if (doThreading) {
         try {
           workManagerSource.getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,new AsyncWorkListener(next));
@@ -43,18 +43,7 @@ catch (    Exception e) {
         }
       }
  else {
-        try {
-          work.doWork();
-        }
- catch (        MuleException e) {
-          MessagingExceptionHandler exceptionListener=event.getFlowConstruct().getExceptionListener();
-          if (e instanceof MessagingException) {
-            exceptionListener.handleException(e,event);
-          }
- else {
-            exceptionListener.handleException(new MessagingException(CoreMessages.eventProcessingFailedFor(getStageDescription()),event,e),event);
-          }
-        }
+        work.doRun();
       }
     }
   }
