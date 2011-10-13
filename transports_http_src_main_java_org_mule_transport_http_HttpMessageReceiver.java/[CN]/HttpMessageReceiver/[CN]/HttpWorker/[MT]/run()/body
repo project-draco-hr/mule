@@ -11,17 +11,19 @@
         break;
       }
       try {
-        conn.writeResponse(processRequest(request));
+        HttpResponse response=processRequest(request);
+        conn.writeResponse(response);
       }
  catch (      Exception e) {
         String temp=ExceptionHelper.getErrorMapping(connector.getProtocol(),e.getClass());
         int httpStatus=Integer.valueOf(temp);
-        conn.writeResponse(buildFailureResponse(request.getRequestLine().getHttpVersion(),httpStatus,e.getMessage()));
         if (e instanceof MessagingException) {
           MuleEvent event=((MessagingException)e).getEvent();
+          conn.writeResponse(buildFailureResponse(event,e.getMessage(),httpStatus));
           event.getFlowConstruct().getExceptionListener().handleException(e,event);
         }
  else {
+          conn.writeResponse(buildFailureResponse(request.getRequestLine().getHttpVersion(),httpStatus,e.getMessage()));
           getConnector().getMuleContext().getExceptionListener().handleException(e);
         }
         break;
