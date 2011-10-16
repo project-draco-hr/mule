@@ -6,16 +6,18 @@
     response=responseGenerator.create(request,cachedResponse);
   }
  else {
-    MuleEvent result;
     try {
-      result=messageProcessor.process(request);
+      response=messageProcessor.process(request);
     }
  catch (    Exception e) {
       throw new DefaultMuleException(e);
     }
-    response=result;
     if (response == null || consumableFilter.accept(response.getMessage())) {
-      store(key,response);
+      MuleEvent responseCopy=response;
+      if (response instanceof ThreadSafeAccess) {
+        responseCopy=(MuleEvent)((ThreadSafeAccess)response).newThreadCopy();
+      }
+      store(key,responseCopy);
     }
   }
   return response;
