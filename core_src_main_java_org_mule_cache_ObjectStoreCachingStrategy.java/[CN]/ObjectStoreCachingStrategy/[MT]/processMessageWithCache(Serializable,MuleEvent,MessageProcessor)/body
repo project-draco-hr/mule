@@ -1,17 +1,11 @@
 {
-  Serializable key=generateKey(request);
   MuleEvent cachedResponse=lookupEventInCache(key);
   MuleEvent response;
   if (cachedResponse != null) {
     response=responseGenerator.create(request,cachedResponse);
   }
  else {
-    try {
-      response=messageProcessor.process(request);
-    }
- catch (    Exception e) {
-      throw new DefaultMuleException(e);
-    }
+    response=messageProcessor.process(request);
     if (response == null || consumableFilter.accept(response.getMessage())) {
       MuleEvent responseCopy=response;
       if (response instanceof ThreadSafeAccess) {

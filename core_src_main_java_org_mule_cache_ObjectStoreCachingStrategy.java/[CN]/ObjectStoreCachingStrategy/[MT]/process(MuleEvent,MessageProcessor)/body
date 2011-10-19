@@ -1,13 +1,16 @@
 {
   if (consumableFilter.accept(request.getMessage())) {
-    return processMessageWithCache(request,messageProcessor);
-  }
- else {
+    Serializable key;
     try {
-      return messageProcessor.process(request);
+      key=keyGenerator.generateKey(request);
     }
  catch (    Exception e) {
-      throw new DefaultMuleException(e);
+      logger.warn("Message will be processed without cache: key generation error",e);
+      return messageProcessor.process(request);
     }
+    return processMessageWithCache(key,request,messageProcessor);
+  }
+ else {
+    return messageProcessor.process(request);
   }
 }
