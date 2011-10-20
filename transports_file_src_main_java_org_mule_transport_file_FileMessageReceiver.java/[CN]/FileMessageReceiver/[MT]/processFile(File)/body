@@ -74,15 +74,17 @@
     }
   }
  catch (  Exception e) {
-    RollbackSourceCallback rollbackMethod;
+    RollbackSourceCallback rollbackMethod=null;
     if (((FileConnector)connector).isStreaming()) {
-      final ReceiverFileInputStream receiverFileInputStream=(ReceiverFileInputStream)message.getPayload();
-      rollbackMethod=new RollbackSourceCallback(){
-        @Override public void rollback(){
-          receiverFileInputStream.setStreamProcessingError(true);
+      if (message.getPayload() instanceof ReceiverFileInputStream) {
+        final ReceiverFileInputStream receiverFileInputStream=(ReceiverFileInputStream)message.getPayload();
+        rollbackMethod=new RollbackSourceCallback(){
+          @Override public void rollback(){
+            receiverFileInputStream.setStreamProcessingError(true);
+          }
         }
-      }
 ;
+      }
     }
  else     if (!sourceFile.getAbsolutePath().equals(originalSourceFile)) {
       rollbackMethod=new RollbackSourceCallback(){
@@ -96,9 +98,6 @@
         }
       }
 ;
-    }
- else {
-      rollbackMethod=null;
     }
     if (e instanceof MessagingException) {
       MuleEvent event=((MessagingException)e).getEvent();
