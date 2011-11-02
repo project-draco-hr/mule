@@ -7,6 +7,15 @@
   assertTrue(message.getPayload() instanceof InputStream);
   assertTrue(tempDir.listFiles().length > 0);
   ((InputStream)message.getPayload()).close();
-  Thread.sleep(1000);
+  Prober prober=new PollingProber(1000,100);
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return tempDir.listFiles().length == 0;
+    }
+    @Override public String describeFailure(){
+      return "File was not deleted from temp directory";
+    }
+  }
+);
   assertTrue(tempDir.listFiles().length == 0);
 }

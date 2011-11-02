@@ -4,7 +4,8 @@
   props.put("operation","greetMe");
   MuleMessage result=client.send("clientEndpoint","Dan",props);
   assertEquals("Hello Dan",result.getPayload());
-  GreeterImpl impl=getGreeter();
-  Thread.sleep(3000);
+  final GreeterImpl impl=getGreeter();
+  Prober prober=new PollingProber(5000,100);
+  prober.check(new GreeterNotNull(impl));
   assertEquals(1,impl.getInvocationCount());
 }
