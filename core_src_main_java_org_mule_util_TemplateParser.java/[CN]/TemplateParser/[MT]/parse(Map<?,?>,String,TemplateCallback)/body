@@ -1,0 +1,39 @@
+{
+  String result=template;
+  Map<?,?> newProps=props;
+  if (props != null && !(props instanceof CaseInsensitiveHashMap)) {
+    newProps=new CaseInsensitiveHashMap(props);
+  }
+  Matcher m=pattern.matcher(result);
+  while (m.find()) {
+    Object value=null;
+    String match=m.group();
+    String propname=match.substring(pre,match.length() - post);
+    if (callback != null) {
+      value=callback.match(propname);
+    }
+ else     if (newProps != null) {
+      value=newProps.get(propname);
+    }
+    if (value == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Value " + propname + " not found in context");
+      }
+    }
+ else {
+      String matchRegex=escape(match);
+      String valueString=value.toString();
+      if (valueString.indexOf('$') != -1) {
+        valueString=valueString.replaceAll("\\$",DOLLAR_ESCAPE);
+      }
+      if (valueString.indexOf('\\') != -1) {
+        valueString=valueString.replaceAll("\\\\","\\\\\\\\");
+      }
+      result=result.replaceAll(matchRegex,valueString);
+    }
+  }
+  if (result.indexOf(DOLLAR_ESCAPE) != -1) {
+    result=result.replaceAll(DOLLAR_ESCAPE,"\\$");
+  }
+  return result;
+}
