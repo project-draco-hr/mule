@@ -26,8 +26,10 @@
   processor.setListener(messageProcessor);
   MuleEvent event=getTestEvent("hello",getTestInboundEndpoint(MessageExchangePattern.REQUEST_RESPONSE));
   MuleEvent response=processor.process(event);
+  assertThat(processor.getClient().getRequestContext().isEmpty(),Is.is(true));
+  assertThat(processor.getClient().getResponseContext().isEmpty(),Is.is(true));
   Object payload=response.getMessage().getPayload();
-  assertTrue(payload instanceof String);
-  assertEquals("hello",payload);
-  assertTrue(gotEvent);
+  assertThat(payload,IsInstanceOf.instanceOf(String.class));
+  assertThat((String)payload,Is.is("hello"));
+  assertThat(gotEvent,Is.is(true));
 }
