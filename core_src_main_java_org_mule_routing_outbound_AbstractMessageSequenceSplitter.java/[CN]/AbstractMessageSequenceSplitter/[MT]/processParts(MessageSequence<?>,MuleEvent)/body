@@ -1,14 +1,15 @@
 {
   if (messageInfoMapping == null) {
-    messageInfoMapping=event.getFlowConstruct().getMessageInfoMapping();
+    messageInfoMapping=originalEvent.getFlowConstruct().getMessageInfoMapping();
   }
-  String correlationId=messageInfoMapping.getCorrelationId(event.getMessage());
+  String correlationId=messageInfoMapping.getCorrelationId(originalEvent.getMessage());
   List<MuleEvent> resultEvents=new ArrayList<MuleEvent>();
   int correlationSequence=0;
   int count=seq.size();
+  MuleEvent currentEvent=originalEvent;
   for (; seq.hasNext(); ) {
     Object payload=seq.next();
-    MuleMessage message=createMessage(payload,event.getMessage());
+    MuleMessage message=createMessage(payload,originalEvent.getMessage());
     correlationSequence++;
     if (enableCorrelation != CorrelationMode.NEVER) {
       boolean correlationSet=message.getCorrelationId() != null;
@@ -18,8 +19,12 @@
       message.setCorrelationGroupSize(count);
       message.setCorrelationSequence(correlationSequence);
     }
-    message.propagateRootId(event.getMessage());
-    resultEvents.add(processNext(new DefaultMuleEvent(message,event)));
+    message.propagateRootId(originalEvent.getMessage());
+    MuleEvent resultEvent=processNext(RequestContext.setEvent(new DefaultMuleEvent(message,originalEvent,currentEvent.getSession())));
+    if (resultEvent != null) {
+      currentEvent=resultEvent;
+      resultEvents.add(resultEvent);
+    }
   }
   if (correlationSequence == 1) {
     logger.warn("Splitter only returned a single result. If this is not expected, please check your split expression");
