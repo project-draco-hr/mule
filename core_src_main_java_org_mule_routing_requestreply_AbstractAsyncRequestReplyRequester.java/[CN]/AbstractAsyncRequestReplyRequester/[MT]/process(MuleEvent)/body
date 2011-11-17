@@ -5,6 +5,10 @@
  else {
     locks.put(getAsyncReplyCorrelationId(event),new Latch());
     sendAsyncRequest(event);
-    return receiveAsyncReply(event);
+    MuleEvent resultEvent=receiveAsyncReply(event);
+    if (resultEvent != null) {
+      resultEvent=org.mule.RequestContext.setEvent(new DefaultMuleEvent(resultEvent.getMessage(),event));
+    }
+    return resultEvent;
   }
 }
