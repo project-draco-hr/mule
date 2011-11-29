@@ -1,36 +1,9 @@
 {
   if (message == null) {
-    servletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
-    if (feedback) {
-      servletResponse.setStatus(HttpServletResponse.SC_OK);
-      servletResponse.getWriter().write("Action was processed successfully. There was no result");
-    }
+    writeEmptyResponse(servletResponse);
   }
  else {
-    HttpResponse httpResponse;
-    if (message.getPayload() instanceof HttpResponse) {
-      httpResponse=(HttpResponse)message.getPayload();
-    }
- else {
-      httpResponse=(HttpResponse)responseTransformer.transform(message);
-    }
-    Header contentTypeHeader=httpResponse.getFirstHeader(HttpConstants.HEADER_CONTENT_TYPE);
-    String contentType=defaultContentType;
-    if (contentTypeHeader != null && contentTypeHeader.getValue() != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Using Content-Type from message header = " + contentTypeHeader.getValue());
-      }
-      contentType=contentTypeHeader.getValue();
-    }
-    servletResponse.setContentType(contentType);
-    servletResponse=setHttpHeadersOnServletResponse(httpResponse,servletResponse);
-    if (!servletResponse.isCommitted()) {
-      servletResponse.setStatus(httpResponse.getStatusCode());
-    }
-    if (httpResponse.hasBody()) {
-      OutputHandler outputHandler=httpResponse.getBody();
-      outputHandler.write(RequestContext.getEvent(),servletResponse.getOutputStream());
-    }
+    writeResponseFromMessage(servletResponse,message);
   }
   servletResponse.flushBuffer();
 }
