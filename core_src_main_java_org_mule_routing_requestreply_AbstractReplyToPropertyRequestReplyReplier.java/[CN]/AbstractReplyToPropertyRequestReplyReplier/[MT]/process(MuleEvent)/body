@@ -1,0 +1,16 @@
+{
+  MuleEvent resultEvent;
+  if (shouldProcessEvent(event)) {
+    Object replyTo=event.getReplyToDestination();
+    ReplyToHandler replyToHandler=event.getReplyToHandler();
+    resultEvent=processNext(event);
+    final String replyToStop=resultEvent.getMessage().getInvocationProperty(MuleProperties.MULE_REPLY_TO_STOP_PROPERTY);
+    if (resultEvent != null && !BooleanUtils.toBoolean(replyToStop)) {
+      processReplyTo(event,resultEvent,replyToHandler,replyTo);
+    }
+  }
+ else {
+    resultEvent=processNext(event);
+  }
+  return resultEvent;
+}
