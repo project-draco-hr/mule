@@ -1,0 +1,14 @@
+{
+  mockTransaction.setXA(true);
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_NONE);
+  TransactionTemplate transactionTemplate=new TransactionTemplate(config,mockMuleContext);
+  try {
+    transactionTemplate.execute(getFailureTransactionCallback());
+  }
+ catch (  MessagingException e) {
+  }
+  Mockito.verify(mockTransaction).suspend();
+  Mockito.verify(mockTransaction,VerificationModeFactory.times(0)).commit();
+  Mockito.verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+}

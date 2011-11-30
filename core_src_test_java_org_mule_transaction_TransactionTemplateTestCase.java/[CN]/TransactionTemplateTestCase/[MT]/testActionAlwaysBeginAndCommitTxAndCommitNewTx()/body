@@ -1,0 +1,13 @@
+{
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_BEGIN);
+  TransactionTemplate transactionTemplate=new TransactionTemplate(config,mockMuleContext);
+  config.setFactory(new TestTransactionFactory(mockNewTransaction));
+  Object result=transactionTemplate.execute(getEmptyTransactionCallback(RETURN_VALUE));
+  assertThat(result,is(RETURN_VALUE));
+  Mockito.verify(mockTransaction).commit();
+  Mockito.verify(mockNewTransaction).commit();
+  Mockito.verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+  Mockito.verify(mockNewTransaction,VerificationModeFactory.times(0)).rollback();
+  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
+}
