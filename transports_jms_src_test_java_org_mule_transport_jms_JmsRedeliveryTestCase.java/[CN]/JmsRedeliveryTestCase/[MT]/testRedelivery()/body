@@ -1,25 +1,4 @@
 {
-  MessageSource source=null;
-  Object flowOrService=muleContext.getRegistry().lookupObject("TestSelector");
-  assertNotNull(flowOrService);
-  if (flowOrService instanceof Service) {
-    Service svc=(Service)flowOrService;
-    source=svc.getMessageSource();
-  }
- else {
-    Flow flow=(Flow)flowOrService;
-    source=flow.getMessageSource();
-  }
-  InboundEndpoint ep=null;
-  if (source instanceof InboundEndpoint) {
-    ep=(InboundEndpoint)source;
-  }
- else   if (source instanceof ServiceCompositeMessageSource) {
-    ep=((ServiceCompositeMessageSource)source).getEndpoints().get(0);
-  }
-  assertNotNull(ep);
-  JmsConnector cnctr=(JmsConnector)muleContext.getRegistry().lookupConnector("jmsConnector");
-  assertTrue(cnctr.getSelector(ep) instanceof JmsSelectorFilter);
   MuleClient client=muleContext.getClient();
   while (client.request(DESTINATION,1000) != null) {
     logger.warn("Destination " + DESTINATION + " isn't empty, draining it");
