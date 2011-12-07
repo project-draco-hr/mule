@@ -1,9 +1,22 @@
 {
-  DefaultMuleSession before=new DefaultMuleSession(Mockito.mock(FlowConstruct.class),Mockito.mock(MuleContext.class));
+  Flow flow=new Flow("flow",Mockito.mock(MuleContext.class));
+  DefaultMuleSession before=new DefaultMuleSession(flow,Mockito.mock(MuleContext.class));
   before.setValid(false);
-  before.setSecurityContext(Mockito.mock(SecurityContext.class));
+  before.setSecurityContext(createTestAuthentication());
   before.setProperty("foo","bar");
-  before.setProperty("notSerializableValue",new Object());
-  DefaultMuleSession after=(DefaultMuleSession)SerializationUtils.deserialize(SerializationUtils.serialize(before),getClass().getClassLoader());
+  MuleContext muleContext=Mockito.mock(MuleContext.class);
+  MuleRegistry registry=Mockito.mock(MuleRegistry.class);
+  Mockito.when(muleContext.getRegistry()).thenReturn(registry);
+  Mockito.when(muleContext.getExecutionClassLoader()).thenReturn(getClass().getClassLoader());
+  Mockito.when(registry.lookupFlowConstruct("flow")).thenReturn(flow);
+  DefaultMuleSession after=(DefaultMuleSession)SerializationUtils.deserialize(SerializationUtils.serialize(before),muleContext);
   assertEquals(before.getId(),after.getId());
+  assertEquals(before.isValid(),after.isValid());
+  assertEquals(before.getFlowConstruct(),after.getFlowConstruct());
+  assertEquals(before.getProperty("foo"),after.getProperty("foo"));
+  assertEquals(before.getSecurityContext().getAuthentication().getPrincipal(),after.getSecurityContext().getAuthentication().getPrincipal());
+  assertEquals(before.getSecurityContext().getAuthentication().getProperties().get("key1"),after.getSecurityContext().getAuthentication().getProperties().get("key1"));
+  assertEquals(before.getSecurityContext().getAuthentication().getCredentials(),after.getSecurityContext().getAuthentication().getCredentials());
+  after.setProperty("new","value");
+  assertNull(before.getProperty("new"));
 }
