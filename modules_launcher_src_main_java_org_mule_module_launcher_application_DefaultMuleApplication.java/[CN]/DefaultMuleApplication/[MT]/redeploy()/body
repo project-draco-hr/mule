@@ -3,26 +3,26 @@
     logger.info(miniSplash(String.format("Redeploying app '%s'",descriptor.getAppName())));
   }
   String appName=getAppName();
-  this.deploymentService.fireOnUndeploymentStart(appName);
+  deploymentListener.onDeploymentStart(appName);
   try {
     dispose();
-    this.deploymentService.fireOnUndeploymentSuccess(appName);
+    deploymentListener.onUndeploymentSuccess(appName);
   }
  catch (  RuntimeException e) {
-    this.deploymentService.fireOnUndeploymentFailure(appName,e);
+    deploymentListener.onUndeploymentFailure(appName,e);
     throw e;
   }
   install();
   final ClassLoader cl=getDeploymentClassLoader();
   Thread.currentThread().setContextClassLoader(cl);
-  this.deploymentService.fireOnDeploymentStart(appName);
+  deploymentListener.onDeploymentStart(appName);
   try {
     init();
     start();
-    this.deploymentService.fireOnDeploymentSuccess(appName);
+    deploymentListener.onDeploymentSuccess(appName);
   }
  catch (  Throwable cause) {
-    this.deploymentService.fireOnDeploymentFailure(appName,cause);
+    deploymentListener.onDeploymentFailure(appName,cause);
   }
   Thread.currentThread().setContextClassLoader(null);
 }

@@ -22,7 +22,7 @@
       }
  catch (      Throwable t) {
         logger.error(String.format("Failed to install app from archive '%s'",zip),t);
-        fireOnDeploymentFailure(appName,t);
+        deploymentListener.onDeploymentFailure(appName,t);
         File appZip=new File(appsDir,zip);
         addZombie(appZip);
       }
@@ -46,19 +46,19 @@
       applications.add(a);
     }
  catch (    Throwable t) {
-      fireOnDeploymentFailure(app,t);
+      deploymentListener.onDeploymentFailure(app,t);
       addZombie(new File(appsDir,app));
       logger.error(String.format("Failed to create application [%s]",app),t);
     }
   }
   for (  Application application : applications) {
     try {
-      fireOnDeploymentStart(application.getAppName());
+      deploymentListener.onDeploymentStart(application.getAppName());
       deployer.deploy(application);
-      fireOnDeploymentSuccess(application.getAppName());
+      deploymentListener.onDeploymentSuccess(application.getAppName());
     }
  catch (    Throwable t) {
-      fireOnDeploymentFailure(application.getAppName(),t);
+      deploymentListener.onDeploymentFailure(application.getAppName(),t);
       final String msg=miniSplash(String.format("Failed to deploy app '%s', see below",application.getAppName()));
       logger.error(msg,t);
     }
