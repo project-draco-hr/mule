@@ -1,4 +1,7 @@
 {
+  if (applicationFactory == null) {
+    throw new IllegalStateException("There is no application factory");
+  }
   if (!url.toString().endsWith(".zip")) {
     throw new IllegalArgumentException("Invalid Mule application archive: " + url);
   }
@@ -6,14 +9,10 @@
   if (baseName.contains("%20")) {
     throw new DeploymentInitException(MessageFactory.createStaticMessage("Mule application name may not contain spaces: " + baseName));
   }
-  final ReentrantLock lock=deploymentService.getLock();
   String appName;
   File appDir=null;
   boolean errorEncountered=false;
   try {
-    if (!lock.tryLock(0,TimeUnit.SECONDS)) {
-      throw new IOException("Another deployment operation is in progress");
-    }
     final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
     final String fullPath=url.toURI().toString();
     if (logger.isInfoEnabled()) {
@@ -33,11 +32,6 @@
     ex.fillInStackTrace();
     throw ex;
   }
-catch (  InterruptedException e) {
-    errorEncountered=true;
-    Thread.currentThread().interrupt();
-    throw new IOException("Install operation has been interrupted");
-  }
 catch (  IOException e) {
     errorEncountered=true;
     throw e;
@@ -51,9 +45,6 @@ catch (  Throwable t) {
     if (errorEncountered && appDir != null && appDir.exists()) {
       final boolean couldNotDelete=FileUtils.deleteTree(appDir);
     }
-    if (lock.isHeldByCurrentThread()) {
-      lock.unlock();
-    }
   }
-  return deploymentService.getAppFactory().createApp(appName);
+  return applicationFactory.createApp(appName);
 }

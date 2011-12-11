@@ -1,9 +1,5 @@
 {
-  final ReentrantLock lock=deploymentService.getLock();
   try {
-    if (!lock.tryLock(0,TimeUnit.SECONDS)) {
-      return;
-    }
     app.stop();
     app.dispose();
     final File appDir=new File(MuleContainerBootstrapUtils.getMuleAppsDir(),app.getAppName());
@@ -12,20 +8,11 @@
     marker.delete();
     Introspector.flushCaches();
   }
- catch (  InterruptedException e) {
-    Thread.currentThread().interrupt();
-    return;
-  }
-catch (  Throwable t) {
+ catch (  Throwable t) {
     if (t instanceof DeploymentException) {
       throw ((DeploymentException)t);
     }
     final String msg=String.format("Failed to undeploy application [%s]",app.getAppName());
     throw new DeploymentException(MessageFactory.createStaticMessage(msg),t);
-  }
- finally {
-    if (lock.isHeldByCurrentThread()) {
-      lock.unlock();
-    }
   }
 }

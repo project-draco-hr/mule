@@ -1,23 +1,8 @@
 {
-  final ReentrantLock lock=deploymentService.getLock();
-  try {
-    if (!lock.tryLock(0,TimeUnit.SECONDS)) {
-      throw new IOException("Another deployment operation is in progress");
-    }
-    final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
-    File appFile=new File(appsDir,packedMuleAppFileName);
-    if (!appFile.getParentFile().equals(appsDir)) {
-      throw new SecurityException("installFromAppDir() can only deploy from $MULE_HOME/apps. Use installFrom(url) instead.");
-    }
-    return installFrom(appFile.toURL());
+  final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
+  File appFile=new File(appsDir,packedMuleAppFileName);
+  if (!appFile.getParentFile().equals(appsDir)) {
+    throw new SecurityException("installFromAppDir() can only deploy from $MULE_HOME/apps. Use installFrom(url) instead.");
   }
- catch (  InterruptedException e) {
-    Thread.currentThread().interrupt();
-    throw new IOException("Install operation has been interrupted");
-  }
- finally {
-    if (lock.isHeldByCurrentThread()) {
-      lock.unlock();
-    }
-  }
+  return installFrom(appFile.toURL());
 }
