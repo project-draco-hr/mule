@@ -1,0 +1,17 @@
+{
+  byte action=config.getAction();
+  boolean transactionStarted=false;
+  Transaction tx=TransactionCoordination.getInstance().getTransaction();
+  if (action == TransactionConfig.ACTION_ALWAYS_BEGIN || (action == TransactionConfig.ACTION_BEGIN_OR_JOIN && tx == null)) {
+    logger.debug("Beginning transaction");
+    tx=config.getFactory().beginTransaction(context);
+    transactionStarted=true;
+    logger.debug("Transaction successfully started: " + tx);
+  }
+  T result=next.execute(callback);
+  Transaction transaction=TransactionCoordination.getInstance().getTransaction();
+  if (transactionStarted && transaction != null) {
+    resolveTransaction(transaction);
+  }
+  return result;
+}
