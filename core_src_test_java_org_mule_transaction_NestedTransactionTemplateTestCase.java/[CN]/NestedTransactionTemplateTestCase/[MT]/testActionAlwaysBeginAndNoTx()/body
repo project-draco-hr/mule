@@ -1,0 +1,10 @@
+{
+  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_BEGIN);
+  TransactionTemplate transactionTemplate=createTransactionalTemplate(config);
+  config.setFactory(new TestTransactionFactory(mockTransaction));
+  Object result=transactionTemplate.execute(getEmptyTransactionCallback(RETURN_VALUE));
+  assertThat(result,is(RETURN_VALUE));
+  verify(mockTransaction).commit();
+  verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
+}

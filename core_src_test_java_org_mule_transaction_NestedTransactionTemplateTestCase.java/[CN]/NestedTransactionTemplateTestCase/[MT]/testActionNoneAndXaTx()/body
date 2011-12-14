@@ -1,0 +1,12 @@
+{
+  mockTransaction.setXA(true);
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_NONE);
+  TransactionTemplate transactionTemplate=createTransactionalTemplate(config);
+  Object result=transactionTemplate.execute(getEmptyTransactionCallback(RETURN_VALUE));
+  assertThat(result,is(RETURN_VALUE));
+  verify(mockTransaction).suspend();
+  verify(mockTransaction).resume();
+  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
+  verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+}
