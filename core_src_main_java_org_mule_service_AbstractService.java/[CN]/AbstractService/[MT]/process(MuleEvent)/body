@@ -1,15 +1,15 @@
 {
-  MuleEvent newEvent=new DefaultMuleEvent(event,this);
+  MuleEvent newEvent=new DefaultMuleEvent(event.getMessage(),event,event.getSession());
   RequestContext.setEvent(newEvent);
   try {
     MuleEvent result=messageProcessorChain.process(newEvent);
     if (result != null) {
       result.getMessage().release();
     }
-    return new DefaultMuleEvent(newEvent,event.getFlowConstruct());
+    return result;
   }
  catch (  Exception e) {
-    return new DefaultMuleEvent(getExceptionListener().handleException(e,newEvent),event.getFlowConstruct());
+    return getExceptionListener().handleException(e,newEvent);
   }
  finally {
     RequestContext.setEvent(event);
