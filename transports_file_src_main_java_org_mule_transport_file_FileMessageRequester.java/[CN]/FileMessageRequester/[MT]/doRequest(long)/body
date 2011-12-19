@@ -14,9 +14,9 @@
       }
     }
     if (result != null) {
-      boolean checkFileAge=connector.getCheckFileAge();
+      boolean checkFileAge=fileConnector.getCheckFileAge();
       if (checkFileAge) {
-        long fileAge=connector.getFileAge();
+        long fileAge=fileConnector.getFileAge();
         long lastMod=result.lastModified();
         long now=System.currentTimeMillis();
         long thisFileAge=now - lastMod;
@@ -28,23 +28,28 @@
         }
       }
       String sourceFileOriginalName=result.getName();
+      File workFile=null;
+      if (workDir != null) {
+        String workFileName=formatUsingFilenameParser(sourceFileOriginalName,workFileNamePattern);
+        workFile=FileUtils.newFile(workDir,workFileName);
+        fileConnector.move(result,workFile);
+        result=workFile;
+      }
       File destinationFile=null;
       String movDir=getMoveDirectory();
       if (movDir != null) {
         String destinationFileName=sourceFileOriginalName;
         String moveToPattern=getMoveToPattern();
         if (moveToPattern != null) {
-          DefaultMuleMessage parserMesssage=new DefaultMuleMessage(null,connector.getMuleContext());
-          parserMesssage.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-          destinationFileName=connector.getFilenameParser().getFilename(parserMesssage,moveToPattern);
+          destinationFileName=formatUsingFilenameParser(sourceFileOriginalName,moveToPattern);
         }
         destinationFile=FileUtils.newFile(movDir,destinationFileName);
       }
       MuleMessage returnMessage=null;
       String encoding=endpoint.getEncoding();
       try {
-        if (connector.isStreaming()) {
-          ReceiverFileInputStream receiverStream=new ReceiverFileInputStream(result,connector.isAutoDelete(),destinationFile);
+        if (fileConnector.isStreaming()) {
+          ReceiverFileInputStream receiverStream=new ReceiverFileInputStream(result,fileConnector.isAutoDelete(),destinationFile);
           returnMessage=createMuleMessage(receiverStream,encoding);
         }
  else {
@@ -56,7 +61,7 @@
         return null;
       }
       returnMessage.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName);
-      if (!connector.isStreaming()) {
+      if (!fileConnector.isStreaming()) {
         moveOrDelete(result,destinationFile);
       }
       return returnMessage;

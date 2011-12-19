@@ -1,7 +1,7 @@
 {
-  boolean checkFileAge=((FileConnector)connector).getCheckFileAge();
+  boolean checkFileAge=fileConnector.getCheckFileAge();
   if (checkFileAge) {
-    long fileAge=((FileConnector)connector).getFileAge();
+    long fileAge=fileConnector.getFileAge();
     long lastMod=file.lastModified();
     long now=System.currentTimeMillis();
     long thisFileAge=now - lastMod;
@@ -28,9 +28,9 @@
   final File sourceFile;
   if (workDir != null) {
     String workFileName=file.getName();
-    workFileName=((FileConnector)connector).getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
+    workFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
     File workFile=FileUtils.newFile(workDir,workFileName);
-    move(file,workFile);
+    fileConnector.move(file,workFile);
     sourceFile=workFile;
   }
  else {
@@ -41,15 +41,15 @@
   if (moveDir != null) {
     String destinationFileName=originalSourceFileName;
     if (moveToPattern != null) {
-      destinationFileName=((FileConnector)connector).getFilenameParser().getFilename(fileParserMessasge,moveToPattern);
+      destinationFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,moveToPattern);
     }
     destinationFile=FileUtils.newFile(moveDir,destinationFileName);
   }
   MuleMessage message=null;
   String encoding=endpoint.getEncoding();
   try {
-    if (((FileConnector)connector).isStreaming()) {
-      ReceiverFileInputStream payload=new ReceiverFileInputStream(sourceFile,((FileConnector)connector).isAutoDelete(),destinationFile);
+    if (fileConnector.isStreaming()) {
+      ReceiverFileInputStream payload=new ReceiverFileInputStream(sourceFile,fileConnector.isAutoDelete(),destinationFile);
       message=createMuleMessage(payload,encoding);
     }
  else {
@@ -65,7 +65,7 @@
     message.setProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,Boolean.TRUE,PropertyScope.INBOUND);
   }
   try {
-    if (!((FileConnector)connector).isStreaming()) {
+    if (!fileConnector.isStreaming()) {
       moveAndDelete(sourceFile,destinationFile,originalSourceFileName,message);
     }
  else {
@@ -75,7 +75,7 @@
   }
  catch (  Exception e) {
     RollbackSourceCallback rollbackMethod=null;
-    if (((FileConnector)connector).isStreaming()) {
+    if (fileConnector.isStreaming()) {
       if (message.getPayload() instanceof ReceiverFileInputStream) {
         final ReceiverFileInputStream receiverFileInputStream=(ReceiverFileInputStream)message.getPayload();
         rollbackMethod=new RollbackSourceCallback(){
