@@ -1,15 +1,25 @@
 {
-  MuleEvent newEvent=new DefaultMuleEvent(event,this);
+  final MuleEvent newEvent=new DefaultMuleEvent(event,this);
   RequestContext.setEvent(newEvent);
   try {
-    MuleEvent result=messageProcessorChain.process(newEvent);
-    if (result != null) {
-      result.getMessage().release();
+    TransactionTemplate<MuleEvent> exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<MuleEvent>createExceptionHandlingTransactionTemplate(muleContext);
+    return exceptionHandlingTransactionTemplate.execute(new TransactionCallback<MuleEvent>(){
+      @Override public MuleEvent doInTransaction() throws Exception {
+        MuleEvent result=messageProcessorChain.process(newEvent);
+        if (result != null) {
+          result.getMessage().release();
+          return new DefaultMuleEvent(result,event.getFlowConstruct());
+        }
+        return null;
+      }
     }
-    return new DefaultMuleEvent(result,event.getFlowConstruct());
+);
   }
- catch (  Exception e) {
-    return new DefaultMuleEvent(getExceptionListener().handleException(e,newEvent),event.getFlowConstruct());
+ catch (  MessagingException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new DefaultMuleException(CoreMessages.createStaticMessage("Flow execution exception"),e);
   }
  finally {
     RequestContext.setEvent(event);

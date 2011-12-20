@@ -2,11 +2,12 @@
   try {
     return next.execute(callback);
   }
- catch (  AlreadyHandledMessagingException e) {
+ catch (  MessagingException e) {
+    T result=(T)e.getEvent().getFlowConstruct().getExceptionListener().handleException(e,e.getEvent());
+    e.setProcessedEvent((MuleEvent)result);
     throw e;
   }
-catch (  MessagingException e) {
-    T result=(T)e.getEvent().getFlowConstruct().getExceptionListener().handleException(e,e.getEvent());
-    return result;
+catch (  Exception e) {
+    throw e;
   }
 }

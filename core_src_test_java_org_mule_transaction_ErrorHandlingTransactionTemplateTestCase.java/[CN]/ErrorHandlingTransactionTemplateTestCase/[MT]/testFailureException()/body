@@ -1,8 +1,14 @@
 {
   TransactionTemplate transactionTemplate=createExceptionHandlingTransactionTemplate(mockMuleContext);
-  when(mockMessagingException.getEvent()).thenReturn(mockEvent);
   MuleEvent mockResultEvent=mock(MuleEvent.class);
+  when(mockMessagingException.getEvent()).thenReturn(mockEvent).thenReturn(mockEvent).thenReturn(mockResultEvent);
   when(mockEvent.getFlowConstruct().getExceptionListener().handleException(mockMessagingException,mockEvent)).thenReturn(mockResultEvent);
-  Object result=transactionTemplate.execute(TransactionTemplateTestUtils.getFailureTransactionCallback(mockMessagingException));
-  assertThat((MuleEvent)result,is(mockResultEvent));
+  try {
+    transactionTemplate.execute(TransactionTemplateTestUtils.getFailureTransactionCallback(mockMessagingException));
+    fail("AlreadyHandledMessagingException must be thrown");
+  }
+ catch (  MessagingException e) {
+    assertThat(e,Is.is(mockMessagingException));
+    verify(mockMessagingException).setProcessedEvent(mockResultEvent);
+  }
 }

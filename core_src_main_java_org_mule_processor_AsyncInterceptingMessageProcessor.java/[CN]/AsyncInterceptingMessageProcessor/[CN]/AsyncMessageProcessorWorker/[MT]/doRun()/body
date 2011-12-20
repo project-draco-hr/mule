@@ -1,8 +1,17 @@
 {
+  TransactionTemplate exceptionHandlingTransactionTemplate=TransactionTemplateFactory.createExceptionHandlingTransactionTemplate(muleContext);
   try {
-    processNextTimed(event);
+    exceptionHandlingTransactionTemplate.execute(new TransactionCallback<Void>(){
+      @Override public Void doInTransaction() throws Exception {
+        processNextTimed(event);
+        return null;
+      }
+    }
+);
   }
- catch (  Exception e) {
-    event.getFlowConstruct().getExceptionListener().handleException(e,event);
+ catch (  MessagingException e) {
+  }
+catch (  Exception e) {
+    muleContext.getExceptionListener().handleException(e);
   }
 }

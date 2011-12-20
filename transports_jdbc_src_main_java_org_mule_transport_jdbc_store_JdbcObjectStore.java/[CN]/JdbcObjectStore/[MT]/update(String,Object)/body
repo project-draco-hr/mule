@@ -1,13 +1,12 @@
 {
   try {
-    TransactionTemplate<Object> tt=new TransactionTemplate<Object>(this.transactionConfig,this.jdbcConnector.getMuleContext());
-    Object result=tt.execute(new TransactionCallback<Object>(){
+    TransactionCallback<Object> transactionCallback=new TransactionCallback<Object>(){
       public Object doInTransaction() throws Exception {
         return jdbcConnector.getQueryRunner().update(sql,arguments);
       }
     }
-);
-    return result;
+;
+    return executeInTransactionTemplate(transactionCallback);
   }
  catch (  SQLException e) {
     throw new ObjectStoreException(e);

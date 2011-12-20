@@ -16,7 +16,10 @@
     }
 ;
     if (e instanceof MessagingException) {
-      getFlowConstruct().getExceptionListener().handleException(e,((MessagingException)e).getEvent(),rollbackMethod);
+      MessagingException messagingException=(MessagingException)e;
+      if (!messagingException.getEvent().isTransacted() || messagingException.getEvent().getMessage().getExceptionPayload() != null) {
+        rollbackMethod.rollback();
+      }
     }
  else {
       getConnector().getMuleContext().getExceptionListener().handleException(e,rollbackMethod);

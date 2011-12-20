@@ -13,12 +13,21 @@
   }
   if (expired.size() > 0) {
     for (    Object anExpired : expired) {
-      EventGroup group=(EventGroup)anExpired;
+      final EventGroup group=(EventGroup)anExpired;
+      TransactionTemplate<Void> exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<Void>createExceptionHandlingTransactionTemplate(muleContext);
       try {
-        handleGroupExpiry(group);
+        exceptionHandlingTransactionTemplate.execute(new TransactionCallback<Void>(){
+          @Override public Void doInTransaction() throws Exception {
+            handleGroupExpiry(group);
+            return null;
+          }
+        }
+);
       }
  catch (      MessagingException e) {
-        e.getEvent().getFlowConstruct().getExceptionListener().handleException(e,e.getEvent());
+      }
+catch (      Exception e) {
+        muleContext.getExceptionListener().handleException(e);
       }
     }
   }

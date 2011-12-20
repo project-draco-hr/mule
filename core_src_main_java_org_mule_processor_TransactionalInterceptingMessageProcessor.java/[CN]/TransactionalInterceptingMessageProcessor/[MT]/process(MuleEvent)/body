@@ -3,7 +3,7 @@
     return event;
   }
  else {
-    TransactionTemplate<MuleEvent> tt=new TransactionTemplate<MuleEvent>(transactionConfig,event.getMuleContext());
+    TransactionTemplate<MuleEvent> transactionTemplate=TransactionTemplateFactory.<MuleEvent>createNestedTransactionTemplate(transactionConfig,event.getMuleContext());
     TransactionCallback<MuleEvent> cb=new TransactionCallback<MuleEvent>(){
       public MuleEvent doInTransaction() throws Exception {
         return processNext(event);
@@ -11,13 +11,13 @@
     }
 ;
     try {
-      return tt.execute(cb);
+      return transactionTemplate.execute(cb);
     }
- catch (    MessagingException e) {
+ catch (    MuleException e) {
       throw e;
     }
 catch (    Exception e) {
-      throw new MessagingException(CoreMessages.errorInvokingMessageProcessorWithinTransaction(next,transactionConfig),event,e);
+      throw new DefaultMuleException(CoreMessages.errorInvokingMessageProcessorWithinTransaction(next,transactionConfig),e);
     }
   }
 }

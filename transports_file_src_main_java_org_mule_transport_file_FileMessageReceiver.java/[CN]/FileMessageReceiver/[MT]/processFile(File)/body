@@ -64,7 +64,32 @@
   if (forceSync) {
     message.setProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,Boolean.TRUE,PropertyScope.INBOUND);
   }
+  final Object originalPayload=message.getPayload();
   try {
+    TransactionTemplate<Void> mainTransactionTemplate=TransactionTemplateFactory.<Void>createMainTransactionTemplate(endpoint.getTransactionConfig(),connector.getMuleContext());
+    final File finalDestinationFile=destinationFile;
+    final MuleMessage finalMessage=message;
+    mainTransactionTemplate.execute(new TransactionCallback<Void>(){
+      @Override public Void doInTransaction() throws Exception {
+        if (!fileConnector.isStreaming()) {
+          moveAndDelete(sourceFile,finalDestinationFile,originalSourceFileName,finalMessage);
+        }
+ else {
+          try {
+            finalMessage.setOutboundProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
+            FileMessageReceiver.this.routeMessage(finalMessage);
+          }
+ catch (          Exception e) {
+            if (originalPayload instanceof ReceiverFileInputStream) {
+              ((ReceiverFileInputStream)originalPayload).setStreamProcessingError(true);
+            }
+            throw e;
+          }
+        }
+        return null;
+      }
+    }
+);
     if (!fileConnector.isStreaming()) {
       moveAndDelete(sourceFile,destinationFile,originalSourceFileName,message);
     }
@@ -76,8 +101,8 @@
  catch (  Exception e) {
     RollbackSourceCallback rollbackMethod=null;
     if (fileConnector.isStreaming()) {
-      if (message.getPayload() instanceof ReceiverFileInputStream) {
-        final ReceiverFileInputStream receiverFileInputStream=(ReceiverFileInputStream)message.getPayload();
+      if (originalPayload instanceof ReceiverFileInputStream) {
+        final ReceiverFileInputStream receiverFileInputStream=(ReceiverFileInputStream)originalPayload;
         rollbackMethod=new RollbackSourceCallback(){
           @Override public void rollback(){
             receiverFileInputStream.setStreamProcessingError(true);
@@ -100,8 +125,9 @@
 ;
     }
     if (e instanceof MessagingException) {
-      MuleEvent event=((MessagingException)e).getEvent();
-      event.getFlowConstruct().getExceptionListener().handleException(e,event,rollbackMethod);
+      if (((MessagingException)e).getEvent().getMessage().getExceptionPayload() != null && rollbackMethod != null) {
+        rollbackMethod.rollback();
+      }
     }
  else {
       connector.getMuleContext().getExceptionListener().handleException(e,rollbackMethod);

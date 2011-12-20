@@ -1,16 +1,19 @@
 {
   try {
-    currentFiles.add(name);
-    processFile(file);
+    TransactionTemplate<Void> exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<Void>createExceptionHandlingTransactionTemplate(getConnector().getMuleContext());
+    exceptionHandlingTransactionTemplate.execute(new TransactionCallback<Void>(){
+      @Override public Void doInTransaction() throws Exception {
+        currentFiles.add(name);
+        processFile(file);
+        return null;
+      }
+    }
+);
   }
- catch (  Exception e) {
-    if (e instanceof MessagingException) {
-      MuleEvent event=((MessagingException)e).getEvent();
-      event.getFlowConstruct().getExceptionListener().handleException(e,event);
-    }
- else {
-      getConnector().getMuleContext().getExceptionListener().handleException(e);
-    }
+ catch (  MessagingException e) {
+  }
+catch (  Exception e) {
+    getConnector().getMuleContext().getExceptionListener().handleException(e);
   }
  finally {
     currentFiles.remove(name);

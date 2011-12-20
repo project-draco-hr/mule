@@ -1,18 +1,28 @@
 {
-  MuleEvent event=null;
   try {
-    event=routeMessage(message);
-    MuleMessage returnedMessage=event == null ? null : event.getMessage();
-    if (returnedMessage != null) {
-      returnedMessage.release();
+    TransactionTemplate<MuleMessage> mainTransactionTemplate=TransactionTemplateFactory.<MuleMessage>createMainTransactionTemplate(endpoint.getTransactionConfig(),connector.getMuleContext());
+    return mainTransactionTemplate.execute(new TransactionCallback<MuleMessage>(){
+      @Override public MuleMessage doInTransaction() throws Exception {
+        MuleEvent event=routeMessage(message);
+        MuleMessage returnedMessage=event == null ? null : event.getMessage();
+        if (returnedMessage != null) {
+          returnedMessage.release();
+        }
+        return returnedMessage;
+      }
     }
-    return returnedMessage;
+);
   }
- catch (  Exception e) {
-    if (event == null) {
-      event=createMuleEvent(message,null);
-    }
-    return flowConstruct.getExceptionListener().handleException(e,event).getMessage();
+ catch (  MessagingException e) {
+    return e.getMuleMessage();
+  }
+catch (  MuleException e) {
+    endpoint.getMuleContext().getExceptionListener().handleException(e);
+    throw e;
+  }
+catch (  Exception e) {
+    endpoint.getMuleContext().getExceptionListener().handleException(e);
+    throw new DefaultMuleException(e);
   }
  finally {
     message.release();
