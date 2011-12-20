@@ -1,0 +1,23 @@
+{
+  AsyncInterceptingMessageProcessor async=new AsyncInterceptingMessageProcessor(muleContext.getDefaultThreadingProfile(),"async",0);
+  SensingNullMessageProcessor asyncListener=new SensingNullMessageProcessor();
+  async.setListener(asyncListener);
+  async.start();
+  MuleMessage message=new DefaultMuleMessage("data",muleContext);
+  MuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,getTestService());
+  event.getSession().setProperty("key","value");
+  async.process(event);
+  asyncListener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
+  MuleEvent asyncEvent=asyncListener.event;
+  assertNotSame(asyncEvent,event);
+  assertFalse(asyncEvent.equals(event));
+  assertSame(asyncEvent.getSession(),event.getSession());
+  assertEquals(1,asyncEvent.getSession().getPropertyNamesAsSet().size());
+  assertEquals("value",asyncEvent.getSession().getProperty("key"));
+  asyncEvent.getSession().setProperty("newKey","newValue");
+  assertEquals(2,asyncEvent.getSession().getPropertyNamesAsSet().size());
+  assertEquals("newValue",asyncEvent.getSession().getProperty("newKey"));
+  assertEquals(2,event.getSession().getPropertyNamesAsSet().size());
+  assertEquals("newValue",event.getSession().getProperty("newKey"));
+  async.stop();
+}
