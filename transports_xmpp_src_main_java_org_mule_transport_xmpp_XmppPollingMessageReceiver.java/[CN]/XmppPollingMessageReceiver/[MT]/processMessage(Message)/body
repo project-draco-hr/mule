@@ -1,4 +1,19 @@
 {
-  MuleMessage muleMessage=createMuleMessage(xmppMessage);
-  routeMessage(muleMessage);
+  TransactionTemplate<Void> mainTransactionTemplate=TransactionTemplateFactory.<Void>createMainTransactionTemplate(endpoint.getTransactionConfig(),connector.getMuleContext());
+  try {
+    mainTransactionTemplate.execute(new TransactionCallback<Void>(){
+      @Override public Void doInTransaction() throws Exception {
+        MuleMessage muleMessage=createMuleMessage(xmppMessage);
+        routeMessage(muleMessage);
+        return null;
+      }
+    }
+);
+  }
+ catch (  MuleException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new DefaultMuleException(e);
+  }
 }

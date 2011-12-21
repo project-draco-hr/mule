@@ -1,15 +1,22 @@
 {
-  SftpNotifier notifier=new SftpNotifier((SftpConnector)connector,createNullMuleMessage(),endpoint,flowConstruct.getName());
-  InputStream inputStream=sftpRRUtil.retrieveFile(path,notifier);
-  if (logger.isDebugEnabled()) {
-    logger.debug("Routing file: " + path);
+  TransactionTemplate<Void> mainTransactionTemplate=TransactionTemplateFactory.<Void>createMainTransactionTemplate(endpoint.getTransactionConfig(),connector.getMuleContext());
+  mainTransactionTemplate.execute(new TransactionCallback<Void>(){
+    @Override public Void doInTransaction() throws Exception {
+      SftpNotifier notifier=new SftpNotifier((SftpConnector)connector,createNullMuleMessage(),endpoint,flowConstruct.getName());
+      InputStream inputStream=sftpRRUtil.retrieveFile(path,notifier);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Routing file: " + path);
+      }
+      MuleMessage message=createMuleMessage(inputStream);
+      message.setOutboundProperty(SftpConnector.PROPERTY_FILENAME,path);
+      message.setOutboundProperty(SftpConnector.PROPERTY_ORIGINAL_FILENAME,path);
+      notifier.setMessage(message);
+      routeMessage(message);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Routed file: " + path);
+      }
+      return null;
+    }
   }
-  MuleMessage message=createMuleMessage(inputStream);
-  message.setOutboundProperty(SftpConnector.PROPERTY_FILENAME,path);
-  message.setOutboundProperty(SftpConnector.PROPERTY_ORIGINAL_FILENAME,path);
-  notifier.setMessage(message);
-  routeMessage(message);
-  if (logger.isDebugEnabled()) {
-    logger.debug("Routed file: " + path);
-  }
+);
 }

@@ -1,10 +1,16 @@
 {
-  long frequency=getFrequency();
-  long tenPercent=(long)(frequency * 0.1);
-  long pollTimeout=frequency - tenPercent;
-  Message xmppMessage=conversation.receive(pollTimeout);
-  if (xmppMessage == null) {
-    return;
+  try {
+    long frequency=getFrequency();
+    long tenPercent=(long)(frequency * 0.1);
+    long pollTimeout=frequency - tenPercent;
+    Message xmppMessage=conversation.receive(pollTimeout);
+    if (xmppMessage == null) {
+      return;
+    }
+    processMessage(xmppMessage);
   }
-  processMessage(xmppMessage);
+ catch (  Exception e) {
+    connector.getMuleContext().getExceptionListener().handleException(e);
+    throw e;
+  }
 }
