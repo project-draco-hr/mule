@@ -1,0 +1,16 @@
+{
+  MuleMessage message=new DefaultMuleMessage("data",muleContext);
+  MuleEvent event=new DefaultMuleEvent(message,getTestInboundEndpoint(""),getTestService());
+  RequestContext.setEvent(event);
+  Object nonSerializable=new Object();
+  message.setProperty("keyNonSerializable",nonSerializable,PropertyScope.SESSION);
+  message.setProperty("key","value",PropertyScope.SESSION);
+  Flow flow=(Flow)muleContext.getRegistry().lookupFlowConstruct("FlowRefWithSessionProperties");
+  MuleEvent result=flow.process(event);
+  assertSame(event.getSession(),result.getSession());
+  assertNotNull(result);
+  assertEquals("value",result.getMessage().getProperty("key",PropertyScope.SESSION));
+  assertEquals("value1",result.getMessage().getProperty("key1",PropertyScope.SESSION));
+  assertEquals("value2",result.getMessage().getProperty("key2",PropertyScope.SESSION));
+  assertEquals(nonSerializable,result.getMessage().getProperty("keyNonSerializable",PropertyScope.SESSION));
+}
