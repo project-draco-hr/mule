@@ -3,10 +3,11 @@
   MuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,getTestService());
   Object nonSerializable=new Object();
   event.getSession().setProperty("key",nonSerializable);
-  try {
-    SerializationUtils.deserialize(SerializationUtils.serialize(event),muleContext);
-    fail("Exception expected");
-  }
- catch (  Exception e) {
-  }
+  message.setProperty("key2","value2",PropertyScope.SESSION);
+  MuleEvent deserialized=(MuleEvent)SerializationUtils.deserialize(SerializationUtils.serialize(event),muleContext);
+  assertEquals(nonSerializable,event.getSession().getProperty("key"));
+  assertEquals("value2",event.getSession().getProperty("key2"));
+  assertNotSame(deserialized,event);
+  assertNull(deserialized.getSession().getProperty("key"));
+  assertEquals("value2",deserialized.getSession().getProperty("key2"));
 }
