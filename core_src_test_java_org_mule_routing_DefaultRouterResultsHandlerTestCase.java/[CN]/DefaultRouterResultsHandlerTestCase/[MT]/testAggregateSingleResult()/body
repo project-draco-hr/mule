@@ -1,0 +1,15 @@
+{
+  MuleEvent event=getTestEvent("previuos");
+  MuleEvent event1=getTestEvent("foo1");
+  event.getSession().setProperty("key","value");
+  event1.getSession().setProperty("key","valueNEW");
+  event1.getSession().setProperty("key1","value1");
+  RouterResultsHandler resultsHandler=new DefaultRouterResultsHandler();
+  MuleEvent result=resultsHandler.aggregateResults(Collections.singletonList(event1),event,muleContext);
+  assertNotNull(result);
+  assertEquals(DefaultMuleMessage.class,result.getMessage().getClass());
+  assertSame(event1,result);
+  assertEquals(event1.getMessage(),result.getMessage());
+  assertEquals("valueNEW",result.getSession().getProperty("key"));
+  assertEquals("value1",result.getSession().getProperty("key1"));
+}

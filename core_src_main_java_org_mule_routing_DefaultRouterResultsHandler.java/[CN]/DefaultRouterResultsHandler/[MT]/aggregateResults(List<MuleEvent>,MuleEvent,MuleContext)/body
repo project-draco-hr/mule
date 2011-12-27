@@ -1,11 +1,10 @@
 {
-  MuleMessage aggregate;
   if (results == null || results.size() == 0) {
-    aggregate=null;
+    return null;
   }
  else   if (results.size() == 1) {
     MuleEvent event=results.get(0);
-    aggregate=event == null ? null : event.getMessage();
+    return event == null ? null : event;
   }
  else {
     MuleMessageCollection coll=new DefaultMessageCollection(muleContext);
@@ -16,7 +15,6 @@
         coll.addMessage(muleMessage);
       }
     }
-    aggregate=coll;
+    return coll == null ? null : RequestContext.setEvent(new DefaultMuleEvent(coll,previous,previous.getSession()));
   }
-  return aggregate == null ? null : RequestContext.setEvent(new DefaultMuleEvent(aggregate,previous,previous.getSession()));
 }
