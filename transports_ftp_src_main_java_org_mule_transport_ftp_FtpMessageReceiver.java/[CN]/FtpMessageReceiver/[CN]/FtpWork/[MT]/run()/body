@@ -1,21 +1,47 @@
 {
+  FTPClient client=null;
   try {
+    client=connector.createFtpClient(endpoint);
+    final FTPClient finalClient=client;
     TransactionTemplate<Void> exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<Void>createExceptionHandlingTransactionTemplate(getConnector().getMuleContext());
     exceptionHandlingTransactionTemplate.execute(new TransactionCallback<Void>(){
       @Override public Void doInTransaction() throws Exception {
         currentFiles.add(name);
-        processFile(file);
+        MuleMessage message;
+        if (!connector.validateFile(file)) {
+          return null;
+        }
+        FtpMuleMessageFactory muleMessageFactory=createMuleMessageFactory(finalClient);
+        message=muleMessageFactory.create(file,endpoint.getEncoding());
+        routeMessage(message);
+        postProcess(finalClient,file);
         return null;
       }
     }
 );
   }
  catch (  MessagingException e) {
+    if (!e.isCauseRollback()) {
+      try {
+        postProcess(client,file);
+      }
+ catch (      Exception e1) {
+        logger.error(e);
+      }
+    }
   }
 catch (  Exception e) {
     getConnector().getMuleContext().getExceptionListener().handleException(e);
   }
  finally {
+    if (client != null) {
+      try {
+        connector.releaseFtp(endpoint.getEndpointURI(),client);
+      }
+ catch (      Exception e) {
+        logger.error(e);
+      }
+    }
     currentFiles.remove(name);
     scheduledFiles.remove(name);
   }
