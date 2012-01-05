@@ -1,0 +1,9 @@
+{
+  final TransactionConfig transactionConfig=new MuleTransactionConfig();
+  final boolean processTransactionOnException=false;
+  ProcessingInterceptor<MuleEvent> tempProcessingInterceptor=new ExecuteCallbackInterceptor<MuleEvent>();
+  tempProcessingInterceptor=new HandleExceptionInterceptor(tempProcessingInterceptor,messagingExceptionHandler);
+  tempProcessingInterceptor=new BeginAndResolveTransactionInterceptor<MuleEvent>(tempProcessingInterceptor,transactionConfig,muleContext,processTransactionOnException);
+  tempProcessingInterceptor=new SuspendXaTransactionInterceptor<MuleEvent>(tempProcessingInterceptor,transactionConfig,processTransactionOnException);
+  this.processingInterceptor=new RethrowExceptionInterceptor(tempProcessingInterceptor);
+}

@@ -1,6 +1,6 @@
 {
   sendExpect100(request);
-  MuleMessage message=createMuleMessage(request);
+  final MuleMessage message=createMuleMessage(request);
   String path=message.getInboundProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
   int i=path.indexOf('?');
   if (i > -1) {
@@ -10,12 +10,30 @@
   if (logger.isDebugEnabled()) {
     logger.debug(message.getInboundProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
   }
-  MessageReceiver receiver=getTargetReceiver(message,endpoint);
+  final MessageReceiver receiver=getTargetReceiver(message,endpoint);
   HttpResponse response;
   if (receiver != null) {
     message.setProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY,HttpConnector.normalizeUrl(receiver.getEndpointURI().getPath()),PropertyScope.INBOUND);
-    preRouteMessage(message);
-    MuleEvent returnEvent=receiver.routeMessage(message);
+    ProcessingTemplate<MuleEvent> processingTemplate=createProcessingTemplate();
+    MuleEvent returnEvent;
+    try {
+      returnEvent=processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
+        @Override public MuleEvent process() throws Exception {
+          preRouteMessage(message);
+          return receiver.routeMessage(message);
+        }
+      }
+);
+    }
+ catch (    MuleException e) {
+      throw e;
+    }
+catch (    IOException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new DefaultMuleException(e);
+    }
     MuleMessage returnMessage=returnEvent == null ? null : returnEvent.getMessage();
     Object tempResponse;
     if (returnMessage != null) {

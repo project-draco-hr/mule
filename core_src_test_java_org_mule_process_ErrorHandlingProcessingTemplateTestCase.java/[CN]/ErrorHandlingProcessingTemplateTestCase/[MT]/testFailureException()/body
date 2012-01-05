@@ -1,0 +1,14 @@
+{
+  ProcessingTemplate processingTemplate=createExceptionHandlingTransactionTemplate();
+  MuleEvent mockResultEvent=mock(MuleEvent.class);
+  when(mockMessagingException.getEvent()).thenReturn(mockEvent).thenReturn(mockEvent).thenReturn(mockResultEvent);
+  when(mockMessagingExceptionHandler.handleException(mockMessagingException,mockEvent)).thenReturn(mockResultEvent);
+  try {
+    processingTemplate.execute(TransactionTemplateTestUtils.getFailureTransactionCallback(mockMessagingException));
+    fail("MessagingException must be thrown");
+  }
+ catch (  MessagingException e) {
+    assertThat(e,Is.is(mockMessagingException));
+    verify(mockMessagingException).setProcessedEvent(mockResultEvent);
+  }
+}

@@ -22,7 +22,7 @@
   }
   try {
     logger.debug("Attempting to receive event on: " + jobConfig.getEndpointRef());
-    TransactionTemplate<Void> tt;
+    ProcessingTemplate<MuleEvent> processingTemplate;
     final AtomicBoolean pollGlobalEndpoint=new AtomicBoolean(false);
     InboundEndpoint endpoint=muleContext.getRegistry().lookupObject(jobConfig.getEndpointRef() + ".quartz-job");
     if (endpoint == null) {
@@ -31,18 +31,18 @@
       if (pollGlobalEndpoint.get()) {
         endpoint=epBuilder.buildInboundEndpoint();
         muleContext.getRegistry().registerObject(jobConfig.getEndpointRef() + ".quartz-job",endpoint);
-        tt=TransactionTemplateFactory.<Void>createMainTransactionTemplate(endpoint.getTransactionConfig(),muleContext);
+        processingTemplate=new TransactionalErrorHandlingProcessingTemplate(muleContext,endpoint.getTransactionConfig(),receiver.getFlowConstruct().getExceptionListener());
       }
  else {
-        tt=TransactionTemplateFactory.<Void>createMainTransactionTemplate(new MuleTransactionConfig(),muleContext);
+        processingTemplate=new TransactionalErrorHandlingProcessingTemplate(muleContext,new MuleTransactionConfig(),receiver.getFlowConstruct().getExceptionListener());
       }
     }
  else {
-      tt=TransactionTemplateFactory.<Void>createMainTransactionTemplate(endpoint.getTransactionConfig(),muleContext);
+      processingTemplate=new TransactionalErrorHandlingProcessingTemplate(muleContext,endpoint.getTransactionConfig(),receiver.getFlowConstruct().getExceptionListener());
     }
     final InboundEndpoint finalEndpoint=endpoint;
-    TransactionCallback<Void> cb=new TransactionCallback<Void>(){
-      public Void doInTransaction() throws Exception {
+    ProcessingCallback<MuleEvent> cb=new ProcessingCallback<MuleEvent>(){
+      public MuleEvent process() throws Exception {
         Transaction tx=TransactionCoordination.getInstance().getTransaction();
         if (tx != null) {
           tx.begin();
@@ -70,7 +70,7 @@
       }
     }
 ;
-    tt.execute(cb);
+    processingTemplate.execute(cb);
   }
  catch (  RuntimeException rex) {
     throw rex;

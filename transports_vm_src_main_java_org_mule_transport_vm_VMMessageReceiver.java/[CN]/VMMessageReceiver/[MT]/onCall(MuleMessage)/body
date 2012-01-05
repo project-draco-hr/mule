@@ -1,17 +1,18 @@
 {
   try {
-    TransactionTemplate<MuleMessage> mainTransactionTemplate=TransactionTemplateFactory.<MuleMessage>createMainTransactionTemplate(endpoint.getTransactionConfig(),connector.getMuleContext());
-    return mainTransactionTemplate.execute(new TransactionCallback<MuleMessage>(){
-      @Override public MuleMessage doInTransaction() throws Exception {
+    ProcessingTemplate<MuleEvent> processingTemplate=createProcessingTemplate();
+    MuleEvent resultEvent=processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
+      @Override public MuleEvent process() throws Exception {
         MuleEvent event=routeMessage(message);
         MuleMessage returnedMessage=event == null ? null : event.getMessage();
         if (returnedMessage != null) {
           returnedMessage.release();
         }
-        return returnedMessage;
+        return event;
       }
     }
 );
+    return resultEvent != null ? resultEvent.getMessage() : null;
   }
  catch (  MessagingException e) {
     return e.getMuleMessage();

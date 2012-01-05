@@ -1,18 +1,18 @@
 {
-  TransactionTemplate<List<MuleEvent>> tt=TransactionTemplateFactory.<List<MuleEvent>>createNestedTransactionTemplate(endpoint.getTransactionConfig(),receiver.getConnector().getMuleContext());
-  TransactionCallback<List<MuleEvent>> cb=new TransactionCallback<List<MuleEvent>>(){
-    public List<MuleEvent> doInTransaction() throws Exception {
+  ProcessingTemplate<List<MuleEvent>> processingTemplate=new TransactionalProcessingTemplate<List<MuleEvent>>(receiver.getConnector().getMuleContext(),endpoint.getTransactionConfig());
+  ProcessingCallback<List<MuleEvent>> processingCallback=new ProcessingCallback<List<MuleEvent>>(){
+    public List<MuleEvent> process() throws Exception {
       final Transaction tx=TransactionCoordination.getInstance().getTransaction();
       if (tx != null) {
         bindTransaction(tx);
       }
       List<MuleEvent> results=new ArrayList<MuleEvent>(messages.size());
       for (      final Object payload : messages) {
-        TransactionTemplate<MuleEvent> exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<MuleEvent>createExceptionHandlingTransactionTemplate(endpoint.getMuleContext());
-        MuleEvent resultEvent=null;
+        ProcessingTemplate<MuleEvent> processingTemplate=new TransactionalErrorHandlingProcessingTemplate(endpoint.getMuleContext(),receiver.flowConstruct.getExceptionListener());
+        MuleEvent resultEvent;
         try {
-          resultEvent=exceptionHandlingTransactionTemplate.execute(new TransactionCallback<MuleEvent>(){
-            @Override public MuleEvent doInTransaction() throws Exception {
+          resultEvent=processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
+            @Override public MuleEvent process() throws Exception {
               Object preProcessedPayload=preProcessMessage(payload);
               if (preProcessedPayload != null) {
                 final MuleMessage muleMessage=receiver.createMuleMessage(preProcessedPayload,endpoint.getEncoding());
@@ -62,7 +62,7 @@
   }
 ;
   try {
-    List<MuleEvent> results=tt.execute(cb);
+    List<MuleEvent> results=processingTemplate.execute(processingCallback);
     handleResults(handleEventResults(results));
   }
   finally {

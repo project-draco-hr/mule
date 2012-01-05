@@ -1,7 +1,7 @@
 {
-  TransactionTemplate<MuleEvent> tt=TransactionTemplateFactory.<MuleEvent>createNestedTransactionTemplate(getTransactionConfig(),muleContext);
-  TransactionCallback<MuleEvent> cb=new TransactionCallback<MuleEvent>(){
-    public MuleEvent doInTransaction() throws Exception {
+  ProcessingTemplate<MuleEvent> processingTemplate=new TransactionalProcessingTemplate<MuleEvent>(muleContext,getTransactionConfig());
+  ProcessingCallback<MuleEvent> processingCallback=new ProcessingCallback<MuleEvent>(){
+    public MuleEvent process() throws Exception {
       try {
         return route(event);
       }
@@ -15,7 +15,7 @@ catch (      Exception e) {
   }
 ;
   try {
-    return tt.execute(cb);
+    return processingTemplate.execute(processingCallback);
   }
  catch (  MuleException e) {
     throw e;

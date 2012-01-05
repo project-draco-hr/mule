@@ -1,0 +1,17 @@
+{
+  when(mockMessagingException.getEvent()).thenReturn(mockEvent);
+  when(mockMessagingExceptionHandler.handleException(any(MessagingException.class),any(MuleEvent.class))).thenAnswer(new Answer<Object>(){
+    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      DefaultMessagingExceptionStrategy defaultMessagingExceptionStrategy=new DefaultMessagingExceptionStrategy();
+      if (rollbackFilter != null) {
+        defaultMessagingExceptionStrategy.setRollbackTxFilter(new WildcardFilter(rollbackFilter));
+      }
+      if (commitFilter != null) {
+        defaultMessagingExceptionStrategy.setCommitTxFilter(new WildcardFilter(commitFilter));
+      }
+      defaultMessagingExceptionStrategy.handleException((Exception)invocationOnMock.getArguments()[0],(MuleEvent)invocationOnMock.getArguments()[1]);
+      return null;
+    }
+  }
+);
+}

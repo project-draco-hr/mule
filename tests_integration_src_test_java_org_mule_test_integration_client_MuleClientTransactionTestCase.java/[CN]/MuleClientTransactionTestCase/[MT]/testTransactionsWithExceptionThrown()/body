@@ -12,10 +12,10 @@
   endpointBuilder.setName("TransactedTest.Queue");
   ImmutableEndpoint inboundEndpoint=muleContext.getEndpointFactory().getOutboundEndpoint(endpointBuilder);
   client.getMuleContext().getRegistry().registerEndpoint(inboundEndpoint);
-  TransactionTemplate<Void> tt=new TransactionTemplate<Void>(tc,muleContext);
+  ProcessingTemplate<Void> processingTemplate=new TransactionalProcessingTemplate<Void>(muleContext,tc);
   try {
-    tt.execute(new TransactionCallback<Void>(){
-      public Void doInTransaction() throws Exception {
+    processingTemplate.execute(new ProcessingCallback<Void>(){
+      public Void process() throws Exception {
         for (int i=0; i < 100; i++) {
           client.send("jms://test.queue","Test Client Dispatch message " + i,props);
         }

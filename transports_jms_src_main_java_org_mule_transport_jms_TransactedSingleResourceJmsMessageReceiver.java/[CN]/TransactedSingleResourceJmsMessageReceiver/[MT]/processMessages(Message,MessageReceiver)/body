@@ -1,9 +1,9 @@
 {
-  TransactionTemplate<Void> tt=TransactionTemplateFactory.<Void>createMainTransactionTemplate(endpoint.getTransactionConfig(),connector.getMuleContext());
+  ProcessingTemplate<MuleEvent> processingTemplate=createProcessingTemplate();
   final String encoding=endpoint.getEncoding();
   if (receiveMessagesInTransaction) {
-    TransactionCallback<Void> cb=new MessageTransactionCallback<Void>(message){
-      public Void doInTransaction() throws Exception {
+    ProcessingCallback<MuleEvent> processingCallback=new MessageProcessingCallback<MuleEvent>(message){
+      public MuleEvent process() throws Exception {
         Transaction tx=TransactionCoordination.getInstance().getTransaction();
         if (tx != null) {
           tx.bindResource(connector.getConnection(),ReusableSessionWrapperFactory.createWrapper(session));
@@ -34,7 +34,7 @@
       }
     }
 ;
-    tt.execute(cb);
+    processingTemplate.execute(processingCallback);
   }
  else {
     MuleMessage messageToRoute=createMuleMessage(message,encoding);

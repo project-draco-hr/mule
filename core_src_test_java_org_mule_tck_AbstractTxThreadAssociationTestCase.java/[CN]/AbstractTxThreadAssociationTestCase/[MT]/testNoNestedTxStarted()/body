@@ -4,14 +4,14 @@
   tm.setTransactionTimeout(TRANSACTION_TIMEOUT_SECONDS);
   TransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_BEGIN);
   config.setFactory(new XaTransactionFactory());
-  TransactionTemplate template=new TransactionTemplate(config,muleContext);
+  ProcessingTemplate<Void> processingTemplate=new TransactionalProcessingTemplate(muleContext,config);
   final TransactionConfig nestedConfig=new MuleTransactionConfig(TransactionConfig.ACTION_BEGIN_OR_JOIN);
   nestedConfig.setFactory(new XaTransactionFactory());
-  template.execute(new TransactionCallback<Void>(){
-    public Void doInTransaction() throws Exception {
-      TransactionTemplate<Void> nestedTemplate=new TransactionTemplate<Void>(nestedConfig,muleContext);
-      return nestedTemplate.execute(new TransactionCallback<Void>(){
-        public Void doInTransaction() throws Exception {
+  processingTemplate.execute(new ProcessingCallback<Void>(){
+    public Void process() throws Exception {
+      ProcessingTemplate<Void> nestedProcessingTemplate=new TransactionalProcessingTemplate<Void>(muleContext,nestedConfig);
+      return nestedProcessingTemplate.execute(new ProcessingCallback<Void>(){
+        public Void process() throws Exception {
           return null;
         }
       }

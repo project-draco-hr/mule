@@ -1,0 +1,23 @@
+{
+  byte action=transactionConfig.getAction();
+  boolean mustResolveTransaction=false;
+  Transaction tx=TransactionCoordination.getInstance().getTransaction();
+  if (action == TransactionConfig.ACTION_ALWAYS_BEGIN || (action == TransactionConfig.ACTION_BEGIN_OR_JOIN && tx == null)) {
+    logger.debug("Beginning transaction");
+    tx=transactionConfig.getFactory().beginTransaction(muleContext);
+    mustResolveTransaction=true;
+    logger.debug("Transaction successfully started: " + tx);
+  }
+  T result;
+  try {
+    result=next.execute(callback);
+    resolveTransactionIfRequired(mustResolveTransaction);
+    return result;
+  }
+ catch (  MessagingException e) {
+    if (processOnException) {
+      resolveTransactionIfRequired(true);
+    }
+    throw e;
+  }
+}

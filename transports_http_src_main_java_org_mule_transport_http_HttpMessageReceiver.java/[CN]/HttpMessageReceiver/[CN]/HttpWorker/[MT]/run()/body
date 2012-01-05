@@ -11,23 +11,13 @@
         break;
       }
       try {
-        TransactionTemplate<HttpResponse> exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<HttpResponse>createExceptionHandlingTransactionTemplate(getConnector().getMuleContext());
-        HttpResponse response=exceptionHandlingTransactionTemplate.execute(new TransactionCallback<HttpResponse>(){
-          @Override public HttpResponse doInTransaction() throws Exception {
-            return processRequest(request);
-          }
-        }
-);
-        conn.writeResponse(response);
+        HttpResponse httpResponse=processRequest(request);
+        conn.writeResponse(httpResponse);
       }
  catch (      Exception e) {
         MuleEvent response=null;
         if (e instanceof MessagingException) {
           response=((MessagingException)e).getEvent();
-          if (response.getMessage().getExceptionPayload() == null) {
-            conn.writeResponse(transformResponse(response.getMessage(),response));
-            break;
-          }
         }
  else {
           getConnector().getMuleContext().getExceptionListener().handleException(e);

@@ -3,9 +3,9 @@
     logger.trace("MuleJcaWorker: async MuleEvent for Mule  JCA EndPoint " + flowConstruct.getName());
   }
   try {
-    TransactionTemplate exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<Void>createExceptionHandlingTransactionTemplate(muleContext);
-    exceptionHandlingTransactionTemplate.execute(new TransactionCallback<Void>(){
-      @Override public Void doInTransaction() throws Exception {
+    ProcessingTemplate<MuleEvent> processingTemplate=new TransactionalErrorHandlingProcessingTemplate(muleContext,new MuleTransactionConfig(),event.getFlowConstruct().getExceptionListener());
+    processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
+      @Override public MuleEvent process() throws Exception {
         try {
           entryPointResolverSet.invoke(getManagedInstance(),RequestContext.getEventContext());
         }

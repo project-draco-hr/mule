@@ -11,15 +11,15 @@
     FtpMuleMessageFactory muleMessageFactory=createMuleMessageFactory(finalClient);
     final MuleMessage finalMessage=muleMessageFactory.create(file,endpoint.getEncoding());
     muleMessage=finalMessage;
-    TransactionTemplate<Void> exceptionHandlingTransactionTemplate=TransactionTemplateFactory.<Void>createExceptionHandlingTransactionTemplate(getConnector().getMuleContext());
-    exceptionHandlingTransactionTemplate.execute(new TransactionCallback<Void>(){
-      @Override public Void doInTransaction() throws Exception {
+    ProcessingTemplate<MuleEvent> processingTemplate=createProcessingTemplate();
+    processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
+      @Override public MuleEvent process() throws Exception {
         routeMessage(finalMessage);
-        postProcess(finalClient,file,finalMessage);
         return null;
       }
     }
 );
+    postProcess(finalClient,file,finalMessage);
   }
  catch (  MessagingException e) {
     if (!e.isCauseRollback()) {

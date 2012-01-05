@@ -3,15 +3,15 @@
     return event;
   }
  else {
-    TransactionTemplate<MuleEvent> transactionTemplate=TransactionTemplateFactory.<MuleEvent>createNestedTransactionTemplate(transactionConfig,event.getMuleContext());
-    TransactionCallback<MuleEvent> cb=new TransactionCallback<MuleEvent>(){
-      public MuleEvent doInTransaction() throws Exception {
+    ProcessingTemplate<MuleEvent> processingTemplate=new TransactionalProcessingTemplate<MuleEvent>(muleContext,transactionConfig);
+    ProcessingCallback<MuleEvent> processingCallback=new ProcessingCallback<MuleEvent>(){
+      public MuleEvent process() throws Exception {
         return processNext(event);
       }
     }
 ;
     try {
-      return transactionTemplate.execute(cb);
+      return processingTemplate.execute(processingCallback);
     }
  catch (    MuleException e) {
       throw e;

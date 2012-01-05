@@ -5,14 +5,14 @@
     throw new NoReceiverForEndpointException(VMMessages.noReceiverForEndpoint(connector.getName(),endpoint.getEndpointURI()));
   }
   final MuleMessage message=event.getMessage().createInboundMessage();
-  TransactionTemplate<MuleMessage> tt=TransactionTemplateFactory.<MuleMessage>createNestedTransactionTemplate(receiver.getEndpoint().getTransactionConfig(),event.getMuleContext());
-  TransactionCallback<MuleMessage> cb=new TransactionCallback<MuleMessage>(){
-    public MuleMessage doInTransaction() throws Exception {
+  ProcessingTemplate<MuleMessage> processingTemplate=new TransactionalProcessingTemplate<MuleMessage>(event.getMuleContext(),receiver.getEndpoint().getTransactionConfig());
+  ProcessingCallback<MuleMessage> processingCallback=new ProcessingCallback<MuleMessage>(){
+    public MuleMessage process() throws Exception {
       return receiver.onCall(message);
     }
   }
 ;
-  retMessage=tt.execute(cb);
+  retMessage=processingTemplate.execute(processingCallback);
   if (logger.isDebugEnabled()) {
     logger.debug("sent event on endpointUri: " + endpoint.getEndpointURI());
   }

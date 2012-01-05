@@ -1,0 +1,14 @@
+{
+  ProcessingTemplate processingTemplate=createExceptionHandlingTransactionTemplate();
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  configureExceptionListener(null,"org.mule.api.MessagingException");
+  try {
+    processingTemplate.execute(TransactionTemplateTestUtils.getFailureTransactionCallback(new MessagingException(mockEvent,null)));
+    fail("MessagingException must be thrown");
+  }
+ catch (  MessagingException e) {
+  }
+  verify(mockTransaction,VerificationModeFactory.times(0)).setRollbackOnly();
+  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
+  verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+}
