@@ -1,0 +1,14 @@
+{
+  MuleMessage message=new DefaultMuleMessage("data",muleContext);
+  MuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,getTestService());
+  message.setInvocationProperty("key","value");
+  MuleEvent deserializedEvent=(MuleEvent)SerializationUtils.deserialize(SerializationUtils.serialize(event),muleContext);
+  assertNotSame(deserializedEvent,event);
+  assertFalse(deserializedEvent.equals(event));
+  assertNotSame(deserializedEvent.getSession(),event.getSession());
+  assertFalse(deserializedEvent.getSession().equals(event.getSession()));
+  assertEquals("value",deserializedEvent.getMessage().getInvocationProperty("key"));
+  deserializedEvent.getMessage().setInvocationProperty("newKey","newValue");
+  assertEquals("newValue",deserializedEvent.getMessage().getInvocationProperty("newKey"));
+  assertNull(event.getMessage().getInvocationProperty("newKey"));
+}

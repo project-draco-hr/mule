@@ -1,0 +1,13 @@
+{
+  MuleMessage message=new DefaultMuleMessage("data",muleContext);
+  MuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,getTestService());
+  Object nonSerializable=new Object();
+  message.setProperty("key","value",PropertyScope.SESSION);
+  message.setProperty("key2",nonSerializable,PropertyScope.SESSION);
+  message.setProperty("key3","ERROR",PropertyScope.INVOCATION);
+  message.setProperty("key4","ERROR",PropertyScope.INBOUND);
+  message.setProperty("key5","ERROR",PropertyScope.OUTBOUND);
+  assertEquals(2,event.getSession().getPropertyNamesAsSet().size());
+  assertEquals("value",event.getSession().getProperty("key"));
+  assertEquals(nonSerializable,event.getSession().getProperty("key2"));
+}

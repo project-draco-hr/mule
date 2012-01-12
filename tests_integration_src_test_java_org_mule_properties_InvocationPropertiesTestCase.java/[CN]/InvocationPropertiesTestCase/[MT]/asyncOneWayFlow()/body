@@ -1,0 +1,12 @@
+{
+  MuleMessage message=new DefaultMuleMessage("data",muleContext);
+  MuleEvent event=new DefaultMuleEvent(message,getTestInboundEndpoint(""),getTestService());
+  Object nonSerializable=new Object();
+  message.setInvocationProperty("P1","value");
+  message.setInvocationProperty("P2",nonSerializable);
+  message.setInvocationProperty("testThread",Thread.currentThread());
+  Flow flow=(Flow)muleContext.getRegistry().lookupFlowConstruct("AsyncFlow");
+  flow.process(event);
+  FlowAssert.verify("AsyncFlow");
+  assertNull(message.getInvocationProperty("P3"));
+}

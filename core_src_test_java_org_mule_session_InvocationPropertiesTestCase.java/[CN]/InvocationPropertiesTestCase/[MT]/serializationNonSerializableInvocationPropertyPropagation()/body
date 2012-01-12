@@ -1,0 +1,14 @@
+{
+  MuleMessage message=new DefaultMuleMessage("data",muleContext);
+  MuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,getTestService());
+  Object nonSerializable=new Object();
+  message.setInvocationProperty("key",nonSerializable);
+  message.setInvocationProperty("key2","value2");
+  try {
+    SerializationUtils.deserialize(SerializationUtils.serialize(event),muleContext);
+    fail("Serialization should have failed.");
+  }
+ catch (  Exception e) {
+    assertEquals(SerializationException.class,e.getClass());
+  }
+}
