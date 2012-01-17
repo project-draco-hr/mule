@@ -1,9 +1,18 @@
 {
   MuleMessage message=new DefaultMuleMessage("data",muleContext);
-  MuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.REQUEST_RESPONSE,getTestService());
+  MuleEvent event=new DefaultMuleEvent(message,getTestInboundEndpoint(""),getTestService());
   SensingNullMessageProcessor flowListener=new SensingNullMessageProcessor();
+  List<MessageProcessor> processors=new ArrayList<MessageProcessor>();
+  processors.add(new MessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      event.getMessage().setInvocationProperty("newKey","newValue");
+      return event;
+    }
+  }
+);
+  processors.add(flowListener);
   Flow flow=new Flow("flow",muleContext);
-  flow.setMessageProcessors(Collections.<MessageProcessor>singletonList(flowListener));
+  flow.setMessageProcessors(processors);
   flow.initialise();
   flow.start();
   Object nonSerializable=new Object();
@@ -13,13 +22,11 @@
   flowListener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
   MuleEvent processedEvent=flowListener.event;
   assertNotSame(processedEvent,event);
-  assertEquals(processedEvent,event);
-  assertSame(processedEvent.getSession(),event.getSession());
+  assertNotSame(processedEvent.getSession(),event.getSession());
   assertEquals("value",processedEvent.getMessage().getInvocationProperty("key"));
   assertEquals(nonSerializable,processedEvent.getMessage().getInvocationProperty("key2"));
-  processedEvent.getMessage().setInvocationProperty("newKey","newValue");
   assertEquals("newValue",processedEvent.getMessage().getInvocationProperty("newKey"));
-  assertEquals("newValue",event.getMessage().getInvocationProperty("newKey"));
+  assertNull(event.getMessage().getInvocationProperty("newKey"));
   flow.stop();
   flow.dispose();
 }
