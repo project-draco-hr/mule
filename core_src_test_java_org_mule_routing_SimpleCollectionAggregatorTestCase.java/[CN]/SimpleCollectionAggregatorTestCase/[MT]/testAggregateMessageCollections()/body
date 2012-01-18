@@ -1,0 +1,33 @@
+{
+  MuleSession session=getTestSession(getTestService(),muleContext);
+  Service testService=getTestService("test",Apple.class);
+  assertNotNull(testService);
+  SimpleCollectionAggregator router=new SimpleCollectionAggregator();
+  router.setMuleContext(muleContext);
+  router.setFlowConstruct(testService);
+  router.initialise();
+  MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
+  MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
+  MuleMessage message3=new DefaultMuleMessage("test event C",muleContext);
+  MuleMessage message4=new DefaultMuleMessage("test event D",muleContext);
+  MuleMessageCollection messageCollection1=new DefaultMessageCollection(muleContext);
+  MuleMessageCollection messageCollection2=new DefaultMessageCollection(muleContext);
+  messageCollection1.addMessage(message1);
+  messageCollection1.addMessage(message2);
+  messageCollection2.addMessage(message3);
+  messageCollection2.addMessage(message4);
+  messageCollection1.setCorrelationGroupSize(2);
+  messageCollection1.setCorrelationId(messageCollection1.getUniqueId());
+  messageCollection2.setCorrelationGroupSize(2);
+  messageCollection2.setCorrelationId(messageCollection1.getUniqueId());
+  InboundEndpoint endpoint=MuleTestUtils.getTestInboundEndpoint(MessageExchangePattern.ONE_WAY,muleContext);
+  MuleEvent event1=new DefaultMuleEvent(messageCollection1,endpoint,testService);
+  MuleEvent event2=new DefaultMuleEvent(messageCollection2,endpoint,testService);
+  assertNull(router.process(event1));
+  MuleEvent resultEvent=router.process(event2);
+  assertNotNull(resultEvent);
+  MuleMessage resultMessage=resultEvent.getMessage();
+  assertNotNull(resultMessage);
+  List<List<String>> payload=(List<List<String>>)resultMessage.getPayload();
+  assertEquals(2,payload.size());
+}
