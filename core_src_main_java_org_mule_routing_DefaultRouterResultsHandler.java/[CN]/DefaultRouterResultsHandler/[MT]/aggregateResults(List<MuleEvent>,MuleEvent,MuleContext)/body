@@ -1,5 +1,5 @@
 {
-  if (results == null || results.size() == 0) {
+  if (results == null) {
     return null;
   }
  else   if (results.size() == 1) {
@@ -12,14 +12,20 @@
     }
   }
  else {
-    MuleMessageCollection coll=new DefaultMessageCollection(muleContext);
-    coll.propagateRootId(previous.getMessage());
-    for (    MuleEvent event : results) {
-      MuleMessage muleMessage=event == null ? null : event.getMessage();
-      if (muleMessage != null) {
-        coll.addMessage(muleMessage);
+    List<MuleEvent> nonNullResults=(List<MuleEvent>)CollectionUtils.select(results,new Predicate(){
+      public boolean evaluate(      Object object){
+        return object != null;
       }
     }
-    return RequestContext.setEvent(new DefaultMuleEvent(coll,previous,previous.getSession()));
+);
+    if (nonNullResults.size() == 0) {
+      return null;
+    }
+ else     if (nonNullResults.size() == 1) {
+      return nonNullResults.get(0);
+    }
+ else {
+      return createMessageCollection(nonNullResults,previous,muleContext);
+    }
   }
 }

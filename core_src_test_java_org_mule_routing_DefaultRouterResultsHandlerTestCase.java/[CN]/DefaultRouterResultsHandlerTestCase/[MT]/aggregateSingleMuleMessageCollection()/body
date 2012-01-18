@@ -1,0 +1,16 @@
+{
+  MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
+  message1.setInvocationProperty("key1","value1");
+  MuleEvent event1=new DefaultMuleEvent(message1,endpoint,flow);
+  MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
+  MuleMessage message3=new DefaultMuleMessage("test event C",muleContext);
+  MuleMessageCollection messageCollection=new DefaultMessageCollection(Mockito.mock(MuleContext.class));
+  messageCollection.setInvocationProperty("key2","value2");
+  messageCollection.addMessage(message2);
+  messageCollection.addMessage(message3);
+  MuleEvent event2=new DefaultMuleEvent(messageCollection,endpoint,flow);
+  MuleEvent result=resultsHandler.aggregateResults(Collections.<MuleEvent>singletonList(event2),event1,Mockito.mock(MuleContext.class));
+  assertSame(event2,result);
+  assertNull(result.getMessage().getInvocationProperty("key1"));
+  assertEquals("value2",result.getMessage().getInvocationProperty("key2"));
+}

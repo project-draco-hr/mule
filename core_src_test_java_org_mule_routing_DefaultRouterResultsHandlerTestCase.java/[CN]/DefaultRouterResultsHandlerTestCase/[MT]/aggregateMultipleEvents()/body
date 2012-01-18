@@ -1,0 +1,35 @@
+{
+  MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
+  message1.setInvocationProperty("key1","value1");
+  MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
+  message2.setInvocationProperty("key2","value2");
+  MuleMessage message3=new DefaultMuleMessage("test event C",muleContext);
+  message3.setInvocationProperty("key3","value3");
+  MuleEvent event1=new DefaultMuleEvent(message1,endpoint,flow);
+  MuleSession session=event1.getSession();
+  MuleEvent event2=new DefaultMuleEvent(message2,endpoint,flow,session);
+  MuleEvent event3=new DefaultMuleEvent(message3,endpoint,flow,session);
+  event1.getSession().setProperty("key","value");
+  event2.getSession().setProperty("key1","value1");
+  event2.getSession().setProperty("key2","value2");
+  event3.getSession().setProperty("KEY2","value2NEW");
+  event3.getSession().setProperty("key3","value3");
+  List<MuleEvent> events=new ArrayList<MuleEvent>();
+  events.add(event2);
+  events.add(event3);
+  MuleEvent result=resultsHandler.aggregateResults(events,event1,Mockito.mock(MuleContext.class));
+  assertNotNull(result);
+  assertEquals(DefaultMessageCollection.class,result.getMessage().getClass());
+  assertEquals(2,((MuleMessageCollection)result.getMessage()).size());
+  assertTrue(result.getMessage().getPayload() instanceof List<?>);
+  assertEquals(message2,((MuleMessageCollection)result.getMessage()).getMessage(0));
+  assertEquals(message3,((MuleMessageCollection)result.getMessage()).getMessage(1));
+  assertNull(result.getMessage().getInvocationProperty("key2"));
+  assertNull(result.getMessage().getInvocationProperty("key3"));
+  assertEquals(event1.getMessage().getMessageRootId(),result.getMessage().getMessageRootId());
+  assertEquals("value",result.getSession().getProperty("key"));
+  assertEquals("value1",result.getSession().getProperty("key1"));
+  assertEquals("value2NEW",result.getSession().getProperty("key2"));
+  assertEquals("value3",result.getSession().getProperty("key3"));
+  assertNull(result.getSession().getProperty("key4"));
+}
