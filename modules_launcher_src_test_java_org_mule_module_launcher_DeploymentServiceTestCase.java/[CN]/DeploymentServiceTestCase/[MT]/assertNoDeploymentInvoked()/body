@@ -1,0 +1,20 @@
+{
+  boolean invoked;
+  Prober prober=new PollingProber(DeploymentService.DEFAULT_CHANGES_CHECK_INTERVAL_MS * 2,100);
+  try {
+    prober.check(new Probe(){
+      public boolean isSatisfied(){
+        return deploymentService.getZombieMap().size() == 1;
+      }
+      public String describeFailure(){
+        return "App was never redeployed";
+      }
+    }
+);
+    invoked=true;
+  }
+ catch (  AssertionError e) {
+    invoked=false;
+  }
+  assertFalse("Deployer was invoked",invoked);
+}

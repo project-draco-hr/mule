@@ -6,28 +6,20 @@
   for (  String anchor : appAnchors) {
     new File(appsDir,anchor).delete();
   }
-  String[] apps;
+  String[] apps=ArrayUtils.EMPTY_STRING_ARRAY;
   final boolean explicitAppSet=appString != null;
   DeploymentStatusTracker deploymentStatusTracker=new DeploymentStatusTracker();
   addDeploymentListener(deploymentStatusTracker);
   StartupSummaryDeploymentListener summaryDeploymentListener=new StartupSummaryDeploymentListener(deploymentStatusTracker);
   addStartupListener(summaryDeploymentListener);
   if (!explicitAppSet) {
-    final String[] zips=appsDir.list(new SuffixFileFilter(".zip"));
-    Arrays.sort(zips);
-    for (    String zip : zips) {
-      String appName=StringUtils.removeEnd(zip,".zip");
-      try {
-        guardedInstallFromAppDir(zip);
-      }
- catch (      Throwable t) {
-        logger.error(String.format("Failed to install app from archive '%s'",zip),t);
-        deploymentListener.onDeploymentFailure(appName,t);
-        File appZip=new File(appsDir,zip);
-        addZombie(appZip);
-      }
+    String[] dirApps=appsDir.list(DirectoryFileFilter.DIRECTORY);
+    apps=(String[])ArrayUtils.addAll(apps,dirApps);
+    String[] zipApps=appsDir.list(ZIP_APPS_FILTER);
+    for (int i=0; i < zipApps.length; i++) {
+      zipApps[i]=StringUtils.removeEndIgnoreCase(zipApps[i],ZIP_FILE_SUFFIX);
     }
-    apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
+    apps=(String[])ArrayUtils.addAll(dirApps,zipApps);
     Arrays.sort(apps);
   }
  else {
@@ -35,20 +27,24 @@
   }
   for (  String app : apps) {
     final Application a;
+    String appMarker=app;
+    File applicationFile=null;
     try {
-      final File appZip=new File(appsDir,app + ".zip");
-      if (appZip.exists()) {
-        a=guardedInstallFromAppDir(appZip.getName());
+      applicationFile=new File(appsDir,app + ".zip");
+      if (applicationFile.exists() && applicationFile.isFile()) {
+        appMarker=app + ZIP_FILE_SUFFIX;
+        a=guardedInstallFromAppDir(applicationFile.getName());
       }
  else {
+        applicationFile=new File(appsDir,appMarker);
         a=appFactory.createApp(app);
       }
       applications.add(a);
     }
  catch (    Throwable t) {
-      deploymentListener.onDeploymentFailure(app,t);
-      addZombie(new File(appsDir,app));
-      logger.error(String.format("Failed to create application [%s]",app),t);
+      deploymentListener.onDeploymentFailure(appMarker,t);
+      addZombie(applicationFile);
+      logger.error(String.format("Failed to create application [%s]",appMarker),t);
     }
   }
   for (  Application application : applications) {

@@ -1,0 +1,11 @@
+{
+  final URL url=getClass().getResource("/empty-app.zip");
+  assertNotNull("Test app file not found " + url,url);
+  addAppArchive(url,"empty-app.zip.zip");
+  deploymentService.start();
+  assertTrue("Deployer never invoked",deployLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
+  deployLatch=new Latch();
+  assertAppsDir(NONE,new String[]{"empty-app.zip"},true);
+  assertEquals("Application has not been properly registered with Mule",1,deploymentService.getApplications().size());
+  assertNoDeploymentInvoked();
+}

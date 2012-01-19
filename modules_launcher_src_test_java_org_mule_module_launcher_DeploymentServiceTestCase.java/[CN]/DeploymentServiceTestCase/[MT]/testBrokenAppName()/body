@@ -1,7 +1,7 @@
 {
-  final URL url=getClass().getResource("/app with spaces.zip");
+  final URL url=getClass().getResource("/empty-app.zip");
   assertNotNull("Test app file not found " + url,url);
-  addAppArchive(url);
+  addAppArchive(url,"app with spaces.zip");
   try {
     deploymentService.start();
   }
@@ -12,6 +12,7 @@
   final Map<URL,Long> zombieMap=deploymentService.getZombieMap();
   assertEquals("Wrong number of zombie apps registered.",1,zombieMap.size());
   final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
-  assertEquals("Wrong URL tagged as zombie.","app%20with%20spaces.zip",new File(zombie.getKey().getFile()).getName());
+  String appName=URLDecoder.decode(new File(zombie.getKey().getFile()).getName(),"UTF-8");
+  assertEquals("Wrong URL tagged as zombie.","app with spaces.zip",appName);
   assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
 }
