@@ -1,0 +1,14 @@
+{
+  MuleClient client=new MuleClient(muleContext);
+  try {
+    client.send("cxf:" + ((InboundEndpoint)client.getMuleContext().getRegistry().lookupObject("cxfDefaultExceptionStrategyInbound")).getAddress() + "?method=testCxfException","TEST",null);
+    fail("Exception expected");
+  }
+ catch (  DispatchException e) {
+    Throwable t=e.getCause();
+    assertTrue(t instanceof CxfEnabledFaultMessage);
+    CustomFault fault=((CxfEnabledFaultMessage)t).getFaultInfo();
+    assertNotNull(fault);
+    assertEquals("Custom Exception Message",fault.getDescription());
+  }
+}

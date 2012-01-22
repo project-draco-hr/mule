@@ -1,0 +1,15 @@
+{
+  MuleClient client=new MuleClient(muleContext);
+  latch=new CountDownLatch(1);
+  muleContext.registerListener(new ExceptionNotificationListener(){
+    @Override public void onNotification(    ServerNotification notification){
+      latch.countDown();
+    }
+  }
+);
+  MuleMessage response=client.send("http://localhost:" + dynamicPort.getNumber() + "/proxyExceptionStrategy",requestPayload,null);
+  assertNotNull(response);
+  assertTrue(response.getPayloadAsString().contains("<faultstring>"));
+  assertTrue(response.getExceptionPayload() != null);
+  assertTrue(latch.await(3000,TimeUnit.MILLISECONDS));
+}
