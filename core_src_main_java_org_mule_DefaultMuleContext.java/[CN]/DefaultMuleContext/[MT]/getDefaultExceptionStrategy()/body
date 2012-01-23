@@ -1,7 +1,13 @@
 {
-  MessagingExceptionHandler messagingExceptionHandler=getRegistry().lookupObject(MuleProperties.OBJECT_DEFAULT_GLOBAL_EXCEPTION_STRATEGY);
-  if (messagingExceptionHandler == null) {
-    messagingExceptionHandler=new DefaultMessagingExceptionStrategy(this);
+  MessagingExceptionHandler defaultExceptionStrategy;
+  if (config.getDefaultExceptionStrategyName() != null) {
+    defaultExceptionStrategy=getRegistry().lookupObject(config.getDefaultExceptionStrategyName());
+    if (defaultExceptionStrategy == null) {
+      throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("No global exception strategy named %s",config.getDefaultExceptionStrategyName())));
+    }
   }
-  return messagingExceptionHandler;
+ else {
+    defaultExceptionStrategy=new DefaultMessagingExceptionStrategy(this);
+  }
+  return defaultExceptionStrategy;
 }
