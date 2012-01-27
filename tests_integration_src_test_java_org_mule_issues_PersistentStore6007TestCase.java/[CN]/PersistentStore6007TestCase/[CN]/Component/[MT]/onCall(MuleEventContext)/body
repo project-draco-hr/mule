@@ -1,7 +1,12 @@
 {
-  payloads.add(eventContext.getMessageAsString());
-  if (payloads.size() == 4) {
-    latch.countDown();
+synchronized (lock) {
+    String payload=eventContext.getMessageAsString();
+    payloads.add(payload);
+    logger.warn("Saw new payload: " + payload);
+    logger.warn("Count is now " + payloads.size());
+    if (payloads.size() == 4) {
+      latch.countDown();
+    }
+    return eventContext.getMessage().getPayload();
   }
-  return eventContext.getMessage().getPayload();
 }
