@@ -1,10 +1,23 @@
 {
   ExceptionPayload epl=message.getExceptionPayload();
-  if (getExpectedType() == null) {
+  if (getExpectedType() == null && this.expression == null) {
     return epl != null;
   }
  else   if (epl != null) {
-    return getExpectedType().isAssignableFrom(epl.getException().getClass());
+    Throwable wrappedException=ExceptionHelper.getNonMuleException(epl.getException());
+    if (getExpectedType() != null) {
+      return getExpectedType().isAssignableFrom(epl.getException().getClass()) || (wrappedException != null && getExpectedType().isAssignableFrom(wrappedException.getClass()));
+    }
+ else {
+      if (expression.startsWith("=")) {
+        String expectedType=expression.substring(1,expression.length());
+        return epl.getException().getClass().getName().equals(expectedType) || (wrappedException != null && wrappedException.getClass().getName().equals(expectedType));
+      }
+ else {
+        RegExFilter regExFilter=new RegExFilter(expression);
+        return regExFilter.accept(epl.getException().getClass().getName()) || (wrappedException != null && regExFilter.accept(wrappedException.getClass().getName()));
+      }
+    }
   }
  else {
     return false;
