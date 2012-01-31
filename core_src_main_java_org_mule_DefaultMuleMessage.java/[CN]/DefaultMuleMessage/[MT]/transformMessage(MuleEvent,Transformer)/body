@@ -1,0 +1,28 @@
+{
+  Object result;
+  if (transformer instanceof MessageTransformer) {
+    result=((MessageTransformer)transformer).transform(this,event);
+  }
+ else {
+    result=transformer.transform(this);
+  }
+  RequestContext.internalRewriteEvent(this,false);
+  if (originalPayload == null && muleContext.getConfiguration().isCacheMessageOriginalPayload()) {
+    originalPayload=payload;
+  }
+  if (result instanceof MuleMessage) {
+    if (!result.equals(this)) {
+synchronized (this) {
+        MuleMessage resultMessage=(MuleMessage)result;
+        setPayload(resultMessage.getPayload());
+        originalPayload=resultMessage.getOriginalPayload();
+        copyMessageProperties(resultMessage);
+        copyAttachments(resultMessage);
+      }
+    }
+  }
+ else {
+    setPayload(result);
+  }
+  setDataType(transformer.getReturnDataType());
+}

@@ -14,43 +14,16 @@
         }
       }
       Class<?> srcCls=getPayload().getClass();
-      if (transformer.isSourceDataTypeSupported(DataTypeFactory.create(srcCls))) {
-        Object result;
-        if (transformer instanceof MessageTransformer) {
-          result=((MessageTransformer)transformer).transform(this,event);
-        }
- else {
-          result=transformer.transform(this);
-        }
-        RequestContext.internalRewriteEvent(this,false);
-        if (originalPayload == null && muleContext.getConfiguration().isCacheMessageOriginalPayload()) {
-          originalPayload=payload;
-        }
-        if (result instanceof MuleMessage) {
-          if (!result.equals(this)) {
-synchronized (this) {
-              MuleMessage resultMessage=(MuleMessage)result;
-              setPayload(resultMessage.getPayload());
-              originalPayload=resultMessage.getOriginalPayload();
-              copyMessageProperties(resultMessage);
-              copyAttachments(resultMessage);
-            }
-          }
-        }
- else {
-          setPayload(result);
-        }
-        setDataType(transformer.getReturnDataType());
+      DataType<?> originalSourceType=DataTypeFactory.create(srcCls);
+      if (transformer.isSourceDataTypeSupported(originalSourceType)) {
+        transformMessage(event,transformer);
       }
  else {
         if (logger.isDebugEnabled()) {
           logger.debug("Transformer " + transformer + " doesn't support the source payload: "+ srcCls);
         }
         if (!transformer.isIgnoreBadInput()) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Exiting from transformer chain (ignoreBadInput = false)");
-          }
-          break;
+          throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
         }
       }
     }
