@@ -1,0 +1,32 @@
+{
+  final Latch latch=new Latch();
+  ThreadingProfile threadingProfile=new ChainedThreadingProfile(muleContext.getDefaultThreadingProfile());
+  threadingProfile.setMuleContext(muleContext);
+  MessageProcessor mockListener=mock(MessageProcessor.class);
+  when(mockListener.process((MuleEvent)any())).thenAnswer(new Answer<MuleEvent>(){
+    public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
+      latch.countDown();
+      throw new RuntimeException();
+    }
+  }
+);
+  SedaStageInterceptingMessageProcessor sedaStageInterceptingMessageProcessor=new SedaStageInterceptingMessageProcessor("testProcessOneWayWithException","testProcessOneWayWithException",queueProfile,queueTimeout,threadingProfile,queueStatistics,muleContext);
+  sedaStageInterceptingMessageProcessor.setListener(mockListener);
+  sedaStageInterceptingMessageProcessor.initialise();
+  sedaStageInterceptingMessageProcessor.start();
+  MessagingExceptionHandler exceptionHandler=mock(MessagingExceptionHandler.class);
+  Flow flow=mock(Flow.class);
+  when(flow.getExceptionListener()).thenReturn(exceptionHandler);
+  when(flow.getProcessingStrategy()).thenReturn(new AsynchronousProcessingStrategy());
+  final MuleEvent event=getTestEvent(TEST_MESSAGE,flow,MessageExchangePattern.ONE_WAY);
+  sedaStageInterceptingMessageProcessor.process(event);
+  assertTrue(latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+  ArgumentMatcher<MuleEvent> notSameEvent=new ArgumentMatcher<MuleEvent>(){
+    @Override public boolean matches(    Object argument){
+      return !argument.equals(event);
+    }
+  }
+;
+  verify(mockListener,timeout(RECEIVE_TIMEOUT).times(1)).process(argThat(notSameEvent));
+  verify(exceptionHandler,timeout(RECEIVE_TIMEOUT).times(1)).handleException((Exception)any(),argThat(notSameEvent));
+}
