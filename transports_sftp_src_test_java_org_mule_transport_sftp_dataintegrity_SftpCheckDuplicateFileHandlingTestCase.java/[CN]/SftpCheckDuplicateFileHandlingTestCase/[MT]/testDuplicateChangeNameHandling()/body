@@ -1,15 +1,7 @@
 {
-  MuleClient muleClient=new MuleClient(muleContext);
-  SftpClient sftpClient=getSftpClient(muleClient,OUTBOUND_ENDPOINT_NAME);
-  try {
-    dispatchAndWaitForDelivery(new DispatchParameters(INBOUND_ENDPOINT_NAME,OUTBOUND_ENDPOINT_NAME));
-    verifyInAndOutFiles(muleClient,INBOUND_ENDPOINT_NAME,OUTBOUND_ENDPOINT_NAME,false,true);
-    dispatchAndWaitForDelivery(new DispatchParameters(INBOUND_ENDPOINT_NAME,OUTBOUND_ENDPOINT_NAME));
-    verifyInAndOutFiles(muleClient,INBOUND_ENDPOINT_NAME,OUTBOUND_ENDPOINT_NAME,false,true);
-    ImmutableEndpoint endpoint=(ImmutableEndpoint)muleClient.getProperty(OUTBOUND_ENDPOINT_NAME);
-    assertTrue("A new file in the outbound endpoint should exist",verifyFileExists(sftpClient,endpoint.getEndpointURI().getPath(),"file_1.txt"));
-  }
-  finally {
-    sftpClient.disconnect();
-  }
+  String endpointUrl="sftp://muletest1:muletest1@localhost:" + port.getNumber() + "/~/inbound";
+  muleClient.dispatch(endpointUrl,TEST_MESSAGE,MESSAGE_PROPERTIES);
+  prober.check(new SftpFilePresentProbe(sftpClient,"outbound",FILENAME));
+  muleClient.dispatch(endpointUrl,TEST_MESSAGE,MESSAGE_PROPERTIES);
+  prober.check(new SftpFilePresentProbe(sftpClient,"outbound",DUPLICATED_FILENAME));
 }
