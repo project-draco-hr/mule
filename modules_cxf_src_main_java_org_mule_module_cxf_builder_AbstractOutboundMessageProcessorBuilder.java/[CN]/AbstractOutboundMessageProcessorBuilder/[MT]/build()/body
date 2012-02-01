@@ -6,9 +6,7 @@
     configuration=CxfConfiguration.getConfiguration(muleContext);
   }
   BusFactory.setThreadDefaultBus(getBus());
-  if (securityManager != null) {
-    properties.put(SecurityConstants.USERNAME_TOKEN_VALIDATOR,securityManager);
-  }
+  setSecurityProperties();
   try {
     client=createClient();
   }
@@ -20,6 +18,9 @@
   addInterceptors(client.getOutInterceptors(),outInterceptors);
   addInterceptors(client.getOutFaultInterceptors(),outFaultInterceptors);
   client.setThreadLocalRequestContext(true);
+  if (wsSecurity != null && wsSecurity.getConfigProperties() != null && !wsSecurity.getConfigProperties().isEmpty()) {
+    client.getOutInterceptors().add(new WSS4JOutInterceptor(wsSecurity.getConfigProperties()));
+  }
   configureClient(client);
   if (features != null) {
     for (    AbstractFeature f : features) {

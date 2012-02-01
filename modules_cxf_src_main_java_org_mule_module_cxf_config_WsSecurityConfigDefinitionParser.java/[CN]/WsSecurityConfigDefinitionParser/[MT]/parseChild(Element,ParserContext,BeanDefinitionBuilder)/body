@@ -1,0 +1,19 @@
+{
+  ManagedMap values=new ManagedMap();
+  NodeList properties=element.getChildNodes();
+  for (int index=0; index < properties.getLength(); index++) {
+    Node property=properties.item(index);
+    if (property instanceof Element) {
+      String key=parseKeyName(property.getLocalName());
+      Object value=((Element)property).getAttribute("value");
+      if (key.endsWith("Ref")) {
+        value=new RuntimeBeanReference(String.valueOf(value));
+      }
+      values.put(key,value);
+    }
+  }
+  builder.addPropertyValue("sourceMap",values);
+  builder.addPropertyValue("targetMapClass",super.getBeanClass(element));
+  postProcess(parserContext,getBeanAssembler(element,builder),element);
+  builder.getBeanDefinition().setAttribute(MuleHierarchicalBeanDefinitionParserDelegate.MULE_NO_RECURSE,Boolean.TRUE);
+}

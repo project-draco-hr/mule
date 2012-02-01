@@ -1,0 +1,22 @@
+{
+  WsSecurity wsSecurity=new WsSecurity();
+  addConfigProperties(wsSecurity);
+  addSecurityManager(wsSecurity);
+  addCustomValidator(wsSecurity);
+  serviceMessageProcessorBuilder.setWsSecurity(wsSecurity);
+  serviceMessageProcessorBuilder.setService(SERVICE_NAME);
+  serviceMessageProcessorBuilder.setNamespace(NAMESPACE);
+  serviceMessageProcessorBuilder.setMuleContext(muleContext);
+  serviceMessageProcessorBuilder.setServiceClass(Echo.class);
+  CxfInboundMessageProcessor messageProcessor=serviceMessageProcessorBuilder.build();
+  assertNotNull(messageProcessor);
+  WSS4JInInterceptor wss4JInInterceptor=getInterceptor(messageProcessor.getServer().getEndpoint().getInInterceptors());
+  assertNotNull(wss4JInInterceptor);
+  Map<String,Object> wss4jProperties=wss4JInInterceptor.getProperties();
+  assertFalse(wss4jProperties.isEmpty());
+  assertEquals(WSHandlerConstants.USERNAME_TOKEN,wss4jProperties.get(WSHandlerConstants.ACTION));
+  Map<String,Object> properties=serviceMessageProcessorBuilder.getProperties();
+  assertNotNull(properties);
+  assertTrue(properties.get(SecurityConstants.USERNAME_TOKEN_VALIDATOR) instanceof MuleSecurityManagerValidator);
+  assertTrue(properties.get(SecurityConstants.TIMESTAMP_TOKEN_VALIDATOR) instanceof NoOpValidator);
+}
