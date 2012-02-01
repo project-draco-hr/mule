@@ -5,12 +5,19 @@
   String correlationId=messageInfoMapping.getCorrelationId(originalEvent.getMessage());
   List<MuleEvent> resultEvents=new ArrayList<MuleEvent>();
   int correlationSequence=0;
-  int count=seq.size();
+  MessageSequence<?> messageSequence=seq;
+  if (groupSize > 1) {
+    messageSequence=new PartitionedMessageSequence(seq,groupSize);
+  }
+  int count=messageSequence.size();
   MuleEvent currentEvent=originalEvent;
-  for (; seq.hasNext(); ) {
-    Object payload=seq.next();
+  for (; messageSequence.hasNext(); ) {
+    Object payload=messageSequence.next();
     MuleMessage message=createMessage(payload,originalEvent.getMessage());
     correlationSequence++;
+    if (counterVariableName != null) {
+      message.setInvocationProperty(counterVariableName,correlationSequence);
+    }
     if (enableCorrelation != CorrelationMode.NEVER) {
       boolean correlationSet=message.getCorrelationId() != null;
       if ((!correlationSet && (enableCorrelation == CorrelationMode.IF_NOT_SET)) || (enableCorrelation == CorrelationMode.ALWAYS)) {
