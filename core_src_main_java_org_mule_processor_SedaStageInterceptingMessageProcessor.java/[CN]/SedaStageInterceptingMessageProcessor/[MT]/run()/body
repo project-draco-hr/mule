@@ -27,24 +27,40 @@ catch (    Exception e) {
       muleContext.getExceptionListener().handleException(e);
     }
     if (event != null) {
-      if (isStatsEnabled()) {
-        queueStatistics.decQueuedEvent();
-      }
-      if (logger.isDebugEnabled()) {
-        logger.debug(MessageFormat.format("{0}: Dequeued event from {1}",getStageDescription(),getQueueName()));
-      }
-      AsyncMessageProcessorWorker work=new AsyncMessageProcessorWorker(event);
-      if (doThreading) {
-        try {
-          workManagerSource.getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,new AsyncWorkListener(next));
-        }
- catch (        Exception e) {
-          OptimizedRequestContext.unsafeSetEvent(work.getEvent());
-          event.getFlowConstruct().getExceptionListener().handleException(e,work.getEvent());
-        }
-      }
+      final MuleEvent eventToProcess=event;
+      TransactionalErrorHandlingProcessingTemplate processingTemplate=new TransactionalErrorHandlingProcessingTemplate(muleContext,event.getFlowConstruct().getExceptionListener());
+      ProcessingCallback<MuleEvent> processingCallback=new ProcessingCallback<MuleEvent>(){
+        @Override public MuleEvent process() throws Exception {
+          if (isStatsEnabled()) {
+            queueStatistics.decQueuedEvent();
+          }
+          if (logger.isDebugEnabled()) {
+            logger.debug(MessageFormat.format("{0}: Dequeued event from {1}",getStageDescription(),getQueueName()));
+          }
+          AsyncMessageProcessorWorker work=new AsyncMessageProcessorWorker(eventToProcess);
+          if (doThreading) {
+            try {
+              workManagerSource.getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,new AsyncWorkListener(next));
+            }
+ catch (            Exception e) {
+              OptimizedRequestContext.unsafeSetEvent(work.getEvent());
+              throw new MessagingException(work.getEvent(),e);
+            }
+          }
  else {
-        work.doRun();
+            work.doRun();
+          }
+          return null;
+        }
+      }
+;
+      try {
+        processingTemplate.execute(processingCallback);
+      }
+ catch (      MessagingException e) {
+      }
+catch (      Exception e) {
+        muleContext.getExceptionListener().handleException(e);
       }
     }
   }
