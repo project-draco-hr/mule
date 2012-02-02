@@ -1,0 +1,15 @@
+{
+  String defaultExceptionStrategyName=config.getDefaultExceptionStrategyName();
+  if (defaultExceptionStrategyName != null) {
+    MessagingExceptionHandler messagingExceptionHandler=muleContext.getRegistry().lookupObject(defaultExceptionStrategyName);
+    if (messagingExceptionHandler == null) {
+      throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("No global exception strategy defined with name %s.",defaultExceptionStrategyName)));
+    }
+    if (messagingExceptionHandler instanceof MessagingExceptionHandlerAcceptor) {
+      MessagingExceptionHandlerAcceptor messagingExceptionHandlerAcceptor=(MessagingExceptionHandlerAcceptor)messagingExceptionHandler;
+      if (!messagingExceptionHandlerAcceptor.acceptsAll()) {
+        throw new MuleRuntimeException(CoreMessages.createStaticMessage("Default exception strategy must not have expression attribute. It must accept any message."));
+      }
+    }
+  }
+}
