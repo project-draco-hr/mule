@@ -1,9 +1,19 @@
 {
-  for (  PropertyScope scope : new PropertyScope[]{PropertyScope.INVOCATION,PropertyScope.INBOUND,PropertyScope.OUTBOUND}) {
+  for (  PropertyScope scope : new PropertyScope[]{PropertyScope.INBOUND,PropertyScope.OUTBOUND}) {
     for (    Map.Entry<String,Object> entry : scopedMap.get(scope).entrySet()) {
       Object value=entry.getValue();
       if (value != null && !(value instanceof Serializable)) {
         String message=String.format("Unable to serialize the %s message property %s, which is of type %s ",scope,entry.getKey(),value);
+        logger.error(message);
+        throw new IOException(message);
+      }
+    }
+  }
+  if (invocationMap instanceof UndefinedInvocationPropertiesMap) {
+    for (    Map.Entry<String,Object> entry : invocationMap.entrySet()) {
+      Object value=entry.getValue();
+      if (value != null && !(value instanceof Serializable)) {
+        String message=String.format("Unable to serialize the invocation message property %s, which is of type %s ",entry.getKey(),value);
         logger.error(message);
         throw new IOException(message);
       }

@@ -3,12 +3,13 @@
   if (endpointUri == null) {
     throw new DispatchException(CoreMessages.objectIsNull("Endpoint"),event,getEndpoint());
   }
-  MuleMessage newMessage=event.getMessage().createInboundMessage();
-  MuleEvent newEvent=new DefaultMuleEvent(newMessage,event);
+  MuleEvent eventToDispatch=DefaultMuleEvent.copy(event);
+  eventToDispatch.clearFlowVariables();
+  eventToDispatch.setMessage(eventToDispatch.getMessage().createInboundMessage());
   QueueSession session=connector.getQueueSession();
   Queue queue=session.getQueue(endpointUri.getAddress());
-  if (!queue.offer(newEvent,connector.getQueueTimeout())) {
-    throw new DispatchException(VMMessages.queueIsFull(queue.getName(),queue.size()),newEvent,getEndpoint());
+  if (!queue.offer(eventToDispatch,connector.getQueueTimeout())) {
+    throw new DispatchException(VMMessages.queueIsFull(queue.getName(),queue.size()),eventToDispatch,getEndpoint());
   }
   if (logger.isDebugEnabled()) {
     logger.debug("dispatched MuleEvent on endpointUri: " + endpointUri);

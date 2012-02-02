@@ -1,5 +1,4 @@
 {
-  MuleEvent resultEvent=null;
   try {
     connect();
     String prop=event.getMessage().getOutboundProperty(MuleProperties.MULE_DISABLE_TRANSPORT_TRANSFORMER_PROPERTY);
@@ -15,12 +14,17 @@
         resultMessage.setMessageRootId(event.getMessage().getMessageRootId());
         MuleSession storedSession=connector.getSessionHandler().retrieveSessionInfoFromMessage(resultMessage);
         event.getSession().merge(storedSession);
-        resultEvent=new DefaultMuleEvent(resultMessage,event);
+        MuleEvent resultEvent=new DefaultMuleEvent(resultMessage,event);
         RequestContext.setEvent(resultEvent);
+        return resultEvent;
+      }
+ else {
+        return null;
       }
     }
  else {
       doDispatch(event);
+      return null;
     }
   }
  catch (  MuleException muleException) {
@@ -29,5 +33,4 @@
 catch (  Exception e) {
     throw new DispatchException(event,getEndpoint(),e);
   }
-  return resultEvent;
 }
