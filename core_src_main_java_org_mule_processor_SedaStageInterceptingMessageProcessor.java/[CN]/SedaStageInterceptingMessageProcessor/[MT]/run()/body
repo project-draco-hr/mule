@@ -38,17 +38,12 @@ catch (    Exception e) {
             logger.debug(MessageFormat.format("{0}: Dequeued event from {1}",getStageDescription(),getQueueName()));
           }
           AsyncMessageProcessorWorker work=new AsyncMessageProcessorWorker(eventToProcess);
-          if (doThreading) {
-            try {
-              workManagerSource.getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,new AsyncWorkListener(next));
-            }
- catch (            Exception e) {
-              OptimizedRequestContext.unsafeSetEvent(work.getEvent());
-              throw new MessagingException(work.getEvent(),e);
-            }
+          try {
+            workManagerSource.getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,new AsyncWorkListener(next));
           }
- else {
-            work.doRun();
+ catch (          Exception e) {
+            OptimizedRequestContext.unsafeSetEvent(work.getEvent());
+            throw new MessagingException(work.getEvent(),e);
           }
           return null;
         }
