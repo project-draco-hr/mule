@@ -1,13 +1,17 @@
 {
+  FlowConstruct flowConstruct=event.getFlowConstruct();
   fireNotification(exception);
   logException(exception);
   processStatistics(event);
+  event.getMessage().setExceptionPayload(new DefaultExceptionPayload(exception));
   event=beforeRouting(exception,event);
   event=route(event,exception);
-  processOutboundRouterStatistics(event);
+  processOutboundRouterStatistics(flowConstruct);
   event=afterRouting(exception,event);
-  processReplyTo(event);
-  closeStream(event.getMessage());
-  nullifyExceptionPayloadIfRequired(event);
+  if (event != null) {
+    processReplyTo(event,exception);
+    closeStream(event.getMessage());
+    nullifyExceptionPayloadIfRequired(event);
+  }
   return event;
 }

@@ -1,0 +1,15 @@
+{
+  HttpClient httpClient=new HttpClient();
+  PostMethod postMethod=new PostMethod(String.format("http://localhost:%s",dynamicPort2.getNumber()));
+  postMethod.setRequestEntity(new StringRequestEntity(MESSAGE,"html/text",CharSetUtils.defaultCharsetName()));
+  int status;
+  for (int i=1; i <= EXPECTED_SHORT_DELIVERED_TIMES; i++) {
+    status=httpClient.executeMethod(postMethod);
+    assertThat(status,is(500));
+    postMethod.releaseConnection();
+  }
+  status=httpClient.executeMethod(postMethod);
+  assertThat(status,is(200));
+  assertThat(postMethod.getResponseBodyAsString(),is(MESSAGE_EXPECTED));
+  postMethod.releaseConnection();
+}
