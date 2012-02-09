@@ -1,0 +1,32 @@
+{
+  try {
+    processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
+      @Override public MuleEvent process() throws Exception {
+        try {
+          finalMessage.setOutboundProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
+          FileMessageReceiver.this.routeMessage(finalMessage);
+        }
+ catch (        Exception e) {
+          originalPayload.setStreamProcessingError(true);
+          throw e;
+        }
+        return null;
+      }
+    }
+);
+  }
+ catch (  MessagingException e) {
+    if (!e.isCauseRollback()) {
+      try {
+        originalPayload.setStreamProcessingError(false);
+        originalPayload.close();
+      }
+ catch (      Exception ex) {
+        logger.warn(ex);
+      }
+    }
+  }
+catch (  Exception e) {
+    connector.getMuleContext().getExceptionListener().handleException(e);
+  }
+}

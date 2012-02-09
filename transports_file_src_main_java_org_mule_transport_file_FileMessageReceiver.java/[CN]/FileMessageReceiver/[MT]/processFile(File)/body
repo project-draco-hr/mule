@@ -49,7 +49,7 @@
   String encoding=endpoint.getEncoding();
   try {
     if (fileConnector.isStreaming()) {
-      ReceiverFileInputStream payload=new ReceiverFileInputStream(sourceFile,fileConnector.isAutoDelete(),destinationFile);
+      ReceiverFileInputStream payload=createReceiverFileInputStream(sourceFile,destinationFile);
       message=createMuleMessage(payload,encoding);
     }
  else {
@@ -65,66 +65,12 @@
     message.setProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,Boolean.TRUE,PropertyScope.INBOUND);
   }
   final Object originalPayload=message.getPayload();
-  try {
-    ProcessingTemplate<MuleEvent> processingTemplate=createProcessingTemplate();
-    final File finalDestinationFile=destinationFile;
-    final MuleMessage finalMessage=message;
-    processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
-      @Override public MuleEvent process() throws Exception {
-        if (!fileConnector.isStreaming()) {
-          moveAndDelete(sourceFile,finalDestinationFile,originalSourceFileName,finalMessage);
-        }
- else {
-          try {
-            finalMessage.setOutboundProperty(FileConnector.PROPERTY_FILENAME,sourceFile.getName());
-            FileMessageReceiver.this.routeMessage(finalMessage);
-          }
- catch (          Exception e) {
-            if (originalPayload instanceof ReceiverFileInputStream) {
-              ((ReceiverFileInputStream)originalPayload).setStreamProcessingError(true);
-            }
-            throw e;
-          }
-        }
-        return null;
-      }
-    }
-);
+  ProcessingTemplate<MuleEvent> processingTemplate=createProcessingTemplate();
+  final MuleMessage finalMessage=message;
+  if (fileConnector.isStreaming()) {
+    processWithStreaming(sourceFile,(ReceiverFileInputStream)originalPayload,processingTemplate,finalMessage);
   }
- catch (  Exception e) {
-    RollbackSourceCallback rollbackMethod=null;
-    if (fileConnector.isStreaming()) {
-      if (originalPayload instanceof ReceiverFileInputStream) {
-        final ReceiverFileInputStream receiverFileInputStream=(ReceiverFileInputStream)originalPayload;
-        rollbackMethod=new RollbackSourceCallback(){
-          @Override public void rollback(){
-            receiverFileInputStream.setStreamProcessingError(true);
-          }
-        }
-;
-      }
-    }
- else     if (!sourceFile.getAbsolutePath().equals(originalSourceFile)) {
-      rollbackMethod=new RollbackSourceCallback(){
-        @Override public void rollback(){
-          try {
-            rollbackFileMove(sourceFile,originalSourceFile);
-          }
- catch (          IOException iox) {
-            logger.warn(iox);
-          }
-        }
-      }
-;
-    }
-    if (e instanceof MessagingException) {
-      MessagingException messagingException=(MessagingException)e;
-      if (rollbackMethod != null && messagingException.isCauseRollback()) {
-        rollbackMethod.rollback();
-      }
-    }
  else {
-      connector.getMuleContext().getExceptionListener().handleException(e,rollbackMethod);
-    }
+    processWithoutStreaming(originalSourceFile,originalSourceFileName,sourceFile,destinationFile,processingTemplate,finalMessage);
   }
 }
