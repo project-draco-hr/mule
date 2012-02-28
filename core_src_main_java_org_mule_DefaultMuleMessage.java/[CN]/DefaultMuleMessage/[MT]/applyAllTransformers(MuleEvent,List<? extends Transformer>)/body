@@ -23,7 +23,15 @@
           logger.debug("Transformer " + transformer + " doesn't support the source payload: "+ srcCls);
         }
         if (!transformer.isIgnoreBadInput()) {
-          throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
+          if (TransformerUtils.isTransformationEnforced(muleContext)) {
+            throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
+          }
+ else {
+            if (logger.isDebugEnabled()) {
+              logger.debug("Exiting from transformer chain (ignoreBadInput = false)");
+            }
+            break;
+          }
         }
       }
     }
