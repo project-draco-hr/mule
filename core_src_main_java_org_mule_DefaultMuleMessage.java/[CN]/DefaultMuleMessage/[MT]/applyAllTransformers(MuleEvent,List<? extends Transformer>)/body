@@ -1,8 +1,10 @@
 {
   if (!transformers.isEmpty()) {
+    boolean checkPayloadTypeAfterTransformations=false;
     for (    Transformer transformer : transformers) {
       Class<?> srcCls=getPayload().getClass();
       DataType<?> originalSourceType=DataTypeFactory.create(srcCls);
+      checkPayloadTypeAfterTransformations=false;
       if (transformer.isSourceDataTypeSupported(originalSourceType)) {
         transformMessage(event,transformer);
       }
@@ -10,18 +12,26 @@
         if (logger.isDebugEnabled()) {
           logger.debug("Transformer " + transformer + " doesn't support the source payload: "+ srcCls);
         }
-        if (!transformer.isIgnoreBadInput()) {
-          if (TransformerUtils.isTransformationEnforced(muleContext)) {
-            throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
+        if (TransformerUtils.isTransformationEnforced(muleContext)) {
+          if (transformer instanceof DiscoverableTransformer) {
+            logger.debug("Skipping converter: " + transformer);
+            checkPayloadTypeAfterTransformations=true;
           }
  else {
-            if (logger.isDebugEnabled()) {
-              logger.debug("Exiting from transformer chain (ignoreBadInput = false)");
-            }
-            break;
+            throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
           }
         }
+ else         if (!transformer.isIgnoreBadInput()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Exiting from transformer chain (ignoreBadInput = false)");
+          }
+          break;
+        }
       }
+    }
+    if (checkPayloadTypeAfterTransformations) {
+      Transformer transformer=transformers.get(transformers.size() - 1);
+      TransformerUtils.checkTransformerReturnClass(transformer,payload);
     }
   }
 }
