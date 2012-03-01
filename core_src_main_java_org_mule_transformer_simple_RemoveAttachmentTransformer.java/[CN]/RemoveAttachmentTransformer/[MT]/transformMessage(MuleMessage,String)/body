@@ -1,0 +1,26 @@
+{
+  try {
+    if (keyEvaluator.isExpression() || keyEvaluator.isPlainText()) {
+      Object keyValue=keyEvaluator.resolveValue(message);
+      if (keyValue != null) {
+        String name=keyValue.toString();
+        message.removeOutboundAttachment(name);
+      }
+ else {
+        logger.info("Attachment key expression return null, no attachment will be removed");
+      }
+    }
+ else {
+      final Set<String> attachmentNames=new HashSet<String>(message.getOutboundAttachmentNames());
+      for (      String attachmentName : attachmentNames) {
+        if (keyEvaluator.matches(attachmentName)) {
+          message.removeOutboundAttachment(attachmentName);
+        }
+      }
+    }
+    return message;
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

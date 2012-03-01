@@ -1,0 +1,26 @@
+{
+  if (keyEvaluator.isExpression() || keyEvaluator.isPlainText()) {
+    Object keyValue=keyEvaluator.resolveValue(message);
+    if (keyValue != null) {
+      String propertyName=keyValue.toString();
+      Object propertyValue=message.getInboundProperty(propertyName);
+      if (propertyValue != null) {
+        message.setOutboundProperty(propertyName,propertyValue);
+      }
+ else {
+        logger.info("Property value for is null, no property will be copied");
+      }
+    }
+ else {
+      logger.info("Key expression return null, no property will be copied");
+    }
+  }
+ else {
+    for (    String inboundPropertyName : message.getInboundPropertyNames()) {
+      if (keyEvaluator.matches(inboundPropertyName)) {
+        message.setOutboundProperty(inboundPropertyName,message.getInboundProperty(inboundPropertyName));
+      }
+    }
+  }
+  return message;
+}

@@ -1,0 +1,20 @@
+{
+  try {
+    if (keyEvaluator.isExpression() || keyEvaluator.isPlainText()) {
+      String attachmentName=keyEvaluator.resolveValue(message).toString();
+      DataHandler inboundAttachment=message.getInboundAttachment(attachmentName);
+      message.addOutboundAttachment(attachmentName,inboundAttachment);
+    }
+ else {
+      for (      String inboundAttachmentName : message.getInboundAttachmentNames()) {
+        if (keyEvaluator.matches(inboundAttachmentName)) {
+          message.addOutboundAttachment(inboundAttachmentName,message.getInboundAttachment(inboundAttachmentName));
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+  return message;
+}
