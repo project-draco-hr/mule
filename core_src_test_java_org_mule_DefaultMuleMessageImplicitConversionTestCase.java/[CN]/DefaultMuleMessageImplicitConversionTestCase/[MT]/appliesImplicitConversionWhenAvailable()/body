@@ -1,0 +1,10 @@
+{
+  TestTransformer transformer=new TransformerBuilder().from(DataTypeFactory.BYTE_ARRAY).to(DataTypeFactory.STRING).returning("bar").boundTo(muleContext).build();
+  TestConverter converter=new TransformerBuilder().from(DataTypeFactory.STRING).to(DataTypeFactory.BYTE_ARRAY).returning("bar".getBytes()).boundTo(muleContext).buildConverter(1);
+  when(conversionResolver.resolve(Mockito.any(DataType.class),Mockito.anyList())).thenReturn(converter);
+  DefaultMuleMessage message=new DefaultMuleMessage("TEST",muleContext);
+  message.applyTransformers(null,transformer);
+  assertEquals("bar",message.getPayload());
+  assertTrue(transformer.wasExecuted());
+  assertTrue(converter.wasExecuted());
+}
