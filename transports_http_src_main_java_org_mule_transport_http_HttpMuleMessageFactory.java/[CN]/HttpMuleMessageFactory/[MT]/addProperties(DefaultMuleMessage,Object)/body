@@ -4,6 +4,8 @@
   String uri;
   String statusCode=null;
   Map<String,Object> headers;
+  Map<String,Object> httpHeaders=new HashMap<String,Object>();
+  Map<String,Object> queryParameters=new HashMap<String,Object>();
   if (transportMessage instanceof HttpRequest) {
     HttpRequest httpRequest=(HttpRequest)transportMessage;
     method=httpRequest.getRequestLine().getMethod();
@@ -25,6 +27,9 @@
   }
   rewriteConnectionAndKeepAliveHeaders(headers);
   headers=processIncomingHeaders(headers);
+  httpHeaders.put(HttpConnector.HTTP_HEADERS,new HashMap<String,Object>(headers));
+  String encoding=getEncoding(headers);
+  queryParameters.put(HttpConnector.HTTP_QUERY_PARAMS,processQueryParams(uri,encoding));
   addUriParamsAsHeaders(headers,uri);
   headers.put(HttpConnector.HTTP_METHOD_PROPERTY,method);
   headers.put(HttpConnector.HTTP_REQUEST_PROPERTY,uri);
@@ -36,5 +41,7 @@
     headers.put(HttpConnector.HTTP_STATUS_PROPERTY,statusCode);
   }
   message.addInboundProperties(headers);
-  initEncoding(message,headers);
+  message.addInboundProperties(httpHeaders);
+  message.addInboundProperties(queryParameters);
+  initEncoding(message,encoding);
 }
