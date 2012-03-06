@@ -17,11 +17,16 @@
   parser.parse(new TemplateParser.TemplateCallback(){
     public Object match(    String token){
       match.set(true);
-      if (token.indexOf(":") == -1) {
+      if (!isEvaluatorExpression(token)) {
         if (valid.get()) {
-          valid.compareAndSet(true,false);
+          try {
+            expressionLanguage.validate(token);
+          }
+ catch (          InvalidExpressionException e) {
+            valid.compareAndSet(true,false);
+            message.append(token).append(" is invalid\n");
+          }
         }
-        message.append(token).append(" is invalid\n");
       }
       return null;
     }

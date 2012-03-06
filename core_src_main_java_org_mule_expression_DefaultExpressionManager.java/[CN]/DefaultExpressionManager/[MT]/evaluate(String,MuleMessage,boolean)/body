@@ -1,19 +1,10 @@
 {
-  String name;
-  if (expression == null) {
-    throw new IllegalArgumentException(CoreMessages.objectIsNull("expression").getMessage());
-  }
-  if (expression.startsWith(DEFAULT_EXPRESSION_PREFIX)) {
-    expression=expression.substring(2,expression.length() - 1);
-  }
-  int i=expression.indexOf(":");
-  if (i > -1) {
-    name=expression.substring(0,i);
-    expression=expression.substring(i + DEFAULT_EXPRESSION_POSTFIX.length());
+  expression=preProcessExpression(expression);
+  if (isEvaluatorExpression(expression)) {
+    String[] parts=expression.split(":",2);
+    return evaluate(parts[1],parts[0],message,failIfNull);
   }
  else {
-    name=expression;
-    expression=null;
+    return expressionLanguage.evaluate(expression,message);
   }
-  return evaluate(expression,name,message,failIfNull);
 }
