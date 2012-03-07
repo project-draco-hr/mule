@@ -1,7 +1,14 @@
 {
   Transaction oldTx=transactions.get();
-  if (oldTx != null && !(oldTx instanceof TransactionCollection)) {
+  if (oldTx != null && !(oldTx instanceof TransactionCollection) && !(oldTx instanceof DelegateTransaction)) {
     throw new IllegalTransactionStateException(CoreMessages.transactionAlreadyBound());
+  }
+  if (oldTx != null && oldTx instanceof DelegateTransaction) {
+    DelegateTransaction delegateTransaction=(DelegateTransaction)oldTx;
+    if (!delegateTransaction.supportsInnerTransaction(transaction)) {
+      throw new IllegalTransactionStateException(CoreMessages.transactionAlreadyBound());
+    }
+    return;
   }
   if (oldTx instanceof TransactionCollection) {
     TransactionCollection txCollection=(TransactionCollection)oldTx;

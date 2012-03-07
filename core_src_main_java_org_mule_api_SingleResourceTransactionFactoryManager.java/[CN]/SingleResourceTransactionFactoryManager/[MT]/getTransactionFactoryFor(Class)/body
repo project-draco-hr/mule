@@ -1,0 +1,16 @@
+{
+  TransactionFactory transactionFactory=transactionFactoriesCache.get(type);
+  if (transactionFactory == null) {
+    for (    Class transactionResourceType : transactionFactories.keySet()) {
+      if (transactionResourceType.isAssignableFrom(type)) {
+        transactionFactory=transactionFactories.get(transactionResourceType);
+        this.transactionFactoriesCache.put(type,transactionFactory);
+        break;
+      }
+    }
+  }
+  if (transactionFactory == null) {
+    throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("No %s for transactional resource %s",TransactionFactory.class.getName(),type.getName())));
+  }
+  return transactionFactory;
+}

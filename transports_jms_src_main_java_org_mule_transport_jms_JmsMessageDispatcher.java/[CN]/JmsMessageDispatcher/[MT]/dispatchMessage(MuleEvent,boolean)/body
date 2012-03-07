@@ -12,8 +12,8 @@
   }
   boolean sessionManaged=true;
   try {
-    session=connector.getSessionFromTransaction();
-    if (session != null) {
+    session=connector.getTransactionalResource(endpoint);
+    if (muleTx != null && muleTx.hasResource(session)) {
       transacted=true;
     }
  else     if (event.getMessage().getOutboundProperty(JmsConstants.CACHE_JMS_SESSIONS_PROPERTY,connector.isCacheJmsSessions())) {
@@ -23,13 +23,11 @@
         session=cachedSession;
       }
  else {
-        session=connector.getSession(endpoint);
         cachedSession=session;
       }
     }
  else {
       sessionManaged=muleTx != null && muleTx.isXA();
-      session=connector.getSession(endpoint);
       if (endpoint.getTransactionConfig().isTransacted()) {
         transacted=true;
       }

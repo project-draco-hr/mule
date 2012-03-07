@@ -1,0 +1,30 @@
+{
+  String statement=connector.getStatement(endpoint);
+  List<?> paramNames=new ArrayList<Object>();
+  String sql=connector.parseStatement(statement,paramNames);
+  sql=escapeStatement(sql);
+  MuleMessage message=event.getMessage();
+  Object[] paramValues=connector.getParams(endpoint,paramNames,new DefaultMuleMessage(event.getMessage().getPayload(),message,event.getMuleContext()),endpoint.getEndpointURI().getAddress());
+  Transaction tx=TransactionCoordination.getInstance().getTransaction();
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("SQL UPDATE: " + sql + ", params = "+ ArrayUtils.toString(paramValues));
+    }
+    int nbRows=connector.getQueryRunnerFor(endpoint).update(connection,sql,paramValues);
+    if (logger.isInfoEnabled()) {
+      logger.info("Executing SQL statement: " + nbRows + " row(s) updated");
+    }
+    if (tx == null) {
+      JdbcUtils.commitAndClose(connection);
+    }
+    logger.debug("MuleEvent dispatched succesfuly");
+  }
+ catch (  Exception e) {
+    logger.debug("Error dispatching event: " + e.getMessage(),e);
+    if (tx == null) {
+      JdbcUtils.rollbackAndClose(connection);
+    }
+    throw e;
+  }
+  return event.getMessage();
+}
