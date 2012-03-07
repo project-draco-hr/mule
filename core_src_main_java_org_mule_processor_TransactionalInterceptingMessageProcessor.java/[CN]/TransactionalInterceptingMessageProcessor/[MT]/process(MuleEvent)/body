@@ -1,0 +1,23 @@
+{
+  if (next == null) {
+    return event;
+  }
+ else {
+    ProcessingTemplate<MuleEvent> processingTemplate=new TransactionalErrorHandlingProcessingTemplate(muleContext,transactionConfig,exceptionListener);
+    ProcessingCallback<MuleEvent> processingCallback=new ProcessingCallback<MuleEvent>(){
+      public MuleEvent process() throws Exception {
+        return processNext(event);
+      }
+    }
+;
+    try {
+      return processingTemplate.execute(processingCallback);
+    }
+ catch (    MuleException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new DefaultMuleException(CoreMessages.errorInvokingMessageProcessorWithinTransaction(next,transactionConfig),e);
+    }
+  }
+}
