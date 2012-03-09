@@ -1,7 +1,8 @@
 {
-  VariableResolverFactoryChainBuilder builder=new VariableResolverFactoryChainBuilder(appVariableResolverFactory);
+  CompositeVariableResolverFactory factory=new CompositeVariableResolverFactory(parserContext,muleContext,appVariableResolverFactory);
+  factory.addVariableResolverFactory(new RegistryVariableResolverFactory(parserContext,muleContext));
   if (vars != null) {
-    builder.add(new CachedMapVariableResolverFactory(vars));
+    factory.addVariableResolverFactory(new CachedMapVariableResolverFactory(vars));
   }
-  return (T)interalExecuteExpression(expression,builder.build());
+  return (T)evaluateInternal(expression,factory);
 }
