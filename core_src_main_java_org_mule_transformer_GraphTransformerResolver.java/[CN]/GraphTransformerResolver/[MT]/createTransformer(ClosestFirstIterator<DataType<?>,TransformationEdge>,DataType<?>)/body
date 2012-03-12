@@ -1,0 +1,24 @@
+{
+  List<TransformationEdge> edgeList=new ArrayList<TransformationEdge>();
+  DataType<?> currentDataType=result;
+  while (true) {
+    TransformationEdge edge=iter.getSpanningTreeEdge(currentDataType);
+    if (edge == null) {
+      break;
+    }
+    edgeList.add(edge);
+    currentDataType=Graphs.getOppositeVertex(graph,edge,currentDataType);
+  }
+  if (edgeList.size() == 1) {
+    return edgeList.get(0).transformer;
+  }
+ else {
+    Collections.reverse(edgeList);
+    Transformer[] transformers=new Transformer[edgeList.size()];
+    int index=0;
+    for (    TransformationEdge edge : edgeList) {
+      transformers[index++]=edge.transformer;
+    }
+    return new CompositeTransformer(transformers);
+  }
+}

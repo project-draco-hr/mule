@@ -1,0 +1,17 @@
+{
+  Transformer xmlToJson=createMockConverter(1,JSON_DATA_TYPE,XML_DATA_TYPE);
+  Transformer objectToXml=createMockConverter(1,XML_DATA_TYPE,OBJECT_DATA_TYPE);
+  GraphTransformerResolver graphResolver=new GraphTransformerResolver();
+  graphResolver.transformerChange(objectToXml,TransformerResolver.RegistryAction.ADDED);
+  graphResolver.transformerChange(xmlToJson,TransformerResolver.RegistryAction.ADDED);
+  Transformer transformer=graphResolver.resolve(OBJECT_DATA_TYPE,JSON_DATA_TYPE);
+  assertNotNull(transformer);
+  Transformer betterXmlToJson=createMockConverter(2,JSON_DATA_TYPE,XML_DATA_TYPE);
+  graphResolver.transformerChange(betterXmlToJson,TransformerResolver.RegistryAction.ADDED);
+  transformer=graphResolver.resolve(OBJECT_DATA_TYPE,JSON_DATA_TYPE);
+  assertTrue(transformer instanceof CompositeTransformer);
+  CompositeTransformer chain=(CompositeTransformer)transformer;
+  assertEquals(2,chain.chain.size());
+  assertEquals(objectToXml,chain.chain.get(0));
+  assertEquals(betterXmlToJson,chain.chain.get(1));
+}
