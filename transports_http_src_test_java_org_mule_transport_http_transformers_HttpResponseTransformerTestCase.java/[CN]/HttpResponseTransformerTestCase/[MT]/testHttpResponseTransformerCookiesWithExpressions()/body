@@ -1,0 +1,18 @@
+{
+  HttpResponseTransformer httpResponseTransformer=createHttpResponseTransformer();
+  Map<String,Object> properties=new HashMap<String,Object>();
+  properties.put("name","userName");
+  properties.put("value","John_Galt");
+  properties.put("domain","localhost");
+  properties.put("path","/");
+  properties.put("expiryDate","Thu, 15 Dec 2013 16:00:00 GMT");
+  properties.put("secure","true");
+  List<CookieWrapper> cookies=new ArrayList<CookieWrapper>();
+  cookies.add(createCookie("#[header:name]","#[header:value]","#[header:domain]","#[header:path]","#[header:expiryDate]","#[header:secure]"));
+  httpResponseTransformer.setCookies(cookies);
+  DefaultMuleMessage muleMessage=new DefaultMuleMessage(HTTP_BODY,properties,muleContext);
+  HttpResponse httpResponse=(HttpResponse)httpResponseTransformer.transformMessage(muleMessage,"UTF-8");
+  Map<String,String> responseCookies=getHeaderCookie(httpResponse.getHeaders());
+  assertNotNull(responseCookies);
+  assertEquals("userName=John_Galt; Domain=localhost; Path=/; Secure; Expires=Sun, 15-Dec-2013 16:00:00 GMT",responseCookies.get("userName"));
+}

@@ -1,0 +1,27 @@
+{
+  if (!response.containsHeader(HttpConstants.HEADER_CONTENT_LENGTH) && !response.containsHeader(HttpConstants.HEADER_TRANSFER_ENCODING)) {
+    if (response.hasBody()) {
+      long len=response.getContentLength();
+      if (len < 0) {
+        if (response.getHttpVersion().lessEquals(HttpVersion.HTTP_1_0)) {
+          len=msg.getPayloadAsBytes().length;
+          response.setBody(msg);
+          Header header=new Header(HttpConstants.HEADER_CONTENT_LENGTH,Long.toString(len));
+          response.setHeader(header);
+        }
+ else {
+          Header header=new Header(HttpConstants.HEADER_TRANSFER_ENCODING,"chunked");
+          response.addHeader(header);
+        }
+      }
+ else {
+        Header header=new Header(HttpConstants.HEADER_CONTENT_LENGTH,Long.toString(len));
+        response.setHeader(header);
+      }
+    }
+ else {
+      Header header=new Header(HttpConstants.HEADER_CONTENT_LENGTH,"0");
+      response.addHeader(header);
+    }
+  }
+}
