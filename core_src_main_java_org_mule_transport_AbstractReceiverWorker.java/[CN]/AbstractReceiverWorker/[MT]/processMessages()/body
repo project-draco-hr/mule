@@ -1,5 +1,5 @@
 {
-  ProcessingTemplate<List<MuleEvent>> processingTemplate=new TransactionalProcessingTemplate<List<MuleEvent>>(receiver.getConnector().getMuleContext(),endpoint.getTransactionConfig());
+  ProcessingTemplate<List<MuleEvent>> processingTemplate=TransactionalProcessingTemplate.createTransactionalProcessingTemplate(receiver.getConnector().getMuleContext(),endpoint.getTransactionConfig());
   ProcessingCallback<List<MuleEvent>> processingCallback=new ProcessingCallback<List<MuleEvent>>(){
     public List<MuleEvent> process() throws Exception {
       final Transaction tx=TransactionCoordination.getInstance().getTransaction();
@@ -8,7 +8,7 @@
       }
       List<MuleEvent> results=new ArrayList<MuleEvent>(messages.size());
       for (      final Object payload : messages) {
-        ProcessingTemplate<MuleEvent> processingTemplate=new TransactionalErrorHandlingProcessingTemplate(endpoint.getMuleContext(),receiver.flowConstruct.getExceptionListener());
+        ProcessingTemplate<MuleEvent> processingTemplate=TransactionalErrorHandlingProcessingTemplate.createMainProcessingTemplate(endpoint.getMuleContext(),receiver.flowConstruct.getExceptionListener());
         MuleEvent resultEvent;
         try {
           resultEvent=processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
