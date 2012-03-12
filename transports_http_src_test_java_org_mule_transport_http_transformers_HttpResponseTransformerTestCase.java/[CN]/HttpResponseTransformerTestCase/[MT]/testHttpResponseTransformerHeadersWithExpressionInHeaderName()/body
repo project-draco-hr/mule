@@ -1,11 +1,11 @@
 {
   HttpResponseTransformer httpResponseTransformer=createHttpResponseTransformer();
-  Map<String,Object> properties=new HashMap<String,Object>();
-  properties.put("allow","Allow");
   Map<String,String> headers=new HashMap<String,String>();
-  headers.put("#[header:allow]","GET");
+  headers.put(HEADER_ALLOW,"GET");
   httpResponseTransformer.setHeaders(headers);
-  DefaultMuleMessage muleMessage=new DefaultMuleMessage(HTTP_BODY,properties,muleContext);
+  DefaultMuleMessage muleMessage=new DefaultMuleMessage(HTTP_BODY,muleContext);
+  when(mockExpressionManager.isExpression(HEADER_ALLOW)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_ALLOW,muleMessage)).thenReturn("GET");
   HttpResponse httpResponse=(HttpResponse)httpResponseTransformer.transformMessage(muleMessage,"UTF-8");
   validateHeader(httpResponse.getHeaders(),"Allow","GET");
 }

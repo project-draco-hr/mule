@@ -1,18 +1,25 @@
 {
   HttpResponseTransformer httpResponseTransformer=createHttpResponseTransformer();
-  Map<String,Object> properties=new HashMap<String,Object>();
-  properties.put("name","userName");
-  properties.put("value","John_Galt");
-  properties.put("domain","localhost");
-  properties.put("path","/");
-  properties.put("expiryDate","Thu, 15 Dec 2013 16:00:00 GMT");
-  properties.put("secure","true");
   List<CookieWrapper> cookies=new ArrayList<CookieWrapper>();
-  cookies.add(createCookie("#[header:name]","#[header:value]","#[header:domain]","#[header:path]","#[header:expiryDate]","#[header:secure]"));
+  cookies.add(createCookie(HEADER_NAME,HEADER_VALUE,HEADER_DOMAIN,HEADER_PATH,HEADER_EXPIRY_DATE,HEADER_SECURE,HEADER_VERSION));
   httpResponseTransformer.setCookies(cookies);
-  DefaultMuleMessage muleMessage=new DefaultMuleMessage(HTTP_BODY,properties,muleContext);
+  DefaultMuleMessage muleMessage=new DefaultMuleMessage(HTTP_BODY,muleContext);
+  when(mockExpressionManager.isExpression(HEADER_NAME)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_NAME,muleMessage)).thenReturn("userName");
+  when(mockExpressionManager.isExpression(HEADER_VALUE)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_VALUE,muleMessage)).thenReturn("John_Galt");
+  when(mockExpressionManager.isExpression(HEADER_DOMAIN)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_DOMAIN,muleMessage)).thenReturn("localhost");
+  when(mockExpressionManager.isExpression(HEADER_PATH)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_PATH,muleMessage)).thenReturn("/");
+  when(mockExpressionManager.isExpression(HEADER_EXPIRY_DATE)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_EXPIRY_DATE,muleMessage)).thenReturn("Thu, 15 Dec 2013 16:00:00 GMT");
+  when(mockExpressionManager.isExpression(HEADER_SECURE)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_SECURE,muleMessage)).thenReturn("true");
+  when(mockExpressionManager.isExpression(HEADER_VERSION)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_VERSION,muleMessage)).thenReturn("1");
   HttpResponse httpResponse=(HttpResponse)httpResponseTransformer.transformMessage(muleMessage,"UTF-8");
   Map<String,String> responseCookies=getHeaderCookie(httpResponse.getHeaders());
   assertNotNull(responseCookies);
-  assertEquals("userName=John_Galt; Domain=localhost; Path=/; Secure; Expires=Sun, 15-Dec-2013 16:00:00 GMT",responseCookies.get("userName"));
+  assertEquals("userName=John_Galt; Version=1; Domain=localhost; Path=/; Secure; Expires=Sun, 15-Dec-2013 16:00:00 GMT",responseCookies.get("userName"));
 }
