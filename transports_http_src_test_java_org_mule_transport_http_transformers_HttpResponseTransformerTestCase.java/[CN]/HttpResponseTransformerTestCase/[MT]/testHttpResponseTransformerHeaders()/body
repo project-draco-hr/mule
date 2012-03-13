@@ -1,17 +1,17 @@
 {
   HttpResponseTransformer httpResponseTransformer=createHttpResponseTransformer();
-  DefaultMuleMessage muleMessage=new DefaultMuleMessage(HTTP_BODY,muleContext);
   Map<String,String> headers=new HashMap<String,String>();
   headers.put("Cache-Control",HEADER_CACHE_CONTROL);
   headers.put("Expires",HEADER_EXPIRES);
   headers.put("Location",HEADER_LOCATION);
   httpResponseTransformer.setHeaders(headers);
   when(mockExpressionManager.isExpression(HEADER_CACHE_CONTROL)).thenReturn(true);
-  when(mockExpressionManager.evaluate(HEADER_CACHE_CONTROL,muleMessage)).thenReturn("max-age=3600");
+  when(mockExpressionManager.evaluate(HEADER_CACHE_CONTROL,mockMuleMessage)).thenReturn("max-age=3600");
   when(mockExpressionManager.isExpression(HEADER_EXPIRES)).thenReturn(true);
-  when(mockExpressionManager.evaluate(HEADER_EXPIRES,muleMessage)).thenReturn("Thu, 01 Dec 1994 16:00:00 GMT");
+  when(mockExpressionManager.evaluate(HEADER_EXPIRES,mockMuleMessage)).thenReturn("Thu, 01 Dec 1994 16:00:00 GMT");
   when(mockExpressionManager.isExpression(HEADER_LOCATION)).thenReturn(true);
-  when(mockExpressionManager.evaluate(HEADER_LOCATION,muleMessage)).thenReturn("http://localhost:8080");
-  HttpResponse httpResponse=(HttpResponse)httpResponseTransformer.transformMessage(muleMessage,"UTF-8");
-  validateHeaders(httpResponse.getHeaders());
+  when(mockExpressionManager.evaluate(HEADER_LOCATION,mockMuleMessage)).thenReturn("http://localhost:8080");
+  HttpResponse response=new HttpResponse();
+  httpResponseTransformer.setHeaders(response,mockMuleMessage);
+  validateHeaders(response.getHeaders());
 }
