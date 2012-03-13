@@ -6,14 +6,14 @@
   }
   MuleEvent eventToSend=DefaultMuleEvent.copy(event);
   final MuleMessage message=eventToSend.getMessage().createInboundMessage();
-  ProcessingTemplate<MuleMessage> processingTemplate=TransactionalProcessingTemplate.createTransactionalProcessingTemplate(event.getMuleContext(),receiver.getEndpoint().getTransactionConfig());
-  ProcessingCallback<MuleMessage> processingCallback=new ProcessingCallback<MuleMessage>(){
+  ExecutionTemplate<MuleMessage> executionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(event.getMuleContext(),receiver.getEndpoint().getTransactionConfig());
+  ExecutionCallback<MuleMessage> processingCallback=new ExecutionCallback<MuleMessage>(){
     public MuleMessage process() throws Exception {
       return receiver.onCall(message);
     }
   }
 ;
-  retMessage=processingTemplate.execute(processingCallback);
+  retMessage=executionTemplate.execute(processingCallback);
   if (logger.isDebugEnabled()) {
     logger.debug("sent event on endpointUri: " + endpoint.getEndpointURI());
   }
