@@ -1,6 +1,6 @@
 {
-  ProcessingTemplate<List<MuleEvent>> processingTemplate=TransactionalProcessingTemplate.createTransactionalProcessingTemplate(receiver.getConnector().getMuleContext(),endpoint.getTransactionConfig());
-  ProcessingCallback<List<MuleEvent>> processingCallback=new ProcessingCallback<List<MuleEvent>>(){
+  ExecutionTemplate<List<MuleEvent>> executionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(receiver.getConnector().getMuleContext(),endpoint.getTransactionConfig());
+  ExecutionCallback<List<MuleEvent>> processingCallback=new ExecutionCallback<List<MuleEvent>>(){
     public List<MuleEvent> process() throws Exception {
       final Transaction tx=TransactionCoordination.getInstance().getTransaction();
       if (tx != null) {
@@ -8,10 +8,10 @@
       }
       List<MuleEvent> results=new ArrayList<MuleEvent>(messages.size());
       for (      final Object payload : messages) {
-        ProcessingTemplate<MuleEvent> processingTemplate=TransactionalErrorHandlingProcessingTemplate.createMainProcessingTemplate(endpoint.getMuleContext(),receiver.flowConstruct.getExceptionListener());
+        ExecutionTemplate<MuleEvent> perMessageExecutionTemplate=TransactionalErrorHandlingExecutionTemplate.createMainExecutionTemplate(endpoint.getMuleContext(),receiver.flowConstruct.getExceptionListener());
         MuleEvent resultEvent;
         try {
-          resultEvent=processingTemplate.execute(new ProcessingCallback<MuleEvent>(){
+          resultEvent=perMessageExecutionTemplate.execute(new ExecutionCallback<MuleEvent>(){
             @Override public MuleEvent process() throws Exception {
               Object preProcessedPayload=preProcessMessage(payload);
               if (preProcessedPayload != null) {
@@ -62,7 +62,7 @@
   }
 ;
   try {
-    List<MuleEvent> results=processingTemplate.execute(processingCallback);
+    List<MuleEvent> results=executionTemplate.execute(processingCallback);
     handleResults(handleEventResults(results));
   }
   finally {

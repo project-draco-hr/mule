@@ -4,16 +4,16 @@
   tm.setTransactionTimeout(TRANSACTION_TIMEOUT_SECONDS);
   TransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_BEGIN);
   config.setFactory(new XaTransactionFactory());
-  ProcessingTemplate<Void> processingTemplate=TransactionalProcessingTemplate.createTransactionalProcessingTemplate(muleContext,config);
+  ExecutionTemplate<Void> executionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(muleContext,config);
   final TransactionConfig nestedConfig=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_BEGIN);
   nestedConfig.setFactory(new XaTransactionFactory());
-  processingTemplate.execute(new ProcessingCallback<Void>(){
+  executionTemplate.execute(new ExecutionCallback<Void>(){
     public Void process() throws Exception {
-      ProcessingTemplate<Void> processingTemplate=TransactionalProcessingTemplate.createTransactionalProcessingTemplate(muleContext,nestedConfig);
+      ExecutionTemplate<Void> innerExecutionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(muleContext,nestedConfig);
       final Transaction firstTx=tm.getTransaction();
       assertNotNull(firstTx);
       assertEquals(firstTx.getStatus(),Status.STATUS_ACTIVE);
-      return processingTemplate.execute(new ProcessingCallback<Void>(){
+      return innerExecutionTemplate.execute(new ExecutionCallback<Void>(){
         public Void process() throws Exception {
           Transaction secondTx=tm.getTransaction();
           assertNotNull(secondTx);

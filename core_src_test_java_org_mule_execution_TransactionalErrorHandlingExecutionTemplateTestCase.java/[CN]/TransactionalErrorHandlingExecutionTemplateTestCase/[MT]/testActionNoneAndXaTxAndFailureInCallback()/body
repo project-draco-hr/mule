@@ -1,0 +1,19 @@
+{
+  mockTransaction.setXA(true);
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_NONE);
+  ExecutionTemplate executionTemplate=createExecutionTemplate(config);
+  MuleEvent mockExceptionListenerResultEvent=configureExceptionListenerCall();
+  try {
+    executionTemplate.execute(getFailureTransactionCallback());
+    fail("MessagingException must be thrown");
+  }
+ catch (  MessagingException e) {
+    assertThat(e,Is.is(mockMessagingException));
+    verify(mockMessagingException).setProcessedEvent(mockExceptionListenerResultEvent);
+  }
+  verify(mockTransaction).suspend();
+  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
+  verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+  verify(mockTransaction).resume();
+}

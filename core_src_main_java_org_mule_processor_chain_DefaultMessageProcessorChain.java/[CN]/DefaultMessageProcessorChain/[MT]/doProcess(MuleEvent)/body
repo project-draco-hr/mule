@@ -18,7 +18,15 @@
     if (flowConstruct instanceof Flow && nextProcessor != null && processorMayReturnNull(processor)) {
       copy=OptimizedRequestContext.criticalSetEvent(currentEvent);
     }
-    resultEvent=processor.process(currentEvent);
+    try {
+      resultEvent=processor.process(currentEvent);
+    }
+ catch (    MessagingException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new MessagingException(currentEvent,e);
+    }
     if (resultWasNull && processor instanceof RequestReplyReplierMessageProcessor) {
       resultEvent=null;
     }

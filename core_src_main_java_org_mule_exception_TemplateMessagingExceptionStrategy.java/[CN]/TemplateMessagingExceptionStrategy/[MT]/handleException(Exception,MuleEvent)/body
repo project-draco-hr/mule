@@ -1,18 +1,32 @@
 {
-  FlowConstruct flowConstruct=event.getFlowConstruct();
-  fireNotification(exception);
-  logException(exception);
-  processStatistics(event);
-  event.getMessage().setExceptionPayload(new DefaultExceptionPayload(exception));
-  event=beforeRouting(exception,event);
-  event=route(event,exception);
-  processOutboundRouterStatistics(flowConstruct);
-  event=afterRouting(exception,event);
-  markExceptionAsHandledIfRequired(exception);
-  if (event != null) {
-    processReplyTo(event,exception);
-    closeStream(event.getMessage());
-    nullifyExceptionPayloadIfRequired(event);
+  try {
+    FlowConstruct flowConstruct=event.getFlowConstruct();
+    fireNotification(exception);
+    logException(exception);
+    processStatistics(event);
+    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(exception));
+    event=beforeRouting(exception,event);
+    event=route(event,exception);
+    processOutboundRouterStatistics(flowConstruct);
+    event=afterRouting(exception,event);
+    markExceptionAsHandledIfRequired(exception);
+    if (event != null) {
+      processReplyTo(event,exception);
+      closeStream(event.getMessage());
+      nullifyExceptionPayloadIfRequired(event);
+    }
+    return event;
   }
-  return event;
+ catch (  Exception e) {
+    MessagingException messagingException=new MessagingException(event,e);
+    try {
+      logger.error("Exception during exception strategy execution");
+      logException(e);
+      TransactionCoordination.getInstance().rollbackCurrentTransaction();
+    }
+ catch (    Exception ex) {
+    }
+    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(messagingException));
+    return event;
+  }
 }
