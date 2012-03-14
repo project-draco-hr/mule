@@ -3,10 +3,16 @@
   if (expression.startsWith(ExpressionManager.DEFAULT_EXPRESSION_PREFIX)) {
     expression=expression.substring(2,expression.length() - 1);
   }
+  for (  Entry<String,String> alias : aliases.entrySet()) {
+    variableResolverFactory.addAlias(alias.getKey(),alias.getValue());
+  }
+  for (  Entry<String,Function> function : globalFunctions.entrySet()) {
+    variableResolverFactory.addVariable(function.getKey(),function.getValue());
+  }
+  variableResolverFactory.addFinalVariable("server",serverContext);
+  variableResolverFactory.addFinalVariable("mule",muleInstanceContext);
+  variableResolverFactory.addFinalVariable("app",appContext);
   try {
-    variableResolverFactory.addFinalVariable("server",serverContext);
-    variableResolverFactory.addFinalVariable("mule",muleInstanceContext);
-    variableResolverFactory.addFinalVariable("app",appContext);
     addExtensions(variableResolverFactory);
     return (T)expressionExecutor.execute(expression,variableResolverFactory);
   }
