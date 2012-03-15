@@ -1,0 +1,26 @@
+{
+  int numParams=params.length;
+  if (numParams < 1 || numParams > 3) {
+    throw new IllegalArgumentException("invalid number of arguments");
+  }
+  String regex=verifyRegex(params[0]);
+  Object result=null;
+  if (numParams == 1) {
+    try {
+      result=getMatches(regex,context.getVariable("message",MessageContext.class).payloadAs(String.class),0,context);
+    }
+ catch (    TransformerException e) {
+      throw new RuntimeException("Unable to convert payload to string");
+    }
+  }
+ else {
+    String text=verifyText(params[1]);
+    if (numParams == 2) {
+      result=getMatches(regex,text,0,context);
+    }
+ else     if (numParams == 3) {
+      result=getMatches(regex,text,verifyFlags(params[2]),context);
+    }
+  }
+  return result;
+}
