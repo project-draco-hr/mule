@@ -4,6 +4,12 @@
     return transformer;
   }
   List<Transformer> trans=muleContext.getRegistry().lookupTransformers(source,result);
+  if (muleContext != null && muleContext.getConfiguration().useExtendedTransformations()) {
+    Transformer compositeTransformer=graphTransformerResolver.resolve(source,result);
+    if (compositeTransformer != null) {
+      trans.add(compositeTransformer);
+    }
+  }
   transformer=getNearestTransformerMatch(trans,source.getType(),result.getType());
   Transformer secondPass;
   if (transformer == null) {

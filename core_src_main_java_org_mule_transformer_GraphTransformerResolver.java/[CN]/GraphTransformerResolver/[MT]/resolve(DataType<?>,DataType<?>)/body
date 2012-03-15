@@ -5,15 +5,15 @@
     return (Transformer)lruMap.get(cacheKey);
   }
   try {
-    if (!this.graph.containsVertex(source)) {
-      return null;
+    Transformer nearestTransformerMatch=null;
+    List<List<TransformationEdge>> transformationPaths=findTransformationPaths(source,result);
+    if (transformationPaths.size() != 0) {
+      sortTransformationPathsByLength(transformationPaths);
+      List<Transformer> transformers=createTransformers(getShortestTransformationPaths(transformationPaths));
+      nearestTransformerMatch=getNearestTransformerMatch(transformers,source.getType(),result.getType());
     }
-    if (!this.graph.containsVertex(result)) {
-      return null;
-    }
-    Transformer transformer=findTransformer(source,result);
-    lruMap.put(cacheKey,transformer);
-    return transformer;
+    lruMap.put(cacheKey,nearestTransformerMatch);
+    return nearestTransformerMatch;
   }
   finally {
     readWriteLock.readLock().unlock();
