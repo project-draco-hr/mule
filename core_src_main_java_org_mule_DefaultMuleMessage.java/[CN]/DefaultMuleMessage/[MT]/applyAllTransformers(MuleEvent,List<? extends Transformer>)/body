@@ -1,10 +1,9 @@
 {
   if (!transformers.isEmpty()) {
-    boolean checkPayloadTypeAfterTransformations=false;
-    for (    Transformer transformer : transformers) {
+    for (int index=0; index < transformers.size(); index++) {
+      Transformer transformer=transformers.get(index);
       Class<?> srcCls=getPayload().getClass();
       DataType<?> originalSourceType=DataTypeFactory.create(srcCls);
-      checkPayloadTypeAfterTransformations=false;
       if (transformer.isSourceDataTypeSupported(originalSourceType)) {
         transformMessage(event,transformer);
       }
@@ -13,19 +12,16 @@
           logger.debug("Transformer " + transformer + " doesn't support the source payload: "+ srcCls);
         }
         if (useExtendedTransformations()) {
-          if (transformer instanceof DiscoverableTransformer) {
-            logger.debug("Skipping converter: " + transformer);
-            checkPayloadTypeAfterTransformations=true;
+          if (canSkipTransformer(transformers,index)) {
+            continue;
+          }
+          Transformer implicitTransformer=muleContext.getDataTypeConverterResolver().resolve(originalSourceType,transformer.getSourceDataTypes());
+          if (implicitTransformer != null) {
+            transformMessage(event,implicitTransformer);
+            transformMessage(event,transformer);
           }
  else {
-            Transformer implicitTransformer=muleContext.getDataTypeConverterResolver().resolve(originalSourceType,transformer.getSourceDataTypes());
-            if (implicitTransformer != null) {
-              transformMessage(event,implicitTransformer);
-              transformMessage(event,transformer);
-            }
- else {
-              throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
-            }
+            throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
           }
         }
  else         if (!transformer.isIgnoreBadInput()) {
@@ -35,10 +31,6 @@
           break;
         }
       }
-    }
-    if (checkPayloadTypeAfterTransformations) {
-      Transformer transformer=transformers.get(transformers.size() - 1);
-      TransformerUtils.checkTransformerReturnClass(transformer,payload);
     }
   }
 }
