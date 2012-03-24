@@ -3,15 +3,11 @@
     expressionConfig.setExpression(collectionExpression);
     checkEvaluator(expressionConfig);
     splitter=new ExpressionSplitter(expressionConfig);
-    if (collectionExpression.startsWith(XPATH_PREFIX)) {
-      DataType<Document> docType=new SimpleDataType<Document>(Document.class);
-      try {
-        xml2dom=muleContext.getRegistry().lookupTransformer(DataTypeFactory.XML_STRING,docType);
-        dom2xml=muleContext.getRegistry().lookupTransformer(docType,DataTypeFactory.XML_STRING);
-      }
- catch (      TransformerException e) {
-        throw new InitialisationException(e,this);
-      }
+    if (expressionConfig.getEvaluator() != null && expressionConfig.getEvaluator().startsWith(XPATH_PREFIX)) {
+      xpathCollection=true;
+    }
+ else     if (expressionConfig.getEvaluator() == null && expressionConfig.getExpression().matches("^xpath\\(.+\\)$")) {
+      xpathCollection=true;
     }
   }
  else {

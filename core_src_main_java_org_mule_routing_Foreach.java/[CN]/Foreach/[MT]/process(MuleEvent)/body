@@ -8,11 +8,15 @@
   if (event.getFlowVariableNames().contains(parentMessageProp)) {
     previousRootMessageVar=event.getFlowVariable(parentMessageProp);
   }
-  boolean transformed=transformPayloadIfNeeded(event);
-  event.getMessage().setInvocationProperty(parentMessageProp,event.getMessage());
+  MuleMessage message=event.getMessage();
+  boolean transformed=false;
+  if (xpathCollection) {
+    transformed=transformPayloadIfNeeded(message);
+  }
+  message.setInvocationProperty(parentMessageProp,message);
   ownedMessageProcessor.process(event);
   if (transformed) {
-    transformBack(event);
+    transformBack(message);
   }
   if (previousCounterVar != null) {
     event.setFlowVariable(counterVariableName,previousCounterVar);
