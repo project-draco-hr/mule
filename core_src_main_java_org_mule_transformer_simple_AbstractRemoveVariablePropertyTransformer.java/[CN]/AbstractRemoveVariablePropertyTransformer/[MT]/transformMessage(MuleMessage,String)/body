@@ -1,5 +1,16 @@
 {
-  if (true) {
+  if (wildcardAttributeEvaluator.hasWildcards()) {
+    wildcardAttributeEvaluator.processValues(message.getPropertyNames(getScope()),new WildcardAttributeEvaluator.MatchCallback(){
+      @Override public void processMatch(      String matchedValue){
+        message.removeProperty(matchedValue,getScope());
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("Removing property: '%s' from scope: '%s'",matchedValue,getScope().getScopeName()));
+        }
+      }
+    }
+);
+  }
+ else {
     Object keyValue=identifierEvaluator.resolveValue(message);
     if (keyValue != null) {
       message.removeProperty(keyValue.toString(),getScope());
