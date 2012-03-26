@@ -2,10 +2,8 @@
   if (event == null) {
     return null;
   }
-  return MessageProcessorExecutionTemplate.createExecutionTemplate(event.getMuleContext().getNotificationManager()).execute(new MessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      return InterceptingChainLifecycleWrapper.super.process(event);
-    }
-  }
-,event);
+  fireNotification(event.getFlowConstruct(),event,this,MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE);
+  MuleEvent result=super.process(event);
+  fireNotification(event.getFlowConstruct(),result,this,MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE);
+  return result;
 }
