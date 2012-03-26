@@ -1,14 +1,14 @@
 {
-  final MessageProcessor processor=((MessageProcessor)applicationContext.getBean(refName));
-  if (processor instanceof FlowConstruct) {
+  if (referencedMessageProcessor != null) {
+    return referencedMessageProcessor;
+  }
+ else {
     return new MessageProcessor(){
-      public MuleEvent process(      MuleEvent event) throws MuleException {
-        return processor.process(event);
+      @Override public MuleEvent process(      MuleEvent event) throws MuleException {
+        MessageProcessor dynamicMessageProcessor=getReferencedMessageProcessor(muleContext.getExpressionManager().parse(refName,event));
+        return dynamicMessageProcessor.process(event);
       }
     }
 ;
-  }
- else {
-    return processor;
   }
 }
