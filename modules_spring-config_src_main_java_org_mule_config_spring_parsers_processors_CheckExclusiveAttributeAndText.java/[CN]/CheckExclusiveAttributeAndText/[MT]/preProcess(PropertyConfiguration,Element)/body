@@ -1,0 +1,25 @@
+{
+  List foundAttributes=new LinkedList();
+  boolean found=false;
+  NamedNodeMap attributes=element.getAttributes();
+  for (int i=0; i < attributes.getLength(); i++) {
+    String alias=SpringXMLUtils.attributeName((Attr)attributes.item(i));
+    if (!config.isIgnored(alias)) {
+      if (attribute.equals(alias)) {
+        found=true;
+      }
+ else {
+        foundAttributes.add(alias);
+      }
+    }
+  }
+  if (found && !element.getTextContent().isEmpty()) {
+    StringBuffer message=new StringBuffer("The attribute '");
+    message.append(attribute);
+    message.append("' cannot be used with text content");
+    message.append(" in element ");
+    message.append(SpringXMLUtils.elementToString(element));
+    message.append(".");
+    throw new CheckExclusiveAttributeException(message.toString());
+  }
+}
