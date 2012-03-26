@@ -14,23 +14,13 @@
     if (processorIterator.hasNext()) {
       nextProcessor=processorIterator.next();
     }
-    fireNotification(event.getFlowConstruct(),event,processor,MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE);
     if (flowConstruct instanceof Flow && nextProcessor != null && processorMayReturnNull(processor)) {
       copy=OptimizedRequestContext.criticalSetEvent(currentEvent);
     }
-    try {
-      resultEvent=processor.process(currentEvent);
-    }
- catch (    MessagingException e) {
-      throw e;
-    }
-catch (    Exception e) {
-      throw new MessagingException(currentEvent,e);
-    }
+    resultEvent=messageProcessorExecutionTemplate.execute(processor,currentEvent);
     if (resultWasNull && processor instanceof RequestReplyReplierMessageProcessor) {
       resultEvent=null;
     }
-    fireNotification(event.getFlowConstruct(),resultEvent,processor,MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE);
     if (resultEvent != null) {
       resultWasNull=false;
       currentEvent=resultEvent;

@@ -12,25 +12,13 @@
     if (logger.isTraceEnabled()) {
       logger.trace("Invoking next MessageProcessor: '" + next.getClass().getName() + "' ");
     }
-    boolean fireNotification=!(next instanceof MessageProcessorChain);
-    if (fireNotification) {
-      fireNotification(event.getFlowConstruct(),event,next,MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE);
-    }
-    final MuleEvent result;
+    MessageProcessorExecutionTemplate executionTemplateToUse=(!(next instanceof MessageProcessorChain)) ? messageProcessorExecutorWithNotifications : messageProcessorExecutorWithoutNotifications;
     try {
-      result=next.process(event);
+      return executionTemplateToUse.execute(next,event);
     }
  catch (    MessagingException e) {
       event.getSession().setValid(false);
       throw e;
     }
-catch (    Exception e) {
-      event.getSession().setValid(false);
-      throw new MessagingException(event,e);
-    }
-    if (fireNotification) {
-      fireNotification(event.getFlowConstruct(),result,next,MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE);
-    }
-    return result;
   }
 }
