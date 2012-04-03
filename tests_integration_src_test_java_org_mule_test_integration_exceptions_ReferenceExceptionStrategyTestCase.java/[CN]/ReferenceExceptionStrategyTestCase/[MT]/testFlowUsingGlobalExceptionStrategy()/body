@@ -2,5 +2,8 @@
   LocalMuleClient client=muleContext.getClient();
   MuleMessage response=client.send("vm://in",JSON_REQUEST,null,5000);
   assertThat(response,IsNull.<Object>notNullValue());
-  assertThat(response.getPayloadAsString(),is(JSON_RESPONSE));
+  ObjectMapper mapper=new ObjectMapper();
+  JsonNode actualJsonNode=mapper.readTree(response.getPayloadAsString());
+  JsonNode expectedJsonNode=mapper.readTree(JSON_RESPONSE);
+  assertThat(actualJsonNode,is(expectedJsonNode));
 }

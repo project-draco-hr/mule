@@ -1,8 +1,11 @@
 {
   Object result=event.getMuleContext().getExpressionManager().evaluate(config.getFullExpression(expressionManager),event);
-  if (result instanceof List<?>) {
+  if (result instanceof Object[]) {
+    result=Arrays.asList((Object[])result);
+  }
+  if (result instanceof Collection<?>) {
     List<MuleMessage> messages=new ArrayList<MuleMessage>();
-    for (    Object object : (List<?>)result) {
+    for (    Object object : (Collection<?>)result) {
       messages.add(new DefaultMuleMessage(object,muleContext));
     }
     return messages;
@@ -21,6 +24,7 @@
     return Collections.singletonList((MuleMessage)result);
   }
  else {
+    logger.info("The expression does not evaluate to a type that can be split: " + result.getClass().getName());
     return Collections.<MuleMessage>singletonList(new DefaultMuleMessage(result,muleContext));
   }
 }
