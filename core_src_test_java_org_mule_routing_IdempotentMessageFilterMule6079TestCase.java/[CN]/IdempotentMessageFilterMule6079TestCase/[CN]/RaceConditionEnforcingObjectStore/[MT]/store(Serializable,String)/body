@@ -1,0 +1,22 @@
+{
+  boolean wasAdded;
+  if (key == null) {
+    throw new ObjectStoreException();
+  }
+synchronized (map) {
+    wasAdded=map.containsKey(key);
+    map.put(key,value);
+  }
+  barrier.countDown();
+  try {
+    barrier.await();
+  }
+ catch (  Exception e) {
+synchronized (errorHappenedInChildThreads) {
+      errorHappenedInChildThreads=true;
+    }
+  }
+  if (wasAdded) {
+    throw new ObjectAlreadyExistsException();
+  }
+}
