@@ -21,20 +21,25 @@
     if (resultWasNull && processor instanceof RequestReplyReplierMessageProcessor) {
       resultEvent=null;
     }
-    if (resultEvent != null) {
+    if (resultEvent != null && !VoidMuleEvent.getInstance().equals(resultEvent)) {
       resultWasNull=false;
       currentEvent=resultEvent;
     }
- else     if (flowConstruct instanceof Flow && nextProcessor != null) {
-      resultWasNull=true;
-      if (copy != null) {
-        currentEvent=copy;
+ else     if (VoidMuleEvent.getInstance().equals(resultEvent)) {
+      if (flowConstruct instanceof Flow && nextProcessor != null) {
+        resultWasNull=true;
+        if (copy != null) {
+          currentEvent=copy;
+        }
+ else {
+          currentEvent=OptimizedRequestContext.criticalSetEvent(currentEvent);
+        }
       }
  else {
-        currentEvent=OptimizedRequestContext.criticalSetEvent(currentEvent);
+        return VoidMuleEvent.getInstance();
       }
     }
- else {
+ else     if (resultEvent == null) {
       return null;
     }
     processor=nextProcessor;

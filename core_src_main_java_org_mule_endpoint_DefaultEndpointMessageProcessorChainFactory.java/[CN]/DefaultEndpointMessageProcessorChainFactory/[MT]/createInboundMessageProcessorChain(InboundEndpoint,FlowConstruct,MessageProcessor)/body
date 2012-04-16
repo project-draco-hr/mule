@@ -11,12 +11,17 @@
     throw new ConfigurationException(MessageFactory.createStaticMessage("No listener (target) has been set for this endpoint"));
   }
   requestChainBuilder.chain(target);
-  DefaultMessageProcessorChainBuilder responseChainBuilder=new EndpointMessageProcessorChainBuilder(endpoint,flowConstruct);
-  responseChainBuilder.setName("InboundEndpoint '" + endpoint.getEndpointURI().getUri() + "' response chain");
-  responseChainBuilder.chain(createInboundResponseMessageProcessors(endpoint));
-  responseChainBuilder.chain(endpoint.getResponseMessageProcessors());
-  DefaultMessageProcessorChainBuilder compositeChainBuilder=new EndpointMessageProcessorChainBuilder(endpoint,flowConstruct);
-  compositeChainBuilder.setName("InboundEndpoint '" + endpoint.getEndpointURI().getUri() + "' composite request/response chain");
-  compositeChainBuilder.chain(requestChainBuilder.build(),responseChainBuilder.build());
-  return compositeChainBuilder.build();
+  if (!endpoint.getExchangePattern().hasResponse()) {
+    return requestChainBuilder.build();
+  }
+ else {
+    DefaultMessageProcessorChainBuilder responseChainBuilder=new EndpointMessageProcessorChainBuilder(endpoint,flowConstruct);
+    responseChainBuilder.setName("InboundEndpoint '" + endpoint.getEndpointURI().getUri() + "' response chain");
+    responseChainBuilder.chain(createInboundResponseMessageProcessors(endpoint));
+    responseChainBuilder.chain(endpoint.getResponseMessageProcessors());
+    DefaultMessageProcessorChainBuilder compositeChainBuilder=new EndpointMessageProcessorChainBuilder(endpoint,flowConstruct);
+    compositeChainBuilder.setName("InboundEndpoint '" + endpoint.getEndpointURI().getUri() + "' composite request/response chain");
+    compositeChainBuilder.chain(requestChainBuilder.build(),responseChainBuilder.build());
+    return compositeChainBuilder.build();
+  }
 }

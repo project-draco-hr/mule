@@ -1,0 +1,23 @@
+{
+  AbstractConnector connector=Mockito.mock(AbstractConnector.class);
+  Mockito.when(connector.getSessionHandler()).thenReturn(new NullSessionHandler());
+  FlowConstruct flowConstruct=Mockito.mock(FlowConstruct.class);
+  InboundEndpoint endpoint=Mockito.mock(InboundEndpoint.class);
+  Mockito.when(endpoint.getExchangePattern()).thenReturn(mep);
+  Mockito.when(endpoint.getConnector()).thenReturn(connector);
+  Mockito.when(endpoint.getEndpointURI()).thenReturn(new MuleEndpointURI("test://test",muleContext));
+  Mockito.when(endpoint.getTransactionConfig()).thenReturn(new MuleTransactionConfig());
+  Mockito.when(endpoint.getExchangePattern()).thenReturn(mep);
+  MuleEvent responseEvent=Mockito.mock(MuleEvent.class);
+  Mockito.when(responseEvent.getSession()).thenReturn(muleSession);
+  MessageProcessor listener=Mockito.mock(MessageProcessor.class);
+  Mockito.when(listener.process(Mockito.any(MuleEvent.class))).thenAnswer(new Answer<MuleEvent>(){
+    @Override public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
+      return (MuleEvent)invocation.getArguments()[0];
+    }
+  }
+);
+  MessageReceiver messageReceiver=new TestMessageReceiver(connector,flowConstruct,endpoint);
+  messageReceiver.setListener(listener);
+  return messageReceiver;
+}

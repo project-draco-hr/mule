@@ -1,7 +1,13 @@
 {
-  OutboundEndpoint endpoint=createOutboundEndpoint(null,null,null,null,MessageExchangePattern.REQUEST_RESPONSE,null);
+  Transformer reqTransformer=Mockito.mock(Transformer.class);
+  Mockito.when(reqTransformer.process(Mockito.any(MuleEvent.class))).then(echoEventAnswer);
+  Transformer resTransformer=Mockito.mock(Transformer.class);
+  Mockito.when(resTransformer.process(Mockito.any(MuleEvent.class))).then(echoEventAnswer);
+  OutboundEndpoint endpoint=createOutboundEndpoint(null,null,reqTransformer,resTransformer,MessageExchangePattern.REQUEST_RESPONSE,null);
   testOutboundEvent=createTestOutboundEvent();
   MuleEvent result=endpoint.process(testOutboundEvent);
+  Mockito.verify(reqTransformer,Mockito.times(1)).process(Mockito.any(MuleEvent.class));
+  Mockito.verify(resTransformer,Mockito.times(1)).process(Mockito.any(MuleEvent.class));
   assertMessageSentSame(true);
   assertNotSame(responseMessage,result.getMessage());
   assertMessageEqualEncodingPropertyAdded(responseMessage,result.getMessage());

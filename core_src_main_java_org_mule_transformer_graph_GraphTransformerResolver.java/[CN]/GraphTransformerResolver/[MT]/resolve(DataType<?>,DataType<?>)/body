@@ -1,0 +1,25 @@
+{
+  String cacheKey=getDataTypeSourceResultPairHash(source,result);
+  readWriteLock.readLock().lock();
+  try {
+    if (cache.containsKey(cacheKey)) {
+      return (Converter)cache.get(cacheKey);
+    }
+  }
+  finally {
+    readWriteLock.readLock().unlock();
+  }
+  List<Converter> converters=converterFilter.filter(lookupStrategyTransformation.lookupConverters(source,result),source,result);
+  if (converters.size() > 1) {
+    throw new ResolverException(CoreMessages.transformHasMultipleMatches(source.getType(),result.getType(),converters.get(0),converters.get(1)));
+  }
+  Transformer converter=(converters.size() == 0) ? null : converters.get(0);
+  readWriteLock.writeLock().lock();
+  try {
+    cache.put(cacheKey,converter);
+  }
+  finally {
+    readWriteLock.writeLock().unlock();
+  }
+  return converter;
+}

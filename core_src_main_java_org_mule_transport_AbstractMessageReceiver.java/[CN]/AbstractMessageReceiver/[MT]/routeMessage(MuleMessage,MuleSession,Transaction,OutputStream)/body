@@ -1,34 +1,3 @@
 {
-  final Object o=message.getInboundProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY);
-  if (ObjectUtils.getBoolean(o,false) && !endpoint.getExchangePattern().hasResponse()) {
-    logger.warn("MuleClient.send() was used but inbound endpoint " + endpoint.getEndpointURI().getUri().toString() + " is not 'request-response'.  No response will be returned.");
-  }
-  message.removeProperty(MuleProperties.MULE_REMOTE_SYNC_PROPERTY,PropertyScope.INBOUND);
-  String rootId=message.getInboundProperty(MuleProperties.MULE_ROOT_MESSAGE_ID_PROPERTY);
-  if (rootId != null) {
-    message.setMessageRootId(rootId);
-    message.removeProperty(MuleProperties.MULE_ROOT_MESSAGE_ID_PROPERTY,PropertyScope.INBOUND);
-  }
-  MuleEvent muleEvent=createMuleEvent(message,outputStream);
-  muleEvent=OptimizedRequestContext.unsafeSetEvent(muleEvent);
-  if (!endpoint.isDisableTransportTransformer()) {
-    applyInboundTransformers(muleEvent);
-  }
-  MuleEvent resultEvent=listener.process(muleEvent);
-  if (resultEvent != null && resultEvent.getMessage() != null && resultEvent.getMessage().getExceptionPayload() != null && resultEvent.getMessage().getExceptionPayload().getException() instanceof FilterUnacceptedException) {
-    handleUnacceptedFilter(muleEvent.getMessage());
-    return muleEvent;
-  }
-  if (resultEvent != null) {
-    MuleSession resultSession=new DefaultMuleSession(resultEvent.getSession());
-    resultSession.setSecurityContext(null);
-    connector.getSessionHandler().storeSessionInfoToMessage(resultSession,resultEvent.getMessage());
-  }
-  if (endpoint.getExchangePattern() == MessageExchangePattern.REQUEST_RESPONSE && resultEvent != null && resultEvent.getMessage() != null && !endpoint.isDisableTransportTransformer()) {
-    applyResponseTransformers(resultEvent);
-  }
-  if (connector.isEnableMessageEvents() && endpoint.getExchangePattern().hasResponse() && resultEvent != null) {
-    connector.fireNotification(new EndpointMessageNotification(resultEvent.getMessage(),endpoint,resultEvent.getFlowConstruct(),EndpointMessageNotification.MESSAGE_RESPONSE));
-  }
-  return resultEvent;
+  return routeMessage(message,session,outputStream);
 }

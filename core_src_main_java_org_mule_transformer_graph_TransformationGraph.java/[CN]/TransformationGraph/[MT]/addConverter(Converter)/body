@@ -1,0 +1,19 @@
+{
+  if (registeredConverters.contains(converter)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Attempting to register an already registered converter: " + converter);
+    }
+    return;
+  }
+  DataType<?> returnDataType=converter.getReturnDataType();
+  if (!containsVertex(returnDataType)) {
+    addVertex(returnDataType);
+  }
+  for (  DataType<?> sourceDataType : converter.getSourceDataTypes()) {
+    if (!containsVertex(sourceDataType)) {
+      addVertex(sourceDataType);
+    }
+    addEdge(sourceDataType,returnDataType,new TransformationEdge(converter));
+  }
+  registeredConverters.add(converter);
+}
