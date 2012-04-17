@@ -4,12 +4,15 @@
   if (stopProcessing) {
     return event;
   }
-  MuleEvent intermediateEvent=new DefaultMuleEvent(new DefaultMuleMessage(event.getMessageAsString() + "before" + appendString,muleContext),event);
+  MuleEvent intermediateEvent=new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage().getPayload() + "before" + appendString,muleContext),event);
   if (next != null) {
     intermediateEvent=next.process(intermediateEvent);
   }
   if (intermediateEvent != null && !VoidMuleEvent.getInstance().equals(intermediateEvent)) {
-    return new DefaultMuleEvent(new DefaultMuleMessage(intermediateEvent.getMessageAsString() + "after" + appendString,muleContext),intermediateEvent);
+    return new DefaultMuleEvent(new DefaultMuleMessage(intermediateEvent.getMessage().getPayload() + "after" + appendString,muleContext),intermediateEvent);
+  }
+ else   if (VoidMuleEvent.getInstance().equals(intermediateEvent)) {
+    return intermediateEvent;
   }
  else {
     return null;

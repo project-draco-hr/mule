@@ -5,12 +5,15 @@
   ReturnNullMP nullmp=new ReturnNullMP();
   AppendingMP mp3=new AppendingMP("3");
   builder.chain(mp1,mp2,nullmp,mp3);
-  assertEquals("0123",builder.build().process(getTestEventUsingFlow("0")).getMessageAsString());
+  MuleEvent requestEvent=getTestEventUsingFlow("0");
+  assertNull(builder.build().process(requestEvent));
+  assertSame(requestEvent,mp1.event);
   assertNotSame(mp1.event,mp1.resultEvent);
-  assertEquals(mp1.resultEvent,mp2.event);
+  assertEquals("01",mp1.resultEvent.getMessage().getPayload());
+  assertSame(mp1.resultEvent,mp2.event);
   assertNotSame(mp2.event,mp2.resultEvent);
-  assertEquals(mp2.resultEvent,nullmp.event);
-  assertNotSame(mp3.event,mp3.resultEvent);
-  assertNotSame(nullmp.event,mp3.event);
-  assertEquals(mp3.event.getMessageAsString(),"012");
+  assertEquals("012",mp2.resultEvent.getMessage().getPayload());
+  assertSame(mp2.resultEvent,nullmp.event);
+  assertEquals("012",nullmp.event.getMessage().getPayload());
+  assertNull(mp3.event);
 }

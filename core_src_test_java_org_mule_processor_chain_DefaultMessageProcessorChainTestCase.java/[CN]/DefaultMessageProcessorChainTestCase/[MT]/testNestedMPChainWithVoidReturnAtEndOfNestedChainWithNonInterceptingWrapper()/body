@@ -1,0 +1,11 @@
+{
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
+  final MessageProcessor nested=new DefaultMessageProcessorChainBuilder().chain(new AppendingMP("a"),new AppendingMP("b"),new ReturnVoidMP()).build();
+  builder.chain(new AppendingMP("1"),new MessageProcessor(){
+    public MuleEvent process(    MuleEvent event) throws MuleException {
+      return nested.process(event);
+    }
+  }
+,new AppendingMP("2"));
+  assertEquals("01ab2",builder.build().process(getTestEventUsingFlow("0")).getMessage().getPayload());
+}
