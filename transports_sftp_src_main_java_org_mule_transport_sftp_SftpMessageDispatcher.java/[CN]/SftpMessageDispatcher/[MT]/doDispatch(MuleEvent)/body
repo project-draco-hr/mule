@@ -1,29 +1,6 @@
 {
-  Object data=event.getMessage().getPayload();
-  String filename=(String)event.getMessage().findPropertyInAnyScope(SftpConnector.PROPERTY_FILENAME,null);
-  if (filename == null) {
-    MuleMessage message=event.getMessage();
-    String outPattern=(String)endpoint.getProperty(SftpConnector.PROPERTY_OUTPUT_PATTERN);
-    if (outPattern == null) {
-      outPattern=(String)message.getProperty(SftpConnector.PROPERTY_OUTPUT_PATTERN,connector.getOutputPattern());
-    }
-    filename=generateFilename(message,outPattern);
-  }
-  byte[] buf;
-  InputStream inputStream;
-  if (data instanceof byte[]) {
-    buf=(byte[])data;
-    inputStream=new ByteArrayInputStream(buf);
-  }
- else   if (data instanceof InputStream) {
-    inputStream=(InputStream)data;
-  }
- else   if (data instanceof String) {
-    inputStream=new ByteArrayInputStream(((String)data).getBytes());
-  }
- else {
-    throw new IllegalArgumentException("Unexpected message type: java.io.InputStream, byte[], or String expected. Got " + data.getClass().getName());
-  }
+  String filename=buildFilename(event);
+  InputStream inputStream=generateInputStream(event);
   if (logger.isDebugEnabled()) {
     logger.debug("Writing file to: " + endpoint.getEndpointURI() + " ["+ filename+ "]");
   }
