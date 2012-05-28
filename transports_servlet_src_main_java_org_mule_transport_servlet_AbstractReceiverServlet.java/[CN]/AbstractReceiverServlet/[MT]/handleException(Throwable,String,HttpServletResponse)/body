@@ -3,9 +3,16 @@
   int code=Integer.valueOf(ExceptionHelper.getErrorMapping("http",exception.getClass()));
   response.setStatus(code);
   try {
-    response.sendError(code,message + ": " + exception.getMessage());
+    String errorMessage=message + ": " + exception.getMessage();
+    if (exception instanceof MessagingException && ((MessagingException)exception).getEvent() != null) {
+      MessagingException me=(MessagingException)exception;
+      writeErrorResponseFromMessage(response,me.getEvent().getMessage(),code,errorMessage);
+    }
+ else {
+      response.sendError(code,errorMessage);
+    }
   }
- catch (  IOException e) {
+ catch (  Exception e) {
     logger.error("Failed to sendError on response: " + e.getMessage(),e);
   }
 }
