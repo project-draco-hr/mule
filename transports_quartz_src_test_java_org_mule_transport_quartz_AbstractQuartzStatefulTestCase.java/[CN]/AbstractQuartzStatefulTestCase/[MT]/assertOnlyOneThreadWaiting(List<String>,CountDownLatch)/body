@@ -1,0 +1,25 @@
+{
+  boolean failure=false;
+  Prober prober=new PollingProber(RECEIVE_TIMEOUT,50);
+  try {
+    prober.check(new Probe(){
+      private final int count=1;
+      @Override public boolean isSatisfied(){
+synchronized (messages) {
+          return messages.size() > count;
+        }
+      }
+      @Override public String describeFailure(){
+        return "Did not receive the expected number of messages";
+      }
+    }
+);
+    failure=true;
+  }
+ catch (  AssertionError e) {
+  }
+  latch.countDown();
+  if (failure) {
+    fail("Only one thread should be executing a stateful quartz job");
+  }
+}
