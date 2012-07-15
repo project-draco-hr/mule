@@ -1,7 +1,17 @@
 {
   if (event != null && event.getMessage() != null) {
     try {
-      event.getMessage().applyTransformers(event,this);
+      MuleMessage message=event.getMessage();
+      message.applyTransformers(event,this);
+      if (message instanceof DefaultMessageCollection) {
+        if (((DefaultMessageCollection)message).isInvalidatedPayload()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Transformed message is an invalidated message collection. Creating new message with payload: " + event.getMessage().getPayload());
+          }
+          MuleMessage newMessage=new DefaultMuleMessage(message.getPayload(),message,message.getMuleContext());
+          event=new DefaultMuleEvent(newMessage,event);
+        }
+      }
     }
  catch (    Exception e) {
       throw new TransformerMessagingException(event,this,e);
