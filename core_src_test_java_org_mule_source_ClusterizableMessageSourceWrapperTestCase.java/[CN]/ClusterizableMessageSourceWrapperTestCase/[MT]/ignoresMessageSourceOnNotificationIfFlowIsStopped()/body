@@ -1,11 +1,13 @@
 {
   when(muleContext.isPrimaryPollingInstance()).thenReturn(true);
-  LifecycleState lifecycleState=mock(LifecycleState.class);
-  when(lifecycleState.isStarted()).thenReturn(false);
-  FlowConstruct flowConstruct=mock(FlowConstruct.class);
-  when(flowConstruct.getLifecycleState()).thenReturn(lifecycleState);
   wrapper.setMuleContext(muleContext);
-  wrapper.setFlowConstruct(flowConstruct);
-  wrapper.onNotification(mock(ClusterNodeNotification.class));
+  Mockito.doAnswer(new Answer<Void>(){
+    @Override public Void answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      ((PrimaryNodeLifecycleNotificationListener)invocationOnMock.getArguments()[0]).onNotification(new ClusterNodeNotification("",1));
+      return null;
+    }
+  }
+).when(muleContext).registerListener(isA(PrimaryNodeLifecycleNotificationListener.class));
+  wrapper.initialise();
   verify(messageSource,times(0)).start();
 }

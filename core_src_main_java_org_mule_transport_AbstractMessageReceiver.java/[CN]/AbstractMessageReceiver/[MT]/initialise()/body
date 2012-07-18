@@ -3,5 +3,22 @@
   defaultInboundTransformers=connector.getDefaultInboundTransformers(endpoint);
   defaultResponseTransformers=connector.getDefaultResponseTransformers(endpoint);
   replyToHandler=getReplyToHandler();
+  if (!shouldConsumeInEveryNode() && !flowConstruct.getMuleContext().isPrimaryPollingInstance()) {
+    primaryNodeLifecycleNotificationListener=new PrimaryNodeLifecycleNotificationListener(new Startable(){
+      @Override public void start() throws MuleException {
+        if (AbstractMessageReceiver.this.isStarted()) {
+          try {
+            AbstractMessageReceiver.this.doConnect();
+          }
+ catch (          Exception e) {
+            throw new DefaultMuleException(e);
+          }
+          AbstractMessageReceiver.this.doStart();
+        }
+      }
+    }
+,flowConstruct.getMuleContext());
+    primaryNodeLifecycleNotificationListener.register();
+  }
   super.initialise();
 }

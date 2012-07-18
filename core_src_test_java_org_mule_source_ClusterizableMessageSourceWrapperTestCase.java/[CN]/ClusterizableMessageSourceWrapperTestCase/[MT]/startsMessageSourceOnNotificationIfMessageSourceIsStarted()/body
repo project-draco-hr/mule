@@ -1,0 +1,17 @@
+{
+  when(muleContext.isPrimaryPollingInstance()).thenReturn(false);
+  wrapper.setMuleContext(muleContext);
+  final PrimaryNodeLifecycleNotificationListener[] primaryNodeLifecycleNotificationListener=new PrimaryNodeLifecycleNotificationListener[1];
+  Mockito.doAnswer(new Answer<Void>(){
+    @Override public Void answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      primaryNodeLifecycleNotificationListener[0]=(PrimaryNodeLifecycleNotificationListener)invocationOnMock.getArguments()[0];
+      return null;
+    }
+  }
+).when(muleContext).registerListener(isA(PrimaryNodeLifecycleNotificationListener.class));
+  wrapper.initialise();
+  wrapper.start();
+  when(muleContext.isPrimaryPollingInstance()).thenReturn(true);
+  primaryNodeLifecycleNotificationListener[0].onNotification(new ClusterNodeNotification("",1));
+  verify(messageSource,times(1)).start();
+}
