@@ -3,13 +3,13 @@
   assertNotNull("Test app file not found " + url,url);
   addAppArchive(url);
   deploymentService.start();
-  assertTrue("Deployer never invoked",deployLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertDeploymentSuccess(deploymentListener,"dummy-app");
   assertAppsDir(NONE,new String[]{"dummy-app"},true);
   assertEquals("Application has not been properly registered with Mule",1,deploymentService.getApplications().size());
-  deployLatch=new Latch();
+  reset(deploymentListener);
   addAppArchive(url);
-  assertTrue("Undeploy never invoked",undeployLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
-  assertTrue("Deployer never invoked",deployLatch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertUndeploymentSuccess(deploymentListener,"dummy-app");
+  assertDeploymentSuccess(deploymentListener,"dummy-app");
   assertEquals("Application has not been properly registered with Mule",1,deploymentService.getApplications().size());
   assertAppsDir(NONE,new String[]{"dummy-app"},true);
 }

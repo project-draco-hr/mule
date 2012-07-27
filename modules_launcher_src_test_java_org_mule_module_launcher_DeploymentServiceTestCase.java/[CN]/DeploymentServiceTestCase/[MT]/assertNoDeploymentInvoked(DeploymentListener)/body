@@ -4,10 +4,11 @@
   try {
     prober.check(new Probe(){
       public boolean isSatisfied(){
-        return deploymentService.getZombieMap().size() == 1;
+        verify(deploymentListener,times(1)).onDeploymentStart(any(String.class));
+        return true;
       }
       public String describeFailure(){
-        return "App was never redeployed";
+        return "No deployment has started";
       }
     }
 );
@@ -16,5 +17,5 @@
  catch (  AssertionError e) {
     invoked=false;
   }
-  assertFalse("Deployer was invoked",invoked);
+  assertFalse("Deployer was started",invoked);
 }

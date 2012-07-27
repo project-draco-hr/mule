@@ -2,12 +2,8 @@
   final URL url=getClass().getResource("/empty-app.zip");
   assertNotNull("Test app file not found " + url,url);
   addAppArchive(url,"app with spaces.zip");
-  try {
-    deploymentService.start();
-  }
- catch (  DeploymentInitException e) {
-    assertTrue(e.getMessage().contains("may not contain spaces"));
-  }
+  deploymentService.start();
+  assertDeploymentFailure(deploymentListener,"app with spaces.zip");
   assertAppsDir(new String[]{"app with spaces.zip"},NONE,true);
   final Map<URL,Long> zombieMap=deploymentService.getZombieMap();
   assertEquals("Wrong number of zombie apps registered.",1,zombieMap.size());
