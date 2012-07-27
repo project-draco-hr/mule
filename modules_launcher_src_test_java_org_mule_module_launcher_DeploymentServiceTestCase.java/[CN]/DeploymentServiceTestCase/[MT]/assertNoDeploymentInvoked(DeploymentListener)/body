@@ -4,8 +4,13 @@
   try {
     prober.check(new Probe(){
       public boolean isSatisfied(){
-        verify(deploymentListener,times(1)).onDeploymentStart(any(String.class));
-        return true;
+        try {
+          verify(deploymentListener,times(1)).onDeploymentStart(any(String.class));
+          return true;
+        }
+ catch (        AssertionError e) {
+          return false;
+        }
       }
       public String describeFailure(){
         return "No deployment has started";
@@ -17,5 +22,5 @@
  catch (  AssertionError e) {
     invoked=false;
   }
-  assertFalse("Deployer was started",invoked);
+  assertFalse("A deployment was started",invoked);
 }
