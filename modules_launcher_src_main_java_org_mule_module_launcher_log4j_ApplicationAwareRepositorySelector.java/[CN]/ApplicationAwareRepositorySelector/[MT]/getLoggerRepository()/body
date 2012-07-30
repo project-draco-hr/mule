@@ -1,9 +1,14 @@
 {
   final ClassLoader ccl=Thread.currentThread().getContextClassLoader();
-  LoggerRepository repository=cache.getLoggerRepository(ccl);
+  LoggerRepository repository=repositoryUnderConstruction.get();
+  if (repository != null) {
+    return repository;
+  }
+  repository=cache.getLoggerRepository(ccl);
   if (repository == null) {
     final RootLogger root=new RootLogger(Level.INFO);
     repository=new Hierarchy(root);
+    repositoryUnderConstruction.set(repository);
     try {
       ConfigWatchDog configWatchDog=null;
       if (ccl instanceof MuleApplicationClassLoader) {
@@ -50,12 +55,17 @@
       if (previous != null) {
         repository=previous;
       }
-      if (configWatchDog != null) {
-        configWatchDog.start();
+ else {
+        if (configWatchDog != null) {
+          configWatchDog.start();
+        }
       }
     }
  catch (    IOException e) {
       throw new RuntimeException(e);
+    }
+ finally {
+      repositoryUnderConstruction.remove();
     }
   }
   return repository;
