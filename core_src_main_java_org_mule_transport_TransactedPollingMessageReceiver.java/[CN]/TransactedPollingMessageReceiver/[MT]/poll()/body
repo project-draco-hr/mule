@@ -1,40 +1,45 @@
 {
-  ExecutionTemplate<MuleEvent> pt=createExecutionTemplate();
-  if (this.isReceiveMessagesInTransaction()) {
-    if (hasNoMessages()) {
-      if (NO_MESSAGES_SLEEP_TIME > 0) {
-        Thread.sleep(NO_MESSAGES_SLEEP_TIME);
+  try {
+    ExecutionTemplate<MuleEvent> pt=createExecutionTemplate();
+    if (this.isReceiveMessagesInTransaction()) {
+      if (hasNoMessages()) {
+        if (NO_MESSAGES_SLEEP_TIME > 0) {
+          Thread.sleep(NO_MESSAGES_SLEEP_TIME);
+        }
+        return;
       }
-      return;
+      ExecutionCallback<MuleEvent> cb=new ExecutionCallback<MuleEvent>(){
+        @Override public MuleEvent process() throws Exception {
+          List messages=getMessages();
+          if (messages != null && messages.size() > 0) {
+            for (            Object message : messages) {
+              processMessage(message);
+            }
+          }
+          return null;
+        }
+      }
+;
+      pt.execute(cb);
     }
-    ExecutionCallback<MuleEvent> cb=new ExecutionCallback<MuleEvent>(){
-      @Override public MuleEvent process() throws Exception {
-        List messages=getMessages();
-        if (messages != null && messages.size() > 0) {
-          for (          Object message : messages) {
-            processMessage(message);
+ else {
+      List messages=getMessages();
+      if (messages != null && messages.size() > 0) {
+        final CountDownLatch countdown=new CountDownLatch(messages.size());
+        for (        Object message : messages) {
+          try {
+            this.getWorkManager().scheduleWork(new MessageProcessorWorker(pt,countdown,message));
+          }
+ catch (          Exception e) {
+            countdown.countDown();
+            throw e;
           }
         }
-        return null;
+        countdown.await();
       }
     }
-;
-    pt.execute(cb);
   }
- else {
-    List messages=getMessages();
-    if (messages != null && messages.size() > 0) {
-      final CountDownLatch countdown=new CountDownLatch(messages.size());
-      for (      Object message : messages) {
-        try {
-          this.getWorkManager().scheduleWork(new MessageProcessorWorker(pt,countdown,message));
-        }
- catch (        Exception e) {
-          countdown.countDown();
-          throw e;
-        }
-      }
-      countdown.await();
-    }
+ catch (  Exception e) {
+    logger.error(e);
   }
 }
