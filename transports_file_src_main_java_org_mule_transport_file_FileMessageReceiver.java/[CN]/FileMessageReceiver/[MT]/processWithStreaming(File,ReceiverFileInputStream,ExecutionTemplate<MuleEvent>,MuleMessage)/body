@@ -1,5 +1,6 @@
 {
   try {
+    final AtomicBoolean exceptionWasThrown=new AtomicBoolean(false);
     executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
       @Override public MuleEvent process() throws Exception {
         try {
@@ -7,6 +8,7 @@
           FileMessageReceiver.this.routeMessage(finalMessage);
         }
  catch (        Exception e) {
+          exceptionWasThrown.set(true);
           originalPayload.setStreamProcessingError(true);
           throw e;
         }
@@ -14,6 +16,10 @@
       }
     }
 );
+    if (exceptionWasThrown.get()) {
+      originalPayload.setStreamProcessingError(false);
+      originalPayload.close();
+    }
   }
  catch (  MessagingException e) {
     if (!e.causedRollback()) {
