@@ -1,0 +1,25 @@
+{
+  try {
+    threadStartLatch.await(5000,TimeUnit.MILLISECONDS);
+    for (int i=0; i < ITERATIONS_PER_THREAD; i++) {
+      try {
+        lockableObjectStore.lock(key);
+        Integer value;
+        if (objectStore.contains(key)) {
+          value=objectStore.retrieve(key);
+          objectStore.remove(key);
+        }
+ else {
+          value=0;
+        }
+        objectStore.store(key,value + 1);
+      }
+  finally {
+        lockableObjectStore.release(key);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new RuntimeException(e);
+  }
+}

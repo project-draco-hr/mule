@@ -1,7 +1,14 @@
 {
   super.dispose();
   if (store != null) {
-    store.dispose();
+    if (store instanceof ObjectStorePartition) {
+      try {
+        ((ObjectStorePartition)store).close();
+      }
+ catch (      ObjectStoreException e) {
+        logger.warn("error closing object store: " + e.getMessage(),e);
+      }
+    }
     store=null;
   }
   if (deadLetterQueue instanceof Disposable) {

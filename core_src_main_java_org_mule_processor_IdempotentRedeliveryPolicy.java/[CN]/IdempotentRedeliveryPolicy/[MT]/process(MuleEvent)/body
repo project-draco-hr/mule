@@ -13,41 +13,47 @@
 catch (  Exception ex) {
     exceptionSeen=true;
   }
-  if (!exceptionSeen) {
-    counter=getCounter(messageId,null,false);
-    tooMany=counter != null && counter.get() > maxRedeliveryCount;
-  }
-  if (tooMany || exceptionSeen) {
-    try {
-      if (deadLetterQueue != null) {
-        return deadLetterQueue.process(event);
-      }
- else {
-        throw new MessageRedeliveredException(messageId,counter.get(),maxRedeliveryCount,null,event);
-      }
+  try {
+    store.lockEntry(messageId);
+    if (!exceptionSeen) {
+      counter=findCounter(messageId);
+      tooMany=counter != null && counter.get() > maxRedeliveryCount;
     }
- catch (    MessageRedeliveredException ex) {
+    if (tooMany || exceptionSeen) {
+      try {
+        if (deadLetterQueue != null) {
+          return deadLetterQueue.process(event);
+        }
+ else {
+          throw new MessageRedeliveredException(messageId,counter.get(),maxRedeliveryCount,null,event);
+        }
+      }
+ catch (      MessageRedeliveredException ex) {
+        throw ex;
+      }
+catch (      Exception ex) {
+        logger.info("Exception thrown from failed message processing for message " + messageId,ex);
+      }
+      return null;
+    }
+    try {
+      MuleEvent returnEvent=processNext(event);
+      counter=findCounter(messageId);
+      if (counter != null) {
+        resetCounter(messageId);
+      }
+      return returnEvent;
+    }
+ catch (    MuleException ex) {
+      incrementCounter(messageId);
       throw ex;
     }
-catch (    Exception ex) {
-      logger.info("Exception thrown from failed message processing for message " + messageId,ex);
+catch (    RuntimeException ex) {
+      incrementCounter(messageId);
+      throw ex;
     }
-    return null;
   }
-  try {
-    MuleEvent returnEvent=processNext(event);
-    counter=getCounter(messageId,counter,false);
-    if (counter != null) {
-      counter.set(0);
-    }
-    return returnEvent;
-  }
- catch (  MuleException ex) {
-    incrementCounter(messageId,counter);
-    throw ex;
-  }
-catch (  RuntimeException ex) {
-    incrementCounter(messageId,counter);
-    throw ex;
+  finally {
+    store.releaseEntry(messageId);
   }
 }
