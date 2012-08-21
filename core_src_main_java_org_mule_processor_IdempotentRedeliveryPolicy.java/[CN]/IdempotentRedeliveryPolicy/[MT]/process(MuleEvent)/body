@@ -13,33 +13,39 @@
 catch (  Exception ex) {
     exceptionSeen=true;
   }
-  if (!exceptionSeen) {
-    counter=findCounter(messageId);
-    tooMany=counter != null && counter.get() > maxRedeliveryCount;
-  }
-  if (tooMany || exceptionSeen) {
-    try {
-      return deadLetterQueue.process(event);
-    }
- catch (    Exception ex) {
-      logger.info("Exception thrown from failed message processing for message " + messageId,ex);
-    }
-    return null;
-  }
+  lock.lock(messageId);
   try {
-    MuleEvent returnEvent=processNext(event);
-    counter=findCounter(messageId);
-    if (counter != null) {
-      resetCounter(messageId);
+    if (!exceptionSeen) {
+      counter=findCounter(messageId);
+      tooMany=counter != null && counter.get() > maxRedeliveryCount;
     }
-    return returnEvent;
+    if (tooMany || exceptionSeen) {
+      try {
+        return deadLetterQueue.process(event);
+      }
+ catch (      Exception ex) {
+        logger.info("Exception thrown from failed message processing for message " + messageId,ex);
+      }
+      return null;
+    }
+    try {
+      MuleEvent returnEvent=processNext(event);
+      counter=findCounter(messageId);
+      if (counter != null) {
+        resetCounter(messageId);
+      }
+      return returnEvent;
+    }
+ catch (    MuleException ex) {
+      incrementCounter(messageId);
+      throw ex;
+    }
+catch (    RuntimeException ex) {
+      incrementCounter(messageId);
+      throw ex;
+    }
   }
- catch (  MuleException ex) {
-    incrementCounter(messageId);
-    throw ex;
-  }
-catch (  RuntimeException ex) {
-    incrementCounter(messageId);
-    throw ex;
+  finally {
+    lock.unlock(messageId);
   }
 }

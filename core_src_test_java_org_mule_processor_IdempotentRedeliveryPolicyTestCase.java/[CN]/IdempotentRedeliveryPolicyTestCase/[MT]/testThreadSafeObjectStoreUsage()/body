@@ -1,0 +1,14 @@
+{
+  when(message.getPayload()).thenReturn(STRING_MESSAGE);
+  irp.setListener(mockWaitingMessageProcessor);
+  irp.initialise();
+  ExecuteIrpThread firstIrpExecutionThread=new ExecuteIrpThread();
+  firstIrpExecutionThread.start();
+  ExecuteIrpThread threadCausingRedeliveryException=new ExecuteIrpThread();
+  threadCausingRedeliveryException.start();
+  waitingMessageProcessorExecutionLatch.await(5000,TimeUnit.MILLISECONDS);
+  waitLatch.release();
+  firstIrpExecutionThread.join();
+  threadCausingRedeliveryException.join();
+  verify(mockDlqMessageProcessor,VerificationModeFactory.times(1)).process(event);
+}
