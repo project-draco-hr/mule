@@ -21,9 +21,17 @@ catch (  Exception ex) {
     }
     if (tooMany || exceptionSeen) {
       try {
-        return deadLetterQueue.process(event);
+        if (deadLetterQueue != null) {
+          return deadLetterQueue.process(event);
+        }
+ else {
+          throw new MessageRedeliveredException(messageId,counter.get(),maxRedeliveryCount,null,event);
+        }
       }
- catch (      Exception ex) {
+ catch (      MessageRedeliveredException ex) {
+        throw ex;
+      }
+catch (      Exception ex) {
         logger.info("Exception thrown from failed message processing for message " + messageId,ex);
       }
       return null;
