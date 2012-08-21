@@ -1,7 +1,22 @@
 {
-  when(message.getPayload()).thenReturn(STRING_MESSAGE);
-  when(mockObjectStoreManager.getLockableObjectStore(any(ObjectStore.class))).thenReturn(new SerializationObjectStore());
+  Mockito.when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_STORE_MANAGER)).thenReturn(mockObjectStoreManager);
+  Mockito.when(mockObjectStoreManager.getObjectStore(anyString(),anyBoolean(),anyInt(),anyInt(),anyInt())).thenReturn(new SerializationObjectStore());
+  IdempotentRedeliveryPolicy irp=new IdempotentRedeliveryPolicy();
+  irp.setUseSecureHash(true);
+  irp.setMaxRedeliveryCount(1);
+  irp.setFlowConstruct(mock(FlowConstruct.class));
+  irp.setMuleContext(mockMuleContext);
+  irp.setListener(mockFailingMessageProcessor);
+  irp.setDeadLetterQueue(mockDlqMessageProcessor);
   irp.initialise();
-  processUntilFailure();
-  verify(mockDlqMessageProcessor,VerificationModeFactory.times(1)).process(event);
+  when(message.getPayload()).thenReturn(STRING_MESSAGE);
+  when(event.getMessage()).thenReturn(message);
+  for (int i=0; i < MAX_REDELIVERY_COUNT; i++) {
+    try {
+      irp.process(event);
+    }
+ catch (    Exception e) {
+    }
+  }
+  verify(mockDlqMessageProcessor.getMessageProcessor().process(event),VerificationModeFactory.times(1));
 }

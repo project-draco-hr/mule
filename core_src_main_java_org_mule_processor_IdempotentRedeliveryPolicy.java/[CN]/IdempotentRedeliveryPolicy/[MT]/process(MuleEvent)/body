@@ -13,47 +13,33 @@
 catch (  Exception ex) {
     exceptionSeen=true;
   }
-  try {
-    store.lockEntry(messageId);
-    if (!exceptionSeen) {
-      counter=findCounter(messageId);
-      tooMany=counter != null && counter.get() > maxRedeliveryCount;
-    }
-    if (tooMany || exceptionSeen) {
-      try {
-        if (deadLetterQueue != null) {
-          return deadLetterQueue.process(event);
-        }
- else {
-          throw new MessageRedeliveredException(messageId,counter.get(),maxRedeliveryCount,null,event);
-        }
-      }
- catch (      MessageRedeliveredException ex) {
-        throw ex;
-      }
-catch (      Exception ex) {
-        logger.info("Exception thrown from failed message processing for message " + messageId,ex);
-      }
-      return null;
-    }
-    try {
-      MuleEvent returnEvent=processNext(event);
-      counter=findCounter(messageId);
-      if (counter != null) {
-        resetCounter(messageId);
-      }
-      return returnEvent;
-    }
- catch (    MuleException ex) {
-      incrementCounter(messageId);
-      throw ex;
-    }
-catch (    RuntimeException ex) {
-      incrementCounter(messageId);
-      throw ex;
-    }
+  if (!exceptionSeen) {
+    counter=findCounter(messageId);
+    tooMany=counter != null && counter.get() > maxRedeliveryCount;
   }
-  finally {
-    store.releaseEntry(messageId);
+  if (tooMany || exceptionSeen) {
+    try {
+      return deadLetterQueue.process(event);
+    }
+ catch (    Exception ex) {
+      logger.info("Exception thrown from failed message processing for message " + messageId,ex);
+    }
+    return null;
+  }
+  try {
+    MuleEvent returnEvent=processNext(event);
+    counter=findCounter(messageId);
+    if (counter != null) {
+      resetCounter(messageId);
+    }
+    return returnEvent;
+  }
+ catch (  MuleException ex) {
+    incrementCounter(messageId);
+    throw ex;
+  }
+catch (  RuntimeException ex) {
+    incrementCounter(messageId);
+    throw ex;
   }
 }
