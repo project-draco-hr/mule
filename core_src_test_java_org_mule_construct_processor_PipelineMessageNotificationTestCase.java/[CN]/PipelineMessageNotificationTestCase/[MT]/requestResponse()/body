@@ -1,0 +1,12 @@
+{
+  TriggerableMessageSource source=new TriggerableMessageSource();
+  pipeline.setMessageSource(source);
+  pipeline.initialise();
+  event=new DefaultMuleEvent(new DefaultMuleMessage("request",muleContext),MessageExchangePattern.REQUEST_RESPONSE,pipeline);
+  source.trigger(event);
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_BEGIN)));
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_REQUEST_END)));
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_RESPONSE_END)));
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_END)));
+  verify(notificationManager,times(4)).fireNotification(any(PipelineMessageNotification.class));
+}

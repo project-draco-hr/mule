@@ -1,2 +1,23 @@
 {
+  builder.chain(new AbstractInterceptingMessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      muleContext.getNotificationManager().fireNotification(new PipelineMessageNotification(AbstractPipeline.this,event,PipelineMessageNotification.PROCESS_BEGIN));
+      MuleEvent result=null;
+      try {
+        result=processNext(event);
+        if (event.getExchangePattern().hasResponse() && result != null) {
+          muleContext.getNotificationManager().fireNotification(new PipelineMessageNotification(AbstractPipeline.this,result,PipelineMessageNotification.PROCESS_RESPONSE_END));
+        }
+        return result;
+      }
+ catch (      MessagingException me) {
+        muleContext.getNotificationManager().fireNotification(new PipelineMessageNotification(AbstractPipeline.this,event,PipelineMessageNotification.PROCESS_EXCEPTION));
+        throw me;
+      }
+ finally {
+        muleContext.getNotificationManager().fireNotification(new PipelineMessageNotification(AbstractPipeline.this,result,PipelineMessageNotification.PROCESS_END));
+      }
+    }
+  }
+);
 }
