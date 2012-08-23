@@ -7,7 +7,9 @@
     sendAsyncRequest(event);
     MuleEvent resultEvent=receiveAsyncReply(event);
     if (resultEvent != null) {
-      event.getSession().merge(resultEvent.getSession());
+      if (resultEvent.getMessage().getInboundProperty(MuleProperties.MULE_SESSION_PROPERTY) != null) {
+        event.getSession().merge(resultEvent.getSession());
+      }
       resultEvent=org.mule.RequestContext.setEvent(new DefaultMuleEvent(resultEvent.getMessage(),event));
     }
     return resultEvent;
