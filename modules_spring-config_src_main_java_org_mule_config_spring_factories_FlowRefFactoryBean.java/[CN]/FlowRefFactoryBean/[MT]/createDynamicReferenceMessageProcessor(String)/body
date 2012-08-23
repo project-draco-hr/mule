@@ -1,0 +1,19 @@
+{
+  if (name == null) {
+    throw new MuleRuntimeException(CoreMessages.objectIsNull(name));
+  }
+ else   if (!referenceCache.containsKey(name)) {
+    MessageProcessor dynamicReference=new MessageProcessor(){
+      @Override public MuleEvent process(      MuleEvent event) throws MuleException {
+        MessageProcessor dynamicMessageProcessor=getReferencedFlow(muleContext.getExpressionManager().parse(refName,event));
+        return dynamicMessageProcessor.process(event);
+      }
+    }
+;
+    if (dynamicReference instanceof Initialisable) {
+      ((Initialisable)dynamicReference).initialise();
+    }
+    referenceCache.putIfAbsent(name,dynamicReference);
+  }
+  return referenceCache.get(name);
+}
