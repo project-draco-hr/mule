@@ -1,13 +1,14 @@
 {
+  final int threadTimeout=20;
   ThreadingProfile threadingProfile=new ChainedThreadingProfile(muleContext.getDefaultThreadingProfile());
-  threadingProfile.setThreadWaitTimeout(500);
-  threadingProfile.setMaxThreadsActive(2);
+  threadingProfile.setThreadWaitTimeout(threadTimeout);
+  threadingProfile.setMaxThreadsActive(3);
   threadingProfile.setPoolExhaustedAction(ThreadingProfile.WHEN_EXHAUSTED_WAIT);
   threadingProfile.setMuleContext(muleContext);
   MessageProcessor mockListener=mock(MessageProcessor.class);
   when(mockListener.process((MuleEvent)any())).thenAnswer(new Answer<MuleEvent>(){
     public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
-      Thread.sleep(500);
+      Thread.sleep(threadTimeout * 2);
       return (MuleEvent)invocation.getArguments()[0];
     }
   }
