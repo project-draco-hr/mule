@@ -3,16 +3,20 @@
   try {
     executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
       @Override public MuleEvent process() throws Exception {
+        MessagingException exceptionThrown=null;
         try {
           processNextTimed(event);
         }
  catch (        MessagingException e) {
-          firePipelineExceptionNotification(event);
+          exceptionThrown=e;
           throw e;
         }
 catch (        Exception e) {
-          firePipelineExceptionNotification(event);
-          throw new MessagingException(event,e,next);
+          exceptionThrown=new MessagingException(event,e,next);
+          throw exceptionThrown;
+        }
+ finally {
+          firePipelineNotification(event,exceptionThrown);
         }
         return VoidMuleEvent.getInstance();
       }

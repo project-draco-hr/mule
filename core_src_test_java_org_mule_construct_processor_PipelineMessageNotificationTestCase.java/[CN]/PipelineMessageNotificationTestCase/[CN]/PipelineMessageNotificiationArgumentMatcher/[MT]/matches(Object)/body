@@ -1,8 +1,16 @@
 {
-  if (expectedAction == ((PipelineMessageNotification)argument).getAction()) {
-    return true;
+  ServerNotification notification=(ServerNotification)argument;
+  if (exceptionExpected) {
+    MessagingException exception=null;
+    if (notification instanceof PipelineMessageNotification) {
+      exception=((PipelineMessageNotification)notification).getException();
+    }
+ else     if (notification instanceof AsyncMessageNotification) {
+      exception=((AsyncMessageNotification)notification).getException();
+    }
+    return expectedAction == notification.getAction() && exception != null;
   }
  else {
-    return false;
+    return expectedAction == notification.getAction();
   }
 }
