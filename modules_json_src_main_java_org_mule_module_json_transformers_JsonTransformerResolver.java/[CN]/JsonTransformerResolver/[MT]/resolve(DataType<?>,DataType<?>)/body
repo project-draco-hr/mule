@@ -25,9 +25,18 @@
  else {
       return null;
     }
-    List<Transformer> ts=muleContext.getRegistry().lookupTransformers(source,result);
-    if (ts.size() == 1 && !(ts.get(0) instanceof ObjectToString)) {
-      t=ts.get(0);
+    Collection<Transformer> ts=muleContext.getRegistry().lookupTransformers(source,result);
+    ts=CollectionUtils.select(ts,new Predicate(){
+      @Override public boolean evaluate(      Object object){
+        if (object instanceof ObjectToString) {
+          return false;
+        }
+        return true;
+      }
+    }
+);
+    if (ts.size() == 1) {
+      t=ts.iterator().next();
     }
  else     if (marshal) {
       ObjectToJson otj=new ObjectToJson();
