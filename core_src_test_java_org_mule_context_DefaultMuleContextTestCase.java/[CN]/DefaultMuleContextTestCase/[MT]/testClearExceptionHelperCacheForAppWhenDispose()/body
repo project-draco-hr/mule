@@ -1,0 +1,21 @@
+{
+  MuleContext ctx=new DefaultMuleContextFactory().createMuleContext();
+  String value=ExceptionHelper.getErrorMapping(TEST_PROTOCOL,IllegalArgumentException.class,ctx);
+  assertThat(value,is(INITIAL_VALUE));
+  ctx.dispose();
+  URL url=DefaultMuleContextTestCase.class.getClassLoader().getResource(SpiUtils.SERVICE_ROOT + ServiceType.EXCEPTION.getPath() + "/"+ TEST_PROTOCOL+ "-exception-mappings.properties");
+  File exceptionMappingFile=new File(url.getFile());
+  FileWriter fileWriter=null;
+  try {
+    fileWriter=new FileWriter(exceptionMappingFile);
+    fileWriter.append("\njava.lang.IllegalArgumentException=" + VALUE_AFTER_REDEPLOY);
+  }
+  finally {
+    if (fileWriter != null) {
+      fileWriter.close();
+    }
+  }
+  ctx.setExecutionClassLoader(getClass().getClassLoader());
+  value=ExceptionHelper.getErrorMapping(TEST_PROTOCOL,IllegalArgumentException.class,ctx);
+  assertThat(value,is(VALUE_AFTER_REDEPLOY));
+}
