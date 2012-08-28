@@ -2,6 +2,14 @@
   super.doInitialise();
   if (clientConnectionManager == null) {
     clientConnectionManager=new MultiThreadedHttpConnectionManager();
+    String prop=System.getProperty("mule.http.disableCleanupThread");
+    disableCleanupThread=prop != null && prop.equals("true");
+    if (!disableCleanupThread) {
+      connectionCleaner=new IdleConnectionTimeoutThread();
+      connectionCleaner.setName("HttpClient-connection-cleaner-" + getName());
+      connectionCleaner.addConnectionManager(clientConnectionManager);
+      connectionCleaner.start();
+    }
     HttpConnectionManagerParams params=new HttpConnectionManagerParams();
     if (getSendBufferSize() != INT_VALUE_NOT_SET) {
       params.setSendBufferSize(getSendBufferSize());
