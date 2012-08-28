@@ -1,0 +1,25 @@
+{
+  this(muleContext);
+  setUniqueId(msg.getUniqueId());
+  setMessageRootId(msg.getMessageRootId());
+  copyMessageProperties(msg);
+  if (!msg.invalidatedPayload) {
+    for (int i=0; i < msg.getMessagesAsArray().length; i++) {
+      MuleMessage currentMsg=msg.getMessagesAsArray()[i];
+      if (deepMessageCopy) {
+        if (currentMsg instanceof MuleMessageCollection) {
+          addMessage(new DefaultMessageCollection((DefaultMessageCollection)currentMsg,muleContext,true));
+        }
+ else {
+          addMessage(new DefaultMuleMessage(currentMsg,currentMsg,muleContext));
+        }
+      }
+ else {
+        addMessage(currentMsg);
+      }
+    }
+  }
+ else {
+    invalidatedPayload=true;
+  }
+}
