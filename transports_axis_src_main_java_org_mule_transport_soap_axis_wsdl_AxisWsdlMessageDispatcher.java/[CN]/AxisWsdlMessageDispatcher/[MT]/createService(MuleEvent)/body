@@ -6,12 +6,12 @@
     parser.setPassword(endpoint.getEndpointURI().getPassword());
   }
   parser.run(wsdlUrl);
-  Map map=parser.getSymbolTable().getHashMap();
-  List entries=new ArrayList();
-  for (Iterator it=map.entrySet().iterator(); it.hasNext(); ) {
-    Map.Entry entry=(Map.Entry)it.next();
-    Vector v=(Vector)entry.getValue();
-    for (Iterator it2=v.iterator(); it2.hasNext(); ) {
+  Map<?,?> map=parser.getSymbolTable().getHashMap();
+  List<Object> entries=new ArrayList<Object>();
+  for (Iterator<?> it=map.entrySet().iterator(); it.hasNext(); ) {
+    Map.Entry<?,?> entry=(Map.Entry<?,?>)it.next();
+    Vector<?> v=(Vector<?>)entry.getValue();
+    for (Iterator<?> it2=v.iterator(); it2.hasNext(); ) {
       SymTabEntry e=(SymTabEntry)it2.next();
       if (ServiceEntry.class.isInstance(e)) {
         entries.add(entry.getKey());
@@ -21,9 +21,9 @@
   if (entries.size() != 1) {
     throw new Exception("Need one and only one service entry, found " + entries.size());
   }
-  Service service=new Service(parser,(QName)entries.get(0));
-  service.setEngineConfiguration(clientConfig);
-  service.setEngine(new AxisClient(clientConfig));
+  Service axisService=new Service(parser,(QName)entries.get(0));
+  axisService.setEngineConfiguration(clientConfig);
+  axisService.setEngine(new AxisClient(clientConfig));
   event.getMessage().setOutboundProperty(SoapConstants.METHOD_NAMESPACE_PROPERTY,parser.getCurrentDefinition().getTargetNamespace());
-  return service;
+  return axisService;
 }
