@@ -10,8 +10,13 @@
 );
   when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_LOCK_FACTORY)).thenReturn(new ServerLockFactory());
   when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_STORE_MANAGER)).thenReturn(mockObjectStoreManager);
-  InMemoryObjectStore inMemoryObjectStore=new InMemoryObjectStore();
-  when(mockObjectStoreManager.getObjectStore(anyString(),anyBoolean(),anyInt(),anyInt(),anyInt())).thenReturn(inMemoryObjectStore);
+  final InMemoryObjectStore inMemoryObjectStore=new InMemoryObjectStore();
+  when(mockObjectStoreManager.getObjectStore(anyString(),anyBoolean(),anyInt(),anyInt(),anyInt())).thenAnswer(new Answer<ObjectStore>(){
+    @Override public ObjectStore answer(    InvocationOnMock invocation) throws Throwable {
+      return inMemoryObjectStore;
+    }
+  }
+);
   when(event.getMessage()).thenReturn(message);
   irp.setMaxRedeliveryCount(MAX_REDELIVERY_COUNT);
   irp.setUseSecureHash(true);
