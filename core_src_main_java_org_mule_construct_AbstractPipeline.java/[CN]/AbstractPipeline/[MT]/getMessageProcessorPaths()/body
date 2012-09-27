@@ -1,0 +1,21 @@
+{
+  Map<MessageProcessor,String> result=new LinkedHashMap<MessageProcessor,String>();
+  int index=0;
+  String base="/" + getName();
+  for (  MessageProcessor mp : getMessageProcessors()) {
+    String prefix=base + "/processors/" + index;
+    result.put(mp,prefix);
+    if (mp instanceof MessageProcessorContainer) {
+      Map<MessageProcessor,String> children=((MessageProcessorContainer)mp).getMessageProcessorPaths();
+      prefixMessageProcessorPaths(prefix,children);
+      result.putAll(children);
+    }
+    index++;
+  }
+  if (exceptionListener instanceof MessageProcessorContainer) {
+    Map<MessageProcessor,String> esPathMap=((MessageProcessorContainer)exceptionListener).getMessageProcessorPaths();
+    prefixMessageProcessorPaths(base + "/es",esPathMap);
+    result.putAll(esPathMap);
+  }
+  return result;
+}
