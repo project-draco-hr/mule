@@ -1,0 +1,27 @@
+{
+  Document document=DocumentHelper.createDocument();
+  Element rootElement=document.addElement("mule","http://www.mulesoft.org/schema/mule/core");
+  try {
+    rootElement.add(convert(element));
+    addSchemaLocation(rootElement,element,callback);
+    for (int i=0; i < element.getAttributes().getLength(); i++) {
+      if (element.getAttributes().item(i).getLocalName().endsWith("-ref")) {
+        org.w3c.dom.Element depenedantElement=callback.getGlobalElement(element.getAttributes().item(i).getNodeValue());
+        if (depenedantElement != null) {
+          rootElement.add(convert(depenedantElement));
+          addSchemaLocation(rootElement,depenedantElement,callback);
+        }
+ else {
+          throw new MuleArtifactFactoryException("Missing dependent xml element " + element.getAttributes().item(i).getLocalName());
+        }
+      }
+    }
+    ConfigResource config=new ConfigResource("",new StringBufferInputStream(document.asXML()));
+    MuleContextFactory factory=new DefaultMuleContextFactory();
+    MuleContext muleContext=factory.createMuleContext(new SpringXmlConfigurationBuilder(new ConfigResource[]{config}));
+    return new DefaultMuleArtifact(muleContext.getRegistry().lookupObject(element.getAttribute("name")));
+  }
+ catch (  Exception e) {
+    throw new MuleArtifactFactoryException("Error parsing XML",e);
+  }
+}
