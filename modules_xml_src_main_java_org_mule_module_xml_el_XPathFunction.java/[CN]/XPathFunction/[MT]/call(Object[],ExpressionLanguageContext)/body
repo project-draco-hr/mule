@@ -1,11 +1,15 @@
 {
   try {
-    if (params.length == 1) {
-      return muleContext.getExpressionManager().evaluate("xpath-branch:" + params[0],new DefaultMuleMessage(((MessageContext)context.getVariable("message")).getPayload(),muleContext));
+    MessageContext ctxMessage=(MessageContext)context.getVariable("message");
+    MuleMessage message=new DefaultMuleMessage(ctxMessage.getPayload(),muleContext);
+    String evaluator="xpath-branch:";
+    if (params.length != 1) {
+      evaluator="xpath-node:";
+      message=new DefaultMuleMessage(params[1],muleContext);
     }
- else {
-      return muleContext.getExpressionManager().evaluate("xpath-node:" + params[0],new DefaultMuleMessage(params[1],muleContext));
-    }
+    Object result=muleContext.getExpressionManager().evaluate(evaluator + params[0],message);
+    ctxMessage.setPayload(message.getPayload());
+    return result;
   }
  catch (  Exception e) {
     throw new RuntimeException(e);
