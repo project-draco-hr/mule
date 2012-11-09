@@ -1,8 +1,8 @@
 {
-  InboundEndpoint endpoint1=getTestInboundEndpoint("Test1Provider","test://Test1Provider?exchangePattern=one-way");
-  Mock session=MuleTestUtils.getMockSession();
   Service service=getTestService();
-  session.matchAndReturn("getFlowConstruct",service);
+  MuleSession session=mock(MuleSession.class);
+  when(session.getFlowConstruct()).thenReturn(service);
+  InboundEndpoint endpoint1=getTestInboundEndpoint("Test1Provider","test://Test1Provider?exchangePattern=one-way");
   IdempotentMessageFilter ir=new IdempotentMessageFilter();
   ir.setIdExpression("#[header:id]");
   ir.setFlowConstruct(service);
@@ -11,12 +11,12 @@
   ir.setStore(new InMemoryObjectStore<String>());
   MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
   okMessage.setOutboundProperty("id","1");
-  MuleEvent event=new DefaultMuleEvent(okMessage,endpoint1,getTestService(),(MuleSession)session.proxy());
+  MuleEvent event=new DefaultMuleEvent(okMessage,endpoint1,getTestService(),session);
   event=ir.process(event);
   assertNotNull(event);
   okMessage=new DefaultMuleMessage("OK",muleContext);
   okMessage.setOutboundProperty("id","1");
-  event=new DefaultMuleEvent(okMessage,endpoint1,getTestService(),(MuleSession)session.proxy());
+  event=new DefaultMuleEvent(okMessage,endpoint1,getTestService(),session);
   event=ir.process(event);
   assertNull(event);
 }
