@@ -1,6 +1,4 @@
 {
-  Mock mockSession=MuleTestUtils.getMockSession();
-  mockSession.matchAndReturn("getFlowConstruct",getTestService());
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("TestFailEndpoint","test://Failure?exchangePattern=request-response");
   OutboundEndpoint endpoint2=getTestOutboundEndpoint("TestSuccessEndpoint","test://Success?exchangePattern=request-response");
   Mock mockendpoint1=RouterTestUtils.getMockEndpoint(endpoint1);
@@ -16,7 +14,7 @@
   MuleMessage exPayloadMessage=new DefaultMuleMessage("there was a failure",muleContext);
   exPayloadMessage.setExceptionPayload(new DefaultExceptionPayload(new RuntimeException()));
   MuleEvent exPayloadMessageEvent=new OutboundRoutingTestEvent(exPayloadMessage,null,muleContext);
-  final MuleSession session=(MuleSession)mockSession.proxy();
+  final MuleSession session=mock(MuleSession.class);
   mockendpoint1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),exPayloadMessageEvent);
   mockendpoint2.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),expectedResultEvent);
   MuleEvent actualResult=router.route(new OutboundRoutingTestEvent(message,session,muleContext));

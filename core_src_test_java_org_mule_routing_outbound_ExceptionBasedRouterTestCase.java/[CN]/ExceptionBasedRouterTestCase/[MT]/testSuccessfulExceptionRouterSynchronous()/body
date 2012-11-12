@@ -1,6 +1,4 @@
 {
-  Mock mockSession=MuleTestUtils.getMockSession();
-  mockSession.matchAndReturn("getFlowConstruct",getTestService());
   DefaultOutboundRouterCollection messageRouter=new DefaultOutboundRouterCollection();
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   OutboundEndpoint endpoint1=muleContext.getEndpointFactory().getOutboundEndpoint("test://Dummy1?exchangePattern=request-response");
@@ -22,7 +20,8 @@
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
   MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
   mockendpoint1.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
-  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)mockSession.proxy(),muleContext));
+  MuleSession session=mock(MuleSession.class);
+  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   assertNotNull(result);
   assertEquals(message,result.getMessage());
   mockendpoint1.verify();

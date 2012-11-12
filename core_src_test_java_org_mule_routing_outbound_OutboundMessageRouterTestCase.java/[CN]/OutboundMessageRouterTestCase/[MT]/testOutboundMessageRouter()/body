@@ -1,6 +1,4 @@
 {
-  Mock session=MuleTestUtils.getMockSession();
-  session.matchAndReturn("getFlowConstruct",getTestService());
   DefaultOutboundRouterCollection messageRouter=createObject(DefaultOutboundRouterCollection.class);
   messageRouter.setCatchAllStrategy(new LoggingCatchAllStrategy());
   assertNotNull(messageRouter.getCatchAllStrategy());
@@ -31,12 +29,12 @@
   list.add(router1);
   list.add(router2);
   messageRouter.setMessageProcessors(list);
-  MuleEvent event=getTestEvent("test event",(MuleSession)session.proxy());
+  MuleSession session=mock(MuleSession.class);
+  MuleEvent event=getTestEvent("test event",session);
   mockendpoint1.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   messageRouter.process(event);
   mockendpoint1.verify();
-  event=getTestEvent(new IllegalArgumentException(),(MuleSession)session.proxy());
-  session.expectAndReturn("getFlowConstruct",getTestService());
+  event=getTestEvent(new IllegalArgumentException(),session);
   mockendpoint2.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   messageRouter.process(event);
   mockendpoint2.verify();
@@ -46,9 +44,7 @@
   endpoints.add((OutboundEndpoint)mockendpoint2.proxy());
   router3.setRoutes(endpoints);
   messageRouter.addRoute(router3);
-  event=getTestEvent("testing multiple routing",(MuleSession)session.proxy());
-  session.expectAndReturn("getFlowConstruct",getTestService());
-  session.expectAndReturn("getFlowConstruct",getTestService());
+  event=getTestEvent("testing multiple routing",session);
   mockendpoint1.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   mockendpoint2.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   messageRouter.setMatchAll(true);

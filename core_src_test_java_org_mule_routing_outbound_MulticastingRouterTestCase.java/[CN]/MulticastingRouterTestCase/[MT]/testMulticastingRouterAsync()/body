@@ -1,6 +1,4 @@
 {
-  Mock session=MuleTestUtils.getMockSession();
-  session.matchAndReturn("getFlowConstruct",getTestService());
   RegExFilter filter=new RegExFilter("(.*) Message");
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://test1",null,filter,null);
   assertNotNull(endpoint1);
@@ -17,7 +15,8 @@
   assertTrue(router.isMatch(message));
   mockendpoint1.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   mockendpoint2.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
-  router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
+  MuleSession session=mock(MuleSession.class);
+  router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   mockendpoint1.verify();
   mockendpoint2.verify();
 }

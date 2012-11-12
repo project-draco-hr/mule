@@ -1,7 +1,4 @@
 {
-  Mock session=MuleTestUtils.getMockSession();
-  session.matchAndReturn("getFlowConstruct",getTestService());
-  session.matchAndReturn("setFlowConstruct",RouterTestUtils.getArgListCheckerFlowConstruct(),null);
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1endpoint","test://endpointUri.1",null,new PayloadTypeFilter(Apple.class),null);
   OutboundEndpoint endpoint2=getTestOutboundEndpoint("Test2Endpoint","test://endpointUri.2",null,new PayloadTypeFilter(Orange.class),null);
   OutboundEndpoint endpoint3=getTestOutboundEndpoint("Test3Endpoint","test://endpointUri.3");
@@ -39,19 +36,18 @@
   mockendpoint1.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   mockendpoint2.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   mockendpoint3.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
-  asyncSplitter.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
-  session.verify();
+  MuleSession session=mock(MuleSession.class);
+  asyncSplitter.route(new OutboundRoutingTestEvent(message,session,muleContext));
   message=new DefaultMuleMessage(payload,muleContext);
   MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
   mockendpoint4.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint4.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint5.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint6.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
-  MuleEvent result=syncSplitter.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
+  MuleEvent result=syncSplitter.route(new OutboundRoutingTestEvent(message,session,muleContext));
   assertNotNull(result);
   MuleMessage resultMessage=result.getMessage();
   assertNotNull(resultMessage);
   assertTrue(resultMessage instanceof MuleMessageCollection);
   assertEquals(4,((MuleMessageCollection)resultMessage).size());
-  session.verify();
 }

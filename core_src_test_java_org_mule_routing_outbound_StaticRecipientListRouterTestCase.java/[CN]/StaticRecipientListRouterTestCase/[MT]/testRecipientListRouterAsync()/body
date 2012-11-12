@@ -1,6 +1,5 @@
 {
-  Mock session=MuleTestUtils.getMockSession();
-  session.matchAndReturn("getFlowConstruct",getTestService());
+  MuleSession session=mock(MuleSession.class);
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider");
   assertNotNull(endpoint1);
   Mock mockendpoint1=RouterTestUtils.getMockEndpoint(endpoint1);
@@ -20,13 +19,13 @@
   assertTrue(router.isMatch(message));
   final List<Mock> mockEndpoints=new ArrayList<Mock>();
   router.setMockEndpointListener(new MockEndpointListener(){
-    public void mockEndpointAdded(    Mock recipient){
+    @Override public void mockEndpointAdded(    Mock recipient){
       mockEndpoints.add(recipient);
       recipient.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
     }
   }
 );
-  router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
+  router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   for (  Mock mockEp : mockEndpoints) {
     mockEp.verify();
   }

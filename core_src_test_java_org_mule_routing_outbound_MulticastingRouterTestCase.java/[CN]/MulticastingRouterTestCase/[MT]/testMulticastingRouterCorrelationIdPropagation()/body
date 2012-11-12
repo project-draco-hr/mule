@@ -1,6 +1,4 @@
 {
-  Mock session=MuleTestUtils.getMockSession();
-  session.matchAndReturn("getFlowConstruct",getTestService());
   RegExFilter filter=new RegExFilter("(.*) Message");
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://test1",null,filter,null);
   assertNotNull(endpoint1);
@@ -18,7 +16,7 @@
   message.setProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY,"MyCustomCorrelationId",PropertyScope.INBOUND);
   assertTrue(router.isMatch(message));
   ConstraintMatcher expectedCorrelationId=new ConstraintMatcher(){
-    public boolean matches(    Object[] args){
+    @Override public boolean matches(    Object[] args){
       boolean argsMatch=args.length == 1 && args[0] instanceof MuleEvent;
       if (argsMatch) {
         MuleEvent event=(MuleEvent)args[0];
@@ -27,14 +25,15 @@
       }
       return false;
     }
-    public Object[] getConstraints(){
+    @Override public Object[] getConstraints(){
       return new String[]{"Outbound Correlation ID property should be set."};
     }
   }
 ;
   mockendpoint1.expect("process",expectedCorrelationId);
   mockendpoint2.expect("process",expectedCorrelationId);
-  router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
+  MuleSession session=mock(MuleSession.class);
+  router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   mockendpoint1.verify();
   mockendpoint2.verify();
 }

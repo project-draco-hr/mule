@@ -1,7 +1,4 @@
 {
-  Mock session=MuleTestUtils.getMockSession();
-  session.matchAndReturn("getFlowConstruct",getTestService());
-  session.matchAndReturn("setFlowConstruct",RouterTestUtils.getArgListCheckerFlowConstruct(),null);
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Endpoint","test://endpointUri.1");
   OutboundEndpoint endpoint2=getTestOutboundEndpoint("Test2Endpoint","test://endpointUri.2");
   OutboundEndpoint endpoint3=getTestOutboundEndpoint("Test3Endpoint","test://endpointUri.3");
@@ -37,7 +34,8 @@
   mockendpoint1.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   mockendpoint2.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
   mockendpoint3.expect("process",RouterTestUtils.getArgListCheckerMuleEvent());
-  router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
+  MuleSession session=mock(MuleSession.class);
+  router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   mockendpoint1.verify();
   mockendpoint2.verify();
   mockendpoint3.verify();
@@ -52,7 +50,7 @@
   mockendpoint4.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint5.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
   mockendpoint6.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
-  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,(MuleSession)session.proxy(),muleContext));
+  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   assertNotNull(result);
   MuleMessage resultMessage=result.getMessage();
   assertNotNull(resultMessage);
