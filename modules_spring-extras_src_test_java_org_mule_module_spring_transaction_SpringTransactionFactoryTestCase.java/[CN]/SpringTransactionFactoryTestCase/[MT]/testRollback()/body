@@ -1,11 +1,11 @@
 {
-  Mock mockPTM=new Mock(PlatformTransactionManager.class);
-  Mock mockTS=new Mock(TransactionStatus.class);
-  mockPTM.expectAndReturn("getTransaction",C.same(null),mockTS.proxy());
-  mockPTM.expect("rollback",C.same(mockTS.proxy()));
-  mockTS.expect("setRollbackOnly");
+  TransactionStatus mockTS=mock(TransactionStatus.class);
+  PlatformTransactionManager mockPTM=mock(PlatformTransactionManager.class);
+  when(mockPTM.getTransaction(any(TransactionDefinition.class))).thenReturn(mockTS);
   SpringTransactionFactory factory=new SpringTransactionFactory();
-  factory.setManager((PlatformTransactionManager)mockPTM.proxy());
+  factory.setManager(mockPTM);
   Transaction tx=factory.beginTransaction(muleContext);
   tx.rollback();
+  verify(mockPTM).rollback(mockTS);
+  verify(mockTS).setRollbackOnly();
 }

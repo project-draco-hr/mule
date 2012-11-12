@@ -1,17 +1,10 @@
 {
   HttpsConnector httpsConnector=new HttpsConnector(muleContext);
   httpsConnector.setSslHandshakeTimeout(1000);
-  Map<?,?> properties=Collections.emptyMap();
-  Mock mockEndpoint=new Mock(InboundEndpoint.class);
-  mockEndpoint.expectAndReturn("getConnector",httpsConnector);
-  mockEndpoint.expectAndReturn("getEncoding",new DefaultMuleConfiguration().getDefaultEncoding());
-  mockEndpoint.expectAndReturn("getProperties",properties);
-  mockEndpoint.expectAndReturn("getProperties",properties);
-  InboundEndpoint inboundEndpoint=(InboundEndpoint)mockEndpoint.proxy();
-  Mock mockService=new Mock(Service.class);
-  mockService.expectAndReturn("getResponseRouter",null);
-  mockService.expectAndReturn("getInboundRouter",new ServiceCompositeMessageSource());
-  Service service=(Service)mockService.proxy();
-  MockHttpsMessageReceiver messageReceiver=new MockHttpsMessageReceiver(httpsConnector,service,inboundEndpoint);
-  return messageReceiver;
+  Map<String,Object> properties=Collections.emptyMap();
+  InboundEndpoint inboundEndpoint=mock(InboundEndpoint.class);
+  when(inboundEndpoint.getConnector()).thenReturn(httpsConnector);
+  when(inboundEndpoint.getProperties()).thenReturn(properties);
+  Service service=mock(Service.class);
+  return new MockHttpsMessageReceiver(httpsConnector,service,inboundEndpoint);
 }

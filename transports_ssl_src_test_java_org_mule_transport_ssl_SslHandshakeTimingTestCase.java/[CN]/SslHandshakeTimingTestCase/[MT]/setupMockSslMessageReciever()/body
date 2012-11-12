@@ -1,16 +1,11 @@
 {
   SslConnector connector=new SslConnector(muleContext);
   connector.setSslHandshakeTimeout(1000);
-  Mock mockService=new Mock(Service.class);
-  mockService.expect("getResponseRouter");
-  mockService.expectAndReturn("getInboundRouter",new ServiceCompositeMessageSource());
-  Service service=(Service)mockService.proxy();
   Map<String,Object> properties=Collections.emptyMap();
-  Mock mockEndpoint=new Mock(InboundEndpoint.class);
-  mockEndpoint.expectAndReturn("getConnector",connector);
-  mockEndpoint.expectAndReturn("getEncoding",new DefaultMuleConfiguration().getDefaultEncoding());
-  mockEndpoint.expectAndReturn("getProperties",properties);
-  mockEndpoint.expectAndReturn("getProperties",properties);
-  InboundEndpoint endpoint=(InboundEndpoint)mockEndpoint.proxy();
+  InboundEndpoint endpoint=mock(InboundEndpoint.class);
+  when(endpoint.getProperties()).thenReturn(properties);
+  when(endpoint.getConnector()).thenReturn(connector);
+  when(endpoint.getEncoding()).thenReturn(new DefaultMuleConfiguration().getDefaultEncoding());
+  Service service=mock(Service.class);
   return new SslMessageReceiver(connector,service,endpoint);
 }

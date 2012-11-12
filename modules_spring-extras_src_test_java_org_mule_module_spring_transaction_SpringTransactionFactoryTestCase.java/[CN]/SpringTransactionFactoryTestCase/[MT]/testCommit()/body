@@ -1,10 +1,10 @@
 {
-  Mock mockPTM=new Mock(PlatformTransactionManager.class);
-  Mock mockTS=new Mock(TransactionStatus.class);
-  mockPTM.expectAndReturn("getTransaction",C.same(null),mockTS.proxy());
-  mockPTM.expect("commit",C.same(mockTS.proxy()));
+  TransactionStatus mockTS=mock(TransactionStatus.class);
+  PlatformTransactionManager mockPTM=mock(PlatformTransactionManager.class);
+  when(mockPTM.getTransaction(any(TransactionDefinition.class))).thenReturn(mockTS);
   SpringTransactionFactory factory=new SpringTransactionFactory();
-  factory.setManager((PlatformTransactionManager)mockPTM.proxy());
+  factory.setManager(mockPTM);
   Transaction tx=factory.beginTransaction(muleContext);
   tx.commit();
+  verify(mockPTM).commit(mockTS);
 }
