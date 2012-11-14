@@ -9,8 +9,19 @@
       if (attributeName != null && attributeName.endsWith("-ref")) {
         org.w3c.dom.Element depenedantElement=callback.getGlobalElement(element.getAttributes().item(i).getNodeValue());
         if (depenedantElement != null) {
-          rootElement.add(convert(depenedantElement));
-          addSchemaLocation(rootElement,depenedantElement,callback);
+          if ("http://www.springframework.org/schema/beans".equals(depenedantElement.getNamespaceURI())) {
+            String namespaceUri=depenedantElement.getNamespaceURI();
+            Namespace namespace=new Namespace(depenedantElement.getPrefix(),namespaceUri);
+            Element beans=rootElement.element(new QName("beans",namespace));
+            if (beans == null) {
+              beans=rootElement.addElement("beans",namespaceUri);
+            }
+            beans.add(convert(depenedantElement));
+          }
+ else {
+            rootElement.add(convert(depenedantElement));
+            addSchemaLocation(rootElement,depenedantElement,callback);
+          }
         }
  else {
           throw new MuleArtifactFactoryException("Missing dependent xml element " + element.getAttributes().item(i).getLocalName());
