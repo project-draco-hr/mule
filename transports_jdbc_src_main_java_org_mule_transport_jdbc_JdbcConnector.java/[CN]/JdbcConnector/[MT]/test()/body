@@ -1,14 +1,21 @@
 {
   if (isConnected()) {
-    return new ConnectorTestResult(TestResult.Status.SUCCESS);
+    return new DefaultTestResult(TestResult.Status.SUCCESS);
   }
   Connection con=null;
   try {
     con=dataSource.getConnection();
-    return new ConnectorTestResult(TestResult.Status.SUCCESS);
+    return new DefaultTestResult(TestResult.Status.SUCCESS);
   }
  catch (  Exception e) {
-    return new ConnectorTestResult(TestResult.Status.FAILURE,e.toString());
+    TestResult.FailureType failureType=TestResult.FailureType.UNSPECIFIED;
+    if (e.getMessage().contains("Communications link failure")) {
+      failureType=TestResult.FailureType.CONNECTION_FAILURE;
+    }
+ else     if (e.getMessage().contains("Access denied for user")) {
+      failureType=TestResult.FailureType.INVALID_CREDENTIALS;
+    }
+    return new DefaultTestResult(TestResult.Status.FAILURE,e.getMessage(),failureType,e);
   }
  finally {
     if (con != null) {
