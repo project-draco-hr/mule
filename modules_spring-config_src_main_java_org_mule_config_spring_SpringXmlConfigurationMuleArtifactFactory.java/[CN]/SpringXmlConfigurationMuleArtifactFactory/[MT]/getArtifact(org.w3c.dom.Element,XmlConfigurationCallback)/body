@@ -37,13 +37,20 @@
 catch (  Exception e) {
     throw new MuleArtifactFactoryException("Error parsing XML",e);
   }
+  MuleContext muleContext=null;
+  SpringXmlConfigurationBuilder builder=null;
   try {
     MuleContextFactory factory=new DefaultMuleContextFactory();
-    MuleContext muleContext=factory.createMuleContext(new SpringXmlConfigurationBuilder(new ConfigResource[]{config}));
+    builder=new SpringXmlConfigurationBuilder(new ConfigResource[]{config});
+    muleContext=factory.createMuleContext(builder);
     muleContext.start();
-    return new DefaultMuleArtifact(muleContext.getRegistry().lookupObject(element.getAttribute("name")));
+    MuleArtifact artifact=new DefaultMuleArtifact(muleContext.getRegistry().lookupObject(element.getAttribute("name")));
+    builders.put(artifact,builder);
+    contexts.put(artifact,muleContext);
+    return artifact;
   }
  catch (  Exception e) {
+    dispose(builder,muleContext);
     throw new MuleArtifactFactoryException("Error initializing",e);
   }
 }
