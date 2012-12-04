@@ -2,13 +2,19 @@
   MessageDispatcher dispatcher=null;
   try {
     dispatcher=getDispatcher(endpoint);
-    if (notificationMessageProcessor == null) {
-      notificationMessageProcessor=new OutboundNotificationMessageProcessor(endpoint);
+    boolean fireNotification=event.isNotificationsEnabled();
+    EndpointMessageNotification beginNotification=null;
+    if (fireNotification) {
+      if (notificationMessageProcessor == null) {
+        notificationMessageProcessor=new OutboundNotificationMessageProcessor(endpoint);
+      }
+      beginNotification=notificationMessageProcessor.createBeginNotification(event);
     }
-    EndpointMessageNotification beginNotification=notificationMessageProcessor.createBeginNotification(event);
     MuleEvent result=dispatcher.process(event);
-    notificationMessageProcessor.dispatchNotification(beginNotification);
-    notificationMessageProcessor.process((result != null && !VoidMuleEvent.getInstance().equals(result)) ? result : event);
+    if (fireNotification) {
+      notificationMessageProcessor.dispatchNotification(beginNotification);
+      notificationMessageProcessor.process((result != null && !VoidMuleEvent.getInstance().equals(result)) ? result : event);
+    }
     return result;
   }
  catch (  DispatchException dex) {
