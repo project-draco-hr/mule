@@ -2,38 +2,34 @@
   RegExFilter filter=new RegExFilter("(.*) Message");
   OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://test1",null,filter,null);
   assertNotNull(endpoint1);
+  OutboundEndpoint mockendpoint1=RouterTestUtils.createMockEndpoint(endpoint1);
   OutboundEndpoint endpoint2=getTestOutboundEndpoint("Test2Provider","test://test2",null,filter,null);
   assertNotNull(endpoint2);
-  Mock mockendpoint1=RouterTestUtils.getMockEndpoint(endpoint1);
-  Mock mockendpoint2=RouterTestUtils.getMockEndpoint(endpoint2);
+  OutboundEndpoint mockendpoint2=RouterTestUtils.createMockEndpoint(endpoint2);
   MulticastingRouter router=createObject(MulticastingRouter.class);
   List<MessageProcessor> endpoints=new ArrayList<MessageProcessor>();
-  endpoints.add((OutboundEndpoint)mockendpoint1.proxy());
-  endpoints.add((OutboundEndpoint)mockendpoint2.proxy());
+  endpoints.add(mockendpoint1);
+  endpoints.add(mockendpoint2);
   router.setRoutes(endpoints);
   router.setEnableCorrelation(CorrelationMode.NEVER);
   MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,muleContext);
   message.setProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY,"MyCustomCorrelationId",PropertyScope.INBOUND);
   assertTrue(router.isMatch(message));
-  ConstraintMatcher expectedCorrelationId=new ConstraintMatcher(){
-    @Override public boolean matches(    Object[] args){
-      boolean argsMatch=args.length == 1 && args[0] instanceof MuleEvent;
-      if (argsMatch) {
-        MuleEvent event=(MuleEvent)args[0];
-        String correlationId=event.getMessage().getOutboundProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY);
-        return correlationId != null && correlationId.equals("MyCustomCorrelationId");
-      }
-      return false;
-    }
-    @Override public Object[] getConstraints(){
-      return new String[]{"Outbound Correlation ID property should be set."};
+  Answer<MuleEvent> answer=new Answer<MuleEvent>(){
+    @Override public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
+      Object[] arguments=invocation.getArguments();
+      assertEquals(1,arguments.length);
+      assertTrue(arguments[0] instanceof MuleEvent);
+      MuleEvent event=(MuleEvent)arguments[0];
+      String correlationId=event.getMessage().getOutboundProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY);
+      assertNotNull(correlationId);
+      assertEquals("MyCustomCorrelationId",correlationId);
+      return event;
     }
   }
 ;
-  mockendpoint1.expect("process",expectedCorrelationId);
-  mockendpoint2.expect("process",expectedCorrelationId);
+  when(mockendpoint1.process(any(MuleEvent.class))).thenAnswer(answer);
+  when(mockendpoint2.process(any(MuleEvent.class))).thenAnswer(answer);
   MuleSession session=mock(MuleSession.class);
   router.route(new OutboundRoutingTestEvent(message,session,muleContext));
-  mockendpoint1.verify();
-  mockendpoint2.verify();
 }

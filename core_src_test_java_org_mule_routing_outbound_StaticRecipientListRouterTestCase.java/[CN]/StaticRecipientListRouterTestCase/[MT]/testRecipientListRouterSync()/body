@@ -16,11 +16,9 @@
   assertTrue(router.isMatch(message));
   message=new DefaultMuleMessage("test event",muleContext);
   final MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
-  final List<Mock> mockEndpoints=new ArrayList<Mock>();
   router.setMockEndpointListener(new MockEndpointListener(){
-    @Override public void mockEndpointAdded(    Mock recipient){
-      mockEndpoints.add(recipient);
-      recipient.expectAndReturn("process",RouterTestUtils.getArgListCheckerMuleEvent(),event);
+    @Override public void mockEndpointAdded(    OutboundEndpoint recipient) throws MuleException {
+      when(recipient.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer(event));
     }
   }
 );
@@ -30,5 +28,5 @@
   MuleMessage resultMessage=result.getMessage();
   assertNotNull(resultMessage);
   assertTrue(resultMessage.getPayload() instanceof List);
-  assertEquals(3,((List)resultMessage.getPayload()).size());
+  assertEquals(3,((List<?>)resultMessage.getPayload()).size());
 }
