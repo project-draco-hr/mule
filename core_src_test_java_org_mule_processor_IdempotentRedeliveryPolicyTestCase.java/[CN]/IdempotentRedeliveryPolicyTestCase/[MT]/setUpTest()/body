@@ -8,7 +8,11 @@
     }
   }
 );
-  when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_LOCK_FACTORY)).thenReturn(new ServerLockFactory());
+  MuleLockManager muleLockManager=new MuleLockManager();
+  muleLockManager.setMuleContext(mockMuleContext);
+  when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_LOCK_PROVIDER)).thenReturn(new SingleServerLockProvider());
+  muleLockManager.initialise();
+  when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_LOCK_MANAGER)).thenReturn(muleLockManager);
   when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_STORE_MANAGER)).thenReturn(mockObjectStoreManager);
   final InMemoryObjectStore inMemoryObjectStore=new InMemoryObjectStore();
   when(mockObjectStoreManager.getObjectStore(anyString(),anyBoolean(),anyInt(),anyInt(),anyInt())).thenAnswer(new Answer<ObjectStore>(){
