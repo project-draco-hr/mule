@@ -1,15 +1,12 @@
 {
   Connector connector=getConnectorAndAssert();
-  Mock ehandlerMock=new Mock(SystemExceptionHandler.class,"exceptionHandler");
-  ehandlerMock.expect("handleException",C.isA(Exception.class));
+  SystemExceptionHandler ehandlerMock=mock(SystemExceptionHandler.class);
   assertNotNull(muleContext.getExceptionListener());
-  muleContext.setExceptionListener((SystemExceptionHandler)ehandlerMock.proxy());
+  muleContext.setExceptionListener(ehandlerMock);
   muleContext.getExceptionListener().handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
   if (connector instanceof AbstractConnector) {
-    ehandlerMock.expect("handleException",C.isA(Exception.class));
     muleContext.getExceptionListener().handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
   }
-  ehandlerMock.verify();
   muleContext.setExceptionListener(null);
   try {
     muleContext.getExceptionListener().handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
