@@ -1,8 +1,11 @@
 {
   when(mockMessagingException.getEvent()).thenReturn(mockEvent);
+  when(mockMuleContext.getNotificationManager()).thenReturn(mock(ServerNotificationManager.class));
+  when(mockMuleContext.getRegistry()).thenReturn(mock(MuleRegistry.class));
   when(mockMessagingExceptionHandler.handleException(any(MessagingException.class),any(MuleEvent.class))).thenAnswer(new Answer<Object>(){
     @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
       DefaultMessagingExceptionStrategy defaultMessagingExceptionStrategy=new DefaultMessagingExceptionStrategy();
+      defaultMessagingExceptionStrategy.setMuleContext(mockMuleContext);
       if (rollbackFilter != null) {
         defaultMessagingExceptionStrategy.setRollbackTxFilter(new WildcardFilter(rollbackFilter));
       }
