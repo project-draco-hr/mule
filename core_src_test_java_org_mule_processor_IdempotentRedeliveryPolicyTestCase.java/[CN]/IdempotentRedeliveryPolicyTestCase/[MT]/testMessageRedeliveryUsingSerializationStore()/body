@@ -1,7 +1,13 @@
 {
   when(message.getPayload()).thenReturn(STRING_MESSAGE);
   reset(mockObjectStoreManager);
-  when(mockObjectStoreManager.getObjectStore(anyString(),anyBoolean(),anyInt(),anyInt(),anyInt())).thenReturn(new SerializationObjectStore());
+  final ObjectStore serializationObjectStore=new SerializationObjectStore();
+  when(mockObjectStoreManager.getObjectStore(anyString(),anyBoolean(),anyInt(),anyInt(),anyInt())).thenAnswer(new Answer<ObjectStore>(){
+    @Override public ObjectStore answer(    InvocationOnMock invocation) throws Throwable {
+      return serializationObjectStore;
+    }
+  }
+);
   irp.initialise();
   processUntilFailure();
   verify(mockDlqMessageProcessor,VerificationModeFactory.times(1)).process(event);
