@@ -1,9 +1,10 @@
 {
   MockHttpsMessageReceiver messageReceiver=setupMockHttpsMessageReceiver();
   MockSslSocket socket=new MockSslSocket();
-  Work work=messageReceiver.createWork(socket);
+  HttpServerConnection serverConnection=new HttpServerConnection(socket,messageReceiver.getEndpoint().getEncoding(),(HttpConnector)messageReceiver.getConnector());
+  Work work=messageReceiver.createWork(serverConnection);
   assertNotNull(work);
-  invokeHandshakeCompleted(work,socket);
+  invokeHandshakeCompleted(serverConnection,socket);
   MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,muleContext);
   invokePreRouteMessage(work,message);
   assertNotNull(message.<Object>getInboundProperty(MuleProperties.MULE_REMOTE_CLIENT_ADDRESS));

@@ -1,0 +1,14 @@
+{
+  HttpRequestDispatcher httpRequestDispatcher=new HttpRequestDispatcher(mockHttpConnector,mockRetryTemplate,mockServerSocket,mockWorkManager);
+  sustituteLifecycleManager();
+  when(mockConnectorLifecycleManager.getState().isStarted()).thenReturn(false);
+  when(mockHttpConnector.isStarted()).thenReturn(false);
+  Thread dispatcherThread=createDispatcherThread(httpRequestDispatcher);
+  try {
+    dispatcherThread.start();
+    verify(mockWorkManager,times(0)).scheduleWork(any(HttpRequestDispatcherWork.class),anyLong(),any(ExecutionContext.class),any(WorkListener.class));
+  }
+  finally {
+    httpRequestDispatcher.disconnect();
+  }
+}

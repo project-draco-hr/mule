@@ -1,0 +1,25 @@
+{
+  final HttpRequestDispatcher httpRequestDispatcher=new HttpRequestDispatcher(mockHttpConnector,mockRetryTemplate,mockServerSocket,mockWorkManager);
+  final Latch acceptCalledLath=new Latch();
+  sustituteLifecycleManager();
+  when(mockConnectorLifecycleManager.getState().isStarted()).thenReturn(true);
+  when(mockRetryTemplate.execute(any(RetryCallback.class),any(WorkManager.class))).thenAnswer(new Answer<Object>(){
+    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      acceptCalledLath.release();
+      throw new Exception();
+    }
+  }
+);
+  when(mockHttpConnector.getMuleContext().getExceptionListener()).thenReturn(mockExceptionListener);
+  Thread dispatcherThread=createDispatcherThread(httpRequestDispatcher);
+  try {
+    dispatcherThread.start();
+    if (!acceptCalledLath.await(WAIT_TIME,TimeUnit.MILLISECONDS)) {
+      fail("retry template should be executed");
+    }
+    verify(mockExceptionListener,Mockito.atLeast(1)).handleException(Mockito.isA(Exception.class));
+  }
+  finally {
+    httpRequestDispatcher.disconnect();
+  }
+}

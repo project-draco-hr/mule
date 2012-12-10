@@ -1,0 +1,34 @@
+{
+  while (!disconnect.get()) {
+    if (httpConnector.isStarted() && !disconnect.get()) {
+      try {
+        retryTemplate.execute(new RetryCallback(){
+          public void doWork(          RetryContext context) throws Exception {
+            Socket socket=null;
+            try {
+              socket=serverSocket.accept();
+            }
+ catch (            Exception e) {
+              if (!httpConnector.isDisposed() && !disconnect.get()) {
+                throw new ConnectException(e,null);
+              }
+            }
+            if (socket != null) {
+              Work work=new HttpRequestDispatcherWork(httpConnector,socket);
+              workManager.scheduleWork(work,javax.resource.spi.work.WorkManager.INDEFINITE,null,httpConnector);
+            }
+          }
+          public String getWorkDescription(){
+            String hostName=((InetSocketAddress)serverSocket.getLocalSocketAddress()).getHostName();
+            int port=((InetSocketAddress)serverSocket.getLocalSocketAddress()).getPort();
+            return String.format("%s://%s:%d",httpConnector.getProtocol(),hostName,port);
+          }
+        }
+,workManager);
+      }
+ catch (      Exception e) {
+        httpConnector.getMuleContext().getExceptionListener().handleException(e);
+      }
+    }
+  }
+}
