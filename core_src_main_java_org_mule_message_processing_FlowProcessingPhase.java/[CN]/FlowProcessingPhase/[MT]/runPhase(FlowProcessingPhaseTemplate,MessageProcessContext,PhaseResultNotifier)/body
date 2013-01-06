@@ -1,0 +1,50 @@
+{
+  Work flowExecutionWork=new Work(){
+    @Override public void release(){
+    }
+    @Override public void run(){
+      try {
+        try {
+          TransactionalErrorHandlingExecutionTemplate transactionTemplate=TransactionalErrorHandlingExecutionTemplate.createMainExecutionTemplate(messageProcessContext.getFlowConstruct().getMuleContext(),(messageProcessContext.getTransactionConfig() == null ? new MuleTransactionConfig() : messageProcessContext.getTransactionConfig()),messageProcessContext.getFlowConstruct().getExceptionListener());
+          MuleEvent response=transactionTemplate.execute(new ExecutionCallback<MuleEvent>(){
+            @Override public MuleEvent process() throws Exception {
+              Object message=flowProcessingPhaseTemplate.getOriginalMessage();
+              if (message == null) {
+                return null;
+              }
+              MuleEvent muleEvent=flowProcessingPhaseTemplate.getMuleEvent();
+              muleEvent=flowProcessingPhaseTemplate.beforeRouteEvent(muleEvent);
+              muleEvent=flowProcessingPhaseTemplate.routeEvent(muleEvent);
+              muleEvent=flowProcessingPhaseTemplate.afterRouteEvent(muleEvent);
+              return muleEvent;
+            }
+          }
+);
+          if (flowProcessingPhaseTemplate instanceof RequestResponseFlowProcessingPhaseTemplate) {
+            ((RequestResponseFlowProcessingPhaseTemplate)flowProcessingPhaseTemplate).sendResponseToClient(response);
+          }
+          flowProcessingPhaseTemplate.afterSuccessfulProcessingFlow(response);
+        }
+ catch (        MessagingException e) {
+          flowProcessingPhaseTemplate.afterFailureProcessingFlow(e);
+        }
+        phaseResultNotifier.phaseSuccessfully();
+      }
+ catch (      Exception e) {
+        phaseResultNotifier.phaseFailure(e);
+      }
+    }
+  }
+;
+  if (messageProcessContext.supportsAsynchronousProcessing()) {
+    try {
+      messageProcessContext.getFlowExecutionWorkManager().scheduleWork(flowExecutionWork);
+    }
+ catch (    WorkException e) {
+      phaseResultNotifier.phaseFailure(e);
+    }
+  }
+ else {
+    flowExecutionWork.run();
+  }
+}

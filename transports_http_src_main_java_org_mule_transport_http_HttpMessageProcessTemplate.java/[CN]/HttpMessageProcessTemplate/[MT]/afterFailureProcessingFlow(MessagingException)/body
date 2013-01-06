@@ -1,0 +1,23 @@
+{
+  if (!failureSendingResponse) {
+    Exception e=messagingException;
+    MuleEvent response=messagingException.getEvent();
+    if (response != null && response.getMessage().getExceptionPayload() != null && response.getMessage().getExceptionPayload().getException() instanceof MessagingException) {
+      e=(Exception)response.getMessage().getExceptionPayload().getException();
+    }
+    String temp=ExceptionHelper.getErrorMapping(getInboundEndpoint().getConnector().getProtocol(),messagingException.getClass(),getMuleContext());
+    int httpStatus=Integer.valueOf(temp);
+    try {
+      if (e instanceof MessagingException) {
+        httpStatus=response.getMessage().getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY) != null ? Integer.valueOf(response.getMessage().getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY).toString()) : httpStatus;
+        httpServerConnection.writeFailureResponse(httpStatus,e.getMessage());
+      }
+ else {
+        httpServerConnection.writeFailureResponse(httpStatus,e.getMessage());
+      }
+    }
+ catch (    IOException ioException) {
+      throw new DefaultMuleException(ioException);
+    }
+  }
+}

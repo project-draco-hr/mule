@@ -1,5 +1,6 @@
 {
   final HttpRequestDispatcher httpRequestDispatcher=new HttpRequestDispatcher(mockHttpConnector,mockRetryTemplate,mockServerSocket,mockWorkManager);
+  httpRequestDispatcher.requestHandOffExecutor=mockExecutor;
   final Latch acceptCalledLath=new Latch();
   sustituteLifecycleManager();
   when(mockConnectorLifecycleManager.getState().isStarted()).thenReturn(true);
@@ -16,7 +17,7 @@
       return null;
     }
   }
-).when(mockWorkManager).scheduleWork(any(HttpRequestDispatcherWork.class),anyLong(),any(ExecutionContext.class),any(WorkListener.class));
+).when(mockExecutor).execute(any(HttpRequestDispatcherWork.class));
   Thread dispatcherThread=createDispatcherThread(httpRequestDispatcher);
   dispatcherThread.start();
   try {
