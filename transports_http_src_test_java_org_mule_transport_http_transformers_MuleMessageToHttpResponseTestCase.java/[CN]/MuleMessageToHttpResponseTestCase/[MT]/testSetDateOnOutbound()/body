@@ -1,0 +1,16 @@
+{
+  MuleMessageToHttpResponse transformer=new MuleMessageToHttpResponse();
+  MuleMessage msg=mock(MuleMessage.class);
+  HttpResponse response=transformer.createResponse(null,"UTF-8",msg);
+  Header[] headers=response.getHeaders();
+  boolean hasDateHeader=false;
+  for (  Header header : headers) {
+    if (HttpConstants.HEADER_DATE.equals(header.getName())) {
+      hasDateHeader=true;
+      SimpleDateFormat formatter=new SimpleDateFormat(HttpConstants.DATE_FORMAT,Locale.US);
+      formatter.setLenient(false);
+      formatter.parse(header.getValue());
+    }
+  }
+  Assert.assertTrue("Missing 'Date' header",hasDateHeader);
+}
