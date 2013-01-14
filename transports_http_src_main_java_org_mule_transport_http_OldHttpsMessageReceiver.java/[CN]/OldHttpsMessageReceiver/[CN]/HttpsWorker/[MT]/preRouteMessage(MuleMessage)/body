@@ -1,0 +1,19 @@
+{
+  try {
+    long timeout=((HttpsConnector)getConnector()).getSslHandshakeTimeout();
+    boolean handshakeComplete=latch.await(timeout,TimeUnit.MILLISECONDS);
+    if (!handshakeComplete) {
+      throw new MessagingException(HttpMessages.sslHandshakeDidNotComplete(),message);
+    }
+  }
+ catch (  InterruptedException e) {
+    throw new MessagingException(HttpMessages.sslHandshakeDidNotComplete(),message,e);
+  }
+  super.preRouteMessage(message);
+  if (peerCertificateChain != null) {
+    message.setOutboundProperty(HttpsConnector.PEER_CERTIFICATES,peerCertificateChain);
+  }
+  if (localCertificateChain != null) {
+    message.setOutboundProperty(HttpsConnector.LOCAL_CERTIFICATES,localCertificateChain);
+  }
+}
