@@ -1,3 +1,56 @@
 {
-  sendHttpResponse(muleEvent);
+  try {
+    if (logger.isTraceEnabled()) {
+      logger.trace("Sending http response");
+    }
+    MuleMessage returnMessage=responseMuleEvent == null ? null : responseMuleEvent.getMessage();
+    Object tempResponse;
+    if (returnMessage != null) {
+      tempResponse=returnMessage.getPayload();
+    }
+ else {
+      tempResponse=NullPayload.getInstance();
+    }
+    HttpResponse response;
+    if (tempResponse instanceof HttpResponse) {
+      response=(HttpResponse)tempResponse;
+    }
+ else {
+      response=transformResponse(returnMessage);
+    }
+    response.setupKeepAliveFromRequestVersion(request.getRequestLine().getHttpVersion());
+    HttpConnector httpConnector=(HttpConnector)getMessageReceiver().getEndpoint().getConnector();
+    response.disableKeepAlive(!httpConnector.isKeepAlive());
+    Header connectionHeader=request.getFirstHeader("Connection");
+    if (connectionHeader != null) {
+      String value=connectionHeader.getValue();
+      boolean endpointOverride=getEndpointKeepAliveValue(getMessageReceiver().getEndpoint());
+      if ("keep-alive".equalsIgnoreCase(value) && endpointOverride) {
+        response.setKeepAlive(true);
+        if (response.getHttpVersion().equals(HttpVersion.HTTP_1_0)) {
+          connectionHeader=new Header(HttpConstants.HEADER_CONNECTION,"Keep-Alive");
+          response.setHeader(connectionHeader);
+        }
+      }
+ else       if ("close".equalsIgnoreCase(value)) {
+        response.setKeepAlive(false);
+      }
+    }
+    try {
+      httpServerConnection.writeResponse(response,getThrottlingHeaders());
+    }
+ catch (    Exception e) {
+      failureSendingResponse=true;
+    }
+    if (logger.isTraceEnabled()) {
+      logger.trace("HTTP response sent successfully");
+    }
+  }
+ catch (  Exception e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Exception while sending http response");
+      logger.debug(e);
+    }
+    throw new MessagingException(responseMuleEvent,e);
+  }
 }
