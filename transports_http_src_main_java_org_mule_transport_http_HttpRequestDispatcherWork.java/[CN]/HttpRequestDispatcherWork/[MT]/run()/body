@@ -9,13 +9,15 @@
         if (keepAliveTimeout > 0) {
           httpConnector.getKeepAliveMonitor().addExpirable(keepAliveTimeout,TimeUnit.MILLISECONDS,this);
         }
-        HttpRequest request=httpServerConnection.readRequest();
-        HttpMessageReceiver httpMessageReceiver=httpConnector.lookupReceiver(socket,request);
-        if (httpMessageReceiver != null) {
-          httpMessageReceiver.processRequest(httpServerConnection);
-        }
- else {
-          httpServerConnection.writeFailureResponse(HttpConstants.SC_NOT_FOUND,HttpMessages.cannotBindToAddress(httpServerConnection.getFullUri()).toString());
+        RequestLine requestLine=httpServerConnection.getRequestLine();
+        if (requestLine != null) {
+          try {
+            HttpMessageReceiver httpMessageReceiver=httpConnector.lookupReceiver(socket,requestLine);
+            httpMessageReceiver.processRequest(httpServerConnection);
+          }
+ catch (          NoReceiverForEndpointException e) {
+            httpServerConnection.writeFailureResponse(HttpConstants.SC_NOT_FOUND,HttpMessages.cannotBindToAddress(httpServerConnection.getFullUri()).toString());
+          }
         }
       }
   finally {

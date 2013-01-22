@@ -1,37 +1,9 @@
 {
-  int port=((InetSocketAddress)socket.getLocalSocketAddress()).getPort();
-  String host=null;
-  for (  MessageReceiver messageReceiver : receivers.values()) {
-    if (messageReceiver.getEndpointURI().getPort() == port) {
-      host=messageReceiver.getEndpointURI().getHost();
-      break;
-    }
+  try {
+    return this.lookupReceiver(socket,request.getRequestLine());
   }
-  if (host == null) {
+ catch (  NoReceiverForEndpointException e) {
+    logger.debug("No receiver found: " + e.getMessage());
     return null;
   }
-  String requestUriWithoutParams=request.getUrlWithoutParams();
-  StringBuilder requestUri=new StringBuilder(80);
-  if (requestUriWithoutParams.indexOf("://") == -1) {
-    requestUri.append(getProtocol()).append("://").append(host).append(':').append(port);
-    if (!ROOT_PATH.equals(requestUriWithoutParams)) {
-      requestUri.append(requestUriWithoutParams);
-    }
-  }
-  String uriStr=requestUri.toString();
-  if (logger.isTraceEnabled()) {
-    logger.trace("Looking up receiver on connector: " + getName() + " with URI key: "+ requestUri.toString());
-  }
-  HttpMessageReceiver receiver=(HttpMessageReceiver)lookupReceiver(uriStr);
-  if (receiver == null && !ROOT_PATH.equals(requestUriWithoutParams)) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Secondary lookup of receiver on connector: " + getName() + " with URI key: "+ requestUri.toString());
-    }
-    receiver=(HttpMessageReceiver)findReceiverByStem(getReceivers(),uriStr);
-    if (receiver == null && logger.isWarnEnabled()) {
-      logger.warn("No receiver found with secondary lookup on connector: " + getName() + " with URI key: "+ requestUri.toString());
-      logger.warn("Receivers on connector are: " + MapUtils.toString(getReceivers(),true));
-    }
-  }
-  return receiver;
 }
