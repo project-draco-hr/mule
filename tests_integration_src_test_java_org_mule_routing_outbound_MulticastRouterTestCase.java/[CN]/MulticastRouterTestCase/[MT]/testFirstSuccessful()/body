@@ -1,12 +1,9 @@
 {
   ByteArrayInputStream bis=new ByteArrayInputStream("Hello, world".getBytes("UTF-8"));
   MuleClient client=new MuleClient(muleContext);
-  MuleMessage response=client.send("vm://inbound2",bis,null);
-  assertNotNull(response);
-  Object payload=response.getPayload();
-  assertNotNull(payload);
-  assertEquals("Hello, world",response.getPayload());
-  assertEquals(errorCounter.get(),2);
+  client.dispatch("vm://inbound2",bis,null);
+  MuleMessage response=client.request("vm://output4",2000);
+  assertNull(response);
   MuleMessage error=client.request("vm://errors2",2000);
-  assertNull(error);
+  assertRoutingExceptionReceived(error);
 }

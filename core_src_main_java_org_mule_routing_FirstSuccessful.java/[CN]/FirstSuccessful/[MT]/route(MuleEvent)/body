@@ -1,9 +1,10 @@
 {
   MuleEvent returnEvent=null;
   boolean failed=true;
+  Exception failExceptionCause=null;
   for (  MessageProcessor mp : routes) {
     try {
-      MuleEvent toProcess=cloneEventForRoutinng(event,mp);
+      MuleEvent toProcess=cloneEventForRouting(event,mp);
       returnEvent=mp.process(toProcess);
       if (returnEvent == null || VoidMuleEvent.getInstance().equals(returnEvent)) {
         failed=false;
@@ -15,13 +16,19 @@
     }
  catch (    Exception ex) {
       failed=true;
+      failExceptionCause=ex;
     }
     if (!failed) {
       break;
     }
   }
   if (failed) {
-    throw new CouldNotRouteOutboundMessageException(event,this);
+    if (failExceptionCause != null) {
+      throw new CouldNotRouteOutboundMessageException(event,this,failExceptionCause);
+    }
+ else {
+      throw new CouldNotRouteOutboundMessageException(event,this);
+    }
   }
   return returnEvent;
 }
