@@ -1,0 +1,16 @@
+{
+  TestCoreExtension testCoreExtension=new TestCoreExtension();
+  TestCoreExtensionDependency dependantCoreExtension=mock(TestCoreExtensionDependency.class);
+  List<MuleCoreExtension> coreExtensions=new LinkedList<MuleCoreExtension>();
+  coreExtensions.add(testCoreExtension);
+  coreExtensions.add(dependantCoreExtension);
+  final List<LinkedMuleCoreExtensionDependency> dependencies=new LinkedList<LinkedMuleCoreExtensionDependency>();
+  final LinkedMuleCoreExtensionDependency linkedMuleCoreExtensionDependency=new LinkedMuleCoreExtensionDependency(TestCoreExtension.class,TestCoreExtensionDependency.class.getMethod("setTestCoreExtension",TestCoreExtension.class));
+  dependencies.add(linkedMuleCoreExtensionDependency);
+  when(dependencyDiscoverer.findDependencies(dependantCoreExtension)).thenReturn(dependencies);
+  final List<MuleCoreExtension> resolvedCoreExtensions=dependencyResolver.resolveDependencies(coreExtensions);
+  verify(dependantCoreExtension).setTestCoreExtension(testCoreExtension);
+  assertThat(resolvedCoreExtensions.size(),equalTo(2));
+  assertThat(resolvedCoreExtensions.get(0),is(TestCoreExtension.class));
+  assertThat(resolvedCoreExtensions.get(1),is(TestCoreExtensionDependency.class));
+}
