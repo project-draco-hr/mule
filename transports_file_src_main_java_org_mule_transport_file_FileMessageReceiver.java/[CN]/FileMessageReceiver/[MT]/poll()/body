@@ -13,7 +13,17 @@
         break;
       }
       if (file.isFile()) {
-        processFile(file);
+        Lock fileLock=lockFactory.createLock(file.getName());
+        if (fileLock.tryLock()) {
+          try {
+            if (file.exists()) {
+              processFile(file);
+            }
+          }
+  finally {
+            fileLock.unlock();
+          }
+        }
       }
     }
   }

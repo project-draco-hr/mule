@@ -17,7 +17,15 @@
         if (getLifecycleState().isStopping()) {
           break;
         }
-        routeFile(file);
+        Lock fileLock=lockFactory.createLock(connector.getName() + file);
+        if (fileLock.tryLock(10,TimeUnit.MILLISECONDS)) {
+          try {
+            routeFile(file);
+          }
+ catch (          Exception e) {
+            fileLock.unlock();
+          }
+        }
       }
       if (logger.isDebugEnabled()) {
         logger.debug("Polling. Routed all " + files.length + " files found at "+ endpoint.getEndpointURI());
