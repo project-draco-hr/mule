@@ -1,34 +1,8 @@
 {
-  MuleEvent returnEvent=null;
-  boolean failed=true;
-  Exception failExceptionCause=null;
-  for (  MessageProcessor mp : routes) {
-    try {
-      MuleEvent toProcess=cloneEventForRouting(event,mp);
-      returnEvent=mp.process(toProcess);
-      if (returnEvent == null || VoidMuleEvent.getInstance().equals(returnEvent)) {
-        failed=false;
-      }
- else {
-        MuleMessage msg=returnEvent.getMessage();
-        failed=msg == null || failureExpressionFilter.accept(msg);
-      }
-    }
- catch (    Exception ex) {
-      failed=true;
-      failExceptionCause=ex;
-    }
-    if (!failed) {
-      break;
-    }
+  try {
+    return routingStrategy.route(event,getRoutes());
   }
-  if (failed) {
-    if (failExceptionCause != null) {
-      throw new CouldNotRouteOutboundMessageException(event,this,failExceptionCause);
-    }
- else {
-      throw new CouldNotRouteOutboundMessageException(event,this);
-    }
+ catch (  RoutingFailedMessagingException exception) {
+    throw new CouldNotRouteOutboundMessageException(event,this);
   }
-  return returnEvent;
 }

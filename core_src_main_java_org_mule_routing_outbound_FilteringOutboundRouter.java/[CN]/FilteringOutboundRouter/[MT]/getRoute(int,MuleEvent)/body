@@ -13,18 +13,18 @@
     if (logger.isDebugEnabled()) {
       logger.debug("Uri before parsing is: " + uri);
     }
-    Map<String,Object> props=new HashMap<String,Object>();
-    props.putAll(ep.getProperties());
-    for (    String propertyKey : message.getOutboundPropertyNames()) {
-      Object value=message.getOutboundProperty(propertyKey);
-      props.put(propertyKey,value);
-    }
-    propagateMagicProperties(message,message);
+    AbstractRoutingStrategy.propagateMagicProperties(message,message);
     if (!parser.isContainsTemplate(uri)) {
       logger.debug("Uri does not contain template(s)");
       return ep;
     }
  else {
+      Map<String,Object> props=new HashMap<String,Object>();
+      props.putAll(ep.getProperties());
+      for (      String propertyKey : message.getOutboundPropertyNames()) {
+        Object value=message.getOutboundProperty(propertyKey);
+        props.put(propertyKey,value);
+      }
       String newUriString=parser.parse(props,uri);
       if (parser.isContainsTemplate(newUriString)) {
         newUriString=this.getMuleContext().getExpressionManager().parse(newUriString,event,true);
