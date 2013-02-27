@@ -1,6 +1,7 @@
 {
+  FileInputStream in=null;
   try {
-    FileInputStream in=new FileInputStream(file);
+    in=new FileInputStream(file);
     return (T)SerializationUtils.deserialize(in,muleContext);
   }
  catch (  SerializationException se) {
@@ -8,5 +9,15 @@
   }
 catch (  FileNotFoundException fnfe) {
     throw new ObjectDoesNotExistException(fnfe);
+  }
+ finally {
+    if (in != null) {
+      try {
+        in.close();
+      }
+ catch (      Exception e) {
+        logger.warn("error closing opened file " + file.getAbsolutePath());
+      }
+    }
   }
 }
