@@ -1,0 +1,22 @@
+{
+  int count;
+  if (buffer.getByteCountRemainder() > 0) {
+    count=Math.min(len,buffer.getByteCountRemainder());
+    System.arraycopy(buffer.data,buffer.position,b,off,count);
+    buffer.position+=count;
+    return count;
+  }
+  count=super.read(b,off,len);
+  if (count > 0) {
+    return count;
+  }
+  if (count <= 0 && !trailerWritten) {
+    buffer.position=0;
+    buffer.length=writeTrailer(buffer.data,buffer.position);
+    trailerWritten=true;
+    return read(b,off,len);
+  }
+ else {
+    return count;
+  }
+}

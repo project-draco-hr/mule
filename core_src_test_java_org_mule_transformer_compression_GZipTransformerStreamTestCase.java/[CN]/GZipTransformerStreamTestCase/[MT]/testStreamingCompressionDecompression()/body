@@ -1,0 +1,11 @@
+{
+  GZipCompressTransformer compressTransformer=(GZipCompressTransformer)super.getTransformer();
+  GZipUncompressTransformer decompressTransformer=new GZipUncompressTransformer();
+  decompressTransformer.setMuleContext(muleContext);
+  InputStream input=new ByteArrayInputStream(SerializationUtils.serialize(TEST_DATA));
+  InputStream compressedInputStream=(InputStream)compressTransformer.transform(input);
+  InputStream decompressedInputStream=(InputStream)decompressTransformer.transform(compressedInputStream);
+  assertEquals(SerializationUtils.deserialize(IOUtils.toByteArray(decompressedInputStream)),TEST_DATA);
+  IOUtils.closeQuietly(compressedInputStream);
+  IOUtils.closeQuietly(decompressedInputStream);
+}

@@ -1,0 +1,12 @@
+{
+  byte[] testDataByteArray=SerializationUtils.serialize(TEST_DATA);
+  MuleClient client=new MuleClient(muleContext);
+  MuleMessage compressedResponse=client.send("vm://compressInput",testDataByteArray,null);
+  assertNotNull(compressedResponse);
+  assertTrue(compressedResponse.getPayload() instanceof byte[]);
+  MuleMessage uncompressedResponse=client.send("vm://decompressInput",compressedResponse.getPayload(),null);
+  assertNotNull(uncompressedResponse);
+  assertTrue(uncompressedResponse.getPayload() instanceof byte[]);
+  String uncompressedStr=(String)SerializationUtils.deserialize((byte[])uncompressedResponse.getPayload());
+  assertEquals(TEST_DATA,uncompressedStr);
+}
