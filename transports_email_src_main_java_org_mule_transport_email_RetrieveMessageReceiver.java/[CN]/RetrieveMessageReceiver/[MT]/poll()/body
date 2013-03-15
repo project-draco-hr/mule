@@ -1,42 +1,44 @@
 {
   boolean done=false;
   while (!done) {
-    if (getLifecycleState().isStopping()) {
-      break;
-    }
-    try {
+synchronized (folderLock) {
+      if (getLifecycleState().isStopping() || getLifecycleState().isStopped()) {
+        break;
+      }
       try {
-        if (!folder.isOpen()) {
-          folder.open(Folder.READ_WRITE);
+        try {
+          if (!folder.isOpen()) {
+            folder.open(Folder.READ_WRITE);
+          }
         }
-      }
- catch (      Exception e) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("ignoring exception: " + e.getMessage());
+ catch (        Exception e) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("ignoring exception: " + e.getMessage());
+          }
         }
+        int count=folder.getMessageCount();
+        int batchSize=getBatchSize(count);
+        if (count > 0) {
+          Message[] messages=folder.getMessages(1,batchSize);
+          MessageCountEvent event=new MessageCountEvent(folder,MessageCountEvent.ADDED,true,messages);
+          messagesAdded(event);
+        }
+ else         if (count == -1) {
+          throw new MessagingException("Cannot monitor folder: " + folder.getFullName() + " as folder is closed");
+        }
+        done=batchSize >= count;
       }
-      int count=folder.getMessageCount();
-      int batchSize=getBatchSize(count);
-      if (count > 0) {
-        Message[] messages=folder.getMessages(1,batchSize);
-        MessageCountEvent event=new MessageCountEvent(folder,MessageCountEvent.ADDED,true,messages);
-        messagesAdded(event);
+ catch (      MessagingException e) {
+        done=true;
+        getConnector().getMuleContext().getExceptionListener().handleException(e);
       }
- else       if (count == -1) {
-        throw new MessagingException("Cannot monitor folder: " + folder.getFullName() + " as folder is closed");
-      }
-      done=batchSize >= count;
-    }
- catch (    MessagingException e) {
-      done=true;
-      getConnector().getMuleContext().getExceptionListener().handleException(e);
-    }
  finally {
-      try {
-        folder.close(true);
-      }
- catch (      Exception e) {
-        logger.error("Failed to close pop3  inbox: " + e.getMessage());
+        try {
+          folder.close(true);
+        }
+ catch (        Exception e) {
+          logger.error("Failed to close pop3  inbox: " + e.getMessage());
+        }
       }
     }
   }
