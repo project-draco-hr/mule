@@ -6,10 +6,12 @@ synchronized (this) {
     if (holder == null) {
       Connector connector=createJettyConnector();
       connector.setPort(endpoint.getEndpointURI().getPort());
-      connector.setHost(endpoint.getEndpointURI().getHost());
-      if ("localhost".equalsIgnoreCase(endpoint.getEndpointURI().getHost())) {
-        logger.warn("You are using localhost interface! This means that no external connections will be available." + " Don't you want to use 0.0.0.0 instead (all network interfaces)?");
+      String host=endpoint.getEndpointURI().getHost();
+      if ("localhost".equalsIgnoreCase(host) && TcpPropertyHelper.isBindingLocalhostToAllLocalInterfaces()) {
+        logger.warn(TcpMessages.localhostBoundToAllLocalInterfaces());
+        host="0.0.0.0";
       }
+      connector.setHost(host);
       getHttpServer().addConnector(connector);
       holder=createContextHolder(connector,receiver.getEndpoint(),receiver);
       holders.put(connectorKey,holder);
