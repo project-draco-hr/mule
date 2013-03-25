@@ -11,12 +11,9 @@
     repositoryUnderConstruction.set(repository);
     try {
       ConfigWatchDog configWatchDog=null;
-      if (ccl instanceof MuleApplicationClassLoader) {
-        MuleApplicationClassLoader muleCL=(MuleApplicationClassLoader)ccl;
-        URL appLogConfig=muleCL.findResource("log4j.xml");
-        if (appLogConfig == null) {
-          appLogConfig=muleCL.findResource("log4j.properties");
-        }
+      if (ccl instanceof ApplicationClassLoader) {
+        ApplicationClassLoader muleCL=(ApplicationClassLoader)ccl;
+        URL appLogConfig=getAppLoggingConfig(muleCL);
         final String appName=muleCL.getAppName();
         if (appLogConfig == null) {
           String logName=String.format("mule-app-%s.log",appName);
@@ -30,7 +27,7 @@
  else {
           configureFrom(appLogConfig,repository);
           if (appLogConfig.toExternalForm().startsWith("file:")) {
-            configWatchDog=new ConfigWatchDog(muleCL,appLogConfig.getFile(),repository);
+            configWatchDog=new ConfigWatchDog(ccl,appLogConfig.getFile(),repository);
             configWatchDog.setName(String.format("[%s].log4j.config.monitor",appName));
           }
  else {
