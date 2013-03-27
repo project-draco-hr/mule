@@ -49,7 +49,20 @@
   String encoding=endpoint.getEncoding();
   try {
     if (fileConnector.isStreaming()) {
-      ReceiverFileInputStream payload=createReceiverFileInputStream(sourceFile,destinationFile);
+      ReceiverFileInputStream payload=createReceiverFileInputStream(sourceFile,destinationFile,new InputStreamCloseListener(){
+        @Override public void fileClose(        File file){
+          try {
+            if (logger.isDebugEnabled()) {
+              logger.debug(String.format("Removing processing flag for $ ",file.getAbsolutePath()));
+            }
+            filesBeingProcessingObjectStore.remove(file.getAbsolutePath());
+          }
+ catch (          ObjectStoreException e) {
+            logger.warn("Failure trying to remove file " + originalSourceFile + " from list of files under processing");
+          }
+        }
+      }
+);
       message=createMuleMessage(payload,encoding);
     }
  else {

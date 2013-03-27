@@ -21,4 +21,15 @@ catch (  Exception e) {
     rollbackFileMoveIfRequired(originalSourceFile,sourceFile);
     connector.getMuleContext().getExceptionListener().handleException(e);
   }
+ finally {
+    try {
+      filesBeingProcessingObjectStore.remove(originalSourceFile);
+      if (logger.isDebugEnabled()) {
+        logger.debug(String.format("Removing processing flag for $ ",originalSourceFile));
+      }
+    }
+ catch (    ObjectStoreException e) {
+      logger.warn("Failure trying to remove file " + originalSourceFile + " from list of files under processing");
+    }
+  }
 }
