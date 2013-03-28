@@ -7,11 +7,20 @@
   MuleEvent result=null;
   MessagingException exceptionThrown=null;
   try {
-    result=next.execute(messageProcessor,event);
+    if (next == null) {
+      result=messageProcessor.process(event);
+    }
+ else {
+      result=next.execute(messageProcessor,event);
+    }
   }
  catch (  MessagingException e) {
     exceptionThrown=e;
     throw e;
+  }
+catch (  MuleException e) {
+    exceptionThrown=new MessagingException(event,e,messageProcessor);
+    throw exceptionThrown;
   }
  finally {
     if (fireNotification) {
