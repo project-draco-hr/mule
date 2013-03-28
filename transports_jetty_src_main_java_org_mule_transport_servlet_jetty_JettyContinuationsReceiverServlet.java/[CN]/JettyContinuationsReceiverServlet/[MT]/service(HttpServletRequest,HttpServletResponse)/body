@@ -1,18 +1,52 @@
 {
   try {
-    final Continuation continuation=ContinuationSupport.getContinuation(request,mutex);
+    MuleMessage responseMessage=null;
 synchronized (mutex) {
-      MessageReceiver receiver=getReceiverForURI(request);
-      MuleMessage requestMessage=receiver.createMuleMessage(request);
-      requestMessage.setOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,request.getMethod());
-      requestMessage.setReplyTo(continuation);
-      setupRequestMessage(request,requestMessage,receiver);
-      routeMessage(receiver,requestMessage,request);
-      continuation.suspend(10000);
+      Continuation continuation=ContinuationSupport.getContinuation(request,mutex);
+      if (!continuation.isPending()) {
+        MessageReceiver receiver=getReceiverForURI(request);
+        MuleMessage requestMessage=receiver.createMuleMessage(request);
+        requestMessage.setOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,request.getMethod());
+        ContinuationsReplyTo continuationsReplyTo=new ContinuationsReplyTo(continuation,mutex);
+        requestMessage.setReplyTo(continuationsReplyTo);
+        setupRequestMessage(request,requestMessage,receiver);
+        if (receiver instanceof JettyHttpMessageReceiver) {
+          JettyHttpMessageReceiver jettyReceiver=(JettyHttpMessageReceiver)receiver;
+          jettyReceiver.routeMessageAsync(requestMessage,continuationsReplyTo);
+          continuation.suspend(0L);
+        }
+ else {
+          responseMessage=receiver.routeMessage(requestMessage).getMessage();
+          writeResponse(response,responseMessage);
+        }
+      }
+ else {
+        if (continuation.isResumed()) {
+          Object r=continuation.getObject();
+          if (r instanceof MuleMessage) {
+            responseMessage=(MuleMessage)r;
+            continuation.setObject(null);
+            writeResponse(response,responseMessage);
+          }
+ else           if (r instanceof Exception) {
+            if (r instanceof MessagingException) {
+              MessagingException me=(MessagingException)r;
+              MuleEvent event=me.getEvent();
+              if (event instanceof DefaultMuleEvent) {
+                ((DefaultMuleEvent)event).resetAccessControl();
+              }
+            }
+            throw (Exception)r;
+          }
+        }
+      }
     }
-    writeResponse(response,(MuleMessage)continuation.getObject());
   }
- catch (  Exception e) {
+ catch (  RuntimeException e) {
     throw new ServletException(e);
+  }
+catch (  Exception e) {
+    String message=e.getMessage();
+    handleException(e,message,response);
   }
 }
