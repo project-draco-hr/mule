@@ -9,7 +9,16 @@
       hasDateHeader=true;
       SimpleDateFormat formatter=new SimpleDateFormat(HttpConstants.DATE_FORMAT,Locale.US);
       formatter.setLenient(false);
-      formatter.parse(header.getValue());
+      try {
+        formatter.parse(header.getValue());
+      }
+ catch (      ParseException e) {
+        formatter.setLenient(true);
+        formatter.parse(header.getValue());
+        formatter=new SimpleDateFormat(HttpConstants.DATE_FORMAT.replaceFirst("hh","HH"),Locale.US);
+        formatter.setLenient(false);
+        formatter.parse(header.getValue());
+      }
     }
   }
   Assert.assertTrue("Missing 'Date' header",hasDateHeader);
