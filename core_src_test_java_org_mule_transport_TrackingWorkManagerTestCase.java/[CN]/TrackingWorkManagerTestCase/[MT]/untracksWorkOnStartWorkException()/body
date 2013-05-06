@@ -1,0 +1,14 @@
+{
+  final Work work=mock(Work.class);
+  doThrow(new WorkException()).when(delegateWorkManager).startWork(Matchers.<Work>any());
+  try {
+    trackingWorkManager.startWork(work);
+    expectedExceptionFail();
+  }
+ catch (  Exception e) {
+  }
+  InOrder inOrder=inOrder(workTracker,delegateWorkManager);
+  inOrder.verify(workTracker).addWork(work);
+  inOrder.verify(delegateWorkManager).startWork(Matchers.<Work>any());
+  inOrder.verify(workTracker).removeWork(work);
+}

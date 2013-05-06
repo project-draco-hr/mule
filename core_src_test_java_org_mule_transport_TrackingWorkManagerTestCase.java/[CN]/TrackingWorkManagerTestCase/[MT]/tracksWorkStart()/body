@@ -1,0 +1,16 @@
+{
+  final Work work=mock(Work.class);
+  final ArgumentCaptor<Work> argument=ArgumentCaptor.forClass(Work.class);
+  doAnswer(new Answer(){
+    @Override public Object answer(    InvocationOnMock invocation) throws Throwable {
+      argument.getValue().run();
+      return null;
+    }
+  }
+).when(delegateWorkManager).startWork(argument.capture());
+  trackingWorkManager.startWork(work);
+  InOrder inOrder=inOrder(workTracker,delegateWorkManager);
+  inOrder.verify(workTracker).addWork(work);
+  inOrder.verify(delegateWorkManager).startWork(Matchers.<Work>any());
+  inOrder.verify(workTracker).removeWork(work);
+}
