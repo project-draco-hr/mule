@@ -2,7 +2,11 @@
   ObjectInputStream objectInputStream=null;
   try {
     objectInputStream=new ObjectInputStream(new FileInputStream(file));
-    return (StoreValue<T>)SerializationUtils.deserialize(objectInputStream,muleContext);
+    StoreValue<T> storedValue=(StoreValue<T>)SerializationUtils.deserialize(objectInputStream,muleContext);
+    if (storedValue.getValue() instanceof DeserializationPostInitialisable) {
+      DeserializationPostInitialisable.Implementation.init(storedValue.getValue(),muleContext);
+    }
+    return storedValue;
   }
  catch (  FileNotFoundException e) {
     throw new ObjectDoesNotExistException(e);
