@@ -1,0 +1,30 @@
+{
+  Logger log=LoggerFactory.getLogger(BaseOAuth2Connector.class);
+  String runtimeVersion=MuleManifest.getProductVersion();
+  if (runtimeVersion.equals("Unknown")) {
+    log.warn("Unknown Mule runtime version. This module may not work properly!");
+  }
+ else {
+    String[] expectedMinVersion="3.4".split("\\.");
+    if (runtimeVersion.contains("-")) {
+      runtimeVersion=runtimeVersion.split("-")[0];
+    }
+    String[] currentRuntimeVersion=runtimeVersion.split("\\.");
+    for (int i=0; (i < expectedMinVersion.length); i++) {
+      try {
+        if (Integer.parseInt(currentRuntimeVersion[i]) > Integer.parseInt(expectedMinVersion[i])) {
+          break;
+        }
+        if (Integer.parseInt(currentRuntimeVersion[i]) < Integer.parseInt(expectedMinVersion[i])) {
+          throw new RuntimeException("This module requires at least Mule 3.4");
+        }
+      }
+ catch (      NumberFormatException nfe) {
+        log.warn("Error parsing Mule version, cannot validate current Mule version");
+      }
+catch (      ArrayIndexOutOfBoundsException iobe) {
+        log.warn("Error parsing Mule version, cannot validate current Mule version");
+      }
+    }
+  }
+}
