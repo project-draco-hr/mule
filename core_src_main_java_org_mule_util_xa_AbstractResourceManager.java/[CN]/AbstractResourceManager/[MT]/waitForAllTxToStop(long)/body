@@ -1,15 +1,14 @@
 {
   long startTime=System.currentTimeMillis();
-  Collection transactionsToStop;
+  Collection<AbstractTransactionContext> transactionsToStop;
 synchronized (globalTransactions) {
-    transactionsToStop=new ArrayList(globalTransactions);
+    transactionsToStop=new ArrayList<AbstractTransactionContext>(globalTransactions);
   }
-  for (Iterator it=transactionsToStop.iterator(); it.hasNext(); ) {
+  for (  AbstractTransactionContext context : transactionsToStop) {
     long remainingTimeout=startTime - System.currentTimeMillis() + timeoutMSecs;
     if (remainingTimeout <= 0) {
       return false;
     }
-    AbstractTransactionContext context=(AbstractTransactionContext)it.next();
 synchronized (context) {
       if (!context.finished) {
         logger.info("Waiting for tx " + context + " to finish for "+ remainingTimeout+ " milli seconds");
