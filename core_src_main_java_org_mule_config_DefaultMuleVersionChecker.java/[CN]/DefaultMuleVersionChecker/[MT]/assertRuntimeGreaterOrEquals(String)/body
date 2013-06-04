@@ -12,13 +12,14 @@
       runtimeVersion=runtimeVersion.split("-")[0];
     }
     String[] currentRuntimeVersion=runtimeVersion.split("\\.");
-    for (int i=0; (i < expectedMinVersion.length); i++) {
+    int i=0;
+    for (; (i < currentRuntimeVersion.length); i++) {
       try {
         if (Integer.parseInt(currentRuntimeVersion[i]) > Integer.parseInt(expectedMinVersion[i])) {
           break;
         }
         if (Integer.parseInt(currentRuntimeVersion[i]) < Integer.parseInt(expectedMinVersion[i])) {
-          throw new ConfigurationException(CoreMessages.minMuleVersionNotMet(minVersion));
+          this.throwException(minVersion);
         }
       }
  catch (      NumberFormatException nfe) {
@@ -26,6 +27,11 @@
       }
 catch (      ArrayIndexOutOfBoundsException iobe) {
         logger.warn(String.format("Error parsing Mule version '%s', cannot validate current Mule version",runtimeVersion));
+      }
+    }
+    for (; i < expectedMinVersion.length; i++) {
+      if (!"0".equals(expectedMinVersion[i])) {
+        this.throwException(minVersion);
       }
     }
   }
