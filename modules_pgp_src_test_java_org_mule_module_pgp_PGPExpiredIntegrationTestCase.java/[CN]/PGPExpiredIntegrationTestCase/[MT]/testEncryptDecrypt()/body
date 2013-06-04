@@ -1,8 +1,11 @@
 {
   String payload="this is a super simple test. Hope it works!!!";
-  MuleClient client=new MuleClient(muleContext);
-  MuleMessage exceptionMessage=client.send("vm://in",new DefaultMuleMessage(payload,muleContext));
-  assertNotNull(exceptionMessage);
+  MuleClient client=muleContext.getClient();
+  client.dispatch("vm://in",new DefaultMuleMessage(payload,muleContext));
   MuleMessage message=client.request("vm://out",1000);
   assertNull(message);
+  assertNotNull(exceptionFromFlow);
+  InvalidPublicKeyException ipke=ExceptionUtils.getDeepestOccurenceOfType(exceptionFromFlow,InvalidPublicKeyException.class);
+  assertNotNull(ipke);
+  assertTrue(ipke.getMessage().contains("has expired"));
 }
