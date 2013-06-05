@@ -1,0 +1,35 @@
+{
+  if (!(key instanceof String)) {
+    throw new IllegalArgumentException("Invalid key type");
+  }
+  OAuthState state=null;
+  if (!this.objectStore.contains(((String)key))) {
+    throw new RuntimeException((("There is no access token stored under the key " + ((String)key)) + ". You need to call the <authorize> message processor. The key will be given to you via a flow variable after the OAuth dance is completed. You can extract it using flowVars['tokenId']."));
+  }
+  state=this.objectStore.retrieve((String)key);
+  OAuthAdapter connector=this.instantiateOAuthAdapter();
+  connector.setConsumerKey(oauthManager.getConsumerKey());
+  connector.setConsumerSecret(oauthManager.getConsumerSecret());
+  connector.setTimeObjectStore(oauthManager.getTimeObjectStore());
+  connector.setClientId(oauthManager.getClientId());
+  connector.setAssignmentRuleId(oauthManager.getAssignmentRuleId());
+  connector.setUseDefaultRule(oauthManager.getUseDefaultRule());
+  connector.setAllowFieldTruncationSupport(oauthManager.getAllowFieldTruncationSupport());
+  connector.setAccessToken(state.getAccessToken());
+  connector.setAuthorizationUrl(state.getAuthorizationUrl());
+  connector.setAccessTokenUrl(state.getAccessTokenUrl());
+  connector.setRefreshToken(state.getRefreshToken());
+  connector.setInstanceId(state.getInstanceId());
+  connector.setUserId(state.getUserId());
+  if (connector instanceof Initialisable) {
+    ((Initialisable)connector).initialise();
+  }
+  if (connector instanceof MuleContextAware) {
+    ((MuleContextAware)connector).setMuleContext(oauthManager.getMuleContext());
+  }
+  if (connector instanceof Startable) {
+    ((Startable)connector).start();
+  }
+  connector.postAuthorize();
+  return connector;
+}

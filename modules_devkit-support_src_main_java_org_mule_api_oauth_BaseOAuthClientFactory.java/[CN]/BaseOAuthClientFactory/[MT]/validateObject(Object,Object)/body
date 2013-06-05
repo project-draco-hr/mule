@@ -1,0 +1,31 @@
+{
+  if (!(key instanceof String)) {
+    throw new RuntimeException("Invalid key type");
+  }
+  if (!(obj instanceof SalesforceOAuthConnectorOAuth2Adapter)) {
+    throw new RuntimeException("Invalid connector type");
+  }
+  SalesforceOAuthConnectorOAuthState state=null;
+  try {
+    if (!oauthManager.getAccessTokenObjectStore().contains(((String)key))) {
+      return false;
+    }
+    state=((SalesforceOAuthConnectorOAuthState)oauthManager.getAccessTokenObjectStore().retrieve(((String)key)));
+    if (((SalesforceOAuthConnectorOAuth2Adapter)obj).getAccessToken() == null) {
+      return false;
+    }
+    if (!((SalesforceOAuthConnectorOAuth2Adapter)obj).getAccessToken().equals(state.getAccessToken())) {
+      return false;
+    }
+    if ((((SalesforceOAuthConnectorOAuth2Adapter)obj).getRefreshToken() == null) && (state.getRefreshToken() != null)) {
+      return false;
+    }
+    if ((((SalesforceOAuthConnectorOAuth2Adapter)obj).getRefreshToken() != null) && (!((SalesforceOAuthConnectorOAuth2Adapter)obj).getRefreshToken().equals(state.getRefreshToken()))) {
+      return false;
+    }
+  }
+ catch (  ObjectStoreException _x) {
+    return false;
+  }
+  return true;
+}
