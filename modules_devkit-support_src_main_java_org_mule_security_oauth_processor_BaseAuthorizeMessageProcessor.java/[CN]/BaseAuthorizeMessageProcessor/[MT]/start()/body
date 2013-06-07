@@ -1,0 +1,25 @@
+{
+  T moduleObject=null;
+  try {
+    moduleObject=this.findOrCreate(this.getOAuthManagerClass(),false,null);
+  }
+ catch (  IllegalAccessException e) {
+    throw new DefaultMuleException(CoreMessages.failedToStart("authorize"),e);
+  }
+catch (  InstantiationException e) {
+    throw new DefaultMuleException(CoreMessages.failedToStart("authorize"),e);
+  }
+  this.setModuleObject(moduleObject);
+  if (oauthCallback == null) {
+    FetchAccessTokenMessageProcessor fetchAccessTokenMessageProcessor=new FetchAccessTokenMessageProcessor(moduleObject);
+    oauthCallback=new DefaultHttpCallback(Arrays.asList(new ExtractAuthorizationCodeMessageProcessor(Pattern.compile(this.getAuthCodeRegex())),fetchAccessTokenMessageProcessor,listener),getMuleContext(),moduleObject.getDomain(),moduleObject.getLocalPort(),moduleObject.getRemotePort(),moduleObject.getPath(),moduleObject.getAsync(),getFlowConstruct().getExceptionListener(),moduleObject.getConnector());
+    fetchAccessTokenMessageProcessor.setRedirectUri(oauthCallback.getUrl());
+    if (accessTokenUrl != null) {
+      fetchAccessTokenMessageProcessor.setAccessTokenUrl(accessTokenUrl);
+    }
+ else {
+      fetchAccessTokenMessageProcessor.setAccessTokenUrl(moduleObject.getAccessTokenUrl());
+    }
+    oauthCallback.start();
+  }
+}
