@@ -1,10 +1,10 @@
 {
   final int THREADS=10;
   final CountDownLatch latch=new CountDownLatch(THREADS);
-  final MuleClient client=new MuleClient(muleContext);
+  final MuleClient client=muleContext.getClient();
   final byte[] buf=new byte[8192];
   Arrays.fill(buf,(byte)'a');
-  client.send(((InboundEndpoint)client.getMuleContext().getRegistry().lookupObject("inEchoService")).getAddress(),new DefaultMuleMessage(new ByteArrayInputStream(buf),muleContext));
+  client.send(((InboundEndpoint)muleContext.getRegistry().lookupObject("inEchoService")).getAddress(),new DefaultMuleMessage(new ByteArrayInputStream(buf),muleContext));
   for (int i=0; i < THREADS; i++) {
     new Thread(new Runnable(){
       @Override public void run(){
@@ -12,7 +12,7 @@
         props.put(MuleProperties.MULE_REPLY_TO_PROPERTY,"vm://queue");
         try {
           for (int j=0; j < 20; j++) {
-            client.dispatch(((InboundEndpoint)client.getMuleContext().getRegistry().lookupObject("inEchoService")).getAddress(),new DefaultMuleMessage(buf,muleContext),props);
+            client.dispatch(((InboundEndpoint)muleContext.getRegistry().lookupObject("inEchoService")).getAddress(),new DefaultMuleMessage(buf,muleContext),props);
           }
         }
  catch (        MuleException e) {
