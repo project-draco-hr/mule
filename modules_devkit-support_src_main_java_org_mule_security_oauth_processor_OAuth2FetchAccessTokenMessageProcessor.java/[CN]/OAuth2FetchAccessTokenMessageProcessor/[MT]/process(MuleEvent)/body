@@ -1,0 +1,15 @@
+{
+  try {
+    OAuth2Adapter oauthAdapter=this.oauthManager.createAccessToken(((String)event.getMessage().getInvocationProperty("_oauthVerifier")));
+    if (oauthAdapter.getAccessTokenUrl() == null) {
+      oauthAdapter.setAccessTokenUrl(this.accessTokenUrl);
+    }
+    oauthAdapter.fetchAccessToken(this.redirectUri);
+    oauthManager.getAccessTokenPoolFactory().passivateObject(oauthAdapter.getAccessTokenId(),oauthAdapter);
+    event.getMessage().setInvocationProperty("OAuthAccessTokenId",oauthAdapter.getAccessTokenId());
+  }
+ catch (  Exception e) {
+    throw new MessagingException(MessageFactory.createStaticMessage("Unable to fetch access token"),event,e);
+  }
+  return event;
+}
