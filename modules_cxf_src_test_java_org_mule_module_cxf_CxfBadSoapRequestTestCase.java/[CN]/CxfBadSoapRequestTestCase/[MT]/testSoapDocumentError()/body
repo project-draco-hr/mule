@@ -1,5 +1,5 @@
 {
-  MuleClient client=new MuleClient(muleContext);
+  MuleClient client=muleContext.getClient();
   String soapRequest="<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" + "<soap:Body>" + "<ssss xmlns=\"http://www.muleumo.org\">"+ "<request xmlns=\"http://www.muleumo.org\">Bad Request</request>"+ "</ssss>"+ "</soap:Body>"+ "</soap:Envelope>";
   MuleMessage reply=client.send("http://localhost:" + dynamicPort.getNumber() + "/services/TestComponent",new DefaultMuleMessage(soapRequest,muleContext));
   assertNotNull(reply);
@@ -7,7 +7,7 @@
   String ct=reply.getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE,StringUtils.EMPTY);
   assertEquals("text/xml; charset=UTF-8",ct);
   Document document=DocumentHelper.parseText(reply.getPayloadAsString());
-  List fault=document.selectNodes("//soap:Envelope/soap:Body/soap:Fault/faultcode");
+  List<?> fault=document.selectNodes("//soap:Envelope/soap:Body/soap:Fault/faultcode");
   assertEquals(1,fault.size());
   Element faultCodeElement=(Element)fault.get(0);
   assertEquals("soap:Client",faultCodeElement.getStringValue());

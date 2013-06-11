@@ -1,10 +1,10 @@
 {
-  MuleClient client=new MuleClient(muleContext);
+  MuleClient client=muleContext.getClient();
   Map<String,Object> props=new HashMap<String,Object>();
   props.put("Content-Type","application/soap+xml");
   InputStream xml=getClass().getResourceAsStream("/direct/direct-request.xml");
-  MuleMessage result=client.send(((InboundEndpoint)client.getMuleContext().getRegistry().lookupObject("httpInbound")).getAddress(),xml,props);
+  MuleMessage result=client.send(((InboundEndpoint)muleContext.getRegistry().lookupObject("httpInbound")).getAddress(),xml,props);
   assertTrue(result.getPayloadAsString().contains("Hello!"));
-  String ct=result.getStringProperty(HttpConstants.HEADER_CONTENT_TYPE,"");
+  String ct=result.getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE,"");
   assertEquals("text/xml; charset=UTF-8",ct);
 }
