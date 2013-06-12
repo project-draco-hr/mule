@@ -1,35 +1,24 @@
 {
-  LinkedInConnectorOAuth1Adapter moduleObject=null;
-  try {
+  OAuth1Adapter moduleObject=this.getAdapter();
+  OAuth1Manager manager=moduleObject.getOauth1Manager();
+  OAuth1FetchAccessTokenMessageProcessor fetchAccessTokenMessageProcessor=new OAuth1FetchAccessTokenMessageProcessor(moduleObject);
+  this.startCallback(manager,fetchAccessTokenMessageProcessor);
+  if (this.getAccessTokenUrl() != null) {
+    fetchAccessTokenMessageProcessor.setAccessTokenUrl(this.getAccessTokenUrl());
   }
- catch (  IllegalAccessException e) {
-    throw new DefaultMuleException(CoreMessages.failedToStart("authorize"),e);
+ else {
+    fetchAccessTokenMessageProcessor.setAccessTokenUrl(moduleObject.getAccessTokenUrl());
   }
-catch (  InstantiationException e) {
-    throw new DefaultMuleException(CoreMessages.failedToStart("authorize"),e);
+  if (requestTokenUrl != null) {
+    fetchAccessTokenMessageProcessor.setRequestTokenUrl(requestTokenUrl);
   }
-  if (oauthCallback == null) {
-    OAuth1FetchAccessTokenMessageProcessor fetchAccessTokenMessageProcessor=new OAuth1FetchAccessTokenMessageProcessor(moduleObject);
-    oauthCallback=new DefaultHttpCallback(Arrays.asList(new ExtractAuthorizationCodeMessageProcessor(Pattern.compile(this.getAuthCodeRegex())),fetchAccessTokenMessageProcessor,listener),getMuleContext(),moduleObject.getDomain(),moduleObject.getLocalPort(),moduleObject.getRemotePort(),moduleObject.getPath(),moduleObject.getAsync(),getFlowConstruct().getExceptionListener(),moduleObject.getConnector());
-    fetchAccessTokenMessageProcessor.setRedirectUri(oauthCallback.getUrl());
-    if (accessTokenUrl != null) {
-      fetchAccessTokenMessageProcessor.setAccessTokenUrl(accessTokenUrl);
-    }
  else {
-      fetchAccessTokenMessageProcessor.setAccessTokenUrl(moduleObject.getAccessTokenUrl());
-    }
-    if (requestTokenUrl != null) {
-      fetchAccessTokenMessageProcessor.setRequestTokenUrl(requestTokenUrl);
-    }
+    fetchAccessTokenMessageProcessor.setRequestTokenUrl(moduleObject.getRequestTokenUrl());
+  }
+  if (this.getAuthorizationUrl() != null) {
+    fetchAccessTokenMessageProcessor.setAuthorizationUrl(this.getAuthorizationUrl());
+  }
  else {
-      fetchAccessTokenMessageProcessor.setRequestTokenUrl(moduleObject.getRequestTokenUrl());
-    }
-    if (authorizationUrl != null) {
-      fetchAccessTokenMessageProcessor.setAuthorizationUrl(authorizationUrl);
-    }
- else {
-      fetchAccessTokenMessageProcessor.setAuthorizationUrl(moduleObject.getAuthorizationUrl());
-    }
-    oauthCallback.start();
+    fetchAccessTokenMessageProcessor.setAuthorizationUrl(moduleObject.getAuthorizationUrl());
   }
 }

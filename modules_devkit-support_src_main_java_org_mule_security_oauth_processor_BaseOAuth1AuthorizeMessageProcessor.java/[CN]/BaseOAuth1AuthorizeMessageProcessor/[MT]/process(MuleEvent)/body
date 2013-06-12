@@ -1,21 +1,12 @@
 {
-  LinkedInConnectorOAuth1Adapter moduleObject=null;
+  OAuth1Adapter moduleObject=this.getAdapter();
   try {
-    moduleObject=findOrCreate(LinkedInConnectorOAuth1Adapter.class,false,null);
     Map<String,String> extraParameters=new HashMap<String,String>();
-    if (state != null) {
-      try {
-        String transformerState=((String)evaluateAndTransform(getMuleContext(),event,AuthorizeMessageProcessor.class.getDeclaredField("state").getGenericType(),null,state));
-        extraParameters.put("state",transformerState);
-      }
- catch (      NoSuchFieldException e) {
-        throw new MessagingException(CoreMessages.createStaticMessage("internal error"),event,e);
-      }
+    if (this.getState() != null) {
+      extraParameters.put("state",this.toString(event,this.getState()));
     }
-    String transformedAuthorizationUrl=((String)evaluateAndTransform(getMuleContext(),event,AuthorizeMessageProcessor.class.getDeclaredField("authorizationUrl").getGenericType(),null,authorizationUrl));
-    String transformedAccessTokenUrl=((String)evaluateAndTransform(getMuleContext(),event,AuthorizeMessageProcessor.class.getDeclaredField("accessTokenUrl").getGenericType(),null,accessTokenUrl));
-    moduleObject.setAccessTokenUrl(transformedAccessTokenUrl);
-    String location=moduleObject.authorize(extraParameters,requestTokenUrl,accessTokenUrl,authorizationUrl,oauthCallback.getUrl());
+    moduleObject.setAccessTokenUrl(this.toString(event,this.getAccessTokenUrl()));
+    String location=moduleObject.authorize(extraParameters,requestTokenUrl,this.getAccessTokenUrl(),this.getAuthorizationUrl(),this.getOauthCallback().getUrl());
     event.getMessage().setOutboundProperty("http.status","302");
     event.getMessage().setOutboundProperty("Location",location);
     return event;

@@ -1,15 +1,11 @@
 {
   OAuth2Manager<OAuth2Adapter> module=this.getOAuthManager();
-  if (oauthCallback == null) {
-    OAuth2FetchAccessTokenMessageProcessor fetchAccessTokenMessageProcessor=new OAuth2FetchAccessTokenMessageProcessor((OAuth2Manager<OAuth2Adapter>)moduleObject);
-    oauthCallback=new DefaultHttpCallback(Arrays.asList(new ExtractAuthorizationCodeMessageProcessor(Pattern.compile(this.getAuthCodeRegex())),fetchAccessTokenMessageProcessor,listener),getMuleContext(),module.getDomain(),module.getLocalPort(),module.getRemotePort(),module.getPath(),module.getAsync(),getFlowConstruct().getExceptionListener(),module.getConnector());
-    fetchAccessTokenMessageProcessor.setRedirectUri(oauthCallback.getUrl());
-    if (accessTokenUrl != null) {
-      fetchAccessTokenMessageProcessor.setAccessTokenUrl(accessTokenUrl);
-    }
+  FetchAccessTokenMessageProcessor fetchAccessTokenMessageProcessor=new OAuth2FetchAccessTokenMessageProcessor((OAuth2Manager<OAuth2Adapter>)module);
+  this.startCallback(module,fetchAccessTokenMessageProcessor);
+  if (this.getAccessTokenUrl() != null) {
+    fetchAccessTokenMessageProcessor.setAccessTokenUrl(this.getAccessTokenUrl());
+  }
  else {
-      fetchAccessTokenMessageProcessor.setAccessTokenUrl(module.getAccessTokenUrl());
-    }
-    oauthCallback.start();
+    fetchAccessTokenMessageProcessor.setAccessTokenUrl(module.getAccessTokenUrl());
   }
 }
