@@ -3,46 +3,47 @@
   if (adapter.getAccessToken() != null) {
     return;
   }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Retrieving access token...");
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug("Retrieving access token...");
   }
   String accessTokenUrl=adapter.getAccessTokenUrl() != null ? adapter.getAccessTokenUrl() : this.accessTokenUrl;
   String response=this.httpUtil.post(accessTokenUrl,requestBody);
-  if (logger.isDebugEnabled()) {
-    logger.debug(String.format("Received response [%s]",response));
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug(String.format("Received response [%s]",response));
   }
   adapter.setAccessToken(this.oauthResponseParser.extractAccessCode(adapter.getAccessCodePattern(),response));
-  if (logger.isDebugEnabled()) {
-    logger.debug(String.format("Access token retrieved successfully [accessToken = %s]",adapter.getAccessToken()));
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug(String.format("Access token retrieved successfully [accessToken = %s]",adapter.getAccessToken()));
   }
   this.saveAccessToken(adapter);
-  if (logger.isDebugEnabled()) {
-    logger.debug(String.format("Attempting to extract expiration time using [expirationPattern = %s]",adapter.getExpirationTimePattern().pattern()));
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug(String.format("Attempting to extract expiration time using [expirationPattern = %s]",adapter.getExpirationTimePattern().pattern()));
   }
   Date expiration=this.oauthResponseParser.extractExpirationTime(adapter.getExpirationTimePattern(),response);
   if (expiration != null) {
     adapter.setExpiration(expiration);
-    if (logger.isDebugEnabled()) {
-      logger.debug(String.format("Token expiration extracted successfully [expiration = %s]",expiration));
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Token expiration extracted successfully [expiration = %s]",expiration));
     }
   }
  else {
-    if (logger.isDebugEnabled()) {
-      logger.debug(String.format("Token expiration could not be extracted from [response = %s]",response));
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Token expiration could not be extracted from [response = %s]",response));
     }
   }
-  if (logger.isDebugEnabled()) {
-    logger.debug("Attempting to extract refresh token time using [refreshTokenPattern = \"refresh_token\":\"([^&]+?)\"]");
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug("Attempting to extract refresh token time using [refreshTokenPattern = \"refresh_token\":\"([^&]+?)\"]");
   }
   String refreshToken=this.oauthResponseParser.extractRefreshToken(adapter.getRefreshTokenPattern(),response);
   if (refreshToken != null) {
-    if (logger.isDebugEnabled()) {
-      logger.debug(String.format("Refresh token extracted successfully [refresh token = %s]",refreshToken));
+    adapter.setRefreshToken(refreshToken);
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Refresh token extracted successfully [refresh token = %s]",refreshToken));
     }
   }
  else {
-    if (logger.isDebugEnabled()) {
-      logger.debug(String.format("Refresh token could not be extracted from [response = %s]",response));
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Refresh token could not be extracted from [response = %s]",response));
     }
   }
   this.fetchCallbackParameters(adapter,response);
