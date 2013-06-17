@@ -1,0 +1,23 @@
+{
+  final String state="state";
+  final String authorizeUrl="authorizeUrl";
+  final String customField="customField";
+  final String anotherCustomField="anotherCustomField";
+  this.processor.setState(state);
+  this.processor.setCustomField(customField);
+  this.processor.setAnotherCustomField(anotherCustomField);
+  Mockito.when(this.manager.getDefaultUnauthorizedConnector().getAuthorizationParameters()).thenReturn(this.getAuthorizePropertiesWithoutDefaults());
+  Mockito.when(this.manager.buildAuthorizeUrl(Mockito.anyMap(),Mockito.anyString(),Mockito.anyString())).thenAnswer(new Answer<String>(){
+    @Override public String answer(    InvocationOnMock invocation) throws Throwable {
+      Map<String,String> parameters=(Map<String,String>)invocation.getArguments()[0];
+      Assert.assertEquals(state,parameters.get("state"));
+      Assert.assertEquals(customField.toLowerCase(),parameters.get("customField"));
+      Assert.assertEquals(anotherCustomField.toLowerCase(),parameters.get("anotherCustomField"));
+      return authorizeUrl;
+    }
+  }
+);
+  this.processor.process(event);
+  Mockito.verify(this.event.getMessage()).setOutboundProperty("http.status","302");
+  Mockito.verify(this.event.getMessage()).setOutboundProperty("Location",authorizeUrl);
+}

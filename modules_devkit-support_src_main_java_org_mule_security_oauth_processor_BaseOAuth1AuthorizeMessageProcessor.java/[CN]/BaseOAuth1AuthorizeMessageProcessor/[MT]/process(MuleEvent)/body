@@ -1,0 +1,17 @@
+{
+  OAuth1Adapter moduleObject=this.getAdapter();
+  try {
+    Map<String,String> extraParameters=new HashMap<String,String>();
+    if (this.getState() != null) {
+      extraParameters.put("state",this.toString(event,this.getState()));
+    }
+    moduleObject.setAccessTokenUrl(this.toString(event,this.getAccessTokenUrl()));
+    String location=moduleObject.authorize(extraParameters,requestTokenUrl,this.getAccessTokenUrl(),this.getAuthorizationUrl(),this.getOauthCallback().getUrl());
+    event.getMessage().setOutboundProperty("http.status","302");
+    event.getMessage().setOutboundProperty("Location",location);
+    return event;
+  }
+ catch (  Exception e) {
+    throw new MessagingException(CoreMessages.failedToInvoke("authorize"),event,e);
+  }
+}

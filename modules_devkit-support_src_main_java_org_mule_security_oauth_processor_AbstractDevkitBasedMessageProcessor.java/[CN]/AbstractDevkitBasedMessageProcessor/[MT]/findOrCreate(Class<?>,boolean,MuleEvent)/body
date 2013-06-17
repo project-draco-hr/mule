@@ -1,0 +1,22 @@
+{
+  Object temporaryObject=moduleObject;
+  if (temporaryObject == null) {
+    temporaryObject=(muleContext.getRegistry().lookupObject(moduleClass));
+    if (temporaryObject == null) {
+      if (shouldAutoCreate) {
+        temporaryObject=(moduleClass.newInstance());
+        muleContext.getRegistry().registerObject(moduleClass.getName(),temporaryObject);
+      }
+ else {
+        throw new ConfigurationException(MessageFactory.createStaticMessage("Cannot find object"));
+      }
+    }
+  }
+  if (temporaryObject instanceof String) {
+    temporaryObject=(muleContext.getExpressionManager().evaluate(((String)temporaryObject),muleEvent,true));
+    if (temporaryObject == null) {
+      throw new ConfigurationException(MessageFactory.createStaticMessage("Cannot find object by config name"));
+    }
+  }
+  return temporaryObject;
+}

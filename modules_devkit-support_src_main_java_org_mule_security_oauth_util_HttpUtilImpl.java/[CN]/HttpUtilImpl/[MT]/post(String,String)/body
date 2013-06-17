@@ -1,0 +1,31 @@
+{
+  HttpURLConnection conn=null;
+  try {
+    conn=((HttpURLConnection)new URL(url).openConnection());
+  }
+ catch (  MalformedURLException e) {
+    throw new IllegalArgumentException(url + " is not a valid url",e);
+  }
+catch (  IOException e) {
+    throw new RuntimeException("Could not open connection to " + url,e);
+  }
+  try {
+    conn.setRequestMethod("POST");
+  }
+ catch (  ProtocolException e) {
+    throw new RuntimeException("Something is wrong with the runtime, POST is not recognized as a verb",e);
+  }
+  conn.setDoOutput(true);
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("Sending request to [%s] using the following as content [%s]",url,body));
+  }
+  try {
+    OutputStreamWriter out=new OutputStreamWriter(conn.getOutputStream());
+    out.write(body);
+    out.close();
+    return IOUtils.toString(conn.getInputStream());
+  }
+ catch (  IOException e) {
+    throw new RuntimeException("Error found while consuming http resource at " + url,e);
+  }
+}
