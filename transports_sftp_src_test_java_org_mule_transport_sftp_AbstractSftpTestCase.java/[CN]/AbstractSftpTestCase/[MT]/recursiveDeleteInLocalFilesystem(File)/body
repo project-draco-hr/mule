@@ -6,26 +6,16 @@
   }
   File parentParent=parent.getParentFile();
   if (!parentParent.canWrite()) {
-    if (SystemUtils.IS_OS_WINDOWS) {
-      Runtime.getRuntime().exec("attrib -r /D" + parentParent.getAbsolutePath());
-    }
- else     if (SystemUtils.IS_OS_UNIX || SystemUtils.IS_OS_LINUX) {
-      Runtime.getRuntime().exec("chmod +w " + parentParent.getAbsolutePath());
-    }
- else {
-      throw new IOException("This test is not supported on your detected platform : " + SystemUtils.OS_NAME);
+    if (!parentParent.setWritable(true)) {
+      throw new IOException("Failed to set readonly-folder: " + parentParent + " to writeable");
     }
   }
   if (parent.exists()) {
-    if (SystemUtils.IS_OS_WINDOWS) {
-      Runtime.getRuntime().exec("attrib -r /D" + parent.getAbsolutePath());
+    if (!parent.setWritable(true)) {
+      throw new IOException("Failed to set readonly-folder: " + parent + " to writeable");
     }
- else     if (SystemUtils.IS_OS_UNIX || SystemUtils.IS_OS_LINUX) {
-      Runtime.getRuntime().exec("chmod +w " + parent.getAbsolutePath());
+    if (!parent.delete()) {
+      throw new IOException("Failed to delete folder: " + parent);
     }
- else {
-      throw new IOException("This test is not supported on your detected platform : " + SystemUtils.OS_NAME);
-    }
-    if (!parent.delete())     throw new IOException("Failed to delete folder: " + parent);
   }
 }
