@@ -1,21 +1,21 @@
 {
   OAuth2Manager<OAuth2Adapter> manager=this.getOAuthManager();
   try {
-    String transformedToken=((String)evaluateAndTransform(getMuleContext(),event,String.class,null,getAccessTokenId()));
+    String accessTokenId=this.getAccessTokenId(event,this,manager);
     if (logger.isDebugEnabled()) {
-      logger.debug("Attempting to acquire access token using from store for user " + transformedToken);
+      logger.debug("Attempting to acquire access token using from store for user " + accessTokenId);
     }
-    OAuth2Adapter connector=manager.acquireAccessToken(transformedToken);
+    OAuth2Adapter connector=manager.acquireAccessToken(accessTokenId);
     if (connector == null) {
       throw new UnableToAcquireConnectionException();
     }
  else {
       if (logger.isDebugEnabled()) {
-        logger.debug(String.format("Access Token has been acquired for [tokenId= %s]",transformedToken));
+        logger.debug(String.format("Access Token has been acquired for [tokenId= %s]",accessTokenId));
       }
-      manager.destroyAccessToken(transformedToken,connector);
+      manager.destroyAccessToken(accessTokenId,connector);
       if (logger.isDebugEnabled()) {
-        logger.debug(String.format("Access token for [tokenId= %s] has been successfully destroyed",transformedToken));
+        logger.debug(String.format("Access token for [tokenId= %s] has been successfully destroyed",accessTokenId));
       }
     }
   }

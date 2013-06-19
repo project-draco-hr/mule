@@ -1,23 +1,20 @@
 {
   OAuth2Adapter connector=null;
   if (!processCallback.isProtected()) {
-    return processCallback.process(oauthManager.getDefaultUnauthorizedConnector());
+    return processCallback.process(this.oauthManager.getDefaultUnauthorizedConnector());
   }
-  if (((AbstractConnectedProcessor)messageProcessor).getAccessTokenId() == null) {
-    throw new IllegalArgumentException("The accessTokenId cannot be null");
-  }
-  String _transformedToken=((String)evaluateAndTransform(muleContext,event,AbstractConnectedProcessor.class.getDeclaredField("_accessTokenIdType").getGenericType(),null,((AbstractConnectedProcessor)messageProcessor).getAccessTokenId()));
+  String accessTokenId=this.getAccessTokenId(event,messageProcessor,this.oauthManager);
   try {
     if (logger.isDebugEnabled()) {
-      logger.debug(("Attempting to acquire access token using from store for [accessTokenId=" + _transformedToken.toString()));
+      logger.debug(String.format("Attempting to acquire access token using from store for [accessTokenId=%s]",accessTokenId));
     }
-    connector=oauthManager.acquireAccessToken(_transformedToken);
+    connector=oauthManager.acquireAccessToken(accessTokenId);
     if (connector == null) {
       throw new UnableToAcquireConnectionException();
     }
  else {
       if (logger.isDebugEnabled()) {
-        logger.debug((("Access token has been acquired for [accessTokenId=" + connector.getAccessTokenId()) + "]"));
+        logger.debug(String.format("Access token has been acquired for [accessTokenId=%s]",accessTokenId));
       }
     }
     return next.execute(processCallback,connector,messageProcessor,event);
@@ -27,10 +24,10 @@
       for (      Class<? extends Exception> exceptionClass : processCallback.getManagedExceptions()) {
         if (exceptionClass.isInstance(e)) {
           if (logger.isDebugEnabled()) {
-            logger.debug((((("An exception ( " + exceptionClass.getName()) + ") has been thrown. Destroying the access token with [accessTokenId=") + connector.getAccessTokenId()) + "]"));
+            logger.debug(String.format("An exception (%s) has been thrown. Destroying the access token with [accessTokenId=%s]",exceptionClass.getName(),accessTokenId));
           }
           try {
-            oauthManager.destroyAccessToken(_transformedToken,connector);
+            oauthManager.destroyAccessToken(accessTokenId,connector);
             connector=null;
           }
  catch (          Exception innerException) {
@@ -45,9 +42,9 @@
     try {
       if (connector != null) {
         if (logger.isDebugEnabled()) {
-          logger.debug((("Releasing the access token back into the pool [accessTokenId=" + connector.getAccessTokenId()) + "]"));
+          logger.debug(String.format("Releasing the access token back into the pool [accessTokenId=%s]",accessTokenId));
         }
-        oauthManager.releaseAccessToken(_transformedToken,connector);
+        oauthManager.releaseAccessToken(accessTokenId,connector);
       }
     }
  catch (    Exception e) {
