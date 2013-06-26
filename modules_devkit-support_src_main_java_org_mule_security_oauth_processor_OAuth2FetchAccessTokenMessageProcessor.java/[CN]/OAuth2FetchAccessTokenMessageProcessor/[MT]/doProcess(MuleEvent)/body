@@ -1,4 +1,5 @@
 {
+  MuleEvent restoredEvent=this.restoreOriginalEvent(event);
   try {
     OAuth2Adapter oauthAdapter=this.oauthManager.createAdapter(((String)event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER)));
     if (oauthAdapter.getAccessTokenUrl() == null) {
@@ -8,10 +9,11 @@
     String transformedAccessTokenId=StringUtils.isBlank(this.getAccessTokenId()) ? this.oauthManager.getDefaultUnauthorizedConnector().getName() : this.getAccessTokenId();
     transformedAccessTokenId=(String)this.evaluateAndTransform(event.getMuleContext(),event,String.class,null,transformedAccessTokenId);
     this.oauthManager.getAccessTokenPoolFactory().passivateObject(transformedAccessTokenId,oauthAdapter);
-    event.getMessage().setInvocationProperty(OAuthProperties.ACCESS_TOKEN_ID,transformedAccessTokenId);
+    restoredEvent.getMessage().setInvocationProperty(OAuthProperties.VERIFIER,event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER));
+    restoredEvent.getMessage().setInvocationProperty(OAuthProperties.ACCESS_TOKEN_ID,transformedAccessTokenId);
   }
  catch (  Exception e) {
     throw new MessagingException(MessageFactory.createStaticMessage("Unable to fetch access token"),event,e);
   }
-  return event;
+  return restoredEvent;
 }
