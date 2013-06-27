@@ -10,7 +10,8 @@
   Mockito.when(this.manager.buildAuthorizeUrl(Mockito.anyMap(),Mockito.anyString(),Mockito.anyString())).thenAnswer(new Answer<String>(){
     @Override public String answer(    InvocationOnMock invocation) throws Throwable {
       Map<String,String> parameters=(Map<String,String>)invocation.getArguments()[0];
-      Assert.assertEquals(state,parameters.get("state"));
+      String expectedState=String.format(OAuthProperties.EVENT_STATE_TEMPLATE,eventId) + state;
+      Assert.assertEquals(expectedState,parameters.get("state"));
       Assert.assertEquals(customField.toLowerCase(),parameters.get("customField"));
       Assert.assertEquals(anotherCustomField.toLowerCase(),parameters.get("anotherCustomField"));
       return authorizeUrl;
@@ -18,6 +19,8 @@
   }
 );
   this.processor.process(event);
-  Mockito.verify(this.event.getMessage()).setOutboundProperty("http.status","302");
-  Mockito.verify(this.event.getMessage()).setOutboundProperty("Location",authorizeUrl);
+  Mockito.verify(this.manager).storeAuthorizationEvent(this.event);
+  Mockito.verify(this.event.getMessage()).setOutboundProperty(OAuthProperties.HTTP_STATUS,"302");
+  Mockito.verify(this.event.getMessage()).setOutboundProperty(OAuthProperties.CALLBACK_LOCATION,authorizeUrl);
+  Mockito.verify(this.muleContext).fireNotification(Mockito.argThat(new OAuthNotificationMatcher(OAuthAuthorizeNotification.OAUTH_AUTHORIZATION_BEGIN,this.event)));
 }

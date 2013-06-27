@@ -1,0 +1,25 @@
+{
+  try {
+    event=this.doProcess(event);
+    this.overwritePayload(event,event.getMessage().getPayload());
+  }
+ catch (  MessagingException messagingException) {
+    messagingException.setProcessedEvent(event);
+    throw messagingException;
+  }
+catch (  NotAuthorizedException e) {
+    try {
+      return this.handleNotAuthorized((OAuthAdapter)moduleObject,e,event);
+    }
+ catch (    Exception ne) {
+      this.handleException(event,ne);
+    }
+  }
+catch (  MuleException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    this.handleException(event,e);
+  }
+  return event;
+}

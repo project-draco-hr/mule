@@ -1,0 +1,30 @@
+{
+  String state=event.getMessage().getInboundProperty("state");
+  String eventId=null;
+  try {
+    eventId=StringUtils.match(EVENT_ID_PATTERN,state,1);
+  }
+ catch (  IllegalArgumentException e) {
+    throw new MessagingException(MessageFactory.createStaticMessage(String.format("Could not fetch original event for callback with state %s. Could not extract original event id",state)),event);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("received callback for event id %s. Fetching original event",eventId));
+  }
+  MuleEvent restoredEvent=null;
+  try {
+    restoredEvent=this.oauthManager.restoreAuthorizationEvent(eventId);
+  }
+ catch (  ObjectDoesNotExistException e) {
+    throw new MessagingException(MessageFactory.createStaticMessage(String.format("Could not find authorization event %s in object store",eventId)),event,e);
+  }
+catch (  ObjectStoreException e) {
+    throw new MessagingException(MessageFactory.createStaticMessage(String.format("Error retrieving authorization event %s from object store",eventId)),event,e);
+  }
+  try {
+    restoredEvent.getMessage().setProperty("state",StringUtils.match(ORIGINAL_STATE_PATTERN,state,1),PropertyScope.INBOUND);
+  }
+ catch (  IllegalArgumentException e) {
+    restoredEvent.getMessage().setProperty("state",StringUtils.EMPTY,PropertyScope.INBOUND);
+  }
+  return restoredEvent;
+}
