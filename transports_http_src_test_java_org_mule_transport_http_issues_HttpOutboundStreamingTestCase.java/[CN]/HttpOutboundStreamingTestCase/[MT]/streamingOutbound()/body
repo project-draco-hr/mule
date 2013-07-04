@@ -24,12 +24,11 @@
     }
   }
 ;
-  Flow flow=(Flow)muleContext.getRegistry().lookupFlowConstruct("senderTestFlow");
-  MuleClient client=new DefaultLocalMuleClient(muleContext);
-  flow.process(getTestEvent(stream,MessageExchangePattern.ONE_WAY)).getMessage();
   MuleMessage responseMessage=null;
   try {
-    responseMessage=client.request("vm://callback",600000);
+    MuleClient client=muleContext.getClient();
+    client.dispatch("vm://send",getTestEvent(stream,MessageExchangePattern.ONE_WAY).getMessage());
+    responseMessage=client.request("vm://callback",10000);
   }
   finally {
     latch.countDown();
