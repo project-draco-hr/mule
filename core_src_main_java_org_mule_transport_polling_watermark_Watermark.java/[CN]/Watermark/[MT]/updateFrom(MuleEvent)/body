@@ -1,0 +1,17 @@
+{
+  String resolvedVariable=resolveVariable(event);
+  Object watermarkValue=StringUtils.isEmpty(updateExpression) ? event.getFlowVariable(resolvedVariable) : evaluate(updateExpression,event);
+  if (watermarkValue instanceof Serializable) {
+synchronized (objectStore) {
+      if (objectStore.contains(resolvedVariable)) {
+        objectStore.remove(resolvedVariable);
+      }
+      if (watermarkValue != null) {
+        objectStore.store(resolvedVariable,(Serializable)watermarkValue);
+      }
+    }
+  }
+ else {
+    logger.error("Value retrieved from event is not serializable and hence can't be saved to the object store");
+  }
+}
