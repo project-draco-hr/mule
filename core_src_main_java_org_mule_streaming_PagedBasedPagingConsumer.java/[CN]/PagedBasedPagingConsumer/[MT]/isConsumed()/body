@@ -1,17 +1,20 @@
 {
-  if (CollectionUtils.isEmpty(this.currentPage)) {
-    this.loadNextPage(this.producer);
+  if (this.closed) {
+    return true;
   }
   if (CollectionUtils.isEmpty(this.currentPage)) {
-    try {
-      this.close();
-    }
- catch (    MuleException e) {
-      if (logger.isWarnEnabled()) {
-        logger.warn("Expection was trapped trying to close consumer",e);
+    this.loadNextPage(this.producer);
+    if (CollectionUtils.isEmpty(this.currentPage)) {
+      try {
+        this.close();
       }
+ catch (      MuleException e) {
+        if (logger.isWarnEnabled()) {
+          logger.warn("Expection was trapped trying to close consumer",e);
+        }
+      }
+      return true;
     }
-    return true;
   }
   return false;
 }
