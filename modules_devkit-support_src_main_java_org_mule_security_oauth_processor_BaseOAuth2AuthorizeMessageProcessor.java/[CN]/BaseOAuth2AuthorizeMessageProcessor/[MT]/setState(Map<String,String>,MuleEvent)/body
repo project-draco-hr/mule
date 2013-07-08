@@ -1,7 +1,12 @@
 {
-  String state=this.getState();
-  if (state != null) {
-    state=String.format(OAuthProperties.EVENT_STATE_TEMPLATE,event.getId()) + this.toString(event,state);
-    extraParameters.put("state",state);
+  String state=String.format(OAuthProperties.EVENT_STATE_TEMPLATE,event.getId());
+  if (this.getState() != null) {
+    state+=this.toString(event,this.getState());
+  }
+  try {
+    extraParameters.put("state",URLEncoder.encode(state,"UTF-8"));
+  }
+ catch (  UnsupportedEncodingException e) {
+    throw new RuntimeException("Error found URL Encoding the state argument",e);
   }
 }
