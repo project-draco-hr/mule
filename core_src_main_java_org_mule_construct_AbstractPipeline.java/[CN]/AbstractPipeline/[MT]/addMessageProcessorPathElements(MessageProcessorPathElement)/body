@@ -1,6 +1,7 @@
 {
-  String prefix="processors";
-  MessageProcessorPathElement processorPathElement=pathElement.addChild(prefix);
+  String processorsPrefix="processors";
+  String esPrefix="es";
+  MessageProcessorPathElement processorPathElement=pathElement.addChild(processorsPrefix);
   List<MessageProcessor> filteredMessageProcessorList=new ArrayList<MessageProcessor>();
   for (  MessageProcessor messageProcessor : getMessageProcessors()) {
     if (messageProcessor instanceof InterceptingMessageProcessor) {
@@ -13,7 +14,12 @@
   }
   NotificationUtils.addMessageProcessorPathElements(filteredMessageProcessorList,processorPathElement);
   if (exceptionListener instanceof MessageProcessorContainer) {
-    MessageProcessorPathElement exceptionStrategyPathElement=pathElement.addChild(getExceptionStrategyPrefix());
+    String esGlobalName=getExceptionStrategyGlobalName();
+    MessageProcessorPathElement exceptionStrategyPathElement=pathElement;
+    if (esGlobalName != null) {
+      exceptionStrategyPathElement=exceptionStrategyPathElement.addChild(esGlobalName);
+    }
+    exceptionStrategyPathElement=exceptionStrategyPathElement.addChild(esPrefix);
     ((MessageProcessorContainer)exceptionListener).addMessageProcessorPathElements(exceptionStrategyPathElement);
   }
 }
