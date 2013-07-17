@@ -10,8 +10,11 @@
     String transformedAccessTokenId=StringUtils.isBlank(this.getAccessTokenId()) ? this.oauthManager.getDefaultUnauthorizedConnector().getName() : this.getAccessTokenId();
     transformedAccessTokenId=(String)this.evaluateAndTransform(event.getMuleContext(),event,String.class,null,transformedAccessTokenId);
     this.oauthManager.getAccessTokenPoolFactory().passivateObject(transformedAccessTokenId,oauthAdapter);
-    restoredEvent.getMessage().setInvocationProperty(OAuthProperties.VERIFIER,event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER));
-    restoredEvent.getMessage().setInvocationProperty(OAuthProperties.ACCESS_TOKEN_ID,transformedAccessTokenId);
+    MuleMessage message=restoredEvent.getMessage();
+    message.setInvocationProperty(OAuthProperties.VERIFIER,event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER));
+    message.setInvocationProperty(OAuthProperties.ACCESS_TOKEN_ID,transformedAccessTokenId);
+    message.removeProperty(OAuthProperties.HTTP_STATUS,PropertyScope.OUTBOUND);
+    message.removeProperty(OAuthProperties.CALLBACK_LOCATION,PropertyScope.OUTBOUND);
   }
  catch (  Exception e) {
     throw new MessagingException(MessageFactory.createStaticMessage("Unable to fetch access token"),event,e);
