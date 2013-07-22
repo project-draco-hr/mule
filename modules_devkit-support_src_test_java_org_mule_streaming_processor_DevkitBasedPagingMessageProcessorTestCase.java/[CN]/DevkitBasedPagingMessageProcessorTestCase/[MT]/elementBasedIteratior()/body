@@ -1,0 +1,14 @@
+{
+  TestPagingProcessor processor=new TestPagingProcessor();
+  processor.setOutputStrategy(StreamingOutputStrategy.ELEMENT);
+  MuleEvent event=Mockito.mock(MuleEvent.class,Mockito.RETURNS_DEEP_STUBS);
+  @SuppressWarnings("rawtypes") ArgumentCaptor<ConsumerIterator> captor=ArgumentCaptor.forClass(ConsumerIterator.class);
+  processor.process(event);
+  Mockito.verify(event.getMessage()).setPayload(captor.capture());
+  @SuppressWarnings("unchecked") ConsumerIterator<String> it=(ConsumerIterator<String>)captor.getValue();
+  for (int i=0; i < TOP; i++) {
+    Assert.assertTrue(it.hasNext());
+    Assert.assertNotNull(it.next());
+  }
+  Assert.assertFalse(it.hasNext());
+}

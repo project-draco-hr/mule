@@ -1,0 +1,16 @@
+{
+  PagingDelegate<?> delegate=this.getPagingDelegate();
+  Producer<?> producer=new PagingDelegateProducer(delegate);
+  Consumer<?> consumer=null;
+  if (this.outputStrategy == StreamingOutputStrategy.ELEMENT) {
+    consumer=new ElementBasedPagingConsumer(producer);
+  }
+ else   if (this.outputStrategy == StreamingOutputStrategy.PAGE) {
+    consumer=new PagedBasedPagingConsumer(producer);
+  }
+ else {
+    throw new DefaultMuleException("Unsupported outputStrategy " + this.outputStrategy);
+  }
+  event.getMessage().setPayload(new ConsumerIterator(consumer));
+  return event;
+}
