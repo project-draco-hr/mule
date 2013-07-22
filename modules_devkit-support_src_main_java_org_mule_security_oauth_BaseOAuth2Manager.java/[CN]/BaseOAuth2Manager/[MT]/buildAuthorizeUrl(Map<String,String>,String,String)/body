@@ -6,18 +6,15 @@
  else {
     urlBuilder.append(this.getDefaultUnauthorizedConnector().getAuthorizationUrl());
   }
-  urlBuilder.append("?");
-  urlBuilder.append("response_type=code&");
-  urlBuilder.append("client_id=");
-  urlBuilder.append(this.getDefaultUnauthorizedConnector().getConsumerKey());
-  for (  String parameter : extraParameters.keySet()) {
-    urlBuilder.append("&");
-    urlBuilder.append(parameter);
-    urlBuilder.append("=");
-    urlBuilder.append(extraParameters.get(parameter));
+  urlBuilder.append("?").append("response_type=code&").append("client_id=").append(this.getDefaultUnauthorizedConnector().getConsumerKey());
+  String scope=this.getDefaultUnauthorizedConnector().getScope();
+  if (!StringUtils.isBlank(scope)) {
+    urlBuilder.append("&scope=").append(scope);
   }
-  urlBuilder.append("&redirect_uri=");
-  urlBuilder.append(redirectUri);
+  for (  Map.Entry<String,String> entry : extraParameters.entrySet()) {
+    urlBuilder.append("&").append(entry.getKey()).append("=").append(entry.getValue());
+  }
+  urlBuilder.append("&redirect_uri=").append(redirectUri);
   if (getLogger().isDebugEnabled()) {
     getLogger().debug(("Authorization URL has been generated as follows: " + urlBuilder));
   }
