@@ -1,0 +1,14 @@
+{
+  List<MessageProcessor> messageProcessors=getMessageProcessorsListWithFailingMessageProcessor();
+  MuleEvent eventToRoute=getEventWithId(ID_1);
+  assertEquals(LETTER_A,roundRobinRoutingStrategy.route(eventToRoute,messageProcessors).getMessage().getPayloadAsString());
+  try {
+    roundRobinRoutingStrategy.route(eventToRoute,messageProcessors);
+    fail("Exception was expected");
+  }
+ catch (  MessagingException me) {
+    assertEquals(EXCEPTION_MESSAGE,me.getCause().getMessage());
+  }
+  assertEquals(LETTER_B,roundRobinRoutingStrategy.route(eventToRoute,messageProcessors).getMessage().getPayloadAsString());
+  assertEquals(LETTER_A,roundRobinRoutingStrategy.route(eventToRoute,messageProcessors).getMessage().getPayloadAsString());
+}
