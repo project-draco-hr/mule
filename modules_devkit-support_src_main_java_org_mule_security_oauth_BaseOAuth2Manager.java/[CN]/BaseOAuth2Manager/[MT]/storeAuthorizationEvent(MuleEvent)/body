@@ -14,10 +14,16 @@
   if (!(message.getPayload() instanceof Serializable)) {
     throw new MessagingException(MessageFactory.createStaticMessage(String.format("In order to perform the OAuth authorization dance the mule event needs to be stored in the object store. However, the message has a payload of class %s which is not serializable.",message.getPayload().getClass().getCanonicalName())),event);
   }
-  try {
-    this.accessTokenObjectStore.store(this.buildAuthorizationEventKey(event.getId()),event);
-  }
- catch (  ObjectStoreException e) {
-    throw new MessagingException(MessageFactory.createStaticMessage("Exception was thrown when trying to store the message into object store. Please check that all message properties are serializable"),event,e);
+  String key=this.buildAuthorizationEventKey(event.getId());
+synchronized (event) {
+    try {
+      if (this.accessTokenObjectStore.contains(key)) {
+        this.accessTokenObjectStore.remove(key);
+      }
+      this.accessTokenObjectStore.store(key,event);
+    }
+ catch (    ObjectStoreException e) {
+      throw new MessagingException(MessageFactory.createStaticMessage("Exception was thrown when trying to store the message into object store. Please check that all message properties are serializable"),event,e);
+    }
   }
 }
