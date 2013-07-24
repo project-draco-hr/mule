@@ -1,0 +1,14 @@
+{
+  deploymentService.start();
+  URL url=getClass().getResource("/dummy-app.zip");
+  assertNotNull("Test app file not found " + url,url);
+  addExplodedApp(url,"dummy-app");
+  assertDeploymentSuccess(deploymentListener,"dummy-app");
+  assertAppsDir(NONE,new String[]{"dummy-app"},true);
+  reset(deploymentListener);
+  File originalConfigFile=new File(appsDir + "/dummy-app","mule-config.xml");
+  url=getClass().getResource("/overridden.properties");
+  File newConfigFile=new File(url.toURI());
+  FileUtils.copyFile(newConfigFile,originalConfigFile);
+  assertDeploymentFailure(deploymentListener,"dummy-app");
+}

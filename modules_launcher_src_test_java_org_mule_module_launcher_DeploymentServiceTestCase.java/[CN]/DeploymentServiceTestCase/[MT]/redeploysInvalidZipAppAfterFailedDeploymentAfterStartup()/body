@@ -1,0 +1,12 @@
+{
+  deploymentService.start();
+  final URL url=getClass().getResource("/incompleteApp.zip");
+  assertNotNull("Test app file not found " + url,url);
+  addAppArchive(url,"incompleteApp.zip");
+  assertDeploymentFailure(deploymentListener,"incompleteApp");
+  reset(deploymentListener);
+  addAppArchive(url,"incompleteApp.zip");
+  assertDeploymentFailure(deploymentListener,"incompleteApp");
+  final Map.Entry<URL,Long> zombie=deploymentService.getZombieMap().entrySet().iterator().next();
+  assertEquals("Wrong URL tagged as zombie.","incompleteApp",new File(zombie.getKey().getFile()).getParentFile().getName());
+}

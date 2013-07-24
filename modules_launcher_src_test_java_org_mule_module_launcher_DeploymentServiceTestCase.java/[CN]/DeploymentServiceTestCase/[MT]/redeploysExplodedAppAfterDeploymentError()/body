@@ -1,0 +1,18 @@
+{
+  deploymentService.start();
+  File appDir=new File(appsDir,"incompleteApp");
+  final URL url=getClass().getResource("/incompleteApp.zip");
+  assertNotNull("Test app file not found " + url,url);
+  final File source=new File(url.toURI());
+  FileUtils.unzip(source,appDir);
+  assertDeploymentFailure(deploymentListener,"incompleteApp");
+  final URL extraApp=getClass().getResource("/dummy-app.zip");
+  assertNotNull("Test app file not found " + extraApp,extraApp);
+  addAppArchive(extraApp);
+  assertDeploymentSuccess(deploymentListener,"dummy-app");
+  final URL fixedApp=getClass().getResource("/empty-app.zip");
+  assertNotNull("Test app file not found " + fixedApp,fixedApp);
+  addExplodedApp(fixedApp,"incompleteApp");
+  assertDeploymentSuccess(deploymentListener,"incompleteApp");
+  assertEquals("Failed app still appears as zombie after a successful redeploy",0,deploymentService.getZombieMap().size());
+}
