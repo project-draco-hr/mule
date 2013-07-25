@@ -20,32 +20,44 @@
       }
     }
   }
-  Reader script;
-  if (StringUtils.isNotBlank(scriptText)) {
-    script=new StringReader(scriptText);
-  }
- else   if (scriptFile != null) {
-    InputStream is;
-    try {
-      is=IOUtils.getResourceAsStream(scriptFile,getClass());
+  Reader script=null;
+  try {
+    if (StringUtils.isNotBlank(scriptText)) {
+      script=new StringReader(scriptText);
     }
- catch (    IOException e) {
-      throw new InitialisationException(CoreMessages.cannotLoadFromClasspath(scriptFile),e,this);
+ else     if (scriptFile != null) {
+      InputStream is;
+      try {
+        is=IOUtils.getResourceAsStream(scriptFile,getClass());
+      }
+ catch (      IOException e) {
+        throw new InitialisationException(CoreMessages.cannotLoadFromClasspath(scriptFile),e,this);
+      }
+      if (is == null) {
+        throw new InitialisationException(CoreMessages.cannotLoadFromClasspath(scriptFile),this);
+      }
+      script=new InputStreamReader(is);
     }
-    if (is == null) {
-      throw new InitialisationException(CoreMessages.cannotLoadFromClasspath(scriptFile),this);
-    }
-    script=new InputStreamReader(is);
-  }
  else {
-    throw new InitialisationException(CoreMessages.propertiesNotSet("scriptText, scriptFile"),this);
-  }
-  if (scriptEngine instanceof Compilable) {
-    try {
-      compiledScript=((Compilable)scriptEngine).compile(script);
+      throw new InitialisationException(CoreMessages.propertiesNotSet("scriptText, scriptFile"),this);
     }
- catch (    ScriptException e) {
-      throw new InitialisationException(e,this);
+    if (scriptEngine instanceof Compilable) {
+      try {
+        compiledScript=((Compilable)scriptEngine).compile(script);
+      }
+ catch (      ScriptException e) {
+        throw new InitialisationException(e,this);
+      }
+    }
+  }
+  finally {
+    if (script != null) {
+      try {
+        script.close();
+      }
+ catch (      IOException e) {
+        throw new InitialisationException(e,this);
+      }
     }
   }
 }
