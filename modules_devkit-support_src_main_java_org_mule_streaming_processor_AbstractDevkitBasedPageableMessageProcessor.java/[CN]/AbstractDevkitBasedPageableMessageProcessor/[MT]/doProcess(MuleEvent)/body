@@ -1,15 +1,19 @@
 {
-  PagingDelegate<?> delegate=this.getPagingDelegate(event,new PagingConfiguration(this.isPaging(),this.getPageSize()));
+  PagingDelegate<?> delegate=this.getPagingDelegate(event,new PagingConfiguration(this.fetchSize,this.firstPage,this.lastPage,this.outputUnit));
+  if (delegate == null) {
+    event.getMessage().setPayload(new ArrayList<Object>().iterator());
+    return event;
+  }
   Producer<?> producer=new PagingDelegateProducer(delegate);
   Consumer<?> consumer=null;
-  if (this.outputStrategy == StreamingOutputStrategy.ELEMENT) {
+  if (this.outputUnit == StreamingOutputUnit.ELEMENT) {
     consumer=new ElementBasedPagingConsumer(producer);
   }
- else   if (this.outputStrategy == StreamingOutputStrategy.PAGE) {
+ else   if (this.outputUnit == StreamingOutputUnit.PAGE) {
     consumer=new PagedBasedPagingConsumer(producer);
   }
  else {
-    throw new DefaultMuleException("Unsupported outputStrategy " + this.outputStrategy);
+    throw new DefaultMuleException("Unsupported outputStrategy " + this.outputUnit);
   }
   event.getMessage().setPayload(new ConsumerIterator(consumer));
   return event;
