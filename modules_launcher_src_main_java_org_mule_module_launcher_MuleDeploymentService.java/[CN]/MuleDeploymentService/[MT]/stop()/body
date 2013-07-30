@@ -1,13 +1,19 @@
 {
   stopAppDirMonitorTimer();
-  Collections.reverse(applications);
-  for (  Application application : applications) {
-    try {
-      application.stop();
-      application.dispose();
+  lock.lock();
+  try {
+    Collections.reverse(applications);
+    for (    Application application : applications) {
+      try {
+        application.stop();
+        application.dispose();
+      }
+ catch (      Throwable t) {
+        logger.error(t);
+      }
     }
- catch (    Throwable t) {
-      logger.error(t);
-    }
+  }
+  finally {
+    lock.unlock();
   }
 }
