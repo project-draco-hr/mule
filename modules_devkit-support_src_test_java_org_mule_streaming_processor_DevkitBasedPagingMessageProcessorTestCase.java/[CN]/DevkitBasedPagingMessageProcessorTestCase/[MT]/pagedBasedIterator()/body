@@ -1,15 +1,15 @@
 {
   TestPagingProcessor processor=this.newProcessor();
   processor.setOutputUnit(StreamingOutputUnit.PAGE);
-  MuleEvent event=Mockito.mock(MuleEvent.class,Mockito.RETURNS_DEEP_STUBS);
   @SuppressWarnings("rawtypes") ArgumentCaptor<ConsumerIterator> captor=ArgumentCaptor.forClass(ConsumerIterator.class);
   processor.process(event);
   Mockito.verify(event.getMessage()).setPayload(captor.capture());
   @SuppressWarnings("unchecked") ConsumerIterator<List<String>> it=(ConsumerIterator<List<String>>)captor.getValue();
-  for (int i=0; i < TOP / PAGE_SIZE; i++) {
+  int pageSize=Integer.valueOf(PAGE_SIZE);
+  for (int i=0; i < TOP / pageSize; i++) {
     Assert.assertTrue(it.hasNext());
     List<String> page=it.next();
-    Assert.assertTrue(page != null && page.size() == PAGE_SIZE);
+    Assert.assertTrue(page != null && page.size() == pageSize);
   }
   Assert.assertFalse(it.hasNext());
 }
