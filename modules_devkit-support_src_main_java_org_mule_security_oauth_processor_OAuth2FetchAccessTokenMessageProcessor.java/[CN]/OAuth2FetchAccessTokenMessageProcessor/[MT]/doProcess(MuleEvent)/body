@@ -7,7 +7,10 @@
       oauthAdapter.setAccessTokenUrl(this.getAccessTokenUrl());
     }
     oauthAdapter.fetchAccessToken(this.getRedirectUri());
-    String transformedAccessTokenId=StringUtils.isBlank(this.getAccessTokenId()) ? this.oauthManager.getDefaultUnauthorizedConnector().getName() : this.getAccessTokenId();
+    String transformedAccessTokenId=this.getAccessTokenId();
+    if (StringUtils.isEmpty(transformedAccessTokenId)) {
+      transformedAccessTokenId=this.oauthManager.getDefaultUnauthorizedConnector().getName();
+    }
     transformedAccessTokenId=(String)this.evaluateAndTransform(restoredEvent.getMuleContext(),restoredEvent,String.class,null,transformedAccessTokenId);
     this.oauthManager.getAccessTokenPoolFactory().passivateObject(transformedAccessTokenId,oauthAdapter);
     MuleMessage message=restoredEvent.getMessage();
