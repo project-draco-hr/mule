@@ -1,0 +1,21 @@
+{
+  if (this.closed) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("paging delegate is closed. Returning null");
+    }
+    return null;
+  }
+  List<T> page=this.wrapped.getPage();
+  if (CollectionUtils.isEmpty(page)) {
+    try {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Empty page was obtained. Closing delegate since this means that the data source has been consumed");
+      }
+      this.close();
+    }
+ catch (    MuleException e) {
+      this.handleCloseException(e);
+    }
+  }
+  return page;
+}
