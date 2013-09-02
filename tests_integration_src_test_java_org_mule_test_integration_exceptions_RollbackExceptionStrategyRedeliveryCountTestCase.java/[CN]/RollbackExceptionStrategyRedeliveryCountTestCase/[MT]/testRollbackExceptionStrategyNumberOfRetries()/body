@@ -1,0 +1,18 @@
+{
+  final CountDownLatch latch=new CountDownLatch(4);
+  LocalMuleClient client=muleContext.getClient();
+  muleContext.registerListener(new ExceptionNotificationListener<ExceptionNotification>(){
+    @Override public void onNotification(    ExceptionNotification notification){
+      latch.countDown();
+    }
+  }
+);
+  client.dispatch("vm://in8","test",null);
+  if (!latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS)) {
+    fail("message should have been delivered at least 5 times");
+  }
+  MuleMessage response=client.request("vm://dlqCounter",20000);
+  assertThat(response,IsNull.notNullValue());
+  AtomicInteger counter=muleContext.getRegistry().lookupObject("counter");
+  assertThat(counter.get(),Is.is(4));
+}
