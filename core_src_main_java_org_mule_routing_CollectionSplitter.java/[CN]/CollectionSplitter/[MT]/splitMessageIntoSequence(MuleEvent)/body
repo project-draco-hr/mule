@@ -1,3 +1,25 @@
 {
-  return this.strategy.split(event);
+  MuleMessage msg=event.getMessage();
+  if (msg instanceof MuleMessageCollection) {
+    return new ArrayMessageSequence(((MuleMessageCollection)msg).getMessagesAsArray());
+  }
+  Object payload=msg.getPayload();
+  if (payload instanceof MessageSequence<?>) {
+    return ((MessageSequence<?>)payload);
+  }
+  if (payload instanceof Iterator<?>) {
+    return new IteratorMessageSequence<Object>(((Iterator<Object>)payload));
+  }
+  if (payload instanceof Collection) {
+    return new CollectionMessageSequence(new LinkedList((Collection)payload));
+  }
+  if (payload instanceof Iterable<?>) {
+    return new IteratorMessageSequence<Object>(((Iterable<Object>)payload).iterator());
+  }
+  if (payload instanceof Object[]) {
+    return new ArrayMessageSequence((Object[])payload);
+  }
+ else {
+    throw new IllegalArgumentException(CoreMessages.objectNotOfCorrectType(payload.getClass(),new Class[]{Iterable.class,Iterator.class,MessageSequence.class,Collection.class}).getMessage());
+  }
 }
