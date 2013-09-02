@@ -1,16 +1,7 @@
 {
-  boolean checkFileAge=fileConnector.getCheckFileAge();
-  if (checkFileAge) {
-    long fileAge=fileConnector.getFileAge();
-    long lastMod=file.lastModified();
-    long now=System.currentTimeMillis();
-    long thisFileAge=now - lastMod;
-    if (thisFileAge < fileAge) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("The file has not aged enough yet, will return nothing for: " + file);
-      }
-      return;
-    }
+  if (fileConnector.getCheckFileAge() && !isAgedFile(file,fileConnector.getFileAge())) {
+    removeProcessingMark(file.getAbsolutePath());
+    return;
   }
   if (!(file.canRead() && file.exists() && file.isFile())) {
     throw new DefaultMuleException(FileMessages.fileDoesNotExist(file.getName()));
@@ -50,15 +41,7 @@
     if (fileConnector.isStreaming()) {
       ReceiverFileInputStream payload=createReceiverFileInputStream(sourceFile,destinationFile,new InputStreamCloseListener(){
         @Override public void fileClose(        File file){
-          try {
-            if (logger.isDebugEnabled()) {
-              logger.debug(String.format("Removing processing flag for $ ",file.getAbsolutePath()));
-            }
-            filesBeingProcessingObjectStore.remove(file.getAbsolutePath());
-          }
- catch (          ObjectStoreException e) {
-            logger.warn("Failure trying to remove file " + originalSourceFile + " from list of files under processing");
-          }
+          removeProcessingMark(file.getAbsolutePath());
         }
       }
 );
