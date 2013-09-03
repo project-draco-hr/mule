@@ -10,7 +10,16 @@
   if (groupId == null || groupId.equals("-1")) {
     throw new RoutingException(CoreMessages.noCorrelationId(),event,timeoutMessageProcessor);
   }
+  boolean lookupMiss=false;
   while (true) {
+    if (lookupMiss) {
+      try {
+        Thread.sleep(1);
+      }
+ catch (      InterruptedException interrupted) {
+        Thread.currentThread().interrupt();
+      }
+    }
     try {
       if (isGroupAlreadyProcessed(groupId)) {
         if (logger.isDebugEnabled()) {
