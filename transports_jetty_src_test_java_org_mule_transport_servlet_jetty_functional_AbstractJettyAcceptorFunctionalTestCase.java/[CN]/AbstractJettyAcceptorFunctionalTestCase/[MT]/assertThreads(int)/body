@@ -1,20 +1,10 @@
 {
-  PollingProber prober=new PollingProber(5000,50);
-  prober.check(new Probe(){
-    int actual;
-    public boolean isSatisfied(){
-      final Set<Thread> threadSet=Thread.getAllStackTraces().keySet();
-      actual=0;
-      for (      final Thread th : threadSet) {
-        if (th.getClass().equals(QueuedThreadPool.PoolThread.class) && th.getName().contains("Acceptor")) {
-          actual=actual + 1;
-        }
-      }
-      return actual == acceptors;
-    }
-    public String describeFailure(){
-      return String.format("Expected '%s' acceptor threads but there are '%s'",acceptors,actual);
+  final Set<Thread> threadSet=Thread.getAllStackTraces().keySet();
+  int actual=0;
+  for (  final Thread th : threadSet) {
+    if (th.getClass().equals(QueuedThreadPool.PoolThread.class) && th.getName().contains("Acceptor")) {
+      actual=actual + 1;
     }
   }
-);
+  assertEquals(acceptors,actual);
 }
