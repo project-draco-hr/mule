@@ -1,8 +1,13 @@
 {
   getDefaultObjectStore().store(OS_KEY7,PRE_EXISTENT_OS_VALUE);
   executePollOf("failingFlowCachedExceptionWatermark");
-  ObjectStore os=getDefaultObjectStore();
-  assertTrue(os.contains(OS_KEY7));
-  assertEquals("catchedException",os.retrieve(OS_KEY7));
-  assertFalse(foo.contains(RESULT_OF_UPDATE_EXPRESSION));
+  prober.check(new ObjectStoreProbe(getDefaultObjectStore()){
+    @Override boolean evaluate(    ObjectStore os) throws ObjectStoreException {
+      return os.contains(OS_KEY7) && "catchedException".equals(os.retrieve(OS_KEY7)) && !foo.contains(RESULT_OF_UPDATE_EXPRESSION);
+    }
+    @Override public String describeFailure(){
+      return "The object store does not contain the key " + OS_KEY7;
+    }
+  }
+);
 }

@@ -1,8 +1,13 @@
 {
   getDefaultObjectStore().store(OS_KEY3,PRE_EXISTENT_OS_VALUE);
   executePollOf("usingWatermarkFlow");
-  ObjectStore os=getDefaultObjectStore();
-  assertTrue(os.contains(OS_KEY3));
-  assertEquals(MODIFIED_KEY_VALUE,os.retrieve(OS_KEY3));
-  assertTrue(foo.contains(PRE_EXISTENT_OS_VALUE));
+  prober.check(new ObjectStoreProbe(getDefaultObjectStore()){
+    @Override boolean evaluate(    ObjectStore os) throws ObjectStoreException {
+      return os.contains(OS_KEY3) && MODIFIED_KEY_VALUE.equals(os.retrieve(OS_KEY3)) && foo.contains(PRE_EXISTENT_OS_VALUE);
+    }
+    @Override public String describeFailure(){
+      return "The object store does not contain the key " + OS_KEY3;
+    }
+  }
+);
 }

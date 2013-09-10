@@ -1,8 +1,13 @@
 {
   getDefaultObjectStore().store(OS_KEY5,PRE_EXISTENT_OS_VALUE);
   executePollOf("watermarkWithUpdateExpression");
-  ObjectStore os=getDefaultObjectStore();
-  assertTrue(os.contains(OS_KEY5));
-  assertEquals(RESULT_OF_UPDATE_EXPRESSION,os.retrieve(OS_KEY5));
-  assertTrue(foo.contains(RESULT_OF_UPDATE_EXPRESSION));
+  prober.check(new ObjectStoreProbe(getDefaultObjectStore()){
+    @Override boolean evaluate(    ObjectStore os) throws ObjectStoreException {
+      return os.contains(OS_KEY5) && RESULT_OF_UPDATE_EXPRESSION.equals(os.retrieve(OS_KEY5)) && foo.contains(RESULT_OF_UPDATE_EXPRESSION);
+    }
+    @Override public String describeFailure(){
+      return "The object store does not contain the key " + OS_KEY5;
+    }
+  }
+);
 }

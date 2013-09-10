@@ -1,8 +1,14 @@
 {
-  ObjectStore os=muleContext.getRegistry().lookupObject("_defaultInMemoryObjectStore");
+  final ObjectStore os=muleContext.getRegistry().lookupObject("_defaultInMemoryObjectStore");
   os.store(OS_KEY8,PRE_EXISTENT_OS_VALUE);
   executePollOf("watermarkWithObjectStore");
-  assertTrue(os.contains(OS_KEY8));
-  assertEquals(RESULT_OF_UPDATE_EXPRESSION,os.retrieve(OS_KEY8));
-  assertTrue(foo.contains(RESULT_OF_UPDATE_EXPRESSION));
+  prober.check(new ObjectStoreProbe(os){
+    @Override boolean evaluate(    ObjectStore os) throws ObjectStoreException {
+      return os.contains(OS_KEY8) && RESULT_OF_UPDATE_EXPRESSION.equals(os.retrieve(OS_KEY8)) && foo.contains(RESULT_OF_UPDATE_EXPRESSION);
+    }
+    @Override public String describeFailure(){
+      return "The object store does not contain the key " + OS_KEY8;
+    }
+  }
+);
 }
