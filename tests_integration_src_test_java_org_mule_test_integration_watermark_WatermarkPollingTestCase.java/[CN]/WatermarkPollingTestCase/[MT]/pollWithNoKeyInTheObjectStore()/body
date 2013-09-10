@@ -1,6 +1,12 @@
 {
   executePollOf("nameNotDefinedWatermarkObjectStoreFlow");
-  ObjectStore os=getDefaultObjectStore();
-  assertTrue(os.contains(OS_KEY1));
-  assertEquals(DEFAULT_VALUE_WHEN_KEY_NOT_PRESENT,os.retrieve(OS_KEY1));
+  prober.check(new ObjectStoreProbe(getDefaultObjectStore()){
+    @Override boolean evaluate(    ObjectStore os) throws ObjectStoreException {
+      return os.contains(OS_KEY1) && DEFAULT_VALUE_WHEN_KEY_NOT_PRESENT.equals(os.retrieve(OS_KEY1));
+    }
+    @Override public String describeFailure(){
+      return "The object store does not contain the key " + OS_KEY1;
+    }
+  }
+);
 }
