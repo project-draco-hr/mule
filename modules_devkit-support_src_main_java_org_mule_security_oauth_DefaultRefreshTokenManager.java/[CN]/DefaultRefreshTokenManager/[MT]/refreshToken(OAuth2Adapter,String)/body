@@ -1,0 +1,16 @@
+{
+  if (StringUtils.isEmpty(accessTokenId)) {
+    throw new IllegalArgumentException("Cannot refresh a blank accessTokenId");
+  }
+  Lock lock=this.muleContext.getLockFactory().createLock(String.format("%s:%s",this.getClass().getCanonicalName(),accessTokenId));
+  lock.lock();
+  try {
+    if (!this.refreshedTokens.contains(accessTokenId)) {
+      adapter.refreshAccessToken(accessTokenId);
+      this.refreshedTokens.store(accessTokenId,true);
+    }
+  }
+  finally {
+    lock.unlock();
+  }
+}

@@ -1,0 +1,26 @@
+{
+  try {
+    adapter.postAuth();
+  }
+ catch (  Exception e) {
+    if (accessTokenId != null) {
+      for (      Class<? extends Exception> clazz : this.refreshAccessTokenOn()) {
+        if (clazz.isAssignableFrom(e.getClass())) {
+          Logger logger=this.getLogger();
+          if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Tried to execute postAuth() postAuth in adapter of class %s with accessTokenId %s but token was expired. Attempting refresh",adapter.getClass().getCanonicalName(),accessTokenId));
+          }
+          try {
+            this.refreshTokenManager.refreshToken(adapter,accessTokenId);
+            adapter.postAuth();
+          }
+ catch (          Exception re) {
+            logger.error(String.format("Could not refresh access token %s on adapter of class %s while attempting postAuth(). Will throw the original exception",accessTokenId,adapter.getClass().getCanonicalName()));
+            throw e;
+          }
+        }
+      }
+    }
+    throw e;
+  }
+}

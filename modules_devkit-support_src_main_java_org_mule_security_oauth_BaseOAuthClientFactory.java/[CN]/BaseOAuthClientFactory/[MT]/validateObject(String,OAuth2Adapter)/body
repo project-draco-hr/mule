@@ -1,0 +1,29 @@
+{
+  if (!this.getAdapterClass().isInstance(obj)) {
+    throw new IllegalArgumentException("Invalid connector type");
+  }
+  OAuth2Adapter connector=(OAuth2Adapter)obj;
+  try {
+    if (!this.objectStore.contains(key)) {
+      return false;
+    }
+    OAuthState state=this.retrieveOAuthState(key,true);
+    if (connector.getAccessToken() == null) {
+      return false;
+    }
+    if (!connector.getAccessToken().equals(state.getAccessToken())) {
+      return false;
+    }
+    if (connector.getRefreshToken() == null && state.getRefreshToken() != null) {
+      return false;
+    }
+    if (connector.getRefreshToken() != null && !connector.getRefreshToken().equals(state.getRefreshToken())) {
+      return false;
+    }
+  }
+ catch (  ObjectStoreException e) {
+    logger.warn("Could not validate object due to object store exception",e);
+    return false;
+  }
+  return true;
+}
