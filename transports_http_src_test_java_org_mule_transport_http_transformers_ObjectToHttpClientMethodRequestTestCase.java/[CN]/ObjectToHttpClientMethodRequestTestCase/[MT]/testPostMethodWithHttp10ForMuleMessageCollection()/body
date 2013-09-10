@@ -1,0 +1,18 @@
+{
+  final MuleMessageCollection message=setupRequestContextForCollection("http://localhost:8080/services",HttpConstants.METHOD_POST);
+  MuleMessage messageOne=setupRequestContext("http://localhost:8080/services",HttpConstants.METHOD_POST);
+  message.addMessage(messageOne);
+  final String contentType="text/plain";
+  String payload="I'm a payload";
+  messageOne.setPayload(payload);
+  message.setInvocationProperty(HttpConstants.HEADER_CONTENT_TYPE,contentType);
+  message.setOutboundProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP10);
+  final ObjectToHttpClientMethodRequest transformer=createTransformer();
+  final Object response=transformer.transform(message);
+  assertTrue(response instanceof PostMethod);
+  final HttpMethod httpMethod=(HttpMethod)response;
+  assertEquals(null,httpMethod.getQueryString());
+  final byte[] byteArrayContent=((ByteArrayRequestEntity)((PostMethod)httpMethod).getRequestEntity()).getContent();
+  final byte[] expectedByteArrayContent=SerializationUtils.serialize((Serializable)message.getPayload());
+  assertArrayEquals(expectedByteArrayContent,byteArrayContent);
+}
