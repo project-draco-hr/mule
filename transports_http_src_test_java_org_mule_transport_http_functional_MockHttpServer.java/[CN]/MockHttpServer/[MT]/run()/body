@@ -2,21 +2,16 @@
   try {
     ServerSocket serverSocket=new ServerSocket(listenPort);
     startupLatch.countDown();
-    Socket socket=serverSocket.accept();
-    InputStream in=socket.getInputStream();
-    BufferedReader reader=new BufferedReader(new InputStreamReader(in));
-    readHttpRequest(reader);
-    OutputStream out=socket.getOutputStream();
-    out.write("HTTP/1.1 200 OK\n\n".getBytes());
+    Socket clientSocket=serverSocket.accept();
+    InputStream in=clientSocket.getInputStream();
+    OutputStream out=clientSocket.getOutputStream();
+    processRequests(in,out);
     in.close();
     out.close();
-    socket.close();
+    clientSocket.close();
     serverSocket.close();
   }
- catch (  Exception ex) {
-    throw new RuntimeException(ex);
-  }
- finally {
-    testCompleteLatch.countDown();
+ catch (  Exception e) {
+    throw new RuntimeException(e);
   }
 }
