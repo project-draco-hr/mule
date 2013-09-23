@@ -1,0 +1,22 @@
+{
+  MuleMessageToHttpResponse transformer=new MuleMessageToHttpResponse();
+  final String contentType="text/xml";
+  final String wrongContentType="text/json";
+  Map<String,Object> outboundProperties=new HashMap<String,Object>();
+  outboundProperties.put(HttpConstants.HEADER_CONTENT_TYPE,wrongContentType);
+  MuleContext muleContext=mock(MuleContext.class);
+  MuleMessage msg=new DefaultMuleMessage(null,outboundProperties,muleContext);
+  msg.setInvocationProperty(HttpConstants.HEADER_CONTENT_TYPE,wrongContentType);
+  msg.setProperty(HttpConstants.HEADER_CONTENT_TYPE,wrongContentType,PropertyScope.INBOUND);
+  msg.setOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE,contentType);
+  HttpResponse response=transformer.createResponse(null,"UTF-8",msg);
+  Header[] headers=response.getHeaders();
+  boolean hasContentTypeHeader=false;
+  for (  Header header : headers) {
+    if (HttpConstants.HEADER_CONTENT_TYPE.equals(header.getName())) {
+      hasContentTypeHeader=true;
+      Assert.assertEquals(contentType,header.getValue());
+    }
+  }
+  Assert.assertTrue("Missing " + HttpConstants.HEADER_CONTENT_TYPE + " header",hasContentTypeHeader);
+}
