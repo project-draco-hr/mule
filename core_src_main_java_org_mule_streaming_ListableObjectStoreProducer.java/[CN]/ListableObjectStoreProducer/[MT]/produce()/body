@@ -2,10 +2,17 @@
   if (this.objectStore == null || !this.keys.hasNext()) {
     return Collections.emptyList();
   }
+  Serializable key=this.keys.next();
   try {
-    return Arrays.asList(this.objectStore.retrieve(this.keys.next()));
+    return Arrays.asList(this.objectStore.retrieve(key));
   }
- catch (  ObjectStoreException e) {
+ catch (  ObjectDoesNotExistException e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(String.format("key %s no longer available in objectstore. This is likely due to a concurrency issue. Will continue with next key if available",key));
+    }
+    return this.produce();
+  }
+catch (  ObjectStoreException e) {
     throw new RuntimeException(e);
   }
 }
