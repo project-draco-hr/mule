@@ -17,7 +17,22 @@
     if (!acceptCalledLath.await(WAIT_TIME,TimeUnit.MILLISECONDS)) {
       fail("retry template should be executed");
     }
-    verify(mockExceptionListener,timeout(WAIT_TIME)).handleException(Mockito.isA(Exception.class));
+    Prober prober=new PollingProber(100,1);
+    prober.check(new Probe(){
+      public boolean isSatisfied(){
+        try {
+          verify(mockExceptionListener,Mockito.atLeast(1)).handleException(Mockito.isA(Exception.class));
+          return true;
+        }
+ catch (        AssertionError e) {
+          return false;
+        }
+      }
+      public String describeFailure(){
+        return "Exception listener was not invoked";
+      }
+    }
+);
   }
   finally {
     httpRequestDispatcher.disconnect();
