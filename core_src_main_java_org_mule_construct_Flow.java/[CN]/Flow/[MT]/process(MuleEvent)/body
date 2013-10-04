@@ -1,5 +1,7 @@
 {
-  final MuleEvent newEvent=new DefaultMuleEvent(event,this);
+  Object replyToDestination=event.getReplyToDestination();
+  ReplyToHandler replyToHandler=event.getReplyToHandler();
+  final MuleEvent newEvent=new DefaultMuleEvent(event,this,null,null);
   RequestContext.setEvent(newEvent);
   try {
     ExecutionTemplate<MuleEvent> executionTemplate=ErrorHandlingExecutionTemplate.createErrorHandlingExecutionTemplate(muleContext,getExceptionListener());
@@ -14,7 +16,7 @@
     }
 );
     if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
-      result=new DefaultMuleEvent(result,event.getFlowConstruct());
+      result=new DefaultMuleEvent(result,event.getFlowConstruct(),replyToHandler,replyToDestination);
     }
     return result;
   }
