@@ -1,0 +1,19 @@
+{
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug(this + " Invoking " + method);
+    }
+    if (method.getDeclaringClass().equals(XaTransaction.MuleXaObject.class)) {
+      return method.invoke(this,args);
+    }
+    if (method.getName().equals("createConsumer")) {
+      MessageConsumerWrapper messageConsumerWrapper=(MessageConsumerWrapper)method.invoke(sessionWrapper,args);
+      return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),new Class[]{MessageConsumer.class},new BitronixMessageConsumerInvocationHandler(messageConsumerWrapper));
+    }
+    return method.invoke(sessionWrapper,args);
+  }
+ catch (  Exception e) {
+    System.out.println("e");
+    throw new RuntimeException(e);
+  }
+}

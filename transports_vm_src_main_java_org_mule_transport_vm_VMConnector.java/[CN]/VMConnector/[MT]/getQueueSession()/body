@@ -1,25 +1,3 @@
 {
-  Transaction tx=TransactionCoordination.getInstance().getTransaction();
-  if (tx != null) {
-    if (tx.hasResource(queueManager)) {
-      final QueueSession queueSession=(QueueSession)tx.getResource(queueManager);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Retrieved VM queue session " + queueSession + " from current transaction "+ tx);
-      }
-      return queueSession;
-    }
-  }
-  QueueSession session=queueManager.getQueueSession();
-  if (tx != null) {
-    try {
-      tx.bindResource(queueManager,session);
-      if (xaResourceFactory != null && tx instanceof XaTransaction) {
-        tx.bindResource(this,xaResourceFactory.create());
-      }
-    }
- catch (    TransactionException e) {
-      throw new RuntimeException("Could not bind queue session to current transaction",e);
-    }
-  }
-  return session;
+  return queueManager.getQueueSession();
 }
