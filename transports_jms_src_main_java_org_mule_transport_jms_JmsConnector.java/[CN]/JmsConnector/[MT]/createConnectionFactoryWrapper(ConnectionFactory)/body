@@ -1,0 +1,33 @@
+{
+  ConnectionFactory wrappedConnectionFactory=connectionFactory;
+  if (connectionFactory instanceof PoolingConnectionFactory || connectionFactory instanceof ConnectionFactoryWrapper) {
+    return connectionFactory;
+  }
+  try {
+    if (connectionFactory instanceof XAConnectionFactory && muleContext.getTransactionManager() instanceof TransactionManagerWrapper) {
+synchronized (BitronixJmsXaConnectionFactoryProvider.class) {
+        BitronixJmsXaConnectionFactoryProvider.xaConnectionFactoryProvided=connectionFactory;
+        PoolingConnectionFactory poolingConnectionFactory=new PoolingConnectionFactory();
+        poolingConnectionFactory.setClassName(BitronixJmsXaConnectionFactoryProvider.class.getCanonicalName());
+        poolingConnectionFactory.setAutomaticEnlistingEnabled(false);
+        poolingConnectionFactory.setMaxPoolSize(100);
+        poolingConnectionFactory.setMaxIdleTime(1);
+        poolingConnectionFactory.setCacheProducersConsumers(false);
+        poolingConnectionFactory.setAllowLocalTransactions(true);
+        poolingConnectionFactory.setIgnoreRecoveryFailures(true);
+        poolingConnectionFactory.setUniqueName(muleContext.getConfiguration().getId() + "-" + getName());
+        poolingConnectionFactory.init();
+        wrappedConnectionFactory=new BitronixConnectionFactoryWrapper(poolingConnectionFactory);
+      }
+    }
+ else {
+      if (connectionFactory instanceof XAConnectionFactory && muleContext.getTransactionManager() != null) {
+        wrappedConnectionFactory=new ConnectionFactoryWrapper(connectionFactory,sameRMOverrideValue);
+      }
+    }
+    return wrappedConnectionFactory;
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+}
