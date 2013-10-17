@@ -1,22 +1,5 @@
 {
-  httpServer=new Server(){
-    @Override public void addHandler(    Handler handler){
-      final Connector c=getServer().getConnectors()[0];
-      if (handler instanceof WebAppContext) {
-        final WebAppContext webapp=(WebAppContext)handler;
-        final String msg=String.format("Will deploy a web app at %s:/%s%s%s","http",c.getHost(),c.getPort() == 80 ? StringUtils.EMPTY : ":" + c.getPort(),webapp.getContextPath());
-        final File workDir=new File(muleContext.getConfiguration().getWorkingDirectory(),"_exploded_wars" + webapp.getContextPath());
-        workDir.mkdirs();
-        webapp.setTempDirectory(workDir);
-        webapp.setAttribute("muleContext",muleContext);
-        if (logger.isInfoEnabled()) {
-          logger.info(StringMessageUtils.getBoilerPlate(msg,'*',70));
-        }
-      }
-      super.addHandler(handler);
-    }
-  }
-;
+  httpServer=new Server();
   if (webappsConfiguration != null) {
     deployer=new WebAppDeployer();
     String webAppDir=webappsConfiguration.getDirectory();
@@ -28,19 +11,20 @@
       final URL muleDefaults=ClassUtils.getResource("org/mule/transport/jetty/webdefault.xml",getClass());
       deployer.setDefaultsDescriptor(muleDefaults.toExternalForm());
     }
+    deployer.setConnector(this);
     deployer.setWebAppDir(webAppDir);
     deployer.setExtract(true);
     deployer.setParentLoaderPriority(false);
     deployer.setServerClasses(webappsConfiguration.getServerClasses());
     deployer.setSystemClasses(webappsConfiguration.getSystemClasses());
-    org.mortbay.jetty.AbstractConnector jettyConnector=createJettyConnector();
+    Connector jettyConnector=createJettyConnector();
     jettyConnector.setHost(webappsConfiguration.getHost());
     jettyConnector.setPort(webappsConfiguration.getPort());
     deployer.setContexts(httpServer);
-    String[] confClasses=new String[]{WebInfConfiguration.class.getName(),DummyJndiConfiguration.class.getName()};
+    String[] confClasses=new String[]{WebInfConfiguration.class.getName(),WebXmlConfiguration.class.getName(),DummyJndiConfiguration.class.getName()};
     deployer.setConfigurationClasses(confClasses);
     httpServer.addConnector(jettyConnector);
-    httpServer.addLifeCycle(deployer);
+    httpServer.addBean(deployer);
   }
   initialiseFromConfigFile();
   try {

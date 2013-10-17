@@ -16,17 +16,19 @@
     path=ROOT;
   }
   ContextHandlerCollection handlerCollection=new ContextHandlerCollection();
-  Context context=new Context(handlerCollection,ROOT,Context.NO_SECURITY);
-  context.setConnectorNames(new String[]{connector.getName()});
-  context.addEventListener(new MuleServletContextListener(muleContext,getName()));
   if (resourceBase != null) {
-    Context resourceContext=new Context(handlerCollection,path,Context.NO_SECURITY);
-    resourceContext.setResourceBase(resourceBase);
+    ResourceHandler resourceHandler=new ResourceHandler();
+    ContextHandler resourceContextHandler=new ContextHandler(handlerCollection,path);
+    resourceHandler.setResourceBase(resourceBase);
+    resourceContextHandler.setHandler(resourceHandler);
   }
-  context.addServlet(JarResourceServlet.class,JarResourceServlet.DEFAULT_PATH_SPEC);
+  ServletContextHandler servletContext=new ServletContextHandler(handlerCollection,ROOT,ServletContextHandler.NO_SECURITY);
+  servletContext.addEventListener(new MuleServletContextListener(muleContext,getName()));
   ServletHolder holder=new ServletHolder();
   holder.setServlet(servlet);
-  context.addServlet(holder,"/*");
-  getHttpServer().addHandler(handlerCollection);
+  servletContext.addServlet(holder,"/*");
+  servletContext.addServlet(JarResourceServlet.class,JarResourceServlet.DEFAULT_PATH_SPEC);
+  handlerCollection.addHandler(servletContext);
+  addHandler(handlerCollection);
   return servlet;
 }
