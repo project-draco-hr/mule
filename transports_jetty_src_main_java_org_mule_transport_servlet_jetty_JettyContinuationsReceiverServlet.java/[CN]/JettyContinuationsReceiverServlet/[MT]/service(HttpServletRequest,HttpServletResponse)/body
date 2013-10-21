@@ -2,8 +2,8 @@
   try {
     MuleMessage responseMessage=null;
 synchronized (mutex) {
-      Continuation continuation=ContinuationSupport.getContinuation(request,mutex);
-      if (!continuation.isPending()) {
+      Continuation continuation=ContinuationSupport.getContinuation(request);
+      if (continuation.isInitial()) {
         MessageReceiver receiver=getReceiverForURI(request);
         MuleMessage requestMessage=receiver.createMuleMessage(request);
         requestMessage.setProperty(HttpConnector.HTTP_METHOD_PROPERTY,request.getMethod(),PropertyScope.INBOUND);
@@ -13,7 +13,7 @@ synchronized (mutex) {
         if (receiver instanceof JettyHttpMessageReceiver) {
           JettyHttpMessageReceiver jettyReceiver=(JettyHttpMessageReceiver)receiver;
           jettyReceiver.routeMessageAsync(requestMessage,continuationsReplyTo);
-          continuation.suspend(0L);
+          continuation.suspend();
         }
  else {
           responseMessage=receiver.routeMessage(requestMessage).getMessage();
@@ -22,10 +22,10 @@ synchronized (mutex) {
       }
  else {
         if (continuation.isResumed()) {
-          Object r=continuation.getObject();
+          Object r=continuation.getAttribute(OBJECT_KEY);
           if (r instanceof MuleMessage) {
             responseMessage=(MuleMessage)r;
-            continuation.setObject(null);
+            continuation.setAttribute(OBJECT_KEY,null);
             writeResponse(response,responseMessage);
           }
  else           if (r instanceof Exception) {
