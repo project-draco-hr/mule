@@ -3,6 +3,8 @@
     throw new IllegalArgumentException("Invalid connector type");
   }
   OAuth2Adapter connector=(OAuth2Adapter)obj;
+  Lock lock=this.getLock(key);
+  lock.lock();
   try {
     if (!this.objectStore.contains(key)) {
       return false;
@@ -24,6 +26,9 @@
  catch (  ObjectStoreException e) {
     logger.warn("Could not validate object due to object store exception",e);
     return false;
+  }
+ finally {
+    lock.unlock();
   }
   return true;
 }
