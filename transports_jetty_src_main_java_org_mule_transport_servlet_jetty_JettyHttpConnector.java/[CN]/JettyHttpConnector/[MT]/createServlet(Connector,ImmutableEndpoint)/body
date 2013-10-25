@@ -15,20 +15,19 @@
   if (StringUtils.isBlank(path)) {
     path=ROOT;
   }
-  ContextHandlerCollection handlerCollection=new ContextHandlerCollection();
   if (resourceBase != null) {
     ResourceHandler resourceHandler=new ResourceHandler();
-    ContextHandler resourceContextHandler=new ContextHandler(handlerCollection,path);
+    ContextHandler resourceContextHandler=new ContextHandler(contexts,path);
     resourceHandler.setResourceBase(resourceBase);
     resourceContextHandler.setHandler(resourceHandler);
   }
-  ServletContextHandler servletContext=new ServletContextHandler(handlerCollection,ROOT,ServletContextHandler.NO_SECURITY);
+  ServletContextHandler servletContext=new ServletContextHandler(contexts,ROOT,ServletContextHandler.NO_SECURITY);
   servletContext.addEventListener(new MuleServletContextListener(muleContext,getName()));
+  servletContext.setConnectorNames(new String[]{connector.getName()});
   ServletHolder holder=new ServletHolder();
   holder.setServlet(servlet);
   servletContext.addServlet(holder,"/*");
   servletContext.addServlet(JarResourceServlet.class,JarResourceServlet.DEFAULT_PATH_SPEC);
-  handlerCollection.addHandler(servletContext);
-  addHandler(handlerCollection);
+  addHandler(servletContext);
   return servlet;
 }
