@@ -1,0 +1,17 @@
+{
+  HttpClient client=new HttpClient();
+  client.getParams().setAuthenticationPreemptive(true);
+  client.getState().setCredentials(new AuthScope(host,-1,realm),new UsernamePasswordCredentials(user,pass));
+  GetMethod get=new GetMethod(url);
+  get.setDoAuthentication(handshake);
+  try {
+    int status=client.executeMethod(get);
+    if (status == HttpConstants.SC_UNAUTHORIZED && handshake == true) {
+      status=client.executeMethod(get);
+    }
+    assertEquals(result,status);
+  }
+  finally {
+    get.releaseConnection();
+  }
+}
