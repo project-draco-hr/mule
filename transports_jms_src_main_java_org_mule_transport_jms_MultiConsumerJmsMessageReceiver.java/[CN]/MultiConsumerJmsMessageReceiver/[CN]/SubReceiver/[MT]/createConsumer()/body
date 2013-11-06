@@ -1,9 +1,11 @@
 {
   subLogger.debug("SUB createConsumer()");
+  boolean sessionCreated=false;
   try {
     JmsSupport jmsSupport=jmsConnector.getJmsSupport();
     boolean topic=jmsConnector.getTopicResolver().isTopic(endpoint,true);
     if (session == null) {
+      sessionCreated=true;
       session=jmsConnector.getSession(endpoint);
     }
     Destination dest=jmsSupport.createDestination(session,endpoint);
@@ -27,7 +29,15 @@
       durableName="mule." + jmsConnector.getName() + "."+ endpoint.getEndpointURI().getAddress();
       logger.debug("Jms Connector for this receiver is durable but no durable name has been specified. Defaulting to: " + durableName);
     }
-    consumer=jmsSupport.createConsumer(session,dest,selector,jmsConnector.isNoLocal(),durableName,topic,endpoint);
+    try {
+      consumer=jmsSupport.createConsumer(session,dest,selector,jmsConnector.isNoLocal(),durableName,topic,endpoint);
+    }
+ catch (    Exception e) {
+      if (sessionCreated) {
+        jmsConnector.closeQuietly(session);
+      }
+      throw e;
+    }
   }
  catch (  JMSException e) {
     throw new ConnectException(e,MultiConsumerJmsMessageReceiver.this);
