@@ -1,7 +1,6 @@
 {
   try {
     final Integer numberOfMessagesCreated=inboundMessagesGenerator.generateInboundMessages();
-    verificationTimeout=10000;
     if (noMessageExpected) {
       Thread.sleep(verificationTimeout);
       assertThat(outboundMessagesVerifier.numberOfMessagesThatArrived(),Is.is(0));
@@ -17,7 +16,12 @@
           }
         }
         @Override public String describeFailure(){
-          return "Not all the messages arrived";
+          try {
+            return String.format("Not all the messages arrived. Only %d of %s arrived",outboundMessagesVerifier.numberOfMessagesThatArrived(),numberOfMessagesCreated);
+          }
+ catch (          Exception e) {
+            return String.format("Not all messages arrived.");
+          }
         }
       }
 );

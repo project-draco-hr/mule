@@ -6,7 +6,7 @@
   try {
     if (connectionFactory instanceof XAConnectionFactory && muleContext.getTransactionManager() instanceof TransactionManagerWrapper) {
 synchronized (BitronixJmsXaConnectionFactoryProvider.class) {
-        BitronixJmsXaConnectionFactoryProvider.xaConnectionFactoryThreadLocal=connectionFactory;
+        BitronixJmsXaConnectionFactoryProvider.xaConnectionFactoryProvided=connectionFactory;
         PoolingConnectionFactory poolingConnectionFactory=new PoolingConnectionFactory();
         poolingConnectionFactory.setClassName(BitronixJmsXaConnectionFactoryProvider.class.getCanonicalName());
         poolingConnectionFactory.setAutomaticEnlistingEnabled(false);
@@ -14,7 +14,6 @@ synchronized (BitronixJmsXaConnectionFactoryProvider.class) {
         poolingConnectionFactory.setMaxIdleTime(1);
         poolingConnectionFactory.setCacheProducersConsumers(false);
         poolingConnectionFactory.setAllowLocalTransactions(true);
-        poolingConnectionFactory.setIgnoreRecoveryFailures(true);
         poolingConnectionFactory.setUniqueName(muleContext.getConfiguration().getId() + "-" + getName());
         poolingConnectionFactory.init();
         wrappedConnectionFactory=new BitronixConnectionFactoryWrapper(poolingConnectionFactory);
