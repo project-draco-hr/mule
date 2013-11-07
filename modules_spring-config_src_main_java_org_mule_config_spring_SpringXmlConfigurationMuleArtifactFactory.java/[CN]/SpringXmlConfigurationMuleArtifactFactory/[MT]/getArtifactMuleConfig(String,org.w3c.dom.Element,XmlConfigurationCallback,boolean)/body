@@ -1,0 +1,52 @@
+{
+  Document document=DocumentHelper.createDocument();
+  Element rootElement=document.addElement("mule","http://www.mulesoft.org/schema/mule/core");
+  org.w3c.dom.Element[] placeholders=callback.getPropertyPlaceholders();
+  for (  org.w3c.dom.Element placeholder : placeholders) {
+    try {
+      Element newPlaceHolder=convert(placeholder);
+      rootElement.add(newPlaceHolder);
+    }
+ catch (    ParserConfigurationException e) {
+      throw new MuleArtifactFactoryException("Error parsing XML",e);
+    }
+  }
+  Element parentElement=rootElement;
+  addSchemaLocation(rootElement,element,callback);
+  if (embedInFlow) {
+    parentElement=rootElement.addElement("flow","http://www.mulesoft.org/schema/mule/core");
+    parentElement.addAttribute("name",flowName);
+  }
+  try {
+    parentElement.add(convert(element));
+    for (int i=0; i < element.getAttributes().getLength(); i++) {
+      String attributeName=element.getAttributes().item(i).getLocalName();
+      if (attributeName != null && attributeName.endsWith("-ref")) {
+        org.w3c.dom.Element dependentElement=callback.getGlobalElement(element.getAttributes().item(i).getNodeValue());
+        if (dependentElement != null) {
+          if ("http://www.springframework.org/schema/beans".equals(dependentElement.getNamespaceURI())) {
+            String namespaceUri=dependentElement.getNamespaceURI();
+            Namespace namespace=new Namespace(dependentElement.getPrefix(),namespaceUri);
+            Element beans=rootElement.element(new QName("beans",namespace));
+            if (beans == null) {
+              beans=rootElement.addElement("beans",namespaceUri);
+            }
+            beans.add(convert(dependentElement));
+          }
+ else {
+            rootElement.add(convert(dependentElement));
+            addSchemaLocation(rootElement,dependentElement,callback);
+          }
+          addChildSchemaLocations(rootElement,dependentElement,callback);
+        }
+      }
+    }
+    if (embedInFlow) {
+      parentElement.addElement("logger","http://www.mulesoft.org/schema/mule/core");
+    }
+    return document.asXML();
+  }
+ catch (  Throwable t) {
+    throw new MuleArtifactFactoryException("Error generating XML",t);
+  }
+}
