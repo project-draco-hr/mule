@@ -1,0 +1,17 @@
+{
+synchronized (BitronixTransactionManagerFactory.class) {
+    if (!transactionManagerUsedByThisApp) {
+      transactionManagerUsedByThisApp=true;
+      numberOfAppsUsingTm++;
+    }
+    if (transactionManager != null) {
+      return transactionManager;
+    }
+    configureTransactionLogsDirectory();
+    configureUniqueServerId();
+    transactionManager=TransactionManagerServices.getTransactionManager();
+    registerMuleQueuesXaResource();
+    transactionManager=new TransactionManagerWrapper(transactionManager,defaultXaSessionResourceProducer);
+    return transactionManager;
+  }
+}

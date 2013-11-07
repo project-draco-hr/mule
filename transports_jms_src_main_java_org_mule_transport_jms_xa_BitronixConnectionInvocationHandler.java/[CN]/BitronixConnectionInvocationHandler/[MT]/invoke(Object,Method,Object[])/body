@@ -1,0 +1,18 @@
+{
+  if (BitronixConnectionInvocationHandler.logger.isDebugEnabled()) {
+    BitronixConnectionInvocationHandler.logger.debug("Invoking " + method);
+  }
+  Transaction tx=TransactionCoordination.getInstance().getTransaction();
+  if (method.getName().equals("createSession")) {
+    if (tx != null) {
+      DualSessionWrapper xas=(DualSessionWrapper)connection.createSession((Boolean)args[0],(Integer)args[1]);
+      return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),new Class[]{Session.class,XaTransaction.MuleXaObject.class},new BitronixSessionInvocationHandler(xas));
+    }
+ else {
+      return (connection).createSession(false,Session.AUTO_ACKNOWLEDGE);
+    }
+  }
+ else {
+    return method.invoke(connection,args);
+  }
+}

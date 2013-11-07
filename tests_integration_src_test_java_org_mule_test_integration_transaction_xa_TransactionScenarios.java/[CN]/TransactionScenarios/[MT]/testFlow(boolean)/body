@@ -1,0 +1,33 @@
+{
+  try {
+    final Integer numberOfMessagesCreated=inboundMessagesGenerator.generateInboundMessages();
+    if (noMessageExpected) {
+      Thread.sleep(verificationTimeout);
+      assertThat(outboundMessagesVerifier.numberOfMessagesThatArrived(),Is.is(0));
+    }
+ else {
+      new PollingProber(10000,100).check(new Probe(){
+        @Override public boolean isSatisfied(){
+          try {
+            return outboundMessagesVerifier.numberOfMessagesThatArrived() == numberOfMessagesCreated;
+          }
+ catch (          Exception e) {
+            throw new RuntimeException(e);
+          }
+        }
+        @Override public String describeFailure(){
+          try {
+            return String.format("Not all the messages arrived. Only %d of %s arrived",outboundMessagesVerifier.numberOfMessagesThatArrived(),numberOfMessagesCreated);
+          }
+ catch (          Exception e) {
+            return String.format("Not all messages arrived.");
+          }
+        }
+      }
+);
+    }
+  }
+ catch (  Exception e) {
+    throw new RuntimeException(e);
+  }
+}
