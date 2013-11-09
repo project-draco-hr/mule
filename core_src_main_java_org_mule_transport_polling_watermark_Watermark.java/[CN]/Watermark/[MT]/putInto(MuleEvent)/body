@@ -5,12 +5,17 @@
     watermarkValue=objectStore.retrieve(resolvedVariable);
   }
  catch (  ObjectDoesNotExistException ex) {
-    watermarkValue=evaluate(defaultExpression,event);
+    try {
+      watermarkValue=WatermarkUtils.evaluate(defaultExpression,event);
+    }
+ catch (    NotSerializableException nse) {
+      logger.warn(String.format("Default watermark expression '%s' returned not serializable value",this.defaultExpression),nse);
+    }
   }
   if (watermarkValue != null) {
     event.setFlowVariable(resolvedVariable,watermarkValue);
   }
  else {
-    logger.warn(CoreMessages.nullWatermark());
+    logger.warn(CoreMessages.nullWatermark().getMessage());
   }
 }
