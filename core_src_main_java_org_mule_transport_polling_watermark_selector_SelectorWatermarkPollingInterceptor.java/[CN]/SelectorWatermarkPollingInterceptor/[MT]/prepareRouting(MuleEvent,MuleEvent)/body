@@ -2,16 +2,13 @@
   event=super.prepareRouting(sourceEvent,event);
   Object payload=event.getMessage().getPayload();
   final WatermarkSelector selector=new WatermarkSelectorWrapper(this.selector,this.selectorExpression,event);
-  if (payload instanceof Collection) {
-    for (    Object object : (Collection<?>)payload) {
+  if (payload instanceof Iterable) {
+    for (    Object object : (Iterable<?>)payload) {
       selector.acceptValue(object);
     }
   }
  else   if (payload instanceof Iterator) {
     event.getMessage().setPayload(new SelectorIteratorProxy<Object>((Iterator<Object>)payload,selector));
-  }
- else   if (payload instanceof Iterable) {
-    event.getMessage().setPayload(new SelectorIteratorProxy<Object>(((Iterable<Object>)payload).iterator(),selector));
   }
  else {
     throw new ConfigurationException(CoreMessages.createStaticMessage(String.format("Poll executing with payload of class %s but selector can only handle Iterator and Iterable objects when watermark is to be updated via selectors",payload.getClass().getCanonicalName())));
