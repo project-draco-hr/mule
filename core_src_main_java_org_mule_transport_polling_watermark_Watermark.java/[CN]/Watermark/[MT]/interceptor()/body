@@ -1,29 +1,3 @@
 {
-  return new MessageProcessorPollingInterceptor(){
-    /** 
- * Watermark source preprocessing puts the watermark value into a flow variable
- */
-    @Override public MuleEvent prepareSourceEvent(    MuleEvent event) throws MuleException {
-      putInto(event);
-      return event;
-    }
-    /** 
- * Watermark route preparation carries the value from the source event to the flow event
- */
-    @Override public MuleEvent prepareRouting(    MuleEvent sourceEvent,    MuleEvent event) throws ConfigurationException {
-      if (!event.isSynchronous()) {
-        throw new ConfigurationException(CoreMessages.watermarkRequiresSynchronousProcessing());
-      }
-      String var=resolveVariable(event);
-      event.setFlowVariable(var,sourceEvent.getFlowVariable(var));
-      return event;
-    }
-    /** 
- * Watermark post processing saves the flow variable to the object store
- */
-    @Override public void postProcessRouting(    MuleEvent event) throws ObjectStoreException {
-      updateFrom(event);
-    }
-  }
-;
+  return new WatermarkPollingInterceptor(this);
 }

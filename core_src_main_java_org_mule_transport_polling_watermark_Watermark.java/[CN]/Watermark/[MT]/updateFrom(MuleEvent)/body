@@ -1,20 +1,25 @@
 {
-  String resolvedVariable=resolveVariable(event);
-  Object watermarkValue=StringUtils.isEmpty(updateExpression) ? event.getFlowVariable(resolvedVariable) : evaluate(updateExpression,event);
-  if (watermarkValue == null) {
-    logger.warn(CoreMessages.nullWatermark());
-  }
- else   if (watermarkValue instanceof Serializable) {
+  try {
+    String variableName=resolveVariable(event);
+    Object watermarkValue=this.getUpdatedValue(event,variableName);
+    if (watermarkValue == null) {
+      logger.warn(CoreMessages.nullWatermark().getMessage());
+    }
+ else     if (watermarkValue instanceof Serializable) {
 synchronized (objectStore) {
-      if (objectStore.contains(resolvedVariable)) {
-        objectStore.remove(resolvedVariable);
-      }
-      if (watermarkValue != null) {
-        objectStore.store(resolvedVariable,(Serializable)watermarkValue);
+        if (objectStore.contains(variableName)) {
+          objectStore.remove(variableName);
+        }
+        if (watermarkValue != null) {
+          objectStore.store(variableName,(Serializable)watermarkValue);
+        }
       }
     }
-  }
  else {
-    logger.error(CoreMessages.notSerializableWatermark());
+      throw new IllegalArgumentException(CoreMessages.notSerializableWatermark(variableName).getMessage());
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Exception found updating watermark",e);
   }
 }
