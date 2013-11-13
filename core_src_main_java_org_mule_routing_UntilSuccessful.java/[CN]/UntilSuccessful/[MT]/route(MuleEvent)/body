@@ -1,20 +1,3 @@
 {
-  try {
-    ensurePayloadSerializable(event);
-  }
- catch (  final Exception e) {
-    throw new MessagingException(MessageFactory.createStaticMessage("Failed to prepare message for processing"),event,e,this);
-  }
-  try {
-    final Serializable eventStoreKey=storeEvent(event);
-    scheduleForProcessing(eventStoreKey);
-    if (ackExpression == null) {
-      return VoidMuleEvent.getInstance();
-    }
-    final Object ackResponsePayload=muleContext.getExpressionManager().evaluate(ackExpression,event);
-    return new DefaultMuleEvent(new DefaultMuleMessage(ackResponsePayload,event.getMessage(),muleContext),event);
-  }
- catch (  final Exception e) {
-    throw new MessagingException(MessageFactory.createStaticMessage("Failed to schedule the event for processing"),event,e,this);
-  }
+  return untilSuccessfulStrategy.route(event);
 }

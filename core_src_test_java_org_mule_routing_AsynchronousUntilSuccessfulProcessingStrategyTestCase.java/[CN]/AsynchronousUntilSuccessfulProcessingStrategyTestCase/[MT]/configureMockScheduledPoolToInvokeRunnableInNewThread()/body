@@ -1,0 +1,20 @@
+{
+  when(mockScheduledPool.schedule(any(Callable.class),anyLong(),any(TimeUnit.class))).thenAnswer(new Answer<Object>(){
+    @Override public Object answer(    final InvocationOnMock invocationOnMock) throws Throwable {
+      assertThat((Long)invocationOnMock.getArguments()[1],is(mockUntilSuccessfulConfiguration.getSecondsBetweenRetries()));
+      assertThat((TimeUnit)invocationOnMock.getArguments()[2],is(TimeUnit.SECONDS));
+      new Thread(new Runnable(){
+        @Override public void run(){
+          try {
+            ((Callable)invocationOnMock.getArguments()[0]).call();
+          }
+ catch (          Exception e) {
+          }
+        }
+      }
+).start();
+      return null;
+    }
+  }
+);
+}
