@@ -1,0 +1,13 @@
+{
+  when(mockUntilSuccessfulConfiguration.getFailureExpressionFilter()).thenReturn(mockAlwaysTrueFailureExpressionFilter);
+  SynchronousUntilSuccessfulProcessingStrategy processingStrategy=createProcessingStrategy();
+  try {
+    processingStrategy.route(mockEvent);
+    fail("processing should thrown exception");
+  }
+ catch (  MessagingException e) {
+    assertThat(e,instanceOf(RoutingException.class));
+    verify(mockRoute,times(DEFAULT_RETRIES + 1)).process(mockEvent);
+    verify(mockAlwaysTrueFailureExpressionFilter,times(DEFAULT_RETRIES + 1)).accept(any(MuleMessage.class));
+  }
+}

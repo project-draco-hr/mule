@@ -5,9 +5,6 @@
   if (routes.size() > 1) {
     throw new InitialisationException(MessageFactory.createStaticMessage("Only one message processor is allowed within UntilSuccessful." + " Use a Processor Chain to group several message processors into one."),this);
   }
-  if (objectStore == null) {
-    throw new InitialisationException(MessageFactory.createStaticMessage("A ListableObjectStore must be configured on UntilSuccessful."),this);
-  }
   super.initialise();
   if (deadLetterQueue != null) {
     if (deadLetterQueue instanceof EndpointBuilder) {
@@ -34,6 +31,19 @@
   failureExpressionFilter.setMuleContext(muleContext);
   if ((ackExpression != null) && (!muleContext.getExpressionManager().isExpression(ackExpression))) {
     throw new InitialisationException(MessageFactory.createStaticMessage("Invalid ackExpression: " + ackExpression),this);
+  }
+  if (synchronous) {
+    this.untilSuccessfulStrategy=new SynchronousUntilSuccessfulProcessingStrategy();
+  }
+ else {
+    if (threadingProfile == null) {
+      threadingProfile=muleContext.getDefaultThreadingProfile();
+    }
+    this.untilSuccessfulStrategy=new AsynchronousUntilSuccessfulProcessingStrategy();
+  }
+  this.untilSuccessfulStrategy.setUntilSuccessfulConfiguration(this);
+  if (untilSuccessfulStrategy instanceof Initialisable) {
+    ((Initialisable)untilSuccessfulStrategy).initialise();
   }
   String flowName=flowConstruct.getName();
   String clusterId=muleContext.getClusterId();

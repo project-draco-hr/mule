@@ -1,0 +1,19 @@
+{
+  when(mockAlwaysTrueFailureExpressionFilter.accept(any(MuleMessage.class))).thenReturn(true);
+  when(mockUntilSuccessfulConfiguration.getRoute()).thenReturn(mockRoute);
+  when(mockUntilSuccessfulConfiguration.getAckExpression()).thenReturn(null);
+  when(mockUntilSuccessfulConfiguration.getMaxRetries()).thenReturn(DEFAULT_RETRIES);
+  when(mockEvent.getMessage().getInvocationProperty(PROCESS_ATTEMPT_COUNT_PROPERTY_NAME,DEFAULT_PROCESS_ATTEMPT_COUNT_PROPERTY_VALUE)).thenAnswer(new Answer<Object>(){
+    private int numberOfAttempts=0;
+    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      return numberOfAttempts++;
+    }
+  }
+);
+  when(mockUntilSuccessfulConfiguration.getThreadingProfile().createScheduledPool(anyString())).thenReturn(mockScheduledPool);
+  when(mockUntilSuccessfulConfiguration.getObjectStore()).thenReturn(objectStore);
+  objectStore.clear();
+  configureMockScheduledPoolToInvokeRunnableInNewThread();
+  configureMockRouteToCountDownRouteLatch();
+  configureExceptionStrategyToReleaseLatchWhenExecuted();
+}
