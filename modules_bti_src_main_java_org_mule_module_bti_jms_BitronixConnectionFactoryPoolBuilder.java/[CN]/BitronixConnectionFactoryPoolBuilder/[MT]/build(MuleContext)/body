@@ -1,0 +1,22 @@
+{
+  Preconditions.checkState(name != null,"name is required");
+  Preconditions.checkState(connectionFactory != null,"connectionFactory is required");
+  Preconditions.checkState(minPoolSize > 0,"minPoolSize must be greater than 0");
+  Preconditions.checkState(maxPoolSize > 0,"maxPoolSize must be greater than 0");
+  Preconditions.checkState(maxIdleTime > 0,"maxIdleTime must be greater than 0");
+  PoolingConnectionFactory poolingConnectionFactory;
+synchronized (BitronixJmsXaConnectionFactoryProvider.class) {
+    BitronixJmsXaConnectionFactoryProvider.xaConnectionFactoryProvided=(ConnectionFactory)connectionFactory;
+    poolingConnectionFactory=new PoolingConnectionFactory();
+    poolingConnectionFactory.setClassName(BitronixJmsXaConnectionFactoryProvider.class.getCanonicalName());
+    poolingConnectionFactory.setAutomaticEnlistingEnabled(false);
+    poolingConnectionFactory.setMaxPoolSize(maxPoolSize);
+    poolingConnectionFactory.setMinPoolSize(minPoolSize);
+    poolingConnectionFactory.setMaxIdleTime(maxIdleTime);
+    poolingConnectionFactory.setCacheProducersConsumers(false);
+    poolingConnectionFactory.setAllowLocalTransactions(true);
+    poolingConnectionFactory.setUniqueName(muleContext.getConfiguration().getId() + "-" + name);
+    poolingConnectionFactory.init();
+  }
+  return new BitronixConnectionFactoryWrapper(poolingConnectionFactory,muleContext);
+}
