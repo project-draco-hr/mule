@@ -1,23 +1,15 @@
 {
   ConnectionFactory wrappedConnectionFactory=connectionFactory;
-  if (connectionFactory instanceof PoolingConnectionFactory || connectionFactory instanceof ConnectionFactoryWrapper) {
+  if (connectionFactory instanceof BitronixConnectionFactoryWrapper || connectionFactory instanceof ConnectionFactoryWrapper) {
     return connectionFactory;
   }
   try {
     if (connectionFactory instanceof XAConnectionFactory && muleContext.getTransactionManager() instanceof TransactionManagerWrapper) {
-synchronized (BitronixJmsXaConnectionFactoryProvider.class) {
-        BitronixJmsXaConnectionFactoryProvider.xaConnectionFactoryProvided=connectionFactory;
-        PoolingConnectionFactory poolingConnectionFactory=new PoolingConnectionFactory();
-        poolingConnectionFactory.setClassName(BitronixJmsXaConnectionFactoryProvider.class.getCanonicalName());
-        poolingConnectionFactory.setAutomaticEnlistingEnabled(false);
-        poolingConnectionFactory.setMaxPoolSize(100);
-        poolingConnectionFactory.setMaxIdleTime(1);
-        poolingConnectionFactory.setCacheProducersConsumers(false);
-        poolingConnectionFactory.setAllowLocalTransactions(true);
-        poolingConnectionFactory.setUniqueName(muleContext.getConfiguration().getId() + "-" + getName());
-        poolingConnectionFactory.init();
-        wrappedConnectionFactory=new BitronixConnectionFactoryWrapper(poolingConnectionFactory);
-      }
+      logger.info(String.format("No pool defined for XAConnectionFactory in connector %s. A default pool will be created. " + "To customize define a bti:xa-connection-factory-pool element in your config and assign it to " + "the connector.",getName()));
+      BitronixConnectionFactoryPoolBuilder builder=new BitronixConnectionFactoryPoolBuilder();
+      builder.setConnectionFactory((XAConnectionFactory)connectionFactory);
+      builder.setName(getName());
+      wrappedConnectionFactory=builder.build(muleContext);
     }
  else {
       if (connectionFactory instanceof XAConnectionFactory && muleContext.getTransactionManager() != null) {
