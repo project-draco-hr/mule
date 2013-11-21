@@ -1,0 +1,19 @@
+{
+  if (queue == null) {
+    throw new IllegalArgumentException("Queue to be disposed cannot be null");
+  }
+  final String queueName=queue.getName();
+synchronized (this.queues) {
+    if (!this.queues.containsKey(queueName)) {
+      throw new IllegalArgumentException(String.format("There's no queue for name %s",queueName));
+    }
+    this.queues.remove(queueName);
+  }
+  queue.clear();
+  if (queue instanceof Stoppable) {
+    ((Stoppable)queue).stop();
+  }
+  if (queue instanceof Disposable) {
+    ((Disposable)queue).dispose();
+  }
+}
