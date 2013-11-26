@@ -1,8 +1,15 @@
 {
-  QueueInfo q=queues.get(name);
-  if (q == null) {
-    q=new QueueInfo(name,muleContext,config);
-    queues.put(name,q);
+  Lock lock=this.queuesLock.writeLock();
+  lock.lock();
+  try {
+    QueueInfo q=queues.get(name);
+    if (q == null) {
+      q=new QueueInfo(name,muleContext,config);
+      queues.put(name,q);
+    }
+    return q;
   }
-  return q;
+  finally {
+    lock.unlock();
+  }
 }
