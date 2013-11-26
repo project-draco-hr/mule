@@ -3,11 +3,16 @@
     throw new IllegalArgumentException("Queue to be disposed cannot be null");
   }
   final String queueName=queue.getName();
-synchronized (this.queues) {
+  Lock lock=this.queuesLock.writeLock();
+  lock.lock();
+  try {
     if (!this.queues.containsKey(queueName)) {
       throw new IllegalArgumentException(String.format("There's no queue for name %s",queueName));
     }
     this.queues.remove(queueName);
+  }
+  finally {
+    lock.unlock();
   }
   queue.clear();
   if (queue instanceof Stoppable) {
