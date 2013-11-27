@@ -22,6 +22,12 @@
       ConfigResource[] constructorArg=new ConfigResource[configs.size()];
       System.arraycopy(configs.toArray(),0,constructorArg,0,configs.size());
       ConfigurationBuilder cb=(ConfigurationBuilder)ClassUtils.instanciateClass(className,new Object[]{constructorArg});
+      if (domainContext != null && cb instanceof DomainMuleContextAwareConfigurationBuilder) {
+        ((DomainMuleContextAwareConfigurationBuilder)cb).setDomainContext(domainContext);
+      }
+ else       if (domainContext != null) {
+        throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("ConfigurationBuilder %s does not support domain context",cb.getClass().getCanonicalName())));
+      }
       cb.configure(muleContext);
     }
   }

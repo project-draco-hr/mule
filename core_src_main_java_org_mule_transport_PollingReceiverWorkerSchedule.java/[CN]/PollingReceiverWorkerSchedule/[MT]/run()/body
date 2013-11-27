@@ -1,10 +1,17 @@
 {
+  ClassLoader originalCl=Thread.currentThread().getContextClassLoader();
   try {
-    if (!worker.isRunning()) {
-      workManager.scheduleWork(worker);
+    try {
+      Thread.currentThread().setContextClassLoader(classLoader);
+      if (!worker.isRunning()) {
+        workManager.scheduleWork(worker);
+      }
+    }
+ catch (    Exception e) {
+      receiver.getConnector().getMuleContext().getExceptionListener().handleException(e);
     }
   }
- catch (  Exception e) {
-    receiver.getConnector().getMuleContext().getExceptionListener().handleException(e);
+  finally {
+    Thread.currentThread().setContextClassLoader(originalCl);
   }
 }

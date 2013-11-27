@@ -1,0 +1,11 @@
+{
+  addPackedAppFromResource("/broken-app.zip","brokenApp.zip");
+  deploymentService.start();
+  assertDeploymentFailure(applicationDeploymentListener,"brokenApp");
+  assertAppsDir(new String[]{"brokenApp.zip"},NONE,true);
+  final Map<URL,Long> zombieMap=deploymentService.getZombieApplications();
+  assertEquals("Wrong number of zombie apps registered.",1,zombieMap.size());
+  final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
+  assertEquals("Wrong URL tagged as zombie.","brokenApp.zip",new File(zombie.getKey().getFile()).getName());
+  assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
+}

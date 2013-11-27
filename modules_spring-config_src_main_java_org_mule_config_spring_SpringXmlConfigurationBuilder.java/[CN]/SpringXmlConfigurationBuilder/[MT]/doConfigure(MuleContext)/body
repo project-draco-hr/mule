@@ -1,15 +1,24 @@
 {
   ConfigResource[] allResources;
-  if (useDefaultConfigResource) {
+  if (useMinimalConfigResource) {
     allResources=new ConfigResource[configResources.length + 2];
-    allResources[0]=new ConfigResource(MULE_SPRING_CONFIG);
-    allResources[1]=new ConfigResource(MULE_DEFAULTS_CONFIG);
+    allResources[0]=new ConfigResource(MULE_MINIMAL_SPRING_CONFIG);
+    allResources[1]=new ConfigResource(MULE_SPRING_CONFIG);
     System.arraycopy(configResources,0,allResources,2,configResources.length);
+  }
+ else   if (useDefaultConfigResource) {
+    allResources=new ConfigResource[configResources.length + 4];
+    allResources[0]=new ConfigResource(MULE_REGISTRY_BOOTSTRAP_SPRING_CONFIG);
+    allResources[1]=new ConfigResource(MULE_MINIMAL_SPRING_CONFIG);
+    allResources[2]=new ConfigResource(MULE_SPRING_CONFIG);
+    allResources[3]=new ConfigResource(MULE_DEFAULTS_CONFIG);
+    System.arraycopy(configResources,0,allResources,4,configResources.length);
   }
  else {
     allResources=new ConfigResource[configResources.length + 1];
     allResources[0]=new ConfigResource(MULE_SPRING_CONFIG);
     System.arraycopy(configResources,0,allResources,1,configResources.length);
   }
-  createSpringRegistry(muleContext,createApplicationContext(muleContext,allResources));
+  applicationContext=createApplicationContext(muleContext,allResources);
+  createSpringRegistry(muleContext,applicationContext);
 }

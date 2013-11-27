@@ -2,16 +2,12 @@
   if (logger.isInfoEnabled()) {
     logger.info(miniSplash(String.format("New app '%s'",descriptor.getAppName())));
   }
-  final String[] configResources=descriptor.getConfigResources();
-  absoluteResourcePaths=new String[configResources.length];
-  for (int i=0; i < configResources.length; i++) {
-    String resource=configResources[i];
-    final File file=toAbsoluteFile(resource);
-    if (!file.exists()) {
-      String message=String.format("Config for app '%s' not found: %s",getAppName(),file);
+  for (  String configResourceAbsolutePatch : this.descriptor.getAbsoluteResourcePaths()) {
+    File configResource=new File(configResourceAbsolutePatch);
+    if (!configResource.exists()) {
+      String message=String.format("Config for app '%s' not found: %s",getArtifactName(),configResource);
       throw new InstallException(MessageFactory.createStaticMessage(message));
     }
-    absoluteResourcePaths[i]=file.getAbsolutePath();
   }
   deploymentClassLoader=applicationClassLoaderFactory.create(descriptor);
 }

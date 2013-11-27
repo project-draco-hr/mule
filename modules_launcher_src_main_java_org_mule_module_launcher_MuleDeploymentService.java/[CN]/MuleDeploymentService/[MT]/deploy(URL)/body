@@ -1,26 +1,3 @@
 {
-  Application application;
-  try {
-    try {
-      application=guardedInstallFrom(appArchiveUrl);
-      trackApplication(application);
-    }
- catch (    Throwable t) {
-      File appArchive=new File(appArchiveUrl.toURI());
-      String appName=StringUtils.removeEnd(appArchive.getName(),ZIP_FILE_SUFFIX);
-      final String msg=miniSplash(String.format("Failed to deploy app '%s', see below",appName));
-      logger.error(msg,t);
-      addZombieFile(appName,appArchive);
-      deploymentListener.onDeploymentFailure(appName,t);
-      throw t;
-    }
-    deployApplication(application);
-  }
- catch (  Throwable t) {
-    if (t instanceof DeploymentException) {
-      throw ((DeploymentException)t);
-    }
-    final String msg="Failed to deploy from URL: " + appArchiveUrl;
-    throw new DeploymentException(MessageFactory.createStaticMessage(msg),t);
-  }
+  applicationDeployer.deployPackagedArtifact(appArchiveUrl);
 }

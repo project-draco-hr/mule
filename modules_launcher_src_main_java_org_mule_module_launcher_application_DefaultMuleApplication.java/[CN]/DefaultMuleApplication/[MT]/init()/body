@@ -3,7 +3,7 @@
     logger.info(miniSplash(String.format("Initializing app '%s'",descriptor.getAppName())));
   }
   try {
-    ConfigurationBuilder cfgBuilder=createConfigurationBuilder();
+    ConfigurationBuilder cfgBuilder=domain.createApplicationConfigurationBuilder(this);
     if (!cfgBuilder.isConfigured()) {
       List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(3);
       builders.add(createConfigurationBuilderFromApplicationProperties());
@@ -11,12 +11,10 @@
       builders.add(cfgBuilder);
       DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
       if (deploymentListener != null) {
-        muleContextFactory.addListener(new MuleContextDeploymentListener(getAppName(),deploymentListener));
+        muleContextFactory.addListener(new MuleContextDeploymentListener(getArtifactName(),deploymentListener));
       }
-      this.muleContext=muleContextFactory.createMuleContext(builders,new ApplicationMuleContextBuilder(descriptor));
-      if (descriptor.isRedeploymentEnabled()) {
-        createRedeployMonitor();
-      }
+      ApplicationMuleContextBuilder applicationContextBuilder=new ApplicationMuleContextBuilder(descriptor);
+      this.muleContext=muleContextFactory.createMuleContext(builders,applicationContextBuilder);
     }
   }
  catch (  Exception e) {

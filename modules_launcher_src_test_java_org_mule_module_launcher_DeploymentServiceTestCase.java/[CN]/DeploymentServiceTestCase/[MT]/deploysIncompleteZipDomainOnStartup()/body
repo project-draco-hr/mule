@@ -1,0 +1,10 @@
+{
+  addPackedDomainFromResource("/incompleteDomain.zip");
+  deploymentService.start();
+  assertDeploymentFailure(domainDeploymentListener,"incompleteDomain");
+  addPackedDomainFromResource("/dummy-domain.zip");
+  assertDeploymentSuccess(domainDeploymentListener,"dummy-domain");
+  assertDomainFolderIsMaintained("incompleteDomain");
+  final Map.Entry<URL,Long> zombie=deploymentService.getZombieDomains().entrySet().iterator().next();
+  assertEquals("Wrong URL tagged as zombie.","incompleteDomain",new File(zombie.getKey().getFile()).getParentFile().getName());
+}
