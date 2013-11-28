@@ -31,6 +31,13 @@
         soapActions.add(soapAction);
         protocolHeaders.put(SoapBindingConstants.SOAP_ACTION,soapActions);
       }
+      String eventRequestUri=event.getMessageSourceURI().toString();
+      if (eventRequestUri.startsWith(JmsConnector.JMS)) {
+        String contentType=muleReqMsg.getInboundProperty(SoapJMSConstants.CONTENTTYPE_FIELD) != null ? (String)muleReqMsg.getInboundProperty(SoapJMSConstants.CONTENTTYPE_FIELD) : "text/xml";
+        String requestUri=muleReqMsg.getInboundProperty(SoapJMSConstants.REQUESTURI_FIELD) != null ? (String)muleReqMsg.getInboundProperty(SoapJMSConstants.REQUESTURI_FIELD) : eventRequestUri;
+        protocolHeaders.put(SoapJMSConstants.CONTENTTYPE_FIELD,Collections.singletonList(contentType));
+        protocolHeaders.put(SoapJMSConstants.REQUESTURI_FIELD,Collections.singletonList(requestUri));
+      }
       m.put(Message.PROTOCOL_HEADERS,protocolHeaders);
     }
     org.apache.cxf.transport.Destination d;
