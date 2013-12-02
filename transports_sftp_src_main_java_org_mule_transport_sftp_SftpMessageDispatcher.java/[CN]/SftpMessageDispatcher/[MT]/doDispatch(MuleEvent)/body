@@ -25,7 +25,12 @@
         transferFilename=sftpUtil.createUniqueSuffix(transferFilename);
       }
     }
-    client.storeFile(transferFilename,inputStream);
+    if (sftpUtil.getDuplicateHandling().equals(SftpConnector.PROPERTY_DUPLICATE_HANDLING_APPEND)) {
+      client.storeFile(transferFilename,inputStream,SftpClient.WriteMode.APPEND);
+    }
+ else {
+      client.storeFile(transferFilename,inputStream);
+    }
     if (useTempDir) {
       client.rename(transferFilename,destDir + "/" + filename);
     }
