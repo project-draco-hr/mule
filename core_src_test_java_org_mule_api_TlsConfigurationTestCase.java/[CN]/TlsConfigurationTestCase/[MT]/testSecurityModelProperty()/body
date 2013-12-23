@@ -1,0 +1,14 @@
+{
+  String previousSecurityModel=SecurityUtils.getSecurityModel();
+  System.setProperty(MuleProperties.MULE_SECURITY_SYSTEM_PROPERTY,TEST_SECURITY_MODEL);
+  File file=createConfigFile(TEST_SECURITY_MODEL,"enabledCipherSuites=TEST");
+  try {
+    TlsConfiguration tlsConfiguration=new TlsConfiguration(TlsConfiguration.DEFAULT_KEYSTORE);
+    tlsConfiguration.initialise(true,TlsConfiguration.JSSE_NAMESPACE);
+    assertArrayEquals(new String[]{"TEST"},tlsConfiguration.getEnabledCipherSuites());
+  }
+  finally {
+    System.setProperty(MuleProperties.MULE_SECURITY_SYSTEM_PROPERTY,previousSecurityModel);
+    file.delete();
+  }
+}
