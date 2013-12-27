@@ -1,9 +1,15 @@
 {
   Enumeration<?> e=ClassUtils.getResources(SERVICE_PATH + REGISTRY_PROPERTIES,getClass());
-  List<Map<String,String>> bootstraps=new LinkedList<Map<String,String>>();
+  List<Properties> bootstraps=new LinkedList<Properties>();
   while (e.hasMoreElements()) {
     try {
-      bootstraps.add(this.readBootstrap((URL)e.nextElement()));
+      URL url=(URL)e.nextElement();
+      if (logger.isDebugEnabled()) {
+        logger.debug("Reading bootstrap file: " + url.toString());
+      }
+      Properties p=new Properties();
+      p.load(url.openStream());
+      bootstraps.add(p);
     }
  catch (    Exception e1) {
       throw new InitialisationException(e1,this);
@@ -11,13 +17,13 @@
   }
   int objectCounter=1;
   int transformerCounter=1;
-  Map<String,String> transformers=new LinkedHashMap<String,String>();
-  Map<String,String> namedObjects=new LinkedHashMap<String,String>();
-  Map<String,String> unnamedObjects=new LinkedHashMap<String,String>();
+  Properties transformers=new OrderedProperties();
+  Properties namedObjects=new OrderedProperties();
+  Properties unnamedObjects=new OrderedProperties();
   Map<String,String> singleTransactionFactories=new LinkedHashMap<String,String>();
-  for (  Map<String,String> bootstrap : bootstraps) {
-    for (    Map.Entry<String,String> entry : bootstrap.entrySet()) {
-      final String key=entry.getKey();
+  for (  Properties bootstrap : bootstraps) {
+    for (    Map.Entry entry : bootstrap.entrySet()) {
+      final String key=(String)entry.getKey();
       if (key.contains(OBJECT_KEY)) {
         String newKey=key.substring(0,key.lastIndexOf(".")) + objectCounter++;
         unnamedObjects.put(newKey,entry.getValue());
@@ -29,11 +35,11 @@
  else       if (key.contains(SINGLE_TX)) {
         if (!key.contains(".transaction.resource")) {
           String transactionResourceKey=key.replace(".transaction.factory",".transaction.resource");
-          String transactionResource=bootstrap.get(transactionResourceKey);
+          String transactionResource=bootstrap.getProperty(transactionResourceKey);
           if (transactionResource == null) {
             throw new InitialisationException(CoreMessages.createStaticMessage(String.format("Theres no transaction resource specified for transaction factory %s",key)),this);
           }
-          singleTransactionFactories.put(entry.getValue(),transactionResource);
+          singleTransactionFactories.put((String)entry.getValue(),transactionResource);
         }
       }
  else {
