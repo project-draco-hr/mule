@@ -1,0 +1,20 @@
+{
+  ReentrantLock lock=deploymentService.getLock();
+  lock.lock();
+  try {
+    File tempFolder=new File(muleHome,artifactName);
+    FileUtils.unzip(new File(url.toURI()),tempFolder);
+    File configFile=new File(tempFolder,configFileName);
+    if (configFile.exists()) {
+      configFile.setLastModified(System.currentTimeMillis() + 1000);
+    }
+    File appFolder=new File(destinationDir,artifactName);
+    if (appFolder.exists()) {
+      FileUtils.deleteTree(appFolder);
+    }
+    FileUtils.moveDirectory(tempFolder,appFolder);
+  }
+  finally {
+    lock.unlock();
+  }
+}

@@ -1,10 +1,16 @@
 {
-  ApplicationClassLoaderFactory applicationClassLoaderFactory=new MuleApplicationClassLoaderFactory();
+  DomainClassLoaderRepository domainClassLoaderRepository=new MuleDomainClassLoaderRepository();
+  ApplicationClassLoaderFactory applicationClassLoaderFactory=new MuleApplicationClassLoaderFactory(domainClassLoaderRepository);
   applicationClassLoaderFactory=new CompositeApplicationClassLoaderFactory(applicationClassLoaderFactory,pluginClassLoaderManager);
-  DefaultApplicationFactory appFactory=new DefaultApplicationFactory(applicationClassLoaderFactory);
-  appFactory.setDeploymentListener(deploymentListener);
-  this.appFactory=appFactory;
-  DefaultMuleDeployer deployer=new DefaultMuleDeployer();
-  deployer.setApplicationFactory(this.appFactory);
-  this.deployer=deployer;
+  DefaultDomainFactory domainFactory=new DefaultDomainFactory(domainClassLoaderRepository);
+  domainFactory.setDeploymentListener(domainDeploymentListener);
+  DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,domainFactory);
+  applicationFactory.setDeploymentListener(applicationDeploymentListener);
+  DefaultArtifactDeployer<Application> applicationMuleDeployer=new DefaultArtifactDeployer<Application>();
+  DefaultArtifactDeployer<Domain> domainMuleDeployer=new DefaultArtifactDeployer<Domain>();
+  this.applicationDeployer=new ArchiveDeployer(applicationMuleDeployer,applicationFactory,applications,deploymentLock);
+  this.applicationDeployer.setDeploymentListener(applicationDeploymentListener);
+  this.domainDeployer=new ArchiveDeployer(domainMuleDeployer,domainFactory,domains,deploymentLock);
+  this.domainDeployer.setDeploymentListener(domainDeploymentListener);
+  this.deploymentDirectoryWatcher=new DeploymentDirectoryWatcher(domainDeployer,applicationDeployer,domains,applications,deploymentLock);
 }

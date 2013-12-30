@@ -1,0 +1,16 @@
+{
+  String configBuilderClassName=determineConfigBuilderClassNameForApplication(application);
+  ConfigurationBuilder configurationBuilder=(ConfigurationBuilder)ClassUtils.instanciateClass(configBuilderClassName,new Object[]{application.getDescriptor().getAbsoluteResourcePaths()},application.getArtifactClassLoader().getClassLoader());
+  if (!containsSharedResources()) {
+    return configurationBuilder;
+  }
+ else {
+    if (configurationBuilder instanceof DomainMuleContextAwareConfigurationBuilder) {
+      ((DomainMuleContextAwareConfigurationBuilder)configurationBuilder).setDomainContext(getMuleContext());
+    }
+ else {
+      throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("ConfigurationBuilder %s does not support domain context",configurationBuilder.getClass().getCanonicalName())));
+    }
+    return configurationBuilder;
+  }
+}

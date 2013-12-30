@@ -1,0 +1,21 @@
+{
+  addPackedDomainFromResource("/broken-domain.zip");
+  deploymentService.start();
+  assertDeploymentFailure(domainDeploymentListener,"broken-domain");
+  reset(domainDeploymentListener);
+  Thread.sleep(1000);
+  assertDomainDir(new String[]{"broken-domain.zip"},NONE,true);
+  assertDomainDir(NONE,new String[]{"dummy-domain"},false);
+  assertEquals("No domains should have been registered with Mule.",0,deploymentService.getDomains().size());
+  final Map<URL,Long> zombieMap=deploymentService.getZombieDomains();
+  assertEquals("Wrong number of zombie domains registered.",1,zombieMap.size());
+  final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
+  assertEquals("Wrong URL tagged as zombie.","broken-domain.zip",new File(zombie.getKey().getFile()).getName());
+  assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
+  try {
+    assertDeploymentFailure(domainDeploymentListener,"broken-domain.zip");
+    fail("Install was invoked again for the broken doamin file");
+  }
+ catch (  AssertionError expected) {
+  }
+}

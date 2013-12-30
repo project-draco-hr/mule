@@ -1,0 +1,20 @@
+{
+  if (transportMessage == null) {
+    return new DefaultMuleMessage(NullPayload.getInstance(),muleContext);
+  }
+  if (!isTransportMessageTypeSupported(transportMessage)) {
+    throw new MessageTypeNotSupportedException(transportMessage,getClass());
+  }
+  Object payload=extractPayload(transportMessage,encoding);
+  DefaultMuleMessage message;
+  if (previousMessage != null) {
+    message=new DefaultMuleMessage(payload,previousMessage,muleContext);
+  }
+ else {
+    message=new DefaultMuleMessage(payload,muleContext);
+  }
+  message.setEncoding(encoding);
+  addProperties(message,transportMessage);
+  addAttachments(message,transportMessage);
+  return message;
+}
