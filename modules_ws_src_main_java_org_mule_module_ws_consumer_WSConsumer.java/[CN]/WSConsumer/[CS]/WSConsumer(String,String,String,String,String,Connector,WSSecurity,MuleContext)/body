@@ -1,0 +1,19 @@
+{
+  super();
+  javax.wsdl.xml.WSDLReader wsdlReader11;
+  wsdlReader11=javax.wsdl.factory.WSDLFactory.newInstance().newWSDLReader();
+  targetNamespace=wsdlReader11.readWSDL(wsdlLocation).getTargetNamespace();
+  this.wsdlOperation=wsdlOperation;
+  ProxyClientMessageProcessorBuilder cxfBuilder=new ProxyClientMessageProcessorBuilder();
+  cxfBuilder.setMuleContext(muleContext);
+  for (  SecurityStrategy strategy : security.getStrategies()) {
+    strategy.apply(cxfBuilder);
+  }
+  MessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder();
+  AutoTransformer auto=new AutoTransformer();
+  auto.setReturnClass(String.class);
+  chainBuilder.chain(new ResponseMessageProcessorAdapter(auto));
+  chainBuilder.chain(cxfBuilder.build(),createEndpoint(serviceAddress,connector,muleContext));
+  chainBuilder.chain(auto);
+  mp=chainBuilder.build();
+}
