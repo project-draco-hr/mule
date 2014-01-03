@@ -1,0 +1,15 @@
+{
+  try {
+    this.runFlow("timeout");
+    fail("Was expecting a timeout");
+  }
+ catch (  CompositeRoutingException e) {
+    MuleEvent response=e.getEvent();
+    ExceptionPayload ep=response.getMessage().getExceptionPayload();
+    assertNotNull(ep);
+    assertSame(e,ep.getException());
+    Map<Integer,Exception> exceptions=e.getExceptions();
+    assertEquals(1,exceptions.size());
+    assertTrue(exceptions.get(3) instanceof ResponseTimeoutException);
+  }
+}
