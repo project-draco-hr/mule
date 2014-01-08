@@ -1,0 +1,20 @@
+{
+  WSDLReader wsdlReader11=javax.wsdl.factory.WSDLFactory.newInstance().newWSDLReader();
+  Definition wsdlDefinition=wsdlReader11.readWSDL(wsdlLocation);
+  this.targetNamespace=wsdlDefinition.getTargetNamespace();
+  this.wsdlOperation=wsdlOperation;
+  ProxyClientMessageProcessorBuilder cxfBuilder=new ProxyClientMessageProcessorBuilder();
+  cxfBuilder.setMuleContext(muleContext);
+  if (security != null) {
+    for (    SecurityStrategy strategy : security.getStrategies()) {
+      strategy.apply(cxfBuilder);
+    }
+  }
+  MessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder();
+  AutoTransformer auto=new AutoTransformer();
+  auto.setReturnDataType(DataType.STRING_DATA_TYPE);
+  chainBuilder.chain(new ResponseMessageProcessorAdapter(auto));
+  chainBuilder.chain(cxfBuilder.build(),createEndpoint(serviceAddress,connector,muleContext));
+  mp=chainBuilder.build();
+  cxfBuilder.getClient().getEndpoint().getBinding().getInInterceptors().add(new CheckFaultInterceptor());
+}

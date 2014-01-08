@@ -1,6 +1,18 @@
 {
   Map<String,Object> configProperties=new HashMap<String,Object>();
   configProperties.put(WSHandlerConstants.ACTION,WSHandlerConstants.USERNAME_TOKEN);
-  configProperties.put(WSHandlerConstants.ACTION,WSHandlerConstants.USERNAME_TOKEN);
-  builder.getClient().getOutInterceptors().add(new WSS4JOutInterceptor(configProperties));
+  configProperties.put(WSHandlerConstants.USER,username);
+  configProperties.put(WSHandlerConstants.PW_CALLBACK_REF,new CallbackHandler(){
+    @Override public void handle(    Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+      WSPasswordCallback pc=(WSPasswordCallback)callbacks[0];
+      if (pc.getIdentifier().equals(username)) {
+        pc.setPassword(password);
+      }
+    }
+  }
+);
+  if (builder.getOutInterceptors() == null) {
+    builder.setOutInterceptors(new ArrayList<Interceptor<? extends Message>>());
+  }
+  builder.getOutInterceptors().add(new WSS4JOutInterceptor(configProperties));
 }
