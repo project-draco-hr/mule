@@ -5,7 +5,7 @@
     @Override public void run(){
       try {
         try {
-          final AtomicReference exceptionThrowWhileSendingResponse=new AtomicReference();
+          final AtomicReference exceptionThrownDuringFlowProcessing=new AtomicReference();
           TransactionalErrorHandlingExecutionTemplate transactionTemplate=TransactionalErrorHandlingExecutionTemplate.createMainExecutionTemplate(messageProcessContext.getFlowConstruct().getMuleContext(),(messageProcessContext.getTransactionConfig() == null ? new MuleTransactionConfig() : messageProcessContext.getTransactionConfig()),messageProcessContext.getFlowConstruct().getExceptionListener());
           MuleEvent response=transactionTemplate.execute(new ExecutionCallback<MuleEvent>(){
             @Override public MuleEvent process() throws Exception {
@@ -22,13 +22,13 @@
                 return muleEvent;
               }
  catch (              Exception e) {
-                exceptionThrowWhileSendingResponse.set(e);
+                exceptionThrownDuringFlowProcessing.set(e);
                 throw e;
               }
             }
           }
 );
-          if (exceptionThrowWhileSendingResponse.get() != null && !(exceptionThrowWhileSendingResponse.get() instanceof ResponseDispatchException)) {
+          if (exceptionThrownDuringFlowProcessing.get() != null && !(exceptionThrownDuringFlowProcessing.get() instanceof ResponseDispatchException)) {
             sendResponseIfNeccessary(response,flowProcessingPhaseTemplate);
           }
           flowProcessingPhaseTemplate.afterSuccessfulProcessingFlow(response);
