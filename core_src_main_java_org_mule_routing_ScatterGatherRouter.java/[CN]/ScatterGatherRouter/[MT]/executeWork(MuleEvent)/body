@@ -1,0 +1,14 @@
+{
+  List<ProcessingMuleEventWork> works=new ArrayList<ProcessingMuleEventWork>(this.routes.size());
+  try {
+    for (    final MessageProcessor route : this.routes) {
+      ProcessingMuleEventWork work=new ProcessingMuleEventWork(route,DefaultMuleEvent.copy(event));
+      this.workManager.scheduleWork(work);
+      works.add(work);
+    }
+  }
+ catch (  WorkException e) {
+    throw new DefaultMuleException(MessageFactory.createStaticMessage("Could not schedule work for route"),e);
+  }
+  return works;
+}
