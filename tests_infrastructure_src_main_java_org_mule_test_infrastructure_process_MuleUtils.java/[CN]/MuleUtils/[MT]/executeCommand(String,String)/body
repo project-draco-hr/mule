@@ -1,0 +1,16 @@
+{
+  CommandLine cmdLine=CommandLine.parse(command);
+  DefaultExecutor executor=new DefaultExecutor();
+  Map<String,String> env=addEnvProperties(envVars);
+  ExecuteWatchdog watchDog=new ExecuteWatchdog(TIMEOUT);
+  executor.setWatchdog(watchDog);
+  executor.setStreamHandler(new PumpStreamHandler());
+  int result=executor.execute(cmdLine,env);
+  if (executor.isFailure(result)) {
+    if (watchDog.killedProcess()) {
+      throw new RuntimeException("Reached timeout while running: " + cmdLine);
+    }
+    throw new RuntimeException("Process failed with return code [" + result + "]: "+ cmdLine);
+  }
+  return result;
+}
