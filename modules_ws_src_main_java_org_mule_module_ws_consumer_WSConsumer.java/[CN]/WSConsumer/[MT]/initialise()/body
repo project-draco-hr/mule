@@ -2,7 +2,23 @@
   try {
     WSDLReader wsdlReader=WSDLFactory.newInstance().newWSDLReader();
     Definition wsdlDefinition=wsdlReader.readWSDL(wsdlLocation);
-    this.soapAction=getSoapAction(wsdlDefinition);
+    Service service=wsdlDefinition.getService(new QName(wsdlDefinition.getTargetNamespace(),wsdlService));
+    if (service == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage(String.format("Service %s not found in WSDL",wsdlService)),this);
+    }
+    Port port=service.getPort(wsdlPort);
+    if (port == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage(String.format("Port %s not found in WSDL",wsdlPort)),this);
+    }
+    Binding binding=port.getBinding();
+    if (binding == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage(String.format("Port %s has no binding",wsdlPort)),this);
+    }
+    BindingOperation operation=port.getBinding().getBindingOperation(wsdlOperation,null,null);
+    if (operation == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage(String.format("Operation %s not found in WSDL",wsdlOperation)),this);
+    }
+    this.soapAction=getSoapAction(operation);
   }
  catch (  WSDLException e) {
     throw new InitialisationException(e,this);

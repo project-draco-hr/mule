@@ -13,8 +13,27 @@
   MessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder();
   AutoTransformer auto=new AutoTransformer();
   auto.setReturnDataType(DataType.STRING_DATA_TYPE);
+  chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      try {
+        return processNext(event);
+      }
+ catch (      DispatchException e) {
+        if (e.getCause() instanceof SoapFault) {
+          SoapFault soapFault=(SoapFault)e.getCause();
+          throw new SoapFaultException(soapFault.getFaultCode(),soapFault.getSubCode(),soapFault.getMessage(),soapFault.getDetail());
+        }
+ else {
+          throw e;
+        }
+      }
+    }
+  }
+);
   chainBuilder.chain(new ResponseMessageProcessorAdapter(auto));
-  chainBuilder.chain(cxfBuilder.build(),createEndpoint(serviceAddress,connector,muleContext));
+  CxfOutboundMessageProcessor cxfOutboundMessageProcessor=cxfBuilder.build();
+  cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new CheckFaultInterceptor());
+  chainBuilder.chain(cxfOutboundMessageProcessor);
+  chainBuilder.chain(createEndpoint(serviceAddress,connector,muleContext));
   mp=chainBuilder.build();
-  cxfBuilder.getClient().getEndpoint().getBinding().getInInterceptors().add(new CheckFaultInterceptor());
 }
