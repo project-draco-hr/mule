@@ -1,8 +1,14 @@
 {
-  MuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://soapFaultWithoutCatchExceptionStrategy","<tns:fail xmlns:tns=\"http://consumer.ws.module.mule.org/\"><text>Hello</text></tns:fail>",null);
-  assertNotNull(response.getExceptionPayload());
-  SoapFaultException soapFault=(SoapFaultException)response.getExceptionPayload().getException().getCause();
-  assertEquals("Hello",soapFault.getMessage());
-  assertEquals("Server",soapFault.getFaultCode().getLocalPart());
+  Flow flow=(Flow)getFlowConstruct("soapFaultWithoutCatchExceptionStrategy");
+  try {
+    flow.process(getTestEvent(FAIL_REQUEST));
+    fail();
+  }
+ catch (  MessagingException e) {
+    MuleMessage response=e.getEvent().getMessage();
+    assertNotNull(response.getExceptionPayload());
+    SoapFaultException soapFault=(SoapFaultException)response.getExceptionPayload().getException();
+    assertTrue(soapFault.getMessage().startsWith("Hello"));
+    assertEquals("Server",soapFault.getFaultCode().getLocalPart());
+  }
 }
