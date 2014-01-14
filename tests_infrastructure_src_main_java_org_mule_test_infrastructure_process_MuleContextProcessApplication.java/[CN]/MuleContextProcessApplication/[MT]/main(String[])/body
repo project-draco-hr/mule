@@ -1,0 +1,47 @@
+{
+  try {
+    long initialTime=System.currentTimeMillis();
+    replaceSystemOutputWithSocketOutput();
+    System.out.println("MuleContextProcessApplication attached to log port");
+    System.out.println("Creating fake mule server");
+    String muleHomeSystemProperty=System.getProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY);
+    System.out.println("Using mule home: " + muleHomeSystemProperty);
+    FakeMuleServer fakeMuleServer=new FakeMuleServer(muleHomeSystemProperty,retrieveConfiguredCoreExtensions());
+    File appsDirectory=fakeMuleServer.getAppsDir();
+    System.out.println("Creating test app directory");
+    File applicationDirectory=new File(appsDirectory,TEST_APPLICATION_NAME);
+    if (!applicationDirectory.exists() && !applicationDirectory.mkdir()) {
+      throw new RuntimeException("Could not create test-app directory to create test application within fake mule serevr");
+    }
+    System.out.println("Test app directory created");
+    System.out.println("Creating app config file");
+    String applicationConfiguration=System.getProperty(MuleContextProcessBuilder.CONFIG_FILE_KEY);
+    File applicationConfigurationFile=new File(MuleContextProcessApplication.class.getClassLoader().getResource(applicationConfiguration).getFile());
+    if (!applicationConfigurationFile.exists()) {
+      throw new RuntimeException("Could not find file for application configuration " + applicationConfiguration);
+    }
+    FileUtils.copyFile(applicationConfigurationFile,new File(applicationDirectory,MuleServer.DEFAULT_CONFIGURATION));
+    System.out.println("Test app config file created");
+    ApplicationStartedDeploymentListener applicationStartedDeploymentListener=new ApplicationStartedDeploymentListener();
+    fakeMuleServer.addDeploymentListener(applicationStartedDeploymentListener);
+    System.out.println("Starting fake mule server");
+    fakeMuleServer.start();
+    System.out.println("Fake mule server started");
+    applicationStartedDeploymentListener.waitUntilApplicationDeployed();
+    notifyMuleContextStarted();
+    while (true) {
+      if (System.currentTimeMillis() - initialTime > (Integer.valueOf(System.getProperty(MuleContextProcessBuilder.TIMEOUT_IN_SECONDS)) * 1000)) {
+        System.exit(-1);
+      }
+      Thread.sleep(1000);
+    }
+  }
+ catch (  Throwable e) {
+    System.out.println("Failure starting process: " + e.getMessage());
+    e.printStackTrace();
+    throw new RuntimeException(e);
+  }
+ finally {
+    closeQuietly(logSocket);
+  }
+}

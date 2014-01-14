@@ -1,0 +1,31 @@
+{
+  List<String> command=new ArrayList<String>();
+  command.add("java");
+  command.add("-cp");
+  command.add(System.getProperty("java.class.path"));
+  if (Boolean.getBoolean("debug")) {
+    command.add("-Xdebug");
+    int debugPort=getDebugPort();
+    command.add("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + debugPort);
+    logger.info(String.format("To connect to process %s for debugging use port %d",instanceId,debugPort));
+  }
+  for (  String systemPropertyKey : systemProperties.keySet()) {
+    command.add(String.format("-D%s=%s",systemPropertyKey,systemProperties.get(systemPropertyKey)));
+  }
+  if (muleAppClass == null) {
+    command.add("org.mule.test.infrastructure.process.MuleContextProcessApplication");
+  }
+ else {
+    command.add(muleAppClass);
+  }
+  ProcessBuilder processBuilder=new ProcessBuilder(command);
+  try {
+    TestProcess testProcess=new TestProcess(instanceId,Integer.valueOf(systemProperties.get(LOG_PORT_PROPERTY)),Integer.valueOf(systemProperties.get(COMMAND_PORT_PROPERTY)));
+    Process process=processBuilder.start();
+    testProcess.setProcess(process);
+    return testProcess;
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+}

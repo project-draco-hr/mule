@@ -1,0 +1,43 @@
+{
+  logger.debug("Trying to create server socket for command service to port: " + serverPort);
+  commandSocket=new ServerSocket(serverPort,0,InetAddress.getByName("localhost"));
+  commandServerThread=new Thread("Command-Server"){
+    @Override public void run(){
+      try {
+        Socket processClientConnection=commandSocket.accept();
+        BufferedReader processClientLogEntriesInputStream=new BufferedReader(new InputStreamReader(processClientConnection.getInputStream()));
+        while (!Thread.interrupted()) {
+          String commandLine=processClientLogEntriesInputStream.readLine();
+          if (commandLine == null) {
+            try {
+              Thread.sleep(200);
+            }
+ catch (            InterruptedException e) {
+              return;
+            }
+          }
+ else {
+            logger.info("Command from external process received: " + commandLine);
+synchronized (this) {
+              if (commandListener == null) {
+                pendingCommands.add(commandLine);
+              }
+ else {
+                commandListener.commandReceived(commandLine);
+              }
+            }
+          }
+        }
+      }
+ catch (      IOException e) {
+        throw new RuntimeException(e);
+      }
+ finally {
+        closeQuietly(commandSocket);
+      }
+    }
+  }
+;
+  commandServerThread.setDaemon(true);
+  commandServerThread.start();
+}
