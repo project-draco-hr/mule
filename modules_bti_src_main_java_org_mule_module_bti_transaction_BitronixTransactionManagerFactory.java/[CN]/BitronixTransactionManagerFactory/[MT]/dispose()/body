@@ -1,12 +1,21 @@
 {
-  if (transactionManagerUsedByThisApp) {
+  try {
+    if (transactionManagerUsedByThisApp) {
 synchronized (BitronixTransactionManagerFactory.class) {
-      numberOfAppsUsingTm--;
-      if (numberOfAppsUsingTm == 0) {
-        TransactionManagerServices.getTransactionManager().shutdown();
-        transactionManager=null;
+        numberOfAppsUsingTm--;
         transactionManagerUsedByThisApp=false;
+        defaultXaSessionResourceProducer.close();
+        if (numberOfAppsUsingTm == 0) {
+          TransactionManagerServices.getTransactionManager().shutdown();
+          transactionManager=null;
+        }
       }
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Failure shutting down transaction manager" + e.getMessage());
+    if (logger.isDebugEnabled()) {
+      logger.debug(e.getMessage(),e);
     }
   }
 }
