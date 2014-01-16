@@ -4,6 +4,9 @@
   Preconditions.checkState(minPoolSize >= 0,"minPoolSize must be greater or equal than 0");
   Preconditions.checkState(maxPoolSize > 0,"maxPoolSize must be greater than 0");
   Preconditions.checkState(maxIdleTime > 0,"maxIdleTime must be greater than 0");
+  Preconditions.checkState(acquisitionTimeoutSeconds >= 0,"acquisitionTimeoutSeconds must equal to or grater than 0");
+  Preconditions.checkState(preparedStatementCacheSize > 0,"preparedStatementCacheSize must equal to or grater than 0");
+  Preconditions.checkState(acquireIncrement > 0,"acquireIncrement must be greater than 0");
   PoolingDataSource poolingDataSource;
 synchronized (BitronixJdbcXaDataSourceProvider.class) {
     BitronixJdbcXaDataSourceProvider.xaDatasourceHolder=dataSource;
@@ -12,10 +15,12 @@ synchronized (BitronixJdbcXaDataSourceProvider.class) {
     poolingDataSource.setMinPoolSize(minPoolSize);
     poolingDataSource.setMaxPoolSize(maxPoolSize);
     poolingDataSource.setMaxIdleTime(maxIdleTime);
-    poolingDataSource.setAcquireIncrement(1);
+    poolingDataSource.setAcquireIncrement(acquireIncrement);
     poolingDataSource.setAllowLocalTransactions(true);
     poolingDataSource.setAutomaticEnlistingEnabled(false);
     poolingDataSource.setUniqueName(BitronixConfigurationUtil.createUniqueIdForResource(muleContext,name));
+    poolingDataSource.setAcquisitionTimeout(acquisitionTimeoutSeconds);
+    poolingDataSource.setPreparedStatementCacheSize(preparedStatementCacheSize);
     poolingDataSource.init();
   }
   return new BitronixXaDataSourceWrapper(poolingDataSource,muleContext);
