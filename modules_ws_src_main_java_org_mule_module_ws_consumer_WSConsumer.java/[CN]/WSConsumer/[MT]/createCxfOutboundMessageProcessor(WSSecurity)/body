@@ -1,10 +1,15 @@
 {
   ProxyClientMessageProcessorBuilder cxfBuilder=new ProxyClientMessageProcessorBuilder();
+  Map<String,Object> configProperties=new HashMap<String,Object>();
   cxfBuilder.setMuleContext(muleContext);
   if (security != null) {
     for (    SecurityStrategy strategy : security.getStrategies()) {
-      strategy.apply(cxfBuilder);
+      strategy.apply(configProperties);
     }
+    if (cxfBuilder.getOutInterceptors() == null) {
+      cxfBuilder.setOutInterceptors(new ArrayList<Interceptor<? extends Message>>());
+    }
+    cxfBuilder.getOutInterceptors().add(new WSS4JOutInterceptor(configProperties));
   }
   CxfOutboundMessageProcessor cxfOutboundMessageProcessor=cxfBuilder.build();
   cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new CheckFaultInterceptor());
