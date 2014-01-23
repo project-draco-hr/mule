@@ -1,0 +1,16 @@
+{
+  Flow flow=(Flow)getFlowConstruct("testFlow");
+  MuleEvent event=getTestEvent(ECHO_HEADERS_REQUEST);
+  event.getMessage().setProperty("soap.headerIn",REQUEST_HEADER_IN,PropertyScope.OUTBOUND);
+  event.getMessage().setProperty("soap.headerInOut",REQUEST_HEADER_INOUT,PropertyScope.OUTBOUND);
+  event.getMessage().setProperty("testHttpHeader",TEST_MESSAGE,PropertyScope.OUTBOUND);
+  getFunctionalTestComponent("server").setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      errorCollector.checkThat(context.getMessage().getInboundProperty("testHttpHeader"),notNullValue());
+      errorCollector.checkThat(context.getMessage().getInboundProperty("soap.headerIn"),nullValue());
+      errorCollector.checkThat(context.getMessage().getInboundProperty("soap.headerInOut"),nullValue());
+    }
+  }
+);
+  flow.process(event);
+}
