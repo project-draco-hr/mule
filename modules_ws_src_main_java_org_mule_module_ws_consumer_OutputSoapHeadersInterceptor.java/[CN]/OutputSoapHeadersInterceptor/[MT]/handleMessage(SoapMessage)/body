@@ -5,15 +5,16 @@
   }
   for (  Header header : message.getHeaders()) {
     if (header instanceof SoapHeader) {
+      Transformer transformer=null;
       try {
         DataType sourceType=DataTypeFactory.createFromObject(header.getObject());
-        Transformer transformer=muleContext.getRegistry().lookupTransformer(sourceType,DataType.STRING_DATA_TYPE);
-        String key=SOAP_HEADERS_PROPERTY_PREFIX + header.getName().getLocalPart();
+        transformer=muleContext.getRegistry().lookupTransformer(sourceType,DataType.STRING_DATA_TYPE);
+        String key=WSConsumer.SOAP_HEADERS_PROPERTY_PREFIX + header.getName().getLocalPart();
         String value=(String)transformer.transform(header.getObject());
         event.getMessage().setProperty(key,value,PropertyScope.INBOUND);
       }
  catch (      TransformerException e) {
-        throw new InvalidSoapHeaderException(CoreMessages.createStaticMessage("Cannot parse content " + "of SOAP header %s in the response",header.getName().getLocalPart()),e,event);
+        throw new Fault(new TransformerMessagingException(CoreMessages.createStaticMessage("Cannot parse content of SOAP header %s in the response",header.getName().getLocalPart()),event,transformer,e.getCause()));
       }
     }
   }
