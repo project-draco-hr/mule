@@ -1,5 +1,7 @@
 {
+  ClassLoader originalClassLoader=Thread.currentThread().getContextClassLoader();
   try {
+    Thread.currentThread().setContextClassLoader(endpoint.getMuleContext().getExecutionClassLoader());
     ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
     MuleEvent resultEvent=executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
       @Override public MuleEvent process() throws Exception {
@@ -27,5 +29,6 @@ catch (  Exception e) {
   }
  finally {
     message.release();
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
   }
 }
