@@ -8,9 +8,20 @@
     e.printStackTrace();
   }
   muleContext.dispose();
-  Thread.sleep(5000);
-  for (  Thread t : Thread.getAllStackTraces().keySet()) {
-    assertTrue(!t.getName().startsWith("SHUTDOWN_TEST_FLOW"));
-    assertTrue(!t.getName().startsWith("MuleServer"));
+  new PollingProber(10000,100).check(new Probe(){
+    @Override public boolean isSatisfied(){
+      boolean threadsStopped=true;
+      for (      Thread t : Thread.getAllStackTraces().keySet()) {
+        if (t.getName().startsWith("SHUTDOWN_TEST_FLOW") || t.getName().startsWith("MuleServer")) {
+          threadsStopped=false;
+          break;
+        }
+      }
+      return threadsStopped;
+    }
+    @Override public String describeFailure(){
+      return "mule threads running during dispose";
+    }
   }
+);
 }
