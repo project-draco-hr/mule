@@ -1,0 +1,26 @@
+{
+  BindingOperationInfo bop=ServiceModelUtil.getOperation(message.getExchange(),opName);
+  if (bop == null) {
+    Endpoint ep=message.getExchange().get(Endpoint.class);
+    if (ep == null) {
+      return null;
+    }
+    BindingInfo service=ep.getEndpointInfo().getBinding();
+    boolean output=!isRequestor(message);
+    for (    BindingOperationInfo info : service.getOperations()) {
+      if (info.getName().getLocalPart().equals(opName.getLocalPart())) {
+        SoapBody body;
+        if (output) {
+          body=info.getOutput().getExtensor(SoapBody.class);
+        }
+ else {
+          body=info.getInput().getExtensor(SoapBody.class);
+        }
+        if (body != null && opName.getNamespaceURI().equals(body.getNamespaceURI())) {
+          return info;
+        }
+      }
+    }
+  }
+  return bop;
+}
