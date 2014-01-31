@@ -1,4 +1,5 @@
 {
+  final List<String> initialThreads=collectThreadNames();
   try {
     muleContext.start();
     fail("Expected Mule to fail to start, due to our RudeMessageProcessor");
@@ -10,14 +11,8 @@
   muleContext.dispose();
   new PollingProber(10000,100).check(new Probe(){
     @Override public boolean isSatisfied(){
-      boolean threadsStopped=true;
-      for (      Thread t : Thread.getAllStackTraces().keySet()) {
-        if (t.getName().startsWith("SHUTDOWN_TEST_FLOW") || t.getName().startsWith("MuleServer")) {
-          threadsStopped=false;
-          break;
-        }
-      }
-      return threadsStopped;
+      List<String> currentThreads=collectThreadNames();
+      return countOcurrences(currentThreads,"SHUTDOWN_TEST_FLOW") == 0 && countOcurrences(initialThreads,"MuleServer") == countOcurrences(currentThreads,"MuleServer") + 1;
     }
     @Override public String describeFailure(){
       return "mule threads running during dispose";
