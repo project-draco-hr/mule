@@ -1,0 +1,15 @@
+{
+  SpringXmlConfigurationMuleArtifactFactory factoryTest=new SpringXmlConfigurationMuleArtifactFactory();
+  XmlConfigurationCallback callback=Mockito.mock(XmlConfigurationCallback.class);
+  HashMap<String,String> map=new HashMap<String,String>();
+  Mockito.when(callback.getEnvironmentProperties()).thenReturn(map);
+  Element[] propertyPlaceholders=new Element[1];
+  propertyPlaceholders[0]=createPropertyPlaceholder("test1.properties","true");
+  Mockito.when(callback.getPropertyPlaceholders()).thenReturn(propertyPlaceholders);
+  Mockito.when(callback.getSchemaLocation("http://www.mulesoft.org/schema/mule/core")).thenReturn("http://www.mulesoft.org/schema/mule/core/current/mule.xsd");
+  Element element=createElement("logger","http://www.mulesoft.org/schema/mule/core");
+  String muleConfigTxt=factoryTest.getArtifactMuleConfig("test-flow",element,callback,false);
+  Document muleConfig=DocumentHelper.parseText(muleConfigTxt);
+  List result=DocumentHelper.selectNodes("/mule/*[local-name()='property-placeholder' and @location='test1.properties' and @ignore-unresolvable='true']",muleConfig);
+  Assert.assertThat("Property placeholder for test1.properties is present",result.size(),CoreMatchers.is(1));
+}
