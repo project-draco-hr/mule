@@ -1,10 +1,21 @@
 {
-  if (compiledExpressionsCache.containsKey(expression)) {
-    return (Serializable)compiledExpressionsCache.get(expression);
+  try {
+    return compiledExpressionsCache.get(expression,new Callable<Serializable>(){
+      @Override public Serializable call(){
+        return MVEL.compileExpression(expression,new ParserContext(parserContext.getParserConfiguration()));
+      }
+    }
+);
   }
+ catch (  UncheckedExecutionException e) {
+    if (e.getCause() instanceof RuntimeException) {
+      throw (RuntimeException)e.getCause();
+    }
  else {
-    Serializable compiledExpression=MVEL.compileExpression(expression,parserContext.createSubcontext());
-    compiledExpressionsCache.put(expression,compiledExpression);
-    return compiledExpression;
+      throw new MuleRuntimeException(e);
+    }
+  }
+catch (  ExecutionException e) {
+    throw new MuleRuntimeException(e);
   }
 }
