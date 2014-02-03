@@ -1,0 +1,20 @@
+{
+  try {
+    Object payload=msg.getPayload();
+    if (payload instanceof XMLStreamReader) {
+      XMLStreamReader reader=(XMLStreamReader)payload;
+      ByteArrayOutputStream out=new ByteArrayOutputStream();
+      StreamResult tempOut=new StreamResult(out);
+      XMLUtils.getTransformer().transform(XMLUtils.toXmlSource(reader),tempOut);
+      SOAPMessage request=javax.xml.soap.MessageFactory.newInstance().createMessage(null,new ByteArrayInputStream(out.toByteArray()));
+      Document content=request.getSOAPBody().extractContentAsDocument();
+      msg.setPayload(XMLUtils.toXml(content));
+    }
+ else {
+      msg.setPayload(msg.getPayloadAsString());
+    }
+  }
+ catch (  Exception e) {
+    throw new DefaultMuleException(MessageFactory.createStaticMessage("Error fetching SOAP message contents"),e);
+  }
+}
