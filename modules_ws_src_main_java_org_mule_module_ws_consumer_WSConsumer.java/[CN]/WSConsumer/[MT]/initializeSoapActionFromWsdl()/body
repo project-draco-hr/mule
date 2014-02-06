@@ -1,0 +1,32 @@
+{
+  try {
+    WSDLReader wsdlReader=WSDLFactory.newInstance().newWSDLReader();
+    Definition wsdlDefinition=wsdlReader.readWSDL(config.getWsdlLocation());
+    Service service=wsdlDefinition.getService(new QName(wsdlDefinition.getTargetNamespace(),config.getService()));
+    if (service == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Service %s not found in WSDL",config.getService()),this);
+    }
+    Port port=service.getPort(config.getPort());
+    if (port == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Port %s not found in WSDL",config.getPort()),this);
+    }
+    Binding binding=port.getBinding();
+    if (binding == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Port %s has no binding",config.getPort()),this);
+    }
+    BindingOperation operation=binding.getBindingOperation(this.operation,null,null);
+    if (operation == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Operation %s not found in WSDL",this.operation),this);
+    }
+    List extensions=operation.getExtensibilityElements();
+    for (    Object extension : extensions) {
+      if (extension instanceof SOAPOperation) {
+        this.soapAction=((SOAPOperation)extension).getSoapActionURI();
+        return;
+      }
+    }
+  }
+ catch (  WSDLException e) {
+    throw new InitialisationException(e,this);
+  }
+}

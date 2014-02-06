@@ -1,0 +1,39 @@
+{
+  MessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder();
+  chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      try {
+        MuleEvent result=processNext(event);
+        convertPayloadToString(result.getMessage());
+        return result;
+      }
+ catch (      DispatchException e) {
+        if (e.getCause() instanceof SoapFault) {
+          SoapFault soapFault=(SoapFault)e.getCause();
+          event.getMessage().setPayload(soapFault.getDetail());
+          convertPayloadToString(event.getMessage());
+          throw new SoapFaultException(event,soapFault.getFaultCode(),soapFault.getSubCode(),soapFault.getMessage(),soapFault.getDetail());
+        }
+ else {
+          throw e;
+        }
+      }
+    }
+  }
+);
+  chainBuilder.chain(createCxfOutboundMessageProcessor(config.getSecurity()));
+  chainBuilder.chain(new MessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      List<String> outboundProperties=new ArrayList<String>(event.getMessage().getOutboundPropertyNames());
+      for (      String outboundProperty : outboundProperties) {
+        if (outboundProperty.startsWith(SOAP_HEADERS_PROPERTY_PREFIX)) {
+          event.getMessage().removeProperty(outboundProperty,PropertyScope.OUTBOUND);
+        }
+      }
+      return event;
+    }
+  }
+);
+  chainBuilder.chain(config.createOutboundEndpoint());
+  return chainBuilder.build();
+}

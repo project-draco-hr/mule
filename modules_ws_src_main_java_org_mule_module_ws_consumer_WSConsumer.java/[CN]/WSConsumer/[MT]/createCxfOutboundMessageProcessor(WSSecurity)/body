@@ -2,7 +2,7 @@
   ProxyClientMessageProcessorBuilder cxfBuilder=new ProxyClientMessageProcessorBuilder();
   Map<String,Object> configProperties=new HashMap<String,Object>();
   cxfBuilder.setMuleContext(muleContext);
-  if (security != null) {
+  if (security != null && security.hasStrategies()) {
     for (    SecurityStrategy strategy : security.getStrategies()) {
       strategy.apply(configProperties);
     }
@@ -13,5 +13,9 @@
   }
   CxfOutboundMessageProcessor cxfOutboundMessageProcessor=cxfBuilder.build();
   cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new CheckFaultInterceptor());
+  cxfOutboundMessageProcessor.getClient().getOutInterceptors().add(new InputSoapHeadersInterceptor(muleContext));
+  cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new OutputSoapHeadersInterceptor(muleContext));
+  cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new ReversibleStaxInInterceptor());
+  cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new ResetStaxInterceptor());
   return cxfOutboundMessageProcessor;
 }

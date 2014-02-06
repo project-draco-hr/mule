@@ -1,0 +1,20 @@
+{
+  super(parserConfiguration,muleContext);
+  if (message != null) {
+    addFinalVariable("message",new MessageContext(message));
+    addVariable("payload",message.getPayload(),new VariableAssignmentCallback(){
+      @Override public void assignValue(      String name,      Object value,      Object newValue){
+        message.setPayload(newValue);
+      }
+    }
+);
+    if (message.getExceptionPayload() != null) {
+      addFinalVariable("exception",message.getExceptionPayload().getException());
+    }
+ else {
+      addFinalVariable("exception",null);
+    }
+    addFinalVariable("flowVars",new MessagePropertyMapContext(message,PropertyScope.INVOCATION));
+    addFinalVariable("sessionVars",new MessagePropertyMapContext(message,PropertyScope.SESSION));
+  }
+}
