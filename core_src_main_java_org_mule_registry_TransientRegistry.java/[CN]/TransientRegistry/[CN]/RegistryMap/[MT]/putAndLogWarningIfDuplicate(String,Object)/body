@@ -2,10 +2,11 @@
   Lock writeLock=registryLock.writeLock();
   try {
     writeLock.lock();
-    if (registry.containsKey(key)) {
+    final Object previousObject=registry.put(key,object);
+    if (previousObject != null && previousObject != object) {
+      addToLostObjectsListOnlyOnce(previousObject);
       logger.warn("TransientRegistry already contains an object named '" + key + "'.  The previous object will be overwritten.");
     }
-    registry.put(key,object);
   }
   finally {
     writeLock.unlock();
