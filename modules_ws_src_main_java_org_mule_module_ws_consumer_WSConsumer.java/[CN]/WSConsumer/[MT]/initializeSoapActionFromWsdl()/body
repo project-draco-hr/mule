@@ -1,7 +1,11 @@
 {
   try {
     WSDLReader wsdlReader=WSDLFactory.newInstance().newWSDLReader();
-    Definition wsdlDefinition=wsdlReader.readWSDL(config.getWsdlLocation());
+    URL url=IOUtils.getResourceAsUrl(config.getWsdlLocation(),getClass());
+    if (url == null) {
+      throw new InitialisationException(MessageFactory.createStaticMessage("Can't find wsdl at %s",config.getWsdlLocation()),this);
+    }
+    Definition wsdlDefinition=wsdlReader.readWSDL(url.toString());
     Service service=wsdlDefinition.getService(new QName(wsdlDefinition.getTargetNamespace(),config.getService()));
     if (service == null) {
       throw new InitialisationException(MessageFactory.createStaticMessage("Service %s not found in WSDL",config.getService()),this);
