@@ -1,0 +1,33 @@
+{
+  if (muleMessage != null) {
+    if (MESSAGE.equals(name)) {
+      return new SimpleValueResolver(new MessageContext(muleMessage));
+    }
+ else     if (PAYLOAD.equals(name)) {
+      return new MuleVariableResolver<Object>(PAYLOAD,muleMessage.getPayload(),null,new VariableAssignmentCallback<Object>(){
+        @Override public void assignValue(        String name,        Object value,        Object newValue){
+          muleMessage.setPayload(newValue);
+        }
+      }
+);
+    }
+ else     if (FLOW_VARS.equals(name)) {
+      return new SimpleValueResolver(new MessagePropertyMapContext(muleMessage,PropertyScope.INVOCATION));
+    }
+ else     if (EXCEPTION.equals(name)) {
+      if (muleMessage.getExceptionPayload() != null) {
+        return new SimpleValueResolver(muleMessage.getExceptionPayload().getException());
+      }
+ else {
+        return new SimpleValueResolver(null);
+      }
+    }
+ else     if (SESSION_VARS.equals(name)) {
+      return new SimpleValueResolver(new MessagePropertyMapContext(muleMessage,PropertyScope.SESSION));
+    }
+ else     if (MVELExpressionLanguageContext.MULE_MESSAGE_INTERNAL_VARIABLE.equals(name)) {
+      return new SimpleValueResolver(muleMessage);
+    }
+  }
+  return null;
+}
