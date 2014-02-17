@@ -1,9 +1,12 @@
 {
-  MuleContext muleContext=doCreateMuleContext(new DefaultMuleContextBuilder());
-  if (properties != null && !properties.isEmpty()) {
-    new SimpleConfigurationBuilder(properties).configure(muleContext);
+  return doCreateMuleContext(new DefaultMuleContextBuilder(),new ContextConfigurator(){
+    @Override public void configure(    MuleContext muleContext) throws ConfigurationException {
+      if (properties != null && !properties.isEmpty()) {
+        new SimpleConfigurationBuilder(properties).configure(muleContext);
+      }
+      new AutoConfigurationBuilder(configResources).configure(muleContext);
+      notifyMuleContextConfiguration(muleContext);
+    }
   }
-  new AutoConfigurationBuilder(configResources).configure(muleContext);
-  notifyMuleContextConfiguration(muleContext);
-  return muleContext;
+);
 }
