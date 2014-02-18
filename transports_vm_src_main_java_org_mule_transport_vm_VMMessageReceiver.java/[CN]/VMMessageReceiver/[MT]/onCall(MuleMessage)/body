@@ -2,10 +2,11 @@
   ClassLoader originalClassLoader=Thread.currentThread().getContextClassLoader();
   try {
     Thread.currentThread().setContextClassLoader(endpoint.getMuleContext().getExecutionClassLoader());
+    final MuleMessage messageToRoute=new DefaultMuleMessage(message.getPayload(),message,endpoint.getMuleContext());
     ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
     MuleEvent resultEvent=executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
       @Override public MuleEvent process() throws Exception {
-        MuleEvent event=routeMessage(message);
+        MuleEvent event=routeMessage(messageToRoute);
         MuleMessage returnedMessage=event == null ? null : event.getMessage();
         if (returnedMessage != null) {
           returnedMessage.release();
@@ -14,7 +15,7 @@
       }
     }
 );
-    return resultEvent != null ? resultEvent.getMessage() : null;
+    return resultEvent != null ? new DefaultMuleMessage(resultEvent.getMessage().getPayload(),resultEvent.getMessage(),message.getMuleContext()) : null;
   }
  catch (  MessagingException e) {
     return e.getMuleMessage();
