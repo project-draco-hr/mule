@@ -1,0 +1,13 @@
+{
+  String config="<db:select config-ref=\"derby-config\" xmlns:db=\"http://www.mulesoft.org/schema/mule/db\"><db:template-query-ref name=\"template\"/></db:select>";
+  Document document=XMLUnit.buildControlDocument(config);
+  String configRef="<db:derby-config name=\"derby-config\" url=\"jdbc:derby:muleEmbeddedDB;create=true\" xmlns:db=\"http://www.mulesoft.org/schema/mule/db\" driverClassName=\"org.apache.derby.jdbc.EmbeddedDriver\"/>";
+  String templateRef="<db:template-query name=\"template\" xmlns:db=\"http://www.mulesoft.org/schema/mule/db\"><db:parameterized-query><![CDATA[SELECT CURRENT_TIMESTAMP FROM SYSIBM.SYSDUMMY1]]></db:parameterized-query><db:in-param name=\"myParameter1\" defaultValue=\"lala\"/><db:in-param name=\"myParameter2\" defaultValue=\"#[payload.parameter2]\"/></db:template-query>";
+  Map<String,String> callbackData=new HashMap<String,String>();
+  callbackData.put("derby-config",configRef);
+  callbackData.put("template",templateRef);
+  XmlConfigurationCallback callback=new DatabaseConfigurationCallback(callbackData);
+  doTestMessageProcessor(document,callback,true);
+  doTestMessageProcessor(document,callback,true);
+  doTestMessageProcessor(document,callback,true);
+}

@@ -1,0 +1,20 @@
+{
+  XmlConfigurationMuleArtifactFactory factory=lookupArtifact();
+  MuleArtifact artifact=null;
+  try {
+    artifact=factory.getArtifactForMessageProcessor(document.getDocumentElement(),callback);
+    Assert.assertNotNull(artifact);
+    Assert.assertTrue(artifact.hasCapability(OperationMetaDataEnabled.class));
+    Assert.assertTrue(artifact.getCapability(OperationMetaDataEnabled.class) instanceof OperationMetaDataEnabled);
+    if (canConnect) {
+      OperationMetaDataEnabled m=artifact.getCapability(OperationMetaDataEnabled.class);
+      Assert.assertNull(m.getInputMetaData());
+      Assert.assertEquals(expectedResult,m.getOutputMetaData(null).getStatus());
+    }
+  }
+  finally {
+    if (artifact != null) {
+      factory.returnArtifact(artifact);
+    }
+  }
+}
