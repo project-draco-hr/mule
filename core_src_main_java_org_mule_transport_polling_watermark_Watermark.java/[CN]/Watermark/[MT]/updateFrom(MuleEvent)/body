@@ -1,22 +1,15 @@
 {
   try {
-    String variableName=resolveVariable(event);
-    Object watermarkValue=this.getUpdatedValue(event,variableName);
+    Object watermarkValue=this.getUpdatedValue(event);
     if (watermarkValue == null) {
       logger.warn(CoreMessages.nullWatermark().getMessage());
+      return;
     }
- else     if (watermarkValue instanceof Serializable) {
-synchronized (objectStore) {
-        if (objectStore.contains(variableName)) {
-          objectStore.remove(variableName);
-        }
-        if (watermarkValue != null) {
-          objectStore.store(variableName,(Serializable)watermarkValue);
-        }
-      }
+    if (watermarkValue instanceof Serializable) {
+      this.updateWith(event,(Serializable)watermarkValue);
     }
  else {
-      throw new IllegalArgumentException(CoreMessages.notSerializableWatermark(variableName).getMessage());
+      throw new IllegalArgumentException(CoreMessages.notSerializableWatermark(this.resolveVariable(event)).getMessage());
     }
   }
  catch (  Exception e) {
