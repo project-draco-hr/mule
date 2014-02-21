@@ -11,7 +11,7 @@
     session=connector.getSession(transacted,topic);
     if (transacted && !tx.isXA()) {
       final Session finalSession=session;
-      getConnector().getMuleContext().registerListener(new TransactionNotificationListener<TransactionNotification>(){
+      getEndpoint().getMuleContext().registerListener(new TransactionNotificationListener<TransactionNotification>(){
         public void onNotification(        TransactionNotification txNotification){
           final int txAction=txNotification.getAction();
           final String txId=txNotification.getTransactionStringId();
@@ -29,13 +29,13 @@
     if (selectorFilter != null) {
       final String expressionTemplate=selectorFilter.getExpression();
       if (StringUtils.isNotBlank(expressionTemplate)) {
-        selector=connector.getMuleContext().getExpressionManager().parse(expressionTemplate,(MuleMessage)null);
+        selector=getEndpoint().getMuleContext().getExpressionManager().parse(expressionTemplate,(MuleMessage)null);
       }
     }
  else     if (endpoint.getProperties() != null) {
       final String expressionTemplate=(String)endpoint.getProperty(JmsConstants.JMS_SELECTOR_PROPERTY);
       if (StringUtils.isNotBlank(expressionTemplate)) {
-        selector=connector.getMuleContext().getExpressionManager().parse(expressionTemplate,(MuleMessage)null);
+        selector=getEndpoint().getMuleContext().getExpressionManager().parse(expressionTemplate,(MuleMessage)null);
       }
     }
     String tempDurable=(String)endpoint.getProperties().get(JmsConstants.DURABLE_PROPERTY);
