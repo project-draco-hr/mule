@@ -1,15 +1,18 @@
 {
-  MVELExpressionLanguageContext factory=createExpressionLanguageContext();
-  factory.addPrivateVariable(MVELExpressionLanguageContext.MULE_MESSAGE_INTERNAL_VARIABLE,message);
-  if (vars != null) {
-    factory.appendFactory(new CachedMapVariableResolverFactory(vars));
-  }
-  factory.appendFactory(createMessageVariableResolverFactory(message));
+  MVELExpressionLanguageContext context=createExpressionLanguageContext(vars);
+  context.addChildContext(staticContext);
+  VariableResolverFactory messageResolverFactory=new MessageVariableResolverFactory(message);
+  context.addChildContext(messageResolverFactory);
   if (useGlobalConfiguration) {
-    factory.appendFactory(createGlobalVariableResolverFactory(factory));
+    if (autoResolveVariables) {
+      context.addChildContext(createGlobalVariableResolverFactory(staticContext,messageResolverFactory,createVariableVariableResolverFactory(message)));
+    }
+ else {
+      context.addChildContext(createGlobalVariableResolverFactory(staticContext,messageResolverFactory));
+    }
   }
-  if (autoResolveVariables) {
-    factory.localFactory.appendFactory(createVariableVariableResolverFactory(message));
+ else   if (autoResolveVariables) {
+    context.addChildContext(createVariableVariableResolverFactory(message));
   }
-  return (T)evaluateInternal(expression,factory);
+  return evaluateInternal(expression,context);
 }

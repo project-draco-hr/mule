@@ -5,11 +5,12 @@
   int batchSize=getBatchSize(queue.size());
   MuleEvent message=(MuleEvent)queue.poll(connector.getQueueTimeout());
   if (message != null) {
+    ((DefaultMuleMessage)message.getMessage()).setMuleContext(endpoint.getMuleContext());
     messages.add(message.getMessage());
     for (int i=0; i < batchSize && message != null; i++) {
       message=(MuleEvent)queue.poll(0);
       if (message != null) {
-        messages.add(message.getMessage());
+        messages.add(new DefaultMuleMessage(message.getMessage(),endpoint.getMuleContext()));
       }
     }
   }

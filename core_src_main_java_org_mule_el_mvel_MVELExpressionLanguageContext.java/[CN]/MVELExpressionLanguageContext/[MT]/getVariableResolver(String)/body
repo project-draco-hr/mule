@@ -1,7 +1,14 @@
 {
   VariableResolver variableResolver=variableResolvers.get(name);
   if (variableResolver == null) {
-    variableResolver=nextFactory.getVariableResolver(name);
+    for (    VariableResolverFactory child : children) {
+      if (child.isResolveable(name)) {
+        return child.getVariableResolver(name);
+      }
+    }
+    if (nextFactory != null) {
+      return nextFactory.getVariableResolver(name);
+    }
   }
   return variableResolver;
 }
