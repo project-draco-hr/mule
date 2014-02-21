@@ -1,0 +1,36 @@
+{
+  WSDLReader reader=wsdlManager.getWSDLFactory().newWSDLReader();
+  reader.setFeature("javax.wsdl.verbose",false);
+  reader.setFeature("javax.wsdl.importDocuments",true);
+  reader.setExtensionRegistry(wsdlManager.getExtensionRegistry());
+  CatalogWSDLLocator catLocator=new CatalogWSDLLocator(url,bus);
+  ResourceManagerWSDLLocator wsdlLocator=new ResourceManagerWSDLLocator(url,catLocator,bus);
+  InputSource src=wsdlLocator.getBaseInputSource();
+  Definition def;
+  if (src.getByteStream() != null || src.getCharacterStream() != null) {
+    Document doc;
+    XMLStreamReader xmlReader=null;
+    try {
+      xmlReader=StaxUtils.createXMLStreamReader(src);
+      doc=StaxUtils.read(xmlReader,true);
+      if (src.getSystemId() != null) {
+        try {
+          doc.setDocumentURI(new String(src.getSystemId()));
+        }
+ catch (        Exception e) {
+        }
+      }
+    }
+ catch (    Exception e) {
+      throw new WSDLException(WSDLException.PARSER_ERROR,e.getMessage(),e);
+    }
+ finally {
+      StaxUtils.close(xmlReader);
+    }
+    def=reader.readWSDL(wsdlLocator,doc.getDocumentElement());
+  }
+ else {
+    def=reader.readWSDL(wsdlLocator);
+  }
+  return def;
+}
