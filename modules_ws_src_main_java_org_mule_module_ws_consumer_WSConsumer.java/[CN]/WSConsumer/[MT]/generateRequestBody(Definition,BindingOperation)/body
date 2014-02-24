@@ -1,0 +1,23 @@
+{
+  List<String> schemas;
+  try {
+    schemas=WSDLUtils.getSchemas(wsdlDefinition);
+  }
+ catch (  TransformerException e) {
+    logger.warn("Unable to get schemas from WSDL, cannot check if the operation requires input parameters",e);
+    return null;
+  }
+  SOAPBody soapBody=WSDLUtils.getSoapBody(bindingOperation);
+  if (soapBody == null) {
+    logger.warn("No SOAP body defined in the WSDL for the specified operation, cannot check if the operation requires input parameters");
+    return null;
+  }
+  Part part=getPart(soapBody,bindingOperation.getOperation().getInput().getMessage());
+  DefaultXmlMetaDataModel model=new DefaultXmlMetaDataModel(schemas,part.getElementName(),Charset.defaultCharset());
+  if (model.getFields().isEmpty()) {
+    logger.info("The selected operation does not require input parameters, the payload will be ignored");
+    QName element=part.getElementName();
+    return String.format("<ns:%s xmlns:ns=\"%s\" />",element.getLocalPart(),element.getNamespaceURI());
+  }
+  return null;
+}
