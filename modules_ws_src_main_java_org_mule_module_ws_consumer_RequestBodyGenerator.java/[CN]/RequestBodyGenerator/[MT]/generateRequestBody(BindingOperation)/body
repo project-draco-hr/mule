@@ -9,18 +9,23 @@
   }
   SOAPBody soapBody=WSDLUtils.getSoapBody(bindingOperation);
   if (soapBody == null) {
-    logger.warn("No SOAP body defined in the WSDL for the specified operation, cannot check if the operation requires input parameters");
+    logger.warn("No SOAP body defined in the WSDL for the specified operation, cannot check if the operation " + "requires input parameters. The payload will be used as SOAP body.");
     return null;
   }
   Part part=getSinglePart(soapBody,bindingOperation.getOperation().getInput().getMessage());
   if (part == null || part.getElementName() == null) {
     return null;
   }
-  DefaultXmlMetaDataModel model=new DefaultXmlMetaDataModel(schemas,part.getElementName(),Charset.defaultCharset());
-  if (model.getFields().isEmpty()) {
-    logger.info("The selected operation does not require input parameters, the payload will be ignored");
-    QName element=part.getElementName();
-    return String.format("<ns:%s xmlns:ns=\"%s\" />",element.getLocalPart(),element.getNamespaceURI());
+  try {
+    DefaultXmlMetaDataModel model=new DefaultXmlMetaDataModel(schemas,part.getElementName(),Charset.defaultCharset());
+    if (model.getFields().isEmpty()) {
+      logger.info("The selected operation does not require input parameters, the payload will be ignored");
+      QName element=part.getElementName();
+      return String.format("<ns:%s xmlns:ns=\"%s\" />",element.getLocalPart(),element.getNamespaceURI());
+    }
+  }
+ catch (  MetaDataGenerationException e) {
+    logger.warn("Unable to check if the operation requires input parameters, the payload will be used as SOAP body",e);
   }
   return null;
 }
