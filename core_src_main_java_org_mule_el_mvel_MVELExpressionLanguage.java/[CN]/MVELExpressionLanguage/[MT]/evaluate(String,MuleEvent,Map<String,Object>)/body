@@ -1,19 +1,9 @@
 {
   MVELExpressionLanguageContext context=createExpressionLanguageContext(vars);
   context.addChildContext(staticContext);
-  VariableResolverFactory eventResolverFactory=new EventVariableResolverFactory(event);
-  VariableResolverFactory messageResolverFactory=new MessageVariableResolverFactory(event.getMessage());
-  context.addChildContext(messageResolverFactory);
-  context.addChildContext(eventResolverFactory);
-  if (useGlobalConfiguration) {
-    if (autoResolveVariables) {
-      context.addChildContext(createGlobalVariableResolverFactory(staticContext,messageResolverFactory,eventResolverFactory,createVariableVariableResolverFactory(event)));
-    }
- else {
-      context.addChildContext(createGlobalVariableResolverFactory(staticContext,messageResolverFactory,eventResolverFactory));
-    }
-  }
- else   if (autoResolveVariables) {
+  context.addChildContext(new EventVariableResolverFactory(event));
+  context.addChildContext(globalContext);
+  if (autoResolveVariables) {
     context.addChildContext(createVariableVariableResolverFactory(event));
   }
   return evaluateInternal(expression,context);
