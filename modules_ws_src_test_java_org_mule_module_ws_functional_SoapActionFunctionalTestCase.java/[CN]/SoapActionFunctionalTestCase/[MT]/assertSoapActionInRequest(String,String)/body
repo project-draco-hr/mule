@@ -3,7 +3,13 @@
   MuleEvent event=getTestEvent("<test/>");
   getFunctionalTestComponent("server").setEventCallback(new EventCallback(){
     @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
-      errorCollector.checkThat((String)context.getMessage().getInboundProperty("SOAPAction"),equalTo(String.format("\"%s\"",expectedSoapAction)));
+      String soapAction=context.getMessage().getInboundProperty("SOAPAction");
+      if (expectedSoapAction == null) {
+        errorCollector.checkThat(soapAction,nullValue());
+      }
+ else {
+        errorCollector.checkThat(soapAction,equalTo(String.format("\"%s\"",expectedSoapAction)));
+      }
     }
   }
 );
