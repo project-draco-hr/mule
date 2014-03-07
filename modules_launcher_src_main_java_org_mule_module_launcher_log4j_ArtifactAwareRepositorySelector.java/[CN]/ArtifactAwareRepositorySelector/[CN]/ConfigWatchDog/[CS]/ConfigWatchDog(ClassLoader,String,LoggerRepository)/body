@@ -1,13 +1,16 @@
 {
-  if (classLoader instanceof MuleApplicationClassLoader) {
-    ((MuleApplicationClassLoader)classLoader).addShutdownListener(new MuleApplicationClassLoader.ShutdownListener(){
+  if (classLoader instanceof ArtifactClassLoader) {
+    ((ArtifactClassLoader)classLoader).addShutdownListener(new ShutdownListener(){
       @Override public void execute(){
         final ClassLoader ccl=Thread.currentThread().getContextClassLoader();
         ArtifactAwareRepositorySelector.this.cache.remove(ccl);
-        interrupted=true;
+        ConfigWatchDog.this.interrupt();
       }
     }
 );
+  }
+ else   if (!(classLoader instanceof MuleContainerSystemClassLoader)) {
+    throw new MuleRuntimeException(CoreMessages.createStaticMessage("Can't create a ConfigWatchDog thread for " + "current class loader of type %s",classLoader.getClass().getName()));
   }
   this.filename=filename;
   this.file=new File(filename);
