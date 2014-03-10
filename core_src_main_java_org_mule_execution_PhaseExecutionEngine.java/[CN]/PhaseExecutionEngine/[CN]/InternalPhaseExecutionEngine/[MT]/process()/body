@@ -1,9 +1,17 @@
 {
-  for (  MessageProcessPhase phase : phaseList) {
-    if (phase.supportsTemplate(messageProcessTemplate)) {
-      phase.runPhase(messageProcessTemplate,messageProcessContext,this);
-      return;
+  ClassLoader originalClassLoader=null;
+  try {
+    originalClassLoader=Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(messageProcessContext.getExecutionClassLoader());
+    for (    MessageProcessPhase phase : phaseList) {
+      if (phase.supportsTemplate(messageProcessTemplate)) {
+        phase.runPhase(messageProcessTemplate,messageProcessContext,this);
+        return;
+      }
+      currentPhase++;
     }
-    currentPhase++;
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
   }
 }

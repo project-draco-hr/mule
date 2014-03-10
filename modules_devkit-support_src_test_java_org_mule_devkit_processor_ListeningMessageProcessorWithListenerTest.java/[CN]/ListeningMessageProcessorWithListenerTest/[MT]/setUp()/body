@@ -1,0 +1,15 @@
+{
+  this.processor=new TestInterceptingMessageProcessor();
+  this.processor.setMuleContext(this.muleContext);
+  this.processor.setFlowConstruct(this.flowConstruct);
+  this.listener=mock(MessageProcessor.class);
+  when(this.listener.process(any(MuleEvent.class))).thenAnswer(new Answer<MuleEvent>(){
+    @Override public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
+      MuleEvent event=(MuleEvent)invocation.getArguments()[0];
+      MuleEvent response=getMuleEvent();
+      when(response.getMessage().getPayload()).thenReturn(event.getMessage().getPayload());
+      return response;
+    }
+  }
+);
+}
