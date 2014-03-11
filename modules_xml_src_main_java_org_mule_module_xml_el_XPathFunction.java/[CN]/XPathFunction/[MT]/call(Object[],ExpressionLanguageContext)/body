@@ -1,14 +1,21 @@
 {
+  this.validateParams(params);
+  final MessageContext ctx=context.getVariable("message");
+  final String xpathExpression=this.getXpathExpression(params);
+  final boolean hasCustomPayload=this.hasCustomPayload(params);
+  MuleMessage muleMessage=context.getVariable(MVELExpressionLanguageContext.MULE_MESSAGE_INTERNAL_VARIABLE);
+  if (hasCustomPayload) {
+    muleMessage=new DefaultMuleMessage(params[1],muleContext);
+  }
+ else   if (muleMessage == null) {
+    muleMessage=new DefaultMuleMessage(ctx.getPayload(),muleContext);
+  }
+  String evaluator=hasCustomPayload ? NODE_EVALUATOR : BRANCH_EVALUATOR;
   try {
-    MessageContext ctxMessage=(MessageContext)context.getVariable("message");
-    MuleMessage message=new DefaultMuleMessage(ctxMessage.getPayload(),muleContext);
-    String evaluator="xpath-branch:";
-    if (params.length != 1) {
-      evaluator="xpath-node:";
-      message=new DefaultMuleMessage(params[1],muleContext);
+    Object result=muleContext.getExpressionManager().evaluate(evaluator + xpathExpression,muleMessage);
+    if (!hasCustomPayload) {
+      ctx.setPayload(muleMessage.getPayload());
     }
-    Object result=muleContext.getExpressionManager().evaluate(evaluator + params[0],message);
-    ctxMessage.setPayload(message.getPayload());
     return result;
   }
  catch (  Exception e) {
