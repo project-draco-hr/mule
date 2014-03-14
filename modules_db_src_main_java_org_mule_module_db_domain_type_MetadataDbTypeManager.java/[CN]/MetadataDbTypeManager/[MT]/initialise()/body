@@ -1,0 +1,29 @@
+{
+  DbConnection connection;
+  try {
+    connection=dbConnectionFactory.createConnection(TransactionalAction.NOT_SUPPORTED);
+  }
+ catch (  SQLException e) {
+    throw new IllegalStateException("Cannot obtain type information form database");
+  }
+  try {
+    DatabaseMetaData metaData=connection.getMetaData();
+    ResultSet typeInfo=metaData.getTypeInfo();
+    ResultSetIterator resultSetIterator=new ResultSetIterator(connection,typeInfo,new InsensitiveMapRowHandler(),new StatementStreamingResultSetCloser());
+    while (resultSetIterator.hasNext()) {
+      Map<String,Object> typeRecord=resultSetIterator.next();
+      Number data_type=(Number)typeRecord.get("DATA_TYPE");
+      String type_name=(String)typeRecord.get("TYPE_NAME");
+      registerType(new ResolvedDbType(data_type.intValue(),type_name));
+      if (logger.isDebugEnabled()) {
+        logger.debug("Type: " + typeRecord);
+      }
+    }
+  }
+ catch (  SQLException e) {
+    throw new IllegalStateException("Cannot process metadata information",e);
+  }
+ finally {
+    dbConnectionFactory.releaseConnection(connection);
+  }
+}

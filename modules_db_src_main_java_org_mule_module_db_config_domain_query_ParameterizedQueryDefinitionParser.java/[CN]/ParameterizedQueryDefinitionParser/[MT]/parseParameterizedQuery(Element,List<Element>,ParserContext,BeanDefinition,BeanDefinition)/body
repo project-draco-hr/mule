@@ -1,0 +1,42 @@
+{
+  String sql=queryElement.getTextContent();
+  QueryTemplateParser sqlParser=new SimpleQueryTemplateParser();
+  QueryTemplate queryTemplate=sqlParser.parse(sql);
+  if (queryTemplate.getType() == QueryType.STORE_PROCEDURE_CALL) {
+    List<BeanDefinition> newParams=parseStoreProcedureParams(paramElements,nestedCtx);
+    BeanDefinitionBuilder definitionFactoryBean=BeanDefinitionBuilder.genericBeanDefinition(QueryTemplate.class);
+    definitionFactoryBean.addConstructorArgValue(queryTemplate.getSqlText());
+    definitionFactoryBean.addConstructorArgValue(queryTemplate.getType());
+    definitionFactoryBean.addConstructorArgValue(newParams);
+    BeanDefinitionBuilder queryBuilder=BeanDefinitionBuilder.genericBeanDefinition(Query.class);
+    queryBuilder.addConstructorArgValue(definitionFactoryBean.getBeanDefinition());
+    BeanDefinition queryBean=queryBuilder.getBeanDefinition();
+    BeanDefinitionBuilder queryResolverFactoryBean=BeanDefinitionBuilder.genericBeanDefinition(QueryResolverFactoryBean.class);
+    queryResolverFactoryBean.addConstructorArgValue(queryBean);
+    queryResolverFactoryBean.addConstructorArgValue(sqlParamResolver);
+    queryResolverFactoryBean.addConstructorArgValue(dbConfigResolver);
+    return queryResolverFactoryBean.getBeanDefinition();
+  }
+ else {
+    List<BeanDefinition> params=parseParameterValues(paramElements,nestedCtx);
+    BeanDefinitionBuilder queryBuilder=BeanDefinitionBuilder.genericBeanDefinition(Query.class);
+    queryBuilder.addConstructorArgValue(queryTemplate);
+    if (params.size() == 0 && !queryTemplate.getParams().isEmpty()) {
+      List<QueryParamValue> paramValues=new ArrayList<QueryParamValue>();
+      for (      InputQueryParam inputSqlParam : queryTemplate.getInputParams()) {
+        QueryParamValue paramValue=new QueryParamValue(inputSqlParam.getName(),inputSqlParam.getValue());
+        paramValues.add(paramValue);
+      }
+      queryBuilder.addConstructorArgValue(paramValues);
+    }
+ else {
+      queryBuilder.addConstructorArgValue(params);
+    }
+    BeanDefinition queryBean=queryBuilder.getBeanDefinition();
+    BeanDefinitionBuilder queryResolverFactoryBean=BeanDefinitionBuilder.genericBeanDefinition(QueryResolverFactoryBean.class);
+    queryResolverFactoryBean.addConstructorArgValue(queryBean);
+    queryResolverFactoryBean.addConstructorArgValue(sqlParamResolver);
+    queryResolverFactoryBean.addConstructorArgValue(dbConfigResolver);
+    return queryResolverFactoryBean.getBeanDefinition();
+  }
+}

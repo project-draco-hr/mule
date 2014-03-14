@@ -1,0 +1,15 @@
+{
+  String queryTemplateRef=queryElement.getAttribute(NAME_ATTRIBUTE);
+  List<BeanDefinition> paramValues=parseParameterValues(paramElements,nestedCtx);
+  BeanDefinitionBuilder queryTemplateFactoryBean=BeanDefinitionBuilder.genericBeanDefinition(QueryTemplateFactoryBean.class);
+  queryTemplateFactoryBean.addConstructorArgReference(queryTemplateRef);
+  queryTemplateFactoryBean.addConstructorArgValue(paramValues);
+  BeanDefinitionBuilder queryBuilder=BeanDefinitionBuilder.genericBeanDefinition(Query.class);
+  queryBuilder.addConstructorArgValue(queryTemplateFactoryBean.getBeanDefinition());
+  BeanDefinition queryTemplate=queryBuilder.getBeanDefinition();
+  BeanDefinitionBuilder queryResolverBean=BeanDefinitionBuilder.genericBeanDefinition(QueryResolverFactoryBean.class);
+  queryResolverBean.addConstructorArgValue(queryTemplate);
+  queryResolverBean.addConstructorArgValue(sqlParamResolver);
+  queryResolverBean.addConstructorArgValue(dbConfigResolver);
+  return queryResolverBean.getBeanDefinition();
+}

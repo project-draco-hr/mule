@@ -1,0 +1,17 @@
+{
+  String config=element.getAttribute(CONFIG_PROPERTY);
+  BeanDefinitionBuilder wrapper;
+  if ("".equals(config)) {
+    wrapper=BeanDefinitionBuilder.genericBeanDefinition(DefaultDbConfigResolverFactoryBean.class);
+  }
+ else   if (config.startsWith("#[")) {
+    wrapper=BeanDefinitionBuilder.genericBeanDefinition(DynamicDbConfigResolver.class);
+    wrapper.addConstructorArgValue(config);
+  }
+ else {
+    wrapper=BeanDefinitionBuilder.genericBeanDefinition(StaticDbConfigResolver.class);
+    wrapper.addConstructorArgReference(config);
+  }
+  dbConfigResolverFactoryBeanDefinition=wrapper.getBeanDefinition();
+  builder.addConstructorArgValue(dbConfigResolverFactoryBeanDefinition);
+}

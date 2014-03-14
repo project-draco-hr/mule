@@ -1,0 +1,37 @@
+{
+  if (connection == null) {
+    return;
+  }
+  try {
+    if (connection.isClosed()) {
+      return;
+    }
+  }
+ catch (  SQLException e) {
+    return;
+  }
+  final Transaction transaction=dbTransactionManager.getTransaction();
+  boolean closeConnection=false;
+  if (connection.getTransactionalAction() == TransactionalAction.NOT_SUPPORTED) {
+    closeConnection=true;
+  }
+ else   if (connection.getTransactionalAction() == TransactionalAction.JOIN_IF_POSSIBLE && transaction == null) {
+    closeConnection=true;
+  }
+  if (closeConnection) {
+    try {
+      if (!connection.getAutoCommit()) {
+        connection.commit();
+      }
+    }
+ catch (    SQLException e) {
+      throw new ConnectionCommitException(e);
+    }
+    try {
+      connection.close();
+    }
+ catch (    SQLException e) {
+      throw new ConnectionClosingException(e);
+    }
+  }
+}

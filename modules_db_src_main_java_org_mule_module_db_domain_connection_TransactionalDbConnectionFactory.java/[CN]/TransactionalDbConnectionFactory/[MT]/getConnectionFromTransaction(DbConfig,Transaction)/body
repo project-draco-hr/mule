@@ -1,0 +1,22 @@
+{
+  Connection con;
+  if (tx.hasResource(config.getDataSource())) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Retrieving connection from current transaction: " + tx);
+    }
+    con=(Connection)tx.getResource(config.getDataSource());
+  }
+ else {
+    con=getConnectionFromDataSource(config);
+    try {
+      tx.bindResource(config.getDataSource(),con);
+    }
+ catch (    TransactionException e) {
+      if (con != null && !con.isClosed()) {
+        con.close();
+      }
+      throw new ConnectionBindingException("Could not bind connection to current transaction: " + tx,e);
+    }
+  }
+  return con;
+}
