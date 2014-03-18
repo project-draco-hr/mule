@@ -1,12 +1,11 @@
 {
-  Query query=createSelectQuery(STATIC_SQL_TEXT,new Object[]{"foo"});
-  QueryParamResolver queryParamResolver=mock(QueryParamResolver.class);
-  QueryResolver queryResolver=new ParametrizedQueryResolver(query,queryParamResolver);
+  ParamValueResolver paramValueResolver=mock(ParamValueResolver.class);
+  QueryResolver queryResolver=new ParametrizedQueryResolver(resolvedTemplateQuery,paramValueResolver);
   List<QueryParamValue> resolvedParams=Collections.singletonList(new QueryParamValue("param1","foo"));
-  when(queryParamResolver.resolveParams(muleEvent,query.getParamValues())).thenReturn(resolvedParams);
-  Query resolvedQuery=queryResolver.resolve(muleEvent);
-  assertThat(query,not(sameInstance(resolvedQuery)));
-  assertThat(query.getQueryTemplate(),sameInstance(resolvedQuery.getQueryTemplate()));
+  when(paramValueResolver.resolveParams(muleEvent,resolvedTemplateQuery.getParamValues())).thenReturn(resolvedParams);
+  Query resolvedQuery=queryResolver.resolve(null,muleEvent);
+  assertThat(resolvedTemplateQuery,not(sameInstance(resolvedQuery)));
+  assertThat(resolvedTemplateQuery.getQueryTemplate(),sameInstance(resolvedQuery.getQueryTemplate()));
   assertThat(resolvedParams,sameInstance(resolvedQuery.getParamValues()));
   assertThat((String)resolvedParams.get(0).getValue(),equalTo("foo"));
 }
