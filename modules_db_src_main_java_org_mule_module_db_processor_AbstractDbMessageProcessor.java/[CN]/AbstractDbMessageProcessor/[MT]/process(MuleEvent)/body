@@ -1,0 +1,23 @@
+{
+  DbConnection connection=null;
+  DbConfig dbConfig=dbConfigResolver.resolve(muleEvent);
+  try {
+    connection=dbConfig.getConnectionFactory().createConnection(transactionalAction);
+    Object result=executeQuery(connection,muleEvent);
+    if (target == null || "".equals(target) || "#[payload]".equals(target)) {
+      muleEvent.getMessage().setPayload(result);
+    }
+ else {
+      muleContext.getExpressionManager().enrich(target,muleEvent,result);
+    }
+    return processNext(muleEvent);
+  }
+ catch (  SQLException e) {
+    throw new DefaultMuleException(e);
+  }
+ finally {
+    if (connection != null && mustCloseConnection()) {
+      dbConfig.getConnectionFactory().releaseConnection(connection);
+    }
+  }
+}

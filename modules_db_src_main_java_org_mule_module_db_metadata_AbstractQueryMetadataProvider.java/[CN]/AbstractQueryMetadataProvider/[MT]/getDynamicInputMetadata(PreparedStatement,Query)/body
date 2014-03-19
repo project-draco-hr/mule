@@ -1,0 +1,35 @@
+{
+  List<InputQueryParam> inputParams=query.getQueryTemplate().getInputParams();
+  if (inputParams.size() == 0) {
+    return null;
+  }
+  List<String> fieldNames=new ArrayList<String>();
+  for (  InputQueryParam inputParam : inputParams) {
+    String field=getReferencedField(inputParam);
+    if (field == null) {
+      return null;
+    }
+    fieldNames.add(field);
+  }
+  ParameterMetaData parameterMetaData;
+  try {
+    parameterMetaData=statement.getParameterMetaData();
+  }
+ catch (  SQLException e) {
+    return new DefaultResult<MetaData>(null,Result.Status.FAILURE,"Driver did not return metadata for the provided SQL");
+  }
+  try {
+    Map<String,MetaDataModel> recordModels=new HashMap<String,MetaDataModel>();
+    int i=1;
+    for (    String fieldName : fieldNames) {
+      int dataType=parameterMetaData.getParameterType(i++);
+      recordModels.put(fieldName,getDataTypeMetadataModel(dataType));
+    }
+    DefaultDefinedMapMetaDataModel recordModel=new DefaultDefinedMapMetaDataModel(recordModels);
+    DefaultMetaData defaultMetaData=new DefaultMetaData(recordModel);
+    return new DefaultResult<MetaData>(defaultMetaData);
+  }
+ catch (  SQLException e) {
+    return new DefaultResult<MetaData>(null,Result.Status.FAILURE,e.getMessage(),FailureType.UNSPECIFIED,e);
+  }
+}

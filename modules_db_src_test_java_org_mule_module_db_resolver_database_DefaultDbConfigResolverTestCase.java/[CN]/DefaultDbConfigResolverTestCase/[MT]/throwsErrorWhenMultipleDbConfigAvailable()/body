@@ -1,0 +1,20 @@
+{
+  DbConfig dbConfig1=mock(DbConfig.class);
+  when(dbConfig1.getName()).thenReturn("dbConfig1");
+  DbConfig dbConfig2=mock(DbConfig.class);
+  when(dbConfig2.getName()).thenReturn("dbConfig2");
+  MuleRegistry registry=mock(MuleRegistry.class);
+  Collection<DbConfig> foundDbConfigs=new ArrayList<DbConfig>();
+  foundDbConfigs.add(dbConfig1);
+  foundDbConfigs.add(dbConfig2);
+  when(registry.lookupObjects(DbConfig.class)).thenReturn(foundDbConfigs);
+  DefaultDbConfigResolver dbConfigResolver=new DefaultDbConfigResolver(registry);
+  try {
+    dbConfigResolver.resolve(muleEvent);
+    fail("Was supposed to fail when there are multiple dbConfigs available");
+  }
+ catch (  UnresolvableDbConfigException e) {
+    assertThat(e.getMessage(),containsString("dbConfig1"));
+    assertThat(e.getMessage(),containsString("dbConfig2"));
+  }
+}

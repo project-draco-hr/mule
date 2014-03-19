@@ -1,0 +1,23 @@
+{
+  DbConnection connection=null;
+  DbConfig dbConfig=dbConfigResolver.resolve(null);
+  try {
+    try {
+      connection=dbConfig.getConnectionFactory().createConnection(TransactionalAction.NOT_SUPPORTED);
+    }
+ catch (    SQLException e) {
+      return new DefaultResult<MetaData>(null,Result.Status.FAILURE,e.getMessage(),FailureType.CONNECTION_FAILURE,e);
+    }
+    PreparedStatement preparedStatement;
+    try {
+      preparedStatement=connection.prepareStatement(query.getQueryTemplate().getSqlText());
+    }
+ catch (    SQLException e) {
+      return new DefaultResult<MetaData>(null,Result.Status.FAILURE,e.getMessage(),FailureType.INVALID_CONFIGURATION,e);
+    }
+    return metadataResolver.resolveMetaData(preparedStatement,query);
+  }
+  finally {
+    dbConfig.getConnectionFactory().releaseConnection(connection);
+  }
+}
