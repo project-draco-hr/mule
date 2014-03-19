@@ -2,9 +2,15 @@
   FTPClient client=null;
   try {
     client=connector.createFtpClient(endpoint);
-    FTPFile fileToProcess=findFileToProcess(client);
-    if (fileToProcess == null) {
-      return null;
+    FTPFile fileToProcess;
+    if (connector.isFile(endpoint,client)) {
+      fileToProcess=client.listFiles(endpoint.getEndpointURI().getPath())[0];
+    }
+ else {
+      fileToProcess=findFileToProcess(client);
+      if (fileToProcess == null) {
+        return null;
+      }
     }
     fileToProcess=prepareFile(client,fileToProcess);
     FtpMuleMessageFactory messageFactory=createMuleMessageFactory(client);
