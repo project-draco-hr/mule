@@ -1,0 +1,64 @@
+{
+  this.runFlow("put","start the consumers");
+  final JmsConnector connector=muleContext.getRegistry().lookupObject("activemqconnector");
+  PollingProber prober=new PollingProber(5000,500);
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      Collection<MessageReceiver> receivers=connector.getReceivers().values();
+      if (receivers != null && receivers.size() == 1) {
+        try {
+          receiver=(MultiConsumerJmsMessageReceiver)receivers.iterator().next();
+          assertConsumersCount();
+        }
+ catch (        AssertionError e) {
+          return false;
+        }
+      }
+      return true;
+    }
+    @Override public String describeFailure(){
+      return "receivers never started";
+    }
+  }
+);
+  this.stopBroker();
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return receiver.consumers.isEmpty();
+    }
+    @Override public String describeFailure(){
+      return "consumers were never released";
+    }
+  }
+);
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      try {
+        startBroker();
+        return true;
+      }
+ catch (      Exception e) {
+        return false;
+      }
+    }
+    @Override public String describeFailure(){
+      return "could not restart broker";
+    }
+  }
+);
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      try {
+        assertConsumersCount();
+        return true;
+      }
+ catch (      AssertionError e) {
+        return false;
+      }
+    }
+    @Override public String describeFailure(){
+      return "receivers never came back";
+    }
+  }
+);
+}
