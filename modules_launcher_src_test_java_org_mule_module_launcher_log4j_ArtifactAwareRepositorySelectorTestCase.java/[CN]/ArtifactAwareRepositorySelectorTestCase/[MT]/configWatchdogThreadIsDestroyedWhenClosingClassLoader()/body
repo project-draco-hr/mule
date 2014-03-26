@@ -1,9 +1,17 @@
 {
   Prober prober=new PollingProber(3000,100);
-  ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
+  final ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
   List<ClassLoader> classLoaders=new ArrayList<ClassLoader>();
   classLoaders.add(currentClassLoader);
-  classLoaders.add(new MuleApplicationClassLoader(TEST_APP_NAME,currentClassLoader));
+  classLoaders.add(new MuleApplicationClassLoader(TEST_APP_NAME,currentClassLoader){
+    public URL findLocalResource(    String resourceName){
+      if (resourceName != null && resourceName.startsWith("log4j")) {
+        return currentClassLoader.getResource(resourceName);
+      }
+      return super.findLocalResource(resourceName);
+    }
+  }
+);
   CompositeApplicationClassLoader compositeClassLoader=new CompositeApplicationClassLoader(TEST_APP_NAME,classLoaders);
   Thread.currentThread().setContextClassLoader(compositeClassLoader);
   RepositorySelector repositorySelector=new ArtifactAwareRepositorySelector();
