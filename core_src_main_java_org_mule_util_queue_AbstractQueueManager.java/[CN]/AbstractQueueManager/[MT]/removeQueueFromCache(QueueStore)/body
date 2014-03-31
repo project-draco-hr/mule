@@ -1,0 +1,22 @@
+{
+  try {
+    if (queueStore == null) {
+      throw new IllegalArgumentException("Queue to be disposed cannot be null");
+    }
+    final String queueName=queueStore.getName();
+    Lock lock=this.queuesLock.writeLock();
+    lock.lock();
+    try {
+      if (!this.queues.containsKey(queueName)) {
+        throw new IllegalArgumentException(String.format("There's no queue for name %s",queueName));
+      }
+      this.queues.remove(queueName);
+    }
+  finally {
+      lock.unlock();
+    }
+  }
+ catch (  Exception e) {
+    throw new MuleRuntimeException(e);
+  }
+}

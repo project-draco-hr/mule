@@ -1,0 +1,17 @@
+{
+  try {
+    if (transactionContextProvider.isTransactional()) {
+      Serializable item=transactionContextProvider.getTransactionalContext().poll(queue,timeout);
+      return postProcessIfNeeded(item);
+    }
+ else {
+      return postProcessIfNeeded(queue.poll(timeout));
+    }
+  }
+ catch (  InterruptedException iex) {
+    if (!muleContext.isStopping()) {
+      throw iex;
+    }
+    return null;
+  }
+}

@@ -1,7 +1,7 @@
 {
-  final TransactionalQueueManager mgr=createQueueManager();
+  final QueueManager mgr=createQueueManager();
   mgr.start();
-  mgr.setDefaultQueueConfiguration(new QueueConfiguration(2,new QueueStoreAdapter<Serializable>(new SimpleMemoryObjectStore())));
+  mgr.setDefaultQueueConfiguration(new DefaultQueueConfiguration(2,false));
   final Latch latch=new Latch();
   Thread t=new Thread(){
     @Override public void run(){
@@ -31,6 +31,5 @@
   t.join();
   assertEquals("Queue size",2,q.size());
   assertTrue(t1 - t0 > 100);
-  purgeQueue(q);
-  mgr.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
+  mgr.stop();
 }

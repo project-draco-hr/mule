@@ -1,0 +1,29 @@
+{
+  if (flag == XAResource.TMENDRSCAN) {
+    return new Xid[0];
+  }
+  Multimap<Xid,XaQueueTxJournalEntry> xidXaJournalEntryMultimap=xaTxQueueTransactionJournal.allLogEntries();
+  if (logger.isDebugEnabled()) {
+    logger.debug("Executing XA recover");
+    logger.debug("Found " + xidXaJournalEntryMultimap.size() + " in the tx log");
+  }
+  List<Xid> txsToRecover=new ArrayList<Xid>();
+  for (  Xid xid : xidXaJournalEntryMultimap.keySet()) {
+    Collection<XaQueueTxJournalEntry> entries=xidXaJournalEntryMultimap.get(xid);
+    Object commitOrRollback=CollectionUtils.find(entries,new Predicate(){
+      @Override public boolean evaluate(      Object object){
+        XaQueueTxJournalEntry logEntry=(XaQueueTxJournalEntry)object;
+        return logEntry.isCommit() || logEntry.isRollback();
+      }
+    }
+);
+    if (commitOrRollback != null) {
+      continue;
+    }
+    txsToRecover.add(xid);
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("found " + txsToRecover.size() + " txs to recover");
+  }
+  return txsToRecover.toArray(new Xid[txsToRecover.size()]);
+}

@@ -1,0 +1,13 @@
+{
+  final AtomicInteger addSize=new AtomicInteger(0);
+  CollectionUtils.forAllDo(this.transactionJournal.logEntriesForTx(txId),new Closure(){
+    @Override public void execute(    Object value){
+      LocalQueueTxJournalEntry localTxJournalEntry=(LocalQueueTxJournalEntry)value;
+      if (localTxJournalEntry.getQueueName().equals(queue.getName()) && (localTxJournalEntry.isAdd() || localTxJournalEntry.isAddFirst())) {
+        addSize.incrementAndGet();
+      }
+    }
+  }
+);
+  return queue.getSize() + addSize.get();
+}

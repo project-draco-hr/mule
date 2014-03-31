@@ -1,0 +1,14 @@
+{
+  Collection<LocalQueueTxJournalEntry> logEntries=this.transactionJournal.logEntriesForTx(txId);
+  for (  LocalQueueTxJournalEntry entry : logEntries) {
+    if (entry.isRemove()) {
+      try {
+        queueProvider.getQueue(entry.getQueueName()).putNow(entry.getValue());
+      }
+ catch (      InterruptedException e) {
+        throw new ResourceManagerException(e);
+      }
+    }
+  }
+  this.transactionJournal.logRollback(txId);
+}

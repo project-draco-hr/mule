@@ -1,0 +1,17 @@
+{
+  MuleEvent muleEvent=getTestEvent(SOME_VALUE);
+  LocalTxQueueTransactionJournal transactionJournal=new LocalTxQueueTransactionJournal(temporaryFolder.getRoot().getAbsolutePath(),muleContext);
+  int numberOfOffers=1000;
+  for (int i=0; i < numberOfOffers; i++) {
+    transactionJournal.logAdd(TX_ID,mockQueueInfo,muleEvent);
+  }
+  transactionJournal.close();
+  transactionJournal=new LocalTxQueueTransactionJournal(temporaryFolder.getRoot().getAbsolutePath(),muleContext);
+  Multimap<Integer,LocalQueueTxJournalEntry> allEntries=transactionJournal.allLogEntries();
+  assertThat(allEntries.size(),is(numberOfOffers));
+  assertThat(allEntries.get(TX_ID).size(),is(numberOfOffers));
+  LocalQueueTxJournalEntry journalEntry=allEntries.get(TX_ID).iterator().next();
+  assertThat(journalEntry.getQueueName(),is(QUEUE_NAME));
+  assertThat(((MuleEvent)journalEntry.getValue()).getMessage().getPayloadAsString(),is(SOME_VALUE));
+  assertThat(journalEntry.isAdd(),is(true));
+}

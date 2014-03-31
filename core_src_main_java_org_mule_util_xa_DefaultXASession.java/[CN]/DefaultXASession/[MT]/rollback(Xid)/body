@@ -4,7 +4,11 @@
   }
   AbstractTransactionContext context=resourceManager.getActiveTransactionalResource(xid);
   if (context == null) {
-    throw new XAException(XAException.XAER_NOTA);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Rollback called without a transaction context");
+    }
+    rollbackDandlingTransaction(xid);
+    return;
   }
   if (logger.isDebugEnabled()) {
     logger.debug("Rolling back transaction branch " + xid);
