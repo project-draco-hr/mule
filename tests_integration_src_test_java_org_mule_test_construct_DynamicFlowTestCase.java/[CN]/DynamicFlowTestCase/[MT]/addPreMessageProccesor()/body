@@ -1,0 +1,11 @@
+{
+  MuleMessage result=client.send("vm://dynamic","source->",null);
+  assertEquals("source->(static)",result.getPayloadAsString());
+  Flow flow=getFlow("dynamicFlow");
+  String pipelineId=flow.dynamicPipeline(null).injectBefore(new StringAppendTransformer("(pre)")).resetAndUpdate();
+  result=client.send("vm://dynamic","source->",null);
+  assertEquals("source->(pre)(static)",result.getPayloadAsString());
+  flow.dynamicPipeline(pipelineId).injectBefore(new StringAppendTransformer("(pre1)"),new StringAppendTransformer("(pre2)")).resetAndUpdate();
+  result=client.send("vm://dynamic","source->",null);
+  assertEquals("source->(pre1)(pre2)(static)",result.getPayloadAsString());
+}
