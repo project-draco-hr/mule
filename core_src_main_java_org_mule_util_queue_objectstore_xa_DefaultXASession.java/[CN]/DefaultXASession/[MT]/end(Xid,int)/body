@@ -1,0 +1,30 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug(new StringBuilder(128).append("Thread ").append(Thread.currentThread()).append(flags == TMSUSPEND ? " suspends" : flags == TMFAIL ? " fails" : " ends").append(" work on behalf of transaction branch ").append(xid).toString());
+  }
+  if (localContext == null) {
+    throw new XAException(XAException.XAER_NOTA);
+  }
+  if (localXid == null || !localXid.equals(xid)) {
+    throw new XAException(XAException.XAER_PROTO);
+  }
+  try {
+switch (flags) {
+case TMSUSPEND:
+      resourceManager.addSuspendedTransactionalResource(localXid,localContext);
+    resourceManager.removeActiveTransactionalResource(localXid);
+  break;
+case TMFAIL:
+resourceManager.setTransactionRollbackOnly(localContext);
+break;
+case TMSUCCESS:
+default :
+break;
+}
+}
+ catch (ResourceManagerException e) {
+throw (XAException)new XAException(XAException.XAER_RMERR).initCause(e);
+}
+localXid=null;
+localContext=null;
+}

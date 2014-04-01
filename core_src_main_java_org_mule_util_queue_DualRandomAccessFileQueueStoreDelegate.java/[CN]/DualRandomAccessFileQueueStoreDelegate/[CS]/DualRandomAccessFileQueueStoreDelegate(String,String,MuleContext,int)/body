@@ -1,0 +1,18 @@
+{
+  super(capacity);
+  this.muleContext=muleContext;
+  File queuesDirectory=new File(workingDirectory + File.separator + QUEUE_STORE_DIRECTORY);
+  if (!queuesDirectory.exists()) {
+    Preconditions.checkState(queuesDirectory.mkdirs(),"Could not create queue store directory " + queuesDirectory.getAbsolutePath());
+  }
+  File queueStoreFile1=new File(queuesDirectory,queueName + "-1");
+  File queueStoreFile2=new File(queuesDirectory,queueName + "-2");
+  randomAccessFileQueueStore1=new RandomAccessFileQueueStore(queueStoreFile1);
+  randomAccessFileQueueStore2=new RandomAccessFileQueueStore(queueStoreFile2);
+  writeFile=randomAccessFileQueueStore1;
+  readFile=randomAccessFileQueueStore1;
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("Queue %s has %s messages",queueName,getSize()));
+  }
+  filesLock=new ReentrantReadWriteLock();
+}

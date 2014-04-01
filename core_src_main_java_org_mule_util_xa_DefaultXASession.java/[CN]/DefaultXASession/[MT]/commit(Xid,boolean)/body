@@ -2,9 +2,13 @@
   if (xid == null) {
     throw new XAException(XAException.XAER_PROTO);
   }
-  AbstractTransactionContext context=resourceManager.getActiveTransactionalResource(xid);
+  T context=resourceManager.getActiveTransactionalResource(xid);
   if (context == null) {
-    throw new XAException(XAException.XAER_NOTA);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Commit called without a transaction context");
+    }
+    commitDanglingTransaction(xid,onePhase);
+    return;
   }
   if (logger.isDebugEnabled()) {
     logger.debug("Committing transaction branch " + xid);

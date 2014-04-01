@@ -1,0 +1,34 @@
+{
+  long startTime=System.currentTimeMillis();
+  Collection<AbstractTransactionContext> transactionsToStop;
+synchronized (globalTransactions) {
+    transactionsToStop=new ArrayList<AbstractTransactionContext>(globalTransactions);
+  }
+  for (  AbstractTransactionContext context : transactionsToStop) {
+    long remainingTimeout=startTime - System.currentTimeMillis() + timeoutMSecs;
+    if (remainingTimeout <= 0) {
+      return false;
+    }
+synchronized (context) {
+      if (!context.finished) {
+        logger.info("Waiting for tx " + context + " to finish for "+ remainingTimeout+ " milli seconds");
+      }
+      while (!context.finished && remainingTimeout > 0) {
+        try {
+          context.wait(remainingTimeout);
+        }
+ catch (        InterruptedException e) {
+          return false;
+        }
+        remainingTimeout=startTime - System.currentTimeMillis() + timeoutMSecs;
+      }
+      if (context.finished) {
+        logger.info("Tx " + context + " finished");
+      }
+ else {
+        logger.warn("Tx " + context + " failed to finish in given time");
+      }
+    }
+  }
+  return (globalTransactions.size() == 0);
+}

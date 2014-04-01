@@ -21,12 +21,7 @@
   final MuleEvent event=getTestEvent(TEST_MESSAGE,flow,MessageExchangePattern.ONE_WAY);
   sedaStageInterceptingMessageProcessor.process(event);
   assertTrue(latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
-  ArgumentMatcher<MuleEvent> notSameEvent=new ArgumentMatcher<MuleEvent>(){
-    @Override public boolean matches(    Object argument){
-      return !argument.equals(event);
-    }
-  }
-;
+  ArgumentMatcher<MuleEvent> notSameEvent=createNotSameEventArgumentMatcher(event);
   verify(mockListener,timeout(RECEIVE_TIMEOUT).times(1)).process(argThat(notSameEvent));
   verify(exceptionHandler,timeout(RECEIVE_TIMEOUT).times(1)).handleException((Exception)any(),argThat(notSameEvent));
 }

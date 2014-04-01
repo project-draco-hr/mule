@@ -1,0 +1,41 @@
+{
+  if (!journalFile.exists()) {
+    return;
+  }
+  DataInputStream dataInputStream=null;
+  try {
+    dataInputStream=new DataInputStream(new BufferedInputStream(new FileInputStream(journalFile)));
+    boolean logEntryCreationFailed=false;
+    while (!logEntryCreationFailed) {
+      try {
+        K journalEntry=journalEntrySerializer.deserialize(dataInputStream);
+        if (journalEntry != null) {
+          this.entries.put(journalEntry.getTxId(),journalEntry);
+        }
+ else {
+          logEntryCreationFailed=true;
+        }
+      }
+ catch (      EOFException e) {
+        logger.debug("Expected exception since there are no more log entries",e);
+        logEntryCreationFailed=true;
+      }
+catch (      Exception e) {
+        throw new MuleRuntimeException(e);
+      }
+    }
+  }
+ catch (  FileNotFoundException e) {
+    throw new RuntimeException(e);
+  }
+ finally {
+    try {
+      if (dataInputStream != null) {
+        dataInputStream.close();
+      }
+    }
+ catch (    IOException e) {
+      logger.error(e);
+    }
+  }
+}
