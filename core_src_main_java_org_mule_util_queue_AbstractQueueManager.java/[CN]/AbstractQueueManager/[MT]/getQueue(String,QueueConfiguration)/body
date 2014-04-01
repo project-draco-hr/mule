@@ -1,15 +1,18 @@
 {
-  Lock lock=this.queuesLock.writeLock();
-  lock.lock();
+  CacheAwareQueueStore queueStore=queues.get(name);
+  if (queueStore != null) {
+    return queueStore;
+  }
+  queuesLock.lock();
   try {
-    CacheAwareQueueStore q=queues.get(name);
-    if (q == null) {
-      q=new CacheAwareQueueStore(createQueueStore(name,config),this);
-      queues.put(name,q);
+    queueStore=queues.get(name);
+    if (queueStore == null) {
+      queueStore=new CacheAwareQueueStore(createQueueStore(name,config),this);
+      queues.put(name,queueStore);
     }
-    return q;
+    return queueStore;
   }
   finally {
-    lock.unlock();
+    queuesLock.unlock();
   }
 }
