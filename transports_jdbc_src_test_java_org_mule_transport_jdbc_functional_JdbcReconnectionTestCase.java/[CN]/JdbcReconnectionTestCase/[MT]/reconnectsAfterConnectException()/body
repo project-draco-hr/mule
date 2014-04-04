@@ -1,0 +1,28 @@
+{
+  final CountDownLatch messageReceivedLatch=new CountDownLatch(1);
+  final CountDownLatch connectFailedLatch=new CountDownLatch(3);
+  final CountDownLatch reconnectedLatch=new CountDownLatch(1);
+  getFunctionalTestComponent("test").setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      messageReceivedLatch.countDown();
+    }
+  }
+);
+  ConnectionListener connectionListener=new ConnectionListener(muleContext).setExpectedAction(ConnectionNotification.CONNECTION_FAILED).setNumberOfExecutionsRequired(3);
+  MuleDerbyTestUtils.defaultDerbyCleanAndInit("derby.properties","database.name");
+  initializeDatabase();
+  muleContext.start();
+  assertTrue("No message received",messageReceivedLatch.await(LOCK_TIMEOUT,TimeUnit.MILLISECONDS));
+  stopDatabase();
+  connectionListener.waitUntilNotificationsAreReceived();
+  getFunctionalTestComponent("test").setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      reconnectedLatch.countDown();
+    }
+  }
+);
+  MuleDerbyTestUtils.defaultDerbyCleanAndInit("derby.properties","database.name");
+  initializeDatabase();
+  assertTrue("Reconnection failed",reconnectedLatch.await(LOCK_TIMEOUT,TimeUnit.MILLISECONDS));
+  stopDatabase();
+}
