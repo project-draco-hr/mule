@@ -1,8 +1,11 @@
 {
-  try {
-    resultSet.close();
-  }
- catch (  SQLException e) {
-    logger.warn("Error attempting to close resultSet",e);
+  Object connectionLock=getTrackedConnectionLock(connection);
+synchronized (connectionLock) {
+    checkValidConnectionLock(connection,connectionLock);
+    Set<ResultSet> resultSets=getConnectionResultSets(connection,resultSet);
+    super.close(connection,resultSet);
+    if (resultSets.size() == 0) {
+      releaseResources(connection,connectionLock);
+    }
   }
 }
