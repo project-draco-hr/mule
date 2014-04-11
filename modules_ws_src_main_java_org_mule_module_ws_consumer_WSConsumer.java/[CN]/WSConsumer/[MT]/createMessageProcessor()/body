@@ -24,6 +24,17 @@
     }
   }
 );
+  chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      Object operation=event.getMessage().removeProperty(CxfConstants.OPERATION,PropertyScope.INVOCATION);
+      MuleEvent result=processNext(event);
+      if (operation != null) {
+        result.getMessage().setInvocationProperty(CxfConstants.OPERATION,operation);
+      }
+      return result;
+    }
+  }
+);
   chainBuilder.chain(createCxfOutboundMessageProcessor(config.getSecurity()));
   chainBuilder.chain(new MessageProcessor(){
     @Override public MuleEvent process(    MuleEvent event) throws MuleException {
