@@ -1,6 +1,9 @@
 {
   LocalMuleClient client=muleContext.getClient();
   MuleMessage response=client.send("vm://storedProcedureStreaming",TEST_MESSAGE,null);
-  assertThat(response.getPayload(),is(StatementResultIterator.class));
+  Map payload=(Map)response.getPayload();
+  assertThat(payload.size(),IsEqual.equalTo(1));
+  assertThat(payload.get("resultSet1"),is(ResultSetIterator.class));
   assertThat(response.getInboundProperty("processedResults"),is(List.class));
+  assertRecords(response.getInboundProperty("processedResults"),getAllRecords());
 }
