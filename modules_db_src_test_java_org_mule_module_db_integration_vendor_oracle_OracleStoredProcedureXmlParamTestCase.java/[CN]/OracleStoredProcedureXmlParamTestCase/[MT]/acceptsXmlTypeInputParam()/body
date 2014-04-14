@@ -1,0 +1,21 @@
+{
+  DataSource defaultDataSource=getDefaultDataSource();
+  Connection connection=defaultDataSource.getConnection();
+  try {
+    Object xmlType=XmlTypeUtils.createXmlType(connection,Alien.ET.getXml());
+    LocalMuleClient client=muleContext.getClient();
+    Map<String,Object> messageProperties=new HashMap<String,Object>();
+    messageProperties.put("name","Monguito");
+    messageProperties.put(DESCRIPTION_FIELD,xmlType);
+    MuleMessage response=client.send("vm://xmlTypeInputParam",TEST_MESSAGE,messageProperties);
+    assertThat(response.getPayload(),is(Map.class));
+    Map<String,Object> mapPayload=(Map)response.getPayload();
+    assertThat(mapPayload.size(),equalTo(0));
+    assertUpdatedAlienDscription();
+  }
+  finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+}
