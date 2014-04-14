@@ -1,0 +1,17 @@
+{
+  DataSource defaultDataSource=getDefaultDataSource();
+  Connection connection=defaultDataSource.getConnection();
+  Object xmlType;
+  try {
+    xmlType=XmlTypeUtils.createXmlType(connection,Alien.ET.getXml());
+  }
+  finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+  LocalMuleClient client=muleContext.getClient();
+  MuleMessage response=client.send("vm://updateWithXmlTypeParam",xmlType,null);
+  assertEquals(2,response.getPayload());
+  assertUpdatedAlienDscription();
+}
