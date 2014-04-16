@@ -1,5 +1,4 @@
 {
-  NodeList childNodes=sqlElem.getChildNodes();
   String sqlText;
   boolean hasFileAttribute=sqlElem.hasAttribute(FILE_ATTRIBUTE);
   boolean hasTextContent=!element.getTextContent().isEmpty();
@@ -16,7 +15,13 @@
     }
   }
  else {
-    sqlText=childNodes.item(0).getNodeValue();
+    Node node=sqlElem.getFirstChild();
+    if (node.getNextSibling() != null && node.getNextSibling().getNodeType() == Node.CDATA_SECTION_NODE) {
+      sqlText=node.getNextSibling().getNodeValue();
+    }
+ else {
+      sqlText=node.getNodeValue();
+    }
   }
   SimpleQueryTemplateParser simpleQueryParser=new SimpleQueryTemplateParser();
   QueryTemplate queryTemplate=simpleQueryParser.parse(sqlText);
