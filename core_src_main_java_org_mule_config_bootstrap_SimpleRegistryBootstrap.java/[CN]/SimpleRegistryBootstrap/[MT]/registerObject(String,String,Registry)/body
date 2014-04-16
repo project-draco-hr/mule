@@ -1,15 +1,22 @@
 {
+  ArtifactType artifactTypeParameterValue=ArtifactType.APP;
   boolean optional=false;
   String className=null;
   try {
     int x=value.indexOf(",");
     if (x > -1) {
       Properties p=PropertiesUtils.getPropertiesFromString(value.substring(x + 1),',');
+      if (p.containsKey(ArtifactType.APPLY_TO_ARTIFACT_TYPE_PARAMETER_KEY)) {
+        artifactTypeParameterValue=ArtifactType.createFromString((String)p.get(ArtifactType.APPLY_TO_ARTIFACT_TYPE_PARAMETER_KEY));
+      }
       optional=p.containsKey("optional");
       className=value.substring(0,x);
     }
  else {
       className=value;
+    }
+    if (!artifactTypeParameterValue.equals(ArtifactType.ALL) && !artifactTypeParameterValue.equals(supportedArtifactType)) {
+      return;
     }
     Object o=ClassUtils.instanciateClass(className);
     Class<?> meta=Object.class;
