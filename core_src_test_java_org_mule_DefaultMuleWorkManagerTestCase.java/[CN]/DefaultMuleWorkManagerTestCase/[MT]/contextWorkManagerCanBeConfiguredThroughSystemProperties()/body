@@ -1,0 +1,27 @@
+{
+  final Thread currentThread=Thread.currentThread();
+  final AtomicBoolean stop=new AtomicBoolean(false);
+  final AtomicBoolean workExecutedInCurrentThread=new AtomicBoolean(false);
+  for (int i=0; i < MAX_NUMBER_OF_THREADS_ALLOWED + 1; i++) {
+    muleContext.getWorkManager().scheduleWork(new Work(){
+      @Override public void release(){
+      }
+      @Override public void run(){
+        if (Thread.currentThread().equals(currentThread)) {
+          workExecutedInCurrentThread.set(true);
+          return;
+        }
+        while (!stop.get()) {
+          try {
+            Thread.sleep(1000);
+          }
+ catch (          InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+    }
+);
+  }
+  assertThat(workExecutedInCurrentThread.get(),is(true));
+}
