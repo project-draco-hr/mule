@@ -1,0 +1,12 @@
+{
+  assertMessageRouted();
+  ConnectionListener connectionListener=new ConnectionListener(muleContext).setExpectedAction(ConnectionNotification.CONNECTION_FAILED).setNumberOfExecutionsRequired(3);
+  CustomConnectionFactory.returnInvalidConnections=true;
+  stopBroker();
+  connectionListener.waitUntilNotificationsAreReceived();
+  ConnectionListener reconnectionListener=new ConnectionListener(muleContext).setExpectedAction(ConnectionNotification.CONNECTION_CONNECTED).setNumberOfExecutionsRequired(1);
+  CustomConnectionFactory.returnInvalidConnections=false;
+  startBroker();
+  reconnectionListener.waitUntilNotificationsAreReceived();
+  assertMessageRouted();
+}
