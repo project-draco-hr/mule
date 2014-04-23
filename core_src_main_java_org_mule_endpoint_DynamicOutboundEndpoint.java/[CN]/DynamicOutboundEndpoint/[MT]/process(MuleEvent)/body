@@ -1,4 +1,10 @@
 {
-  EndpointURI endpointURIForMessage=getEndpointURIForMessage(event);
-  return getStaticEndpointFor(endpointURIForMessage).process(event);
+  final String uri=resolveUri(event);
+  OutboundEndpoint outboundEndpoint=staticEndpoints.get(uri);
+  if (outboundEndpoint == null) {
+    final EndpointURI endpointURIForMessage=createEndpointUri(uri);
+    outboundEndpoint=createStaticEndpoint(endpointURIForMessage);
+    staticEndpoints.put(endpointURIForMessage.getAddress(),outboundEndpoint);
+  }
+  return outboundEndpoint.process(event);
 }
