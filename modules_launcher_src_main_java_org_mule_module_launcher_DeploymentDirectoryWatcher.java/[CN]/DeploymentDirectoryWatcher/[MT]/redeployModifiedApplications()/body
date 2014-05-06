@@ -1,9 +1,9 @@
 {
-  for (  Application application : applications) {
-    if (application.getDescriptor().isRedeploymentEnabled()) {
-      if (applicationTimestampListener.isApplicationResourceUpdated(application)) {
-        applicationArchiveDeployer.redeploy(application);
-      }
+  Collection redeployableApplications=CollectionUtils.select(applications,new Predicate(){
+    @Override public boolean evaluate(    Object object){
+      return ((Application)object).getDescriptor().isRedeploymentEnabled();
     }
   }
+);
+  redeployModifiedArtifacts(redeployableApplications,applicationTimestampListener,applicationArchiveDeployer);
 }
