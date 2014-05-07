@@ -1,3 +1,23 @@
 {
-  domainDeployer.redeploy(artifact);
+  Collection<Application> domainApplications=findApplicationsAssociated(artifact);
+  for (  Application domainApplication : domainApplications) {
+    applicationDeployer.undeployArtifactWithoutUninstall(domainApplication);
+  }
+  try {
+    domainDeployer.redeploy(artifact);
+  }
+ catch (  DeploymentException e) {
+    logger.warn(String.format("Failure during redeployment of domain %s, domain applications deployment will be skipped",artifact.getArtifactName()));
+    throw e;
+  }
+  for (  Application domainApplication : domainApplications) {
+    try {
+      applicationDeployer.deployArtifact(domainApplication);
+    }
+ catch (    Exception e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug(e);
+      }
+    }
+  }
 }
