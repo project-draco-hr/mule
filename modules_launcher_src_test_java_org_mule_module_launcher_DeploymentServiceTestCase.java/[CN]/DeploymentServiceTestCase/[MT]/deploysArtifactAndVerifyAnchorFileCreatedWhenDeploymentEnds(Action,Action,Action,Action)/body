@@ -1,0 +1,16 @@
+{
+  WaitComponent.reset();
+  deploymentService.start();
+  deployArtifactAction.perform();
+  try {
+    if (!WaitComponent.componentInitializedLatch.await(DEPLOYMENT_TIMEOUT,TimeUnit.MILLISECONDS)) {
+      fail("WaitComponent should be initilaized already. Probably app deployment failed");
+    }
+    verifyAnchorFileDoesNotExistsAction.perform();
+  }
+  finally {
+    WaitComponent.waitLatch.release();
+  }
+  verifyDeploymentSuccessfulAction.perform();
+  verifyAnchorFileExistsAction.perform();
+}
