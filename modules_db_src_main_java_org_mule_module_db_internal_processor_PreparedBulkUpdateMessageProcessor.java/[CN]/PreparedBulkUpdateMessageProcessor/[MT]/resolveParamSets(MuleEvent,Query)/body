@@ -6,14 +6,11 @@
  else {
     payload=muleContext.getExpressionManager().evaluate(source,muleEvent);
   }
-  if (!(payload instanceof Collection)) {
-    throw new IllegalArgumentException("Bulk mode operations require a collection as payload");
-  }
+  final Iterator<Object> paramsIterator=getIterator(payload);
   ParamValueResolver paramValueResolver=new DynamicParamValueResolver(muleContext.getExpressionManager());
   List<List<QueryParamValue>> result=new LinkedList<List<QueryParamValue>>();
-  Collection collection=(Collection)payload;
-  for (  Object aCollection : collection) {
-    MuleMessage itemMessage=new DefaultMuleMessage(aCollection,muleContext);
+  while (paramsIterator.hasNext()) {
+    MuleMessage itemMessage=new DefaultMuleMessage(paramsIterator.next(),muleContext);
     MuleEvent itemEvent=new DefaultMuleEvent(itemMessage,muleEvent);
     List<QueryParamValue> queryParamValues=paramValueResolver.resolveParams(itemEvent,query.getParamValues());
     result.add(queryParamValues);
