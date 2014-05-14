@@ -1,0 +1,47 @@
+{
+  boolean needsResize=((this.count > 0) && (this.count >= this.resizeThreshold));
+  Reference<K,V> reference=this.referenceManager.pollForPurge();
+  if ((reference != null) || (needsResize && allowResize)) {
+    lock();
+    try {
+      int countAfterRestructure=this.count;
+      Set<Reference<K,V>> toPurge=Collections.emptySet();
+      if (reference != null) {
+        toPurge=new HashSet<>();
+        while (reference != null) {
+          toPurge.add(reference);
+          reference=this.referenceManager.pollForPurge();
+        }
+      }
+      countAfterRestructure-=toPurge.size();
+      needsResize=((countAfterRestructure > 0) && (countAfterRestructure >= this.resizeThreshold));
+      boolean resizing=false;
+      int restructureSize=this.references.length;
+      if (allowResize && needsResize && (restructureSize < MAXIMUM_SEGMENT_SIZE)) {
+        restructureSize<<=1;
+        resizing=true;
+      }
+      Reference<K,V>[] restructured=(resizing ? createReferenceArray(restructureSize) : this.references);
+      for (int i=0; i < this.references.length; i++) {
+        reference=this.references[i];
+        if (!resizing) {
+          restructured[i]=null;
+        }
+        while (reference != null) {
+          if (!toPurge.contains(reference) && (reference.get() != null)) {
+            int index=getIndex(reference.getHash(),restructured);
+            restructured[index]=this.referenceManager.createReference(reference.get(),reference.getHash(),restructured[index]);
+          }
+          reference=reference.getNext();
+        }
+      }
+      if (resizing) {
+        setReferences(restructured);
+      }
+      this.count=Math.max(countAfterRestructure,0);
+    }
+  finally {
+      unlock();
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  if (src == null) {
+    throw new IllegalArgumentException("Source for field copy cannot be null");
+  }
+  if (dest == null) {
+    throw new IllegalArgumentException("Destination for field copy cannot be null");
+  }
+  if (!src.getClass().isAssignableFrom(dest.getClass())) {
+    throw new IllegalArgumentException("Destination class [" + dest.getClass().getName() + "] must be same or subclass as source class ["+ src.getClass().getName()+ "]");
+  }
+  doWithFields(src.getClass(),new FieldCallback(){
+    @Override public void doWith(    Field field) throws IllegalArgumentException, IllegalAccessException {
+      makeAccessible(field);
+      Object srcValue=field.get(src);
+      field.set(dest,srcValue);
+    }
+  }
+,COPYABLE_FIELDS);
+}

@@ -1,0 +1,19 @@
+{
+  extensionsManager=new DefaultExtensionsManager();
+  Describer[] describers=getManagedDescribers();
+  if (ArrayUtils.isEmpty(describers)) {
+    extensionsManager.discoverExtensions(muleContext.getExecutionClassLoader());
+  }
+ else {
+    loadExtensionsFromDescribers(extensionsManager,describers);
+  }
+  generatedResourcesDirectory=getGenerationTargetDirectory();
+  ResourcesGenerator generator=new ExtensionsTestInfrastructureResourcesGenerator(serviceRegistry,generatedResourcesDirectory);
+  List<GenerableResourceContributor> resourceContributors=getGenerableResourceContributors();
+  for (  Extension extension : extensionsManager.getExtensions()) {
+    for (    GenerableResourceContributor contributor : resourceContributors) {
+      contributor.contribute(extension,generator);
+    }
+  }
+  generateResourcesAndAddToClasspath(generator);
+}

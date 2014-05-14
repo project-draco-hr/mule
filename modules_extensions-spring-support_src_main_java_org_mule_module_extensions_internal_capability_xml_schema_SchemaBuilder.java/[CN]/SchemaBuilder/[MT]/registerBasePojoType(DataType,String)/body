@@ -1,0 +1,38 @@
+{
+  final TopLevelComplexType complexType=new TopLevelComplexType();
+  registeredComplexTypesHolders.put(type,new ComplexTypeHolder(complexType,type));
+  complexType.setName(type.getName());
+  complexType.setAnnotation(createDocAnnotation(description));
+  ComplexContent complexContent=new ComplexContent();
+  complexType.setComplexContent(complexContent);
+  final ExtensionType extension=new ExtensionType();
+  extension.setBase(MULE_ABSTRACT_EXTENSION_TYPE);
+  complexContent.setExtension(extension);
+  final ExplicitGroup all=new ExplicitGroup();
+  extension.setSequence(all);
+  for (  Map.Entry<Method,DataType> entry : IntrospectionUtils.getSettersDataTypes(type.getRawType()).entrySet()) {
+    final Method method=entry.getKey();
+    if (isIgnored(method)) {
+      continue;
+    }
+    final String name=NameUtils.getFieldNameFromSetter(method.getName());
+    final DataType methodType=entry.getValue();
+    final boolean required=isRequired(method);
+    final boolean dynamic=isDynamic(method);
+    methodType.getQualifier().accept(new BaseDataQualifierVisitor(){
+      @Override public void onList(){
+        generateCollectionElement(all,name,EMPTY,methodType,required);
+      }
+      @Override public void onPojo(){
+        registerComplexTypeChildElement(all,name,EMPTY,methodType,false);
+      }
+      @Override protected void defaultOperation(){
+        Attribute attribute=createAttribute(name,methodType,required,dynamic);
+        extension.getAttributeOrAttributeGroup().add(attribute);
+      }
+    }
+);
+  }
+  schema.getSimpleTypeOrComplexTypeOrGroup().add(complexType);
+  return complexType;
+}

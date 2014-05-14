@@ -1,0 +1,21 @@
+{
+  ImmutableSet.Builder<ParameterConstruct> parameters=ImmutableSet.builder();
+  for (  Field field : getParameterFields(extensionType)) {
+    Parameter parameter=field.getAnnotation(Parameter.class);
+    Optional optional=field.getAnnotation(Optional.class);
+    ParameterConstruct parameterConstruct;
+    DataType dataType=IntrospectionUtils.getFieldDataType(field);
+    if (optional == null) {
+      parameterConstruct=with.requiredParameter(field.getName());
+    }
+ else {
+      parameterConstruct=with.optionalParameter(field.getName()).defaultingTo(getDefaultValue(optional,dataType));
+    }
+    parameterConstruct.ofType(dataType);
+    if (!parameter.isDynamic()) {
+      parameterConstruct.whichIsNotDynamic();
+    }
+    parameters.add(parameterConstruct);
+  }
+  return parameters.build();
+}
