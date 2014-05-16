@@ -1,3 +1,12 @@
 {
-  return delegate.poll(queue,pollTimeout);
+  final boolean lockAcquired=transactionContextAccessLock.tryLock(pollTimeout,TimeUnit.MILLISECONDS);
+  if (lockAcquired) {
+    try {
+      return delegate.poll(queue,pollTimeout);
+    }
+  finally {
+      transactionContextAccessLock.unlock();
+    }
+  }
+  return null;
 }
