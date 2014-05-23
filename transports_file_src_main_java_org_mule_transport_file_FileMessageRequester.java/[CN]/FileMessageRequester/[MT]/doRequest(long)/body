@@ -27,10 +27,11 @@
           return null;
         }
       }
-      String sourceFileOriginalName=result.getName();
+      String originalSourceFileName=result.getName();
+      String originalSourceDirectory=result.getParent();
       File workFile=null;
       if (workDir != null) {
-        String workFileName=formatUsingFilenameParser(sourceFileOriginalName,workFileNamePattern);
+        String workFileName=formatUsingFilenameParser(originalSourceFileName,originalSourceDirectory,workFileNamePattern);
         workFile=FileUtils.newFile(workDir,workFileName);
         fileConnector.move(result,workFile);
         result=workFile;
@@ -38,10 +39,10 @@
       File destinationFile=null;
       String movDir=getMoveDirectory();
       if (movDir != null) {
-        String destinationFileName=sourceFileOriginalName;
+        String destinationFileName=originalSourceFileName;
         String moveToPattern=getMoveToPattern();
         if (moveToPattern != null) {
-          destinationFileName=formatUsingFilenameParser(sourceFileOriginalName,moveToPattern);
+          destinationFileName=formatUsingFilenameParser(originalSourceFileName,originalSourceDirectory,moveToPattern);
         }
         destinationFile=FileUtils.newFile(movDir,destinationFileName);
       }
@@ -60,7 +61,8 @@
         logger.error("File being read disappeared!",e);
         return null;
       }
-      returnMessage.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,sourceFileOriginalName,PropertyScope.INBOUND);
+      returnMessage.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName,PropertyScope.INBOUND);
+      returnMessage.setProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory,PropertyScope.INBOUND);
       if (!fileConnector.isStreaming()) {
         moveOrDelete(result,destinationFile);
       }
