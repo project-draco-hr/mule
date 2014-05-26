@@ -1,12 +1,11 @@
 {
-  if (src instanceof byte[]) {
-    return src;
+  File file=null;
+  FileInputStream fileInputStream=null;
+  if (src instanceof FileInputStream) {
+    fileInputStream=(FileInputStream)src;
   }
-  if (src instanceof InputStream || src instanceof String) {
-    return super.doTransform(src,outputEncoding);
-  }
- else {
-    File file=(File)src;
+ else   if (src instanceof File) {
+    file=(File)src;
     if (file == null) {
       throw new TransformerException(this,new IllegalArgumentException("null file"));
     }
@@ -17,23 +16,26 @@
       logger.warn("File is empty: " + file.getAbsolutePath());
       return ArrayUtils.EMPTY_BYTE_ARRAY;
     }
-    FileInputStream fis=null;
-    byte[] bytes=null;
     try {
-      fis=new FileInputStream(file);
-      int length=new Long(file.length()).intValue();
-      bytes=new byte[length];
-      fis.read(bytes);
-      return bytes;
+      fileInputStream=new FileInputStream(file);
     }
- catch (    OutOfMemoryError oom) {
-      throw new TransformerException(this,oom);
-    }
-catch (    IOException e) {
+ catch (    FileNotFoundException e) {
       throw new TransformerException(this,e);
     }
+  }
+ else {
+    throw new TransformerException(MessageFactory.createStaticMessage("Cannot handle source type %s",src.getClass().getName()),this);
+  }
+  try {
+    return IOUtils.toByteArray(fileInputStream);
+  }
+ catch (  OutOfMemoryError oom) {
+    throw new TransformerException(this,oom);
+  }
+catch (  IOException e) {
+    throw new TransformerException(this,e);
+  }
  finally {
-      IOUtils.closeQuietly(fis);
-    }
+    IOUtils.closeQuietly(fileInputStream);
   }
 }
