@@ -12,14 +12,15 @@
  else   if (logger.isInfoEnabled()) {
     logger.info("Lock obtained on file: " + file.getAbsolutePath());
   }
-  DefaultMuleMessage fileParserMessasge=new DefaultMuleMessage(null,getEndpoint().getMuleContext());
-  fileParserMessasge.setInboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,file.getName());
-  final String originalSourceFile=file.getAbsolutePath();
+  final String originalSourceFilePath=file.getAbsolutePath();
   final String originalSourceFileName=file.getName();
+  final String originalSourceDirectory=file.getParent();
+  DefaultMuleMessage fileParserMessasge=new DefaultMuleMessage(null,getEndpoint().getMuleContext());
+  fileParserMessasge.setInboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName);
+  fileParserMessasge.setInboundProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory);
   final File sourceFile;
   if (workDir != null) {
-    String workFileName=file.getName();
-    workFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
+    String workFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
     File workFile=FileUtils.newFile(workDir,workFileName);
     fileConnector.move(file,workFile);
     sourceFile=workFile;
@@ -59,6 +60,9 @@
     message.setProperty(FileConnector.PROPERTY_SOURCE_DIRECTORY,file.getParent(),PropertyScope.INBOUND);
     message.setProperty(FileConnector.PROPERTY_SOURCE_FILENAME,file.getName(),PropertyScope.INBOUND);
   }
+  message.setProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory,PropertyScope.INBOUND);
+  message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName,PropertyScope.INBOUND);
+  message.setInvocationProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory);
   message.setInvocationProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName);
   if (forceSync) {
     message.setProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,Boolean.TRUE,PropertyScope.INBOUND);
@@ -70,6 +74,6 @@
     processWithStreaming(sourceFile,(ReceiverFileInputStream)originalPayload,executionTemplate,finalMessage);
   }
  else {
-    processWithoutStreaming(originalSourceFile,originalSourceFileName,sourceFile,destinationFile,executionTemplate,finalMessage);
+    processWithoutStreaming(originalSourceFilePath,originalSourceFileName,originalSourceDirectory,sourceFile,destinationFile,executionTemplate,finalMessage);
   }
 }
