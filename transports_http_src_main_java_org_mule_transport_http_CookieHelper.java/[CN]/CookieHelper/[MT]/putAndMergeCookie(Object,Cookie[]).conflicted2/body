@@ -2,8 +2,16 @@
   if (newCookiesArray == null) {
     return preExistentCookies;
   }
-  for (  Cookie cookie : newCookiesArray) {
-    preExistentCookies=putAndMergeCookie(preExistentCookies,cookie.getName(),cookie.getValue());
+  final List<Cookie> cookiesThatAreReallyNew=new ArrayList<Cookie>(newCookiesArray.length);
+  final Cookie[] preExistentCookiesArray=(Cookie[])preExistentCookies;
+  for (  Cookie newCookie : newCookiesArray) {
+    int newCookieInPreExistentArrayIndex=getCookieIndexFromCookiesArray(newCookie.getName(),preExistentCookiesArray);
+    if (newCookieInPreExistentArrayIndex >= 0) {
+      preExistentCookiesArray[newCookieInPreExistentArrayIndex]=newCookie;
+    }
+ else {
+      cookiesThatAreReallyNew.add(newCookie);
+    }
   }
-  return preExistentCookies;
+  return concatenateCookies(preExistentCookiesArray,cookiesThatAreReallyNew.toArray(new Cookie[cookiesThatAreReallyNew.size()]));
 }
