@@ -1,21 +1,22 @@
 {
-  File[] files;
-  if (fileFilter != null) {
-    files=currentDirectory.listFiles(fileFilter);
-  }
- else {
-    files=currentDirectory.listFiles(filenameFilter);
-  }
+  File[] files=currentDirectory.listFiles();
   if (files == null) {
     return;
   }
   for (  File file : files) {
-    if (!file.isDirectory()) {
-      discoveredFiles.add(file);
+    if (file.isDirectory()) {
+      basicListFiles(file,discoveredFiles);
     }
  else {
-      if (fileConnector.isRecursive()) {
-        this.basicListFiles(file,discoveredFiles);
+      boolean addFile=true;
+      if (fileFilter != null) {
+        addFile=fileFilter.accept(file);
+      }
+ else       if (filenameFilter != null) {
+        addFile=filenameFilter.accept(currentDirectory,file.getName());
+      }
+      if (addFile) {
+        discoveredFiles.add(file);
       }
     }
   }
