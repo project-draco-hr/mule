@@ -1,6 +1,6 @@
 {
   if (isPersistent()) {
-    TransactionalQueueManager mgr1=createQueueManager();
+    AbstractQueueManager mgr1=createQueueManager();
     QueueSession s1=mgr1.getQueueSession();
     Queue q1=s1.getQueue("queue1");
     mgr1.start();
@@ -10,8 +10,8 @@
       q1.put("String" + i);
       assertEquals("Queue size",i,q1.size());
     }
-    mgr1.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
-    TransactionalQueueManager mgr2=createQueueManager();
+    mgr1.stop();
+    AbstractQueueManager mgr2=createQueueManager();
     QueueSession s2=mgr2.getQueueSession();
     Queue q2=s2.getQueue("queue1");
     mgr2.start();
@@ -21,7 +21,7 @@
       assertEquals("Queue content","String" + i,o);
     }
     assertEquals("Queue size",0,q2.size());
-    purgeQueue(q2);
-    mgr2.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
+    mgr2.stop();
+    mgr2.dispose();
   }
 }

@@ -1,6 +1,6 @@
 {
-  final TransactionalQueueManager mgr=createQueueManager();
-  mgr.setDefaultQueueConfiguration(new QueueConfiguration(1,new QueueStoreAdapter<Serializable>(new SimpleMemoryObjectStore())));
+  final QueueManager mgr=createQueueManager();
+  mgr.setDefaultQueueConfiguration(new DefaultQueueConfiguration(1,false));
   try {
     mgr.start();
     QueueSession s=mgr.getQueueSession();
@@ -10,25 +10,30 @@
     assertEquals("Queue size",1,q.size());
     assertFalse(q.offer("String2",1000));
     assertEquals("Queue size",1,q.size());
-    new Thread(new Runnable(){
+    final Latch takeExecutionLatch=new Latch();
+    final Thread takeExecutionThread=new Thread(new Runnable(){
       public void run(){
         try {
-          Thread.sleep(500);
+          takeExecutionLatch.release();
           QueueSession s=mgr.getQueueSession();
           Queue q=s.getQueue("queue1");
           assertEquals("Queue content","String1",q.take());
         }
  catch (        Exception e) {
-          e.printStackTrace();
+          logger.warn(e);
         }
       }
     }
-).start();
+);
+    takeExecutionThread.start();
+    if (!takeExecutionLatch.await(THREAD_EXECUTION_TIMEOUT,TimeUnit.MILLISECONDS)) {
+      fail("Thread executing put over queue was not executed");
+    }
     assertTrue(q.offer("String2",1000));
+    takeExecutionThread.join(THREAD_EXECUTION_TIMEOUT);
     assertEquals("Queue size",1,q.size());
-    purgeQueue(q);
   }
   finally {
-    mgr.stop(AbstractResourceManager.SHUTDOWN_MODE_NORMAL);
+    mgr.stop();
   }
 }

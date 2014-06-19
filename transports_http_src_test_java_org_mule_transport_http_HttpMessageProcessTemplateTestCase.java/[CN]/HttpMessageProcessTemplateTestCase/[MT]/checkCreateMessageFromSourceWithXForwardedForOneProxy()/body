@@ -1,0 +1,10 @@
+{
+  when(httpServerConnection.getRemoteClientAddress()).thenReturn(PROXY_1_ADDRESS);
+  HttpMessageProcessTemplate template=new HttpMessageProcessTemplate(messageReceiver,httpServerConnection);
+  message.setInboundProperty(HttpConstants.HEADER_X_FORWARDED_FOR,ONE_PROXY_X_FORWARDED_FOR);
+  MuleMessage retMessage=template.createMessageFromSource(PAYLOAD);
+  assertThat(retMessage,is(notNullValue()));
+  assertThat(retMessage.getPayload(),is(notNullValue()));
+  assertThat(retMessage.<String>getInboundProperty(MuleProperties.MULE_REMOTE_CLIENT_ADDRESS),is(equalTo(CLIENT_ADDRESS)));
+  assertThat(retMessage.<String>getInboundProperty(MuleProperties.MULE_PROXY_ADDRESS),is(equalTo(PROXY_1_ADDRESS)));
+}

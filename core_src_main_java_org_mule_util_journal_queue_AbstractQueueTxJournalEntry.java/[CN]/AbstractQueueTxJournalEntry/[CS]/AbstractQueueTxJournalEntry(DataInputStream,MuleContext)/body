@@ -1,0 +1,15 @@
+{
+  txId=deserializeTxId(inputStream);
+  operation=inputStream.readByte();
+  if (isCheckpointOperation(operation)) {
+    return;
+  }
+  byte queueNameSize=inputStream.readByte();
+  byte[] queueNameAsBytes=new byte[queueNameSize];
+  inputStream.read(queueNameAsBytes,0,queueNameSize);
+  int valueSize=inputStream.readInt();
+  byte[] valueAsBytes=new byte[valueSize];
+  inputStream.read(valueAsBytes,0,valueSize);
+  queueName=new String(queueNameAsBytes);
+  value=(Serializable)SerializationUtils.deserialize(valueAsBytes,muleContext);
+}

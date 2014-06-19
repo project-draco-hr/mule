@@ -1,11 +1,12 @@
 {
   deploymentService.start();
-  addPackedDomainFromResource("/broken-domain.zip","brokenDomain.zip");
-  assertDeploymentFailure(domainDeploymentListener,"brokenDomain");
-  assertDomainDir(new String[]{"brokenDomain.zip"},NONE,true);
+  addPackedDomainFromResource(brokenDomainDescriptor.zipPath,brokenDomainDescriptor.targetPath);
+  assertDeploymentFailure(domainDeploymentListener,brokenDomainDescriptor.id);
+  assertDomainDir(new String[]{brokenDomainDescriptor.targetPath},NONE,true);
+  assertDomainAnchorFileDoesNotExists(brokenDomainDescriptor.id);
   final Map<URL,Long> zombieMap=deploymentService.getZombieDomains();
   assertEquals("Wrong number of zombie domains registered.",1,zombieMap.size());
   final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
-  assertEquals("Wrong URL tagged as domain.","brokenDomain.zip",new File(zombie.getKey().getFile()).getName());
+  assertEquals("Wrong URL tagged as domain.",brokenDomainDescriptor.targetPath,new File(zombie.getKey().getFile()).getName());
   assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
 }

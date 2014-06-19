@@ -1,0 +1,16 @@
+{
+  previousMuleHome=System.setProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY,tempMuleHome.getRoot().getAbsolutePath());
+  domainDir=tempMuleHome.newFolder(String.format("domains/%s",DOMAIN_NAME));
+  classesDir=tempMuleHome.newFolder(String.format("apps/%s/classes",APP_NAME));
+  File libDir=tempMuleHome.newFolder(String.format("apps/%s/lib",APP_NAME));
+  URL resourceSrcJarFile=Thread.currentThread().getContextClassLoader().getResource("test-jar-with-resources.jar");
+  assertNotNull(resourceSrcJarFile);
+  File srcJarFile=new File(resourceSrcJarFile.getFile());
+  jarFile=new File(libDir,"test-jar-with-resources.jar");
+  FileUtils.copyFile(srcJarFile,jarFile,false);
+  FileUtils.stringToFile(new File(classesDir,RESOURCE_IN_CLASSES_AND_JAR).getAbsolutePath(),"Some text");
+  FileUtils.stringToFile(new File(classesDir,RESOURCE_JUST_IN_CLASSES).getAbsolutePath(),"Some text");
+  FileUtils.stringToFile(new File(domainDir,RESOURCE_JUST_IN_DOMAIN).getAbsolutePath(),"Some text");
+  domainCL=new MuleSharedDomainClassLoader(DOMAIN_NAME,Thread.currentThread().getContextClassLoader());
+  appCL=new MuleApplicationClassLoader(APP_NAME,domainCL);
+}

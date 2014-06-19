@@ -4,7 +4,12 @@
       Definition definition=getServiceFactory().getBus().getExtension(WSDLManager.class).getDefinition(getServiceFactory().getWsdlURL());
       Service service=getServiceFromDefinition(definition);
       setServiceNamespace(service.getQName().getNamespaceURI());
-      return new QName(getServiceNamespace(),((Port)service.getPorts().values().iterator().next()).getName());
+      QName endpointName=getPortMatchingSoapVersion(service);
+      if (endpointName == null) {
+        endpointName=new QName(getServiceNamespace(),((Port)service.getPorts().values().iterator().next()).getName());
+      }
+      LOG.fine(String.format("ProxyServiceConfiguration using endpoint %s",endpointName));
+      return endpointName;
     }
  else {
       return super.getEndpointName();

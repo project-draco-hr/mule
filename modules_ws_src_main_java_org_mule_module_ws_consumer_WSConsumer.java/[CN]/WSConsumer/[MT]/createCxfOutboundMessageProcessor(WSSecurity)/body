@@ -1,7 +1,9 @@
 {
   ProxyClientMessageProcessorBuilder cxfBuilder=new ProxyClientMessageProcessorBuilder();
   Map<String,Object> configProperties=new HashMap<String,Object>();
+  cxfBuilder.setMtomEnabled(mtomEnabled);
   cxfBuilder.setMuleContext(muleContext);
+  cxfBuilder.setSoapVersion(soapVersion.getVersion());
   if (security != null && security.hasStrategies()) {
     for (    SecurityStrategy strategy : security.getStrategies()) {
       strategy.apply(configProperties);
@@ -15,6 +17,9 @@
   cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new CheckFaultInterceptor());
   cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new NamespaceSaverStaxInterceptor());
   cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new NamespaceRestorerStaxInterceptor());
+  if (soapAction != null) {
+    cxfOutboundMessageProcessor.getClient().getOutInterceptors().add(new SoapActionInterceptor(soapAction));
+  }
   cxfOutboundMessageProcessor.getClient().getOutInterceptors().add(new InputSoapHeadersInterceptor(muleContext));
   cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new OutputSoapHeadersInterceptor(muleContext));
   return cxfOutboundMessageProcessor;

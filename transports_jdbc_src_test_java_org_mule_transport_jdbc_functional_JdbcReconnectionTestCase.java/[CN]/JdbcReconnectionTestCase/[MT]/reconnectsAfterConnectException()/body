@@ -1,0 +1,13 @@
+{
+  MuleClient client=muleContext.getClient();
+  MuleMessage message=client.request("vm://out",RECEIVE_TIMEOUT);
+  assertNotNull("No message received",message);
+  ConnectionListener connectionListener=new ConnectionListener(muleContext).setExpectedAction(ConnectionNotification.CONNECTION_FAILED).setNumberOfExecutionsRequired(3);
+  stopDatabase();
+  connectionListener.waitUntilNotificationsAreReceived();
+  startDatabase();
+  createTable();
+  populateTable();
+  message=client.request("vm://out",RECEIVE_TIMEOUT);
+  assertNotNull("Reconnection failed",message);
+}

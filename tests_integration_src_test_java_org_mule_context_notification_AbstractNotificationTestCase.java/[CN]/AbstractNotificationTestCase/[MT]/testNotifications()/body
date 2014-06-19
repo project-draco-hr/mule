@@ -2,9 +2,18 @@
   doTest();
   notificationLogger=muleContext.getRegistry().lookupObject("notificationLogger");
   muleContext.dispose();
-  Thread.sleep(2000L);
-  logNotifications();
-  RestrictedNode spec=getSpecification();
-  validateSpecification(spec);
-  assertExpectedNotifications(spec);
+  PollingProber prober=new PollingProber(30000,2000);
+  prober.check(new JUnitProbe(){
+    @Override protected boolean test() throws Exception {
+      logNotifications();
+      RestrictedNode spec=getSpecification();
+      validateSpecification(spec);
+      assertExpectedNotifications(spec);
+      return true;
+    }
+    @Override public String describeFailure(){
+      return "expected notifications not matched";
+    }
+  }
+);
 }

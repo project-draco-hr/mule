@@ -2,13 +2,7 @@
   URL artifactLogConfig=getArtifactLoggingConfig(artifactClassLoader);
   final String artifactName=artifactClassLoader.getArtifactName();
   if (artifactLogConfig == null) {
-    String logName=String.format(logFileNameTemplate,artifactName);
-    File logDir=new File(MuleContainerBootstrapUtils.getMuleHome(),"logs");
-    File logFile=new File(logDir,logName);
-    DailyRollingFileAppender fileAppender=new DailyRollingFileAppender(new PatternLayout(PATTERN_LAYOUT),logFile.getAbsolutePath(),"'.'yyyy-MM-dd");
-    fileAppender.setAppend(true);
-    fileAppender.activateOptions();
-    root.addAppender(fileAppender);
+    addDefaultAppender(root,logFileNameTemplate,artifactName);
   }
  else {
     configureFrom(artifactLogConfig,repository);
@@ -19,6 +13,12 @@
  else {
       if (logger.isInfoEnabled()) {
         logger.info(String.format("Logging config %s is not an external file, will not be monitored for changes",artifactLogConfig));
+      }
+    }
+    if (MuleContainerBootstrapUtils.getMuleConfDir() != null && artifactLogConfig.toExternalForm().contains(MuleContainerBootstrapUtils.getMuleConfDir().getAbsolutePath())) {
+      if (!hasFileAppender(root,artifactName)) {
+        addDefaultAppender(root,logFileNameTemplate,artifactName);
+        removeConsoleAppenders(root);
       }
     }
   }

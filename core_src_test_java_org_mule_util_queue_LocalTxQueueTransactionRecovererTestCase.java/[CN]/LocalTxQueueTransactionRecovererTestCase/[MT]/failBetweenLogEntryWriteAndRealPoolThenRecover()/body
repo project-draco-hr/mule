@@ -1,0 +1,18 @@
+{
+  ((DefaultMuleConfiguration)muleContext.getConfiguration()).setWorkingDirectory(temporaryFolder.getRoot().getAbsolutePath());
+  LocalTxQueueTransactionJournal txLog=new LocalTxQueueTransactionJournal(temporaryFolder.getRoot().getAbsolutePath(),muleContext);
+  final DefaultQueueStore inQueue=new DefaultQueueStore(QUEUE_NAME,muleContext,new DefaultQueueConfiguration(0,true));
+  PersistentQueueTransactionContext persistentTransactionContext=new PersistentQueueTransactionContext(txLog,createQueueProvider(inQueue));
+  MuleEvent testEvent=getTestEvent(MESSAGE_CONTENT);
+  inQueue.offer(testEvent,0,10);
+  persistentTransactionContext.poll(inQueue,10);
+  txLog.close();
+  txLog=new LocalTxQueueTransactionJournal(temporaryFolder.getRoot().getAbsolutePath(),muleContext);
+  LocalTxQueueTransactionRecoverer queueTransactionRecoverer=new LocalTxQueueTransactionRecoverer(txLog,createQueueProvider(inQueue));
+  queueTransactionRecoverer.recover();
+  Serializable muleEvent=inQueue.poll(10);
+  assertThat(muleEvent,notNullValue());
+  assertThat(testEvent.equals(muleEvent),is(true));
+  muleEvent=inQueue.poll(10);
+  assertThat(muleEvent,IsNull.nullValue());
+}

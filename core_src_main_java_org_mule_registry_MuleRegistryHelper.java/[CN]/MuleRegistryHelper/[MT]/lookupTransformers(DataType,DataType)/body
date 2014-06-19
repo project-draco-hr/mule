@@ -5,15 +5,21 @@
     return results;
   }
   results=new ArrayList<Transformer>(2);
-  Collection<Transformer> transformers=registry.lookupObjects(Transformer.class);
-  for (  Transformer t : transformers) {
-    if (!(t instanceof Converter)) {
-      continue;
+  Lock readLock=transformersLock.readLock();
+  readLock.lock();
+  try {
+    for (    Transformer transformer : transformers) {
+      if (!(transformer instanceof Converter)) {
+        continue;
+      }
+      DataType returnDataType=transformer.getReturnDataType();
+      if (result.isCompatibleWith(returnDataType) && transformer.isSourceDataTypeSupported(source)) {
+        results.add(transformer);
+      }
     }
-    DataType dt=t.getReturnDataType();
-    if (result.isCompatibleWith(dt) && t.isSourceDataTypeSupported(source)) {
-      results.add(t);
-    }
+  }
+  finally {
+    readLock.unlock();
   }
   List<Transformer> concurrentlyAddedTransformers=(List<Transformer>)transformerListCache.putIfAbsent(dataTypePairHash,results);
   if (concurrentlyAddedTransformers != null) {

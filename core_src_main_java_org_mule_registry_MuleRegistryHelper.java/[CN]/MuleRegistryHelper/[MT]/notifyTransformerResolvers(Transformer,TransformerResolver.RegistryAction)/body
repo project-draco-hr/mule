@@ -1,10 +1,29 @@
 {
   if (t instanceof Converter) {
-    Collection<TransformerResolver> resolvers=lookupObjects(TransformerResolver.class);
-    for (    TransformerResolver resolver : resolvers) {
-      resolver.transformerChange(t,action);
+    Lock transformerResolversReadLock=transformerResolversLock.readLock();
+    transformerResolversReadLock.lock();
+    try {
+      for (      TransformerResolver resolver : transformerResolvers) {
+        resolver.transformerChange(t,action);
+      }
+    }
+  finally {
+      transformerResolversReadLock.unlock();
     }
     transformerListCache.clear();
     exactTransformerCache.clear();
+    Lock transformersWriteLock=transformersLock.writeLock();
+    transformersWriteLock.lock();
+    try {
+      if (action == TransformerResolver.RegistryAction.ADDED) {
+        transformers.add(t);
+      }
+ else {
+        transformers.remove(t);
+      }
+    }
+  finally {
+      transformersWriteLock.unlock();
+    }
   }
 }

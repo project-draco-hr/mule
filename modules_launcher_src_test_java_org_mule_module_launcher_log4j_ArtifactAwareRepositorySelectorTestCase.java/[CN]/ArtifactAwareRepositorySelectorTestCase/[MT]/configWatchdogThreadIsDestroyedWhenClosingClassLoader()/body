@@ -1,0 +1,38 @@
+{
+  Prober prober=new PollingProber(3000,100);
+  final ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
+  List<ClassLoader> classLoaders=new ArrayList<ClassLoader>();
+  classLoaders.add(currentClassLoader);
+  classLoaders.add(new MuleApplicationClassLoader(TEST_APP_NAME,currentClassLoader){
+    public URL findLocalResource(    String resourceName){
+      if (resourceName != null && resourceName.startsWith("log4j")) {
+        return currentClassLoader.getResource(resourceName);
+      }
+      return super.findLocalResource(resourceName);
+    }
+  }
+);
+  CompositeApplicationClassLoader compositeClassLoader=new CompositeApplicationClassLoader(TEST_APP_NAME,classLoaders);
+  Thread.currentThread().setContextClassLoader(compositeClassLoader);
+  RepositorySelector repositorySelector=new ArtifactAwareRepositorySelector();
+  LoggerRepository repository=repositorySelector.getLoggerRepository();
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return isConfigWatchDogThreadRunning();
+    }
+    @Override public String describeFailure(){
+      return "Config watch dog thread was not started";
+    }
+  }
+);
+  compositeClassLoader.dispose();
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return !isConfigWatchDogThreadRunning();
+    }
+    @Override public String describeFailure(){
+      return "Config watch dog thread was not stopped";
+    }
+  }
+);
+}

@@ -3,7 +3,12 @@
   chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
     @Override public MuleEvent process(    MuleEvent event) throws MuleException {
       try {
+        if (requestBody != null) {
+          event.getMessage().setPayload(requestBody);
+        }
+        copyAttachmentsRequest(event);
         MuleEvent result=processNext(event);
+        copyAttachmentsResponse(result);
         return result;
       }
  catch (      DispatchException e) {
@@ -16,6 +21,17 @@
           throw e;
         }
       }
+    }
+  }
+);
+  chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      Object operation=event.getMessage().removeProperty(CxfConstants.OPERATION,PropertyScope.INVOCATION);
+      MuleEvent result=processNext(event);
+      if (operation != null) {
+        result.getMessage().setInvocationProperty(CxfConstants.OPERATION,operation);
+      }
+      return result;
     }
   }
 );

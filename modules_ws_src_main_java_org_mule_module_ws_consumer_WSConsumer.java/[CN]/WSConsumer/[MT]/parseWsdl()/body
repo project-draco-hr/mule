@@ -1,0 +1,34 @@
+{
+  Definition wsdlDefinition=null;
+  URL url=IOUtils.getResourceAsUrl(config.getWsdlLocation(),getClass());
+  if (url == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Can't find wsdl at %s",config.getWsdlLocation()),this);
+  }
+  try {
+    WSDLReader wsdlReader=WSDLFactory.newInstance().newWSDLReader();
+    wsdlDefinition=wsdlReader.readWSDL(url.toString());
+  }
+ catch (  WSDLException e) {
+    throw new InitialisationException(e,this);
+  }
+  Service service=wsdlDefinition.getService(new QName(wsdlDefinition.getTargetNamespace(),config.getService()));
+  if (service == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Service %s not found in WSDL",config.getService()),this);
+  }
+  Port port=service.getPort(config.getPort());
+  if (port == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Port %s not found in WSDL",config.getPort()),this);
+  }
+  Binding binding=port.getBinding();
+  if (binding == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Port %s has no binding",config.getPort()),this);
+  }
+  BindingOperation bindingOperation=binding.getBindingOperation(this.operation,null,null);
+  if (bindingOperation == null) {
+    throw new InitialisationException(MessageFactory.createStaticMessage("Operation %s not found in WSDL",this.operation),this);
+  }
+  this.soapVersion=WSDLUtils.getSoapVersion(binding);
+  this.soapAction=getSoapAction(bindingOperation);
+  RequestBodyGenerator requestBodyGenerator=new RequestBodyGenerator(wsdlDefinition);
+  this.requestBody=requestBodyGenerator.generateRequestBody(bindingOperation);
+}

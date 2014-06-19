@@ -1,0 +1,13 @@
+{
+  DbConnection connection=mock(DbConnection.class);
+  DbConnectionFactory dbConnectionFactory=mock(DbConnectionFactory.class);
+  when(dbConnectionFactory.createConnection(TransactionalAction.JOIN_IF_POSSIBLE)).thenReturn(connection);
+  SelectExecutor selectExecutor=mock(SelectExecutor.class);
+  SelectMessageProcessor processor=new SelectMessageProcessor(null,null,null,null,false);
+  MuleEvent event=mock(MuleEvent.class);
+  MuleMessage muleMessage=mock(MuleMessage.class);
+  when(event.getMessage()).thenReturn(muleMessage);
+  processor.process(event);
+  verify(selectExecutor,times(1)).execute(eq(connection),Matchers.any(Query.class));
+  verify(dbConnectionFactory,times(1)).releaseConnection(connection);
+}

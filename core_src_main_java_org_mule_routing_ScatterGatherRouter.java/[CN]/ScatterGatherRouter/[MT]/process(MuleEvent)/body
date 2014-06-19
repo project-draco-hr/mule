@@ -1,9 +1,13 @@
 {
-  if (CollectionUtils.isEmpty(this.routes)) {
+  if (CollectionUtils.isEmpty(routes)) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),event,null);
   }
   MuleMessage message=event.getMessage();
   AbstractRoutingStrategy.validateMessageIsNotConsumable(event,message);
-  List<ProcessingMuleEventWork> works=this.executeWork(event);
-  return this.processResponses(event,works);
+  List<ProcessingMuleEventWork> works=executeWork(event);
+  MuleEvent response=processResponses(event,works);
+  if (response instanceof DefaultMuleEvent) {
+    response=DefaultMuleEvent.copy(response);
+  }
+  return response;
 }

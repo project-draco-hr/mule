@@ -1,0 +1,25 @@
+{
+  deploymentService.start();
+  addExplodedDomainFromResource(dummyDomainDescriptor.zipPath,dummyDomainDescriptor.id);
+  addExplodedAppFromResource(dummyDomainApp1Descriptor.zipPath,dummyDomainApp1Descriptor.id);
+  addExplodedAppFromResource(dummyDomainApp2Descriptor.zipPath,dummyDomainApp2Descriptor.id);
+  addExplodedAppFromResource(dummyDomainApp3Descriptor.zipPath,dummyDomainApp3Descriptor.id);
+  assertDeploymentSuccess(domainDeploymentListener,dummyDomainDescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp1Descriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp2Descriptor.id);
+  assertDeploymentFailure(applicationDeploymentListener,dummyDomainApp3Descriptor.id);
+  reset(domainDeploymentListener);
+  reset(applicationDeploymentListener);
+  deploymentService.getLock().lock();
+  try {
+    doRedeployDummyDomainByChangingConfigFileWithGoodOne();
+    doRedeployAppByChangingConfigFileWithGoodOne(dummyDomainApp3Descriptor.path);
+  }
+  finally {
+    deploymentService.getLock().unlock();
+  }
+  assertDeploymentSuccess(domainDeploymentListener,dummyDomainDescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp1Descriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp2Descriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp3Descriptor.id);
+}

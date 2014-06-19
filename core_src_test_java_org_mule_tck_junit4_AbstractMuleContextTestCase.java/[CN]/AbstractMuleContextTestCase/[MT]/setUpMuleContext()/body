@@ -1,8 +1,20 @@
 {
-  doSetUpBeforeMuleContextCreation();
-  muleContext=createMuleContext();
-  if (isStartContext() && muleContext != null && !muleContext.isStarted()) {
-    startMuleContext();
+  workingDirectory.create();
+  String workingDirectoryOldValue=System.setProperty(WORKING_DIRECTORY_SYSTEM_PROPERTY_KEY,workingDirectory.getRoot().getAbsolutePath());
+  try {
+    doSetUpBeforeMuleContextCreation();
+    muleContext=createMuleContext();
+    if (isStartContext() && muleContext != null && !muleContext.isStarted()) {
+      startMuleContext();
+    }
+    doSetUp();
   }
-  doSetUp();
+  finally {
+    if (workingDirectoryOldValue != null) {
+      System.setProperty(WORKING_DIRECTORY_SYSTEM_PROPERTY_KEY,workingDirectoryOldValue);
+    }
+ else {
+      System.clearProperty(WORKING_DIRECTORY_SYSTEM_PROPERTY_KEY);
+    }
+  }
 }

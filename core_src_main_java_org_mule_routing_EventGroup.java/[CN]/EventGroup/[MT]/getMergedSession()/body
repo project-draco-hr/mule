@@ -1,10 +1,12 @@
 {
-  MuleSession session=new DefaultMuleSession(events.retrieve(events.allKeys().get(0)).getSession());
+  MuleEvent lastStoredEvent=retrieveLastStoredEvent();
+  MuleSession session=new DefaultMuleSession(lastStoredEvent.getSession());
   for (  Serializable key : events.allKeys()) {
-    MuleEvent event=events.retrieve(key);
-    for (    String name : event.getSession().getPropertyNamesAsSet()) {
-      session.setProperty(name,event.getSession().getProperty(name));
+    if (!key.equals(lastStoredEventKey)) {
+      MuleEvent event=events.retrieve(key);
+      addAndOverrideSessionProperties(session,event);
     }
   }
+  addAndOverrideSessionProperties(session,lastStoredEvent);
   return session;
 }
