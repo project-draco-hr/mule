@@ -3,6 +3,8 @@
   contexts=new ContextHandlerCollection();
   httpServer.setHandler(contexts);
   if (webappsConfiguration != null) {
+    final AbstractNetworkConnector jettyConnector=createJettyConnector();
+    configureConnector(jettyConnector,webappsConfiguration.getHost(),webappsConfiguration.getPort());
     DeploymentManager deploymentManager=new DeploymentManager();
     WebAppProvider webAppProvider=new WebAppProvider(){
       @Override public ContextHandler createContextHandler(      App app) throws Exception {
@@ -13,37 +15,21 @@
         if (webappsConfiguration.getSystemClasses() != null) {
           webAppContext.setSystemClasses(webappsConfiguration.getSystemClasses());
         }
+        File workDir=new File(muleContext.getConfiguration().getWorkingDirectory(),"_exploded_wars" + webAppContext.getContextPath());
+        workDir.mkdirs();
+        webAppContext.setTempDirectory(workDir);
+        webAppContext.setAttribute(MULE_CONTEXT_ATTRIBUTE,muleContext);
+        webAppContext.setVirtualHosts(new String[]{getVirtualHostName(jettyConnector)});
+        if (logger.isInfoEnabled()) {
+          String msg=String.format("Will deploy a web app at %s://%s%s%s","http",jettyConnector.getHost(),jettyConnector.getPort() == 80 ? StringUtils.EMPTY : ":" + jettyConnector.getPort(),webAppContext.getContextPath());
+          logger.info(StringMessageUtils.getBoilerPlate(msg,'*',70));
+        }
         return webAppContext;
       }
     }
 ;
-    final Connector jettyConnector=createJettyConnector();
-    jettyConnector.setHost(webappsConfiguration.getHost());
-    jettyConnector.setPort(webappsConfiguration.getPort());
     deploymentManager.setContexts(contexts);
     deploymentManager.addAppProvider(webAppProvider);
-    deploymentManager.addLifeCycleBinding(new AppLifeCycle.Binding(){
-      @Override public String[] getBindingTargets(){
-        return new String[]{AppLifeCycle.DEPLOYING};
-      }
-      @Override public void processBinding(      Node node,      App app) throws Exception {
-        ContextHandler contextHandler=app.getContextHandler();
-        if (contextHandler instanceof WebAppContext) {
-          WebAppContext webapp=(WebAppContext)contextHandler;
-          File workDir=new File(muleContext.getConfiguration().getWorkingDirectory(),"_exploded_wars" + webapp.getContextPath());
-          workDir.mkdirs();
-          webapp.setTempDirectory(workDir);
-          webapp.setAttribute(MULE_CONTEXT_ATTRIBUTE,muleContext);
-          webapp.setConnectorNames(new String[]{jettyConnector.getName()});
-          if (logger.isInfoEnabled()) {
-            String msg=String.format("Will deploy a web app at %s://%s%s%s","http",jettyConnector.getHost(),jettyConnector.getPort() == 80 ? StringUtils.EMPTY : ":" + jettyConnector.getPort(),webapp.getContextPath());
-            logger.info(StringMessageUtils.getBoilerPlate(msg,'*',70));
-          }
-          return;
-        }
-      }
-    }
-);
     String webAppDir=webappsConfiguration.getDirectory();
     if (StringUtils.isBlank(webAppDir)) {
       final String appDir=muleContext.getRegistry().get(MuleProperties.APP_HOME_DIRECTORY_PROPERTY);

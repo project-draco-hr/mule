@@ -4,14 +4,14 @@
 synchronized (this) {
     holder=holders.get(connectorKey);
     if (holder == null) {
-      Connector connector=createJettyConnector();
-      connector.setPort(endpoint.getEndpointURI().getPort());
+      AbstractNetworkConnector connector=createJettyConnector();
       String host=endpoint.getEndpointURI().getHost();
+      int port=endpoint.getEndpointURI().getPort();
       if ("localhost".equalsIgnoreCase(host) && TcpPropertyHelper.isBindingLocalhostToAllLocalInterfaces()) {
         logger.warn(TcpMessages.localhostBoundToAllLocalInterfaces());
         host="0.0.0.0";
       }
-      connector.setHost(host);
+      configureConnector(connector,host,port);
       getHttpServer().addConnector(connector);
       holder=createContextHolder(connector,receiver.getEndpoint(),receiver);
       holders.put(connectorKey,holder);
