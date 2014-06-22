@@ -1,0 +1,33 @@
+{
+  HttpServlet servlet;
+  if (getReceiverServlet() == null) {
+    if (isUseContinuations()) {
+      servlet=new JettyContinuationsReceiverServlet(muleContext);
+    }
+ else {
+      servlet=new JettyReceiverServlet(muleContext);
+    }
+  }
+ else {
+    servlet=getReceiverServlet();
+  }
+  String path=endpoint.getEndpointURI().getPath();
+  if (StringUtils.isBlank(path)) {
+    path=ROOT;
+  }
+  if (resourceBase != null) {
+    ResourceHandler resourceHandler=new ResourceHandler();
+    ContextHandler resourceContextHandler=new ContextHandler(contexts,path);
+    resourceHandler.setResourceBase(resourceBase);
+    resourceContextHandler.setHandler(resourceHandler);
+  }
+  ServletContextHandler servletContext=new ServletContextHandler(contexts,ROOT,ServletContextHandler.NO_SECURITY);
+  servletContext.addEventListener(new MuleServletContextListener(muleContext,getName()));
+  servletContext.setVirtualHosts(new String[]{getVirtualHostName(connector)});
+  ServletHolder holder=new ServletHolder();
+  holder.setServlet(servlet);
+  servletContext.addServlet(holder,"/*");
+  servletContext.addServlet(JarResourceServlet.class,JarResourceServlet.DEFAULT_PATH_SPEC);
+  addHandler(servletContext);
+  return servlet;
+}
