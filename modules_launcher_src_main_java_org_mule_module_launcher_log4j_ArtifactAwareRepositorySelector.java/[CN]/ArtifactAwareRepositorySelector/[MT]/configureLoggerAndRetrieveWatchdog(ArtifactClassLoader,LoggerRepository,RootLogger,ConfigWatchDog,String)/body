@@ -6,7 +6,7 @@
   }
  else {
     configureFrom(artifactLogConfig,repository);
-    if (artifactLogConfig.toExternalForm().startsWith("file:")) {
+    if (FileUtils.isFile(artifactLogConfig)) {
       configWatchDog=new ConfigWatchDog(artifactClassLoader.getClassLoader(),artifactLogConfig.getFile(),repository);
       configWatchDog.setName(String.format("[%s].log4j.config.monitor",artifactName));
     }
@@ -15,7 +15,7 @@
         logger.info(String.format("Logging config %s is not an external file, will not be monitored for changes",artifactLogConfig));
       }
     }
-    if (MuleContainerBootstrapUtils.getMuleConfDir() != null && artifactLogConfig.toExternalForm().contains(MuleContainerBootstrapUtils.getMuleConfDir().getAbsolutePath())) {
+    if (isUrlInsideDirectory(artifactLogConfig,MuleContainerBootstrapUtils.getMuleConfDir())) {
       if (!hasFileAppender(root,artifactName)) {
         addDefaultAppender(root,logFileNameTemplate,artifactName);
         removeConsoleAppenders(root);
