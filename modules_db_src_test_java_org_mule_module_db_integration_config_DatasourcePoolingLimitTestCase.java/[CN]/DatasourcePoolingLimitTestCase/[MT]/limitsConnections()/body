@@ -1,7 +1,12 @@
 {
-  LocalMuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://testIn",TEST_MESSAGE,null);
-  assertTrue(response.getExceptionPayload().getException() instanceof MessagingException);
-  MessagingException exception=(MessagingException)response.getExceptionPayload().getException();
-  assertTrue(exception.getMessage().contains("An attempt by a client to checkout a Connection has timed out"));
+  try {
+    LocalMuleClient client=muleContext.getClient();
+    client.dispatch("vm://testIn",TEST_MESSAGE,null);
+    client.dispatch("vm://testIn",TEST_MESSAGE,null);
+    MuleMessage response=client.request("vm://connectionError",RECEIVE_TIMEOUT);
+    assertThat(response.getExceptionPayload().getException(),is(instanceOf(MessagingException.class)));
+  }
+  finally {
+    connectionLatch.countDown();
+  }
 }

@@ -1,0 +1,14 @@
+{
+  SedaStageInterceptingMessageProcessor sedaStageInterceptingMessageProcessor=new SedaStageInterceptingMessageProcessor("testProcessAsyncDoCopyEvent","testProcessAsyncDoCopyEvent",queueProfile,queueTimeout,mock(ThreadingProfile.class),queueStatistics,muleContext);
+  sedaStageInterceptingMessageProcessor.setListener(mock(MessageProcessor.class));
+  sedaStageInterceptingMessageProcessor.initialise();
+  MessagingExceptionHandler exceptionHandler=mock(MessagingExceptionHandler.class);
+  Flow flow=mock(Flow.class);
+  when(flow.getExceptionListener()).thenReturn(exceptionHandler);
+  when(flow.getProcessingStrategy()).thenReturn(new AsynchronousProcessingStrategy());
+  final MuleEvent event=getTestEvent(TEST_MESSAGE,flow,MessageExchangePattern.ONE_WAY);
+  sedaStageInterceptingMessageProcessor.processNextAsync(event);
+  MuleEvent queuedEvent=sedaStageInterceptingMessageProcessor.dequeue();
+  assertThat(queuedEvent,is(not(nullValue())));
+  assertThat(queuedEvent,is(not(same(event))));
+}

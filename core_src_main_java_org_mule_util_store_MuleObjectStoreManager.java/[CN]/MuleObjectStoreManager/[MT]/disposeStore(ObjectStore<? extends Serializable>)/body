@@ -1,7 +1,13 @@
 {
   if (store instanceof ObjectStorePartition) {
     ObjectStorePartition partition=(ObjectStorePartition)store;
-    partition.getBaseStore().disposePartition(partition.getPartitionName());
+    String partitionName=partition.getPartitionName();
+    partition.getBaseStore().disposePartition(partitionName);
+    ScheduledFuture<?> future=monitors.remove(partitionName);
+    if (future != null) {
+      future.cancel(false);
+    }
+    stores.remove(partitionName);
   }
  else {
     try {
@@ -9,6 +15,12 @@
     }
  catch (    UnsupportedOperationException e) {
       logger.warn(String.format("ObjectStore of class %s does not support clearing",store.getClass().getCanonicalName()),e);
+    }
+    try {
+      stores.values().remove(store);
+    }
+ catch (    Exception e) {
+      logger.warn("Can not remove object store" + store.toString(),e);
     }
   }
   if (store instanceof Disposable) {

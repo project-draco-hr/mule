@@ -1,0 +1,19 @@
+{
+  final AtomicReference<Connection> connectionRef=new AtomicReference<Connection>();
+  try {
+    retryPolicyTemplate.execute(new RetryCallback(){
+      public void doWork(      RetryContext context) throws Exception {
+        Connection connection=delegate.create(dataSource);
+        connectionRef.set(connection);
+      }
+      public String getWorkDescription(){
+        return "Connection factory";
+      }
+    }
+,null);
+  }
+ catch (  Exception e) {
+    throw new ConnectionCreationException(e);
+  }
+  return connectionRef.get();
+}
