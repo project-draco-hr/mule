@@ -1,0 +1,28 @@
+{
+  String basePath=getBasePath(schema.getDocumentBaseURI());
+  Collection<List<SchemaImport>> schemaImportsCollection=schema.getImports().values();
+  if (!schemaImportsCollection.isEmpty()) {
+    for (    List<SchemaImport> schemaImports : schemaImportsCollection) {
+      for (      SchemaImport schemaImport : schemaImports) {
+        String schemaLocationURI=schemaImport.getSchemaLocationURI();
+        if (schemaLocationURI != null && !schemaLocationURI.startsWith(basePath)) {
+          schemaImport.setSchemaLocationURI(basePath + schemaLocationURI);
+        }
+      }
+    }
+    NodeList children=schema.getElement().getChildNodes();
+    for (int i=0; i < children.getLength(); i++) {
+      Node item=children.item(i);
+      if (XML_IMPORT_ELEMENT.equals(item.getLocalName())) {
+        NamedNodeMap attributes=item.getAttributes();
+        Node namedItem=attributes.getNamedItem(XML_SCHEMA_LOCATION_ATTRIBUTE);
+        if (namedItem != null) {
+          String schemaLocation=namedItem.getNodeValue();
+          if (!schemaLocation.startsWith(basePath)) {
+            namedItem.setNodeValue(basePath + schemaLocation);
+          }
+        }
+      }
+    }
+  }
+}

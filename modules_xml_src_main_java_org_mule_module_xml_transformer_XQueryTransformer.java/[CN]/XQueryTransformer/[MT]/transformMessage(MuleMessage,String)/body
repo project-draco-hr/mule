@@ -6,15 +6,15 @@
       bindParameters(transformer,message);
       bindDocument(message.getPayload(),transformer);
       XQResultSequence result=transformer.executeQuery();
-      List results=new ArrayList();
+      List<Object> results=new ArrayList<Object>();
       while (result.next()) {
         XQItem item=result.getItem();
-        Class type=returnType.getType();
+        Class<?> type=returnType.getType();
         if (Node.class.isAssignableFrom(type) || Node[].class.isAssignableFrom(type)) {
           results.add(item.getNode());
         }
  else         if (String.class.isAssignableFrom(type) || String[].class.isAssignableFrom(type)) {
-          results.add(item.getItemAsString());
+          results.add(item.getItemAsString(null));
         }
  else         if (XMLStreamReader.class.isAssignableFrom(type) || XMLStreamReader[].class.isAssignableFrom(type)) {
           try {
@@ -51,9 +51,6 @@
     }
   finally {
       if (transformer != null) {
-        if (transformer.getWarnings() != null) {
-          logger.warn(transformer.getWarnings().getMessage(),transformer.getWarnings().fillInStackTrace());
-        }
         unbindParameters(transformer);
         transformerPool.returnObject(transformer);
       }

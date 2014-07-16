@@ -1,0 +1,19 @@
+{
+  final TestEventProcessingThread processingThread=new TestEventProcessingThread("testEventProcessingThread",1);
+  try {
+    processingThread.start();
+    Prober prober=new PollingProber(100,1);
+    prober.check(new Probe(){
+      public boolean isSatisfied(){
+        return processingThread.count > 1;
+      }
+      public String describeFailure(){
+        return "Expected more than one invocation of the thread processing method";
+      }
+    }
+);
+  }
+  finally {
+    processingThread.interrupt();
+  }
+}

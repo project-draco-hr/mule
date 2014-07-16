@@ -1,79 +1,16 @@
 {
-  final Map<String,Object> options=StartupContext.get().getStartupOptions();
-  String appString=(String)options.get("app");
-  final File appsDir=MuleContainerBootstrapUtils.getMuleAppsDir();
-  String[] appAnchors=appsDir.list(new SuffixFileFilter(APP_ANCHOR_SUFFIX));
-  for (  String anchor : appAnchors) {
-    new File(appsDir,anchor).delete();
-  }
-  String[] apps=ArrayUtils.EMPTY_STRING_ARRAY;
-  final boolean explicitAppSet=appString != null;
   DeploymentStatusTracker deploymentStatusTracker=new DeploymentStatusTracker();
-  addDeploymentListener(deploymentStatusTracker);
-  StartupSummaryDeploymentListener summaryDeploymentListener=new StartupSummaryDeploymentListener(deploymentStatusTracker);
+  addDeploymentListener(deploymentStatusTracker.getApplicationDeploymentStatusTracker());
+  addDomainDeploymentListener(deploymentStatusTracker.getDomainDeploymentStatusTracker());
+  StartupSummaryDeploymentListener summaryDeploymentListener=new StartupSummaryDeploymentListener(deploymentStatusTracker,this);
   addStartupListener(summaryDeploymentListener);
-  if (!explicitAppSet) {
-    String[] dirApps=appsDir.list(DirectoryFileFilter.DIRECTORY);
-    apps=(String[])ArrayUtils.addAll(apps,dirApps);
-    String[] zipApps=appsDir.list(ZIP_APPS_FILTER);
-    for (int i=0; i < zipApps.length; i++) {
-      zipApps[i]=StringUtils.removeEndIgnoreCase(zipApps[i],ZIP_FILE_SUFFIX);
-    }
-    apps=(String[])ArrayUtils.addAll(dirApps,zipApps);
-    Arrays.sort(apps);
-  }
- else {
-    apps=appString.split(":");
-  }
-  apps=removeDuplicateAppNames(apps);
-  for (  String app : apps) {
-    final Application a;
-    String appMarker=app;
-    File applicationFile=null;
-    try {
-      applicationFile=new File(appsDir,app + ".zip");
-      if (applicationFile.exists() && applicationFile.isFile()) {
-        appMarker=app + ZIP_FILE_SUFFIX;
-        a=guardedInstallFromAppDir(applicationFile.getName());
-      }
- else {
-        applicationFile=new File(appsDir,appMarker);
-        a=appFactory.createApp(app);
-      }
-      applications.add(a);
-    }
- catch (    Throwable t) {
-      deploymentListener.onDeploymentFailure(appMarker,t);
-      addZombie(applicationFile);
-      logger.error(String.format("Failed to create application [%s]",appMarker),t);
-    }
-  }
-  for (  Application application : applications) {
-    try {
-      deploymentListener.onDeploymentStart(application.getAppName());
-      guardedDeploy(application);
-      deploymentListener.onDeploymentSuccess(application.getAppName());
-    }
- catch (    Throwable t) {
-      deploymentListener.onDeploymentFailure(application.getAppName(),t);
-      final String msg=miniSplash(String.format("Failed to deploy app '%s', see below",application.getAppName()));
-      logger.error(msg,t);
-    }
-  }
+  deploymentDirectoryWatcher.start();
   for (  StartupListener listener : startupListeners) {
     try {
       listener.onAfterStartup();
     }
  catch (    Throwable t) {
       logger.error(t);
-    }
-  }
-  if (!explicitAppSet) {
-    scheduleChangeMonitor(appsDir);
-  }
- else {
-    if (logger.isInfoEnabled()) {
-      logger.info(miniSplash("Mule is up and running in a fixed app set mode"));
     }
   }
 }

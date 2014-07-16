@@ -1,0 +1,17 @@
+{
+  try {
+    if (!deploymentLock.tryLock(0,TimeUnit.SECONDS)) {
+      throw new IOException(ANOTHER_DEPLOYMENT_OPERATION_IS_IN_PROGRESS);
+    }
+    return installFrom(artifactUrl);
+  }
+ catch (  InterruptedException e) {
+    Thread.currentThread().interrupt();
+    throw new IOException(INSTALL_OPERATION_HAS_BEEN_INTERRUPTED);
+  }
+ finally {
+    if (deploymentLock.isHeldByCurrentThread()) {
+      deploymentLock.unlock();
+    }
+  }
+}

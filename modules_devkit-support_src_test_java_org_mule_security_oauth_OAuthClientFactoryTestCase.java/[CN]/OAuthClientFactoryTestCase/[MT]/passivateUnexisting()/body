@@ -1,0 +1,18 @@
+{
+  Mockito.when(this.objectStore.contains(KEY)).thenReturn(false);
+  final TestOAuth2Adapter adapter=this.getTesteAdapter();
+  this.factory.passivateObject(KEY,adapter);
+  Mockito.verify(this.objectStore,Mockito.never()).retrieve(KEY);
+  Mockito.verify(this.objectStore,Mockito.never()).remove(KEY);
+  Mockito.doAnswer(new Answer<Void>(){
+    @Override public Void answer(    InvocationOnMock invocation) throws Throwable {
+      OAuthState state=(OAuthState)invocation.getArguments()[1];
+      Assert.assertEquals(adapter.getAccessToken(),state.getAccessToken());
+      Assert.assertEquals(adapter.getAccessTokenUrl(),state.getAccessTokenUrl());
+      Assert.assertEquals(adapter.getAuthorizationUrl(),state.getAuthorizationUrl());
+      Assert.assertEquals(adapter.getRefreshToken(),state.getRefreshToken());
+      return null;
+    }
+  }
+).when(this.objectStore).store(Mockito.eq(KEY),Mockito.any(OAuthState.class));
+}

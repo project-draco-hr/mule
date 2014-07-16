@@ -1,9 +1,12 @@
 {
+  if (!muleContext.isPrimaryPollingInstance()) {
+    return;
+  }
   List<EventGroup> expired=new ArrayList<EventGroup>(1);
   try {
     for (    Serializable o : eventGroups.allKeys()) {
       EventGroup group=getEventGroup(o);
-      if ((group.getCreated() + getTimeout() * MILLI_TO_NANO_MULTIPLIER) < System.nanoTime()) {
+      if (group.getCreated() + getTimeout() < System.currentTimeMillis()) {
         expired.add(group);
       }
     }
@@ -14,7 +17,7 @@
   if (expired.size() > 0) {
     for (    Object anExpired : expired) {
       final EventGroup group=(EventGroup)anExpired;
-      ExecutionTemplate<MuleEvent> executionTemplate=ErrorHandlingExecutionTemplate.createErrorHandlingExecutionTemplate(muleContext,group.getMessageCollectionEvent().getFlowConstruct().getExceptionListener());
+      ExecutionTemplate<MuleEvent> executionTemplate=ErrorHandlingExecutionTemplate.createErrorHandlingExecutionTemplate(muleContext,flowConstruct.getExceptionListener());
       try {
         executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
           @Override public MuleEvent process() throws Exception {

@@ -1,0 +1,24 @@
+{
+  checkInterrupted();
+synchronized (list) {
+    if (capacity > 0) {
+      if (capacity <= room) {
+        throw new IllegalStateException("Can not add more objects than the capacity in one time");
+      }
+      long l1=timeout > 0L ? System.currentTimeMillis() : 0L;
+      long l2=timeout;
+      while (list.size() >= capacity - room) {
+        if (l2 <= 0L) {
+          return false;
+        }
+        list.wait(l2);
+        l2=timeout - (System.currentTimeMillis() - l1);
+      }
+    }
+    if (o != null) {
+      list.addLast(o);
+    }
+    list.notifyAll();
+    return true;
+  }
+}

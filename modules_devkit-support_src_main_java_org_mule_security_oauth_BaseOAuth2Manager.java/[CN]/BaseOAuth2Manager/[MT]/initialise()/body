@@ -1,0 +1,30 @@
+{
+  super.initialise();
+  GenericKeyedObjectPool.Config config=new GenericKeyedObjectPool.Config();
+  config.testOnBorrow=true;
+  if (this.accessTokenObjectStore == null) {
+    this.accessTokenObjectStore=muleContext.getRegistry().lookupObject(MuleProperties.DEFAULT_USER_OBJECT_STORE_NAME);
+    if (this.accessTokenObjectStore == null) {
+      throw new InitialisationException(CoreMessages.createStaticMessage("There is no default user object store on this Mule instance."),this);
+    }
+  }
+  this.accessTokenPoolFactory=this.createPoolFactory(this,this.accessTokenObjectStore);
+  this.accessTokenPool=new GenericKeyedObjectPool<String,OAuth2Adapter>(accessTokenPoolFactory,config);
+  if (defaultUnauthorizedConnector instanceof Initialisable) {
+    ((Initialisable)defaultUnauthorizedConnector).initialise();
+  }
+  if (this.httpUtil == null) {
+    this.httpUtil=new HttpUtilImpl();
+  }
+  if (this.oauthResponseParser == null) {
+    this.oauthResponseParser=new DefaultOAuthResponseParser();
+  }
+  if (this.refreshTokenManager == null) {
+    try {
+      this.refreshTokenManager=this.muleContext.getRegistry().lookupObject(RefreshTokenManager.class);
+    }
+ catch (    RegistrationException e) {
+      throw new InitialisationException(e,this);
+    }
+  }
+}

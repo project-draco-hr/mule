@@ -1,10 +1,19 @@
 {
   XmlConfigurationMuleArtifactFactory factory=lookupArtifact();
-  MuleArtifact artifact=factory.getArtifact(document.getDocumentElement(),callback);
-  Assert.assertNotNull(artifact);
-  Assert.assertTrue(artifact.hasCapability(Testable.class));
-  Assert.assertTrue(artifact.getCapability(Testable.class) instanceof Testable);
-  Testable t=artifact.getCapability(Testable.class);
-  Assert.assertEquals(expectedResult,t.test().getStatus());
-  factory.returnArtifact(artifact);
+  MuleArtifact artifact=null;
+  try {
+    artifact=factory.getArtifact(document.getDocumentElement(),callback);
+    assertNotNull(artifact);
+    assertTrue(artifact.hasCapability(Testable.class));
+    assertTrue(artifact.getCapability(Testable.class) instanceof Testable);
+    if (expectedResult != null) {
+      Testable artifactCapability=artifact.getCapability(Testable.class);
+      assertEquals(expectedResult,artifactCapability.test().getStatus());
+    }
+  }
+  finally {
+    if (artifact != null) {
+      factory.returnArtifact(artifact);
+    }
+  }
 }

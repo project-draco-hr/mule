@@ -1,0 +1,26 @@
+{
+  URL artifactLogConfig=getArtifactLoggingConfig(artifactClassLoader);
+  final String artifactName=artifactClassLoader.getArtifactName();
+  if (artifactLogConfig == null) {
+    addDefaultAppender(root,logFileNameTemplate,artifactName);
+  }
+ else {
+    configureFrom(artifactLogConfig,repository);
+    if (FileUtils.isFile(artifactLogConfig)) {
+      configWatchDog=new ConfigWatchDog(artifactClassLoader.getClassLoader(),artifactLogConfig.getFile(),repository);
+      configWatchDog.setName(String.format("[%s].log4j.config.monitor",artifactName));
+    }
+ else {
+      if (logger.isInfoEnabled()) {
+        logger.info(String.format("Logging config %s is not an external file, will not be monitored for changes",artifactLogConfig));
+      }
+    }
+    if (isUrlInsideDirectory(artifactLogConfig,MuleContainerBootstrapUtils.getMuleConfDir())) {
+      if (!hasFileAppender(root,artifactName)) {
+        addDefaultAppender(root,logFileNameTemplate,artifactName);
+        removeConsoleAppenders(root);
+      }
+    }
+  }
+  return configWatchDog;
+}

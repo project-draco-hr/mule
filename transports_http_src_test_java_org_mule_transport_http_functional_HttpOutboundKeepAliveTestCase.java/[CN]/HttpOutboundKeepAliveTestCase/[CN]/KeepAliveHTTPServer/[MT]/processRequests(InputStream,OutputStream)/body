@@ -1,0 +1,16 @@
+{
+  boolean closeConnection=false;
+  while (requestCount < MAX_REQUESTS && !closeConnection) {
+    HttpRequest request=parseRequest(in,muleContext.getConfiguration().getDefaultEncoding());
+    Header connHeader=request.getFirstHeader(HttpConstants.HEADER_CONNECTION);
+    connectionHeader=(connHeader == null) ? null : connHeader.getValue();
+    requestCount++;
+    closeConnection=CONNECTION_CLOSE_VALUE.equals(connectionHeader);
+    StringBuilder response=new StringBuilder(HTTP_STATUS_LINE_OK);
+    if (closeConnection) {
+      response.append(String.format("%s: %s\n",HttpConstants.HEADER_CONNECTION,CONNECTION_CLOSE_VALUE));
+    }
+    response.append("Content-Length: 4\n\nTEST");
+    out.write(response.toString().getBytes());
+  }
+}

@@ -1,0 +1,54 @@
+{
+  if (adapter.getAccessToken() != null) {
+    return;
+  }
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug("Retrieving access token...");
+  }
+  String accessTokenUrl=adapter.getAccessTokenUrl() != null ? adapter.getAccessTokenUrl() : this.getDefaultUnauthorizedConnector().getAccessTokenUrl();
+  String response=this.httpUtil.post(accessTokenUrl,requestBody);
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug(String.format("Received response [%s]",response));
+  }
+  adapter.setAccessToken(this.oauthResponseParser.extractAccessCode(adapter.getAccessCodePattern(),response));
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug(String.format("Access token retrieved successfully [accessToken = %s]",adapter.getAccessToken()));
+  }
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug(String.format("Attempting to extract expiration time using [expirationPattern = %s]",adapter.getExpirationTimePattern().pattern()));
+  }
+  Date expiration=this.oauthResponseParser.extractExpirationTime(adapter.getExpirationTimePattern(),response);
+  if (expiration != null) {
+    adapter.setExpiration(expiration);
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Token expiration extracted successfully [expiration = %s]",expiration));
+    }
+  }
+ else {
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Token expiration could not be extracted from [response = %s]",response));
+    }
+  }
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug("Attempting to extract refresh token time using [refreshTokenPattern = \"refresh_token\":\"([^&]+?)\"]");
+  }
+  String refreshToken=this.oauthResponseParser.extractRefreshToken(adapter.getRefreshTokenPattern(),response);
+  if (refreshToken != null) {
+    adapter.setRefreshToken(refreshToken);
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Refresh token extracted successfully [refresh token = %s]",refreshToken));
+    }
+  }
+ else {
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Refresh token could not be extracted from [response = %s]",response));
+    }
+  }
+  this.fetchCallbackParameters(adapter,response);
+  try {
+    this.postAuth(adapter,accessTokenId);
+  }
+ catch (  Exception e) {
+    throw new UnableToAcquireAccessTokenException("Adapter was successfuly retrieved but an exception was found after invoking the postAuth() method",e);
+  }
+}

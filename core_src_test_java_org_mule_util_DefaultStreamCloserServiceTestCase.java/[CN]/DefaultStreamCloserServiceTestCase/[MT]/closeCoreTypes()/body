@@ -1,0 +1,32 @@
+{
+  Collection<Object> closeableMocks=new ArrayList<Object>();
+  InputStream in=Mockito.mock(ByteArrayInputStream.class);
+  closeableMocks.add(in);
+  InputSource inputSource1=Mockito.mock(InputSource.class);
+  InputStream byteStream=Mockito.mock(InputStream.class);
+  Mockito.when(inputSource1.getByteStream()).thenReturn(byteStream);
+  closeableMocks.add(inputSource1);
+  InputSource inputSource2=Mockito.mock(InputSource.class);
+  Reader reader=Mockito.mock(Reader.class);
+  Mockito.when(inputSource2.getCharacterStream()).thenReturn(reader);
+  closeableMocks.add(inputSource2);
+  SAXSource sax1=Mockito.mock(SAXSource.class,Mockito.RETURNS_DEEP_STUBS);
+  Mockito.when(sax1.getInputSource()).thenReturn(inputSource1);
+  closeableMocks.add(sax1);
+  SAXSource sax2=Mockito.mock(SAXSource.class,Mockito.RETURNS_DEEP_STUBS);
+  Mockito.when(sax2.getInputSource()).thenReturn(inputSource2);
+  closeableMocks.add(sax2);
+  Closeable closeable=Mockito.mock(Consumer.class);
+  closeableMocks.add(closeable);
+  java.io.Closeable doNotClose=Mockito.mock(java.io.Closeable.class);
+  closeableMocks.add(doNotClose);
+  Mockito.when(this.muleContext.getRegistry().lookupObjects(StreamCloser.class)).thenReturn(new ArrayList<StreamCloser>());
+  for (  Object stream : closeableMocks) {
+    this.service.closeStream(stream);
+  }
+  Mockito.verify(in).close();
+  Mockito.verify(byteStream,Mockito.times(2)).close();
+  Mockito.verify(reader,Mockito.times(2)).close();
+  Mockito.verify(closeable).close();
+  Mockito.verify(doNotClose,Mockito.never()).close();
+}

@@ -18,16 +18,14 @@
     }
   }
 ;
-  MuleClient client=new MuleClient(muleContext);
-  Map<?,?> properties=new HashMap<Object,Object>();
+  MuleClient client=muleContext.getClient();
+  Map<String,Object> properties=new HashMap<String,Object>();
   Object component=getComponent("testComponent");
   assertTrue("FunctionalTestComponent expected",component instanceof FunctionalTestComponent);
   FunctionalTestComponent ftc=(FunctionalTestComponent)component;
   assertNotNull(ftc);
   ftc.setEventCallback(callback);
-  logger.debug("before dispatch");
-  client.dispatch(getAddressByEndpoint(client,INBOUND_ENDPOINT_NAME),TEST_MESSAGE,properties);
-  logger.debug("before retrieve");
+  client.dispatch(getAddressByEndpoint(INBOUND_ENDPOINT_NAME),TEST_MESSAGE,properties);
   latch.await(DEFAULT_TIMEOUT,TimeUnit.MILLISECONDS);
   assertEquals(TEST_MESSAGE,message.get());
 }

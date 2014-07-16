@@ -1,16 +1,7 @@
 {
-  boolean checkFileAge=fileConnector.getCheckFileAge();
-  if (checkFileAge) {
-    long fileAge=fileConnector.getFileAge();
-    long lastMod=file.lastModified();
-    long now=System.currentTimeMillis();
-    long thisFileAge=now - lastMod;
-    if (thisFileAge < fileAge) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("The file has not aged enough yet, will return nothing for: " + file);
-      }
-      return;
-    }
+  if (fileConnector.getCheckFileAge() && !isAgedFile(file,fileConnector.getFileAge())) {
+    removeProcessingMark(file.getAbsolutePath());
+    return;
   }
   if (!(file.canRead() && file.exists() && file.isFile())) {
     throw new DefaultMuleException(FileMessages.fileDoesNotExist(file.getName()));
@@ -21,14 +12,15 @@
  else   if (logger.isInfoEnabled()) {
     logger.info("Lock obtained on file: " + file.getAbsolutePath());
   }
-  DefaultMuleMessage fileParserMessasge=new DefaultMuleMessage(null,connector.getMuleContext());
-  fileParserMessasge.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,file.getName());
-  final String originalSourceFile=file.getAbsolutePath();
+  final String originalSourceFilePath=file.getAbsolutePath();
   final String originalSourceFileName=file.getName();
+  final String originalSourceDirectory=file.getParent();
+  DefaultMuleMessage fileParserMessasge=new DefaultMuleMessage(null,getEndpoint().getMuleContext());
+  fileParserMessasge.setInboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName);
+  fileParserMessasge.setInboundProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory);
   final File sourceFile;
   if (workDir != null) {
-    String workFileName=file.getName();
-    workFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
+    String workFileName=fileConnector.getFilenameParser().getFilename(fileParserMessasge,workFileNamePattern);
     File workFile=FileUtils.newFile(workDir,workFileName);
     fileConnector.move(file,workFile);
     sourceFile=workFile;
@@ -50,15 +42,7 @@
     if (fileConnector.isStreaming()) {
       ReceiverFileInputStream payload=createReceiverFileInputStream(sourceFile,destinationFile,new InputStreamCloseListener(){
         @Override public void fileClose(        File file){
-          try {
-            if (logger.isDebugEnabled()) {
-              logger.debug(String.format("Removing processing flag for $ ",file.getAbsolutePath()));
-            }
-            filesBeingProcessingObjectStore.remove(file.getAbsolutePath());
-          }
- catch (          ObjectStoreException e) {
-            logger.warn("Failure trying to remove file " + originalSourceFile + " from list of files under processing");
-          }
+          removeProcessingMark(file.getAbsolutePath());
         }
       }
 );
@@ -76,7 +60,10 @@
     message.setProperty(FileConnector.PROPERTY_SOURCE_DIRECTORY,file.getParent(),PropertyScope.INBOUND);
     message.setProperty(FileConnector.PROPERTY_SOURCE_FILENAME,file.getName(),PropertyScope.INBOUND);
   }
-  message.setOutboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName);
+  message.setProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory,PropertyScope.INBOUND);
+  message.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName,PropertyScope.INBOUND);
+  message.setInvocationProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory);
+  message.setInvocationProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName);
   if (forceSync) {
     message.setProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,Boolean.TRUE,PropertyScope.INBOUND);
   }
@@ -87,6 +74,6 @@
     processWithStreaming(sourceFile,(ReceiverFileInputStream)originalPayload,executionTemplate,finalMessage);
   }
  else {
-    processWithoutStreaming(originalSourceFile,originalSourceFileName,sourceFile,destinationFile,executionTemplate,finalMessage);
+    processWithoutStreaming(originalSourceFilePath,originalSourceFileName,originalSourceDirectory,sourceFile,destinationFile,executionTemplate,finalMessage);
   }
 }

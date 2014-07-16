@@ -1,10 +1,10 @@
 {
-  MuleClient client=new MuleClient(muleContext);
+  MuleClient client=muleContext.getClient();
   String payload="payload";
   Map<String,Object> headers=new HashMap<String,Object>();
   final String customHeader="X-Custom-Header";
   headers.put(customHeader,"value");
-  client.sendNoReceive("http://localhost:4444/in",payload,headers);
+  client.dispatch(String.format("http://localhost:%d/in",httpPort.getNumber()),payload,headers);
   MuleMessage msg=client.request("vm://out",10000);
   assertNotNull(msg);
   assertEquals(payload,msg.getPayloadAsString());

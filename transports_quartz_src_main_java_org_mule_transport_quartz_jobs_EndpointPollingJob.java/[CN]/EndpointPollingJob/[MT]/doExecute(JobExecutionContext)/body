@@ -42,7 +42,7 @@
     }
     final InboundEndpoint finalEndpoint=endpoint;
     ExecutionCallback<MuleEvent> cb=new ExecutionCallback<MuleEvent>(){
-      public MuleEvent process() throws Exception {
+      @Override public MuleEvent process() throws Exception {
         Transaction tx=TransactionCoordination.getInstance().getTransaction();
         if (tx != null) {
           tx.begin();
@@ -52,8 +52,7 @@
           result=finalEndpoint.getConnector().request(finalEndpoint,jobConfig.getTimeout());
         }
  else {
-          MuleClient client=new MuleClient(connector.getMuleContext());
-          result=client.request(jobConfig.getEndpointRef(),jobConfig.getTimeout());
+          result=request();
         }
         if (result != null) {
           if (logger.isDebugEnabled()) {
@@ -67,6 +66,13 @@
           receiver.routeMessage(result);
         }
         return null;
+      }
+      private MuleMessage request() throws MuleException, Exception {
+        String endpointUri=jobConfig.getEndpointRef();
+        MuleContext context=receiver.getEndpoint().getMuleContext();
+        InboundEndpoint inboundEndpoint=context.getEndpointFactory().getInboundEndpoint(endpointUri);
+        int timeout=jobConfig.getTimeout();
+        return inboundEndpoint.request(timeout);
       }
     }
 ;

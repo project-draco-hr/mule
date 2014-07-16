@@ -1,17 +1,10 @@
 {
-  Thread thread=new Thread(new Runnable(){
-    public void run(){
-      try {
-        muleContext.start();
-      }
- catch (      MuleException e) {
-      }
-    }
+  try {
+    asynchronousMuleContextStart();
+    PollingProber prober=new PollingProber(RECEIVE_TIMEOUT,50);
+    prober.check(new ProcessMessageProbe());
   }
-);
-  thread.start();
-  waitUntilEndpointIsStarted("testInEndpoint");
-  LocalMuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://testIn","TEST",null);
-  assertEquals("TEST received",response.getPayloadAsString());
+  finally {
+    startLatch.countDown();
+  }
 }

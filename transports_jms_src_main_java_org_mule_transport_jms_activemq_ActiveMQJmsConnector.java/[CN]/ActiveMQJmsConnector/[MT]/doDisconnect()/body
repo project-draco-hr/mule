@@ -5,12 +5,20 @@
       return;
     }
     final Class clazz=connection.getClass();
-    Method cleanupMethod;
+    Method cleanupMethod=null;
     if (Proxy.isProxyClass(clazz)) {
-      TargetInvocationHandler handler=(TargetInvocationHandler)Proxy.getInvocationHandler(connection);
-      connection=(Connection)handler.getTargetObject();
-      Class realConnectionClass=connection.getClass();
-      cleanupMethod=realConnectionClass.getMethod("cleanup",(Class[])null);
+      InvocationHandler invocationHandler=Proxy.getInvocationHandler(connection);
+      if (invocationHandler instanceof TargetInvocationHandler) {
+        TargetInvocationHandler targetInvocationHandler=(TargetInvocationHandler)invocationHandler;
+        connection=(Connection)targetInvocationHandler.getTargetObject();
+        Class realConnectionClass=connection.getClass();
+        cleanupMethod=realConnectionClass.getMethod("cleanup",(Class[])null);
+      }
+ else {
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("InvocationHandler of the JMS connection proxy is of type %s, not doing " + "any extra cleanup",invocationHandler.getClass().getName()));
+        }
+      }
     }
  else {
       cleanupMethod=clazz.getMethod("cleanup",(Class[])null);

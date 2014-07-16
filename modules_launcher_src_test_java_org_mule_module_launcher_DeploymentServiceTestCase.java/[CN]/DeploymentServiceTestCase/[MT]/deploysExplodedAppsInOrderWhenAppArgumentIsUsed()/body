@@ -1,0 +1,19 @@
+{
+  addExplodedAppFromResource(emptyAppDescriptor.zipPath,"1");
+  addExplodedAppFromResource(emptyAppDescriptor.zipPath,"2");
+  addExplodedAppFromResource(emptyAppDescriptor.zipPath,"3");
+  Map<String,Object> startupOptions=new HashMap<String,Object>();
+  startupOptions.put("app","3:1:2");
+  StartupContext.get().setStartupOptions(startupOptions);
+  deploymentService.start();
+  assertDeploymentSuccess(applicationDeploymentListener,"1");
+  assertDeploymentSuccess(applicationDeploymentListener,"2");
+  assertDeploymentSuccess(applicationDeploymentListener,"3");
+  assertAppsDir(NONE,new String[]{"1","2","3"},true);
+  List<Application> applications=deploymentService.getApplications();
+  assertNotNull(applications);
+  assertEquals(3,applications.size());
+  assertEquals("3",applications.get(0).getArtifactName());
+  assertEquals("1",applications.get(1).getArtifactName());
+  assertEquals("2",applications.get(2).getArtifactName());
+}

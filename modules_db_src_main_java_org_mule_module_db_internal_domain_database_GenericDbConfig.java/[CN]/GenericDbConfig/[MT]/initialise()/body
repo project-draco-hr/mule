@@ -1,0 +1,21 @@
+{
+  databaseDecorator.init(muleContext);
+  DataSource instanceDataSource=dataSource;
+  if (instanceDataSource == null) {
+    try {
+      dataSource=createDataSource();
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(e,this);
+    }
+  }
+  dataSource=decorateDataSourceIfRequired(dataSource);
+  ConnectionFactory connectionFactory;
+  if (retryPolicyTemplate == null) {
+    connectionFactory=new SimpleConnectionFactory();
+  }
+ else {
+    connectionFactory=new RetryConnectionFactory(retryPolicyTemplate,new SimpleConnectionFactory());
+  }
+  dbConnectionFactory=new TransactionalDbConnectionFactory(new TransactionCoordinationDbTransactionManager(),dbTypeManager,connectionFactory,this.getDataSource());
+}

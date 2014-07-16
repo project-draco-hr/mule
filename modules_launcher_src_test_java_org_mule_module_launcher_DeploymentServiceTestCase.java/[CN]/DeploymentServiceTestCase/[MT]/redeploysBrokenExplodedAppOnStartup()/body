@@ -1,0 +1,15 @@
+{
+  addExplodedAppFromResource(incompleteAppDescriptor.zipPath);
+  deploymentService.start();
+  assertDeploymentFailure(applicationDeploymentListener,incompleteAppDescriptor.id);
+  assertAppsDir(NONE,new String[]{incompleteAppDescriptor.id},true);
+  final Map<URL,Long> zombieMap=deploymentService.getZombieApplications();
+  assertEquals("Wrong number of zombie apps registered.",1,zombieMap.size());
+  final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
+  assertEquals("Wrong URL tagged as zombie.",incompleteAppDescriptor.id,new File(zombie.getKey().getFile()).getParentFile().getName());
+  assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
+  reset(applicationDeploymentListener);
+  File configFile=new File(appsDir + incompleteAppDescriptor.path,MULE_CONFIG_XML_FILE);
+  configFile.setLastModified(configFile.lastModified() + 1000);
+  assertDeploymentFailure(applicationDeploymentListener,incompleteAppDescriptor.id);
+}

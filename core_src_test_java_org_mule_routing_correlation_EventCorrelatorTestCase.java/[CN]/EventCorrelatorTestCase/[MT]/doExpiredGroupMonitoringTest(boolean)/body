@@ -1,0 +1,28 @@
+{
+  when(mockMuleContext.isPrimaryPollingInstance()).thenReturn(primaryNode);
+  EventCorrelator eventCorrelator=createEventCorrelator();
+  when(mockEventCorrelatorCallback.createEventGroup(mockMuleEvent,TEST_GROUP_ID)).thenReturn(mockEventGroup);
+  eventCorrelator.start();
+  try {
+    Prober prober=new PollingProber(1000,50);
+    prober.check(new Probe(){
+      public boolean isSatisfied(){
+        try {
+          return !memoryObjectStore.contains(TEST_GROUP_ID);
+        }
+ catch (        ObjectStoreException e) {
+          logger.debug("Could not access object store.");
+          return false;
+        }
+      }
+      public String describeFailure(){
+        return "Event group not expired.";
+      }
+    }
+);
+  }
+  finally {
+    eventCorrelator.stop();
+    eventCorrelator.dispose();
+  }
+}

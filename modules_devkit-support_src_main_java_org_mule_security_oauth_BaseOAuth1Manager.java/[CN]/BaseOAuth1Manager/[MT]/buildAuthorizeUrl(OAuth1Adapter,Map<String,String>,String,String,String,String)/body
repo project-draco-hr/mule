@@ -1,0 +1,46 @@
+{
+  List<String> customOAuthParameters=new ArrayList<String>();
+  for (  Map.Entry<String,String> entry : extraParameters.entrySet()) {
+    customOAuthParameters.add(entry.getKey());
+    customOAuthParameters.add(entry.getValue());
+  }
+  requestTokenUrl=requestTokenUrl != null ? requestTokenUrl : adapter.getRequestTokenUrl();
+  String scope=adapter.getScope();
+  if (scope != null) {
+    try {
+      String scopeParam="?scope=".concat(URLEncoder.encode(scope,"UTF-8"));
+      requestTokenUrl=requestTokenUrl.concat(scopeParam);
+    }
+ catch (    UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  OAuthProvider provider=new DefaultOAuthProvider(requestTokenUrl,accessTokenUrl != null ? accessTokenUrl : adapter.getAccessTokenUrl(),authorizationUrl != null ? authorizationUrl : adapter.getAuthorizationUrl());
+  OAuthConsumer consumer=this.getConsumer(adapter);
+  provider.setOAuth10a(true);
+  String signedAuthorizationUrl;
+  if (getLogger().isDebugEnabled()) {
+    getLogger().debug(String.format("Attempting to acquire a request token [consumer = %s] [consumerSecret = %s]",consumer.getConsumerKey(),consumer.getConsumerSecret()));
+  }
+  try {
+    signedAuthorizationUrl=provider.retrieveRequestToken(consumer,redirectUri,customOAuthParameters.toArray(new String[]{}));
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Request token acquired [requestToken = %s] [requestTokenSecret = %s]",consumer.getToken(),consumer.getTokenSecret()));
+    }
+  }
+ catch (  OAuthMessageSignerException e) {
+    throw new UnableToAcquireRequestTokenException(e);
+  }
+catch (  OAuthNotAuthorizedException e) {
+    throw new UnableToAcquireRequestTokenException(e);
+  }
+catch (  OAuthExpectationFailedException e) {
+    throw new UnableToAcquireRequestTokenException(e);
+  }
+catch (  OAuthCommunicationException e) {
+    throw new UnableToAcquireRequestTokenException(e);
+  }
+  adapter.setRequestToken(consumer.getToken());
+  adapter.setRequestTokenSecret(consumer.getTokenSecret());
+  return signedAuthorizationUrl;
+}

@@ -1,0 +1,16 @@
+{
+  try {
+    if (!deploymentLock.tryLock(0,TimeUnit.SECONDS)) {
+      return;
+    }
+    deployer.deploy(artifact);
+  }
+ catch (  InterruptedException e) {
+    Thread.currentThread().interrupt();
+  }
+ finally {
+    if (deploymentLock.isHeldByCurrentThread()) {
+      deploymentLock.unlock();
+    }
+  }
+}

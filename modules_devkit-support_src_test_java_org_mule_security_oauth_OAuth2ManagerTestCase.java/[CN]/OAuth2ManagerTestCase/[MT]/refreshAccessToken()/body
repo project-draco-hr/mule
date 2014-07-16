@@ -1,0 +1,35 @@
+{
+  final String accessTokenUrl="accessTokenUrl";
+  Mockito.when(this.adapter.getAccessTokenUrl()).thenReturn(accessTokenUrl);
+  final String oauthVerifier="oauthVerifier";
+  final String consumerKey="consumerKey";
+  final String consumerSecret="consumerSecret";
+  final String response="response";
+  final String requestBody="grant_type=refresh_token&client_id=consumerKey&client_secret=consumerSecret&refresh_token=refreshToken";
+  final Pattern accessTokenPattern=Pattern.compile(".");
+  final Pattern expirationPattern=Pattern.compile(".");
+  final Pattern refreshTokenPattern=Pattern.compile(".");
+  final String accessToken="accessToken";
+  final String refreshToken="refreshToken";
+  final Date expiration=new Date();
+  Mockito.when(adapter.getOauthVerifier()).thenReturn(oauthVerifier);
+  Mockito.when(adapter.getConsumerKey()).thenReturn(consumerKey);
+  Mockito.when(adapter.getConsumerSecret()).thenReturn(consumerSecret);
+  Mockito.when(adapter.getAccessCodePattern()).thenReturn(accessTokenPattern);
+  Mockito.when(adapter.getRefreshTokenPattern()).thenReturn(refreshTokenPattern);
+  Mockito.when(adapter.getExpirationTimePattern()).thenReturn(expirationPattern);
+  Mockito.when(adapter.getRefreshToken()).thenReturn(refreshToken);
+  Mockito.when(this.httpUtil.post(this.manager.getDefaultUnauthorizedConnector().getAccessTokenUrl(),requestBody)).thenReturn(response);
+  Mockito.when(this.oauthResponseParser.extractAccessCode(accessTokenPattern,response)).thenReturn(accessToken);
+  Mockito.when(this.oauthResponseParser.extractExpirationTime(expirationPattern,response)).thenReturn(expiration);
+  Mockito.when(this.oauthResponseParser.extractRefreshToken(refreshTokenPattern,response)).thenReturn(refreshToken);
+  this.manager.refreshAccessToken(adapter,accessToken);
+  Mockito.verify(this.adapter).setAccessToken(null);
+  Mockito.verify(this.httpUtil).post(this.manager.getDefaultUnauthorizedConnector().getAccessTokenUrl(),requestBody);
+  Mockito.verify(this.oauthResponseParser).extractAccessCode(accessTokenPattern,response);
+  Mockito.verify(this.adapter).setAccessToken(accessToken);
+  Mockito.verify(this.adapter).setExpiration(expiration);
+  Mockito.verify(this.adapter).setRefreshToken(refreshToken);
+  Mockito.verify(adapter).postAuth();
+  Mockito.verify(this.manager).fetchCallbackParameters(this.adapter,response);
+}

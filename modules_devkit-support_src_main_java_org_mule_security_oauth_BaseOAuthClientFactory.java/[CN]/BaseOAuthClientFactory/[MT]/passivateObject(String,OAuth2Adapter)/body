@@ -1,0 +1,27 @@
+{
+  if (!this.getAdapterClass().isInstance(obj)) {
+    throw new IllegalArgumentException("Invalid connector type");
+  }
+  OAuth2Adapter connector=(OAuth2Adapter)obj;
+  OAuthState state=null;
+  Lock lock=this.getLock(key);
+  lock.lock();
+  try {
+    if (this.objectStore.contains(key)) {
+      state=this.retrieveOAuthState(key,false);
+      this.objectStore.remove(key);
+    }
+ else {
+      state=new OAuthState();
+    }
+    state.setAccessToken(connector.getAccessToken());
+    state.setAccessTokenUrl(connector.getAccessTokenUrl());
+    state.setAuthorizationUrl(connector.getAuthorizationUrl());
+    state.setRefreshToken(connector.getRefreshToken());
+    this.setCustomStateProperties(connector,state);
+    this.objectStore.store(key,state);
+  }
+  finally {
+    lock.unlock();
+  }
+}

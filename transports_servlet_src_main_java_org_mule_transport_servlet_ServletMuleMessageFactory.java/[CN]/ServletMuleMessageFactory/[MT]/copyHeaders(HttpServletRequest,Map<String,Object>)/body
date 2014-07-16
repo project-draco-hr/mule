@@ -1,7 +1,9 @@
 {
+  Map<String,Object> headers=new HashMap<String,Object>();
   for (Enumeration<?> e=request.getHeaderNames(); e.hasMoreElements(); ) {
     String key=(String)e.nextElement();
     String realKey=key;
+    Object realValue;
     if (key.startsWith(HttpConstants.X_PROPERTY_PREFIX)) {
       realKey=key.substring(2);
     }
@@ -12,17 +14,20 @@
       if (!value.contains(":") && port != 80 && port != 443) {
         value=value + ":" + port;
       }
-      messageProperties.put(realKey,value);
+      realValue=value;
     }
  else {
       Enumeration<?> valueEnum=request.getHeaders(key);
       List<?> values=EnumerationUtils.toList(valueEnum);
       if (values.size() > 1) {
-        messageProperties.put(realKey,values.toArray());
+        realValue=values.toArray();
       }
  else {
-        messageProperties.put(realKey,values.get(0));
+        realValue=values.get(0);
       }
     }
+    headers.put(realKey,realValue);
   }
+  messageProperties.put(HttpConnector.HTTP_HEADERS,headers);
+  messageProperties.putAll(headers);
 }

@@ -1,0 +1,13 @@
+{
+  createFileOnFtpServer("input.txt");
+  final TestSystemExceptionStrategy exceptionListener=new TestSystemExceptionStrategy(muleContext);
+  muleContext.setExceptionListener(exceptionListener);
+  muleContext.start();
+  try {
+    Prober prober=new PollingProber(RECEIVE_TIMEOUT,100);
+    prober.check(new ExceptionListenerInvokedProbe(exceptionListener));
+  }
+  finally {
+    latch.countDown();
+  }
+}

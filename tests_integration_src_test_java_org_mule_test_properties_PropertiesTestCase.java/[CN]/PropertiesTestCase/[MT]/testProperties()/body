@@ -1,5 +1,5 @@
 {
-  MuleClient client=new MuleClient(muleContext);
+  MuleClient client=muleContext.getClient();
   MuleMessage msg1=createOutboundMessage();
   MuleMessage response=client.send("vm://in",msg1);
   assertEquals(response.getPayloadAsString(),"OK(success)");
@@ -15,8 +15,7 @@
   assertNull(response.<Object>getInvocationProperty("invocation4"));
   MuleMessage msg2=createOutboundMessage();
   client.dispatch("vm://inQueue",msg2);
-  Thread.sleep(1000);
-  response=client.request("vm://outQueue",0);
+  response=client.request("vm://outQueue",RECEIVE_TIMEOUT);
   assertEquals(response.getPayloadAsString(),"OK");
   assertEquals("yes",response.getInboundProperty("outbound1"));
   assertEquals("no",response.getInboundProperty("outbound2"));

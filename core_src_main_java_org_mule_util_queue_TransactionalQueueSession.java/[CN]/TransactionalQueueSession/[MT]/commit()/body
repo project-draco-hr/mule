@@ -1,0 +1,14 @@
+{
+  final ReentrantReadWriteLock.WriteLock writeLock=txContextReadWriteLock.writeLock();
+  writeLock.lock();
+  try {
+    if (singleResourceTxContext == null) {
+      throw new IllegalStateException("Cannot commit local transaction as no transaction was begun");
+    }
+    resourceManager.commitTransaction((AbstractTransactionContext)singleResourceTxContext);
+    singleResourceTxContext=null;
+  }
+  finally {
+    writeLock.unlock();
+  }
+}

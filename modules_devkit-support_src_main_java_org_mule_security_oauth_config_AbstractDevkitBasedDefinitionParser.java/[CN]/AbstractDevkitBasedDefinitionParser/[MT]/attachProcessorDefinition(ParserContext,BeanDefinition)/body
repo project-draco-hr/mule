@@ -1,0 +1,19 @@
+{
+  MutablePropertyValues propertyValues=parserContext.getContainingBeanDefinition().getPropertyValues();
+  if (parserContext.getContainingBeanDefinition().getBeanClassName().equals("org.mule.config.spring.factories.PollingMessageSourceFactoryBean")) {
+    propertyValues.addPropertyValue("messageProcessor",definition);
+  }
+ else {
+    if (parserContext.getContainingBeanDefinition().getBeanClassName().equals("org.mule.enricher.MessageEnricher")) {
+      propertyValues.addPropertyValue("enrichmentMessageProcessor",definition);
+    }
+ else {
+      PropertyValue messageProcessors=propertyValues.getPropertyValue("messageProcessors");
+      if ((messageProcessors == null) || (messageProcessors.getValue() == null)) {
+        propertyValues.addPropertyValue("messageProcessors",new ManagedList());
+      }
+      List listMessageProcessors=((List)propertyValues.getPropertyValue("messageProcessors").getValue());
+      listMessageProcessors.add(definition);
+    }
+  }
+}

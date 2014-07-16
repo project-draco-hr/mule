@@ -1,0 +1,55 @@
+{
+  this.restoreAccessToken(adapter);
+  if (adapter.getAccessToken() == null || adapter.getAccessTokenSecret() == null) {
+    requestTokenUrl=requestTokenUrl != null ? requestTokenUrl : adapter.getRequestTokenUrl();
+    String scope=adapter.getScope();
+    if (scope != null) {
+      try {
+        String scopeParam="?scope=".concat(URLEncoder.encode(scope,"UTF-8"));
+        requestTokenUrl=requestTokenUrl.concat(scopeParam);
+      }
+ catch (      UnsupportedEncodingException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    OAuthProvider provider=new DefaultOAuthProvider(requestTokenUrl,accessTokenUrl != null ? accessTokenUrl : adapter.getAccessTokenUrl(),authorizationUrl != null ? authorizationUrl : adapter.getAuthorizationUrl());
+    provider.setOAuth10a(true);
+    OAuthConsumer consumer=this.getConsumer(adapter);
+    consumer.setTokenWithSecret(adapter.getRequestToken(),adapter.getRequestTokenSecret());
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug("Retrieving access token...");
+    }
+    try {
+      provider.retrieveAccessToken(consumer,adapter.getOauthVerifier());
+    }
+ catch (    OAuthMessageSignerException e) {
+      throw new UnableToAcquireAccessTokenException(e);
+    }
+catch (    OAuthNotAuthorizedException e) {
+      throw new UnableToAcquireAccessTokenException(e);
+    }
+catch (    OAuthExpectationFailedException e) {
+      throw new UnableToAcquireAccessTokenException(e);
+    }
+catch (    OAuthCommunicationException e) {
+      throw new UnableToAcquireAccessTokenException(e);
+    }
+    adapter.setAccessToken(consumer.getToken());
+    adapter.setAccessTokenSecret(consumer.getTokenSecret());
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug(String.format("Access token retrieved successfully [accessToken = %s] [accessTokenSecret = %s]",adapter.getAccessToken(),adapter.getAccessTokenSecret()));
+    }
+    SaveAccessTokenCallback save=adapter.getOauthSaveAccessToken();
+    if (save != null) {
+      if (getLogger().isDebugEnabled()) {
+        getLogger().debug(String.format("Attempting to save access token... [accessToken = %s] [accessTokenSecret = %s]",adapter.getAccessToken(),adapter.getAccessTokenSecret()));
+      }
+      try {
+        save.saveAccessToken(adapter.getAccessToken(),adapter.getAccessTokenSecret());
+      }
+ catch (      Exception e) {
+        getLogger().error("Cannot save access token, an unexpected error occurred",e);
+      }
+    }
+  }
+}

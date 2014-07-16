@@ -1,0 +1,16 @@
+{
+  when(pagingDelegate.getPage(provider)).thenReturn(page);
+  when(pagingDelegate.getTotalResults(provider)).thenReturn(page.size());
+  managedExceptions=new ArrayList<Class<? extends Exception>>();
+  managedExceptions.add(UnsupportedOperationException.class);
+  template=new ProcessTemplate<Object,Object>(){
+    @Override public Object execute(    ProcessCallback<Object,Object> callback,    MessageProcessor messageProcessor,    MuleEvent event) throws Exception {
+      return callback.process(provider);
+    }
+    @Override public Object execute(    ProcessCallback<Object,Object> callback,    Filter filter,    MuleMessage message) throws Exception {
+      return callback.process(provider);
+    }
+  }
+;
+  managedPagingDelegate=new ManagedPagingDelegateAdapter<String>(pagingDelegate,template,managedExceptions,true,messageProcessor,event);
+}

@@ -1,0 +1,19 @@
+{
+  Object payload;
+  if (source == null || source.equals("")) {
+    payload=muleEvent.getMessage().getPayload();
+  }
+ else {
+    payload=muleContext.getExpressionManager().evaluate(source,muleEvent);
+  }
+  final Iterator<Object> paramsIterator=getIterator(payload);
+  ParamValueResolver paramValueResolver=new DynamicParamValueResolver(muleContext.getExpressionManager());
+  List<List<QueryParamValue>> result=new LinkedList<List<QueryParamValue>>();
+  while (paramsIterator.hasNext()) {
+    MuleMessage itemMessage=new DefaultMuleMessage(paramsIterator.next(),muleContext);
+    MuleEvent itemEvent=new DefaultMuleEvent(itemMessage,muleEvent);
+    List<QueryParamValue> queryParamValues=paramValueResolver.resolveParams(itemEvent,query.getParamValues());
+    result.add(queryParamValues);
+  }
+  return result;
+}

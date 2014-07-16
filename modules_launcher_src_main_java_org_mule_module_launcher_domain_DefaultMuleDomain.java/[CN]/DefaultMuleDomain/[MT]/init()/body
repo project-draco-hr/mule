@@ -1,0 +1,26 @@
+{
+  if (logger.isInfoEnabled()) {
+    logger.info(miniSplash(String.format("Initializing domain '%s'",getArtifactName())));
+  }
+  try {
+    if (this.configResourceFile != null) {
+      validateConfigurationFileDoNotUsesCoreNamespace();
+      ConfigurationBuilder cfgBuilder=createConfigurationBuilder();
+      if (!cfgBuilder.isConfigured()) {
+        List<ConfigurationBuilder> builders=new ArrayList<ConfigurationBuilder>(3);
+        addAnnotationsConfigBuilderIfPresent(builders);
+        builders.add(cfgBuilder);
+        DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
+        if (deploymentListener != null) {
+          muleContextFactory.addListener(new MuleContextDeploymentListener(getArtifactName(),deploymentListener));
+        }
+        DomainMuleContextBuilder domainMuleContextBuilder=new DomainMuleContextBuilder(name);
+        muleContext=muleContextFactory.createMuleContext(builders,domainMuleContextBuilder);
+      }
+    }
+  }
+ catch (  Exception e) {
+    logger.error(null,ExceptionUtils.getRootCause(e));
+    throw new DeploymentInitException(CoreMessages.createStaticMessage(ExceptionUtils.getRootCauseMessage(e)),e);
+  }
+}

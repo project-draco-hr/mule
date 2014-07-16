@@ -5,27 +5,39 @@
     @Override public void run(){
       try {
         try {
+          final AtomicReference exceptionThrownDuringFlowProcessing=new AtomicReference();
           TransactionalErrorHandlingExecutionTemplate transactionTemplate=TransactionalErrorHandlingExecutionTemplate.createMainExecutionTemplate(messageProcessContext.getFlowConstruct().getMuleContext(),(messageProcessContext.getTransactionConfig() == null ? new MuleTransactionConfig() : messageProcessContext.getTransactionConfig()),messageProcessContext.getFlowConstruct().getExceptionListener());
           MuleEvent response=transactionTemplate.execute(new ExecutionCallback<MuleEvent>(){
             @Override public MuleEvent process() throws Exception {
-              Object message=flowProcessingPhaseTemplate.getOriginalMessage();
-              if (message == null) {
-                return null;
+              try {
+                Object message=flowProcessingPhaseTemplate.getOriginalMessage();
+                if (message == null) {
+                  return null;
+                }
+                MuleEvent muleEvent=flowProcessingPhaseTemplate.getMuleEvent();
+                muleEvent=flowProcessingPhaseTemplate.beforeRouteEvent(muleEvent);
+                muleEvent=flowProcessingPhaseTemplate.routeEvent(muleEvent);
+                muleEvent=flowProcessingPhaseTemplate.afterRouteEvent(muleEvent);
+                sendResponseIfNeccessary(muleEvent,flowProcessingPhaseTemplate);
+                return muleEvent;
               }
-              MuleEvent muleEvent=flowProcessingPhaseTemplate.getMuleEvent();
-              muleEvent=flowProcessingPhaseTemplate.beforeRouteEvent(muleEvent);
-              muleEvent=flowProcessingPhaseTemplate.routeEvent(muleEvent);
-              muleEvent=flowProcessingPhaseTemplate.afterRouteEvent(muleEvent);
-              return muleEvent;
+ catch (              Exception e) {
+                exceptionThrownDuringFlowProcessing.set(e);
+                throw e;
+              }
             }
           }
 );
-          if (flowProcessingPhaseTemplate instanceof RequestResponseFlowProcessingPhaseTemplate) {
-            ((RequestResponseFlowProcessingPhaseTemplate)flowProcessingPhaseTemplate).sendResponseToClient(response);
+          if (exceptionThrownDuringFlowProcessing.get() != null && !(exceptionThrownDuringFlowProcessing.get() instanceof ResponseDispatchException)) {
+            sendResponseIfNeccessary(response,flowProcessingPhaseTemplate);
           }
           flowProcessingPhaseTemplate.afterSuccessfulProcessingFlow(response);
         }
- catch (        MessagingException e) {
+ catch (        ResponseDispatchException e) {
+          flowProcessingPhaseTemplate.afterFailureProcessingFlow(e);
+        }
+catch (        MessagingException e) {
+          sendFailureResponseIfNeccessary(e,flowProcessingPhaseTemplate);
           flowProcessingPhaseTemplate.afterFailureProcessingFlow(e);
         }
         phaseResultNotifier.phaseSuccessfully();

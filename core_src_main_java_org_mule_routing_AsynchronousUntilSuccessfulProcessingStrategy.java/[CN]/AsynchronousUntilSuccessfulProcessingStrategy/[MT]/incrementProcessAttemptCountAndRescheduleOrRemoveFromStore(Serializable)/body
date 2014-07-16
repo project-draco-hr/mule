@@ -1,0 +1,19 @@
+{
+  try {
+    final MuleEvent event=getUntilSuccessfulConfiguration().getObjectStore().remove(eventStoreKey);
+    final MuleEvent mutableEvent=threadSafeCopy(event);
+    final MuleMessage message=mutableEvent.getMessage();
+    final Integer deliveryAttemptCount=message.getInvocationProperty(PROCESS_ATTEMPT_COUNT_PROPERTY_NAME,DEFAULT_PROCESS_ATTEMPT_COUNT_PROPERTY_VALUE);
+    if (deliveryAttemptCount <= getUntilSuccessfulConfiguration().getMaxRetries()) {
+      message.setInvocationProperty(PROCESS_ATTEMPT_COUNT_PROPERTY_NAME,deliveryAttemptCount + 1);
+      getUntilSuccessfulConfiguration().getObjectStore().store(eventStoreKey,mutableEvent);
+      this.scheduleForProcessing(eventStoreKey,false);
+    }
+ else {
+      abandonRetries(event,mutableEvent);
+    }
+  }
+ catch (  final ObjectStoreException ose) {
+    logger.error("Failed to increment failure count for event stored with key: " + eventStoreKey,ose);
+  }
+}

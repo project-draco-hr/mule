@@ -1,8 +1,8 @@
 {
   logger.info("Trying " + numberOfMessages + " messages in batches of "+ burst);
-  MuleClient client=new MuleClient(muleContext);
+  MuleClient client=muleContext.getClient();
   int burstCount=0;
-  Set receivedMessages=new HashSet(numberOfMessages);
+  Set<String> receivedPayloads=new HashSet<String>(numberOfMessages);
   for (int sentPackets=0; sentPackets < numberOfMessages; sentPackets++) {
     burstCount++;
     String msg=MESSAGE + sentPackets;
@@ -13,15 +13,15 @@
         MuleMessage message=client.request("vm://foo",pause);
         pause=Math.max(MIN_PAUSE_PERIOD,pause / 2);
         if (null != message) {
-          receivedMessages.add(message.getPayloadAsString());
+          receivedPayloads.add(message.getPayloadAsString());
         }
       }
       burstCount=0;
     }
   }
-  boolean ok=receivedMessages.size() == numberOfMessages;
+  boolean ok=receivedPayloads.size() == numberOfMessages;
   if (!ok) {
-    logger.info("Received " + receivedMessages.size() + " messages");
+    logger.info("Received " + receivedPayloads.size() + " messages");
   }
   return ok;
 }

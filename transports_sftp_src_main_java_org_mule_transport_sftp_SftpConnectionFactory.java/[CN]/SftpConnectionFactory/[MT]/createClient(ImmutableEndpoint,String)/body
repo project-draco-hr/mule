@@ -1,0 +1,37 @@
+{
+  EndpointURI endpointURI=endpoint.getEndpointURI();
+  String host=endpointURI.getHost();
+  if (logger.isDebugEnabled()) {
+    logger.debug("Using host: " + host);
+  }
+  SftpClient client=new SftpClient(host);
+  if (!StringUtils.isEmpty(preferredAuthenticationMethods)) {
+    client.setPreferredAuthenticationMethods(preferredAuthenticationMethods);
+  }
+  try {
+    int uriPort=endpointURI.getPort();
+    if (uriPort != -1) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Using port: " + uriPort);
+      }
+      client.setPort(uriPort);
+    }
+    SftpUtil sftpUtil=new SftpUtil(endpoint);
+    String identityFile=sftpUtil.getIdentityFile();
+    if (identityFile != null) {
+      String passphrase=sftpUtil.getPassphrase();
+      client.login(endpointURI.getUser(),identityFile,passphrase);
+    }
+ else {
+      client.login(endpointURI.getUser(),endpointURI.getPassword());
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Successfully connected to: " + endpointURI);
+    }
+    return client;
+  }
+ catch (  IOException e) {
+    client.disconnect();
+    throw e;
+  }
+}

@@ -1,18 +1,18 @@
 {
-  MuleClient client=new MuleClient(muleContext);
-  Map<String,String> props=new HashMap<String,String>();
+  MuleClient client=muleContext.getClient();
+  Map<String,Object> props=new HashMap<String,Object>();
   props.put(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_GET);
-  MuleMessage result=client.send("http://localhost:63081/helloworld/sayHelloWithUri/Dan","",props);
+  MuleMessage result=client.send(String.format(URL,"/helloworld/sayHelloWithUri/Dan"),"",props);
   assertEquals((Integer)200,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
   assertEquals("Hello Dan",result.getPayloadAsString());
-  result=client.send("http://localhost:63081/helloworld/sayHelloWithJson/Dan","",props);
+  result=client.send(String.format(URL,"/helloworld/sayHelloWithJson/Dan"),"",props);
   assertEquals((Integer)200,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
   assertEquals(getJsonHelloBean(),result.getPayloadAsString());
-  result=client.send("http://localhost:63081/helloworld/sayHelloWithQuery?name=Dan","",props);
+  result=client.send(String.format(URL,"/helloworld/sayHelloWithQuery?name=Dan"),"",props);
   assertEquals((Integer)200,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
   assertEquals("Hello Dan",result.getPayloadAsString());
   props.put("X-Name","Dan");
-  result=client.send("http://localhost:63081/helloworld/sayHelloWithHeader","",props);
+  result=client.send(String.format(URL,"/helloworld/sayHelloWithHeader"),"",props);
   assertEquals((Integer)201,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
   assertEquals("Hello Dan",result.getPayloadAsString());
   assertEquals("Dan",result.getInboundProperty("X-ResponseName"));

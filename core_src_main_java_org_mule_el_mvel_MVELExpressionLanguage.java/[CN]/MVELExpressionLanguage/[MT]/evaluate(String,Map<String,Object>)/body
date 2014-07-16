@@ -1,8 +1,10 @@
 {
-  MVELExpressionLanguageContext factory=createExpressionLanguageContext();
+  MVELExpressionLanguageContext context=createExpressionLanguageContext();
   if (vars != null) {
-    factory.appendFactory(new CachedMapVariableResolverFactory(vars));
+    context.setNextFactory(new CachedMapVariableResolverFactory(vars,new DelegateVariableResolverFactory(staticContext,globalContext)));
   }
-  factory.appendFactory(createGlobalVariableResolverFactory(factory));
-  return (T)evaluateInternal(expression,factory);
+ else {
+    context.setNextFactory(new DelegateVariableResolverFactory(staticContext,globalContext));
+  }
+  return (T)evaluateInternal(expression,context);
 }

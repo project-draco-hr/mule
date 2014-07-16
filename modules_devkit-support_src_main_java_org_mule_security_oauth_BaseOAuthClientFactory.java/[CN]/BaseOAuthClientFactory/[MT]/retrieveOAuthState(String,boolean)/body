@@ -1,0 +1,49 @@
+{
+  Object state=null;
+  try {
+    state=this.objectStore.retrieve(key);
+  }
+ catch (  ObjectStoreException e) {
+    throw new RuntimeException("Error retrieving value from object store with key " + key,e);
+  }
+  if (state != null && !(state instanceof OAuthState)) {
+    OAuthState newState=new OAuthState();
+    try {
+      for (      PropertyDescriptor beanProperty : Introspector.getBeanInfo(state.getClass(),Object.class).getPropertyDescriptors()) {
+        Object value=beanProperty.getReadMethod().invoke(state,(Object[])null);
+        if (value != null) {
+          PropertyDescriptor stateProperty=oauthStateProperties.get(beanProperty.getName());
+          if (stateProperty != null) {
+            stateProperty.getWriteMethod().invoke(newState,value);
+          }
+ else {
+            newState.setCustomProperty(beanProperty.getName(),value.toString());
+          }
+        }
+      }
+    }
+ catch (    IllegalAccessException e) {
+      throw new RuntimeException("Error accessing value through reflection",e);
+    }
+catch (    IntrospectionException e) {
+      throw new RuntimeException("Error introspecting object of class " + state.getClass().getCanonicalName(),e);
+    }
+catch (    IllegalArgumentException e) {
+      throw new RuntimeException("Error setting value through reflection",e);
+    }
+catch (    InvocationTargetException e) {
+      throw new RuntimeException("Object threw exception while setting value by reflection",e);
+    }
+    state=newState;
+    if (replace) {
+      try {
+        this.objectStore.remove(key);
+        this.objectStore.store(key,newState);
+      }
+ catch (      ObjectStoreException e) {
+        throw new RuntimeException("ObjectStore threw exception while replacing instance",e);
+      }
+    }
+  }
+  return (OAuthState)state;
+}

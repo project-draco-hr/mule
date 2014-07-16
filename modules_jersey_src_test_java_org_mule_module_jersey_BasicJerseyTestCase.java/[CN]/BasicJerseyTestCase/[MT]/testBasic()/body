@@ -1,16 +1,16 @@
 {
-  MuleClient client=new MuleClient(muleContext);
-  MuleMessage result=client.send("http://localhost:63081/helloworld","",null);
+  MuleClient client=muleContext.getClient();
+  MuleMessage result=client.send(String.format(URL,"/helloworld"),"",null);
   assertEquals((Integer)200,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
   assertEquals("Hello World",result.getPayloadAsString());
-  result=client.send("http://localhost:63081/hello","",null);
+  result=client.send(String.format(URL,"/hello"),"",null);
   assertEquals((Integer)404,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
-  Map<String,String> props=new HashMap<String,String>();
+  Map<String,Object> props=new HashMap<String,Object>();
   props.put(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_GET);
-  result=client.send("http://localhost:63081/helloworld","",props);
+  result=client.send(String.format(URL,"/helloworld"),"",props);
   assertEquals((Integer)405,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
   props.put(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_DELETE);
-  result=client.send("http://localhost:63081/helloworld","",props);
+  result=client.send(String.format(URL,"/helloworld"),"",props);
   assertEquals("Hello World Delete",result.getPayloadAsString());
   assertEquals((Integer)200,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
 }

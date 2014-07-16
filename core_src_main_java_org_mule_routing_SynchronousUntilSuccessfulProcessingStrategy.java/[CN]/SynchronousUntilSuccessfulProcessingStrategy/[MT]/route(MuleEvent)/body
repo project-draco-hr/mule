@@ -1,0 +1,27 @@
+{
+  Exception lastExecutionException=null;
+  try {
+    for (int i=0; i <= getUntilSuccessfulConfiguration().getMaxRetries(); i++) {
+      try {
+        return processResponseThroughAckResponseExpression(processEvent(event));
+      }
+ catch (      Exception e) {
+        logger.info("Exception thrown inside until-successful " + e.getMessage());
+        if (logger.isDebugEnabled()) {
+          logger.debug(e);
+        }
+        lastExecutionException=e;
+        if (i < getUntilSuccessfulConfiguration().getMaxRetries()) {
+          Thread.sleep(getUntilSuccessfulConfiguration().getMillisBetweenRetries());
+        }
+      }
+    }
+    throw new RoutingException(event,getUntilSuccessfulConfiguration().getRouter(),lastExecutionException);
+  }
+ catch (  MessagingException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new RoutingException(event,getUntilSuccessfulConfiguration().getRouter(),e);
+  }
+}

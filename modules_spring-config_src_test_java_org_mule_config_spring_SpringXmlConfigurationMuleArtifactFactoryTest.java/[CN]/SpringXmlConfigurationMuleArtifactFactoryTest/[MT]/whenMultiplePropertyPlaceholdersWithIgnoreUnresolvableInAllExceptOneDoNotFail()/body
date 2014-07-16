@@ -1,0 +1,18 @@
+{
+  SpringXmlConfigurationMuleArtifactFactory factoryTest=new SpringXmlConfigurationMuleArtifactFactory();
+  XmlConfigurationCallback callback=getXmlConfigurationCallbackMock();
+  Element[] propertyPlaceholders=new Element[3];
+  propertyPlaceholders[0]=createPropertyPlaceholder("test1.properties",null);
+  propertyPlaceholders[1]=createPropertyPlaceholder("test2.properties","true");
+  propertyPlaceholders[2]=createPropertyPlaceholder("test3.properties","true");
+  Mockito.when(callback.getPropertyPlaceholders()).thenReturn(propertyPlaceholders);
+  Element element=createElement("logger","http://www.mulesoft.org/schema/mule/core");
+  String muleConfigTxt=factoryTest.getArtifactMuleConfig("test-flow",element,callback,false);
+  Document muleConfig=DocumentHelper.parseText(muleConfigTxt);
+  List result=DocumentHelper.selectNodes("/mule/*[local-name()='property-placeholder' and @location='test1.properties' and not(@ignore-unresolvable)]",muleConfig);
+  Assert.assertThat("Property placeholder for test1.properties is present",result.size(),CoreMatchers.is(1));
+  result=DocumentHelper.selectNodes("/mule/*[local-name()='property-placeholder' and @location='test2.properties' and @ignore-unresolvable='true']",muleConfig);
+  Assert.assertThat("Property placeholder for test2.properties is present",result.size(),CoreMatchers.is(1));
+  result=DocumentHelper.selectNodes("/mule/*[local-name()='property-placeholder' and @location='test3.properties' and @ignore-unresolvable='true']",muleConfig);
+  Assert.assertThat("Property placeholder for test3.properties is present",result.size(),CoreMatchers.is(1));
+}

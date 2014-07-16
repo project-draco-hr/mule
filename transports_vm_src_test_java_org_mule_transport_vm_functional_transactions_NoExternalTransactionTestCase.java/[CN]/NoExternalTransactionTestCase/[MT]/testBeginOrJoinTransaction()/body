@@ -1,17 +1,16 @@
 {
   init();
   ExecutionTemplate<String> executionTemplate=createExecutionTemplate(TransactionConfig.ACTION_BEGIN_OR_JOIN,false);
-  logger.debug("TM is a " + tm.getClass().toString());
+  log.debug("TM is a " + tm.getClass().toString());
   tm.begin();
   final Transaction tx=tm.getTransaction();
   final TestResource resource1=new TestResource(tm);
   tx.enlistResource(resource1);
   assertNotNull(tx);
-  String result;
   Exception ex=null;
   try {
-    result=executionTemplate.execute(new ExecutionCallback<String>(){
-      public String process() throws Exception {
+    executionTemplate.execute(new ExecutionCallback<String>(){
+      @Override public String process() throws Exception {
         return "OK";
       }
     }
@@ -19,12 +18,12 @@
   }
  catch (  Exception e) {
     ex=e;
-    logger.debug("saw exception " + e.getMessage());
+    log.debug("saw exception " + e.getMessage());
   }
   assertNotNull(ex);
   tm.rollback();
-  result=executionTemplate.execute(new ExecutionCallback<String>(){
-    public String process() throws Exception {
+  executionTemplate.execute(new ExecutionCallback<String>(){
+    @Override public String process() throws Exception {
       Transaction muleTx=tm.getTransaction();
       muleTx.enlistResource(resource1);
       resource1.setValue(15);

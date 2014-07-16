@@ -1,29 +1,4 @@
 {
-  ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
-  try {
-    executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
-      @Override public MuleEvent process() throws Exception {
-        MuleMessage request=new DefaultMuleMessage(StringUtils.EMPTY,(Map<String,Object>)null,connector.getMuleContext());
-        ImmutableEndpoint ep=endpoint;
-        if (sourceMessageProcessor instanceof ImmutableEndpoint) {
-          ep=(ImmutableEndpoint)sourceMessageProcessor;
-        }
-        MuleEvent event=new DefaultMuleEvent(request,ep.getExchangePattern(),flowConstruct);
-        MuleEvent sourceEvent=sourceMessageProcessor.process(event);
-        if (isNewMessage(sourceEvent)) {
-          routeMessage(sourceEvent.getMessage());
-        }
- else {
-          logger.info(String.format("Polling of '%s' returned null, the flow will not be invoked.",sourceMessageProcessor));
-        }
-        return null;
-      }
-    }
-);
-  }
- catch (  MessagingException e) {
-  }
-catch (  Exception e) {
-    connector.getMuleContext().getExceptionListener().handleException(e);
-  }
+  MuleMessage request=new DefaultMuleMessage(StringUtils.EMPTY,(Map<String,Object>)null,getEndpoint().getMuleContext());
+  pollWith(request);
 }

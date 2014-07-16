@@ -1,0 +1,27 @@
+{
+  this.coreExtensions=intialCoreExtensions;
+  muleHome=new File(muleHomePath);
+  muleHome.deleteOnExit();
+  try {
+    System.setProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY,getMuleHome().getCanonicalPath());
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  try {
+    setMuleFolders();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  deploymentService=new MuleDeploymentService(new MulePluginClassLoaderManager());
+  deploymentListener=mock(DeploymentListener.class);
+  deploymentService.addDeploymentListener(deploymentListener);
+  coreExtensionManager=new DefaultMuleCoreExtensionManager(new MuleCoreExtensionDiscoverer(){
+    @Override public List<MuleCoreExtension> discover() throws DefaultMuleException {
+      return coreExtensions;
+    }
+  }
+,new ReflectionMuleCoreExtensionDependencyResolver());
+  coreExtensionManager.setDeploymentService(deploymentService);
+}

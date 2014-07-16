@@ -1,0 +1,27 @@
+{
+  try {
+    queueFile.seek(0);
+    while (true) {
+      long currentPosition=queueFile.getFilePointer();
+      byte removed=queueFile.readByte();
+      if (removed == 0) {
+        byte[] data=readDataInCurrentPosition();
+        if (rawDataSelector.isSelectedData(data)) {
+          queueFile.seek(currentPosition);
+          queueFile.writeByte(REMOVED);
+          orderedKeys.remove(currentPosition);
+          return true;
+        }
+      }
+    }
+  }
+ catch (  EOFException e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(e);
+    }
+    return false;
+  }
+catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+}

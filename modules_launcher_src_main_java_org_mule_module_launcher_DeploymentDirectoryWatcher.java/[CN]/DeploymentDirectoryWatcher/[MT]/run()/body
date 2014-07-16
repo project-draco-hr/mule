@@ -1,0 +1,40 @@
+{
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Checking for changes...");
+    }
+    if (!deploymentLock.tryLock(0,TimeUnit.SECONDS)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Another deployment operation in progress, will skip this cycle. Owner thread: " + ((DebuggableReentrantLock)deploymentLock).getOwner());
+      }
+      return;
+    }
+    undeployRemovedApps();
+    undeployRemovedDomains();
+    String[] domains=domainsDir.list(DirectoryFileFilter.DIRECTORY);
+    final String[] domainZips=domainsDir.list(ZIP_ARTIFACT_FILTER);
+    redeployModifiedDomains();
+    deployPackedDomains(domainZips);
+    if (domainZips.length > 0 || dirty) {
+      domains=domainsDir.list(DirectoryFileFilter.DIRECTORY);
+    }
+    deployExplodedDomains(domains);
+    redeployModifiedApplications();
+    String[] apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
+    final String[] appZips=appsDir.list(ZIP_ARTIFACT_FILTER);
+    deployPackedApps(appZips);
+    if (appZips.length > 0 || dirty) {
+      apps=appsDir.list(DirectoryFileFilter.DIRECTORY);
+    }
+    deployExplodedApps(apps);
+  }
+ catch (  Exception e) {
+    Thread.currentThread().interrupt();
+  }
+ finally {
+    if (deploymentLock.isHeldByCurrentThread()) {
+      deploymentLock.unlock();
+    }
+    dirty=false;
+  }
+}

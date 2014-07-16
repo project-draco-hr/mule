@@ -1,0 +1,35 @@
+{
+  String[] currentAnchors=artifactDir.list(new SuffixFileFilter(ARTIFACT_ANCHOR_SUFFIX));
+  if (logger.isDebugEnabled()) {
+    StringBuilder sb=new StringBuilder();
+    sb.append(String.format("Current anchors:%n"));
+    for (    String currentAnchor : currentAnchors) {
+      sb.append(String.format("  %s%n",currentAnchor));
+    }
+    logger.debug(sb.toString());
+  }
+  String[] artifactAnchors=findExpectedAnchorFiles(artifacts);
+  @SuppressWarnings("unchecked") final Collection<String> deletedAnchors=CollectionUtils.subtract(Arrays.asList(artifactAnchors),Arrays.asList(currentAnchors));
+  if (logger.isDebugEnabled()) {
+    StringBuilder sb=new StringBuilder();
+    sb.append(String.format("Deleted anchors:%n"));
+    for (    String deletedAnchor : deletedAnchors) {
+      sb.append(String.format("  %s%n",deletedAnchor));
+    }
+    logger.debug(sb.toString());
+  }
+  for (  String deletedAnchor : deletedAnchors) {
+    String artifactName=StringUtils.removeEnd(deletedAnchor,ARTIFACT_ANCHOR_SUFFIX);
+    try {
+      if (findArtifact(artifactName,artifacts) != null) {
+        archiveDeployer.undeployArtifact(artifactName);
+      }
+ else       if (logger.isDebugEnabled()) {
+        logger.debug(String.format("Artifact [%s] has already been undeployed via API",artifactName));
+      }
+    }
+ catch (    Throwable t) {
+      logger.error("Failed to undeployArtifact artifact: " + artifactName,t);
+    }
+  }
+}

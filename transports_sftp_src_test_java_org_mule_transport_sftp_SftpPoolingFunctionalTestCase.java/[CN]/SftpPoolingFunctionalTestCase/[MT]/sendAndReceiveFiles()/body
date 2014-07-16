@@ -1,11 +1,10 @@
 {
   final CountDownLatch latch=new CountDownLatch(sendFiles.size());
   final AtomicInteger loopCount=new AtomicInteger(0);
-  MuleClient client=new MuleClient(muleContext);
   receiveFiles=new ArrayList<String>();
   EventCallback callback=new EventCallback(){
     @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
-      String filename=context.getMessage().getProperty(SftpConnector.PROPERTY_ORIGINAL_FILENAME,null);
+      String filename=context.getMessage().getProperty(SftpConnector.PROPERTY_ORIGINAL_FILENAME,PropertyScope.INBOUND);
       SftpInputStream inputStream=null;
       try {
         logger.info("called " + loopCount.incrementAndGet() + " times. Filename = "+ filename);
@@ -33,8 +32,9 @@
   }
 ;
   getFunctionalTestComponent("receiving").setEventCallback(callback);
+  MuleClient client=muleContext.getClient();
   for (  String sendFile : sendFiles) {
-    HashMap<String,String> props=new HashMap<String,String>(1);
+    Map<String,Object> props=new HashMap<String,Object>();
     props.put(SftpConnector.PROPERTY_FILENAME,sendFile + ".txt");
     client.dispatch("vm://test.upload",sendFile,props);
   }

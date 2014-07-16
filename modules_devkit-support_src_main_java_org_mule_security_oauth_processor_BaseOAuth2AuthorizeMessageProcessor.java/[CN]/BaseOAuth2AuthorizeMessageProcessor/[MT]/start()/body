@@ -1,0 +1,19 @@
+{
+  super.start();
+  OAuth2Manager<OAuth2Adapter> module=this.getOAuthManager();
+  String accessTokenId=this.getAccessTokenId();
+  if (StringUtils.isEmpty(accessTokenId)) {
+    accessTokenId=module.getDefaultAccessTokenId();
+    if (StringUtils.isEmpty(accessTokenId)) {
+      accessTokenId=module.getDefaultUnauthorizedConnector().getName();
+    }
+  }
+  FetchAccessTokenMessageProcessor fetchAccessTokenMessageProcessor=new OAuth2FetchAccessTokenMessageProcessor((OAuth2Manager<OAuth2Adapter>)module,accessTokenId);
+  this.startCallback(module,fetchAccessTokenMessageProcessor);
+  if (this.getAccessTokenUrl() != null) {
+    fetchAccessTokenMessageProcessor.setAccessTokenUrl(this.getAccessTokenUrl());
+  }
+ else {
+    fetchAccessTokenMessageProcessor.setAccessTokenUrl(module.getDefaultUnauthorizedConnector().getAccessTokenUrl());
+  }
+}

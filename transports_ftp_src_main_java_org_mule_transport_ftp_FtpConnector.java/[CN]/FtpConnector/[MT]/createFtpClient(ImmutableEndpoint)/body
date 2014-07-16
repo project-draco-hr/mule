@@ -1,6 +1,7 @@
 {
   EndpointURI uri=endpoint.getEndpointURI();
   FTPClient client=this.getFtp(uri);
+  client.setDataTimeout(endpoint.getResponseTimeout());
   this.enterActiveOrPassiveMode(client,endpoint);
   this.setupFileType(client,endpoint);
   String path=uri.getPath();
@@ -8,8 +9,14 @@
     if ((path.length() >= 2) && (path.charAt(1) == '~')) {
       path=path.substring(1);
     }
-    if (!client.changeWorkingDirectory(path)) {
+    boolean isFile=this.isFile(endpoint,client);
+    if (!isFile && !client.changeWorkingDirectory(path)) {
       throw new IOException(MessageFormat.format("Failed to change working directory to {0}. Ftp error: {1}",path,client.getReplyCode()));
+    }
+ else     if (isFile) {
+      FTPFile[] listFiles=client.listFiles(path);
+      String directory=path.replaceAll(listFiles[0].getName(),"");
+      client.changeWorkingDirectory(directory);
     }
   }
   return client;

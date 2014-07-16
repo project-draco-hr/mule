@@ -1,0 +1,42 @@
+{
+  try {
+    logger.info("Creating logger service on port: " + loggerServerPort);
+    loggerSocket=new ServerSocket(loggerServerPort,0,InetAddress.getByName("localhost"));
+    loggerThread=new Thread(String.format("Process %s logger",instanceId)){
+      @Override public void run(){
+        try {
+          Socket processClientConnection=loggerSocket.accept();
+          clientSocketAcceptedLatch.release();
+          BufferedReader processClientLogEntriesInputStream=new BufferedReader(new InputStreamReader(processClientConnection.getInputStream()));
+          while (!Thread.interrupted()) {
+            String logLine=processClientLogEntriesInputStream.readLine();
+            if (logLine == null) {
+              try {
+                Thread.sleep(200);
+              }
+ catch (              InterruptedException e) {
+                return;
+              }
+            }
+ else {
+              logger.info(logLine);
+            }
+          }
+        }
+ catch (        IOException e) {
+          throw new RuntimeException(e);
+        }
+ finally {
+          closeQuietly(loggerSocket);
+        }
+      }
+    }
+;
+    loggerThread.setDaemon(true);
+    loggerThread.start();
+  }
+ catch (  IOException e) {
+    closeQuietly(loggerSocket);
+    throw new RuntimeException(e);
+  }
+}

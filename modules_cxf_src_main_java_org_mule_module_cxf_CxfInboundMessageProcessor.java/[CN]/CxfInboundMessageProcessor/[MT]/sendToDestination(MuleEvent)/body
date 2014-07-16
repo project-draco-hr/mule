@@ -31,6 +31,19 @@
         soapActions.add(soapAction);
         protocolHeaders.put(SoapBindingConstants.SOAP_ACTION,soapActions);
       }
+      String eventRequestUri=event.getMessageSourceURI().toString();
+      if (eventRequestUri.startsWith(JMS_TRANSPORT)) {
+        String contentType=muleReqMsg.getInboundProperty(SoapJMSConstants.CONTENTTYPE_FIELD);
+        if (contentType == null) {
+          contentType="text/xml";
+        }
+        protocolHeaders.put(SoapJMSConstants.CONTENTTYPE_FIELD,Collections.singletonList(contentType));
+        String requestUri=muleReqMsg.getInboundProperty(SoapJMSConstants.REQUESTURI_FIELD);
+        if (requestUri == null) {
+          requestUri=eventRequestUri;
+        }
+        protocolHeaders.put(SoapJMSConstants.REQUESTURI_FIELD,Collections.singletonList(requestUri));
+      }
       m.put(Message.PROTOCOL_HEADERS,protocolHeaders);
     }
     org.apache.cxf.transport.Destination d;
@@ -57,7 +70,7 @@
       return null;
     }
     MuleMessage muleResMsg=responseEvent.getMessage();
-    muleResMsg.setPayload(getRessponseOutputHandler(m));
+    muleResMsg.setPayload(getResponseOutputHandler(m));
     Message faultMsg=m.getExchange().getOutFaultMessage();
     if (faultMsg != null) {
       Exception ex=faultMsg.getContent(Exception.class);

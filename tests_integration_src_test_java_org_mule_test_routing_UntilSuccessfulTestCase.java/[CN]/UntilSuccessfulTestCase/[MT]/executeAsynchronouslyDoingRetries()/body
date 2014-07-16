@@ -1,0 +1,20 @@
+{
+  final String payload=RandomStringUtils.randomAlphanumeric(20);
+  final int expectedCounterExecutions=4;
+  final int expectedCounterInExceptionStrategyExecutions=1;
+  Flow flow=(Flow)getFlowConstruct("asynchronous-using-threading-profile");
+  flow.process(getTestEvent(payload));
+  new PollingProber(10000,100).check(new Probe(){
+    private int executionOfCountInUntilSuccessful;
+    private int executionOfCountInExceptionStrategy;
+    @Override public boolean isSatisfied(){
+      executionOfCountInUntilSuccessful=getNumberOfInvocationsFor("untilSuccessful2");
+      executionOfCountInExceptionStrategy=getNumberOfInvocationsFor("exceptionStrategy2");
+      return executionOfCountInUntilSuccessful == expectedCounterExecutions && executionOfCountInExceptionStrategy == expectedCounterInExceptionStrategyExecutions;
+    }
+    @Override public String describeFailure(){
+      return String.format("Expecting %d executions of counter in until-successful and got %d \n " + "Expecting %d execution of counter in exception strategy and got %d",expectedCounterExecutions,executionOfCountInUntilSuccessful,expectedCounterInExceptionStrategyExecutions,executionOfCountInExceptionStrategy);
+    }
+  }
+);
+}

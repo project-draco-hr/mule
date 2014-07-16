@@ -5,7 +5,7 @@
   assertNotNull(hop2);
   final AtomicBoolean hop1made=new AtomicBoolean(false);
   EventCallback callback1=new EventCallback(){
-    public void eventReceived(    final MuleEventContext context,    final Object component) throws Exception {
+    @Override public void eventReceived(    final MuleEventContext context,    final Object component) throws Exception {
       assertTrue(hop1made.compareAndSet(false,true));
     }
   }
@@ -19,7 +19,7 @@
 ;
   hop1.setEventCallback(callback1);
   hop2.setEventCallback(callback2);
-  MuleClient client=new MuleClient(muleContext);
+  MuleClient client=muleContext.getClient();
   client.send("vm://inbound","payload",null);
   Thread.sleep(1000);
   assertTrue("First callback never fired",hop1made.get());

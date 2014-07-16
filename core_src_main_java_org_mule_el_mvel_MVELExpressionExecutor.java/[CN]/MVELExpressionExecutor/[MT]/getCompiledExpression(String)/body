@@ -1,10 +1,13 @@
 {
-  if (compiledExpressionsCache.containsKey(expression)) {
-    return (Serializable)compiledExpressionsCache.get(expression);
+  try {
+    return compiledExpressionsCache.getUnchecked(expression);
   }
+ catch (  UncheckedExecutionException e) {
+    if (e.getCause() instanceof RuntimeException) {
+      throw (RuntimeException)e.getCause();
+    }
  else {
-    Serializable compiledExpression=MVEL.compileExpression(expression,parserContext);
-    compiledExpressionsCache.put(expression,compiledExpression);
-    return compiledExpression;
+      throw new MuleRuntimeException(e);
+    }
   }
 }

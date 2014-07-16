@@ -1,0 +1,18 @@
+{
+  this.values=new HashMap<String,String>();
+  this.values.put("fruit","banana");
+  this.values.put("icecream","chocolate");
+  this.values.put("drink","coke");
+  Mockito.when(this.objectStore.retrieve(Mockito.anyString())).thenAnswer(new Answer<Serializable>(){
+    @Override public Serializable answer(    InvocationOnMock invocation) throws Throwable {
+      Serializable value=values.get(invocation.getArguments()[0]);
+      if (value == null) {
+        throw new ObjectDoesNotExistException();
+      }
+      return value;
+    }
+  }
+);
+  Mockito.when(this.objectStore.allKeys()).thenReturn(new ArrayList<Serializable>(this.values.keySet()));
+  this.producer=new ListableObjectStoreProducer<Serializable>(this.objectStore);
+}

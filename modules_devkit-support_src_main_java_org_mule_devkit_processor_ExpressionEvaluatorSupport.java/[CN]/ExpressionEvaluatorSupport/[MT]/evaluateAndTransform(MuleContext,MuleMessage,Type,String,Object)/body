@@ -1,0 +1,51 @@
+{
+  if (source == null) {
+    return source;
+  }
+  Object target=null;
+  if (isList(source.getClass())) {
+    if (isList(expectedType)) {
+      List newList=new ArrayList();
+      Type valueType=((ParameterizedType)expectedType).getActualTypeArguments()[0];
+      ListIterator iterator=((List)source).listIterator();
+      while (iterator.hasNext()) {
+        Object subTarget=iterator.next();
+        newList.add(evaluateAndTransform(muleContext,muleMessage,valueType,expectedMimeType,subTarget));
+      }
+      target=newList;
+    }
+ else {
+      target=source;
+    }
+  }
+ else {
+    if (isMap(source.getClass())) {
+      if (isMap(expectedType)) {
+        Type keyType=Object.class;
+        Type valueType=Object.class;
+        if (expectedType instanceof ParameterizedType) {
+          keyType=((ParameterizedType)expectedType).getActualTypeArguments()[0];
+          valueType=((ParameterizedType)expectedType).getActualTypeArguments()[1];
+        }
+        Map map=((Map)source);
+        Map newMap=new HashMap();
+        for (        Object entryObj : map.entrySet()) {
+{
+            Map.Entry entry=((Map.Entry)entryObj);
+            Object newKey=evaluateAndTransform(muleContext,muleMessage,keyType,expectedMimeType,entry.getKey());
+            Object newValue=evaluateAndTransform(muleContext,muleMessage,valueType,expectedMimeType,entry.getValue());
+            newMap.put(newKey,newValue);
+          }
+        }
+        target=newMap;
+      }
+ else {
+        target=source;
+      }
+    }
+ else {
+      target=evaluate(TemplateParser.createMuleStyleParser().getStyle(),muleContext.getExpressionManager(),muleMessage,source);
+    }
+  }
+  return transform(muleContext,muleMessage,expectedType,expectedMimeType,target);
+}

@@ -116,6 +116,8 @@
   registerBeanDefinitionParser("custom-source",new ChildDefinitionParser("messageSource",null,MessageSource.class));
   registerBeanDefinitionParser("composite-source",new ChildDefinitionParser("messageSource",CompositeMessageSourceFactoryBean.class));
   registerBeanDefinitionParser("poll",new ChildEndpointDefinitionParser(PollingMessageSourceFactoryBean.class));
+  registerBeanDefinitionParser("fixed-frequency-scheduler",new ChildDefinitionParser("schedulerFactory",FixedFrequencySchedulerFactory.class));
+  registerBeanDefinitionParser("watermark",new ChildDefinitionParser("override",WatermarkFactoryBean.class));
   registerBeanDefinitionParser("model",new ModelDefinitionParser());
   registerBeanDefinitionParser("seda-model",new InheritDefinitionParser(new OrphanDefinitionParser(SedaModel.class,true),new NamedDefinitionParser()));
   registerBeanDefinitionParser("entry-point-resolver-set",new ChildDefinitionParser("entryPointResolverSet",DefaultEntryPointResolverSet.class));
@@ -211,11 +213,14 @@
   registerBeanDefinitionParser("when",(ChildDefinitionParser)new ChildDefinitionParser("route",MessageProcessorFilterPairFactoryBean.class).registerPreProcessor(new CheckExclusiveAttributesAndChildren(new String[]{"expression"},new String[]{"{http://www.mulesoft.org/schema/mule/core}abstractFilterType"})));
   registerBeanDefinitionParser("otherwise",new ChildDefinitionParser("defaultRoute",MessageProcessorFilterPairFactoryBean.class));
   registerBeanDefinitionParser("all",new ChildDefinitionParser("messageProcessor",MulticastingRouter.class));
+  registerBeanDefinitionParser("scatter-gather",new ChildDefinitionParser("messageProcessor",ScatterGatherRouterFactoryBean.class));
+  registerBeanDefinitionParser("custom-aggregation-strategy",new AggregationStrategyDefinitionParser());
   registerBeanDefinitionParser("recipient-list",new ChildDefinitionParser("messageProcessor",ExpressionRecipientList.class));
   registerBeanDefinitionParser("request-reply",new ChildDefinitionParser("messageProcessor",SimpleAsyncRequestReplyRequester.class));
   registerBeanDefinitionParser("first-successful",new ChildDefinitionParser("messageProcessor",FirstSuccessful.class));
   registerBeanDefinitionParser("until-successful",new ChildDefinitionParser("messageProcessor",UntilSuccessful.class));
   registerBeanDefinitionParser("round-robin",new ChildDefinitionParser("messageProcessor",RoundRobin.class));
+  registerBeanDefinitionParser("dynamic-round-robin",new RouterDefinitionParser(DynamicRoundRobin.class));
   registerBeanDefinitionParser("dynamic-first-successful",new RouterDefinitionParser(DynamicFirstSuccessful.class));
   registerBeanDefinitionParser("dynamic-all",new RouterDefinitionParser(DynamicAll.class));
   registerMuleBeanDefinitionParser("custom-route-resolver",new ParentDefinitionParser()).addAlias(AbstractMuleBeanDefinitionParser.ATTRIBUTE_REF,"dynamicRouteResolver");

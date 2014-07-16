@@ -1,0 +1,55 @@
+{
+  OAuth2Adapter connector=null;
+  if (!processCallback.isProtected()) {
+    return processCallback.process(this.oauthManager.getDefaultUnauthorizedConnector());
+  }
+  String accessTokenId=this.getAccessTokenId(event,messageProcessor,this.oauthManager);
+  processCallback.setAccessTokenId(accessTokenId);
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug(String.format("Attempting to acquire access token using from store for [accessTokenId=%s]",accessTokenId));
+    }
+    connector=oauthManager.acquireAccessToken(accessTokenId);
+    if (connector == null) {
+      throw new UnableToAcquireConnectionException();
+    }
+ else {
+      if (logger.isDebugEnabled()) {
+        logger.debug(String.format("Access token has been acquired for [accessTokenId=%s]",accessTokenId));
+      }
+    }
+    return next.execute(processCallback,connector,messageProcessor,event);
+  }
+ catch (  Exception e) {
+    if ((processCallback.getManagedExceptions() != null) && (connector != null)) {
+      for (      Class<? extends Exception> exceptionClass : processCallback.getManagedExceptions()) {
+        if (exceptionClass.isInstance(e)) {
+          if (logger.isDebugEnabled()) {
+            logger.debug(String.format("An exception (%s) has been thrown. Destroying the access token with [accessTokenId=%s]",exceptionClass.getName(),accessTokenId));
+          }
+          try {
+            oauthManager.destroyAccessToken(accessTokenId,connector);
+            connector=null;
+          }
+ catch (          Exception innerException) {
+            logger.error(innerException.getMessage(),innerException);
+          }
+        }
+      }
+    }
+    throw e;
+  }
+ finally {
+    try {
+      if (connector != null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("Releasing the access token back into the pool [accessTokenId=%s]",accessTokenId));
+        }
+        oauthManager.releaseAccessToken(accessTokenId,connector);
+      }
+    }
+ catch (    Exception e) {
+      throw new UnableToReleaseConnectionException(e);
+    }
+  }
+}

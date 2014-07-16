@@ -1,0 +1,18 @@
+{
+  MuleEvent event=(MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT);
+  if (event == null || event.getMessage() == null) {
+    return;
+  }
+  if (isEncoded(event.getMessage())) {
+    OutputStream os=message.getContent(OutputStream.class);
+    if (os == null) {
+      return;
+    }
+    try {
+      message.setContent(OutputStream.class,new GZIPOutputStream(os));
+    }
+ catch (    IOException io) {
+      throw new Fault(io);
+    }
+  }
+}

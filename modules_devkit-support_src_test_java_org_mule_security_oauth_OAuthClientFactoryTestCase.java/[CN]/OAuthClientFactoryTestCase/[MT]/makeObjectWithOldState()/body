@@ -1,0 +1,32 @@
+{
+  final OldOAuthState state=this.registerOldState();
+  Mockito.doAnswer(new Answer<Void>(){
+    @Override public Void answer(    InvocationOnMock invocation) throws Throwable {
+      OAuthState newState=(OAuthState)invocation.getArguments()[1];
+      Assert.assertEquals(newState.getAccessToken(),state.getAccessToken());
+      Assert.assertEquals(newState.getAccessTokenUrl(),state.getAccessTokenUrl());
+      Assert.assertEquals(newState.getAuthorizationUrl(),state.getAuthorizationUrl());
+      Assert.assertEquals(newState.getRefreshToken(),state.getRefreshToken());
+      Assert.assertEquals(newState.getCustomProperty("custom1"),state.getCustom1());
+      Assert.assertEquals(newState.getCustomProperty("custom2"),state.getCustom2());
+      state.setChecked(true);
+      return null;
+    }
+  }
+).when(this.factory).setCustomAdapterProperties(Mockito.any(TestOAuth2Adapter.class),Mockito.any(OAuthState.class));
+  TestOAuth2Adapter connector=(TestOAuth2Adapter)this.factory.makeObject(KEY);
+  Assert.assertTrue(state.isChecked());
+  Assert.assertSame(connector.getManager(),this.manager);
+  Mockito.verify(this.manager).postAuth(connector,KEY);
+  Assert.assertTrue(connector.wasStarted());
+  Assert.assertTrue(connector.wasInitialised());
+  Assert.assertSame(connector.getMuleContext(),this.muleContext);
+  Assert.assertEquals(connector.getConsumerKey(),consumerKey);
+  Assert.assertEquals(connector.getConsumerSecret(),consumerSecret);
+  Assert.assertEquals(connector.getAccessToken(),state.getAccessToken());
+  Assert.assertEquals(connector.getAccessTokenUrl(),state.getAccessTokenUrl());
+  Assert.assertEquals(connector.getAuthorizationUrl(),state.getAuthorizationUrl());
+  Assert.assertEquals(connector.getRefreshToken(),state.getRefreshToken());
+  Mockito.verify(this.objectStore).remove(KEY);
+  Mockito.verify(this.objectStore).store(Mockito.eq(KEY),Mockito.any(OAuthState.class));
+}

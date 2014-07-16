@@ -1,0 +1,22 @@
+{
+  Map<Integer,DbType> paramTypes=new HashMap<Integer,DbType>();
+  int position=1;
+  while (procedureColumns.next()) {
+    int typeId=procedureColumns.getInt(TYPE_ID_COLUMN_INDEX);
+    String typeName=procedureColumns.getString(TYPE_NAME_COLUMN_INDEX);
+    if (logger.isDebugEnabled()) {
+      String name=procedureColumns.getString(PARAM_NAME_COLUN_INDEX);
+      logger.debug(String.format("Resolved parameter type: Store procedure: %s Name: %s Index: %s Type ID: %s Type Name: %s",storedProcedureName,name,position,typeId,typeName));
+    }
+    DbType dbType;
+    try {
+      dbType=dbTypeManager.lookup(connection,typeId,typeName);
+    }
+ catch (    UnknownDbTypeException e) {
+      dbType=new ResolvedDbType(typeId,typeName);
+    }
+    paramTypes.put(position,dbType);
+    position++;
+  }
+  return paramTypes;
+}

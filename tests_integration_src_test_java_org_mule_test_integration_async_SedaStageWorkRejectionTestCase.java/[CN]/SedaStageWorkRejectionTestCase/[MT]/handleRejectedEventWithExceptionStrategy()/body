@@ -1,9 +1,11 @@
 {
+  FlowExecutionListener flowExecutionListener=new FlowExecutionListener("sedaFlowCrash",muleContext).setTimeoutInMillis(5000).setNumberOfExecutionsRequired(3);
   MuleClient client=muleContext.getClient();
   int nrMessages=3;
   for (int i=0; i < nrMessages; i++) {
     client.dispatch("vm://flow.in","some data " + i,null);
   }
+  flowExecutionListener.waitUntilFlowIsComplete();
   for (int i=0; i < 2; i++) {
     MuleMessage result=client.request("vm://flow.out",RECEIVE_TIMEOUT);
     assertNotNull(result);

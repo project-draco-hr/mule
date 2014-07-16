@@ -1,0 +1,9 @@
+{
+  Flow flow=getFlow("dynamicFlow");
+  String pipelineId=flow.dynamicPipeline(null).injectBefore(new StringAppendTransformer("(pre)")).injectAfter(new StringAppendTransformer("(post)")).resetAndUpdate();
+  MuleMessage result=client.send("vm://dynamic","source->",null);
+  assertEquals("source->(pre)(static)(post)",result.getPayloadAsString());
+  flow.dynamicPipeline(pipelineId).injectBefore(new StringAppendTransformer("(pre)")).injectAfter(new StringAppendTransformer("(post1)"),new StringAppendTransformer("(post2)")).resetAndUpdate();
+  result=client.send("vm://dynamic","source->",null);
+  assertEquals("source->(pre)(static)(post1)(post2)",result.getPayloadAsString());
+}

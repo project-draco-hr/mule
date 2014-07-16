@@ -7,21 +7,16 @@
       throw new DefaultMuleException(JmsMessages.errorCreatingConnectionFactory(),ne);
     }
   }
-  ConnectionFactory cf=this.connectionFactory;
+  if ((connectionFactoryProperties != null) && !connectionFactoryProperties.isEmpty()) {
+    BeanUtils.populateWithoutFail(connectionFactory,connectionFactoryProperties,true);
+  }
+  connectionFactory=connectionFactoryDecorator.decorate(connectionFactory,this,muleContext);
   Connection connection;
-  try {
-    if (cf instanceof XAConnectionFactory && muleContext.getTransactionManager() != null) {
-      cf=new ConnectionFactoryWrapper(cf,sameRMOverrideValue);
-    }
-  }
- catch (  Exception e) {
-    throw new InitialisationException(e,this);
-  }
   if (username != null) {
-    connection=jmsSupport.createConnection(cf,username,password);
+    connection=jmsSupport.createConnection(connectionFactory,username,password);
   }
  else {
-    connection=jmsSupport.createConnection(cf);
+    connection=jmsSupport.createConnection(connectionFactory);
   }
   if (connection != null) {
     if (clientId != null && !clientId.equals(connection.getClientID())) {

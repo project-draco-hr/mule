@@ -7,18 +7,13 @@
   workListener.workStarted(new WorkEvent(this,WorkEvent.WORK_STARTED,worker,null));
   startLatch.countDown();
   try {
-    if (executionContext == null || executionContext.getXid() == null) {
-      final ClassLoader originalCl=Thread.currentThread().getContextClassLoader();
-      try {
-        Thread.currentThread().setContextClassLoader(executionClassLoader);
-        worker.run();
-      }
-  finally {
-        Thread.currentThread().setContextClassLoader(originalCl);
-      }
-    }
- else {
+    final ClassLoader originalCl=Thread.currentThread().getContextClassLoader();
+    try {
+      Thread.currentThread().setContextClassLoader(executionClassLoader);
       worker.run();
+    }
+  finally {
+      Thread.currentThread().setContextClassLoader(originalCl);
     }
     workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_COMPLETED,worker,null));
   }

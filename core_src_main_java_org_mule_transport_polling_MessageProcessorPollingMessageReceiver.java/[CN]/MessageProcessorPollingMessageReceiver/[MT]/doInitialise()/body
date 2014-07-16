@@ -1,11 +1,12 @@
 {
   super.doInitialise();
-  sourceMessageProcessor=(MessageProcessor)endpoint.getProperty(SOURCE_MESSAGE_PROCESSOR_PROPERTY_NAME);
-  if (sourceMessageProcessor instanceof OutboundEndpoint && !((OutboundEndpoint)sourceMessageProcessor).getExchangePattern().hasResponse()) {
-    throw new InitialisationException(CoreMessages.createStaticMessage(String.format("The endpoint %s does not return responses and therefore can't be used for polling.",sourceMessageProcessor)),this);
+  sourceMessageProcessor=getSourceMessageProcessor();
+  override=getPollOverride();
+  if (override instanceof MuleContextAware) {
+    ((MuleContextAware)override).setMuleContext(endpoint.getMuleContext());
   }
-  Long tempPolling=(Long)endpoint.getProperties().get(AbstractConnector.PROPERTY_POLLING_FREQUENCY);
-  if (tempPolling != null) {
-    setFrequency(tempPolling);
+  if (override instanceof Initialisable) {
+    ((Initialisable)override).initialise();
   }
+  getSchedulerFactory().create(schedulerNameOf(this),createWork());
 }

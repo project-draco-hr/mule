@@ -1,0 +1,13 @@
+{
+  getDefaultObjectStore().store(OS_KEY6,PRE_EXISTENT_OS_VALUE);
+  executePollOf("failingFlowWithWatermark");
+  prober.check(new ObjectStoreProbe(getDefaultObjectStore()){
+    @Override boolean evaluate(    ObjectStore<Serializable> os) throws ObjectStoreException {
+      return os.contains(OS_KEY6) && PRE_EXISTENT_OS_VALUE.equals(os.retrieve(OS_KEY6)) && !foo.contains(RESULT_OF_UPDATE_EXPRESSION);
+    }
+    @Override public String describeFailure(){
+      return "The object store does not contain the key " + OS_KEY6;
+    }
+  }
+);
+}

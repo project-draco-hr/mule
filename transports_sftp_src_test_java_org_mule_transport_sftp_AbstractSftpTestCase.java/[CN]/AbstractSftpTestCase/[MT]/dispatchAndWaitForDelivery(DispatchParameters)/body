@@ -1,10 +1,7 @@
 {
   final CountDownLatch latch=new CountDownLatch(1);
   EndpointMessageNotificationListener listener=null;
-  MuleClient muleClient=p.getMuleClient();
-  boolean localMuleClient=muleClient == null;
   try {
-    if (localMuleClient)     muleClient=new MuleClient(muleContext);
     listener=new EndpointMessageNotificationListener(){
       @Override public void onNotification(      ServerNotification notification){
         if (notification instanceof EndpointMessageNotification) {
@@ -20,13 +17,14 @@
     }
 ;
     muleContext.getNotificationManager().addListener(listener);
-    Map<String,String> headers=new HashMap<String,String>();
+    Map<String,Object> headers=new HashMap<String,Object>();
     headers.put("filename",p.getFilename());
     if (p.getHeaders() != null) {
       headers.putAll(p.getHeaders());
     }
     String connectString=(p.getSftpConnector() == null) ? "" : "?connector=" + p.getSftpConnector();
-    muleClient.dispatch(getAddressByEndpoint(muleClient,p.getInboundEndpoint()) + connectString,TEST_MESSAGE,headers);
+    org.mule.api.client.MuleClient muleClient=muleContext.getClient();
+    muleClient.dispatch(getAddressByEndpoint(p.getInboundEndpoint()) + connectString,TEST_MESSAGE,headers);
     if (logger.isDebugEnabled())     logger.debug("Waiting for file to be delivered to the endpoint...");
     boolean workDone=latch.await(p.getTimeout(),TimeUnit.MILLISECONDS);
     if (logger.isDebugEnabled())     logger.debug((workDone) ? "File delivered, continue..." : "No file delivered, timeout occurred!");
@@ -36,7 +34,8 @@
     fail("An unexpected error occurred: " + e.getMessage());
   }
  finally {
-    if (localMuleClient)     muleClient.dispose();
-    if (listener != null)     muleContext.getNotificationManager().removeListener(listener);
+    if (listener != null) {
+      muleContext.getNotificationManager().removeListener(listener);
+    }
   }
 }

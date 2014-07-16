@@ -28,7 +28,7 @@
         final CountDownLatch countdown=new CountDownLatch(messages.size());
         for (        Object message : messages) {
           try {
-            this.getWorkManager().scheduleWork(new MessageProcessorWorker(pt,countdown,message));
+            this.getWorkManager().scheduleWork(new MessageProcessorWorker(pt,countdown,endpoint.getMuleContext().getExceptionListener(),message));
           }
  catch (          Exception e) {
             countdown.countDown();
@@ -39,7 +39,9 @@
       }
     }
   }
- catch (  Exception e) {
-    getConnector().getMuleContext().handleException(e);
+ catch (  MessagingException e) {
+  }
+catch (  Exception e) {
+    getEndpoint().getMuleContext().handleException(e);
   }
 }

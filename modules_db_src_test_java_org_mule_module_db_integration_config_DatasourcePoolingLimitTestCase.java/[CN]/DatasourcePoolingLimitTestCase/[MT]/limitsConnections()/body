@@ -1,0 +1,12 @@
+{
+  try {
+    LocalMuleClient client=muleContext.getClient();
+    client.dispatch("vm://testIn",TEST_MESSAGE,null);
+    client.dispatch("vm://testIn",TEST_MESSAGE,null);
+    MuleMessage response=client.request("vm://connectionError",RECEIVE_TIMEOUT);
+    assertThat(response.getExceptionPayload().getException(),is(instanceOf(MessagingException.class)));
+  }
+  finally {
+    connectionLatch.countDown();
+  }
+}

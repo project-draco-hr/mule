@@ -1,0 +1,14 @@
+{
+  Preconditions.checkArgument(domain != null,"Domain name cannot be null");
+  if (domain.equals(DomainFactory.DEFAULT_DOMAIN_NAME)) {
+    return getDefaultDomainClassLoader();
+  }
+  if (domainArtifactClassLoaders.containsKey(domain)) {
+    return domainArtifactClassLoaders.get(domain);
+  }
+  validateDomain(domain);
+  ArtifactClassLoader classLoader=new MuleSharedDomainClassLoader(domain,getClass().getClassLoader());
+  classLoader=createClassLoaderUnregisterWrapper(classLoader);
+  domainArtifactClassLoaders.put(domain,classLoader);
+  return classLoader;
+}

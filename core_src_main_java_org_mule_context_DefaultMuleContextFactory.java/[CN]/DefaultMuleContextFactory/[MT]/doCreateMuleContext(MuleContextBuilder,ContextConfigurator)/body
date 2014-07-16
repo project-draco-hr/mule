@@ -1,0 +1,24 @@
+{
+  MuleContext muleContext=buildMuleContext(muleContextBuilder);
+  notifyMuleContextCreation(muleContext);
+  muleContext.initialise();
+  notifyMuleContextInitialization(muleContext);
+  try {
+    configurator.configure(muleContext);
+  }
+ catch (  ConfigurationException e) {
+    if (muleContext != null && !muleContext.isDisposed()) {
+      try {
+        muleContext.dispose();
+      }
+ catch (      Exception e1) {
+        logger.warn("Can not dispose context. " + ExceptionUtils.getMessage(e1));
+        if (logger.isDebugEnabled()) {
+          logger.debug("Can not dispose context. " + ExceptionUtils.getFullStackTrace(e1));
+        }
+      }
+    }
+    throw e;
+  }
+  return muleContext;
+}

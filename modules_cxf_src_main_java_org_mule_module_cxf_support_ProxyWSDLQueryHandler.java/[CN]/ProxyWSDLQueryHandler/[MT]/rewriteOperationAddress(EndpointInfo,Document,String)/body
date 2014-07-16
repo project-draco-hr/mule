@@ -1,0 +1,24 @@
+{
+  List<Element> serviceList=DOMUtils.findAllElementsByTagNameNS(doc.getDocumentElement(),"http://schemas.xmlsoap.org/wsdl/","service");
+  for (  Element serviceEl : serviceList) {
+    String serviceName=serviceEl.getAttribute("name");
+    if (serviceName.equals(ei.getService().getName().getLocalPart())) {
+      List<Element> elementList=DOMUtils.findAllElementsByTagNameNS(doc.getDocumentElement(),"http://schemas.xmlsoap.org/wsdl/","port");
+      for (      Element el : elementList) {
+        if (rewritePortAddress(el)) {
+          List<Element> addresses=findAddresses(el,WSDLConstants.NS_SOAP);
+          if (addresses.isEmpty()) {
+            addresses=findAddresses(el,WSDLConstants.NS_SOAP12);
+          }
+          if (addresses.isEmpty()) {
+            addresses=findAddresses(el,WSDLConstants.QNAME_XMLHTTP_BINDING_ADDRESS.getNamespaceURI());
+          }
+          if (!addresses.isEmpty()) {
+            Element address=addresses.iterator().next();
+            address.setAttribute("location",base);
+          }
+        }
+      }
+    }
+  }
+}

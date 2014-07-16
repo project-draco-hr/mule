@@ -1,0 +1,14 @@
+{
+  final ObjectStore<Serializable> os=muleContext.getRegistry().lookupObject("_defaultInMemoryObjectStore");
+  os.store(OS_KEY8,PRE_EXISTENT_OS_VALUE);
+  executePollOf("watermarkWithObjectStore");
+  prober.check(new ObjectStoreProbe(os){
+    @Override boolean evaluate(    ObjectStore<Serializable> os) throws ObjectStoreException {
+      return os.contains(OS_KEY8) && RESULT_OF_UPDATE_EXPRESSION.equals(os.retrieve(OS_KEY8)) && foo.contains(RESULT_OF_UPDATE_EXPRESSION);
+    }
+    @Override public String describeFailure(){
+      return "The object store does not contain the key " + OS_KEY8;
+    }
+  }
+);
+}

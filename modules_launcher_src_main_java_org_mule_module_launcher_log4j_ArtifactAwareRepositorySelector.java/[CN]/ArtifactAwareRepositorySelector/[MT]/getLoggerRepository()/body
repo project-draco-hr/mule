@@ -1,0 +1,55 @@
+{
+  final ClassLoader ccl=Thread.currentThread().getContextClassLoader();
+  LoggerRepository repository=repositoryUnderConstruction.get();
+  if (repository != null) {
+    return repository;
+  }
+  repository=cache.getLoggerRepository(ccl);
+  if (repository == null) {
+    final RootLogger root=new RootLogger(Level.INFO);
+    repository=new Hierarchy(root);
+    repositoryUnderConstruction.set(repository);
+    try {
+      ConfigWatchDog configWatchDog=null;
+      if (ccl instanceof ArtifactClassLoader) {
+        String logFileNamePatter;
+        if (ccl instanceof ApplicationClassLoader) {
+          logFileNamePatter=MULE_APP_LOG_FILE_TEMPLATE;
+        }
+ else {
+          logFileNamePatter="mule-domain-%s.log";
+        }
+        configWatchDog=configureLoggerAndRetrieveWatchdog((ArtifactClassLoader)ccl,repository,root,configWatchDog,logFileNamePatter);
+      }
+ else {
+        if (MuleContainerBootstrapUtils.getMuleConfDir() != null) {
+          URL rootLogConfig=getLogConfig(new DirectoryResourceLocator(MuleContainerBootstrapUtils.getMuleConfDir().getAbsolutePath()));
+          configureFrom(rootLogConfig,repository);
+          if (ccl instanceof MuleContainerSystemClassLoader) {
+            configWatchDog=new ConfigWatchDog(ccl,rootLogConfig.getFile(),repository);
+            configWatchDog.setName("Mule.system.log4j.config.monitor");
+          }
+        }
+ else {
+          addDefaultAppender(root,"mule-main.log",null);
+        }
+      }
+      final LoggerRepository previous=cache.storeLoggerRepository(ccl,repository);
+      if (previous != null) {
+        repository=previous;
+      }
+ else {
+        if (configWatchDog != null) {
+          configWatchDog.start();
+        }
+      }
+    }
+ catch (    IOException e) {
+      throw new RuntimeException(e);
+    }
+ finally {
+      repositoryUnderConstruction.remove();
+    }
+  }
+  return repository;
+}

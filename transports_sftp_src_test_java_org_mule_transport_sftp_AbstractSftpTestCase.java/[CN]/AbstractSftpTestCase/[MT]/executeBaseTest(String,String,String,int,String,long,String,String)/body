@@ -1,5 +1,4 @@
 {
-  MuleClient client=new MuleClient(muleContext);
   final CountDownLatch latch=new CountDownLatch(1);
   final AtomicInteger loopCount=new AtomicInteger(0);
   final AtomicInteger totalReceivedSize=new AtomicInteger(0);
@@ -67,11 +66,14 @@
     }
   }
 ;
-  HashMap<String,String> props=new HashMap<String,String>(1);
+  HashMap<String,Object> props=new HashMap<String,Object>();
   props.put(SftpConnector.PROPERTY_FILENAME,filename);
   props.put(SftpConnector.PROPERTY_ORIGINAL_FILENAME,filename);
-  if (logger.isInfoEnabled())   logger.info(StringMessageUtils.getBoilerPlate("Note! If this test fails due to timeout please add '-Dmule.test.timeoutSecs=XX' to the mvn command!"));
+  if (logger.isInfoEnabled()) {
+    logger.info(StringMessageUtils.getBoilerPlate("Note! If this test fails due to timeout please add '-Dmule.test.timeoutSecs=XX' to the mvn command!"));
+  }
   executeBaseAssertionsBeforeCall();
+  MuleClient client=muleContext.getClient();
   client.dispatch(sendUrl,os,props);
   boolean workDone=latch.await(timeout,TimeUnit.MILLISECONDS);
   assertTrue("Test timed out. It took more than " + timeout + " milliseconds. If this error occurs the test probably needs a longer time out (on your computer/network)",workDone);

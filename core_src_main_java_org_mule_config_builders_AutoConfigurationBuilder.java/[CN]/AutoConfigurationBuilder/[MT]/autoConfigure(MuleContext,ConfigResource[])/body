@@ -1,22 +1,20 @@
 {
-  Map configsMap=new LinkedHashMap();
-  for (int i=0; i < configResources.length; i++) {
-    String configExtension=StringUtils.substringAfterLast((configResources[i]).getUrl().getFile(),".");
-    List configs=(List)configsMap.get(configExtension);
+  Map<String,List<ConfigResource>> configsMap=new LinkedHashMap<String,List<ConfigResource>>();
+  for (int i=0; i < resources.length; i++) {
+    String configExtension=StringUtils.substringAfterLast((resources[i]).getUrl().getFile(),".");
+    List<ConfigResource> configs=configsMap.get(configExtension);
     if (configs == null) {
-      configs=new ArrayList();
+      configs=new ArrayList<ConfigResource>();
       configsMap.put(configExtension,configs);
     }
-    configs.add(configResources[i]);
+    configs.add(resources[i]);
   }
   try {
     Properties props=new Properties();
     props.load(ClassUtils.getResource("configuration-builders.properties",this.getClass()).openStream());
-    Iterator iterator=configsMap.entrySet().iterator();
-    while (iterator.hasNext()) {
-      Map.Entry e=(Map.Entry)iterator.next();
-      String extension=(String)e.getKey();
-      List configs=(List)e.getValue();
+    for (    Map.Entry<String,List<ConfigResource>> e : configsMap.entrySet()) {
+      String extension=e.getKey();
+      List<ConfigResource> configs=e.getValue();
       String className=(String)props.get(extension);
       if (className == null || !ClassUtils.isClassOnPath(className,this.getClass())) {
         throw new ConfigurationException(CoreMessages.configurationBuilderNoMatching(createConfigResourcesString()));
@@ -24,6 +22,12 @@
       ConfigResource[] constructorArg=new ConfigResource[configs.size()];
       System.arraycopy(configs.toArray(),0,constructorArg,0,configs.size());
       ConfigurationBuilder cb=(ConfigurationBuilder)ClassUtils.instanciateClass(className,new Object[]{constructorArg});
+      if (domainContext != null && cb instanceof DomainMuleContextAwareConfigurationBuilder) {
+        ((DomainMuleContextAwareConfigurationBuilder)cb).setDomainContext(domainContext);
+      }
+ else       if (domainContext != null) {
+        throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("ConfigurationBuilder %s does not support domain context",cb.getClass().getCanonicalName())));
+      }
       cb.configure(muleContext);
     }
   }

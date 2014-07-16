@@ -1,0 +1,27 @@
+{
+  Transaction tx=dbTransactionManager.getTransaction();
+  Connection connection;
+  if (transactionalAction == TransactionalAction.ALWAYS_JOIN) {
+    if (tx == null) {
+      throw new IllegalStateException("Transactional action is " + transactionalAction + " but there is no active transaction");
+    }
+ else {
+      connection=getConnectionFromTransaction(tx,dataSource);
+    }
+  }
+ else   if (transactionalAction == TransactionalAction.JOIN_IF_POSSIBLE) {
+    if (tx == null) {
+      connection=connectionFactory.create(dataSource);
+    }
+ else {
+      connection=getConnectionFromTransaction(tx,dataSource);
+    }
+  }
+ else   if (transactionalAction == TransactionalAction.NOT_SUPPORTED) {
+    connection=connectionFactory.create(dataSource);
+  }
+ else {
+    throw new IllegalArgumentException("There is no defined way to manage transactional action " + transactionalAction);
+  }
+  return doCreateDbConnection(connection,transactionalAction);
+}

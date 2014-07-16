@@ -1,0 +1,11 @@
+{
+  ExpressionManager expressionManager=mock(ExpressionManager.class);
+  String staticSqlText=STATIC_SQL_TEXT;
+  when(expressionManager.parse(DYNAMIC_SQL_TEXT,muleEvent)).thenReturn(staticSqlText);
+  QueryTemplate expectedQueryTemplate=createQueryTemplate(staticSqlText);
+  QueryTemplateParser queryTemplateParser=mock(QueryTemplateParser.class);
+  when(queryTemplateParser.parse(staticSqlText)).thenReturn(expectedQueryTemplate);
+  DynamicQueryResolver queryResolver=new DynamicQueryResolver(query,queryTemplateParser,expressionManager);
+  Query resolvedQuery=queryResolver.resolve(null,muleEvent);
+  assertThat(expectedQueryTemplate,sameInstance(resolvedQuery.getQueryTemplate()));
+}

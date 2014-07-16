@@ -1,8 +1,11 @@
 {
   if (transactionManager == null) {
-    transactionManager=(TransactionManager)registryBroker.lookupObject(MuleProperties.OBJECT_TRANSACTION_MANAGER);
+    transactionManager=registryBroker.lookupObject(MuleProperties.OBJECT_TRANSACTION_MANAGER);
     if (transactionManager == null) {
       Collection temp=registryBroker.lookupObjects(TransactionManagerFactory.class);
+      if (temp.size() > 1) {
+        throw new MuleRuntimeException(CoreMessages.createStaticMessage("More than one TX manager has been configured - Only one TX manager can be defined per application. " + "Validate your app configuration or if your app belongs to a domain and the domains defines a TX manager then you should use that one."));
+      }
       if (temp.size() > 0) {
         try {
           transactionManager=(((TransactionManagerFactory)temp.iterator().next()).create(config));

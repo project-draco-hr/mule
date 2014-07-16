@@ -1,0 +1,28 @@
+{
+  Set<AuthorizationParameter<?>> params=moduleObject.getDefaultUnauthorizedConnector().getAuthorizationParameters();
+  Map<String,String> extraParameters=new HashMap<String,String>();
+  this.setState(extraParameters,event);
+  if (params != null) {
+    for (    AuthorizationParameter<?> parameter : params) {
+      Field field=null;
+      try {
+        field=this.getClass().getDeclaredField(parameter.getName());
+      }
+ catch (      NoSuchFieldException e) {
+        throw new MessagingException(CoreMessages.createStaticMessage(String.format("Code generation error. Field %s should be present in class",parameter.getName())),event,e);
+      }
+      field.setAccessible(true);
+      try {
+        Object value=field.get(this);
+        if (value != null) {
+          Object transformed=this.evaluateAndTransform(getMuleContext(),event,parameter.getType(),null,value);
+          extraParameters.put(parameter.getName(),this.toString(event,transformed).toLowerCase());
+        }
+      }
+ catch (      IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  return extraParameters;
+}

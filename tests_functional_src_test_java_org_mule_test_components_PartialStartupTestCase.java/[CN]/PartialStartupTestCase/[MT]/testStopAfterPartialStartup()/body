@@ -1,0 +1,22 @@
+{
+  final List<String> initialThreads=collectThreadNames();
+  try {
+    muleContext.start();
+    fail("Expected Mule to fail to start, due to our RudeMessageProcessor");
+  }
+ catch (  Exception e) {
+    System.err.println("Expected Exception:");
+    e.printStackTrace();
+  }
+  muleContext.dispose();
+  new PollingProber(10000,100).check(new Probe(){
+    @Override public boolean isSatisfied(){
+      List<String> currentThreads=collectThreadNames();
+      return countOcurrences(currentThreads,"SHUTDOWN_TEST_FLOW") == 0 && countOcurrences(initialThreads,"MuleServer") == countOcurrences(currentThreads,"MuleServer") + 1;
+    }
+    @Override public String describeFailure(){
+      return "mule threads running during dispose";
+    }
+  }
+);
+}

@@ -2,32 +2,29 @@
   Connection c=null;
   Session s=null;
   try {
-    logger.debug("purging topic : " + topic);
+    log.debug("purging topic : " + topic);
     c=getConnection(true,false);
     if (c == null) {
-      logger.debug("could not create a connection to topic : " + destination);
+      log.debug("could not create a connection to topic : " + destination);
     }
     c.start();
     s=((TopicConnection)c).createTopicSession(true,Session.SESSION_TRANSACTED);
-    logger.debug("created topic session");
+    log.debug("created topic session");
     Topic dest=s.createTopic(destination);
-    logger.debug("created topic destination");
-    if (client != null) {
-      client.dispose();
-    }
+    log.debug("created topic destination");
     MessageConsumer consumer=null;
     try {
       consumer=s.createDurableSubscriber(dest,topic);
-      logger.debug("created consumer");
+      log.debug("created consumer");
       while (consumer.receiveNoWait() != null) {
-        logger.debug("Topic " + topic + " isn't empty, draining it");
+        log.debug("Topic " + topic + " isn't empty, draining it");
       }
-      logger.debug("topic should be empty");
+      log.debug("topic should be empty");
       consumer.close();
       s.unsubscribe(topic);
     }
  catch (    JMSException e) {
-      logger.debug("could not unsubscribe : " + topic);
+      log.debug("could not unsubscribe : " + topic);
     }
   }
   finally {
@@ -40,9 +37,9 @@
         c.close();
       }
  catch (      JMSException e) {
-        logger.warn("Failed to close jms connection: " + e.getMessage());
+        log.warn("Failed to close jms connection: " + e.getMessage());
       }
     }
   }
-  logger.debug("completed draining topic :" + topic);
+  log.debug("completed draining topic :" + topic);
 }
