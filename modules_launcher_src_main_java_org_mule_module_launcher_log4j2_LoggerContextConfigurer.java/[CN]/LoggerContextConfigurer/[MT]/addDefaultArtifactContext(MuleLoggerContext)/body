@@ -1,0 +1,18 @@
+{
+  String artifactName=((ArtifactClassLoader)context.getOwnerClassLoader()).getArtifactName();
+  String logFileNameTemplate=getFilenamePattern(context.getOwnerClassLoader());
+  String logName=String.format(logFileNameTemplate,(artifactName != null ? artifactName : ""));
+  File logDir=new File(MuleContainerBootstrapUtils.getMuleHome(),"logs");
+  File logFile=new File(logDir,logName);
+  if (context.getConfigLocation() == null) {
+    addDefaultAppender(context,logFile.getAbsolutePath());
+  }
+ else {
+    if (isUrlInsideDirectory(context.getConfigFile(),MuleContainerBootstrapUtils.getMuleConfDir())) {
+      if (!hasFileAppender(context)) {
+        addDefaultAppender(context,logFile.getAbsolutePath());
+        removeConsoleAppender(context);
+      }
+    }
+  }
+}
