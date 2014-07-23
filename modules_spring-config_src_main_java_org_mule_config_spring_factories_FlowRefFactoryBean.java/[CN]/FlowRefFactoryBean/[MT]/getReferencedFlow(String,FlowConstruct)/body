@@ -1,0 +1,24 @@
+{
+  if (name == null) {
+    throw new MuleRuntimeException(CoreMessages.objectIsNull(name));
+  }
+  String categorizedName=getReferencedFlowCategorizedName(name,flowConstruct);
+  if (!referenceCache.containsKey(categorizedName)) {
+    MessageProcessor referencedFlow=lookupReferencedFlowInApplicationContext(name);
+    if (referencedFlow instanceof Initialisable) {
+      if (referencedFlow instanceof MessageProcessorChain) {
+        for (        MessageProcessor processor : ((MessageProcessorChain)referencedFlow).getMessageProcessors()) {
+          if (processor instanceof FlowConstructAware) {
+            ((FlowConstructAware)processor).setFlowConstruct(flowConstruct);
+          }
+        }
+      }
+      ((Initialisable)referencedFlow).initialise();
+    }
+    if (referencedFlow instanceof Startable) {
+      ((Startable)referencedFlow).start();
+    }
+    referenceCache.putIfAbsent(categorizedName,referencedFlow);
+  }
+  return referenceCache.get(categorizedName);
+}
