@@ -4,7 +4,8 @@
   Object nonSerializable=new Object();
   event.getSession().setProperty("key",nonSerializable);
   message.setProperty("key2","value2",PropertyScope.SESSION);
-  MuleEvent deserialized=(MuleEvent)SerializationUtils.deserialize(SerializationUtils.serialize(event),muleContext);
+  ObjectSerializer serializer=muleContext.getObjectSerializer();
+  MuleEvent deserialized=serializer.deserialize(serializer.serialize(event));
   assertEquals(nonSerializable,event.getSession().getProperty("key"));
   assertEquals("value2",event.getSession().getProperty("key2"));
   assertNotSame(deserialized,event);
