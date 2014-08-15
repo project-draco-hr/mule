@@ -1,12 +1,10 @@
 {
-  Application app=muleServer.findApplication(appName);
-  ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
-  try {
-    ClassLoader classLoader=app.getMuleContext().getExecutionClassLoader();
-    Thread.currentThread().setContextClassLoader(classLoader);
-    return (LoggerContext)LogManager.getContext(classLoader,false);
+  return withAppClassLoader(appName,new Callable<LoggerContext>(){
+    @Override public LoggerContext call() throws Exception {
+      Application app=muleServer.findApplication(appName);
+      ClassLoader classLoader=app.getMuleContext().getExecutionClassLoader();
+      return (LoggerContext)LogManager.getContext(classLoader,false);
+    }
   }
-  finally {
-    Thread.currentThread().setContextClassLoader(currentClassLoader);
-  }
+);
 }
