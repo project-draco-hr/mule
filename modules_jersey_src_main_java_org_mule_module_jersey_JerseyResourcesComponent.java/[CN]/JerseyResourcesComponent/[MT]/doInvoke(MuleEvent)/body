@@ -42,7 +42,12 @@
     logger.debug("Complete URI: " + completeUri);
   }
   MuleResponseWriter writer=new MuleResponseWriter(message);
-  ContainerResponse res=new ContainerResponse(application,req,writer);
+  final MuleContainerResponse res=new MuleContainerResponse(application,req,writer);
   application.handleRequest(req,res);
-  return writer.getResponse();
+  return new OutputHandler(){
+    @Override public void write(    MuleEvent event,    OutputStream out) throws IOException {
+      res.writeToStream(out);
+    }
+  }
+;
 }
