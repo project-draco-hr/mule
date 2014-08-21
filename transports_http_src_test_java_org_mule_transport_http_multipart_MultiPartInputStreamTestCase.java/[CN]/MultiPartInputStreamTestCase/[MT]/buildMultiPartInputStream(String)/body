@@ -1,0 +1,13 @@
+{
+  ByteArrayInputStream bis=new ByteArrayInputStream(body.getBytes("UTF-8"));
+  MultiPartInputStream mpis=new MultiPartInputStream(bis,"multipart/form-data; boundary=" + MULTIPART_BOUNDARY,new MultipartConfiguration(TMP_DIR));
+  Collection<Part> parts=mpis.getParts();
+  assertEquals(NUMBER_OF_PARTS,parts.size());
+  Set<String> parsedPartContents=new HashSet<String>();
+  for (  Part part : parts) {
+    InputStream pis=part.getInputStream();
+    parsedPartContents.add(IOUtils.toString(pis));
+  }
+  assertEquals(partContents,parsedPartContents);
+  assertTrue("Temporary directory should be empty",FileUtils.listFiles(tmpDir,null,false).isEmpty());
+}
