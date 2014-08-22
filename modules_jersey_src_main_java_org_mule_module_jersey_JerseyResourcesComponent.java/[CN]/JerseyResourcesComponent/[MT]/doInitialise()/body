@@ -1,13 +1,18 @@
 {
   super.doInitialise();
-  final Set<Class<?>> resources=new HashSet<Class<?>>();
+  final Set<Class<?>> resources=new HashSet<>();
   if (components == null) {
     throw new IllegalStateException("There must be at least one component in the Jersey resources.");
   }
   initializeResources(resources);
   initializeOtherResources(exceptionMappers,resources);
   initializeOtherResources(contextResolvers,resources);
-  DefaultResourceConfig resourceConfig=createConfiguration(resources);
-  application=WebApplicationFactory.createWebApplication();
-  application.initiate(resourceConfig,getComponentProvider());
+  application=createApplication(resources);
+  try {
+    ServerRuntime serverRuntime=ClassUtils.getFieldValue(application,"runtime",false);
+    backgroundScheduler=ClassUtils.getFieldValue(serverRuntime,"backgroundScheduler",false);
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
 }
