@@ -1,5 +1,5 @@
 {
-  MuleMessageToHttpResponse transformer=new MuleMessageToHttpResponse();
+  MuleMessageToHttpResponse transformer=getMuleMessageToHttpResponse();
   MuleMessage msg=mock(MuleMessage.class);
   HttpResponse response=transformer.createResponse(null,"UTF-8",msg);
   Header[] headers=response.getHeaders();
@@ -7,7 +7,7 @@
   for (  Header header : headers) {
     if (HttpConstants.HEADER_DATE.equals(header.getName())) {
       hasDateHeader=true;
-      SimpleDateFormat formatter=new SimpleDateFormat(HttpConstants.DATE_FORMAT,Locale.US);
+      SimpleDateFormat formatter=new SimpleDateFormat(HttpConstants.DATE_FORMAT_RFC822,Locale.US);
       formatter.setLenient(false);
       try {
         formatter.parse(header.getValue());
@@ -15,11 +15,8 @@
  catch (      ParseException e) {
         formatter.setLenient(true);
         formatter.parse(header.getValue());
-        formatter=new SimpleDateFormat(HttpConstants.DATE_FORMAT.replaceFirst("hh","HH"),Locale.US);
-        formatter.setLenient(false);
-        formatter.parse(header.getValue());
       }
     }
   }
-  Assert.assertTrue("Missing 'Date' header",hasDateHeader);
+  assertThat("Missing 'Date' header",hasDateHeader,is(true));
 }
