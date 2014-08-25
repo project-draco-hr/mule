@@ -1,12 +1,12 @@
 {
   MuleClient client=muleContext.getClient();
   MuleMessage message=client.send("http://localhost:" + httpPort2.getNumber(),"request",null);
-  assertNotNull(message);
+  assertThat(message,notNullValue());
   String server=message.getInboundProperty(HttpConstants.HEADER_SERVER);
   assertTrue(server.startsWith("Mule"));
   String dateStr=message.getInboundProperty(HttpConstants.HEADER_DATE);
-  SimpleDateFormat format=new SimpleDateFormat(HttpConstants.DATE_FORMAT,Locale.US);
+  SimpleDateFormat format=new SimpleDateFormat(HttpConstants.DATE_FORMAT_RFC822,Locale.US);
   Date msgDate=format.parse(dateStr);
-  assertTrue(new Date().after(msgDate));
-  assertEquals("request",message.getPayloadAsString());
+  assertThat(new Date().after(msgDate),is(true));
+  assertThat(message.getPayloadAsString(),is(equalTo("request")));
 }

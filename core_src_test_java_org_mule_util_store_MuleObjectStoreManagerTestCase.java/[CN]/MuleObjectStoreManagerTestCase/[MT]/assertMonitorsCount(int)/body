@@ -1,0 +1,17 @@
+{
+  new PollingProber(POLLING_TIMEOUT,POLLING_DELAY).check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return assertMonitors(expectedValue) && assertSchedulers(expectedValue);
+    }
+    private boolean assertMonitors(    int expectedValue){
+      return storeManager.getMonitorsCount() == expectedValue;
+    }
+    private boolean assertSchedulers(    int expectedValue){
+      return storeManager.scheduler.getQueue().size() + storeManager.scheduler.getActiveCount() == expectedValue;
+    }
+    @Override public String describeFailure(){
+      return "Unexpected count of active monitors.";
+    }
+  }
+);
+}

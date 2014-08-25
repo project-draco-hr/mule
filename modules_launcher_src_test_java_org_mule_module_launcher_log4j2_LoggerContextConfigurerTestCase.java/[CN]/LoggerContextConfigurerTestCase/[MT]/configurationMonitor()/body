@@ -1,0 +1,9 @@
+{
+  when(context.getConfigFile()).thenReturn(new File(CURRENT_DIRECTORY).toURI());
+  contextConfigurer.configure(context);
+  ArgumentCaptor<ConfigurationMonitor> captor=ArgumentCaptor.forClass(ConfigurationMonitor.class);
+  verify(configuration).setConfigurationMonitor(captor.capture());
+  assertThat(captor.getValue() instanceof FileConfigurationMonitor,is(true));
+  FileConfigurationMonitor monitor=(FileConfigurationMonitor)captor.getValue();
+  assertThat(MONITOR_INTERVAL,equalTo(ClassUtils.getFieldValue(monitor,INTERVAL_PROPERTY,true)));
+}
