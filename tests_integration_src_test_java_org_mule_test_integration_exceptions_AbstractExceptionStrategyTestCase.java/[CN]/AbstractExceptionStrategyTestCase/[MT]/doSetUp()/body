@@ -15,12 +15,13 @@
   }
 );
   muleContext.setExceptionListener(systemExceptionListener);
-  TestExceptionStrategy serviceExceptionListener=(TestExceptionStrategy)muleContext.getRegistry().lookupModel("TestModel").getExceptionListener();
-  serviceExceptionListener.setExceptionCallback(new ExceptionCallback(){
-    public void onException(    Throwable t){
-      serviceExceptionCounter.incrementAndGet();
-      latch.countDown();
+  for (  FlowConstruct flow : muleContext.getRegistry().lookupFlowConstructs()) {
+    ((TestExceptionStrategy)flow.getExceptionListener()).setExceptionCallback(new ExceptionCallback(){
+      public void onException(      Throwable t){
+        serviceExceptionCounter.incrementAndGet();
+        latch.countDown();
+      }
     }
-  }
 );
+  }
 }
