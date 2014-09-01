@@ -9,9 +9,14 @@
   if (!_tmpDir.exists())   _tmpDir.mkdirs();
   String boundary="--" + value(_contentType.substring(_contentType.indexOf("boundary=")));
   byte[] byteBoundary=(boundary + "--").getBytes("ISO-8859-1");
-  byte[] bytes=readLine(_in);
-  String line=bytes == null ? null : new String(bytes,"UTF-8");
-  if (line == null || !line.equals(boundary)) {
+  byte[] bytes;
+  String line;
+  do {
+    bytes=readLine(_in);
+    line=bytes == null ? null : new String(bytes,"UTF-8");
+  }
+ while (line != null && !line.equals(boundary));
+  if (line == null) {
     throw new IOException("Missing initial multi part boundary");
   }
   boolean lastPart=false;
