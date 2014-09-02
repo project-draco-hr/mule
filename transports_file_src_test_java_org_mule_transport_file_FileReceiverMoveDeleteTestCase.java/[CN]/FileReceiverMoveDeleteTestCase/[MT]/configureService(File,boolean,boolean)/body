@@ -1,6 +1,5 @@
 {
-  Service service=new SedaService(muleContext);
-  service.setName("moveDeleteBridgeService");
+  Flow flow=new Flow("moveDeleteBridgeService",muleContext);
   String url=fileToUrl(inFile.getParentFile()) + "?connector=moveDeleteConnector";
   Transformer transformer=null;
   if (streaming) {
@@ -25,7 +24,7 @@
     endpointBuilder.addMessageProcessor(new NoActionTransformer());
   }
   InboundEndpoint endpoint=muleContext.getEndpointFactory().getInboundEndpoint(endpointBuilder);
-  ((CompositeMessageSource)service.getMessageSource()).addSource(endpoint);
+  flow.setMessageSource(endpoint);
   final Latch latch=new Latch();
   FunctionalTestComponent testComponent=new FunctionalTestComponent();
   testComponent.setMuleContext(muleContext);
@@ -40,8 +39,8 @@
   testComponent.initialise();
   final DefaultJavaComponent component=new DefaultJavaComponent(new SingletonObjectFactory(testComponent));
   component.setMuleContext(muleContext);
-  service.setComponent(component);
-  service.setModel(muleContext.getRegistry().lookupSystemModel());
-  muleContext.getRegistry().registerService(service);
+  flow.setMessageProcessors(new ArrayList<MessageProcessor>());
+  flow.getMessageProcessors().add(component);
+  muleContext.getRegistry().registerFlowConstruct(flow);
   return latch;
 }
