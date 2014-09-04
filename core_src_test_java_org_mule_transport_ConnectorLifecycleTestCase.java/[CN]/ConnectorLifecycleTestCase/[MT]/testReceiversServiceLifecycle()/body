@@ -1,11 +1,12 @@
 {
-  Service service=getTestService();
+  Flow service=MuleTestUtils.getTestFlow(MuleTestUtils.APPLE_SERVICE,muleContext,false);
   InboundEndpoint endpoint=getTestInboundEndpoint("in","test://in");
-  ((CompositeMessageSource)service.getMessageSource()).addSource(endpoint);
+  service.setMessageSource(endpoint);
   connector=(TestConnector)endpoint.getConnector();
   assertEquals(0,connector.receivers.size());
   connector.start();
   assertEquals(0,connector.receivers.size());
+  service.initialise();
   service.start();
   assertEquals(1,connector.receivers.size());
   assertTrue((connector.receivers.get("in")).isConnected());

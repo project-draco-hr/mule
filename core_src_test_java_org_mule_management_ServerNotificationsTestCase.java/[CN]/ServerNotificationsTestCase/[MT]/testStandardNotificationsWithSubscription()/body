@@ -1,8 +1,8 @@
 {
   final CountDownLatch latch=new CountDownLatch(1);
-  muleContext.registerListener(new ServiceNotificationListener<ServiceNotification>(){
-    public void onNotification(    ServiceNotification notification){
-      if (notification.getAction() == ServiceNotification.SERVICE_STARTED) {
+  muleContext.registerListener(new ServiceNotificationListener(){
+    public void onNotification(    ServerNotification notification){
+      if (notification.getAction() == FlowConstructNotification.FLOW_CONSTRUCT_STARTED) {
         componentStartedCount.incrementAndGet();
         assertEquals("component1",notification.getResourceIdentifier());
         latch.countDown();
@@ -10,8 +10,8 @@
     }
   }
 ,"component1");
-  getTestService("component2",Apple.class);
-  getTestService("component1",Apple.class);
+  getTestFlow("component2",Apple.class);
+  getTestFlow("component1",Apple.class);
   latch.await(20000,TimeUnit.MILLISECONDS);
   assertEquals(1,componentStartedCount.get());
 }
