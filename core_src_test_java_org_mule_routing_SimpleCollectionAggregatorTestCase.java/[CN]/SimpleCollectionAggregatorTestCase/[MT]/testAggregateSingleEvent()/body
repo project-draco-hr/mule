@@ -1,18 +1,18 @@
 {
-  MuleSession session=getTestSession(getTestService(),muleContext);
-  Service testService=getTestService("test",Apple.class);
-  assertNotNull(testService);
+  MuleSession session=getTestSession(getTestFlow(),muleContext);
+  Flow flow=getTestFlow("test",Apple.class);
+  assertNotNull(flow);
   SimpleCollectionAggregator router=new SimpleCollectionAggregator();
   SensingNullMessageProcessor sensingMessageProcessor=getSensingNullMessageProcessor();
   router.setListener(sensingMessageProcessor);
   router.setMuleContext(muleContext);
-  router.setFlowConstruct(testService);
+  router.setFlowConstruct(flow);
   router.initialise();
   MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
   message1.setCorrelationId(message1.getUniqueId());
   message1.setCorrelationGroupSize(1);
   InboundEndpoint endpoint=MuleTestUtils.getTestInboundEndpoint(MessageExchangePattern.ONE_WAY,muleContext);
-  MuleEvent event1=new DefaultMuleEvent(message1,endpoint,testService);
+  MuleEvent event1=new DefaultMuleEvent(message1,endpoint,flow);
   MuleEvent resultEvent=router.process(event1);
   assertSame(VoidMuleEvent.getInstance(),resultEvent);
   assertNotNull(sensingMessageProcessor.event);

@@ -1,7 +1,6 @@
 {
   final CountDownLatch countDown=new CountDownLatch(1);
-  HashMap props=new HashMap();
-  props.put("eventCallback",new EventCallback(){
+  EventCallback eventCallback=new EventCallback(){
     public synchronized void eventReceived(    MuleEventContext context,    Object component){
       try {
         logger.debug("woot - event received");
@@ -15,13 +14,17 @@
       }
     }
   }
-);
-  Service service=MuleTestUtils.getTestService(uniqueName("testComponent"),FunctionalTestComponent.class,props,muleContext,false);
+;
+  Flow flowConstruct=new Flow("testComponent",muleContext);
+  flowConstruct.setMessageProcessors(new ArrayList<MessageProcessor>());
+  FunctionalTestComponent component=new FunctionalTestComponent();
+  component.setEventCallback(eventCallback);
+  flowConstruct.getMessageProcessors().add(new DefaultJavaComponent(new SingletonObjectFactory(component)));
   EndpointBuilder eb=muleContext.getEndpointFactory().getEndpointBuilder(getTestEndpointURI());
   eb.setDisableTransportTransformer(true);
   InboundEndpoint ep=eb.buildInboundEndpoint();
-  ((CompositeMessageSource)service.getMessageSource()).addSource(ep);
-  muleContext.getRegistry().registerService(service);
+  flowConstruct.setMessageSource(ep);
+  muleContext.getRegistry().registerFlowConstruct(flowConstruct);
   if (!muleContext.isStarted()) {
     muleContext.start();
   }

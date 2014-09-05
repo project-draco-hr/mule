@@ -1,13 +1,15 @@
 {
   OutboundEndpoint endpoint=muleContext.getEndpointFactory().getOutboundEndpoint(getTestEndpointURI());
-  Service service=getTestService(uniqueName("testComponent"),FunctionalTestComponent.class);
-  OutboundPassThroughRouter passThroughRouter=new OutboundPassThroughRouter();
-  passThroughRouter.addRoute(endpoint);
-  ((OutboundRouterCollection)service.getOutboundMessageProcessor()).addRoute(passThroughRouter);
+  Flow flow=new Flow("testComponent",muleContext);
+  flow.setMessageProcessors(new ArrayList<MessageProcessor>());
+  FunctionalTestComponent component=new FunctionalTestComponent();
+  flow.getMessageProcessors().add(new DefaultJavaComponent(new SingletonObjectFactory(component)));
+  flow.getMessageProcessors().add(endpoint);
+  muleContext.getRegistry().registerFlowConstruct(flow);
   MuleMessage message=new DefaultMuleMessage(MESSAGE,muleContext);
   message.setOutboundProperty(MailProperties.TO_ADDRESSES_PROPERTY,EMAIL);
   MuleSession session=getTestSession(null,muleContext);
-  DefaultMuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,getTestService("apple",Apple.class),session,new ResponseOutputStream(System.out));
+  DefaultMuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,getTestFlow("apple",Apple.class),session,new ResponseOutputStream(System.out));
   endpoint.process(event);
   getServers().waitForIncomingEmail(AbstractEmailFunctionalTestCase.DELIVERY_DELAY_MS,1);
   MimeMessage[] messages=getServers().getReceivedMessages();

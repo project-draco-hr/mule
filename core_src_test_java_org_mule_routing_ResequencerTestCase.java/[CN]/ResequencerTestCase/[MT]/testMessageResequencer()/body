@@ -1,10 +1,10 @@
 {
   MuleSession session=getTestSession(null,muleContext);
-  Service testService=getTestService("test",Apple.class);
-  assertNotNull(testService);
+  Flow flow=getTestFlow("test",Apple.class);
+  assertNotNull(flow);
   TestEventResequencer router=new TestEventResequencer(3);
   router.setMuleContext(muleContext);
-  router.setFlowConstruct(testService);
+  router.setFlowConstruct(flow);
   router.initialise();
   MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
   MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
@@ -14,9 +14,9 @@
   message2.setCorrelationId(correlationId);
   message3.setCorrelationId(correlationId);
   InboundEndpoint endpoint=MuleTestUtils.getTestInboundEndpoint(MessageExchangePattern.ONE_WAY,muleContext);
-  MuleEvent event1=new DefaultMuleEvent(message1,endpoint,getTestService(),session);
-  MuleEvent event2=new DefaultMuleEvent(message2,endpoint,getTestService(),session);
-  MuleEvent event3=new DefaultMuleEvent(message3,endpoint,getTestService(),session);
+  MuleEvent event1=new DefaultMuleEvent(message1,endpoint,getTestFlow(),session);
+  MuleEvent event2=new DefaultMuleEvent(message2,endpoint,getTestFlow(),session);
+  MuleEvent event3=new DefaultMuleEvent(message3,endpoint,getTestFlow(),session);
   assertNull(router.process(event2));
   assertNull(router.process(event3));
   MuleEvent resultEvent=router.process(event1);
@@ -24,17 +24,4 @@
   MuleMessage resultMessage=resultEvent.getMessage();
   assertNotNull(resultMessage);
   assertTrue(resultMessage.getPayloadAsString().equals("test event A") || resultMessage.getPayloadAsString().equals("test event B") || resultMessage.getPayloadAsString().equals("test event C"));
-  router=new TestEventResequencer(3);
-  router.setMuleContext(muleContext);
-  router.setEventComparator(new EventPayloadComparator());
-  testService.setName("testService2");
-  router.setFlowConstruct(testService);
-  router.initialise();
-  assertNull(router.process(event2));
-  assertNull(router.process(event3));
-  resultEvent=router.process(event1);
-  assertNotNull(resultEvent);
-  resultMessage=resultEvent.getMessage();
-  assertNotNull(resultMessage);
-  assertEquals("test event C",resultMessage.getPayloadAsString());
 }
