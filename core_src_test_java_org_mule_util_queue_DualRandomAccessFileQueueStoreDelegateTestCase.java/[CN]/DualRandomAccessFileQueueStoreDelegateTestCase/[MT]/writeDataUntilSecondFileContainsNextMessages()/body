@@ -1,0 +1,19 @@
+{
+  DualRandomAccessFileQueueStoreDelegate queueStore=createTestQueueStore();
+  final File initialReadFile=queueStore.getQueueControlDataFile().getCurrentReadFile();
+  int numberOfMessagesCreated=0;
+  do {
+    queueStore.add(createTestDataForIndex(numberOfMessagesCreated));
+    numberOfMessagesCreated++;
+  }
+ while (queueStore.getQueueControlDataFile().getCurrentWriteFile().getAbsolutePath().equals(initialReadFile.getAbsolutePath()));
+  int lastInsertedMessageIndex=numberOfMessagesCreated - 1;
+  for (int i=0; i < lastInsertedMessageIndex; i++) {
+    queueStore.removeFirst();
+  }
+  queueStore.peek();
+  assertThat(queueStore.getQueueControlDataFile().getCurrentReadFile().getAbsolutePath(),not(initialReadFile.getAbsolutePath()));
+  assertThat(queueStore.getQueueControlDataFile().getCurrentWriteFile().getAbsolutePath(),not(initialReadFile.getAbsolutePath()));
+  queueStore.close();
+  return lastInsertedMessageIndex;
+}
