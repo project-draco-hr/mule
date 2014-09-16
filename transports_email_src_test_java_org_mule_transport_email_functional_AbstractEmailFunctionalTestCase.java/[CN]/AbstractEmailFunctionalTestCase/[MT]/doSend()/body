@@ -7,18 +7,13 @@
     msg=message;
   }
   MuleClient client=muleContext.getClient();
-  Map<String,Object> props=null;
-  if (charset != null) {
-    props=new HashMap<String,Object>();
-    props.put(MailProperties.CONTENT_TYPE_PROPERTY,"text/plain; charset=" + charset);
-  }
   if (addAttachments) {
-    MuleMessage muleMessage=new DefaultMuleMessage(msg,props,muleContext);
+    MuleMessage muleMessage=new DefaultMuleMessage(msg,muleContext);
     createOutboundAttachments(muleMessage);
     client.dispatch("vm://send",muleMessage);
   }
  else {
-    client.dispatch("vm://send",msg,props);
+    client.dispatch("vm://send",msg,null);
   }
   server.waitForIncomingEmail(DELIVERY_DELAY_MS,1);
   MimeMessage[] messages=server.getReceivedMessages();
