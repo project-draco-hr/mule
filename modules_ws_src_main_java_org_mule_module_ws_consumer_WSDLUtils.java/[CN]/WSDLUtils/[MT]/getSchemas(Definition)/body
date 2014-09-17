@@ -2,13 +2,17 @@
   Map<String,String> wsdlNamespaces=wsdlDefinition.getNamespaces();
   List<String> schemas=new ArrayList<String>();
   List<Types> typesList=new ArrayList<Types>();
-  extractWsdlTypes(wsdlDefinition,typesList);
+  if (wsdlDefinition.getTypes() != null) {
+    typesList.add(wsdlDefinition.getTypes());
+  }
   for (  Types types : typesList) {
     for (    Object o : types.getExtensibilityElements()) {
       if (o instanceof javax.wsdl.extensions.schema.Schema) {
         Schema schema=(Schema)o;
         for (        Map.Entry<String,String> entry : wsdlNamespaces.entrySet()) {
-          if (!schema.getElement().hasAttribute(XML_NS_PREFIX + entry.getKey())) {
+          boolean isDefault=StringUtils.isEmpty(entry.getKey());
+          boolean containsNamespace=schema.getElement().hasAttribute(XML_NS_PREFIX + entry.getKey());
+          if (!isDefault && !containsNamespace) {
             schema.getElement().setAttribute(XML_NS_PREFIX + entry.getKey(),entry.getValue());
           }
         }
@@ -18,6 +22,11 @@
           schemas.add(schemaToString(((SchemaReference)location).getReferencedSchema()));
         }
       }
+    }
+  }
+  for (  Object wsdlImportList : wsdlDefinition.getImports().values()) {
+    for (    Import wsdlImport : (List<Import>)wsdlImportList) {
+      schemas.addAll(getSchemas(wsdlImport.getDefinition()));
     }
   }
   return schemas;

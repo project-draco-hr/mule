@@ -1,0 +1,22 @@
+{
+  this.queueFileProvider=queueFileProvider;
+  if (queueFileProvider.isNewFile()) {
+    this.currentWriteFilePath=firstFile;
+    this.currentReadFilePath=firstFile;
+    writeControlData(currentWriteFilePath,currentReadFilePath);
+  }
+ else {
+    try {
+      this.currentWriteFilePath=getStoredFile();
+      this.currentReadFilePath=getStoredFile();
+    }
+ catch (    Exception e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("failure reading queue control data from file " + queueFileProvider.getFile().getAbsolutePath(),e);
+      }
+      File lastUpdatedFile=firstFile.lastModified() > secondFile.lastModified() ? firstFile : secondFile;
+      this.currentWriteFilePath=lastUpdatedFile;
+      this.currentReadFilePath=firstFile == lastUpdatedFile ? secondFile : firstFile;
+    }
+  }
+}
