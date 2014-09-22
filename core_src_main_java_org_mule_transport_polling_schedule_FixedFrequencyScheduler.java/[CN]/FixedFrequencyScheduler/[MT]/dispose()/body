@@ -2,17 +2,16 @@
   try {
     lifecycleManager.fireDisposePhase(new LifecycleCallback<Scheduler>(){
       @Override public void onTransition(      String phaseName,      Scheduler object) throws MuleException {
-        if (!executor.isTerminated()) {
-          try {
-            executor.awaitTermination(1000,TimeUnit.MILLISECONDS);
-          }
- catch (          InterruptedException e) {
-            executor.shutdownNow();
-          }
+        try {
+          executor.shutdown();
+          executor.awaitTermination(1000,TimeUnit.MILLISECONDS);
+        }
+ catch (        InterruptedException e) {
+          executor.shutdownNow();
+        }
  finally {
-            if (!executor.isTerminated()) {
-              executor.shutdownNow();
-            }
+          if (!executor.isTerminated()) {
+            executor.shutdownNow();
           }
         }
       }
