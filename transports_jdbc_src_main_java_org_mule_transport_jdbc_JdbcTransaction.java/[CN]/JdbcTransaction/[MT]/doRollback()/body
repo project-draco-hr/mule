@@ -3,13 +3,14 @@
     logger.warn(CoreMessages.rollbackTxButNoResource(this));
     return;
   }
+  TransactionException transactionException=null;
   try {
     ((Connection)resource).rollback();
   }
  catch (  SQLException e) {
-    throw new TransactionRollbackException(CoreMessages.transactionRollbackFailed(),e);
+    transactionException=new TransactionRollbackException(CoreMessages.transactionRollbackFailed(),e);
   }
  finally {
-    closeConnection();
+    closeConnection(transactionException);
   }
 }
