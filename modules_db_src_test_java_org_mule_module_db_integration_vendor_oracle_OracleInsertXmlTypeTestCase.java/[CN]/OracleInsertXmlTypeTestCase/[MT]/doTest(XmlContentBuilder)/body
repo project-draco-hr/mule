@@ -1,0 +1,16 @@
+{
+  DataSource defaultDataSource=getDefaultDataSource();
+  Connection connection=defaultDataSource.getConnection();
+  try {
+    testDatabase.executeUpdate(connection,"DELETE FROM ALIEN");
+    LocalMuleClient client=muleContext.getClient();
+    Map<String,Object> messageProperties=new HashMap<String,Object>();
+    messageProperties.put("name",Alien.ET.getName());
+    return client.send("vm://insertXmlType",builder.build(connection),messageProperties);
+  }
+  finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+}
