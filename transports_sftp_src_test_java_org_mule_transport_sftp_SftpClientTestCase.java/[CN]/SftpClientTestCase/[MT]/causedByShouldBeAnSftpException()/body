@@ -1,0 +1,21 @@
+{
+  ChannelSftp mockChannel=mock(ChannelSftp.class);
+  when(mockChannel.ls(anyString())).thenThrow(new SftpException(1,destDir));
+  try {
+    SftpClient client=new SftpClient("local");
+    Field channelField=client.getClass().getDeclaredField("channelSftp");
+    channelField.setAccessible(true);
+    channelField.set(client,mockChannel);
+    client.listFiles(destDir);
+  }
+ catch (  IOException e) {
+    if (e.getCause() == null) {
+      fail("no cause provided, should have been SftpException");
+    }
+    final Class actualClass=e.getCause().getClass();
+    assertEquals(actualClass,SftpException.class);
+  }
+catch (  Exception e) {
+    fail("cause should have been SftpException");
+  }
+}
