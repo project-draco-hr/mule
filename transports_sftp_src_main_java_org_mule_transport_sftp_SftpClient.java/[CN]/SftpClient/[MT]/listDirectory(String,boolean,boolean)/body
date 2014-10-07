@@ -1,19 +1,15 @@
 {
   try {
-    @SuppressWarnings("unchecked") Vector<String> vv=channelSftp.ls(path);
-    if (vv != null) {
+    Vector<LsEntry> entries=channelSftp.ls(path);
+    if (entries != null) {
       List<String> ret=new ArrayList<String>();
-      for (int i=0; i < vv.size(); i++) {
-        Object obj=vv.elementAt(i);
-        if (obj instanceof com.jcraft.jsch.ChannelSftp.LsEntry) {
-          LsEntry entry=(LsEntry)obj;
-          if (includeFiles && !entry.getAttrs().isDir()) {
+      for (      LsEntry entry : entries) {
+        if (includeFiles && !entry.getAttrs().isDir()) {
+          ret.add(entry.getFilename());
+        }
+        if (includeDirectories && entry.getAttrs().isDir()) {
+          if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")) {
             ret.add(entry.getFilename());
-          }
-          if (includeDirectories && entry.getAttrs().isDir()) {
-            if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")) {
-              ret.add(entry.getFilename());
-            }
           }
         }
       }
@@ -21,7 +17,7 @@
     }
   }
  catch (  SftpException e) {
-    throw new IOException(e.getMessage());
+    throw new IOException(e.getMessage(),e);
   }
   return null;
 }
