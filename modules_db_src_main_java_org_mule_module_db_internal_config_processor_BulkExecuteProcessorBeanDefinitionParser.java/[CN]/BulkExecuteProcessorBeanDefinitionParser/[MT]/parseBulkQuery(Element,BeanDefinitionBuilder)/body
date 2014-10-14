@@ -1,12 +1,15 @@
 {
   String file=element.getAttribute("file");
-  String queryText=element.getTextContent();
+  BeanDefinitionBuilder bulkQueryResolver;
   if (StringUtils.isEmpty(file)) {
-    BeanDefinitionBuilder sqlParamResolverFactory=BeanDefinitionBuilder.genericBeanDefinition(BulkQueryResolverFactoryBean.class);
-    sqlParamResolverFactory.addConstructorArgValue(queryText);
-    builder.addConstructorArgValue(sqlParamResolverFactory.getBeanDefinition());
+    bulkQueryResolver=BeanDefinitionBuilder.genericBeanDefinition(BulkQueryResolverFactoryBean.class);
+    bulkQueryResolver.addConstructorArgValue(element.getTextContent());
   }
  else {
-    builder.addConstructorArgValue(new FileBulkQueryResolver(file,new SimpleQueryTemplateParser(),new DefaultFileReader()));
+    bulkQueryResolver=BeanDefinitionBuilder.genericBeanDefinition(FileBulkQueryResolver.class);
+    bulkQueryResolver.addConstructorArgValue(file);
+    bulkQueryResolver.addConstructorArgValue(new SimpleQueryTemplateParser());
+    bulkQueryResolver.addConstructorArgValue(new DefaultFileReader());
   }
+  builder.addConstructorArgValue(bulkQueryResolver.getBeanDefinition());
 }

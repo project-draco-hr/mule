@@ -1,0 +1,13 @@
+{
+  List<QueryParam> defaultParams=Collections.<QueryParam>singletonList(new DefaultInputQueryParam(1,JdbcTypes.INTEGER_DB_TYPE,"5","position"));
+  QueryTemplate queryTemplate=new QueryTemplate(PARSED_PARAMETERIZED_QUERY,QueryType.SELECT,defaultParams);
+  QueryTemplateParser queryParser=mock(QueryTemplateParser.class);
+  when(queryParser.parse(PARAMETERIZED_QUERY)).thenReturn(queryTemplate);
+  ParameterizedQueryTemplateFactoryBean factoryBean=new ParameterizedQueryTemplateFactoryBean(PARAMETERIZED_QUERY,Collections.EMPTY_LIST,queryParser);
+  QueryTemplate createdQueryTemplate=factoryBean.getObject();
+  assertThat(createdQueryTemplate.getSqlText(),equalTo(PARSED_PARAMETERIZED_QUERY));
+  assertThat(createdQueryTemplate.getType(),equalTo(QueryType.SELECT));
+  assertThat(createdQueryTemplate.getParams().size(),equalTo(1));
+  InputQueryParam inputQueryParam=createdQueryTemplate.getInputParams().get(0);
+  assertThat(inputQueryParam.getValue(),IsEqual.<Object>equalTo("5"));
+}
