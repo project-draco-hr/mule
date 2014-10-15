@@ -1,0 +1,16 @@
+{
+  withForceConsoleLog(new Runnable(){
+    @Override public void run(){
+      contextConfigurer.configure(context);
+      ArgumentCaptor<ConsoleAppender> appenderCaptor=ArgumentCaptor.forClass(ConsoleAppender.class);
+      verify(context.getConfiguration()).addAppender(appenderCaptor.capture());
+      Appender forcedConsoleAppender=appenderCaptor.getValue();
+      assertThat(forcedConsoleAppender,notNullValue());
+      assertThat(forcedConsoleAppender.getName(),equalTo("Forced-Console"));
+      assertThat(forcedConsoleAppender.isStarted(),is(true));
+      LoggerConfig rootLogger=((AbstractConfiguration)context.getConfiguration()).getRootLogger();
+      verify(rootLogger).addAppender(forcedConsoleAppender,Level.INFO,null);
+    }
+  }
+);
+}
