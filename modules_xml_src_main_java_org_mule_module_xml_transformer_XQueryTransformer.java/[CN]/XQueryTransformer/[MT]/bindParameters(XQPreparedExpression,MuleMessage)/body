@@ -3,32 +3,43 @@
     for (    Map.Entry<String,Object> parameter : contextProperties.entrySet()) {
       String key=parameter.getKey();
       Object o=evaluateTransformParameter(key,parameter.getValue(),message);
+      if (o == null) {
+        logger.warn(String.format("Cannot bind parameter '%s' because it's value resolved to null",key));
+        continue;
+      }
+      QName paramKey=new QName(key);
       if (o instanceof String) {
-        transformer.bindAtomicValue(new QName(key),o.toString(),connection.createAtomicType(XQItemType.XQBASETYPE_STRING));
+        transformer.bindAtomicValue(paramKey,o.toString(),connection.createAtomicType(XQItemType.XQBASETYPE_STRING));
       }
  else       if (o instanceof Boolean) {
-        transformer.bindBoolean(new QName(key),((Boolean)o).booleanValue(),connection.createAtomicType(XQItemType.XQBASETYPE_BOOLEAN));
+        transformer.bindBoolean(paramKey,((Boolean)o).booleanValue(),connection.createAtomicType(XQItemType.XQBASETYPE_BOOLEAN));
       }
  else       if (o instanceof Byte) {
-        transformer.bindByte(new QName(key),((Byte)o).byteValue(),connection.createAtomicType(XQItemType.XQBASETYPE_BYTE));
+        transformer.bindByte(paramKey,((Byte)o).byteValue(),connection.createAtomicType(XQItemType.XQBASETYPE_BYTE));
       }
  else       if (o instanceof Short) {
-        transformer.bindShort(new QName(key),((Short)o).shortValue(),connection.createAtomicType(XQItemType.XQBASETYPE_SHORT));
+        transformer.bindShort(paramKey,((Short)o).shortValue(),connection.createAtomicType(XQItemType.XQBASETYPE_SHORT));
       }
  else       if (o instanceof Integer) {
-        transformer.bindInt(new QName(key),((Integer)o).intValue(),connection.createAtomicType(XQItemType.XQBASETYPE_INT));
+        transformer.bindInt(paramKey,((Integer)o).intValue(),connection.createAtomicType(XQItemType.XQBASETYPE_INT));
       }
  else       if (o instanceof Long) {
-        transformer.bindLong(new QName(key),((Long)o).longValue(),connection.createAtomicType(XQItemType.XQBASETYPE_LONG));
+        transformer.bindLong(paramKey,((Long)o).longValue(),connection.createAtomicType(XQItemType.XQBASETYPE_LONG));
       }
  else       if (o instanceof Float) {
-        transformer.bindFloat(new QName(key),((Float)o).floatValue(),connection.createAtomicType(XQItemType.XQBASETYPE_FLOAT));
+        transformer.bindFloat(paramKey,((Float)o).floatValue(),connection.createAtomicType(XQItemType.XQBASETYPE_FLOAT));
       }
  else       if (o instanceof Double) {
-        transformer.bindDouble(new QName(key),((Double)o).doubleValue(),connection.createAtomicType(XQItemType.XQBASETYPE_DOUBLE));
+        transformer.bindDouble(paramKey,((Double)o).doubleValue(),connection.createAtomicType(XQItemType.XQBASETYPE_DOUBLE));
+      }
+ else       if (o instanceof Document) {
+        transformer.bindDocument(paramKey,new DOMSource(((Document)o).getFirstChild()),connection.createNodeType());
+      }
+ else       if (o instanceof Node) {
+        transformer.bindDocument(paramKey,new DOMSource((Node)o),connection.createNodeType());
       }
  else {
-        logger.error("Cannot bind value: " + o + " cannot be bound to the Xquery context. Not of supported type");
+        logger.warn(String.format("Cannot bind value for key '%s' because type '%s' is not supported",key,o.getClass().getName()));
       }
     }
   }

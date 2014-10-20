@@ -1,55 +1,21 @@
 {
   super.initialise();
-  if (getXpath() == null) {
-    setXpath(XPathFactory.newInstance().newXPath());
+  if (xpathEvaluator == null) {
+    xpathEvaluator=new SaxonXpathEvaluator();
   }
   if (pattern == null) {
     throw new InitialisationException(MessageFactory.createStaticMessage("A pattern must be supplied to the " + ClassUtils.getSimpleName(getClass())),this);
   }
-  if (muleContext != null) {
-    try {
-      namespaceManager=muleContext.getRegistry().lookupObject(NamespaceManager.class);
-    }
- catch (    RegistrationException e) {
-      throw new ExpressionRuntimeException(CoreMessages.failedToLoad("NamespaceManager"),e);
-    }
-    if (namespaceManager != null) {
-      if (prefixToNamespaceMap == null) {
-        prefixToNamespaceMap=new HashMap<String,String>(namespaceManager.getNamespaces());
-      }
- else {
-        prefixToNamespaceMap.putAll(namespaceManager.getNamespaces());
-      }
-    }
+  try {
+    namespaceManager=muleContext.getRegistry().lookupObject(NamespaceManager.class);
   }
-  final Map<String,String> prefixToNamespaceMap=this.prefixToNamespaceMap;
+ catch (  RegistrationException e) {
+    throw new ExpressionRuntimeException(CoreMessages.failedToLoad("NamespaceManager"),e);
+  }
+  if (namespaceManager != null) {
+    xpathEvaluator.registerNamespaces(namespaceManager);
+  }
   if (prefixToNamespaceMap != null) {
-    getXpath().setNamespaceContext(new NamespaceContext(){
-      @Override public String getNamespaceURI(      String prefix){
-        return prefixToNamespaceMap.get(prefix);
-      }
-      @Override public String getPrefix(      String namespaceURI){
-        for (        Map.Entry<String,String> entry : prefixToNamespaceMap.entrySet()) {
-          if (namespaceURI.equals(entry.getValue())) {
-            return entry.getKey();
-          }
-        }
-        return null;
-      }
-      @Override public Iterator<String> getPrefixes(      String namespaceURI){
-        String prefix=getPrefix(namespaceURI);
-        if (prefix == null) {
-          return Collections.<String>emptyList().iterator();
-        }
- else {
-          return Arrays.asList(prefix).iterator();
-        }
-      }
-    }
-);
-  }
-  if (logger.isInfoEnabled()) {
-    logger.info("XPath implementation: " + getXpath());
-    logger.info("DocumentBuilderFactory implementation: " + getDocumentBuilderFactory());
+    xpathEvaluator.registerNamespaces(prefixToNamespaceMap);
   }
 }

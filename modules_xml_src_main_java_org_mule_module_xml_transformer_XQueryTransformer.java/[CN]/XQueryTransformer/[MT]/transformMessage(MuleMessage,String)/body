@@ -7,11 +7,11 @@
       bindDocument(message.getPayload(),transformer);
       XQResultSequence result=transformer.executeQuery();
       List<Object> results=new ArrayList<Object>();
+      Class<?> type=returnType.getType();
       while (result.next()) {
         XQItem item=result.getItem();
-        Class<?> type=returnType.getType();
         if (Node.class.isAssignableFrom(type) || Node[].class.isAssignableFrom(type)) {
-          results.add(item.getNode());
+          results.add(getItemValue(item));
         }
  else         if (String.class.isAssignableFrom(type) || String[].class.isAssignableFrom(type)) {
           results.add(item.getItemAsString(null));
@@ -32,21 +32,15 @@
             throw new TransformerException(XmlMessages.objectNotAvailble(getName()));
           }
         }
-        if (!type.isArray()) {
-          break;
+      }
+      if (!Collection.class.isAssignableFrom(type)) {
+        if (results.isEmpty()) {
+          return null;
         }
-      }
-      if (returnType.getType().isArray()) {
-        return results.toArray();
-      }
-      if (results.size() == 1) {
-        return results.get(0);
-      }
- else       if (results.size() == 0) {
-        return null;
+        return results.size() == 1 ? results.get(0) : results.toArray();
       }
  else {
-        return results.toArray();
+        return results;
       }
     }
   finally {

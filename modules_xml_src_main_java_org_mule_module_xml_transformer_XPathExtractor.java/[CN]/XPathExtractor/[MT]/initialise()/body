@@ -3,35 +3,13 @@
   if (expression == null) {
     throw new InitialisationException(MessageFactory.createStaticMessage("An expression must be supplied to the StandardXPathExtractor"),this);
   }
+  if (xpathEvaluator == null) {
+    xpathEvaluator=new SaxonXpathEvaluator();
+  }
   if (namespaceManager != null) {
-    if (prefixToNamespaceMap == null) {
-      prefixToNamespaceMap=new HashMap<String,String>(namespaceManager.getNamespaces());
-    }
- else {
-      prefixToNamespaceMap.putAll(namespaceManager.getNamespaces());
-    }
+    xpathEvaluator.registerNamespaces(namespaceManager);
   }
-  getXpath().setNamespaceContext(new NamespaceContext(){
-    @Override public String getNamespaceURI(    String prefix){
-      return prefixToNamespaceMap.get(prefix);
-    }
-    @Override public String getPrefix(    String namespaceURI){
-      for (      Map.Entry<String,String> entry : prefixToNamespaceMap.entrySet()) {
-        if (namespaceURI.equals(entry.getValue())) {
-          return entry.getKey();
-        }
-      }
-      return null;
-    }
-    @Override public Iterator<?> getPrefixes(    String namespaceURI){
-      String prefix=getPrefix(namespaceURI);
-      if (prefix == null) {
-        return Collections.emptyList().iterator();
-      }
- else {
-        return Arrays.asList(prefix).iterator();
-      }
-    }
+  if (prefixToNamespaceMap != null) {
+    xpathEvaluator.registerNamespaces(prefixToNamespaceMap);
   }
-);
 }

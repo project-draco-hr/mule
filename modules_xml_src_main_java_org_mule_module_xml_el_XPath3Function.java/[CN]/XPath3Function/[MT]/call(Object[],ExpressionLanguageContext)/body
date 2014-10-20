@@ -1,0 +1,20 @@
+{
+  validateParams(params);
+  final MessageContext ctx=context.getVariable("message");
+  final String xpathExpression=getXpathExpression(params);
+  final XPathReturnType returnType=getReturnType(params);
+  final MuleEvent event=getMuleEvent(context);
+  final Object input=getInput(params,event);
+  try {
+    Node node=toDOMNode(input,event);
+    Object result=xpathEvaluatorSupplier.get().evaluate(xpathExpression,node,returnType,event);
+    MuleMessage message=event.getMessage();
+    if (input == message.getPayload() && ((DefaultMuleMessage)message).isConsumable()) {
+      ctx.setPayload(node);
+    }
+    return result;
+  }
+ catch (  Exception e) {
+    throw new MuleRuntimeException(e);
+  }
+}
