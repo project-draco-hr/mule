@@ -1,34 +1,36 @@
 {
-  InetSocketAddress socketAddress=(InetSocketAddress)socket.getLocalSocketAddress();
-  int port=socketAddress.getPort();
-  String host=socketAddress.getHostName();
-  List<MessageReceiver> selectedReceivers=new LinkedList<>();
+  int port=((InetSocketAddress)socket.getLocalSocketAddress()).getPort();
+  String host=null;
   for (  MessageReceiver messageReceiver : receivers.values()) {
-    if (messageReceiver.getEndpointURI().getPort() == port && matchesHost(messageReceiver,host)) {
-      selectedReceivers.add(messageReceiver);
-    }
-  }
-  if (selectedReceivers.isEmpty()) {
-    throw new NoReceiverForEndpointException(HttpMessages.noReceiverFoundForUrl(requestLine.getUrlWithoutParams()));
-  }
-  String requestUriWithoutParams=requestLine.getUrlWithoutParams();
-  HttpMessageReceiver receiver=null;
-  if (logger.isDebugEnabled()) {
-    logger.debug(String.format(LOOKUP_DEBUG_MESSAGE_FORMAT,"Primary",getName(),getUri(host,port,requestUriWithoutParams)));
-  }
-  for (  MessageReceiver selectedReceiver : selectedReceivers) {
-    if (matchesPath(selectedReceiver,requestUriWithoutParams)) {
-      receiver=(HttpMessageReceiver)selectedReceiver;
+    if (messageReceiver.getEndpointURI().getPort() == port) {
+      host=messageReceiver.getEndpointURI().getHost();
       break;
     }
   }
+  if (host == null) {
+    String url=requestLine.getUrlWithoutParams();
+    throw new NoReceiverForEndpointException(HttpMessages.noReceiverFoundForUrl(url));
+  }
+  String requestUriWithoutParams=requestLine.getUrlWithoutParams();
+  StringBuilder requestUri=new StringBuilder(80);
+  if (requestUriWithoutParams.indexOf("://") == -1) {
+    requestUri.append(getProtocol()).append("://").append(host).append(':').append(port);
+    if (!ROOT_PATH.equals(requestUriWithoutParams)) {
+      requestUri.append(requestUriWithoutParams);
+    }
+  }
+  String uriStr=requestUri.toString();
+  if (logger.isTraceEnabled()) {
+    logger.trace("Looking up receiver on connector: " + getName() + " with URI key: "+ requestUri.toString());
+  }
+  HttpMessageReceiver receiver=(HttpMessageReceiver)lookupReceiver(uriStr);
   if (receiver == null && !ROOT_PATH.equals(requestUriWithoutParams)) {
     if (logger.isDebugEnabled()) {
-      logger.debug(String.format(LOOKUP_DEBUG_MESSAGE_FORMAT,"Secondary",getName(),getUri(host,port,requestUriWithoutParams)));
+      logger.debug("Secondary lookup of receiver on connector: " + getName() + " with URI key: "+ requestUri.toString());
     }
-    receiver=(HttpMessageReceiver)findReceiverByStem(selectedReceivers,requestUriWithoutParams);
+    receiver=(HttpMessageReceiver)findReceiverByStem(getReceivers(),uriStr);
     if (receiver == null && logger.isWarnEnabled()) {
-      logger.warn(String.format(LOOKUP_DEBUG_MESSAGE_FORMAT,"No receiver found with secondary",getName(),getUri(host,port,requestUriWithoutParams)));
+      logger.warn("No receiver found with secondary lookup on connector: " + getName() + " with URI key: "+ requestUri.toString());
       logger.warn("Receivers on connector are: " + MapUtils.toString(getReceivers(),true));
     }
   }
