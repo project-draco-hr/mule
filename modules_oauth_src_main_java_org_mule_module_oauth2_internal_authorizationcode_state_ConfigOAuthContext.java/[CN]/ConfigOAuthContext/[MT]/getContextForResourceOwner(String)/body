@@ -1,0 +1,21 @@
+{
+  ResourceOwnerOAuthContext resourceOwnerOAuthContext=null;
+  if (!oauthContextStore.containsKey(resourceOwnerId)) {
+    final Lock lock=lockFactory.createLock(configName + "-config-oauth-context");
+    lock.lock();
+    try {
+      if (!oauthContextStore.containsKey(resourceOwnerId)) {
+        resourceOwnerOAuthContext=new ResourceOwnerOAuthContext(createLockForResourceOwner(resourceOwnerId),resourceOwnerId);
+        oauthContextStore.put(resourceOwnerId,resourceOwnerOAuthContext);
+      }
+    }
+  finally {
+      lock.unlock();
+    }
+  }
+  if (resourceOwnerOAuthContext == null) {
+    resourceOwnerOAuthContext=oauthContextStore.get(resourceOwnerId);
+    resourceOwnerOAuthContext.setRefreshUserOAuthContextLock(createLockForResourceOwner(resourceOwnerId));
+  }
+  return resourceOwnerOAuthContext;
+}

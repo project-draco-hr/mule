@@ -1,0 +1,21 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Executing refresh token for user " + resourceOwnerId);
+  }
+  final ResourceOwnerOAuthContext resourceOwnerOAuthContext=getOauthConfig().getUserOAuthContext().getContextForResourceOwner(resourceOwnerId);
+  final boolean lockWasAcquired=resourceOwnerOAuthContext.getRefreshUserOAuthContextLock().tryLock();
+  try {
+    if (lockWasAcquired) {
+      doRefreshToken(currentEvent,resourceOwnerOAuthContext);
+      getOauthConfig().getUserOAuthContext().updateResourceOwnerOAuthContext(resourceOwnerOAuthContext);
+    }
+  }
+  finally {
+    if (lockWasAcquired) {
+      resourceOwnerOAuthContext.getRefreshUserOAuthContextLock().unlock();
+    }
+  }
+  if (!lockWasAcquired) {
+    waitUntilLockGetsReleased(resourceOwnerOAuthContext);
+  }
+}

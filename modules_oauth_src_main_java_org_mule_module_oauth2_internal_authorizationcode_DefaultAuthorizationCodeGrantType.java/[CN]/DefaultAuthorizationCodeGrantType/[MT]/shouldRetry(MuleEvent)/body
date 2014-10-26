@@ -1,0 +1,19 @@
+{
+  if (!StringUtils.isBlank(getRefreshTokenWhen())) {
+    final Object value=muleContext.getExpressionManager().evaluate(getRefreshTokenWhen(),firstAttemptResponseEvent);
+    if (!(value instanceof Boolean)) {
+      throw new MuleRuntimeException(createStaticMessage("Expression %s should return a boolean but return %s",getRefreshTokenWhen(),value));
+    }
+    final Boolean shouldRetryRequest=(Boolean)value;
+    if (shouldRetryRequest) {
+      try {
+        refreshToken(firstAttemptResponseEvent,resourceOwnerIdEvaluator.resolveStringValue(firstAttemptResponseEvent));
+      }
+ catch (      MuleException e) {
+        throw new MuleRuntimeException(e);
+      }
+    }
+    return shouldRetryRequest;
+  }
+  return false;
+}
