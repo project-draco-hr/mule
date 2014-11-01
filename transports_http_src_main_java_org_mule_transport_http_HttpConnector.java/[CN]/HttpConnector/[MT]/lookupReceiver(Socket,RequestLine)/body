@@ -4,7 +4,9 @@
   for (  MessageReceiver messageReceiver : receivers.values()) {
     if (messageReceiver.getEndpointURI().getPort() == port) {
       host=messageReceiver.getEndpointURI().getHost();
-      break;
+      if (!BIND_TO_ALL_INTERFACES_IP.equals(host)) {
+        break;
+      }
     }
   }
   if (host == null) {
@@ -21,16 +23,16 @@
   }
   String uriStr=requestUri.toString();
   if (logger.isTraceEnabled()) {
-    logger.trace("Looking up receiver on connector: " + getName() + " with URI key: "+ requestUri.toString());
+    logger.trace(String.format(LOOKUP_DEBUG_MESSAGE_FORMAT,"Primary",getName(),uriStr));
   }
   HttpMessageReceiver receiver=(HttpMessageReceiver)lookupReceiver(uriStr);
   if (receiver == null && !ROOT_PATH.equals(requestUriWithoutParams)) {
     if (logger.isDebugEnabled()) {
-      logger.debug("Secondary lookup of receiver on connector: " + getName() + " with URI key: "+ requestUri.toString());
+      logger.debug(String.format(LOOKUP_DEBUG_MESSAGE_FORMAT,"Secondary",getName(),uriStr));
     }
-    receiver=(HttpMessageReceiver)findReceiverByStem(getReceivers(),uriStr);
+    receiver=(HttpMessageReceiver)findReceiverByStemConsideringMatchingHost(getReceivers(),uriStr);
     if (receiver == null && logger.isWarnEnabled()) {
-      logger.warn("No receiver found with secondary lookup on connector: " + getName() + " with URI key: "+ requestUri.toString());
+      logger.warn(String.format(LOOKUP_DEBUG_MESSAGE_FORMAT,"No receiver found on secondary",getName(),uriStr));
       logger.warn("Receivers on connector are: " + MapUtils.toString(getReceivers(),true));
     }
   }

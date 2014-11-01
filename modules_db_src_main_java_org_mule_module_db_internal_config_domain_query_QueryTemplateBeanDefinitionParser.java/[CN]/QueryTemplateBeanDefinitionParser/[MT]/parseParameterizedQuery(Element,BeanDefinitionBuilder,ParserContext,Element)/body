@@ -1,57 +1,36 @@
 {
-  String sqlText;
   boolean hasFileAttribute=sqlElem.hasAttribute(FILE_ATTRIBUTE);
   boolean hasTextContent=!element.getTextContent().trim().isEmpty();
   if (hasFileAttribute && hasTextContent) {
     throw new IllegalArgumentException(String.format("Element %s cannot contain attribute file and text content simultaneously",element.getTagName()));
   }
+  BeanDefinitionBuilder queryTemplateFactory=BeanDefinitionBuilder.genericBeanDefinition(ParameterizedQueryTemplateFactoryBean.class);
   if (hasFileAttribute) {
     String fileName=sqlElem.getAttribute(FILE_ATTRIBUTE);
-    try {
-      sqlText=IOUtils.getResourceAsString(fileName,getClass());
-    }
- catch (    IOException e) {
-      throw new IllegalStateException("Unable to read query from file: " + fileName);
-    }
+    BeanDefinitionBuilder queryFileBuilder=BeanDefinitionBuilder.genericBeanDefinition(QueryFileFactoryBean.class);
+    queryFileBuilder.addConstructorArgValue(fileName);
+    queryFileBuilder.addConstructorArgValue(new DefaultFileReader());
+    queryTemplateFactory.addConstructorArgValue(queryFileBuilder.getBeanDefinition());
   }
  else {
     Node node=sqlElem.getFirstChild();
+    String sqlText;
     if (node.getNextSibling() != null && node.getNextSibling().getNodeType() == Node.CDATA_SECTION_NODE) {
       sqlText=node.getNextSibling().getNodeValue();
     }
  else {
       sqlText=node.getNodeValue();
     }
+    queryTemplateFactory.addConstructorArgValue(sqlText);
   }
-  SimpleQueryTemplateParser simpleQueryParser=new SimpleQueryTemplateParser();
-  QueryTemplate queryTemplate=simpleQueryParser.parse(sqlText);
-  if (queryTemplate.getParams().size() > 0 && !queryTemplate.usesNamedParameters()) {
-    throw new IllegalArgumentException("Templates do not support inline parameters");
+  element.removeChild(sqlElem);
+  List<Object> params=new ManagedList<Object>();
+  List<Element> childElementsByTagName=DomUtils.getChildElementsByTagName(element,IN_PARAM_ELEMENT);
+  for (  Element param : childElementsByTagName) {
+    BeanDefinition paramBean=parseParameter(nestedCtx,param);
+    params.add(paramBean);
   }
- else {
-    builder.addConstructorArgValue(queryTemplate.getSqlText());
-    builder.addConstructorArgValue(queryTemplate.getType());
-    element.removeChild(sqlElem);
-    List<Object> params=new ManagedList<Object>();
-    List<Element> childElementsByTagName=DomUtils.getChildElementsByTagName(element,IN_PARAM_ELEMENT);
-    if (queryTemplate.usesNamedParameters()) {
-      for (      InputQueryParam inputSqlParam : queryTemplate.getInputParams()) {
-        Element param=findOverriddenParamElement(inputSqlParam.getName(),childElementsByTagName);
-        if (param == null) {
-          params.add(inputSqlParam);
-        }
- else {
-          BeanDefinition paramBean=parseParameter(nestedCtx,param);
-          params.add(paramBean);
-        }
-      }
-    }
- else {
-      for (      Element param : childElementsByTagName) {
-        BeanDefinition paramBean=parseParameter(nestedCtx,param);
-        params.add(paramBean);
-      }
-    }
-    builder.addConstructorArgValue(params);
-  }
+  queryTemplateFactory.addConstructorArgValue(params);
+  queryTemplateFactory.addConstructorArgValue(new SimpleQueryTemplateParser());
+  builder.addConstructorArgValue(queryTemplateFactory.getBeanDefinition());
 }

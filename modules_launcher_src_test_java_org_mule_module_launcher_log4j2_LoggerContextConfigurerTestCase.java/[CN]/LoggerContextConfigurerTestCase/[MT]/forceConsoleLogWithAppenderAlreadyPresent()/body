@@ -1,0 +1,14 @@
+{
+  withForceConsoleLog(new Runnable(){
+    @Override public void run(){
+      LoggerConfig rootLogger=((AbstractConfiguration)context.getConfiguration()).getRootLogger();
+      Collection<Appender> appenders=new ArrayList<>();
+      appenders.add(ConsoleAppender.createAppender(mock(Layout.class),null,null,"Console",null,null));
+      when(rootLogger.getAppenders().values()).thenReturn(appenders);
+      contextConfigurer.configure(context);
+      verify(context.getConfiguration(),never()).addAppender(any(ConsoleAppender.class));
+      verify(rootLogger,never()).addAppender(any(ConsoleAppender.class),same(Level.INFO),any(Filter.class));
+    }
+  }
+);
+}

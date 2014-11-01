@@ -1,0 +1,15 @@
+{
+  checkState(schemaLocation != null,"schemaLocation has not been provided");
+  final URITranslatorConfigurationBuilder translatorConfigurationBuilder=URITranslatorConfiguration.newBuilder();
+  for (  Map.Entry<String,String> redirect : schemaRedirects.entrySet()) {
+    translatorConfigurationBuilder.addSchemaRedirect(redirect.getKey(),redirect.getValue());
+  }
+  final LoadingConfigurationBuilder loadingConfigurationBuilder=LoadingConfiguration.newBuilder().dereferencing(dereferencing == JsonSchemaDereferencing.CANONICAL ? Dereferencing.CANONICAL : Dereferencing.INLINE).setURITranslatorConfiguration(translatorConfigurationBuilder.freeze());
+  JsonSchemaFactory factory=JsonSchemaFactory.newBuilder().setLoadingConfiguration(loadingConfigurationBuilder.freeze()).freeze();
+  try {
+    return new JsonSchemaValidator(factory.getJsonSchema(schemaLocation));
+  }
+ catch (  ProcessingException e) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage("Could not initialise JsonSchemaValidator"),e);
+  }
+}

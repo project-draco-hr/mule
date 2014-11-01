@@ -1,7 +1,8 @@
 {
   disableShutdownHook(context);
   configureMonitor(context);
-  if (context.getConfigFile() == null) {
+  boolean forceConsoleLog=System.getProperty(MuleProperties.MULE_FORCE_CONSOLE_LOG) != null;
+  if (context.getConfigFile() == null && !forceConsoleLog) {
     removeConsoleAppender(context);
   }
   if (context.isArtifactClassloader()) {
@@ -9,5 +10,8 @@
   }
  else   if (!context.isStandlone()) {
     addDefaultAppender(context,"mule-main.log");
+  }
+  if (forceConsoleLog && !hasAppender(context,ConsoleAppender.class)) {
+    forceConsoleAppender(context);
   }
 }
