@@ -1,31 +1,9 @@
 {
-  QName resultType;
-switch (getResultType()) {
-case BOOLEAN:
-    resultType=XPathConstants.BOOLEAN;
-  break;
-case NODE:
-resultType=XPathConstants.NODE;
-break;
-case NODESET:
-resultType=XPathConstants.NODESET;
-break;
-case NUMBER:
-resultType=XPathConstants.NUMBER;
-break;
-default :
-resultType=XPathConstants.STRING;
-break;
-}
-try {
-if (src instanceof InputSource) {
-return xpath.evaluate(expression,(InputSource)src,resultType);
-}
- else {
-return xpath.evaluate(expression,src,resultType);
-}
-}
- catch (XPathExpressionException e) {
-throw new TransformerException(this,e);
-}
+  MuleEvent event=RequestContext.getEvent();
+  try {
+    return xpathEvaluator.evaluate(expression,XMLUtils.toDOMNode(src,event),resultType,event);
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
 }
