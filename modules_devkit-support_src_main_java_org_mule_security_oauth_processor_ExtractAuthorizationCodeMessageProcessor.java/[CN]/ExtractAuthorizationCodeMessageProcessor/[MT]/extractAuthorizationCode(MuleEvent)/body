@@ -1,0 +1,19 @@
+{
+  String response;
+  if (event.getMessage().getPayload() instanceof NullPayload) {
+    response=event.getMessage().getInboundProperty("http.query.string");
+    if (StringUtils.isBlank(response)) {
+      throw new AuthorizationCodeNotFoundException(this.pattern,response);
+    }
+  }
+ else {
+    response=event.getMessageAsString();
+  }
+  Matcher matcher=pattern.matcher(response);
+  if (matcher.find() && (matcher.groupCount() >= 1)) {
+    return URLDecoder.decode(matcher.group(1),"UTF-8");
+  }
+ else {
+    throw new AuthorizationCodeNotFoundException(this.pattern,response);
+  }
+}
