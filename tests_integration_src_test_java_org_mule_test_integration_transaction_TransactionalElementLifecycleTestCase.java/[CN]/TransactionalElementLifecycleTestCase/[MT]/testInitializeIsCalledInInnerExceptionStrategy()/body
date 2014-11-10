@@ -1,4 +1,10 @@
 {
+  muleContext.getNotificationManager().addListener(new TransactionNotificationListener<TransactionNotification>(){
+    @Override public void onNotification(    TransactionNotification notification){
+      notifications.add(notification);
+    }
+  }
+);
   final Latch endDlqFlowLatch=new Latch();
   LocalMuleClient client=muleContext.getClient();
   FunctionalTestComponent functionalTestComponent=getFunctionalTestComponent("dlq-out");
@@ -12,4 +18,6 @@
   if (!endDlqFlowLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS)) {
     fail("message wasn't received by dlq flow");
   }
+  assertNotificationsArrived();
+  assertApplicationName();
 }
