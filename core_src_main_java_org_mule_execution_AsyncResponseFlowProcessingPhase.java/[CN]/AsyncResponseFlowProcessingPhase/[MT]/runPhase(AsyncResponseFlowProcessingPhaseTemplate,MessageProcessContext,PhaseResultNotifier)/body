@@ -1,0 +1,42 @@
+{
+  Preconditions.checkArgument(messageProcessContext.supportsAsynchronousProcessing(),String.format("Cannot execute %s if %s does not support asynchronous processing",this.getClass().getName(),messageProcessContext.getClass().getName()));
+  Work flowExecutionWork=new Work(){
+    @Override public void release(){
+    }
+    @Override public void run(){
+      try {
+        try {
+          final MessagingExceptionHandler exceptionHandler=messageProcessContext.getFlowConstruct().getExceptionListener();
+          TransactionalErrorHandlingExecutionTemplate transactionTemplate=TransactionalErrorHandlingExecutionTemplate.createMainExecutionTemplate(messageProcessContext.getFlowConstruct().getMuleContext(),(messageProcessContext.getTransactionConfig() == null ? new MuleTransactionConfig() : messageProcessContext.getTransactionConfig()),exceptionHandler);
+          final MuleEvent response=transactionTemplate.execute(new ExecutionCallback<MuleEvent>(){
+            @Override public MuleEvent process() throws Exception {
+              MuleEvent muleEvent=template.getMuleEvent();
+              muleEvent=template.routeEvent(muleEvent);
+              return muleEvent;
+            }
+          }
+);
+          template.sendResponseToClient(response,createResponseCompletationCallback(phaseResultNotifier,exceptionHandler));
+        }
+ catch (        final MessagingException e) {
+          template.sendFailureResponseToClient(e,createSendFailureResponseCompletationCallback(phaseResultNotifier));
+        }
+      }
+ catch (      Exception e) {
+        phaseResultNotifier.phaseFailure(e);
+      }
+    }
+  }
+;
+  try {
+    messageProcessContext.getFlowExecutionWorkManager().scheduleWork(flowExecutionWork);
+  }
+ catch (  WorkException e) {
+    try {
+      template.afterFailureProcessingFlow(e);
+    }
+  finally {
+      phaseResultNotifier.phaseFailure(e);
+    }
+  }
+}
