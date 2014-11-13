@@ -1,0 +1,12 @@
+{
+  final ImmutableMap<String,Object> queryParams=ImmutableMap.<String,Object>builder().put(QUERY_PARAM_NAME,Arrays.asList(QUERY_PARAM_VALUE,QUERY_PARAM_SECOND_VALUE)).build();
+  final String url=String.format("http://localhost:%s/?" + buildQueryString(queryParams),listenPort.getNumber());
+  Request.Get(url).connectTimeout(1000).execute();
+  final MuleMessage message=muleContext.getClient().request("vm://out",1000);
+  ParameterMap retrivedQueryParams=message.getInboundProperty(HttpConstants.RequestProperties.HTTP_QUERY_PARAMS);
+  assertThat(retrivedQueryParams,IsNull.notNullValue());
+  assertThat(retrivedQueryParams.size(),is(1));
+  assertThat(retrivedQueryParams.get(QUERY_PARAM_NAME),is(QUERY_PARAM_VALUE));
+  assertThat(retrivedQueryParams.getAsList(QUERY_PARAM_NAME).size(),is(2));
+  assertThat(retrivedQueryParams.getAsList(QUERY_PARAM_NAME),Matchers.containsInAnyOrder(new String[]{QUERY_PARAM_VALUE,QUERY_PARAM_SECOND_VALUE}));
+}

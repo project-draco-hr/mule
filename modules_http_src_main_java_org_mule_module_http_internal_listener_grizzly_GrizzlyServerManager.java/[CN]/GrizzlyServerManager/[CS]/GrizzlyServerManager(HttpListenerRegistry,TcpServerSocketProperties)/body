@@ -1,0 +1,19 @@
+{
+  this.httpListenerRegistry=httpListenerRegistry;
+  this.requestHandlerFilter=new GrizzlyRequestDispatcherFilter(httpListenerRegistry);
+  FilterChainBuilder serverFilterChainBuilder=FilterChainBuilder.stateless();
+  serverFilterChainBuilder.add(new TransportFilter());
+  sslFilterDelegate=new GrizzlyHttpsSslDelegateFilter();
+  serverFilterChainBuilder.add(sslFilterDelegate);
+  KeepAlive ka=new KeepAlive();
+  ka.setMaxRequestsCount(-1);
+  serverFilterChainBuilder.add(new ChunkingFilter(1024));
+  serverFilterChainBuilder.add(new HttpServerFilter(true,HttpCodecFilter.DEFAULT_MAX_HTTP_PACKET_HEADER_SIZE,ka,null));
+  serverFilterChainBuilder.add(requestHandlerFilter);
+  TCPNIOTransportBuilder transportBuilder=TCPNIOTransportBuilder.newInstance().setSelectorRunnersCount((Runtime.getRuntime().availableProcessors() * 2) + 1).setOptimizedForMultiplexing(true).setIOStrategy(SameThreadIOStrategy.getInstance());
+  configureServerSocketProperties(transportBuilder,serverSocketProperties);
+  transport=transportBuilder.build();
+  transport.setNIOChannelDistributor(new RoundRobinConnectionDistributor(transport,true,true));
+  transport.setProcessor(serverFilterChainBuilder.build());
+  transport.start();
+}

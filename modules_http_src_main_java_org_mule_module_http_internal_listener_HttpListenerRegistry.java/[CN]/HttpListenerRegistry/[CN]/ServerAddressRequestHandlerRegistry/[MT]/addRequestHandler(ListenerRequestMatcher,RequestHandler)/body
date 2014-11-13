@@ -1,0 +1,57 @@
+{
+  pathMapSearchCache.invalidateAll();
+  String requestMatcherPath=requestMatcher.getPath();
+  Preconditions.checkArgument(requestMatcherPath.startsWith(SLASH) || requestMatcherPath.equals(WILDCARD_CHARACTER),"path parameter must start with /");
+  validateCollision(requestMatcher);
+  PathMap currentPathMap=rootPathMap;
+  final RequestHandlerMatcherPair addedRequestHandlerMatcherPair;
+  final PathMap requestHandlerOwner;
+  if (requestMatcherPath.equals(WILDCARD_CHARACTER)) {
+    serverRequestHandler=new PathMap();
+    addedRequestHandlerMatcherPair=new RequestHandlerMatcherPair(requestMatcher,requestHandler);
+    requestHandlerOwner=serverRequestHandler;
+    serverRequestHandler.addRequestHandlerMatcherPair(addedRequestHandlerMatcherPair);
+  }
+ else   if (requestMatcherPath.equals("/*")) {
+    addedRequestHandlerMatcherPair=new RequestHandlerMatcherPair(requestMatcher,requestHandler);
+    requestHandlerOwner=catchAllPathMap;
+    catchAllPathMap.addRequestHandlerMatcherPair(addedRequestHandlerMatcherPair);
+  }
+ else   if (requestMatcherPath.equals(SLASH)) {
+    addedRequestHandlerMatcherPair=new RequestHandlerMatcherPair(requestMatcher,requestHandler);
+    requestHandlerOwner=rootPathMap;
+    rootPathMap.addRequestHandlerMatcherPair(addedRequestHandlerMatcherPair);
+  }
+ else {
+    final String[] pathParts=requestMatcherPath.split(SLASH);
+    int insertionLevel=getPathPartsSize(requestMatcherPath);
+    for (int i=1; i < insertionLevel - 1; i++) {
+      String currentPath=pathParts[i];
+      PathMap pathMap=currentPathMap.getChildPathMap(currentPath);
+      if (i != insertionLevel - 1) {
+        if (pathMap == null) {
+          pathMap=new PathMap();
+          currentPathMap.addChildPathMap(currentPath,pathMap);
+        }
+      }
+      currentPathMap=pathMap;
+    }
+    String currentPath=pathParts[insertionLevel - 1];
+    PathMap pathMap=currentPathMap.getLastChildPathMap(currentPath);
+    if (pathMap == null) {
+      pathMap=new PathMap();
+      currentPathMap.addChildPathMap(currentPath,pathMap);
+    }
+    if (requestMatcherPath.endsWith(WILDCARD_CHARACTER)) {
+      addedRequestHandlerMatcherPair=new RequestHandlerMatcherPair(requestMatcher,requestHandler);
+      pathMap.addWildcardRequestHandler(addedRequestHandlerMatcherPair);
+      requestHandlerOwner=pathMap;
+    }
+ else {
+      addedRequestHandlerMatcherPair=new RequestHandlerMatcherPair(requestMatcher,requestHandler);
+      pathMap.addRequestHandlerMatcherPair(addedRequestHandlerMatcherPair);
+      requestHandlerOwner=pathMap;
+    }
+  }
+  return new DefaultRequestHandlerManager(requestHandlerOwner,addedRequestHandlerMatcherPair);
+}

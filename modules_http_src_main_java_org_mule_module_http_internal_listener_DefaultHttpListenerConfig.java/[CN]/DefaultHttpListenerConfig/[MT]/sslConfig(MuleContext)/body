@@ -1,0 +1,23 @@
+{
+  DefaultHttpListenerConfig sslConfig=muleContext.getRegistry().get(HTTP_SSL_EMPTY_LISTENER_CONFIG);
+  if (sslConfig == null) {
+    final Collection<TlsContextFactory> tlsContextFactories=muleContext.getRegistry().lookupObjects(TlsContextFactory.class);
+    if (tlsContextFactories.size() > 1) {
+      throw new MuleRuntimeException(CoreMessages.createStaticMessage("More than one tls:context has been provided. You need to define it explicitly in the OAuth config"));
+    }
+    if (tlsContextFactories.isEmpty()) {
+      throw new MuleRuntimeException(CoreMessages.createStaticMessage("No tls:context has been configured. You need to define one globally in the config or configured it explicitly in the OAuth config"));
+    }
+    final TlsContextFactory tlsContextFactory=tlsContextFactories.iterator().next();
+    try {
+      sslConfig=new DefaultHttpListenerConfig();
+      sslConfig.setMuleContext(muleContext);
+      sslConfig.setTlsContext(tlsContextFactory);
+      muleContext.getRegistry().registerObject(HTTP_SSL_EMPTY_LISTENER_CONFIG,sslConfig);
+    }
+ catch (    Exception e) {
+      throw new MuleRuntimeException(e);
+    }
+  }
+  return sslConfig;
+}

@@ -1,0 +1,13 @@
+{
+  handlerExtender=null;
+  Response response=Request.Get(getProxyUrl("/test?name=value")).addHeader("MyCustomHeaderName","MyCustomHeaderValue").connectTimeout(1000).execute();
+  HttpResponse httpResponse=response.returnResponse();
+  assertThat(httpResponse.getStatusLine().getStatusCode(),is(200));
+  assertThat(httpResponse.getFirstHeader("MyCustomHeaderName").getValue(),is("MyCustomHeaderValue"));
+  Set<String> lowerCaseHeaderNames=new HashSet<>();
+  for (  Header header : httpResponse.getAllHeaders()) {
+    lowerCaseHeaderNames.add(header.getName().toLowerCase());
+    assertThat(header.getName(),not(startsWith("http.")));
+  }
+  assertThat(lowerCaseHeaderNames.size(),is(httpResponse.getAllHeaders().length));
+}

@@ -1,0 +1,25 @@
+{
+  String transferEncodingHeader=requestBuilder.getHeaders().get(HttpHeaders.Names.TRANSFER_ENCODING);
+  HttpStreamingType requestStreamingMode=resolveStreamingType(event);
+  Object payload=event.getMessage().getPayload();
+  if (requestStreamingMode == HttpStreamingType.AUTO) {
+    if (transferEncodingHeader == null || !transferEncodingHeader.equalsIgnoreCase(HttpHeaders.Values.CHUNKED)) {
+      return payload instanceof InputStream;
+    }
+ else {
+      return true;
+    }
+  }
+ else   if (requestStreamingMode == HttpStreamingType.ALWAYS) {
+    if (transferEncodingHeader != null && !transferEncodingHeader.equalsIgnoreCase(HttpHeaders.Values.CHUNKED)) {
+      throw new MessagingException(CoreMessages.createStaticMessage("Cannot set Transfer-Encoding header with a " + "value different than 'chunked' when using " + "requestStreaming=ALWAYS"),event);
+    }
+    return true;
+  }
+ else {
+    if (transferEncodingHeader != null && transferEncodingHeader.equalsIgnoreCase(HttpHeaders.Values.CHUNKED)) {
+      throw new MessagingException(CoreMessages.createStaticMessage("Cannot set Transfer-Encoding header with " + "value 'chunked' when using requestStreaming=" + "NEVER"),event);
+    }
+    return false;
+  }
+}

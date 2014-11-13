@@ -1,0 +1,43 @@
+{
+  Object payload=muleEvent.getMessage().getPayload();
+  if (!muleEvent.getMessage().getOutboundAttachmentNames().isEmpty()) {
+    try {
+      return createMultiPart(muleEvent.getMessage());
+    }
+ catch (    IOException e) {
+      throw new MessagingException(muleEvent,e);
+    }
+  }
+  if (doStreaming(requestBuilder,muleEvent)) {
+    if (payload instanceof InputStream) {
+      return new InputStreamHttpEntity((InputStream)payload);
+    }
+ else {
+      try {
+        byte[] body=muleEvent.getMessage().getPayloadAsBytes();
+        return new InputStreamHttpEntity(new ByteArrayInputStream(body));
+      }
+ catch (      Exception e) {
+        throw new MessagingException(muleEvent,e);
+      }
+    }
+  }
+ else {
+    String body;
+    String contentType=requestBuilder.getHeaders().get(HttpHeaders.Names.CONTENT_TYPE);
+    if (contentType == null || contentType.equals(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
+      if (muleEvent.getMessage().getPayload() instanceof Map) {
+        body=HttpParser.encodeString(muleEvent.getEncoding(),(Map)payload);
+        requestBuilder.addHeader(HttpHeaders.Names.CONTENT_TYPE,HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED);
+        return new ByteArrayHttpEntity(body.getBytes());
+      }
+    }
+    try {
+      body=muleEvent.getMessage().getPayloadAsString();
+    }
+ catch (    Exception e) {
+      throw new MessagingException(muleEvent,e);
+    }
+    return new ByteArrayHttpEntity(body.getBytes());
+  }
+}

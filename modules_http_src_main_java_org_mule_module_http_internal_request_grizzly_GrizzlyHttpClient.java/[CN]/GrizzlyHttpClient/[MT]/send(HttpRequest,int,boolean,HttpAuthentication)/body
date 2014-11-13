@@ -1,0 +1,53 @@
+{
+  RequestBuilder builder=new RequestBuilder();
+  builder.setMethod(request.getMethod());
+  builder.setUrl(request.getUri());
+  builder.setFollowRedirects(followRedirects);
+  for (  String headerName : request.getHeaderNames()) {
+    for (    String headerValue : request.getHeaderValues(headerName)) {
+      builder.addHeader(headerName,headerValue);
+    }
+  }
+  DefaultHttpRequest defaultHttpRequest=(DefaultHttpRequest)request;
+  for (  String queryParamName : defaultHttpRequest.getQueryParams().keySet()) {
+    for (    String queryParamValue : defaultHttpRequest.getQueryParams().getAsList(queryParamName)) {
+      builder.addQueryParameter(queryParamName,queryParamValue);
+    }
+  }
+  if (authentication != null && authentication instanceof DefaultHttpAuthentication) {
+    DefaultHttpAuthentication defaultHttpAuthentication=(DefaultHttpAuthentication)authentication;
+    Realm.RealmBuilder realmBuilder=new Realm.RealmBuilder().setPrincipal(defaultHttpAuthentication.getUsername()).setPassword(defaultHttpAuthentication.getPassword()).setUsePreemptiveAuth(false);
+    if (defaultHttpAuthentication.getType() == HttpAuthenticationType.BASIC) {
+      realmBuilder.setScheme(Realm.AuthScheme.BASIC);
+    }
+ else     if (defaultHttpAuthentication.getType() == HttpAuthenticationType.DIGEST) {
+      realmBuilder.setScheme(Realm.AuthScheme.DIGEST);
+    }
+    builder.setRealm(realmBuilder.build());
+  }
+  if (request.getEntity() != null) {
+    if (request.getEntity() instanceof InputStreamHttpEntity) {
+      builder.setBody(new InputStreamBodyGenerator(((InputStreamHttpEntity)request.getEntity()).getInputStream()));
+    }
+ else     if (request.getEntity() instanceof ByteArrayHttpEntity) {
+      builder.setBody(((ByteArrayHttpEntity)request.getEntity()).getContent());
+    }
+ else     if (request.getEntity() instanceof MultipartHttpEntity) {
+      MultipartHttpEntity multipartHttpEntity=(MultipartHttpEntity)request.getEntity();
+      for (      Part part : multipartHttpEntity.getParts()) {
+        builder.addBodyPart(new PartWrapper(part));
+      }
+    }
+  }
+  ListenableFuture<Response> future=asyncHttpClient.executeRequest(builder.build());
+  Response response=future.get(responseTimeout,TimeUnit.MILLISECONDS);
+  HttpResponseBuilder responseBuilder=new HttpResponseBuilder();
+  responseBuilder.setStatusCode(response.getStatusCode());
+  responseBuilder.setEntity(new InputStreamHttpEntity(response.getResponseBodyAsStream()));
+  for (  String header : response.getHeaders().keySet()) {
+    for (    String headerValue : response.getHeaders(header)) {
+      responseBuilder.addHeader(header,headerValue);
+    }
+  }
+  return responseBuilder.build();
+}

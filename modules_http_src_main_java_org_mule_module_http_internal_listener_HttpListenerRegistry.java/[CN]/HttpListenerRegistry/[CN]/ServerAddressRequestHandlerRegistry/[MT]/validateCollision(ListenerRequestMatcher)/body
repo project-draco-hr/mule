@@ -1,0 +1,20 @@
+{
+  final String newListenerRequestMatcherPath=newListenerRequestMatcher.getPath();
+  final Stack<PathMap> possibleRequestHandlers=findPossibleRequestHandlersFromCache(newListenerRequestMatcherPath);
+  for (  PathMap possibleRequestHandler : possibleRequestHandlers) {
+    final List<RequestHandlerMatcherPair> requestHandlerMatcherPairs=possibleRequestHandler.getRequestHandlerMatcherPairs();
+    for (    RequestHandlerMatcherPair requestHandlerMatcherPair : requestHandlerMatcherPairs) {
+      final ListenerRequestMatcher requestMatcher=requestHandlerMatcherPair.getRequestMatcher();
+      final String possibleCollisionRequestMatcherPath=requestMatcher.getPath();
+      if (isSameDepth(possibleCollisionRequestMatcherPath,newListenerRequestMatcherPath)) {
+        if (newListenerRequestMatcher.getMethodRequestMatcher().intersectsWith(requestMatcher.getMethodRequestMatcher())) {
+          String possibleCollisionLastPathPart=getLastPathPortion(possibleCollisionRequestMatcherPath);
+          String newListenerRequestMatcherLastPathPart=getLastPathPortion(newListenerRequestMatcherPath);
+          if (possibleCollisionLastPathPart.equals(newListenerRequestMatcherLastPathPart) || (isCatchAllPath(possibleCollisionLastPathPart) && isCatchAllPath(newListenerRequestMatcherLastPathPart)) || (isCatchAllPath(possibleCollisionLastPathPart) && isUriParameter(newListenerRequestMatcherLastPathPart))|| (isUriParameter(possibleCollisionLastPathPart) && isCatchAllPath(newListenerRequestMatcherLastPathPart) || (isUriParameter(possibleCollisionLastPathPart) && isUriParameter(newListenerRequestMatcherLastPathPart)))) {
+            throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format("Already exists a listener matching that path and methods. Listener matching %s new listener %s",requestMatcher,newListenerRequestMatcher)));
+          }
+        }
+      }
+    }
+  }
+}

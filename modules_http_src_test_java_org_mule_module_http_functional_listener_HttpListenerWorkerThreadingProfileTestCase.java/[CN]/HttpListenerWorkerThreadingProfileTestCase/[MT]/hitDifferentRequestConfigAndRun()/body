@@ -1,0 +1,12 @@
+{
+  sendRequestUntilNoMoreWorkers();
+  try {
+    final Response response=Request.Post(String.format("http://localhost:%s",listenPort2.getNumber())).bodyByteArray(TEST_MESSAGE.getBytes()).connectTimeout(100).socketTimeout(100).execute();
+    final HttpResponse httpResponse=response.returnResponse();
+    assertThat(httpResponse.getStatusLine().getStatusCode(),is(200));
+    assertThat(IOUtils.toString(httpResponse.getEntity().getContent()),is(TEST_MESSAGE));
+  }
+  finally {
+    WaitMessageProcessor.waitingLatch.release();
+  }
+}

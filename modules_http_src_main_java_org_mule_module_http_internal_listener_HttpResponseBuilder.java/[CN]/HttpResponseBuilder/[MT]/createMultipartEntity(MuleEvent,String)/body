@@ -1,0 +1,17 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Message contains outbound attachments. Ignoring payload and trying to generate multipart response");
+  }
+  final HashMap<String,DataHandler> parts=new HashMap<>();
+  for (  String outboundAttachmentName : event.getMessage().getOutboundAttachmentNames()) {
+    parts.put(outboundAttachmentName,event.getMessage().getOutboundAttachment(outboundAttachmentName));
+  }
+  final MultipartHttpEntity multipartEntity;
+  try {
+    multipartEntity=new MultipartHttpEntity(HttpPartDataSource.createFrom(parts));
+    return new ByteArrayHttpEntity(HttpMultipartEncoder.createMultipartContent(multipartEntity,contentType));
+  }
+ catch (  Exception e) {
+    throw new MessagingException(event,e);
+  }
+}
