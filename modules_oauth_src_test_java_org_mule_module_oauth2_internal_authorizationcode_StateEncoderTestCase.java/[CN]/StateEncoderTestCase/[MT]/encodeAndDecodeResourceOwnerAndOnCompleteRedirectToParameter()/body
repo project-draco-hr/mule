@@ -1,7 +1,10 @@
 {
-  String encodedState=StateEncoder.encodeResourceOwnerIdInState(ORIGINAL_STATE_VALUE,TEST_RESOURCE_OWNER_ID);
-  encodedState=StateEncoder.encodeOnCompleteRedirectToInState(encodedState,TEST_ON_COMPLETE_URL);
-  assertThat(StateEncoder.decodeOnCompleteRedirectTo(encodedState),is(TEST_ON_COMPLETE_URL));
-  assertThat(StateEncoder.decodeResourceOwnerId(encodedState),is(TEST_RESOURCE_OWNER_ID));
-  assertThat(StateEncoder.decodeOriginalState(encodedState),is(ORIGINAL_STATE_VALUE));
+  final StateEncoder stateEncoder=new StateEncoder(ORIGINAL_STATE_VALUE);
+  stateEncoder.encodeResourceOwnerIdInState(TEST_RESOURCE_OWNER_ID);
+  stateEncoder.encodeOnCompleteRedirectToInState(TEST_ON_COMPLETE_URL);
+  String encodedState=stateEncoder.getEncodedState();
+  final StateDecoder stateDecoder=new StateDecoder(encodedState);
+  assertThat(stateDecoder.decodeOnCompleteRedirectTo(),is(TEST_ON_COMPLETE_URL));
+  assertThat(stateDecoder.decodeResourceOwnerId(),is(TEST_RESOURCE_OWNER_ID));
+  assertThat(stateDecoder.decodeOriginalState(),is(ORIGINAL_STATE_VALUE));
 }

@@ -5,14 +5,14 @@
       final String resourceOwnerId=getOauthConfig().getLocalAuthorizationUrlResourceOwnerIdEvaluator().resolveStringValue(muleEvent);
       muleEvent.setFlowVariable(OAUTH_STATE_ID_FLOW_VAR_NAME,resourceOwnerId);
       final String stateValue=stateEvaluator.resolveStringValue(muleEvent);
-      String currentState=stateValue;
+      final StateEncoder stateEncoder=new StateEncoder(stateValue);
       if (resourceOwnerId != null) {
-        currentState=StateEncoder.encodeResourceOwnerIdInState(stateValue,resourceOwnerId);
+        stateEncoder.encodeResourceOwnerIdInState(resourceOwnerId);
       }
       if (onCompleteRedirectToValue != null) {
-        currentState=StateEncoder.encodeOnCompleteRedirectToInState(currentState,onCompleteRedirectToValue);
+        stateEncoder.encodeOnCompleteRedirectToInState(onCompleteRedirectToValue);
       }
-      final String authorizationUrlWithParams=new AuthorizationRequestUrlBuilder().setAuthorizationUrl(authorizationUrl).setClientId(oauthConfig.getClientId()).setClientSecret(oauthConfig.getClientSecret()).setCustomParameters(customParameters).setRedirectUrl(oauthConfig.getRedirectionUrl()).setState(currentState).setScope(scopes).buildUrl();
+      final String authorizationUrlWithParams=new AuthorizationRequestUrlBuilder().setAuthorizationUrl(authorizationUrl).setClientId(oauthConfig.getClientId()).setClientSecret(oauthConfig.getClientSecret()).setCustomParameters(customParameters).setRedirectUrl(oauthConfig.getRedirectionUrl()).setState(stateEncoder.getEncodedState()).setScope(scopes).buildUrl();
       muleEvent.getMessage().setOutboundProperty(HttpHeaders.Names.LOCATION,authorizationUrlWithParams);
       return muleEvent;
     }
