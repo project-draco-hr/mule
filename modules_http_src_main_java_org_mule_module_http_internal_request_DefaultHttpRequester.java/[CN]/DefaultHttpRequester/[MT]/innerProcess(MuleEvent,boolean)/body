@@ -1,12 +1,5 @@
 {
-  String uri;
-  try {
-    uri=resolveURI(muleEvent).toString();
-  }
- catch (  URISyntaxException e) {
-    throw new MessagingException(CoreMessages.createStaticMessage("Invalid URI for HTTP request"),muleEvent,e);
-  }
-  HttpRequestBuilder builder=muleEventToHttpRequest.create(muleEvent,method.resolveStringValue(muleEvent),uri);
+  HttpRequestBuilder builder=muleEventToHttpRequest.create(muleEvent,method.resolveStringValue(muleEvent),resolveURI(muleEvent));
   HttpAuthentication authentication=requestConfig.getAuthentication();
   if (authentication != null) {
     authentication.authenticate(muleEvent,builder);
@@ -14,7 +7,7 @@
   HttpClient httpClient=requestConfig.getHttpClient();
   HttpResponse response;
   try {
-    response=httpClient.send(builder.build(),responseTimeout.resolveIntegerValue(muleEvent),followRedirects.resolveBooleanValue(muleEvent),authentication);
+    response=httpClient.send(builder.build(),resolveResponseTimeout(muleEvent),followRedirects.resolveBooleanValue(muleEvent),authentication);
   }
  catch (  Exception e) {
     throw new MessagingException(CoreMessages.createStaticMessage("Error sending HTTP request"),muleEvent,e);

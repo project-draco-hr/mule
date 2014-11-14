@@ -1,7 +1,7 @@
 {
   RequestBuilder builder=new RequestBuilder();
   builder.setMethod(request.getMethod());
-  builder.setUrl(request.getUri());
+  builder.setUrl(request.getUri().toString());
   builder.setFollowRedirects(followRedirects);
   for (  String headerName : request.getHeaderNames()) {
     for (    String headerValue : request.getHeaderValues(headerName)) {
@@ -40,7 +40,16 @@
     }
   }
   ListenableFuture<Response> future=asyncHttpClient.executeRequest(builder.build());
-  Response response=future.get(responseTimeout,TimeUnit.MILLISECONDS);
+  Response response=null;
+  try {
+    response=future.get(responseTimeout,TimeUnit.MILLISECONDS);
+  }
+ catch (  InterruptedException e) {
+    throw new IOException(e);
+  }
+catch (  ExecutionException e) {
+    throw new IOException(e);
+  }
   HttpResponseBuilder responseBuilder=new HttpResponseBuilder();
   responseBuilder.setStatusCode(response.getStatusCode());
   responseBuilder.setEntity(new InputStreamHttpEntity(response.getResponseBodyAsStream()));
