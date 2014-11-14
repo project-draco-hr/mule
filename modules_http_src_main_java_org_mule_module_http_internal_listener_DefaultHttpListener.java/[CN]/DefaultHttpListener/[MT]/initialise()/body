@@ -1,6 +1,7 @@
 {
   if (allowedMethods != null) {
-    methodRequestMatcher=new MethodRequestMatcher(extractAllowedMethods());
+    parsedAllowedMethods=extractAllowedMethods();
+    methodRequestMatcher=new MethodRequestMatcher(parsedAllowedMethods);
   }
   if (responseBuilder == null) {
     responseBuilder=HttpResponseBuilder.emptyInstance(muleContext);
@@ -12,11 +13,12 @@
   path=config.resolvePath(path);
   responseBuilder.setResponseStreaming(responseStreamingMode);
   validatePath();
-  messageProcessingManager=DefaultHttpListener.this.muleContext.getRegistry().get(MuleProperties.OBJECT_DEFAULT_MESSAGE_PROCESSING_MANAGER);
+  parseRequest=config.resolveParseRequest(parseRequest);
   try {
+    messageProcessingManager=DefaultHttpListener.this.muleContext.getRegistry().lookupObject(MessageProcessingManager.class);
     requestHandlerManager=this.config.addRequestHandler(new ListenerRequestMatcher(methodRequestMatcher,path),getRequestHandler());
   }
- catch (  IOException e) {
+ catch (  Exception e) {
     throw new InitialisationException(e,this);
   }
 }

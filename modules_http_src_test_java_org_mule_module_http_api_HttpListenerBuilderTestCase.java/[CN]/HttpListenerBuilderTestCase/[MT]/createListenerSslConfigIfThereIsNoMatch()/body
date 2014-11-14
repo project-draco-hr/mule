@@ -1,8 +1,9 @@
 {
-  when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_DEFAULT_MESSAGE_PROCESSING_MANAGER)).thenReturn(mockMessageProcessingManager);
-  when(mockMuleContext.getRegistry().get(HTTP_LISTENER_CONNECTION_MANAGER)).thenReturn(mockListenerConnectionManager);
+  when(mockMuleContext.getRegistry().lookupObject(MessageProcessingManager.class)).thenReturn(mockMessageProcessingManager);
+  when(mockMuleContext.getRegistry().lookupObject(HttpListenerConnectionManager.class)).thenReturn(mockListenerConnectionManager);
   when(mockMuleContext.getRegistry().lookupObjects(DefaultHttpListenerConfig.class)).thenReturn(Collections.<DefaultHttpListenerConfig>emptyList());
   when(mockTlsContextFactory.isKeyStoreConfigured()).thenReturn(true);
+  when(mockMuleContext.getRegistry().get(anyString())).thenReturn(null);
   new HttpListenerBuilder(mockMuleContext).setTlsContextFactory(mockTlsContextFactory).setFlow(mockFlow).setHost(HOST).setPort(PORT).setPath(PATH).build();
-  verify(mockListenerConnectionManager).createSslServer(HOST,PORT,mockTlsContextFactory);
+  verify(mockListenerConnectionManager).createSslServer(new ServerAddress(HOST,PORT),mockTlsContextFactory);
 }
