@@ -1,0 +1,21 @@
+{
+  this.httpListenerRegistry=httpListenerRegistry;
+  requestHandlerFilter=new GrizzlyRequestDispatcherFilter(httpListenerRegistry);
+  sslFilterDelegate=new GrizzlyAddressDelegateFilter<>();
+  httpServerFilterDelegate=new GrizzlyAddressDelegateFilter<>();
+  FilterChainBuilder serverFilterChainBuilder=FilterChainBuilder.stateless();
+  serverFilterChainBuilder.add(new TransportFilter());
+  serverFilterChainBuilder.add(sslFilterDelegate);
+  serverFilterChainBuilder.add(new ChunkingFilter(1024));
+  serverFilterChainBuilder.add(httpServerFilterDelegate);
+  serverFilterChainBuilder.add(requestHandlerFilter);
+  TCPNIOTransportBuilder transportBuilder=TCPNIOTransportBuilder.newInstance().setOptimizedForMultiplexing(true).setIOStrategy(SameThreadIOStrategy.getInstance());
+  configureServerSocketProperties(transportBuilder,serverSocketProperties);
+  transport=transportBuilder.build();
+  transport.setNIOChannelDistributor(new RoundRobinConnectionDistributor(transport,true,true));
+  transport.setProcessor(serverFilterChainBuilder.build());
+  transport.start();
+  idleTimeoutExecutorService=Executors.newCachedThreadPool(new NamedThreadFactory(appName + IDLE_TIMEOUT_THREADS_PREFIX_NAME));
+  idleTimeoutDelayedExecutor=new DelayedExecutor(idleTimeoutExecutorService);
+  idleTimeoutDelayedExecutor.start();
+}
