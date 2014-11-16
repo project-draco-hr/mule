@@ -1,0 +1,27 @@
+{
+  return new MessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      Map<String,String> queryParams=event.getMessage().getInboundProperty(HttpConstants.RequestProperties.HTTP_QUERY_PARAMS);
+      String authorizationCode=queryParams.get(OAuthConstants.CODE_PARAMETER);
+      String state=queryParams.get(OAuthConstants.STATE_PARAMETER);
+      event.setFlowVariable(STATUS_CODE_FLOW_VAR_NAME,OK_STATUS_CODE);
+      if (authorizationCode == null) {
+        event.getMessage().setPayload("Failure retrieving access token.\n OAuth Server uri from callback: " + event.getMessage().getInboundProperty("http.request.uri"));
+      }
+ else {
+        setMapPayloadWithTokenRequestParameters(event,authorizationCode);
+        final MuleEvent tokenUrlResposne=invokeTokenUrl(event);
+        decodeStateAndUpdateOAuthUserState(tokenUrlResposne,state);
+        event.getMessage().setPayload("Successfully retrieved access token!");
+      }
+      final StateDecoder stateDecoder=new StateDecoder(state);
+      final String onCompleteRedirectToValue=stateDecoder.decodeOnCompleteRedirectTo();
+      if (!StringUtils.isEmpty(onCompleteRedirectToValue)) {
+        event.setFlowVariable(STATUS_CODE_FLOW_VAR_NAME,REDIRECT_STATUS_CODE);
+        event.getMessage().setOutboundProperty("Location",onCompleteRedirectToValue);
+      }
+      return event;
+    }
+  }
+;
+}
