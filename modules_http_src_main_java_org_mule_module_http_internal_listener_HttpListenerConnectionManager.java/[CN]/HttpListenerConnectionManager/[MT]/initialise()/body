@@ -1,0 +1,16 @@
+{
+  Collection<TcpServerSocketProperties> tcpServerSocketPropertiesesBeans=muleContext.getRegistry().lookupObjects(TcpServerSocketProperties.class);
+  TcpServerSocketProperties tcpServerSocketProperties=new DefaultTcpServerSocketProperties();
+  if (tcpServerSocketPropertiesesBeans.size() == 1) {
+    tcpServerSocketProperties=Iterables.getOnlyElement(tcpServerSocketPropertiesesBeans);
+  }
+ else   if (tcpServerSocketPropertiesesBeans.size() > 1) {
+    throw new InitialisationException(CoreMessages.createStaticMessage("Only one global TCP server socket properties bean should be defined in the config"),this);
+  }
+  try {
+    httpServerManager=new GrizzlyServerManager(httpListenerRegistry,tcpServerSocketProperties);
+  }
+ catch (  IOException e) {
+    throw new InitialisationException(e,this);
+  }
+}

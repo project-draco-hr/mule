@@ -1,0 +1,91 @@
+{
+  final HttpResponseHeaderBuilder httpResponseHeaderBuilder=new HttpResponseHeaderBuilder();
+  if (!disablePropertiesAsHeaders) {
+    final Set<String> outboundProperties=event.getMessage().getOutboundPropertyNames();
+    for (    String outboundPropertyName : outboundProperties) {
+      final Object outboundPropertyValue=event.getMessage().getOutboundProperty(outboundPropertyName);
+      httpResponseHeaderBuilder.addHeader(outboundPropertyName,outboundPropertyValue);
+    }
+  }
+  ParameterMap resolvedHeaders=resolveParams(event,HttpParamType.HEADER);
+  for (  String name : resolvedHeaders.keySet()) {
+    final Collection<String> paramValues=resolvedHeaders.getAsList(name);
+    for (    String value : paramValues) {
+      httpResponseHeaderBuilder.addHeader(name,value);
+    }
+  }
+  final String configuredContentType=httpResponseHeaderBuilder.getContentType();
+  final String configuredTransferEncoding=httpResponseHeaderBuilder.getTransferEncoding();
+  HttpEntity httpEntity;
+  if (!event.getMessage().getOutboundAttachmentNames().isEmpty()) {
+    if (configuredContentType == null) {
+      httpResponseHeaderBuilder.addContentType(createMultipartFormDataContentType());
+    }
+ else     if (!configuredContentType.startsWith(MULTIPART)) {
+      warnNoMultipartContentTypeButMultipartEntity(httpResponseHeaderBuilder.getContentType());
+    }
+    httpEntity=createMultipartEntity(event,httpResponseHeaderBuilder.getContentType());
+  }
+ else {
+    final Object payload=event.getMessage().getPayload();
+    if (payload == NullPayload.getInstance()) {
+      httpEntity=new EmptyHttpEntity();
+    }
+ else     if (payload instanceof Map) {
+      if (configuredContentType == null) {
+        httpResponseHeaderBuilder.addContentType(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED);
+      }
+ else       if (!configuredContentType.startsWith(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
+        warnMapPayloadButNoUrlEncodedContentType(httpResponseHeaderBuilder.getContentType());
+      }
+      httpEntity=createUrlEncodedEntity(event,(Map<String,Object>)payload);
+    }
+ else     if (payload instanceof InputStream) {
+      if (responseStreaming == HttpStreamingType.AUTO) {
+        if (configuredTransferEncoding == null) {
+          httpResponseHeaderBuilder.addHeader(HttpHeaders.Names.TRANSFER_ENCODING,HttpHeaders.Values.CHUNKED);
+        }
+        httpResponseHeaderBuilder.removeHeader(HttpHeaders.Names.CONTENT_LENGTH);
+      }
+      httpEntity=new InputStreamHttpEntity((InputStream)payload);
+    }
+ else {
+      try {
+        httpEntity=new ByteArrayHttpEntity(event.getMessage().getPayloadAsBytes());
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  if (responseStreaming.equals(HttpStreamingType.ALWAYS)) {
+    if (httpResponseHeaderBuilder.getTransferEncoding() == null) {
+      httpResponseHeaderBuilder.addHeader(HttpHeaders.Names.TRANSFER_ENCODING,HttpHeaders.Values.CHUNKED);
+    }
+    httpResponseHeaderBuilder.removeHeader(HttpHeaders.Names.CONTENT_LENGTH);
+  }
+  if (httpResponseHeaderBuilder.getTransferEncoding() == null && httpResponseHeaderBuilder.getContentLength() == null) {
+    int calculatedContentLenght=0;
+    if (httpEntity instanceof ByteArrayHttpEntity) {
+      calculatedContentLenght=((ByteArrayHttpEntity)httpEntity).getContent().length;
+    }
+ else     if (httpEntity instanceof InputStreamHttpEntity) {
+      httpEntity=new ByteArrayHttpEntity(IOUtils.toByteArray(((InputStreamHttpEntity)httpEntity).getInputStream()));
+      calculatedContentLenght=((ByteArrayHttpEntity)httpEntity).getContent().length;
+    }
+    httpResponseHeaderBuilder.addContentLenght(String.valueOf(calculatedContentLenght));
+  }
+  Collection<String> headerNames=httpResponseHeaderBuilder.getHeaderNames();
+  for (  String headerName : headerNames) {
+    Collection<String> values=httpResponseHeaderBuilder.getHeader(headerName);
+    for (    String value : values) {
+      httpResponseBuilder.addHeader(headerName,value);
+    }
+  }
+  httpResponseBuilder.setStatusCode(statusCodeEvaluator.resolveIntegerValue(event));
+  if (this.reasonPhrase != null) {
+    httpResponseBuilder.setReasonPhrase(reasonPhraseEvaluator.resolveStringValue(event));
+  }
+  httpResponseBuilder.setEntity(httpEntity);
+  return httpResponseBuilder.build();
+}

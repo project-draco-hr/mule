@@ -1,0 +1,26 @@
+{
+  if (initialised) {
+    return;
+  }
+  basePath=HttpParser.sanitizePathWithStartSlash(this.basePath);
+  try {
+    connectionManager=muleContext.getRegistry().lookupObject(HttpListenerConnectionManager.class);
+  }
+ catch (  RegistrationException e) {
+    throw new InitialisationException(e,this);
+  }
+  if (workerThreadingProfile == null) {
+    workerThreadingProfile=new MutableThreadingProfile(ThreadingProfile.DEFAULT_THREADING_PROFILE);
+    workerThreadingProfile.setMaxThreadsActive(DEFAULT_MAX_THREADS);
+  }
+  if (tlsContext != null && !tlsContext.isKeyStoreConfigured()) {
+    throw new InitialisationException(CoreMessages.createStaticMessage("KeyStore must be configured for server side SSL"),this);
+  }
+  if (tlsContext == null) {
+    server=connectionManager.createServer(new ServerAddress(host,port));
+  }
+ else {
+    server=connectionManager.createSslServer(new ServerAddress(host,port),tlsContext);
+  }
+  initialised=true;
+}

@@ -1,0 +1,24 @@
+{
+  if (allowedMethods != null) {
+    parsedAllowedMethods=extractAllowedMethods();
+    methodRequestMatcher=new MethodRequestMatcher(parsedAllowedMethods);
+  }
+  if (responseBuilder == null) {
+    responseBuilder=HttpResponseBuilder.emptyInstance(muleContext);
+  }
+  if (errorResponseBuilder == null) {
+    errorResponseBuilder=HttpResponseBuilder.emptyInstance(muleContext);
+  }
+  path=HttpParser.sanitizePathWithStartSlash(path);
+  path=config.resolvePath(path);
+  responseBuilder.setResponseStreaming(responseStreamingMode);
+  validatePath();
+  parseRequest=config.resolveParseRequest(parseRequest);
+  try {
+    messageProcessingManager=DefaultHttpListener.this.muleContext.getRegistry().lookupObject(MessageProcessingManager.class);
+    requestHandlerManager=this.config.addRequestHandler(new ListenerRequestMatcher(methodRequestMatcher,path),getRequestHandler());
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+}

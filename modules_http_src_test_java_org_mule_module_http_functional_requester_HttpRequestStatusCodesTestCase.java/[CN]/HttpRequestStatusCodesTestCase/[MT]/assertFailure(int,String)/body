@@ -1,0 +1,14 @@
+{
+  Flow flow=(Flow)getFlowConstruct(flowName);
+  MuleEvent event=getTestEvent(TEST_MESSAGE);
+  event.getMessage().setInvocationProperty("code",statusCode);
+  try {
+    flow.process(event);
+    fail();
+  }
+ catch (  MessagingException e) {
+    MuleMessage response=e.getEvent().getMessage();
+    assertNotNull(response.getExceptionPayload());
+    assertTrue(response.getExceptionPayload().getException() instanceof ResponseValidatorException);
+  }
+}

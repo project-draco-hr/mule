@@ -1,0 +1,18 @@
+{
+  try {
+    Enumeration<NetworkInterface> nets=NetworkInterface.getNetworkInterfaces();
+    for (    NetworkInterface networkInterface : Collections.list(nets)) {
+      final Enumeration<InetAddress> inetAddresses=networkInterface.getInetAddresses();
+      while (inetAddresses.hasMoreElements()) {
+        InetAddress inetAddress=inetAddresses.nextElement();
+        if (!inetAddress.isLoopbackAddress() && IPADDRESS_PATTERN.matcher(inetAddress.getHostAddress()).find()) {
+          return inetAddress.getHostAddress();
+        }
+      }
+    }
+    throw new RuntimeException("Could not find network interface different from localhost");
+  }
+ catch (  SocketException e) {
+    throw new RuntimeException(e);
+  }
+}

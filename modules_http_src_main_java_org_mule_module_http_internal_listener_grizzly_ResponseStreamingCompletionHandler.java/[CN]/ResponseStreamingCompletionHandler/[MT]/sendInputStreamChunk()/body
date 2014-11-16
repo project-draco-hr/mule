@@ -1,0 +1,17 @@
+{
+  final Buffer buffer=memoryManager.allocate(1024);
+  final byte[] bufferByteArray=buffer.toByteBuffer().array();
+  final int offset=buffer.toByteBuffer().arrayOffset();
+  final int length=buffer.remaining();
+  int bytesRead=inputStream.read(bufferByteArray,offset,length);
+  final HttpContent content;
+  if (bytesRead == -1) {
+    content=httpResponsePacket.httpTrailerBuilder().build();
+    isDone=true;
+  }
+ else {
+    buffer.limit(bytesRead);
+    content=httpResponsePacket.httpContentBuilder().content(buffer).build();
+  }
+  ctx.write(content,this);
+}

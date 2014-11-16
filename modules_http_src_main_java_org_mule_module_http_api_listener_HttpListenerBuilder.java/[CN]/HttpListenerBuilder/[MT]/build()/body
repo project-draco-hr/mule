@@ -1,0 +1,33 @@
+{
+  try {
+    Preconditions.checkState(flow != null,"You must configure a flow");
+    resolveListenerConfig();
+    if (protocol != null && protocol.toLowerCase().equals(HttpConstants.Protocols.HTTPS)) {
+      if (httpListenerConfig == null) {
+        throw new DefaultMuleException(CoreMessages.createStaticMessage("Protocol is https but there is not listener config provided. A listener config with tls configuration is required."));
+      }
+      if (!httpListenerConfig.hasTlsConfig()) {
+        throw new DefaultMuleException(CoreMessages.createStaticMessage("Provided listener config must have tls configured since the listening protocol is https"));
+      }
+    }
+    httpListener.setFlowConstruct(flow);
+    httpListener.setPath(path);
+    httpListener.setListener(flow);
+    httpListener.setConfig((DefaultHttpListenerConfig)httpListenerConfig);
+    if (responseBuilder != null) {
+      responseBuilder.setMuleContext(muleContext);
+      responseBuilder.initialise();
+      httpListener.setResponseBuilder(responseBuilder);
+    }
+    if (errorResponseBuilder != null) {
+      responseBuilder.setMuleContext(muleContext);
+      errorResponseBuilder.initialise();
+      httpListener.setErrorResponseBuilder(errorResponseBuilder);
+    }
+    httpListener.initialise();
+    return httpListener;
+  }
+ catch (  InitialisationException e) {
+    throw new DefaultMuleException(e);
+  }
+}

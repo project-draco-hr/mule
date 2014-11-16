@@ -1,0 +1,42 @@
+{
+  AsyncHttpClientConfig.Builder builder=new AsyncHttpClientConfig.Builder();
+  builder.setAllowPoolingConnection(true);
+  if (tlsContextFactory != null) {
+    try {
+      sslContext=tlsContextFactory.createSslContext();
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(CoreMessages.createStaticMessage("Cannot initialize SSL context"),e,this);
+    }
+    builder.setSSLEngineFactory(new SSLEngineFactory(){
+      @Override public SSLEngine newSSLEngine() throws GeneralSecurityException {
+        SSLEngine sslEngine=sslContext.createSSLEngine();
+        sslEngine.setEnabledCipherSuites(tlsContextFactory.getEnabledCipherSuites());
+        sslEngine.setEnabledProtocols(tlsContextFactory.getEnabledProtocols());
+        return sslEngine;
+      }
+    }
+);
+  }
+  if (proxyConfig != null) {
+    ProxyServer proxyServer;
+    if (!StringUtils.isEmpty(proxyConfig.getUsername())) {
+      proxyServer=new ProxyServer(proxyConfig.getHost(),Integer.parseInt(proxyConfig.getPort()),proxyConfig.getUsername(),proxyConfig.getPassword());
+      if (proxyConfig instanceof NtlmProxyConfig) {
+        proxyServer.setNtlmDomain(((NtlmProxyConfig)proxyConfig).getNtlmDomain());
+      }
+    }
+ else {
+      proxyServer=new ProxyServer(proxyConfig.getHost(),Integer.parseInt(proxyConfig.getPort()));
+    }
+    builder.setProxyServer(proxyServer);
+  }
+  if (clientSocketProperties != null) {
+    GrizzlyAsyncHttpProviderConfig providerConfig=new GrizzlyAsyncHttpProviderConfig();
+    TransportCustomizer customizer=new SocketConfigTransportCustomizer(clientSocketProperties);
+    providerConfig.addProperty(GrizzlyAsyncHttpProviderConfig.Property.TRANSPORT_CUSTOMIZER,customizer);
+    builder.setAsyncHttpClientProviderConfig(providerConfig);
+  }
+  AsyncHttpClientConfig config=builder.build();
+  asyncHttpClient=new AsyncHttpClient(new GrizzlyAsyncHttpProvider(config),config);
+}

@@ -1,0 +1,34 @@
+{
+  PathMap currentPathMap=rootPathMap;
+  final String[] pathParts=path.split(SLASH);
+  Stack<PathMap> foundPaths=new Stack<>();
+  foundPaths.add(catchAllPathMap);
+  if (path.equals(WILDCARD_CHARACTER)) {
+    foundPaths.push(serverRequestHandler);
+    return foundPaths;
+  }
+  if (path.equals(SLASH)) {
+    foundPaths.add(rootPathMap);
+    return foundPaths;
+  }
+  for (int i=1; i < pathParts.length && currentPathMap != null; i++) {
+    String currentPath=pathParts[i];
+    PathMap pathMap=currentPathMap.getChildPathMap(currentPath);
+    if (pathMap == null) {
+      pathMap=currentPathMap.getCatchAllCurrentPathMap();
+    }
+    if (i == pathParts.length - 1) {
+      if (pathMap != null) {
+        foundPaths.push(pathMap);
+      }
+ else {
+        final PathMap catchAllPathMap=currentPathMap.getCatchAllPathMap();
+        if (catchAllPathMap != null) {
+          foundPaths.push(catchAllPathMap);
+        }
+      }
+    }
+    currentPathMap=pathMap;
+  }
+  return foundPaths;
+}

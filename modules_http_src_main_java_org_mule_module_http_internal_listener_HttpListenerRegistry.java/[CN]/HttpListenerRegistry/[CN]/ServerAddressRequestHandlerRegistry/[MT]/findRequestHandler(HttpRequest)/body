@@ -1,0 +1,20 @@
+{
+  final String path=request.getPath();
+  Preconditions.checkArgument(path.startsWith(SLASH),"path parameter must start with /");
+  Stack<PathMap> foundPaths=findPossibleRequestHandlersFromCache(path);
+  RequestHandlerMatcherPair requestHandlerMatcherPair=null;
+  while (!foundPaths.empty()) {
+    final PathMap pathMap=foundPaths.pop();
+    requestHandlerMatcherPair=findRequestHandlerMatcherPair(pathMap.getRequestHandlerMatcherPairs(),request);
+    if (requestHandlerMatcherPair != null) {
+      break;
+    }
+  }
+  if (requestHandlerMatcherPair == null) {
+    return NoListenerRequestHandler.getInstance();
+  }
+  if (!requestHandlerMatcherPair.isRunning()) {
+    return ServiceTemporarilyUnavailableListenerRequestHandler.getInstance();
+  }
+  return requestHandlerMatcherPair.getRequestHandler();
+}

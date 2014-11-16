@@ -1,0 +1,11 @@
+{
+  MuleClient client=muleContext.getClient();
+  InputStream payload=new ByteArrayInputStream(TEST_MESSAGE.getBytes());
+  client.dispatch("vm://streamingFalseIn",payload,null);
+  assertTrue("Request was never received in the server",requestReceivedLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertNull(transferEncodingHeader);
+  assertThat(Integer.parseInt(contentLengthHeader),equalTo(TEST_MESSAGE.length()));
+  MuleMessage message=client.request("vm://streamingFalseOut",RECEIVE_TIMEOUT);
+  assertTrue(message.getPayload() instanceof InputStream);
+  assertThat(message.getPayloadAsString(),equalTo(DEFAULT_RESPONSE));
+}

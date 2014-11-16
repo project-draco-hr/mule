@@ -1,0 +1,11 @@
+{
+  Flow flow=(Flow)getFlowConstruct("requestFlow");
+  MuleEvent event=getTestEvent(TEST_MESSAGE);
+  event.getMessage().addOutboundAttachment("attachment1","Contents 1","text/plain");
+  event.getMessage().addOutboundAttachment("attachment2","Contents 2","text/html");
+  flow.process(event);
+  assertThat(requestContentType,startsWith("multipart/form-data; boundary="));
+  assertThat(parts.size(),equalTo(2));
+  assertPart("attachment1","text/plain","Contents 1");
+  assertPart("attachment2","text/html","Contents 2");
+}

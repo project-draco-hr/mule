@@ -1,0 +1,16 @@
+{
+  final String url=String.format("http://localhost:%s",listenPort.getNumber());
+  Request.Get(url).connectTimeout(1000).execute();
+  final MuleMessage message=muleContext.getClient().request("vm://out",1000);
+  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REQUEST_URI),is(BASE_PATH));
+  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REQUEST_PATH_PROPERTY),is(BASE_PATH));
+  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_QUERY_STRING),is(""));
+  assertThat(message.getInboundProperty(HttpConstants.RequestProperties.HTTP_URI_PARAMS),notNullValue());
+  assertThat(message.<Map>getInboundProperty(HttpConstants.RequestProperties.HTTP_URI_PARAMS).isEmpty(),is(true));
+  final Map queryParams=message.getInboundProperty(HttpConstants.RequestProperties.HTTP_QUERY_PARAMS);
+  assertThat(queryParams,IsNull.notNullValue());
+  assertThat(queryParams.size(),is(0));
+  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_METHOD_PROPERTY),is("GET"));
+  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_VERSION_PROPERTY),is(HttpProtocol.HTTP_1_1.asString()));
+  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REMOTE_ADDRESS),is(CoreMatchers.notNullValue()));
+}
