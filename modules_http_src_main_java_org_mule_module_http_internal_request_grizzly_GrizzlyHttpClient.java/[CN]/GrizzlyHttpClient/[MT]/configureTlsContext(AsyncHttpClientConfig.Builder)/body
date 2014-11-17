@@ -1,0 +1,19 @@
+{
+  if (tlsContextFactory != null) {
+    try {
+      sslContext=tlsContextFactory.createSslContext();
+    }
+ catch (    Exception e) {
+      throw new InitialisationException(CoreMessages.createStaticMessage("Cannot initialize SSL context"),e,this);
+    }
+    builder.setSSLEngineFactory(new SSLEngineFactory(){
+      @Override public SSLEngine newSSLEngine() throws GeneralSecurityException {
+        SSLEngine sslEngine=sslContext.createSSLEngine();
+        sslEngine.setEnabledCipherSuites(tlsContextFactory.getEnabledCipherSuites());
+        sslEngine.setEnabledProtocols(tlsContextFactory.getEnabledProtocols());
+        return sslEngine;
+      }
+    }
+);
+  }
+}
