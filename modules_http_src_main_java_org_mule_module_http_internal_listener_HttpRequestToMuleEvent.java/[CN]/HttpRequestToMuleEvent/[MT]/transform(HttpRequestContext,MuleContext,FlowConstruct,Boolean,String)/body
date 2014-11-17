@@ -2,6 +2,7 @@
   final HttpRequest request=requestContext.getRequest();
   final Collection<String> headerNames=request.getHeaderNames();
   Map<String,Object> inboundProperties=new HashMap<>();
+  Map<String,Object> outboundProperties=new HashMap<>();
   for (  String headerName : headerNames) {
     final Collection<String> values=request.getHeaderValues(headerName);
     if (values.size() == 1) {
@@ -24,9 +25,10 @@
         final String contentTypeValue=request.getHeaderValue(HttpHeaders.Names.CONTENT_TYPE);
         if (contentTypeValue != null) {
           final MediaType mediaType=MediaType.parse(contentTypeValue);
+          String encoding=mediaType.charset().isPresent() ? mediaType.charset().get().name() : Charset.defaultCharset().name();
+          outboundProperties.put(MuleProperties.MULE_ENCODING_PROPERTY,encoding);
           if ((mediaType.type() + "/" + mediaType.subtype()).equals(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
-            Charset charset=mediaType.charset().isPresent() ? mediaType.charset().get() : Charset.defaultCharset();
-            payload=HttpParser.decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),charset.name());
+            payload=HttpParser.decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),encoding);
           }
  else           if (entity instanceof InputStreamHttpEntity) {
             payload=((InputStreamHttpEntity)entity).getInputStream();
@@ -44,6 +46,6 @@
       payload=inputStreamEntity.getInputStream();
     }
   }
-  final DefaultMuleMessage defaultMuleMessage=new DefaultMuleMessage(payload,inboundProperties,Collections.<String,Object>emptyMap(),inboundAttachments,muleContext);
+  final DefaultMuleMessage defaultMuleMessage=new DefaultMuleMessage(payload,inboundProperties,outboundProperties,inboundAttachments,muleContext);
   return new DefaultMuleEvent(defaultMuleMessage,MessageExchangePattern.REQUEST_RESPONSE,flowConstruct);
 }
