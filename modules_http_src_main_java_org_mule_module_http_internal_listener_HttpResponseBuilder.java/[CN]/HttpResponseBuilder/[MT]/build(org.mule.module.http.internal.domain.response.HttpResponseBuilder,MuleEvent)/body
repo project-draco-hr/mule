@@ -3,8 +3,10 @@
   if (!disablePropertiesAsHeaders) {
     final Set<String> outboundProperties=event.getMessage().getOutboundPropertyNames();
     for (    String outboundPropertyName : outboundProperties) {
-      final Object outboundPropertyValue=event.getMessage().getOutboundProperty(outboundPropertyName);
-      httpResponseHeaderBuilder.addHeader(outboundPropertyName,outboundPropertyValue);
+      if (!outboundPropertyName.equals(HttpConstants.ResponseProperties.HTTP_STATUS_PROPERTY)) {
+        final Object outboundPropertyValue=event.getMessage().getOutboundProperty(outboundPropertyName);
+        httpResponseHeaderBuilder.addHeader(outboundPropertyName,outboundPropertyValue);
+      }
     }
   }
   ParameterMap resolvedHeaders=resolveParams(event,HttpParamType.HEADER);
@@ -82,7 +84,7 @@
       httpResponseBuilder.addHeader(headerName,value);
     }
   }
-  httpResponseBuilder.setStatusCode(statusCodeEvaluator.resolveIntegerValue(event));
+  httpResponseBuilder.setStatusCode(resolveStatusCode(event));
   if (this.reasonPhrase != null) {
     httpResponseBuilder.setReasonPhrase(reasonPhraseEvaluator.resolveStringValue(event));
   }
