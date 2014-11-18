@@ -1,25 +1,18 @@
 {
   MuleMessage message=event.getMessage();
-  String path=message.getInboundProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
-  String contextPath=message.getInboundProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY);
+  String path=resolvePath(message);
+  String contextPath=resolveContextPath(message);
   String query=null;
   int queryIdx=path.indexOf('?');
   if (queryIdx != -1) {
     query=path.substring(queryIdx + 1);
     path=path.substring(0,queryIdx);
   }
-  URI endpointUri=event.getMessageSourceURI();
-  String host=message.getInboundProperty("Host",endpointUri.getHost());
+  String host=message.getInboundProperty("Host",event.getMessageSourceURI().getHost());
   String method=message.getInboundProperty(HttpConnector.HTTP_METHOD_PROPERTY);
-  String scheme;
-  if ("servlet".equals(endpointUri.getScheme())) {
-    scheme="http";
-  }
- else {
-    scheme=endpointUri.getScheme();
-  }
+  String scheme=resolveScheme(event);
   URI baseUri=getBaseUri(scheme,host,contextPath);
-  URI completeUri=getCompleteUri(endpointUri,scheme,host,path,query);
+  URI completeUri=getCompleteUri(scheme,host,path,query);
   if (logger.isDebugEnabled()) {
     logger.debug("Base URI: " + baseUri);
     logger.debug("Complete URI: " + completeUri);
