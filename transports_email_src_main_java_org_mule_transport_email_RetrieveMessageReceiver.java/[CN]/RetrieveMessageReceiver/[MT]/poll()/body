@@ -13,9 +13,7 @@ synchronized (folderLock) {
           }
         }
  catch (        Exception e) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("ignoring exception: " + e.getMessage());
-          }
+          handleFolderException("opening",e);
         }
         int count=folder.getMessageCount();
         int batchSize=getBatchSize(count);
@@ -39,10 +37,10 @@ synchronized (folderLock) {
       }
  finally {
         try {
-          folder.close(true);
+          closeFolder();
         }
  catch (        Exception e) {
-          logger.error("Failed to close pop3  inbox: " + e.getMessage());
+          logger.error(String.format(FOLDER_EXCEPTION_FORMAT,"closing",folder.getFullName(),e.getMessage()));
         }
       }
     }
