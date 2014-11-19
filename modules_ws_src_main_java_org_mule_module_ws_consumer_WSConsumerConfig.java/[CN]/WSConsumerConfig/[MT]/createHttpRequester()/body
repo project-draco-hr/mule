@@ -1,9 +1,21 @@
 {
-  HttpRequesterBuilder requesterBuilder=new HttpRequesterBuilder(muleContext);
-  requesterBuilder.setUrl(serviceAddress).setMethod("POST").setParseResponse(false);
-  requesterBuilder.setResponseValidator(new SuccessStatusCodeValidator("0..599"));
-  if (connectorConfig != null) {
-    requesterBuilder.setConfig(connectorConfig);
+  return new MessageProcessor(){
+    private HttpRequestOptions requestOptions;
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      final MuleMessage responseMessage=muleContext.getClient().send(serviceAddress,event.getMessage(),getRequestOptions());
+      event.setMessage(responseMessage);
+      return event;
+    }
+    private HttpRequestOptions getRequestOptions(){
+      if (requestOptions == null) {
+        final HttpRequestOptionsBuilder builder=newOptions().method(POST.name()).disableStatusCodeValidation().disableParseResponse();
+        if (connectorConfig != null) {
+          builder.requestConfig(connectorConfig);
+        }
+        requestOptions=builder.build();
+      }
+      return requestOptions;
+    }
   }
-  return requesterBuilder.build();
+;
 }

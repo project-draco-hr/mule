@@ -3,13 +3,14 @@
   ByteArrayOutputStream out=new ByteArrayOutputStream();
   IOUtils.copy(getClass().getResourceAsStream("/purchase-order.xml"),out);
   String address="http://localhost:" + dynamicPort.getNumber() + "/proxy";
-  MuleMessage res=client.send(address,out.toByteArray(),null);
+  final HttpRequestOptions httpRequestOptions=newOptions().method(POST.name()).disableStatusCodeValidation().build();
+  MuleMessage res=client.send(address,new DefaultMuleMessage(out.toByteArray(),muleContext),httpRequestOptions);
   System.out.println(res.getPayloadAsString());
   assertTrue(res.getPayloadAsString().contains("purchaseOrder"));
   assertTrue(res.getPayloadAsString().contains("Alice"));
   out=new ByteArrayOutputStream();
   IOUtils.copy(getClass().getResourceAsStream("/namespace-purchase-order.xml"),out);
-  res=client.send(address,out.toByteArray(),null);
+  res=client.send(address,new DefaultMuleMessage(out.toByteArray(),muleContext),httpRequestOptions);
   System.out.println(res.getPayloadAsString());
   assertTrue(res.getPayloadAsString().contains("purchaseOrder"));
   assertTrue(res.getPayloadAsString().contains("Alice"));

@@ -1,0 +1,19 @@
+{
+  final OperationOptions operationOptions=cacheKey.getOperationOptions();
+  final MessageExchangePattern exchangePattern=cacheKey.getExchangePattern();
+  final String url=cacheKey.getUrl();
+  final HttpRequesterBuilder httpRequesterBuilder=new HttpRequesterBuilder(muleContext).setUrl(url);
+  if (operationOptions instanceof HttpRequestOptions) {
+    httpRequesterBuilder.setOperationConfig((HttpRequestOptions)operationOptions);
+  }
+ else {
+    if (operationOptions.getResponseTimeout() != null) {
+      httpRequesterBuilder.responseTimeout(operationOptions.getResponseTimeout());
+    }
+  }
+  MessageProcessor messageProcessor=httpRequesterBuilder.build();
+  if (exchangePattern.equals(MessageExchangePattern.ONE_WAY)) {
+    messageProcessor=new OneWayHttpRequesterAdapter(messageProcessor);
+  }
+  return messageProcessor;
+}
