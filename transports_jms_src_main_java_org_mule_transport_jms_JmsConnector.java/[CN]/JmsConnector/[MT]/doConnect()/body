@@ -4,6 +4,14 @@
     BeanUtils.populateWithoutFail(connectionFactory,connectionFactoryProperties,true);
   }
   if (isStarted() || startOnConnect) {
-    connection.start();
+    try {
+      connection.start();
+    }
+ catch (    Exception e) {
+      if (connectionFactory instanceof Closeable) {
+        ((Closeable)connectionFactory).close();
+      }
+      throw e;
+    }
   }
 }
