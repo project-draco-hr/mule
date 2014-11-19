@@ -1,16 +1,18 @@
 {
-  this.state="my state";
-  this.incomingState=String.format(OAuthProperties.EVENT_STATE_TEMPLATE + "%s",eventId,state);
-  this.exception=false;
-  this.restoredEvent=Mockito.mock(MuleEvent.class,Mockito.RETURNS_DEEP_STUBS);
-  this.manager=Mockito.mock(OAuth2Manager.class,Mockito.RETURNS_DEEP_STUBS);
-  Mockito.when(this.manager.restoreAuthorizationEvent(eventId)).thenReturn(restoredEvent);
-  this.processor=new OAuth2FetchAccessTokenMessageProcessor(this.manager,null);
-  this.processor.setMuleContext(this.muleContext);
-  this.event=Mockito.mock(MuleEvent.class,Mockito.RETURNS_DEEP_STUBS);
-  Mockito.when(event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER)).thenReturn(verifier);
-  Mockito.when(event.getMessage().getInboundProperty("state")).thenReturn(incomingState);
-  Mockito.when(this.restoredEvent.getMuleContext().getExpressionManager().parse(Mockito.anyString(),Mockito.any(MuleMessage.class))).thenAnswer(new Answer<String>(){
+  state="my state";
+  incomingState=String.format(OAuthProperties.EVENT_STATE_TEMPLATE + "%s",eventId,state);
+  exception=false;
+  restoredEvent=mock(MuleEvent.class,Mockito.RETURNS_DEEP_STUBS);
+  when(restoredEvent.getMessage().getInboundProperty("http.query.params")).thenReturn(restoredParameters);
+  manager=mock(OAuth2Manager.class,Mockito.RETURNS_DEEP_STUBS);
+  when(manager.restoreAuthorizationEvent(eventId)).thenReturn(restoredEvent);
+  processor=new OAuth2FetchAccessTokenMessageProcessor(manager,null);
+  processor.setMuleContext(muleContext);
+  event=mock(MuleEvent.class,Mockito.RETURNS_DEEP_STUBS);
+  when(event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER)).thenReturn(verifier);
+  parameters.put("state",incomingState);
+  when(event.getMessage().getInboundProperty("http.query.params")).thenReturn(parameters);
+  when(restoredEvent.getMuleContext().getExpressionManager().parse(anyString(),any(MuleMessage.class))).thenAnswer(new Answer<String>(){
     @Override public String answer(    InvocationOnMock invocation) throws Throwable {
       return (String)invocation.getArguments()[0];
     }
