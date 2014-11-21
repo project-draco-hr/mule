@@ -1,19 +1,6 @@
 {
-  when(expressionManager.isExpression(Mockito.anyString())).thenReturn(true);
-  when(expressionManager.parse(Mockito.eq("dynamicReferencedFlow"),Mockito.any(MuleEvent.class))).thenReturn("parsedDynamicReferencedFlow");
-  when(applicationContext.getBean(Mockito.eq("parsedDynamicReferencedFlow"))).thenReturn(targetSubFlow);
-  FlowRefFactoryBean flowRefFactoryBean=new FlowRefFactoryBean();
-  flowRefFactoryBean.setName("dynamicReferencedFlow");
-  flowRefFactoryBean.setApplicationContext(applicationContext);
-  flowRefFactoryBean.setMuleContext(muleContext);
-  flowRefFactoryBean.initialise();
-  Assert.assertNotSame(targetSubFlow,flowRefFactoryBean.getObject());
-  Assert.assertNotSame(targetSubFlow,flowRefFactoryBean.getObject());
-  Assert.assertSame(result,flowRefFactoryBean.getObject().process(mock(MuleEvent.class)));
-  Assert.assertSame(result,flowRefFactoryBean.getObject().process(mock(MuleEvent.class)));
-  Mockito.verify(applicationContext,Mockito.times(1)).getBean(Mockito.anyString());
-  Mockito.verify(targetSubFlow,Mockito.times(2)).process(Mockito.any(MuleEvent.class));
-  Mockito.verify(targetSubFlow,Mockito.times(1)).initialise();
-  flowRefFactoryBean.dispose();
-  Mockito.verify(targetSubFlow,Mockito.times(1)).dispose();
+  FlowRefFactoryBean flowRefFactoryBean=createDynamicFlowRefFactoryBean(targetSubFlow);
+  assertNotSame(targetSubFlow,flowRefFactoryBean.getObject());
+  assertNotSame(targetSubFlow,flowRefFactoryBean.getObject());
+  verifyProcess(flowRefFactoryBean,targetSubFlow,1);
 }
