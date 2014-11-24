@@ -2,6 +2,11 @@
   if (logger.isDebugEnabled()) {
     logger.debug(MessageFormat.format("{1}: Putting event on queue {2}",queue.getName(),getStageDescription(),event));
   }
-  queue.put(event);
-  fireAsyncScheduledNotification(event);
+  boolean queued=queue.offer(event,threadTimeout);
+  if (queued) {
+    fireAsyncScheduledNotification(event);
+  }
+ else {
+    throw new FailedToQueueEventException(CoreMessages.createStaticMessage(String.format("The queue for '%1s' did not accept new event within %2d %3s",getStageDescription(),threadTimeout,TimeUnit.MILLISECONDS)),event);
+  }
 }
