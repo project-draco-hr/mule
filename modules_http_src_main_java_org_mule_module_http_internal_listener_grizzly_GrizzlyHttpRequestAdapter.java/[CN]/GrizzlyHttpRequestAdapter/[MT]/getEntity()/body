@@ -3,14 +3,14 @@
     if (this.body == null) {
       final String contentTypeValue=getHeaderValue(HttpHeaders.Names.CONTENT_TYPE);
       if (contentTypeValue != null && contentTypeValue.contains("multipart")) {
-        final Collection<Part> parts=HttpParser.parseMultipartContent(grizzlyContent,contentTypeValue);
+        final Collection<Part> parts=HttpParser.parseMultipartContent(requestContent,contentTypeValue);
         this.body=new MultipartHttpEntity(parts);
       }
  else       if (getHeaderValue(HttpHeaders.Names.TRANSFER_ENCODING) != null) {
-        this.body=new InputStreamHttpEntity(grizzlyContent);
+        this.body=new InputStreamHttpEntity(new TransferEncodingChunkInputStream(filterChainContext,requestContent));
       }
  else       if (contentLength > 0) {
-        this.body=new InputStreamHttpEntity(contentLength,grizzlyContent);
+        this.body=new InputStreamHttpEntity(contentLength,requestContent);
       }
  else {
         this.body=new EmptyHttpEntity();
