@@ -6,10 +6,10 @@
   FilterChainBuilder serverFilterChainBuilder=FilterChainBuilder.stateless();
   serverFilterChainBuilder.add(new TransportFilter());
   serverFilterChainBuilder.add(sslFilterDelegate);
-  serverFilterChainBuilder.add(new ChunkingFilter(1024));
   serverFilterChainBuilder.add(httpServerFilterDelegate);
   serverFilterChainBuilder.add(requestHandlerFilter);
-  TCPNIOTransportBuilder transportBuilder=TCPNIOTransportBuilder.newInstance().setOptimizedForMultiplexing(true).setIOStrategy(SameThreadIOStrategy.getInstance());
+  executorProvider=new WorkManagerSourceExecutorProvider();
+  TCPNIOTransportBuilder transportBuilder=TCPNIOTransportBuilder.newInstance().setOptimizedForMultiplexing(true).setIOStrategy(new ExecutorPerServerAddressIOStrategy(executorProvider));
   configureServerSocketProperties(transportBuilder,serverSocketProperties);
   transport=transportBuilder.build();
   transport.setNIOChannelDistributor(new RoundRobinConnectionDistributor(transport,true,true));

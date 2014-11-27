@@ -1,0 +1,21 @@
+{
+  final boolean isReadOrWriteEvent=isReadWrite(ioEvent);
+  final IOEventLifeCycleListener listener;
+  if (isReadOrWriteEvent) {
+    if (isIoEventEnabled) {
+      connection.disableIOEvent(ioEvent);
+    }
+    listener=ENABLE_INTEREST_LIFECYCLE_LISTENER;
+  }
+ else {
+    listener=null;
+  }
+  final Executor threadPool=getThreadPoolFor(connection,ioEvent);
+  if (threadPool != null) {
+    threadPool.execute(new WorkerThreadRunnable(connection,ioEvent,listener));
+  }
+ else {
+    run0(connection,ioEvent,listener);
+  }
+  return true;
+}
