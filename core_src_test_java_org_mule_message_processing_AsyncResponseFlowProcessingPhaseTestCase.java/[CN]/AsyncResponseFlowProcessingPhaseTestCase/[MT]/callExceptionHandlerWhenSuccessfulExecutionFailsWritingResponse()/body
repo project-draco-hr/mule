@@ -2,12 +2,13 @@
   doAnswer(new Answer(){
     @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
       ResponseCompletionCallback callback=(ResponseCompletionCallback)invocationOnMock.getArguments()[1];
-      callback.responseSentWithFailure(mockException,(MuleEvent)invocationOnMock.getArguments()[0]);
+      callback.responseSentWithFailure(mockException,mockMuleEvent);
       return null;
     }
   }
 ).when(mockTemplate).sendResponseToClient(any(MuleEvent.class),any(ResponseCompletionCallback.class));
   phase.runPhase(mockTemplate,mockContext,mockNotifier);
   verify(mockContext.getFlowConstruct().getExceptionListener()).handleException(any(Exception.class),any(MuleEvent.class));
+  verify(mockMuleEvent).resetAccessControl();
   verifyOnlySuccessfulWasCalled();
 }
