@@ -3,8 +3,8 @@
     final Collection<HttpListenerConfig> listenerConfigs=muleContext.getRegistry().lookupObjects(HttpListenerConfig.class);
     for (    HttpListenerConfig listenerConfig : listenerConfigs) {
       if (listenerConfig.getHost().equals(this.host) && listenerConfig.getPort() == this.port && (protocol == null || (protocol.equals(HttpConstants.Protocols.HTTPS) && listenerConfig.hasTlsConfig()) || (protocol.equals(HttpConstants.Protocols.HTTP) && !listenerConfig.hasTlsConfig()))) {
-        if (tlsContextFactory != null) {
-          throw new IllegalStateException(String.format("There's already a listener configuration with tsl configuration defined for host(%s) and port(%s)",this.host,this.port));
+        if (tlsContextFactory != null && !tlsContextFactory.equals(listenerConfig.getTlsContext())) {
+          throw new IllegalStateException(String.format("There's already a listener configuration with TLS configuration defined for host(%s) and port(%s)",this.host,this.port));
         }
         this.httpListenerConfig=listenerConfig;
         break;
@@ -14,7 +14,7 @@
       HttpListenerConfigBuilder httpListenerConfigBuilder=new HttpListenerConfigBuilder(muleContext).setHost(host).setPort(port);
       if (protocol != null && protocol.equals(HttpConstants.Protocols.HTTPS)) {
         if (tlsContextFactory == null) {
-          throw new IllegalStateException("Cannot create a listener for http without a tls context provided");
+          throw new IllegalStateException("Cannot create a listener for http without a TLS context provided");
         }
         httpListenerConfigBuilder.setTlsContextFactory(this.tlsContextFactory);
       }
