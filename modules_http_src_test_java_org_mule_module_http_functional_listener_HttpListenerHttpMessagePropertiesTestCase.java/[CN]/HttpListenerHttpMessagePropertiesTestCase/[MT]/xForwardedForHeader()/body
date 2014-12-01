@@ -1,9 +1,9 @@
 {
   final String url=String.format("http://localhost:%s/some-path",listenPort.getNumber());
-  Request.Post(url).connectTimeout(RECEIVE_TIMEOUT).execute();
+  Post(url).connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage message=muleContext.getClient().request("vm://out",RECEIVE_TIMEOUT);
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REMOTE_ADDRESS),startsWith("/127.0.0.1:"));
-  Request.Post(url).addHeader(HttpRequestToMuleEvent.X_FORWARDED_FOR_HEADER_NAME,"/192.1.2.3:1234").connectTimeout(RECEIVE_TIMEOUT).execute();
+  assertThat(message.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),startsWith("/127.0.0.1:"));
+  Post(url).addHeader(HttpHeaders.Names.X_FORWARDED_FOR,"/192.1.2.3:1234").connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage forwardedMessage=muleContext.getClient().request("vm://out",RECEIVE_TIMEOUT);
-  assertThat(forwardedMessage.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REMOTE_ADDRESS),is("/192.1.2.3:1234"));
+  assertThat(forwardedMessage.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),is("/192.1.2.3:1234"));
 }
