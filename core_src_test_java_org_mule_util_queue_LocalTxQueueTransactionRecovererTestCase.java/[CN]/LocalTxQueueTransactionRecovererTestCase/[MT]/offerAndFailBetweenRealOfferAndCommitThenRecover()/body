@@ -1,10 +1,9 @@
 {
-  ((DefaultMuleConfiguration)muleContext.getConfiguration()).setWorkingDirectory(temporaryFolder.getRoot().getAbsolutePath());
-  TestTransactionLogger txLog=new TestTransactionLogger(temporaryFolder.getRoot().getAbsolutePath(),muleContext).failDuringLogCommit();
+  txLog=new TestTransactionLogger(temporaryFolder.getRoot().getAbsolutePath(),muleContext).failDuringLogCommit();
   final DefaultQueueStore outQueue=new DefaultQueueStore(QUEUE_NAME,muleContext,new DefaultQueueConfiguration(0,true));
-  PersistentQueueTransactionContext persistentTransactionContext=new PersistentQueueTransactionContext(txLog,createQueueProvider(outQueue));
+  persistentTransactionContext=new PersistentQueueTransactionContext(txLog,createQueueProvider(outQueue));
   MuleEvent testEvent=getTestEvent(MESSAGE_CONTENT);
-  persistentTransactionContext.offer(outQueue,testEvent,10);
+  persistentTransactionContext.offer(outQueue,testEvent,TIMEOUT);
   try {
     persistentTransactionContext.doCommit();
     fail();
@@ -13,8 +12,8 @@
   }
   txLog.close();
   txLog=new TestTransactionLogger(temporaryFolder.getRoot().getAbsolutePath(),muleContext);
-  LocalTxQueueTransactionRecoverer queueTransactionRecoverer=new LocalTxQueueTransactionRecoverer(txLog,createQueueProvider(outQueue));
+  queueTransactionRecoverer=new LocalTxQueueTransactionRecoverer(txLog,createQueueProvider(outQueue));
   queueTransactionRecoverer.recover();
-  Serializable muleEvent=outQueue.poll(10);
+  Serializable muleEvent=outQueue.poll(TIMEOUT);
   assertThat(muleEvent,nullValue());
 }
