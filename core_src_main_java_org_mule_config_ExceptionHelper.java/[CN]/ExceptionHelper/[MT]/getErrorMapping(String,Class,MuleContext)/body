@@ -1,21 +1,8 @@
 {
-  protocol=protocol.toLowerCase();
-  Properties mappings=getErrorMappings(protocol,muleContext);
-  if (mappings == null) {
-    logger.info("No mappings found for protocol: " + protocol);
-    return String.valueOf(getErrorCode(exception));
-  }
-  Class clazz=exception;
-  String code=null;
-  while (!clazz.equals(Object.class)) {
-    code=mappings.getProperty(clazz.getName());
-    if (code == null) {
-      clazz=clazz.getSuperclass();
-    }
- else {
-      return code;
-    }
+  String code=getTransportErrorMapping(protocol,exception,muleContext);
+  if (code != null) {
+    return code;
   }
   code=String.valueOf(getErrorCode(exception));
-  return mappings.getProperty(code,code);
+  return getErrorMappings(protocol,muleContext).getProperty(code,code);
 }
