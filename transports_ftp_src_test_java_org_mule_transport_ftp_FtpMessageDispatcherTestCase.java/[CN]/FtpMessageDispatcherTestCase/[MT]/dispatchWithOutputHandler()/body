@@ -1,0 +1,20 @@
+{
+  MuleClient client=muleContext.getClient();
+  OutputHandler oh=new OutputHandler(){
+    public void write(    MuleEvent event,    OutputStream out) throws IOException {
+      StringReader sr=new StringReader(TEST_MESSAGE);
+      try {
+        IOUtils.copy(sr,out);
+        out.flush();
+      }
+  finally {
+        sr.close();
+      }
+    }
+  }
+;
+  client.dispatch(getMuleFtpEndpoint(),new DefaultMuleMessage(oh,muleContext));
+  assertTrue(latch.await(getTimeout(),TimeUnit.MILLISECONDS));
+  String[] filesOnServer=new File(FTP_SERVER_BASE_DIR).list();
+  assertTrue(filesOnServer.length > 0);
+}
