@@ -17,11 +17,18 @@
     throw new InitialisationException(CoreMessages.createStaticMessage("KeyStore must be configured for server side SSL"),this);
   }
   verifyConnectionsParameters();
+  ServerAddress serverAddress;
+  try {
+    serverAddress=createServerAddress();
+  }
+ catch (  UnknownHostException e) {
+    throw new InitialisationException(CoreMessages.createStaticMessage("Cannot resolve host %s",host),e,this);
+  }
   if (tlsContext == null) {
-    server=connectionManager.createServer(new ServerAddress(host,port),createWorkManagerSource(),usePersistentConnections,connectionIdleTimeout);
+    server=connectionManager.createServer(serverAddress,createWorkManagerSource(),usePersistentConnections,connectionIdleTimeout);
   }
  else {
-    server=connectionManager.createSslServer(new ServerAddress(host,port),createWorkManagerSource(),tlsContext,usePersistentConnections,connectionIdleTimeout);
+    server=connectionManager.createSslServer(serverAddress,createWorkManagerSource(),tlsContext,usePersistentConnections,connectionIdleTimeout);
   }
   initialised=true;
 }
