@@ -1,12 +1,12 @@
 {
   final String scheme=(ctx.getAttributes().getAttribute(HttpConstants.Protocols.HTTPS) == null) ? HttpConstants.Protocols.HTTP : HttpConstants.Protocols.HTTPS;
-  final String hostName=((InetSocketAddress)ctx.getConnection().getLocalAddress()).getHostName();
+  final String ip=((InetSocketAddress)ctx.getConnection().getLocalAddress()).getAddress().getHostAddress();
   final int port=((InetSocketAddress)ctx.getConnection().getLocalAddress()).getPort();
   final HttpContent httpContent=ctx.getMessage();
   final HttpRequestPacket request=(HttpRequestPacket)httpContent.getHttpHeader();
   final GrizzlyHttpRequestAdapter httpRequest=new GrizzlyHttpRequestAdapter(ctx,httpContent);
   HttpRequestContext requestContext=new HttpRequestContext(httpRequest,(InetSocketAddress)ctx.getConnection().getPeerAddress(),scheme);
-  final RequestHandler requestHandler=requestHandlerProvider.getRequestHandler(hostName,port,httpRequest);
+  final RequestHandler requestHandler=requestHandlerProvider.getRequestHandler(ip,port,httpRequest);
   requestHandler.handleRequest(requestContext,new HttpResponseReadyCallback(){
     @Override public void responseReady(    HttpResponse httpResponse,    ResponseStatusCallback responseStatusCallback){
       try {
