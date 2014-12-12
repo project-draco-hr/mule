@@ -1,17 +1,24 @@
 {
-  DefaultInboundEndpoint inboundEndpoint;
+  FlowConfiguringMessageProcessor wrapper;
   if (variant.equals(ConfigVariant.FLOW)) {
     final Flow flow=muleContext.getRegistry().lookupObject("CXFProxyService");
-    inboundEndpoint=(DefaultInboundEndpoint)flow.getMessageSource();
+    if (FLOW_HTTPN.equals(configResources)) {
+      wrapper=(FlowConfiguringMessageProcessor)flow.getMessageProcessors().get(0);
+    }
+ else {
+      DefaultInboundEndpoint inboundEndpoint=(DefaultInboundEndpoint)flow.getMessageSource();
+      List<MessageProcessor> processors=inboundEndpoint.getMessageProcessors();
+      wrapper=(FlowConfiguringMessageProcessor)processors.get(0);
+    }
   }
  else {
     final Service service=muleContext.getRegistry().lookupService("CXFProxyService");
     ServiceCompositeMessageSource messageSource=(ServiceCompositeMessageSource)service.getMessageSource();
     List<InboundEndpoint> endpoints=messageSource.getEndpoints();
-    inboundEndpoint=(DefaultInboundEndpoint)endpoints.get(0);
+    DefaultInboundEndpoint inboundEndpoint=(DefaultInboundEndpoint)endpoints.get(0);
+    List<MessageProcessor> processors=inboundEndpoint.getMessageProcessors();
+    wrapper=(FlowConfiguringMessageProcessor)processors.get(0);
   }
-  List<MessageProcessor> processors=inboundEndpoint.getMessageProcessors();
-  FlowConfiguringMessageProcessor wrapper=(FlowConfiguringMessageProcessor)processors.get(0);
   CxfInboundMessageProcessor cxfProcessor=(CxfInboundMessageProcessor)wrapper.getWrappedMessageProcessor();
   Server server=cxfProcessor.getServer();
   EndpointInfo endpointInfo=server.getEndpoint().getEndpointInfo();
