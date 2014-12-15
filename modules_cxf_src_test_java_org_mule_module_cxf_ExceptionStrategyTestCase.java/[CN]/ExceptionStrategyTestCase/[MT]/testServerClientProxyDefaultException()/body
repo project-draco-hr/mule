@@ -1,4 +1,5 @@
 {
+  assumeThat(configResources,is(not(equalTo(EXCEPTION_STRATEGY_FLOW_CONF_HTTPN_XML))));
   MuleClient client=muleContext.getClient();
   latch=new CountDownLatch(1);
   muleContext.registerListener(new ExceptionNotificationListener(){
@@ -7,7 +8,7 @@
     }
   }
 );
-  MuleMessage response=client.send("http://localhost:" + dynamicPort.getNumber() + "/proxyExceptionStrategy",requestPayload,null);
+  MuleMessage response=client.send("http://localhost:" + dynamicPort.getNumber() + "/proxyExceptionStrategy",new DefaultMuleMessage(requestPayload,muleContext),HTTP_REQUEST_OPTIONS);
   assertNotNull(response);
   assertTrue(response.getPayloadAsString().contains("<faultstring>"));
   assertTrue(response.getExceptionPayload() != null);

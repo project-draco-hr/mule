@@ -13,7 +13,13 @@
   Map<String,Object> props=new HashMap<String,Object>();
   props.put("operation","greetMe");
   props.put("FOO","BAR");
-  MuleMessage result=client.send("clientEndpoint","Dan",props);
+  MuleMessage result;
+  if (config == HEADER_CONF_HTTPN_XML) {
+    result=((Flow)getFlowConstruct("clientFlow")).process(getTestEvent(new DefaultMuleMessage("Dan",props,muleContext))).getMessage();
+  }
+ else {
+    result=client.send("clientEndpoint","Dan",props);
+  }
   assertEquals("Hello Dan Received",result.getPayload());
   GreeterImpl impl=getGreeter();
   assertEquals(1,impl.getInvocationCount());
