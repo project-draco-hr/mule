@@ -1,15 +1,12 @@
 {
   CloseableHttpClient httpClient=HttpClients.createDefault();
   try {
-    HttpPost httpPost=new HttpPost(String.format("http://localhost:%s/%s",listenPort.getNumber(),pathToCall));
-    MultipartEntityBuilder builder=MultipartEntityBuilder.create();
-    builder.addTextBody(TEXT_BODY_FIELD_NAME,TEXT_BODY_FIELD_VALUE,ContentType.TEXT_PLAIN);
-    builder.addBinaryBody(FILE_BODY_FIELD_NAME,FILE_BODY_FIELD_VALUE.getBytes(),ContentType.APPLICATION_OCTET_STREAM,FIELD_BDOY_FILE_NAME);
-    HttpEntity multipart=builder.build();
+    HttpPost httpPost=new HttpPost(getUrl(pathToCall));
+    HttpEntity multipart=createHttpEntity(useChunkedMode);
     httpPost.setEntity(multipart);
     final CloseableHttpResponse response=httpClient.execute(httpPost);
     try {
-      final MuleMessage receivedMessage=muleContext.getClient().request("vm://out",1000);
+      final MuleMessage receivedMessage=muleContext.getClient().request(VM_MESSAGE_ENDPOINT,1000);
       assertThat(receivedMessage.getPayload(),Is.<Object>is(NullPayload.getInstance()));
       assertThat(receivedMessage.getInboundAttachmentNames().size(),is(2));
       assertThat(receivedMessage.getInboundAttachmentNames().contains(TEXT_BODY_FIELD_NAME),is(true));
