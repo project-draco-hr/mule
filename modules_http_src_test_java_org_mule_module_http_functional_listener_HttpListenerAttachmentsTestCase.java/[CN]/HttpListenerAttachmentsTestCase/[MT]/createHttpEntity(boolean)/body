@@ -1,0 +1,20 @@
+{
+  MultipartEntityBuilder builder=MultipartEntityBuilder.create();
+  builder.addTextBody(TEXT_BODY_FIELD_NAME,TEXT_BODY_FIELD_VALUE,ContentType.TEXT_PLAIN);
+  builder.addBinaryBody(FILE_BODY_FIELD_NAME,FILE_BODY_FIELD_VALUE.getBytes(),ContentType.APPLICATION_OCTET_STREAM,FIELD_BDOY_FILE_NAME);
+  HttpEntity multipartEntity=builder.build();
+  if (useChunkedMode) {
+    ByteArrayOutputStream multipartOutput=new ByteArrayOutputStream();
+    multipartEntity.writeTo(multipartOutput);
+    multipartOutput.flush();
+    ByteArrayEntity byteArrayEntity=new ByteArrayEntity(multipartOutput.toByteArray());
+    multipartOutput.close();
+    byteArrayEntity.setChunked(true);
+    byteArrayEntity.setContentEncoding(multipartEntity.getContentEncoding());
+    byteArrayEntity.setContentType(multipartEntity.getContentType());
+    return byteArrayEntity;
+  }
+ else {
+    return multipartEntity;
+  }
+}
