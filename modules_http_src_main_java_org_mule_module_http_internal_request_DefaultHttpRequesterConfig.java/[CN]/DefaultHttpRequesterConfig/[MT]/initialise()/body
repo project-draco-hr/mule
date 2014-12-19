@@ -1,6 +1,15 @@
 {
   verifyConnectionsParameters();
-  String threadNamePrefix=String.format(THREAD_NAME_PREFIX_PATTERN,ThreadNameHelper.getPrefix(muleContext),name);
+  if (port == null) {
+    port=String.valueOf(protocol.getDefaultPort());
+  }
+  if (protocol.equals(HTTP) && tlsContext != null) {
+    throw new InitialisationException(CoreMessages.createStaticMessage("TlsContext cannot be configured with protocol HTTP, " + "when using tls:context you must set attribute protocol=\"HTTPS\""),this);
+  }
+  if (protocol.equals(HTTPS) && tlsContext == null) {
+    tlsContext=new TlsContextFactoryBuilder(muleContext).buildDefault();
+  }
+  String threadNamePrefix=format(THREAD_NAME_PREFIX_PATTERN,ThreadNameHelper.getPrefix(muleContext),name);
   GrizzlyHttpClientConfiguration configuration=new GrizzlyHttpClientConfiguration.Builder().setTlsContextFactory(tlsContext).setProxyConfig(proxyConfig).setClientSocketProperties(clientSocketProperties).setMaxConnections(maxConnections).setUsePersistentConnections(usePersistentConnections).setConnectionIdleTimeout(connectionIdleTimeout).setThreadNamePrefix(threadNamePrefix).build();
   httpClient=new GrizzlyHttpClient(configuration);
   httpClient.initialise();
