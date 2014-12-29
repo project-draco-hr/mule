@@ -1,9 +1,11 @@
 {
   assureLoaded();
-  if (realKeyToUUIDIndex.containsKey(key)) {
-    throw new ObjectAlreadyExistsException();
+synchronized (realKeyToUUIDIndex) {
+    if (realKeyToUUIDIndex.containsKey(key)) {
+      throw new ObjectAlreadyExistsException();
+    }
+    File newFile=createFileToStoreObject();
+    realKeyToUUIDIndex.put(key,newFile.getName());
+    serialize(newFile,new StoreValue<T>(key,value));
   }
-  File newFile=createFileToStoreObject();
-  realKeyToUUIDIndex.put(key,newFile.getName());
-  serialize(newFile,new StoreValue<T>(key,value));
 }
