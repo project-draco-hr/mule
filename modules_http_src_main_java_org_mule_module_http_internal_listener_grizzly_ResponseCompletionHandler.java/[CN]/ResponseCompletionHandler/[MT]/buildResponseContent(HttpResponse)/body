@@ -9,5 +9,9 @@
       throw new MuleRuntimeException(CoreMessages.createStaticMessage("At this point only a ByteArray entity is allowed"));
     }
   }
-  return HttpContent.builder(httpResponsePacket).content(grizzlyBuffer).build();
+  HttpContent.Builder contentBuilder=HttpContent.builder(httpResponsePacket);
+  if (httpResponse.getHeaderValue(CONTENT_LENGTH.toLowerCase()) != null) {
+    contentBuilder.last(true);
+  }
+  return contentBuilder.content(grizzlyBuffer).build();
 }

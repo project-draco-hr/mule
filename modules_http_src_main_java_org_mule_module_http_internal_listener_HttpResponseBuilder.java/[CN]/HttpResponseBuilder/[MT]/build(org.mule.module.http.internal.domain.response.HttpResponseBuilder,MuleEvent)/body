@@ -17,7 +17,8 @@
     }
   }
   final String configuredContentType=httpResponseHeaderBuilder.getContentType();
-  final String configuredTransferEncoding=httpResponseHeaderBuilder.getTransferEncoding();
+  final String existingTransferEncoding=httpResponseHeaderBuilder.getTransferEncoding();
+  final String existingContentLength=httpResponseHeaderBuilder.getContentLength();
   HttpEntity httpEntity;
   if (!event.getMessage().getOutboundAttachmentNames().isEmpty()) {
     if (configuredContentType == null) {
@@ -31,6 +32,7 @@
  else {
     final Object payload=event.getMessage().getPayload();
     if (payload == NullPayload.getInstance()) {
+      setupContentLengthEncoding(httpResponseHeaderBuilder,0);
       httpEntity=new EmptyHttpEntity();
     }
  else     if (payload instanceof Map) {
@@ -43,39 +45,31 @@
       httpEntity=createUrlEncodedEntity(event,(Map<String,Object>)payload);
     }
  else     if (payload instanceof InputStream) {
-      if (responseStreaming == HttpStreamingType.AUTO) {
-        if (configuredTransferEncoding == null) {
-          httpResponseHeaderBuilder.addHeader(HttpHeaders.Names.TRANSFER_ENCODING,HttpHeaders.Values.CHUNKED);
-        }
-        httpResponseHeaderBuilder.removeHeader(HttpHeaders.Names.CONTENT_LENGTH);
+      if (responseStreaming == ALWAYS || (responseStreaming == AUTO && existingContentLength == null)) {
+        setupChunkedEncoding(httpResponseHeaderBuilder);
+        httpEntity=new InputStreamHttpEntity((InputStream)payload);
       }
-      httpEntity=new InputStreamHttpEntity((InputStream)payload);
+ else {
+        ByteArrayHttpEntity byteArrayHttpEntity=new ByteArrayHttpEntity(IOUtils.toByteArray(((InputStream)payload)));
+        setupContentLengthEncoding(httpResponseHeaderBuilder,byteArrayHttpEntity.getContent().length);
+        httpEntity=byteArrayHttpEntity;
+      }
     }
  else {
       try {
-        httpEntity=new ByteArrayHttpEntity(event.getMessage().getPayloadAsBytes());
+        ByteArrayHttpEntity byteArrayHttpEntity=new ByteArrayHttpEntity(event.getMessage().getPayloadAsBytes());
+        if (responseStreaming == ALWAYS || (responseStreaming == AUTO && CHUNKED.equals(existingTransferEncoding))) {
+          setupChunkedEncoding(httpResponseHeaderBuilder);
+        }
+ else {
+          setupContentLengthEncoding(httpResponseHeaderBuilder,byteArrayHttpEntity.getContent().length);
+        }
+        httpEntity=byteArrayHttpEntity;
       }
  catch (      Exception e) {
         throw new RuntimeException(e);
       }
     }
-  }
-  if (responseStreaming.equals(HttpStreamingType.ALWAYS)) {
-    if (httpResponseHeaderBuilder.getTransferEncoding() == null) {
-      httpResponseHeaderBuilder.addHeader(HttpHeaders.Names.TRANSFER_ENCODING,HttpHeaders.Values.CHUNKED);
-    }
-    httpResponseHeaderBuilder.removeHeader(HttpHeaders.Names.CONTENT_LENGTH);
-  }
-  if (httpResponseHeaderBuilder.getTransferEncoding() == null && httpResponseHeaderBuilder.getContentLength() == null) {
-    int calculatedContentLenght=0;
-    if (httpEntity instanceof ByteArrayHttpEntity) {
-      calculatedContentLenght=((ByteArrayHttpEntity)httpEntity).getContent().length;
-    }
- else     if (httpEntity instanceof InputStreamHttpEntity) {
-      httpEntity=new ByteArrayHttpEntity(IOUtils.toByteArray(((InputStreamHttpEntity)httpEntity).getInputStream()));
-      calculatedContentLenght=((ByteArrayHttpEntity)httpEntity).getContent().length;
-    }
-    httpResponseHeaderBuilder.addContentLenght(String.valueOf(calculatedContentLenght));
   }
   Collection<String> headerNames=httpResponseHeaderBuilder.getHeaderNames();
   for (  String headerName : headerNames) {
