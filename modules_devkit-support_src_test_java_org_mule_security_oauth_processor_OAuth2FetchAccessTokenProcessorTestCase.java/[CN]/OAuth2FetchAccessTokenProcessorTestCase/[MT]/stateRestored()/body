@@ -1,4 +1,17 @@
 {
+  final AtomicReference<HashMap<String,String>> parameters=new AtomicReference<>();
+  MuleMessage mockMessage=mock(MuleMessage.class);
+  when(restoredEvent.getMessage()).thenReturn(mockMessage);
+  when(mockMessage.getInboundProperty(HTTP_QUERY_PARAMS)).thenReturn(restoredParameters);
+  doAnswer(new Answer(){
+    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      if (invocationOnMock.getArguments()[0].equals(HTTP_QUERY_PARAMS)) {
+        parameters.set((HashMap)invocationOnMock.getArguments()[1]);
+      }
+      return null;
+    }
+  }
+).when(mockMessage).setProperty(anyString(),any(Map.class),any(PropertyScope.class));
   adapterWithUrlUsingConfigAsId();
-  assertThat(restoredParameters.get("state"),equalTo(state));
+  assertThat(parameters.get().get("state"),equalTo(state));
 }
