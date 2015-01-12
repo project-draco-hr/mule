@@ -1,18 +1,30 @@
 {
   if (StringUtils.isBlank(key)) {
-    logger.warn(MessageFactory.createStaticMessage("Detected a lookup attempt with an empty or null key"),new Throwable().fillInStackTrace());
+    logger.warn(createStaticMessage("Detected a lookup attempt with an empty or null key").getMessage(),new Throwable().fillInStackTrace());
     return null;
   }
   if (key.equals(SPRING_APPLICATION_CONTEXT) && applicationContext != null) {
     return applicationContext;
   }
  else {
+    Object object;
     try {
-      return applicationContext.getBean(key);
+      object=applicationContext.getBean(key);
     }
  catch (    NoSuchBeanDefinitionException e) {
-      logger.debug(e);
+      if (logger.isDebugEnabled()) {
+        logger.debug(e.getMessage(),e);
+      }
       return null;
     }
+    if (!applicationContext.isSingleton(key)) {
+      try {
+        getLifecycleManager().applyCompletedPhases(object);
+      }
+ catch (      Exception e) {
+        throw new MuleRuntimeException(createStaticMessage("Could not apply lifecycle into prototype object " + key),e);
+      }
+    }
+    return object;
   }
 }
