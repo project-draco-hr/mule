@@ -1,0 +1,21 @@
+{
+  MuleContext muleContext=mock(MuleContext.class,RETURNS_DEEP_STUBS);
+  SftpConnector sftpConnector=mock(SftpConnector.class,RETURNS_DEEP_STUBS);
+  FlowConstruct flow=mock(FlowConstruct.class);
+  InboundEndpoint endpoint=mock(InboundEndpoint.class);
+  EndpointURI endpointURI=mock(EndpointURI.class);
+  when(sftpConnector.getName()).thenReturn(CONNECTOR_NAME);
+  when(sftpConnector.createSftpClient(endpoint).listFiles()).thenReturn(FILE_NAMES);
+  when(endpoint.getMuleContext()).thenReturn(muleContext);
+  when(endpoint.getEndpointURI()).thenReturn(endpointURI);
+  when(endpoint.getConnector()).thenReturn(sftpConnector);
+  when(endpointURI.getPath()).thenReturn(ENDPOINT_URI_PATH);
+  lockProvider=spy(new SingleServerLockProvider());
+  lockFactory=new MuleLockFactory();
+  lockFactory.setMuleContext(muleContext);
+  lockFactory.setLockProvider(lockProvider);
+  lockFactory.initialise();
+  when(muleContext.getLockFactory()).thenReturn(lockFactory);
+  receiver=new TestSftpMessageReceiver(sftpConnector,flow,endpoint);
+  receiver.doInitialise();
+}
