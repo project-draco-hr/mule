@@ -1,0 +1,19 @@
+{
+  List<ParameterGroup> groups=new LinkedList<>();
+  for (  Field field : getGroupParameterFields(extensionType)) {
+    Set<ParameterConstruct> parameters=declareSingleParameters(field.getType(),configuration.with());
+    if (!parameters.isEmpty()) {
+      ParameterGroup group=new ParameterGroup(field.getType(),getSetter(extensionType,field.getName(),field.getType()));
+      groups.add(group);
+      for (      ParameterConstruct construct : parameters) {
+        ParameterDeclaration parameter=construct.getDeclaration();
+        group.addParameter(construct.getDeclaration().getName(),getSetter(field.getType(),parameter.getName(),parameter.getType().getRawType()));
+      }
+      List<ParameterGroup> childGroups=declareConfigurationParametersGroups(field.getType(),configuration);
+      if (!CollectionUtils.isEmpty(childGroups)) {
+        group.addCapability(new ParameterGroupCapability(childGroups));
+      }
+    }
+  }
+  return groups;
+}

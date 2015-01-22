@@ -1,0 +1,37 @@
+{
+  String[] paramNames=getParamNames(method);
+  if (ArrayUtils.isEmpty(paramNames)) {
+    return ImmutableList.of();
+  }
+  DataType[] parameterTypes=IntrospectionUtils.getMethodArgumentTypes(method);
+  Annotation[][] parameterAnnotations=method.getParameterAnnotations();
+  List<ParameterDescriptor> parameters=new ArrayList<>(paramNames.length);
+  for (int i=0; i < paramNames.length; i++) {
+    checkParametrizable(parameterTypes[i]);
+    DataType dataType=parameterTypes[i];
+    ParameterDescriptor parameter=new ParameterDescriptor();
+    parameter.setName(paramNames[i]);
+    parameter.setType(dataType);
+    Map<Class<? extends Annotation>,Annotation> annotations=parseAnnotations(parameterAnnotations[i]);
+    Optional optional=(Optional)annotations.get(Optional.class);
+    if (optional != null) {
+      parameter.setRequired(false);
+      parameter.setDefaultValue(getDefaultValue(optional,dataType));
+    }
+ else {
+      parameter.setRequired(true);
+    }
+    Payload payload=(Payload)annotations.get(Payload.class);
+    if (payload != null) {
+      parameter.setRequired(false);
+      parameter.setDefaultValue("#[payload]");
+      parameter.setHidden(true);
+    }
+    RestrictedTo typeRestriction=(RestrictedTo)annotations.get(RestrictedTo.class);
+    if (typeRestriction != null) {
+      parameter.setTypeRestriction(typeRestriction.value());
+    }
+    parameters.add(parameter);
+  }
+  return parameters;
+}

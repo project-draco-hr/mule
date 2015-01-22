@@ -1,0 +1,24 @@
+{
+  ObjectBuilder builder=new DefaultObjectBuilder(declaringClass);
+  for (  Map.Entry<Method,DataType> entry : IntrospectionUtils.getSettersDataTypes(declaringClass).entrySet()) {
+    Method setter=entry.getKey();
+    if (IntrospectionUtils.isIgnored(setter)) {
+      continue;
+    }
+    String parameterName=NameUtils.getFieldNameFromSetter(setter.getName());
+    DataType dataType=entry.getValue();
+    ValueResolver resolver=getResolverFromAttribute(element,parameterName,dataType,null);
+    if (resolver == null) {
+      parameterName=hyphenize(parameterName);
+      ElementDescriptor childElement=element.getChildByName(parameterName);
+      if (childElement != null) {
+        ObjectBuilder childBuilder=recursePojoProperties(dataType.getRawType(),childElement);
+        resolver=new ObjectBuilderValueResolver(childBuilder);
+      }
+    }
+    if (resolver != null) {
+      builder.addPropertyResolver(setter,resolver);
+    }
+  }
+  return builder;
+}

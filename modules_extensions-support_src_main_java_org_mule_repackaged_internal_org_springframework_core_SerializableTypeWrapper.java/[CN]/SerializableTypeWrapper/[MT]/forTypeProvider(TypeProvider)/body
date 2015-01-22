@@ -1,0 +1,21 @@
+{
+  checkArgument(provider != null,"Provider must not be null");
+  if (provider.getType() instanceof Serializable || provider.getType() == null) {
+    return provider.getType();
+  }
+  Type cached=cache.get(provider.getType());
+  if (cached != null) {
+    return cached;
+  }
+  for (  Class<?> type : SUPPORTED_SERIALIZABLE_TYPES) {
+    if (type.isAssignableFrom(provider.getType().getClass())) {
+      ClassLoader classLoader=provider.getClass().getClassLoader();
+      Class<?>[] interfaces=new Class<?>[]{type,SerializableTypeProxy.class,Serializable.class};
+      InvocationHandler handler=new TypeProxyInvocationHandler(provider);
+      cached=(Type)Proxy.newProxyInstance(classLoader,interfaces,handler);
+      cache.put(provider.getType(),cached);
+      return cached;
+    }
+  }
+  throw new IllegalArgumentException("Unsupported Type class " + provider.getType().getClass().getName());
+}

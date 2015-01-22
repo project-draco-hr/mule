@@ -1,0 +1,20 @@
+{
+  List<ParameterGroup> groups=new LinkedList<>();
+  for (  Field field : getGroupParameterFields(actingClass)) {
+    Set<ParameterConstruct> parameters=declareSingleParameters(field.getType(),operation.with());
+    if (!parameters.isEmpty()) {
+      ParameterGroup group=new ParameterGroup(field.getType(),getSetter(actingClass,field.getName(),field.getType()));
+      groups.add(group);
+      for (      ParameterConstruct construct : parameters) {
+        construct.withCapability(new ImplicitArgumentCapability());
+        ParameterDeclaration parameter=construct.getDeclaration();
+        group.addParameter(construct.getDeclaration().getName(),getSetter(field.getType(),parameter.getName(),parameter.getType().getRawType()));
+      }
+      List<ParameterGroup> childGroups=declareOperationParameterGroups(field.getType(),operation);
+      if (!CollectionUtils.isEmpty(childGroups)) {
+        group.addCapability(new ParameterGroupCapability(childGroups));
+      }
+    }
+  }
+  return groups;
+}

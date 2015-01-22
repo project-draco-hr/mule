@@ -1,0 +1,15 @@
+{
+  Preconditions.checkArgument(initialCapacity >= 0,"Initial capacity must not be negative");
+  Preconditions.checkArgument(loadFactor > 0f,"Load factor must be positive");
+  Preconditions.checkArgument(concurrencyLevel > 0,"Concurrency level must be positive");
+  Preconditions.checkArgument(referenceType != null,"Reference type must not be null");
+  this.loadFactor=loadFactor;
+  this.shift=calculateShift(concurrencyLevel,MAXIMUM_CONCURRENCY_LEVEL);
+  int size=1 << this.shift;
+  this.referenceType=referenceType;
+  int roundedUpSegmentCapacity=(int)((initialCapacity + size - 1L) / size);
+  this.segments=(Segment[])Array.newInstance(Segment.class,size);
+  for (int i=0; i < this.segments.length; i++) {
+    this.segments[i]=new Segment(roundedUpSegmentCapacity);
+  }
+}

@@ -1,0 +1,17 @@
+{
+  Class<?>[] parameterTypes;
+  if (operation.getParameters().isEmpty()) {
+    parameterTypes=ArrayUtils.EMPTY_CLASS_ARRAY;
+  }
+ else {
+    parameterTypes=new Class<?>[operation.getParameters().size()];
+    int i=0;
+    for (    Parameter parameter : operation.getParameters()) {
+      parameterTypes[i++]=parameter.getType().getRawType();
+    }
+  }
+  Collection<Method> methods=getAllMethods(declaringClass,withAnnotation(org.mule.extensions.annotations.Operation.class),withModifier(Modifier.PUBLIC),withName(operation.getName()),withParameters(parameterTypes));
+  checkArgument(!methods.isEmpty(),String.format("Could not find method %s in class %s",operation.getName(),declaringClass.getName()));
+  checkArgument(methods.size() == 1,String.format("More than one matching method was found in class %s for operation %s",declaringClass.getName(),operation.getName()));
+  return methods.iterator().next();
+}

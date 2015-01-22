@@ -1,0 +1,25 @@
+{
+  if (isExpression(value,parser)) {
+    return new EvaluateAndTransformValueResolver((String)value,expectedDataType);
+  }
+  if (value != null) {
+    final ValueHolder<ValueResolver> resolverValueHolder=new ValueHolder<>();
+    DataQualifierVisitor visitor=new SimpleTypeDataQualifierVisitor(){
+      @Override protected void onSimpleType(){
+        if (conversionService.canConvert(value.getClass(),expectedDataType.getRawType())) {
+          resolverValueHolder.set(new StaticValueResolver(conversionService.convert(value,expectedDataType.getRawType())));
+        }
+ else {
+          defaultOperation();
+        }
+      }
+      @Override protected void defaultOperation(){
+        resolverValueHolder.set(new CachingValueResolverWrapper(new RegistryLookupValueResolver(value.toString())));
+      }
+    }
+;
+    expectedDataType.getQualifier().accept(visitor);
+    return resolverValueHolder.get();
+  }
+  return null;
+}
