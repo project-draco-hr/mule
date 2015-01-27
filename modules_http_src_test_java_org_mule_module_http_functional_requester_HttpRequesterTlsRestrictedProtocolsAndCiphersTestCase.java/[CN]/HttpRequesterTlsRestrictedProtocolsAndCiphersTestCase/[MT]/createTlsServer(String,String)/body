@@ -1,0 +1,23 @@
+{
+  SslContextFactory sslContextFactory=new SslContextFactory();
+  sslContextFactory.setKeyStorePath(FileUtils.getResourcePath("serverKeystore",getClass()));
+  sslContextFactory.setKeyStorePassword("mulepassword");
+  sslContextFactory.setKeyManagerPassword("mulepassword");
+  sslContextFactory.addExcludeCipherSuites(disabledCipherSuite);
+  sslContextFactory.addExcludeProtocols(disabledProtocol);
+  Server server=new Server();
+  ServerConnector connector=new ServerConnector(server,sslContextFactory);
+  connector.setPort(httpsPort.getNumber());
+  server.addConnector(connector);
+  server.setHandler(new AbstractHandler(){
+    @Override public void handle(    String target,    Request baseRequest,    HttpServletRequest request,    HttpServletResponse response) throws IOException, ServletException {
+      body=IOUtils.toString(baseRequest.getInputStream());
+      response.setContentType("text/html");
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.getWriter().print(TEST_MESSAGE);
+      baseRequest.setHandled(true);
+    }
+  }
+);
+  return server;
+}
