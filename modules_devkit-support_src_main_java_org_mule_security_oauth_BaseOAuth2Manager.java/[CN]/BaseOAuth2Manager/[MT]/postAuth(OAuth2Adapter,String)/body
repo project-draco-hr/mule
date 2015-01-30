@@ -3,6 +3,7 @@
     adapter.postAuth();
   }
  catch (  Exception e) {
+    boolean tokenRefreshed=false;
     if (accessTokenId != null) {
       for (      Class<? extends Exception> clazz : this.refreshAccessTokenOn()) {
         if (clazz.isAssignableFrom(e.getClass())) {
@@ -13,6 +14,7 @@
           try {
             this.refreshTokenManager.refreshToken(adapter,accessTokenId);
             adapter.postAuth();
+            tokenRefreshed=true;
           }
  catch (          Exception re) {
             logger.error(String.format("Could not refresh access token %s on adapter of class %s while attempting postAuth(). Will throw the original exception",accessTokenId,adapter.getClass().getCanonicalName()));
@@ -21,6 +23,8 @@
         }
       }
     }
-    throw e;
+    if (!tokenRefreshed) {
+      throw e;
+    }
   }
 }
