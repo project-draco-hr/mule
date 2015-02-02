@@ -8,9 +8,14 @@
     }
     setMapPayloadWithRefreshTokenRequestParameters(muleEvent,userRefreshToken);
     final MuleEvent refreshTokenResponse=invokeTokenUrl(muleEvent);
-    processTokenUrlResponse(refreshTokenResponse,null,resourceOwnerOAuthContext);
+    logResourceOwnerOAuthContextBeforeUpdate(resourceOwnerOAuthContext);
+    TokenResponseProcessor tokenResponseProcessor=processTokenUrlResponse(refreshTokenResponse);
+    updateResourceOwnerState(resourceOwnerOAuthContext,null,tokenResponseProcessor);
   }
- catch (  Exception e) {
+ catch (  TokenNotFoundException e) {
+    throw new MuleRuntimeException(CoreMessages.createStaticMessage("Access token or refresh token were not found from the refresh token oauth call"),e);
+  }
+catch (  Exception e) {
     throw new MuleRuntimeException(e);
   }
 }

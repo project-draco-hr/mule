@@ -1,7 +1,13 @@
 {
   final DefaultMuleEvent accessTokenEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),getMuleContext()),MessageExchangePattern.REQUEST_RESPONSE,new Flow("test",getMuleContext()));
   setMapPayloadWithTokenRequestParameters(accessTokenEvent);
-  final MuleEvent response=invokeTokenUrl(accessTokenEvent);
+  final MuleEvent response;
+  try {
+    response=invokeTokenUrl(accessTokenEvent);
+  }
+ catch (  TokenUrlResponseException e) {
+    throw new DefaultMuleException(e);
+  }
   final TokenResponseProcessor tokenResponseProcessor=TokenResponseProcessor.createClientCredentialsProcessor(tokenResponseConfiguration,getMuleContext().getExpressionManager());
   tokenResponseProcessor.process(response);
   final ResourceOwnerOAuthContext defaultUserState=tokenManager.getConfigOAuthContext().getContextForResourceOwner(ResourceOwnerOAuthContext.DEFAULT_RESOURCE_OWNER_ID);
