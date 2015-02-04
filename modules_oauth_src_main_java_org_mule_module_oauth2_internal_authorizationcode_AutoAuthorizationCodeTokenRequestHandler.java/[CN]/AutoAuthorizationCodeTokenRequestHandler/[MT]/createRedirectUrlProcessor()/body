@@ -25,21 +25,21 @@
       }
  catch (      NoAuthorizationCodeException e) {
         logger.error("Could not extract authorization code from OAuth provider HTTP request done to the redirect URL");
-        logMessageContent(event);
+        muleEventLogger.logContent(event);
         authorizationStatus=NO_AUTHORIZATION_CODE_STATUS;
         statusCodeToReturn=BAD_REQUEST.getStatusCode();
         responseMessage="Failure retrieving access token.\n OAuth Server uri from callback: " + event.getMessage().getInboundProperty(HTTP_REQUEST_URI);
       }
 catch (      TokenUrlResponseException e) {
         logger.error((String.format("HTTP response from token URL %s returned a failure status code",getTokenUrl())));
-        logMessageContent(e.getTokenUrlResponse());
+        muleEventLogger.logContent(e.getTokenUrlResponse());
         authorizationStatus=TOKEN_URL_CALL_FAILED_STATUS;
         statusCodeToReturn=INTERNAL_SERVER_ERROR.getStatusCode();
         responseMessage=String.format("Failure calling token url %s. Exception message is %s",getTokenUrl(),e.getMessage());
       }
 catch (      TokenNotFoundException e) {
         logger.error(String.format("Could not extract access token or refresh token from token URL. Access token is %s, Refresh token is %s",e.getTokenResponseProcessor().getAccessToken(),e.getTokenResponseProcessor().getRefreshToken()));
-        logMessageContent(e.getTokenUrlResponse());
+        muleEventLogger.logContent(e.getTokenUrlResponse());
         authorizationStatus=TOKEN_NOT_FOUND_STATUS;
         statusCodeToReturn=INTERNAL_SERVER_ERROR.getStatusCode();
         responseMessage="Failed getting access token or refresh token from token URL response. See logs for details.";
