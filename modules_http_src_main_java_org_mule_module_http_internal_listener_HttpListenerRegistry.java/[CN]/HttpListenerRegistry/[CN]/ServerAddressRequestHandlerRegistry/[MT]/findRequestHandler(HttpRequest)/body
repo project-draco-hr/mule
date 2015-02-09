@@ -2,18 +2,26 @@
   final String path=normalizePathWithSpacesOrEncodedSpaces(request.getPath());
   Preconditions.checkArgument(path.startsWith(SLASH),"path parameter must start with /");
   Stack<PathMap> foundPaths=findPossibleRequestHandlersFromCache(path);
+  boolean methodNotAllowed=false;
   RequestHandlerMatcherPair requestHandlerMatcherPair=null;
   while (!foundPaths.empty()) {
     final PathMap pathMap=foundPaths.pop();
-    requestHandlerMatcherPair=findRequestHandlerMatcherPair(pathMap.getRequestHandlerMatcherPairs(),request);
+    List<RequestHandlerMatcherPair> requestHandlerMatcherPairs=pathMap.getRequestHandlerMatcherPairs();
+    requestHandlerMatcherPair=findRequestHandlerMatcherPair(requestHandlerMatcherPairs,request);
     if (requestHandlerMatcherPair != null) {
       break;
+    }
+    if (!requestHandlerMatcherPairs.isEmpty()) {
+      methodNotAllowed=true;
     }
   }
   if (requestHandlerMatcherPair == null) {
     if (logger.isInfoEnabled()) {
       logger.info("No listener found for request: " + getMethodAndPath(request.getMethod(),request.getPath()));
       logger.info("Available listeners are: [{}]",Joiner.on(", ").join(this.paths));
+    }
+    if (methodNotAllowed) {
+      return NoMethodRequestHandler.getInstance();
     }
     return NoListenerRequestHandler.getInstance();
   }
