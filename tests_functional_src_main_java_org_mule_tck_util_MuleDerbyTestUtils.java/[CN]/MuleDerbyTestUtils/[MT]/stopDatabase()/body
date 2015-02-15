@@ -1,14 +1,13 @@
 {
   try {
-    ClassUtils.instanciateClass(DERBY_DRIVER_CLASS);
-    DriverManager.getConnection("jdbc:derby:;shutdown=true");
+    loadDriverAndExecuteConnection("jdbc:derby:;shutdown=true",null);
   }
- catch (  SQLException sqlex) {
-    if (!"XJ015".equals(sqlex.getSQLState())) {
-      throw sqlex;
+ catch (  Exception ex) {
+    if (!isXJ015Error(ex)) {
+      if (ex instanceof SQLException) {
+        throw (SQLException)ex;
+      }
+      throw new RuntimeException(ex);
     }
-  }
-catch (  Exception ex) {
-    throw new RuntimeException(ex);
   }
 }
