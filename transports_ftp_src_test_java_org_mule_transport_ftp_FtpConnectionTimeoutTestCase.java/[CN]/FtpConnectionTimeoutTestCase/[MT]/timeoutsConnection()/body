@@ -1,0 +1,15 @@
+{
+  CountDownLatch latch=new CountDownLatch(1);
+  Server server=new BlockingFtpServer(ftpPort.getNumber(),latch);
+  try {
+    MuleClient client=muleContext.getClient();
+    MuleMessage result=client.send("vm://in","somethingFTPFail",null);
+    assertThat(result,is(not(nullValue())));
+    assertThat(result.getExceptionPayload(),is(not(nullValue())));
+    assertThat(result.getPayload(),instanceOf(NullPayload.class));
+  }
+  finally {
+    latch.countDown();
+    server.stop();
+  }
+}
