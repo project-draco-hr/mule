@@ -1,15 +1,16 @@
 {
-  CountDownLatch latch=new CountDownLatch(1);
-  Server server=new BlockingFtpServer(ftpPort.getNumber(),latch);
+  ServerSocket serverSocket=new ServerSocket(ftpPort.getNumber(),1);
+  Socket socket=new Socket();
+  socket.connect(serverSocket.getLocalSocketAddress());
   try {
     MuleClient client=muleContext.getClient();
     MuleMessage result=client.send("vm://in","somethingFTPFail",null);
     assertThat(result,is(not(nullValue())));
-    assertThat(result.getExceptionPayload(),is(not(nullValue())));
+    assertThat(result.getExceptionPayload().getException().getCause().getCause(),instanceOf(SocketTimeoutException.class));
     assertThat(result.getPayload(),instanceOf(NullPayload.class));
   }
   finally {
-    latch.countDown();
-    server.stop();
+    socket.close();
+    serverSocket.close();
   }
 }
