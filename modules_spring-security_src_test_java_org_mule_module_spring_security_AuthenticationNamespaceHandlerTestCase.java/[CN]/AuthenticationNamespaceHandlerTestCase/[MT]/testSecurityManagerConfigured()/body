@@ -1,13 +1,8 @@
 {
-  MuleSecurityManager securityManager=(MuleSecurityManager)muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_SECURITY_MANAGER);
+  MuleSecurityManager securityManager=muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_SECURITY_MANAGER);
   assertNotNull(securityManager);
   Collection<SecurityProvider> providers=securityManager.getProviders();
   assertEquals(2,providers.size());
-  Iterator<SecurityProvider> providersIterator=providers.iterator();
-  SecurityProvider provider=providersIterator.next();
-  assertEquals(SpringProviderAdapter.class,provider.getClass());
-  assertEquals(UserAndPasswordAuthenticationProvider.class,((SpringProviderAdapter)provider).getAuthenticationProvider().getClass());
-  provider=providersIterator.next();
-  assertEquals(SpringProviderAdapter.class,provider.getClass());
-  assertEquals(PreAuthenticatedAuthenticationProvider.class,((SpringProviderAdapter)provider).getAuthenticationProvider().getClass());
+  assertThat(containsSecurityProvider(providers,UserAndPasswordAuthenticationProvider.class),is(true));
+  assertThat(containsSecurityProvider(providers,PreAuthenticatedAuthenticationProvider.class),is(true));
 }
