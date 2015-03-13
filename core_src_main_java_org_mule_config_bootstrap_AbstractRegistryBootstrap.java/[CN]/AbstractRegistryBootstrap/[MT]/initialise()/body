@@ -1,0 +1,51 @@
+{
+  List<Properties> bootstraps;
+  try {
+    bootstraps=discoverer.discover();
+  }
+ catch (  BootstrapException e) {
+    throw new InitialisationException(e,this);
+  }
+  int objectCounter=1;
+  int transformerCounter=1;
+  Properties transformers=new OrderedProperties();
+  Properties namedObjects=new OrderedProperties();
+  Properties unnamedObjects=new OrderedProperties();
+  Map<String,String> singleTransactionFactories=new LinkedHashMap<String,String>();
+  for (  Properties bootstrap : bootstraps) {
+    for (    Map.Entry entry : bootstrap.entrySet()) {
+      final String key=(String)entry.getKey();
+      if (key.contains(OBJECT_KEY)) {
+        String newKey=key.substring(0,key.lastIndexOf(".")) + objectCounter++;
+        unnamedObjects.put(newKey,entry.getValue());
+      }
+ else       if (key.contains(TRANSFORMER_KEY)) {
+        String newKey=key.substring(0,key.lastIndexOf(".")) + transformerCounter++;
+        transformers.put(newKey,entry.getValue());
+      }
+ else       if (key.contains(SINGLE_TX)) {
+        if (!key.contains(".transaction.resource")) {
+          String transactionResourceKey=key.replace(".transaction.factory",".transaction.resource");
+          String transactionResource=bootstrap.getProperty(transactionResourceKey);
+          if (transactionResource == null) {
+            throw new InitialisationException(CoreMessages.createStaticMessage(String.format("Theres no transaction resource specified for transaction factory %s",key)),this);
+          }
+          singleTransactionFactories.put((String)entry.getValue(),transactionResource);
+        }
+      }
+ else {
+        namedObjects.put(key,entry.getValue());
+      }
+    }
+  }
+  try {
+    registerUnnamedObjects(unnamedObjects);
+    registerTransformers();
+    registerTransformers(transformers);
+    registerObjects(namedObjects);
+    registerTransactionFactories(singleTransactionFactories,muleContext);
+  }
+ catch (  Exception e1) {
+    throw new InitialisationException(e1,this);
+  }
+}
