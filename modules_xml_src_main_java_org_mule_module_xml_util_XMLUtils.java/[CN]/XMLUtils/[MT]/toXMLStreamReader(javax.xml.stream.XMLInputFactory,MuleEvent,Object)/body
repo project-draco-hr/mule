@@ -1,0 +1,55 @@
+{
+  if (obj instanceof javax.xml.stream.XMLStreamReader) {
+    return (javax.xml.stream.XMLStreamReader)obj;
+  }
+ else   if (obj instanceof org.mule.module.xml.stax.StaxSource) {
+    return ((org.mule.module.xml.stax.StaxSource)obj).getXMLStreamReader();
+  }
+ else   if (obj instanceof javax.xml.transform.Source) {
+    return factory.createXMLStreamReader((javax.xml.transform.Source)obj);
+  }
+ else   if (obj instanceof org.xml.sax.InputSource) {
+    return factory.createXMLStreamReader(((org.xml.sax.InputSource)obj).getByteStream());
+  }
+ else   if (obj instanceof org.w3c.dom.Document) {
+    return factory.createXMLStreamReader(new javax.xml.transform.dom.DOMSource((org.w3c.dom.Document)obj));
+  }
+ else   if (obj instanceof org.dom4j.Document) {
+    return factory.createXMLStreamReader(new org.dom4j.io.DocumentSource((org.dom4j.Document)obj));
+  }
+ else   if (obj instanceof java.io.InputStream) {
+    final InputStream is=(java.io.InputStream)obj;
+    XMLStreamReader xsr=factory.createXMLStreamReader(is);
+    return new DelegateXMLStreamReader(xsr){
+      @Override public void close() throws XMLStreamException {
+        super.close();
+        try {
+          is.close();
+        }
+ catch (        IOException e) {
+          throw new XMLStreamException(e);
+        }
+      }
+    }
+;
+  }
+ else   if (obj instanceof String) {
+    return factory.createXMLStreamReader(new StringReader((String)obj));
+  }
+ else   if (obj instanceof byte[]) {
+    return factory.createXMLStreamReader(new ByteArrayInputStream((byte[])obj));
+  }
+ else   if (obj instanceof OutputHandler) {
+    ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+    try {
+      ((OutputHandler)obj).write(event,outputStream);
+    }
+ catch (    IOException e) {
+      throw new XMLStreamException(e);
+    }
+    return factory.createXMLStreamReader(new ByteArrayInputStream(outputStream.toByteArray()));
+  }
+ else {
+    return null;
+  }
+}
