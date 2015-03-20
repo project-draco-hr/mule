@@ -1,8 +1,18 @@
 {
   extensionManager=new DefaultExtensionManager();
-  Describer[] describers=getManagedDescribers();
+  Describer[] describers=getDescribers();
   if (ArrayUtils.isEmpty(describers)) {
-    extensionManager.discoverExtensions(muleContext.getExecutionClassLoader());
+    Class<?>[] annotatedClasses=getAnnotatedExtensionClasses();
+    if (!ArrayUtils.isEmpty(annotatedClasses)) {
+      describers=new Describer[annotatedClasses.length];
+      int i=0;
+      for (      Class<?> annotatedClass : annotatedClasses) {
+        describers[i++]=new AnnotationsBasedDescriber(annotatedClass);
+      }
+    }
+  }
+  if (ArrayUtils.isEmpty(describers)) {
+    extensionManager.discoverExtensions(getClass().getClassLoader());
   }
  else {
     loadExtensionsFromDescribers(extensionManager,describers);

@@ -1,0 +1,25 @@
+{
+  final Class<?>[] parameterTypes=method.getParameterTypes();
+  if (isEmpty(parameterTypes)) {
+    argumentResolvers=new ArgumentResolver[]{};
+  }
+  argumentResolvers=new ArgumentResolver[parameterTypes.length];
+  Annotation[][] parameterAnnotations=operationMethod.getParameterAnnotations();
+  final String[] paramNames=MuleExtensionAnnotationParser.getParamNames(operationMethod);
+  for (int i=0; i < parameterTypes.length; i++) {
+    final Class<?> parameterType=parameterTypes[i];
+    Map<Class<? extends Annotation>,Annotation> annotations=toMap(parameterAnnotations[i]);
+    if (MuleEvent.class.isAssignableFrom(parameterType)) {
+      argumentResolvers[i]=new EventArgumentResolver();
+    }
+ else     if (MuleMessage.class.isAssignableFrom(parameterType)) {
+      argumentResolvers[i]=new MessageArgumentResolver();
+    }
+ else     if (annotations.get(ParameterGroup.class) != null) {
+      argumentResolvers[i]=new ParameterGroupArgumentResolver(parameterType);
+    }
+ else {
+      argumentResolvers[i]=new ByParameterNameArgumentResolver<>(paramNames[i]);
+    }
+  }
+}
