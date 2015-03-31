@@ -1,24 +1,9 @@
 {
-  List<MuleCoreExtension> unresolvedExtensions=new LinkedList<MuleCoreExtension>(coreExtensions);
-  List<MuleCoreExtension> resolvedExtensions=new LinkedList<MuleCoreExtension>();
-  boolean continueResolution=true;
-  while (continueResolution) {
-    int initialResolvedCount=resolvedExtensions.size();
-    List<MuleCoreExtension> pendingUnresolvedExtensions=new LinkedList<MuleCoreExtension>();
-    for (    MuleCoreExtension muleCoreExtension : unresolvedExtensions) {
-      boolean resolvedDependency=isResolvedDependency(resolvedExtensions,muleCoreExtension);
-      if (resolvedDependency) {
-        resolvedExtensions.add(muleCoreExtension);
-      }
- else {
-        pendingUnresolvedExtensions.add(muleCoreExtension);
-      }
-    }
-    unresolvedExtensions=pendingUnresolvedExtensions;
-    continueResolution=resolvedExtensions.size() > initialResolvedCount;
-  }
-  if (unresolvedExtensions.size() != 0) {
-    throw new UnresolveableDependencyException("Unable to resolve core extension dependencies: " + unresolvedExtensions);
-  }
+  List<MuleCoreExtension> sortedCoreExtensions=new LinkedList<>(coreExtensions);
+  sortCoreExtensionsByName(sortedCoreExtensions);
+  List<MuleCoreExtension> coreExtensionAwareExtensions=findCoreExtensionAwareExtensions(sortedCoreExtensions);
+  sortedCoreExtensions.removeAll(coreExtensionAwareExtensions);
+  List<MuleCoreExtension> resolvedExtensions=resolveCoreExtensionDependenciesOrder(sortedCoreExtensions);
+  resolvedExtensions.addAll(coreExtensionAwareExtensions);
   return resolvedExtensions;
 }
