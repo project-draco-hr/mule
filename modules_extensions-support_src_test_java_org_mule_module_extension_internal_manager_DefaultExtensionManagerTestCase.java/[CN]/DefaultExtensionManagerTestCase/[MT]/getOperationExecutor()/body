@@ -1,0 +1,15 @@
+{
+  discover();
+  final Object configInstance=new Object();
+  extensionsManager.registerConfigurationInstance(extension1Configuration,EXTENSION1_CONFIG_INSTANCE_NAME,configInstance);
+  final Object executorDelegate=new Object();
+  DelegatingOperationExecutor executor=mock(DelegatingOperationExecutor.class);
+  when(executor.getExecutorDelegate()).thenReturn(executorDelegate);
+  when(extension1Operation.getExecutor(configInstance)).thenReturn(executor);
+  OperationExecutor managedExecutor=extensionsManager.getOperationExecutor(extension1Operation,configInstance);
+  assertThat(managedExecutor,is(sameInstance((OperationExecutor)executor)));
+  managedExecutor=extensionsManager.getOperationExecutor(extension1Operation,configInstance);
+  assertThat(managedExecutor,is(sameInstance((OperationExecutor)executor)));
+  verify(muleContext.getRegistry()).registerObject(anyString(),same(executorDelegate));
+  verify(extension1Operation.getExecutor(configInstance));
+}
