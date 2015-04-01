@@ -1,20 +1,21 @@
 {
+  boolean customSource=false;
+  Object oldPayload=null;
+  HttpEntity entity;
+  if (!StringUtils.isEmpty(requester.getSource()) && !(DEFAULT_PAYLOAD_EXPRESSION.equals(requester.getSource()))) {
+    Object newPayload=muleContext.getExpressionManager().evaluate(requester.getSource(),muleEvent);
+    oldPayload=muleEvent.getMessage().getPayload();
+    muleEvent.getMessage().setPayload(newPayload);
+    customSource=true;
+  }
   if (isEmptyBody(muleEvent,resolvedMethod)) {
-    return new EmptyHttpEntity();
+    entity=new EmptyHttpEntity();
   }
  else {
-    boolean customSource=false;
-    Object oldPayload=null;
-    if (!StringUtils.isEmpty(requester.getSource()) && !(DefaultHttpRequester.DEFAULT_PAYLOAD_EXPRESSION.equals(requester.getSource()))) {
-      Object newPayload=muleContext.getExpressionManager().evaluate(requester.getSource(),muleEvent);
-      oldPayload=muleEvent.getMessage().getPayload();
-      muleEvent.getMessage().setPayload(newPayload);
-      customSource=true;
-    }
-    HttpEntity entity=createRequestEntityFromPayload(requestBuilder,muleEvent);
-    if (customSource) {
-      muleEvent.getMessage().setPayload(oldPayload);
-    }
-    return entity;
+    entity=createRequestEntityFromPayload(requestBuilder,muleEvent);
   }
+  if (customSource) {
+    muleEvent.getMessage().setPayload(oldPayload);
+  }
+  return entity;
 }
