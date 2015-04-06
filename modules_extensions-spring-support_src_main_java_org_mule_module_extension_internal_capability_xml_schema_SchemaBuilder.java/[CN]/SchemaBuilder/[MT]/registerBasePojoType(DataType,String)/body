@@ -10,24 +10,23 @@
   complexContent.setExtension(extension);
   final ExplicitGroup all=new ExplicitGroup();
   extension.setSequence(all);
-  for (  Map.Entry<Method,DataType> entry : IntrospectionUtils.getSettersDataTypes(type.getRawType()).entrySet()) {
-    final Method method=entry.getKey();
-    if (isIgnored(method)) {
+  for (  Field field : IntrospectionUtils.getParameterFields(type.getRawType())) {
+    if (isIgnored(field)) {
       continue;
     }
-    final String name=NameUtils.getFieldNameFromSetter(method.getName());
-    final DataType methodType=entry.getValue();
-    final boolean required=isRequired(method);
-    final boolean dynamic=isDynamic(method);
-    methodType.getQualifier().accept(new BaseDataQualifierVisitor(){
+    final String name=field.getName();
+    final DataType fieldType=getFieldDataType(field);
+    final boolean required=isRequired(field);
+    final boolean dynamic=isDynamic(field);
+    fieldType.getQualifier().accept(new BaseDataQualifierVisitor(){
       @Override public void onList(){
-        generateCollectionElement(all,name,EMPTY,methodType,required);
+        generateCollectionElement(all,name,EMPTY,fieldType,required);
       }
       @Override public void onPojo(){
-        registerComplexTypeChildElement(all,name,EMPTY,methodType,false);
+        registerComplexTypeChildElement(all,name,EMPTY,fieldType,false);
       }
       @Override protected void defaultOperation(){
-        Attribute attribute=createAttribute(name,methodType,required,dynamic);
+        Attribute attribute=createAttribute(name,fieldType,required,dynamic);
         extension.getAttributeOrAttributeGroup().add(attribute);
       }
     }

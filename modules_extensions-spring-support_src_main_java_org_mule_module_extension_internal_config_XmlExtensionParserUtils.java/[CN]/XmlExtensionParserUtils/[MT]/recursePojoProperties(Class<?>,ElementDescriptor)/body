@@ -1,12 +1,11 @@
 {
   ObjectBuilder builder=new DefaultObjectBuilder(declaringClass);
-  for (  Map.Entry<Method,DataType> entry : IntrospectionUtils.getSettersDataTypes(declaringClass).entrySet()) {
-    Method setter=entry.getKey();
-    if (IntrospectionUtils.isIgnored(setter)) {
+  for (  Field field : getParameterFields(declaringClass)) {
+    if (IntrospectionUtils.isIgnored(field)) {
       continue;
     }
-    String parameterName=NameUtils.getFieldNameFromSetter(setter.getName());
-    DataType dataType=entry.getValue();
+    String parameterName=field.getName();
+    DataType dataType=getFieldDataType(field);
     ValueResolver resolver=getResolverFromAttribute(element,parameterName,dataType,null);
     if (resolver == null) {
       parameterName=hyphenize(parameterName);
@@ -17,7 +16,7 @@
       }
     }
     if (resolver != null) {
-      builder.addPropertyResolver(setter,resolver);
+      builder.addPropertyResolver(field,resolver);
     }
   }
   return builder;

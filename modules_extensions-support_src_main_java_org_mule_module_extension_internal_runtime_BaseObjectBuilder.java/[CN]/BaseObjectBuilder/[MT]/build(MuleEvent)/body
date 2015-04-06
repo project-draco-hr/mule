@@ -1,10 +1,14 @@
 {
   T object=instantiateObject();
-  for (  Map.Entry<Method,ValueResolver<Object>> entry : resolvers.entrySet()) {
-    ReflectionUtils.invokeMethod(entry.getKey(),object,entry.getValue().resolve(event));
+  for (  Map.Entry<Field,ValueResolver<Object>> entry : resolvers.entrySet()) {
+    Field field=entry.getKey();
+    field.setAccessible(true);
+    ReflectionUtils.setField(field,object,entry.getValue().resolve(event));
   }
-  for (  Map.Entry<Method,Object> entry : values.entrySet()) {
-    ReflectionUtils.invokeMethod(entry.getKey(),object,entry.getValue());
+  for (  Map.Entry<Field,Object> entry : values.entrySet()) {
+    Field field=entry.getKey();
+    field.setAccessible(true);
+    ReflectionUtils.setField(field,object,entry.getValue());
   }
   return object;
 }
