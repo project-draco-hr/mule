@@ -2,9 +2,9 @@
   return new MessageProcessor(){
     private HttpRequestOptions requestOptions;
     @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      final MuleMessage responseMessage=muleContext.getClient().send(serviceAddress,event.getMessage(),getRequestOptions());
-      event.setMessage(responseMessage);
-      return event;
+      ConnectorOperationLocator connectorOperationLocator=muleContext.getRegistry().get(OBJECT_CONNECTOR_MESSAGE_PROCESSOR_LOCATOR);
+      MessageProcessor messageProcessor=connectorOperationLocator.locateConnectorOperation(serviceAddress,getRequestOptions(),REQUEST_RESPONSE);
+      return messageProcessor.process(event);
     }
     private HttpRequestOptions getRequestOptions(){
       if (requestOptions == null) {
