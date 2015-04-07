@@ -3,18 +3,20 @@
   for (  Field field : getParameterFields(extensionType)) {
     Parameter parameter=field.getAnnotation(Parameter.class);
     Optional optional=field.getAnnotation(Optional.class);
+    String parameterName=getParameterName(field,parameter);
     ParameterConstruct parameterConstruct;
     DataType dataType=IntrospectionUtils.getFieldDataType(field);
     if (optional == null) {
-      parameterConstruct=with.requiredParameter(field.getName());
+      parameterConstruct=with.requiredParameter(parameterName);
     }
  else {
-      parameterConstruct=with.optionalParameter(field.getName()).defaultingTo(getDefaultValue(optional,dataType));
+      parameterConstruct=with.optionalParameter(parameterName).defaultingTo(getDefaultValue(optional,dataType));
     }
     parameterConstruct.ofType(dataType);
     if (!parameter.isDynamic()) {
       parameterConstruct.whichIsNotDynamic();
     }
+    parameterConstruct.withCapability(new MemberNameCapability(field.getName()));
     parameters.add(parameterConstruct);
   }
   return parameters.build();
