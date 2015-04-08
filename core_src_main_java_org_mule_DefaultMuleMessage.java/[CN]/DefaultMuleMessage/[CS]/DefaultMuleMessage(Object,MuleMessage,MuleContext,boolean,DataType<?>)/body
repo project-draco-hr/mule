@@ -1,0 +1,26 @@
+{
+  id=previous.getUniqueId();
+  rootId=previous.getMessageRootId();
+  setMuleContext(muleContext);
+  MuleMessageDataTypeWrapper newDataType=createDataTypeWrapper(dataType);
+  if (message instanceof MuleMessage) {
+    MuleMessage payloadMessage=(MuleMessage)message;
+    setPayload(payloadMessage.getPayload(),newDataType);
+    copyMessageProperties(payloadMessage);
+  }
+ else {
+    setPayload(message,newDataType);
+    copyMessagePropertiesContext(previous);
+  }
+  originalPayload=previous.getPayload();
+  setEncoding(previous.getEncoding());
+  if (previous.getExceptionPayload() != null) {
+    setExceptionPayload(previous.getExceptionPayload());
+  }
+  if (previous instanceof DefaultMuleMessage) {
+    setInvocationProperties(((DefaultMuleMessage)previous).properties.invocationMap);
+    setSessionProperties(((DefaultMuleMessage)previous).properties.sessionMap);
+  }
+  copyAttachments(previous);
+  resetAccessControl();
+}
