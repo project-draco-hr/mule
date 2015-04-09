@@ -1,0 +1,10 @@
+{
+  setPayloadMessageProcessor.setValue(PLAIN_TEXT);
+  setPayloadMessageProcessor.setEncoding(ENCODING_EXPRESSION);
+  setPayloadMessageProcessor.initialise();
+  when(expressionManager.isExpression(ENCODING_EXPRESSION)).thenReturn(true);
+  when(expressionManager.evaluate(ENCODING_EXPRESSION,muleEvent)).thenReturn(CUSTOM_ENCODING);
+  setPayloadMessageProcessor.process(muleEvent);
+  verify(muleMessage).setPayload(any(),actualDataType.capture());
+  assertThat(actualDataType.getValue(),DataTypeMatcher.like(String.class,MimeTypes.ANY,CUSTOM_ENCODING));
+}
