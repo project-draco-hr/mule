@@ -1,0 +1,24 @@
+{
+  SecureRandom secureRandom=new SecureRandom();
+  SSLContext sslContext=null;
+  try {
+    sslContext=SSLContext.getInstance("TLS");
+    sslContext.init(null,null,secureRandom);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  AsyncHttpClientConfig config=new AsyncHttpClientConfig.Builder().setConnectTimeout(5000).setSSLContext(sslContext).build();
+  AsyncHttpClient client=new AsyncHttpClient(new GrizzlyAsyncHttpProvider(config),config);
+  long start=System.currentTimeMillis();
+  try {
+    client.executeRequest(client.prepareGet("http://www.google.com").build()).get();
+  }
+ catch (  InterruptedException e) {
+    e.printStackTrace();
+  }
+catch (  ExecutionException e) {
+    e.printStackTrace();
+  }
+  LOGGER.debug("COMPLETE: " + (System.currentTimeMillis() - start) + "ms");
+}
