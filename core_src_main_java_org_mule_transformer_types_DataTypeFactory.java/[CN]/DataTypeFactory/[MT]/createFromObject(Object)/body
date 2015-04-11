@@ -1,29 +1,8 @@
 {
-  Class<?> type=o.getClass();
-  String mime=null;
-  if (o instanceof DataType) {
-    return (DataType<?>)o;
+  if (value instanceof DataType) {
+    return (DataType<?>)value;
   }
- else   if (o instanceof MuleMessage) {
-    MuleMessage mm=(MuleMessage)o;
-    type=mm.getPayload().getClass();
-    mime=mm.getInboundProperty(MuleProperties.CONTENT_TYPE_PROPERTY);
-    if (mime == null) {
-      mime=mm.getInboundProperty("ContentType");
-    }
-  }
- else   if (o instanceof DataHandler) {
-    mime=((DataHandler)o).getContentType();
-  }
- else   if (o instanceof DataSource) {
-    mime=((DataSource)o).getContentType();
-  }
-  if (mime != null) {
-    int i=mime.indexOf(";");
-    mime=(i > -1 ? mime.substring(0,i) : mime);
-  }
- else {
-    mime=MimeTypes.ANY;
-  }
+  Class<?> type=getObjectType(value);
+  String mime=getObjectMimeType(value);
   return create(type,mime);
 }
