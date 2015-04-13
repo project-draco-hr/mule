@@ -1,0 +1,17 @@
+{
+  List<ValidationResult> results=new ArrayList<>(validations.size());
+  for (  NestedProcessor validation : validations) {
+    try {
+      validation.process();
+    }
+ catch (    Exception e) {
+      results.add(error(ExceptionUtils.getRootCause(e).getMessage()));
+    }
+  }
+  MultipleValidationResult result=ImmutableMultipleValidationResult.of(results);
+  if (result.isError() && throwsException) {
+    throw new MultipleValidationException(result,muleEvent);
+  }
+  muleEvent.getMessage().setPayload(result);
+  return muleEvent;
+}
