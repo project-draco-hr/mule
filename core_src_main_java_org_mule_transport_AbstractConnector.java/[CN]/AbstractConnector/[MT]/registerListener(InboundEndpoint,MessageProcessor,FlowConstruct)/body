@@ -1,28 +1,34 @@
 {
-  if (endpoint == null) {
-    throw new IllegalArgumentException("The endpoint cannot be null when registering a listener");
+  connectionLock.lock();
+  try {
+    if (endpoint == null) {
+      throw new IllegalArgumentException("The endpoint cannot be null when registering a listener");
+    }
+    if (messageProcessorChain == null) {
+      throw new IllegalArgumentException("The messageProcessorChain cannot be null when registering a listener");
+    }
+    EndpointURI endpointUri=endpoint.getEndpointURI();
+    if (endpointUri == null) {
+      throw new ConnectorException(CoreMessages.endpointIsNullForListener(),this);
+    }
+    logger.info("Registering listener: " + flowConstruct.getName() + " on endpointUri: "+ endpointUri.toString());
+    if (getReceiver(flowConstruct,endpoint) != null) {
+      throw new ConnectorException(CoreMessages.listenerAlreadyRegistered(endpointUri),this);
+    }
+    MessageReceiver receiver=createReceiver(flowConstruct,endpoint);
+    receiver.setListener(messageProcessorChain);
+    Object receiverKey=getReceiverKey(flowConstruct,endpoint);
+    receiver.setReceiverKey(receiverKey.toString());
+    receiver.initialise();
+    receivers.put(receiverKey,receiver);
+    if (isConnected()) {
+      receiver.connect();
+    }
+    if (isStarted()) {
+      receiver.start();
+    }
   }
-  if (messageProcessorChain == null) {
-    throw new IllegalArgumentException("The messageProcessorChain cannot be null when registering a listener");
-  }
-  EndpointURI endpointUri=endpoint.getEndpointURI();
-  if (endpointUri == null) {
-    throw new ConnectorException(CoreMessages.endpointIsNullForListener(),this);
-  }
-  logger.info("Registering listener: " + flowConstruct.getName() + " on endpointUri: "+ endpointUri.toString());
-  if (getReceiver(flowConstruct,endpoint) != null) {
-    throw new ConnectorException(CoreMessages.listenerAlreadyRegistered(endpointUri),this);
-  }
-  MessageReceiver receiver=createReceiver(flowConstruct,endpoint);
-  receiver.setListener(messageProcessorChain);
-  Object receiverKey=getReceiverKey(flowConstruct,endpoint);
-  receiver.setReceiverKey(receiverKey.toString());
-  receiver.initialise();
-  receivers.put(receiverKey,receiver);
-  if (isConnected()) {
-    receiver.connect();
-  }
-  if (isStarted()) {
-    receiver.start();
+  finally {
+    connectionLock.unlock();
   }
 }
