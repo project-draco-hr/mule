@@ -1,0 +1,28 @@
+{
+  appendAction(outConfigProperties,USERNAME_TOKEN);
+  outConfigProperties.put(USER,username);
+  if (passwordType == TEXT) {
+    outConfigProperties.put(PASSWORD_TYPE,"PasswordText");
+  }
+ else   if (passwordType == DIGEST) {
+    outConfigProperties.put(PASSWORD_TYPE,"PasswordDigest");
+  }
+  List<String> additionalElements=new ArrayList<String>(2);
+  if (addNonce) {
+    additionalElements.add(NONCE_LN);
+  }
+  if (addCreated) {
+    additionalElements.add(CREATED_LN);
+  }
+  if (!additionalElements.isEmpty()) {
+    outConfigProperties.put(ADD_UT_ELEMENTS,StringUtils.join(additionalElements," "));
+  }
+  addPasswordCallbackHandler(outConfigProperties,new WSPasswordCallbackHandler(WSPasswordCallback.USERNAME_TOKEN){
+    @Override public void handle(    WSPasswordCallback passwordCallback){
+      if (passwordCallback.getIdentifier().equals(username)) {
+        passwordCallback.setPassword(password);
+      }
+    }
+  }
+);
+}

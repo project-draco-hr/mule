@@ -1,0 +1,20 @@
+{
+  final TlsContextKeyStoreConfiguration keyStoreConfig=tlsContextFactory.getKeyStoreConfiguration();
+  appendAction(outConfigProperties,SIGNATURE);
+  Properties outSignatureProperties=new Properties();
+  outSignatureProperties.setProperty(WS_CRYPTO_PROVIDER_KEY,Merlin.class.getCanonicalName());
+  outSignatureProperties.setProperty(KEYSTORE_TYPE,keyStoreConfig.getType());
+  outSignatureProperties.setProperty(KEYSTORE_PASSWORD,keyStoreConfig.getPassword());
+  outSignatureProperties.setProperty(KEYSTORE_PRIVATE_PASSWORD,keyStoreConfig.getKeyPassword());
+  outSignatureProperties.setProperty(KEYSTORE_ALIAS,keyStoreConfig.getAlias());
+  outSignatureProperties.setProperty(KEYSTORE_FILE,keyStoreConfig.getPath());
+  outConfigProperties.put(SIG_PROP_REF_ID,WS_SIGNATURE_PROPERTIES_KEY);
+  outConfigProperties.put(WS_SIGNATURE_PROPERTIES_KEY,outSignatureProperties);
+  outConfigProperties.put(SIGNATURE_USER,keyStoreConfig.getAlias());
+  addPasswordCallbackHandler(outConfigProperties,new WSPasswordCallbackHandler(WSPasswordCallback.SIGNATURE){
+    @Override public void handle(    WSPasswordCallback passwordCallback){
+      passwordCallback.setPassword(keyStoreConfig.getKeyPassword());
+    }
+  }
+);
+}
