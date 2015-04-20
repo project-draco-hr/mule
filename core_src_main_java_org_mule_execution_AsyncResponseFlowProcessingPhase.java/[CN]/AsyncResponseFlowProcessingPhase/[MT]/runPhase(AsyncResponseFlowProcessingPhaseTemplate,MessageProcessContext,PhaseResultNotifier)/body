@@ -6,11 +6,13 @@
       final MuleEvent response=transactionTemplate.execute(new ExecutionCallback<MuleEvent>(){
         @Override public MuleEvent process() throws Exception {
           MuleEvent muleEvent=template.getMuleEvent();
+          fireNotification(muleEvent,MESSAGE_RECEIVED);
           muleEvent=template.routeEvent(muleEvent);
           return muleEvent;
         }
       }
 );
+      fireNotification(response,MESSAGE_RESPONSE);
       template.sendResponseToClient(response,createResponseCompletationCallback(phaseResultNotifier,exceptionHandler));
     }
  catch (    final MessagingException e) {

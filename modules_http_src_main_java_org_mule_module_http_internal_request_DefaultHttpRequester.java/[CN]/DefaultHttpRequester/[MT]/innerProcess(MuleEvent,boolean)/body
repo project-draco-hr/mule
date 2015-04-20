@@ -7,7 +7,10 @@
   HttpClient httpClient=requestConfig.getHttpClient();
   HttpResponse response;
   try {
-    response=httpClient.send(builder.build(),resolveResponseTimeout(muleEvent),followRedirects.resolveBooleanValue(muleEvent),authentication);
+    HttpRequest httpRequest=builder.build();
+    notificationHelper.fireNotification(muleEvent.getMessage(),httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_BEGIN);
+    response=httpClient.send(httpRequest,resolveResponseTimeout(muleEvent),followRedirects.resolveBooleanValue(muleEvent),authentication);
+    notificationHelper.fireNotification(muleEvent.getMessage(),httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_END);
   }
  catch (  Exception e) {
     throw new MessagingException(CoreMessages.createStaticMessage("Error sending HTTP request"),muleEvent,e);
