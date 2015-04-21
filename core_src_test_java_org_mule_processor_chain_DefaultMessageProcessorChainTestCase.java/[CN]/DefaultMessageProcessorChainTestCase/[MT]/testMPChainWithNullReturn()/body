@@ -1,19 +1,20 @@
 {
   DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
-  AppendingMP mp1=new AppendingMP("1");
-  AppendingMP mp2=new AppendingMP("2");
+  AppendingMP mp1=getAppendingMP("1");
+  AppendingMP mp2=getAppendingMP("2");
   ReturnNullMP nullmp=new ReturnNullMP();
-  AppendingMP mp3=new AppendingMP("3");
+  AppendingMP mp3=getAppendingMP("3");
   builder.chain(mp1,mp2,nullmp,mp3);
   MuleEvent requestEvent=getTestEventUsingFlow("0");
-  assertNull(builder.build().process(requestEvent));
-  assertSame(requestEvent,mp1.event);
+  assertNull(process(builder.build(),requestEvent));
+  assertSame(requestEvent.getMessage(),mp1.event.getMessage());
   assertNotSame(mp1.event,mp1.resultEvent);
   assertEquals("01",mp1.resultEvent.getMessage().getPayload());
-  assertSame(mp1.resultEvent,mp2.event);
+  assertSame(mp1.resultEvent.getMessage(),mp2.event.getMessage());
   assertNotSame(mp2.event,mp2.resultEvent);
   assertEquals("012",mp2.resultEvent.getMessage().getPayload());
-  assertSame(mp2.resultEvent,nullmp.event);
+  assertSame(mp2.resultEvent.getMessage(),nullmp.event.getMessage());
   assertEquals("012",nullmp.event.getMessage().getPayload());
   assertNull(mp3.event);
+  assertEquals(isMultipleThreadsUsed() ? 3 : 1,threads);
 }

@@ -3,13 +3,7 @@
   pipeline.setMessageSource(source);
   pipeline.setExceptionListener(new DefaultMessagingExceptionStrategy());
   List<MessageProcessor> processors=new ArrayList<MessageProcessor>();
-  processors.add(new AbstractInterceptingMessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      processNext(event);
-      throw new RuntimeException("error");
-    }
-  }
-);
+  processors.add(new ResponseMessageProcessorAdapter(new AbstractMessageProcessorTestCase.ExceptionThrowingMessageProcessr()));
   pipeline.setMessageProcessors(processors);
   pipeline.initialise();
   event=new DefaultMuleEvent(new DefaultMuleMessage("request",muleContext),MessageExchangePattern.REQUEST_RESPONSE,pipeline);

@@ -3,12 +3,7 @@
   pipeline.setMessageSource(source);
   pipeline.setExceptionListener(new DefaultMessagingExceptionStrategy());
   List<MessageProcessor> processors=new ArrayList<MessageProcessor>();
-  processors.add(new MessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      throw new RuntimeException("error");
-    }
-  }
-);
+  processors.add(new AbstractMessageProcessorTestCase.ExceptionThrowingMessageProcessr());
   pipeline.setMessageProcessors(processors);
   pipeline.initialise();
   event=new DefaultMuleEvent(new DefaultMuleMessage("request",muleContext),MessageExchangePattern.ONE_WAY,pipeline);
@@ -18,6 +13,6 @@
  catch (  Exception e) {
   }
   verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_START,false,event)));
-  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_COMPLETE,true,event)));
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_COMPLETE,true,null)));
   verify(notificationManager,times(2)).fireNotification(any(PipelineMessageNotification.class));
 }

@@ -1,11 +1,12 @@
 {
   DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
-  final MessageProcessor nested=new DefaultMessageProcessorChainBuilder().chain(new AppendingMP("a"),new AppendingMP("b"),new ReturnVoidMP()).build();
-  builder.chain(new AppendingMP("1"),new MessageProcessor(){
+  final MessageProcessor nested=new DefaultMessageProcessorChainBuilder().chain(getAppendingMP("a"),getAppendingMP("b"),new ReturnVoidMP()).build();
+  builder.chain(getAppendingMP("1"),new MessageProcessor(){
     public MuleEvent process(    MuleEvent event) throws MuleException {
-      return nested.process(event);
+      return nested.process(new DefaultMuleEvent(event.getMessage(),MessageExchangePattern.REQUEST_RESPONSE,event.getFlowConstruct()));
     }
   }
-,new AppendingMP("2"));
-  assertEquals("01ab2",builder.build().process(getTestEventUsingFlow("0")).getMessage().getPayload());
+,getAppendingMP("2"));
+  assertEquals("01ab2",process(builder.build(),getTestEventUsingFlow("0")).getMessage().getPayload());
+  assertEquals(isMultipleThreadsUsed() ? 2 : 1,threads);
 }

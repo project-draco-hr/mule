@@ -1,20 +1,13 @@
 {
-  invoked=true;
-  this.event=event;
   if (stopProcessing) {
     return event;
   }
-  MuleEvent intermediateEvent=new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage().getPayload() + "before" + appendString,muleContext),event);
-  if (next != null) {
-    intermediateEvent=next.process(intermediateEvent);
-  }
-  if (intermediateEvent != null && !VoidMuleEvent.getInstance().equals(intermediateEvent)) {
-    return new DefaultMuleEvent(new DefaultMuleMessage(intermediateEvent.getMessage().getPayload() + "after" + appendString,muleContext),intermediateEvent);
-  }
- else   if (VoidMuleEvent.getInstance().equals(intermediateEvent)) {
-    return intermediateEvent;
+  MuleEvent intermediateEvent=new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage().getPayload() + "before" + appendString,DefaultMessageProcessorChainTestCase.this.muleContext),event);
+  MuleEvent result=processNext(intermediateEvent);
+  if (result != null && !result.equals(VoidMuleEvent.getInstance()) && !result.equals(NonBlockingVoidMuleEvent.getInstance())) {
+    return new DefaultMuleEvent(new DefaultMuleMessage(result.getMessage().getPayload() + "after" + appendString,DefaultMessageProcessorChainTestCase.this.muleContext),result);
   }
  else {
-    return null;
+    return result;
   }
 }

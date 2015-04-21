@@ -1,0 +1,15 @@
+{
+  ScatterGatherRouter scatterGatherRouter=new ScatterGatherRouter();
+  scatterGatherRouter.addRoute(getAppendingMP("1"));
+  scatterGatherRouter.addRoute(getAppendingMP("2"));
+  scatterGatherRouter.addRoute(getAppendingMP("3"));
+  ThreadingProfile tp=ThreadingProfile.DEFAULT_THREADING_PROFILE;
+  tp.setMuleContext(muleContext);
+  scatterGatherRouter.setThreadingProfile(tp);
+  scatterGatherRouter.setMuleContext(muleContext);
+  scatterGatherRouter.initialise();
+  scatterGatherRouter.start();
+  MuleEvent event=getTestEventUsingFlow("0");
+  assertThat(((List)process(DefaultMessageProcessorChain.from(scatterGatherRouter),new DefaultMuleEvent(event.getMessage(),event)).getMessage().getPayload()).toArray(),CoreMatchers.<Object>equalTo(new String[]{"01","02","03"}));
+  assertEquals(1,threads);
+}
