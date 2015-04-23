@@ -1,7 +1,7 @@
 {
   RequestBuilder builder=new RequestBuilder();
   builder.setMethod(request.getMethod());
-  builder.setUrl(encodePath(request.getUri()));
+  builder.setUrl(request.getUri());
   builder.setFollowRedirects(followRedirects);
   for (  String headerName : request.getHeaderNames()) {
     for (    String headerValue : request.getHeaderValues(headerName)) {
@@ -11,7 +11,7 @@
   DefaultHttpRequest defaultHttpRequest=(DefaultHttpRequest)request;
   for (  String queryParamName : defaultHttpRequest.getQueryParams().keySet()) {
     for (    String queryParamValue : defaultHttpRequest.getQueryParams().getAll(queryParamName)) {
-      builder.addQueryParameter(queryParamName,queryParamValue);
+      builder.addQueryParam(queryParamName,queryParamValue);
     }
   }
   if (authentication != null && authentication instanceof DefaultHttpAuthentication) {
@@ -34,12 +34,18 @@
     }
  else     if (request.getEntity() instanceof MultipartHttpEntity) {
       MultipartHttpEntity multipartHttpEntity=(MultipartHttpEntity)request.getEntity();
-      for (      Part part : multipartHttpEntity.getParts()) {
-        builder.addBodyPart(new PartWrapper(part));
+      for (      HttpPart part : multipartHttpEntity.getParts()) {
+        if (part.getFileName() != null) {
+          builder.addBodyPart(new ByteArrayPart(part.getName(),IOUtils.toByteArray(part.getInputStream()),part.getContentType(),null,part.getFileName()));
+        }
+ else {
+          byte[] content=IOUtils.toByteArray(part.getInputStream());
+          builder.addBodyPart(new ByteArrayPart(part.getName(),content,part.getContentType(),null));
+        }
       }
     }
   }
-  builder.setPerRequestConfig(new PerRequestConfig(null,responseTimeout));
+  builder.setRequestTimeout(responseTimeout);
   ListenableFuture<Response> future=asyncHttpClient.executeRequest(builder.build());
   Response response=null;
   try {

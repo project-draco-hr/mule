@@ -1,0 +1,57 @@
+{
+  if (clientTransport.isStopped()) {
+    IOException e=new IOException("AsyncHttpClient has been closed.");
+    asyncHandler.onThrowable(e);
+    return new ListenableFuture.CompletedFailure<>(e);
+  }
+  final GrizzlyResponseFuture<T> future=new GrizzlyResponseFuture<T>(asyncHandler);
+  final CompletionHandler<Connection> connectHandler=new CompletionHandler<Connection>(){
+    @Override public void cancelled(){
+      future.cancel(true);
+    }
+    @Override public void failed(    final Throwable throwable){
+      future.abort(throwable);
+    }
+    @Override public void completed(    final Connection c){
+      try {
+        final HttpTransactionContext tx=HttpTransactionContext.startTransaction(c,GrizzlyAsyncHttpProvider.this,request,future);
+        if (future.setHttpTransactionCtx(tx)) {
+          execute(tx);
+        }
+ else {
+          tx.closeConnection();
+        }
+      }
+ catch (      Exception e) {
+        if (e instanceof RuntimeException) {
+          failed(e);
+        }
+ else         if (e instanceof IOException) {
+          failed(e);
+        }
+        if (LOGGER.isWarnEnabled()) {
+          LOGGER.warn(e.toString(),e);
+        }
+      }
+    }
+    @Override public void updated(    final Connection c){
+    }
+  }
+;
+  try {
+    connectionManager.getConnectionAsync(request,future,connectHandler);
+  }
+ catch (  IOException ioe) {
+    abort(future,ioe);
+  }
+catch (  RuntimeException re) {
+    abort(future,re);
+  }
+catch (  Exception e) {
+    if (LOGGER.isWarnEnabled()) {
+      LOGGER.warn(e.toString(),e);
+    }
+    abort(future,e);
+  }
+  return future;
+}

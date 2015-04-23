@@ -1,0 +1,71 @@
+{
+  final FilterChainBuilder fcb=FilterChainBuilder.stateless();
+  fcb.add(new TransportFilter());
+  final int timeout=clientConfig.getRequestTimeout();
+  if (timeout > 0) {
+    int delay=500;
+    if (timeout < delay) {
+      delay=timeout - 10;
+    }
+    timeoutExecutor=IdleTimeoutFilter.createDefaultIdleDelayedExecutor(delay,TimeUnit.MILLISECONDS);
+    timeoutExecutor.start();
+    final IdleTimeoutFilter.TimeoutResolver timeoutResolver=new IdleTimeoutFilter.TimeoutResolver(){
+      @Override public long getTimeout(      final FilterChainContext ctx){
+        final HttpTransactionContext context=HttpTransactionContext.currentTransaction(ctx.getConnection());
+        if (context != null) {
+          if (context.isWSRequest) {
+            return clientConfig.getWebSocketTimeout();
+          }
+          final long timeout=context.getAhcRequest().getRequestTimeout();
+          if (timeout > 0) {
+            return timeout;
+          }
+        }
+        return timeout;
+      }
+    }
+;
+    final IdleTimeoutFilter timeoutFilter=new IdleTimeoutFilter(timeoutExecutor,timeoutResolver,new IdleTimeoutFilter.TimeoutHandler(){
+      public void onTimeout(      Connection connection){
+        timeout(connection);
+      }
+    }
+);
+    fcb.add(timeoutFilter);
+    resolver=timeoutFilter.getResolver();
+  }
+  final boolean defaultSecState=(clientConfig.getSSLContext() != null);
+  final SSLEngineConfigurator configurator=new AhcSSLEngineConfigurator(providerConfig.getSslEngineFactory() != null ? providerConfig.getSslEngineFactory() : new SSLEngineFactory.DefaultSSLEngineFactory(clientConfig));
+  final SwitchingSSLFilter sslFilter=new SwitchingSSLFilter(configurator,defaultSecState);
+  if (clientConfig.getHostnameVerifier() != null) {
+    sslFilter.addHandshakeListener(new HostnameVerifierListener());
+  }
+  fcb.add(sslFilter);
+  final AhcEventFilter eventFilter=new AhcEventFilter(this,(Integer)providerConfig.getProperty(MAX_HTTP_PACKET_HEADER_SIZE));
+  final AsyncHttpClientFilter clientFilter=new AsyncHttpClientFilter(clientConfig);
+  ContentEncoding[] encodings=eventFilter.getContentEncodings();
+  if (encodings.length > 0) {
+    for (    ContentEncoding encoding : encodings) {
+      eventFilter.removeContentEncoding(encoding);
+    }
+  }
+  if ((Boolean)providerConfig.getProperty(DECOMPRESS_RESPONSE)) {
+    eventFilter.addContentEncoding(new GZipContentEncoding(512,512,new ClientEncodingFilter()));
+  }
+  fcb.add(eventFilter);
+  fcb.add(clientFilter);
+  clientTransport.getAsyncQueueIO().getWriter().setMaxPendingBytesPerConnection(AsyncQueueWriter.AUTO_SIZE);
+  clientTransport.setNIOChannelDistributor(new RoundRobinConnectionDistributor(clientTransport,false,false));
+  final int kernelThreadsCount=clientConfig.getIoThreadMultiplier() * Runtime.getRuntime().availableProcessors();
+  clientTransport.setSelectorRunnersCount(kernelThreadsCount);
+  clientTransport.setKernelThreadPoolConfig(ThreadPoolConfig.defaultConfig().setCorePoolSize(kernelThreadsCount).setMaxPoolSize(kernelThreadsCount).setPoolName("grizzly-ahc-kernel"));
+  final TransportCustomizer customizer=(TransportCustomizer)providerConfig.getProperty(TRANSPORT_CUSTOMIZER);
+  if (customizer != null) {
+    customizer.customize(clientTransport,fcb);
+  }
+ else {
+    doDefaultTransportConfig();
+  }
+  fcb.add(new WebSocketFilter());
+  clientTransport.setProcessor(fcb.build());
+}
