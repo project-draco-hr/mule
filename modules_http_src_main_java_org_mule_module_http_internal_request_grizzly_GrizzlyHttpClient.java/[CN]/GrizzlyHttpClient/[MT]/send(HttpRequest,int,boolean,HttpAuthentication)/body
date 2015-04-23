@@ -23,6 +23,15 @@
  else     if (defaultHttpAuthentication.getType() == HttpAuthenticationType.DIGEST) {
       realmBuilder.setScheme(Realm.AuthScheme.DIGEST);
     }
+ else     if (defaultHttpAuthentication.getType() == HttpAuthenticationType.NTLM) {
+      String domain=defaultHttpAuthentication.getDomain();
+      if (domain != null) {
+        realmBuilder.setNtlmDomain(domain);
+      }
+      String workstation=defaultHttpAuthentication.getWorkstation();
+      String ntlmHost=workstation != null ? workstation : InetAddress.getLocalHost().getHostName();
+      realmBuilder.setNtlmHost(ntlmHost).setScheme(Realm.AuthScheme.NTLM);
+    }
     builder.setRealm(realmBuilder.build());
   }
   if (request.getEntity() != null) {
