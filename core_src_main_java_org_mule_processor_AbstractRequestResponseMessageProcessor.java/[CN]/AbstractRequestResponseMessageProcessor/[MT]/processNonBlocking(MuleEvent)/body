@@ -1,0 +1,35 @@
+{
+  final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
+  event=new DefaultMuleEvent(event,new CompletionHandlerReplyToHandlerAdaptor(new CompletionHandler<MuleEvent,MessagingException>(){
+    @Override public void onCompletion(    MuleEvent event){
+      try {
+        MuleEvent response=processResponse(new DefaultMuleEvent(event,originalReplyToHandler));
+        if (!NonBlockingVoidMuleEvent.getInstance().equals(response)) {
+          originalReplyToHandler.processReplyTo(response,null,null);
+        }
+        processFinallly(event,null);
+      }
+ catch (      MuleException e) {
+        onFailure(new MessagingException(event,e));
+      }
+    }
+    @Override public void onFailure(    MessagingException exception){
+      originalReplyToHandler.processExceptionReplyTo(exception.getEvent(),exception,null);
+      processFinallly(exception.getEvent(),exception);
+    }
+  }
+));
+  try {
+    MuleEvent result=processNext(processRequest(event));
+    if (!(result instanceof NonBlockingVoidMuleEvent)) {
+      return processResponse(event);
+    }
+ else {
+      return result;
+    }
+  }
+ catch (  MessagingException exception) {
+    processFinallly(event,exception);
+    throw exception;
+  }
+}

@@ -7,13 +7,17 @@
         @Override public MuleEvent process() throws Exception {
           MuleEvent muleEvent=template.getMuleEvent();
           fireNotification(muleEvent,MESSAGE_RECEIVED);
-          muleEvent=template.routeEvent(muleEvent);
-          return muleEvent;
+          if (muleEvent.isAllowNonBlocking()) {
+            muleEvent=new DefaultMuleEvent(muleEvent,new ErrorHandlingCompletionHandlerReplyToHandlerAdaptor(new FlowProcessingCompletionHandler(template,phaseResultNotifier,exceptionHandler),messageProcessContext.getFlowConstruct().getExceptionListener()));
+          }
+          return template.routeEvent(muleEvent);
         }
       }
 );
-      fireNotification(response,MESSAGE_RESPONSE);
-      template.sendResponseToClient(response,createResponseCompletationCallback(phaseResultNotifier,exceptionHandler));
+      if (response != NonBlockingVoidMuleEvent.getInstance()) {
+        fireNotification(response,MESSAGE_RESPONSE);
+        template.sendResponseToClient(response,createResponseCompletationCallback(phaseResultNotifier,exceptionHandler));
+      }
     }
  catch (    final MessagingException e) {
       template.sendFailureResponseToClient(e,createSendFailureResponseCompletationCallback(phaseResultNotifier));

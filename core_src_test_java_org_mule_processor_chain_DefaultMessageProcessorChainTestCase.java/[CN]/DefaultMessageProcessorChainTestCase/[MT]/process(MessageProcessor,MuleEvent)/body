@@ -1,0 +1,21 @@
+{
+  MuleEvent result;
+  if (nonBlocking && exchangePattern.hasResponse()) {
+    SensingNullCompletionHandler responseCallback=new SensingNullCompletionHandler();
+    event=new DefaultMuleEvent(event,new CompletionHandlerReplyToHandlerAdaptor(responseCallback));
+    result=messageProcessor.process(event);
+    if (NonBlockingVoidMuleEvent.getInstance() == result) {
+      responseCallback.latch.await(1000,TimeUnit.MILLISECONDS);
+      if (responseCallback.exception != null) {
+        throw responseCallback.exception;
+      }
+ else {
+        result=responseCallback.event;
+      }
+    }
+  }
+ else {
+    result=messageProcessor.process(event);
+  }
+  return result;
+}
