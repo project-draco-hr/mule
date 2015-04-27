@@ -1,0 +1,18 @@
+{
+  try {
+    runFlow("all",getAllEvent(INVALID_EMAIL,INVALID_URL));
+    fail("was expecting a failure");
+  }
+ catch (  Exception e) {
+    Throwable root=ExceptionUtils.getRootCause(e);
+    assertThat(root,is(instanceOf(MultipleValidationException.class)));
+    MultipleValidationResult result=((MultipleValidationException)root).getMultipleValidationResult();
+    assertThat(result.getFailedValidationResults(),hasSize(2));
+    assertThat(result.isError(),is(true));
+    String expectedMessage=Joiner.on('\n').join(messages.invalidUrl(INVALID_URL),messages.invalidEmail(INVALID_EMAIL));
+    assertThat(result.getMessage(),is(expectedMessage));
+    for (    ValidationResult failedValidationResult : result.getFailedValidationResults()) {
+      assertThat(failedValidationResult.isError(),is(true));
+    }
+  }
+}
