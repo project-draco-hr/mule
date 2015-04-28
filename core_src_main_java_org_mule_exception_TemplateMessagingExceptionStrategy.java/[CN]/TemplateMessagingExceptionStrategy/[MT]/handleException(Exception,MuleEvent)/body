@@ -6,13 +6,18 @@
     logException(exception);
     processStatistics(event);
     event.getMessage().setExceptionPayload(new DefaultExceptionPayload(exception));
+    if (event.isAllowNonBlocking()) {
+      event=new DefaultMuleEvent(event.getMessage(),event,true);
+    }
     event=beforeRouting(exception,event);
     event=route(event,exception);
     processOutboundRouterStatistics(flowConstruct);
     event=afterRouting(exception,event);
     markExceptionAsHandledIfRequired(exception);
     if (event != null && !VoidMuleEvent.getInstance().equals(event)) {
-      processReplyTo(event,exception);
+      if (!event.getExchangePattern().hasResponse()) {
+        processReplyTo(event,exception);
+      }
       closeStream(event.getMessage());
       nullifyExceptionPayloadIfRequired(event);
     }

@@ -1,27 +1,22 @@
 {
-  HttpRequestBuilder builder=muleEventToHttpRequest.create(muleEvent,method.resolveStringValue(muleEvent),resolveURI(muleEvent));
   HttpAuthentication authentication=requestConfig.getAuthentication();
-  if (authentication != null) {
-    authentication.authenticate(muleEvent,builder);
-  }
-  HttpClient httpClient=requestConfig.getHttpClient();
+  HttpRequest httpRequest=createHttpRequest(muleEvent,authentication);
   HttpResponse response;
   try {
-    HttpRequest httpRequest=builder.build();
     notificationHelper.fireNotification(muleEvent.getMessage(),httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_BEGIN);
-    response=httpClient.send(httpRequest,resolveResponseTimeout(muleEvent),followRedirects.resolveBooleanValue(muleEvent),authentication);
+    response=getHttpClient().send(httpRequest,resolveResponseTimeout(muleEvent),followRedirects.resolveBooleanValue(muleEvent),authentication);
     notificationHelper.fireNotification(muleEvent.getMessage(),httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_END);
   }
  catch (  Exception e) {
     throw new MessagingException(CoreMessages.createStaticMessage("Error sending HTTP request"),muleEvent,e);
   }
   httpResponseToMuleEvent.convert(muleEvent,response);
-  if (checkRetry && authentication != null && authentication.shouldRetry(muleEvent)) {
+  if (resendRequest(muleEvent,checkRetry,authentication)) {
     consumePayload(muleEvent);
     muleEvent=innerProcess(muleEvent,false);
   }
  else {
-    responseValidator.validate(muleEvent);
+    validateResponse(muleEvent);
   }
   return muleEvent;
 }

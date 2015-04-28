@@ -1,0 +1,59 @@
+{
+  RequestBuilder builder=new RequestBuilder();
+  builder.setMethod(request.getMethod());
+  builder.setUrl(request.getUri());
+  builder.setFollowRedirects(followRedirects);
+  for (  String headerName : request.getHeaderNames()) {
+    for (    String headerValue : request.getHeaderValues(headerName)) {
+      builder.addHeader(headerName,headerValue);
+    }
+  }
+  DefaultHttpRequest defaultHttpRequest=(DefaultHttpRequest)request;
+  for (  String queryParamName : defaultHttpRequest.getQueryParams().keySet()) {
+    for (    String queryParamValue : defaultHttpRequest.getQueryParams().getAll(queryParamName)) {
+      builder.addQueryParam(queryParamName,queryParamValue);
+    }
+  }
+  if (authentication != null && authentication instanceof DefaultHttpAuthentication) {
+    DefaultHttpAuthentication defaultHttpAuthentication=(DefaultHttpAuthentication)authentication;
+    Realm.RealmBuilder realmBuilder=new Realm.RealmBuilder().setPrincipal(defaultHttpAuthentication.getUsername()).setPassword(defaultHttpAuthentication.getPassword()).setUsePreemptiveAuth(false);
+    if (defaultHttpAuthentication.getType() == HttpAuthenticationType.BASIC) {
+      realmBuilder.setScheme(Realm.AuthScheme.BASIC);
+    }
+ else     if (defaultHttpAuthentication.getType() == HttpAuthenticationType.DIGEST) {
+      realmBuilder.setScheme(Realm.AuthScheme.DIGEST);
+    }
+ else     if (defaultHttpAuthentication.getType() == HttpAuthenticationType.NTLM) {
+      String domain=defaultHttpAuthentication.getDomain();
+      if (domain != null) {
+        realmBuilder.setNtlmDomain(domain);
+      }
+      String workstation=defaultHttpAuthentication.getWorkstation();
+      String ntlmHost=workstation != null ? workstation : InetAddress.getLocalHost().getHostName();
+      realmBuilder.setNtlmHost(ntlmHost).setScheme(Realm.AuthScheme.NTLM);
+    }
+    builder.setRealm(realmBuilder.build());
+  }
+  if (request.getEntity() != null) {
+    if (request.getEntity() instanceof InputStreamHttpEntity) {
+      builder.setBody(new InputStreamBodyGenerator(((InputStreamHttpEntity)request.getEntity()).getInputStream()));
+    }
+ else     if (request.getEntity() instanceof ByteArrayHttpEntity) {
+      builder.setBody(((ByteArrayHttpEntity)request.getEntity()).getContent());
+    }
+ else     if (request.getEntity() instanceof MultipartHttpEntity) {
+      MultipartHttpEntity multipartHttpEntity=(MultipartHttpEntity)request.getEntity();
+      for (      HttpPart part : multipartHttpEntity.getParts()) {
+        if (part.getFileName() != null) {
+          builder.addBodyPart(new ByteArrayPart(part.getName(),IOUtils.toByteArray(part.getInputStream()),part.getContentType(),null,part.getFileName()));
+        }
+ else {
+          byte[] content=IOUtils.toByteArray(part.getInputStream());
+          builder.addBodyPart(new ByteArrayPart(part.getName(),content,part.getContentType(),null));
+        }
+      }
+    }
+  }
+  builder.setRequestTimeout(responseTimeout);
+  return builder.build();
+}
