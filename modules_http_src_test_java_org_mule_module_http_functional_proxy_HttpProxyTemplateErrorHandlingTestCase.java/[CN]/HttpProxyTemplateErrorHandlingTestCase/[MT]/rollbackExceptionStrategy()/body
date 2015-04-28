@@ -1,0 +1,7 @@
+{
+  HttpResponse response=Request.Get(getProxyUrl("rollbackExceptionStrategy")).connectTimeout(RECEIVE_TIMEOUT).execute().returnResponse();
+  assertThat(response.getStatusLine().getStatusCode(),is(500));
+  assertThat(IOUtils.toString(response.getEntity().getContent()),not(equalTo(SERVICE_DOWN_MESSAGE)));
+  SensingNullMessageProcessor processor=muleContext.getRegistry().lookupObject(ROLLBACK_SENSING_PROCESSOR_NAME);
+  assertThat(processor.event,is(notNullValue()));
+}
