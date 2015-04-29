@@ -1,12 +1,13 @@
 {
   try {
+    boolean nonBlocking=event.isAllowNonBlocking();
     muleContext.getNotificationManager().fireNotification(new ExceptionStrategyNotification(event,ExceptionStrategyNotification.PROCESS_START));
     FlowConstruct flowConstruct=event.getFlowConstruct();
     fireNotification(exception);
     logException(exception);
     processStatistics(event);
     event.getMessage().setExceptionPayload(new DefaultExceptionPayload(exception));
-    if (event.isAllowNonBlocking()) {
+    if (nonBlocking) {
       event=new DefaultMuleEvent(event.getMessage(),event,true);
     }
     event=beforeRouting(exception,event);
@@ -15,7 +16,7 @@
     event=afterRouting(exception,event);
     markExceptionAsHandledIfRequired(exception);
     if (event != null && !VoidMuleEvent.getInstance().equals(event)) {
-      if (!event.getExchangePattern().hasResponse()) {
+      if (!nonBlocking) {
         processReplyTo(event,exception);
       }
       closeStream(event.getMessage());
