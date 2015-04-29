@@ -1,0 +1,23 @@
+{
+  when(mockJmsConnector.getTopicResolver().isTopic(mockInboundEndpoint)).thenReturn(false);
+  when(mockInboundEndpoint.getConnector()).thenReturn(mockJmsConnector);
+  XaTransactedJmsMessageReceiver messageReceiver=spy(new XaTransactedJmsMessageReceiver(mockJmsConnector,mockFlowConstruct,mockInboundEndpoint));
+  doReturn(messageConsumer).when(messageReceiver).createConsumer();
+  when(messageConsumer.receive(messageReceiver.timeout)).thenAnswer(new Answer<Message>(){
+    @Override public Message answer(    InvocationOnMock invocation) throws Exception {
+      Thread.currentThread().interrupt();
+      throw exceptionToThrow;
+    }
+  }
+);
+  doAnswer(new Answer(){
+    @Override public Void answer(    InvocationOnMock invocation) throws Throwable {
+      assertThat(Thread.currentThread().isInterrupted(),is(true));
+      return null;
+    }
+  }
+).when(transaction).setRollbackOnly();
+  TransactionCoordination.getInstance().bindTransaction(transaction);
+  messageReceiver.getMessages();
+  verify(transaction).setRollbackOnly();
+}
