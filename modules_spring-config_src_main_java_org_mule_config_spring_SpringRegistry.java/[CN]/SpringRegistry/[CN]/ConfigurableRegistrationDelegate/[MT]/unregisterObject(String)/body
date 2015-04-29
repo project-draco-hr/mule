@@ -1,8 +1,14 @@
 {
-  Object object=applicationContext.getBean(key);
-  if (applicationContext.getBeanFactory().containsBeanDefinition(key)) {
-    ((BeanDefinitionRegistry)applicationContext.getBeanFactory()).removeBeanDefinition(key);
+  try {
+    writeLock.lock();
+    Object object=applicationContext.getBean(key);
+    if (applicationContext.getBeanFactory().containsBeanDefinition(key)) {
+      ((BeanDefinitionRegistry)applicationContext.getBeanFactory()).removeBeanDefinition(key);
+    }
+    ((DefaultListableBeanFactory)applicationContext.getBeanFactory()).destroySingleton(key);
+    return object;
   }
-  ((DefaultListableBeanFactory)applicationContext.getBeanFactory()).destroySingleton(key);
-  return object;
+  finally {
+    writeLock.unlock();
+  }
 }
