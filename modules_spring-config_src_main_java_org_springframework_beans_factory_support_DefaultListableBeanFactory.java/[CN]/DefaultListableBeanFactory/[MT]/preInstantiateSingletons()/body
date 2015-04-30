@@ -1,0 +1,50 @@
+{
+  if (this.logger.isDebugEnabled()) {
+    this.logger.debug("Pre-instantiating singletons in " + this);
+  }
+  List<String> beanNames=new ArrayList<String>(this.beanDefinitionNames);
+  for (  String beanName : beanNames) {
+    RootBeanDefinition bd=getMergedLocalBeanDefinition(beanName);
+    if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
+      if (isFactoryBean(beanName)) {
+        final FactoryBean<?> factory=(FactoryBean<?>)getBean(FACTORY_BEAN_PREFIX + beanName);
+        boolean isEagerInit;
+        if (System.getSecurityManager() != null && factory instanceof SmartFactoryBean) {
+          isEagerInit=AccessController.doPrivileged(new PrivilegedAction<Boolean>(){
+            @Override public Boolean run(){
+              return ((SmartFactoryBean<?>)factory).isEagerInit();
+            }
+          }
+,getAccessControlContext());
+        }
+ else {
+          isEagerInit=(factory instanceof SmartFactoryBean && ((SmartFactoryBean<?>)factory).isEagerInit());
+        }
+        if (isEagerInit) {
+          getBean(beanName);
+        }
+      }
+ else {
+        getBean(beanName);
+      }
+    }
+  }
+  for (  String beanName : beanNames) {
+    Object singletonInstance=getSingleton(beanName);
+    if (singletonInstance instanceof SmartInitializingSingleton) {
+      final SmartInitializingSingleton smartSingleton=(SmartInitializingSingleton)singletonInstance;
+      if (System.getSecurityManager() != null) {
+        AccessController.doPrivileged(new PrivilegedAction<Object>(){
+          @Override public Object run(){
+            smartSingleton.afterSingletonsInstantiated();
+            return null;
+          }
+        }
+,getAccessControlContext());
+      }
+ else {
+        smartSingleton.afterSingletonsInstantiated();
+      }
+    }
+  }
+}

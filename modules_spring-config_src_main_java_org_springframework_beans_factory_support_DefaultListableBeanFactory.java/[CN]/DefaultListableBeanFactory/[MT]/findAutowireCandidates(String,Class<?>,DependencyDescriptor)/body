@@ -1,0 +1,28 @@
+{
+  String[] candidateNames=BeanFactoryUtils.beanNamesForTypeIncludingAncestors(this,requiredType,true,descriptor.isEager());
+  Map<String,Object> result=new LinkedHashMap<String,Object>(candidateNames.length);
+  for (  Class<?> autowiringType : this.resolvableDependencies.keySet()) {
+    if (autowiringType.isAssignableFrom(requiredType)) {
+      Object autowiringValue=this.resolvableDependencies.get(autowiringType);
+      autowiringValue=AutowireUtils.resolveAutowiringValue(autowiringValue,requiredType);
+      if (requiredType.isInstance(autowiringValue)) {
+        result.put(ObjectUtils.identityToString(autowiringValue),autowiringValue);
+        break;
+      }
+    }
+  }
+  for (  String candidateName : candidateNames) {
+    if (!isSelfReference(beanName,candidateName) && isAutowireCandidate(candidateName,descriptor)) {
+      result.put(candidateName,getBean(candidateName));
+    }
+  }
+  if (result.isEmpty()) {
+    DependencyDescriptor fallbackDescriptor=descriptor.forFallbackMatch();
+    for (    String candidateName : candidateNames) {
+      if (!candidateName.equals(beanName) && isAutowireCandidate(candidateName,fallbackDescriptor)) {
+        result.put(candidateName,getBean(candidateName));
+      }
+    }
+  }
+  return result;
+}
