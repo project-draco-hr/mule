@@ -1,0 +1,24 @@
+{
+  String[] beanNames=getBeanNamesForType(type,includeNonSingletons,allowEagerInit);
+  Map<String,T> result=new LinkedHashMap<String,T>(beanNames.length);
+  for (  String beanName : beanNames) {
+    try {
+      result.put(beanName,getBean(beanName,type));
+    }
+ catch (    BeanCreationException ex) {
+      Throwable rootCause=ex.getMostSpecificCause();
+      if (rootCause instanceof BeanCurrentlyInCreationException) {
+        BeanCreationException bce=(BeanCreationException)rootCause;
+        if (isCurrentlyInCreation(bce.getBeanName())) {
+          if (this.logger.isDebugEnabled()) {
+            this.logger.debug("Ignoring match to currently created bean '" + beanName + "': "+ ex.getMessage());
+          }
+          onSuppressedException(ex);
+          continue;
+        }
+      }
+      throw ex;
+    }
+  }
+  return result;
+}

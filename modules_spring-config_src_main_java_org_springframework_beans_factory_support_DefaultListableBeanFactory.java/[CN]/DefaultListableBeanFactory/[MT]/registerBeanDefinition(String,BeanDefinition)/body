@@ -1,0 +1,38 @@
+{
+  Assert.hasText(beanName,"Bean name must not be empty");
+  Assert.notNull(beanDefinition,"BeanDefinition must not be null");
+  if (beanDefinition instanceof AbstractBeanDefinition) {
+    try {
+      ((AbstractBeanDefinition)beanDefinition).validate();
+    }
+ catch (    BeanDefinitionValidationException ex) {
+      throw new BeanDefinitionStoreException(beanDefinition.getResourceDescription(),beanName,"Validation of bean definition failed",ex);
+    }
+  }
+  BeanDefinition oldBeanDefinition;
+  oldBeanDefinition=this.beanDefinitionMap.get(beanName);
+  if (oldBeanDefinition != null) {
+    if (!isAllowBeanDefinitionOverriding()) {
+      throw new BeanDefinitionStoreException(beanDefinition.getResourceDescription(),beanName,"Cannot register bean definition [" + beanDefinition + "] for bean '"+ beanName+ "': There is already ["+ oldBeanDefinition+ "] bound.");
+    }
+ else     if (oldBeanDefinition.getRole() < beanDefinition.getRole()) {
+      if (this.logger.isWarnEnabled()) {
+        this.logger.warn("Overriding user-defined bean definition for bean '" + beanName + "' with a framework-generated bean definition: replacing ["+ oldBeanDefinition+ "] with ["+ beanDefinition+ "]");
+      }
+    }
+ else {
+      if (this.logger.isInfoEnabled()) {
+        this.logger.info("Overriding bean definition for bean '" + beanName + "': replacing ["+ oldBeanDefinition+ "] with ["+ beanDefinition+ "]");
+      }
+    }
+  }
+ else {
+    this.beanDefinitionNames.add(beanName);
+    this.manualSingletonNames.remove(beanName);
+    this.frozenBeanDefinitionNames=null;
+  }
+  this.beanDefinitionMap.put(beanName,beanDefinition);
+  if (oldBeanDefinition != null || containsSingleton(beanName)) {
+    resetBeanDefinition(beanName);
+  }
+}
