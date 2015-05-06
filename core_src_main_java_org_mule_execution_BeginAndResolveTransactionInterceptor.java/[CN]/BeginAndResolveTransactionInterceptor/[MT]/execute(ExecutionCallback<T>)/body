@@ -1,12 +1,18 @@
 {
   byte action=transactionConfig.getAction();
+  int timeout=transactionConfig.getTimeout();
   boolean resolveStartedTransaction=false;
   Transaction tx=TransactionCoordination.getInstance().getTransaction();
   if (action == TransactionConfig.ACTION_ALWAYS_BEGIN || (action == TransactionConfig.ACTION_BEGIN_OR_JOIN && tx == null)) {
-    logger.debug("Beginning transaction");
+    if (logger.isDebugEnabled()) {
+      logger.debug("Beginning transaction");
+    }
     tx=transactionConfig.getFactory().beginTransaction(muleContext);
+    tx.setTimeout(timeout);
     resolveStartedTransaction=true;
-    logger.debug("Transaction successfully started: " + tx);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Transaction successfully started: " + tx);
+    }
   }
   T result;
   try {
