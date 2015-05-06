@@ -1,0 +1,25 @@
+{
+  try {
+    final SystemExceptionHandler exceptionListener=muleContext.getExceptionListener();
+    muleContext.setExceptionListener(new SystemExceptionHandler(){
+      @Override public void handleException(      Exception exception,      RollbackSourceCallback rollbackMethod){
+        exceptionThrownLatch.countDown();
+        exceptionListener.handleException(exception,rollbackMethod);
+      }
+      @Override public void handleException(      Exception exception){
+        exceptionThrownLatch.countDown();
+        exceptionListener.handleException(exception);
+      }
+    }
+);
+    muleContext.registerListener(new ExceptionNotificationListener<ExceptionNotification>(){
+      @Override public void onNotification(      ExceptionNotification notification){
+        exceptionNotifications.add(notification);
+      }
+    }
+);
+  }
+ catch (  NotificationException e) {
+    throw new RuntimeException(e);
+  }
+}
