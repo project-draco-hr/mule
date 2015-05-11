@@ -4,10 +4,10 @@
   pipeline.setProcessingStrategy(new NonBlockingProcessingStrategy());
   pipeline.setMessageProcessors(Collections.<MessageProcessor>singletonList(new SensingNullMessageProcessor()));
   pipeline.initialise();
-  SensingNullCompletionHandler nullCompletionHandler=new SensingNullCompletionHandler();
-  event=new DefaultMuleEvent(new DefaultMuleMessage("request",muleContext),MessageExchangePattern.REQUEST_RESPONSE,new CompletionHandlerReplyToHandlerAdaptor(nullCompletionHandler),pipeline);
+  SensingNullReplyToHandler nullReplyToHandler=new SensingNullReplyToHandler();
+  event=new DefaultMuleEvent(new DefaultMuleMessage("request",muleContext),MessageExchangePattern.REQUEST_RESPONSE,nullReplyToHandler,pipeline);
   source.trigger(event);
-  nullCompletionHandler.latch.await(AbstractMuleContextTestCase.RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
+  nullReplyToHandler.latch.await(AbstractMuleContextTestCase.RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
   verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_START,false,null)));
   verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_END,false,null)));
   verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_COMPLETE,false,null)));

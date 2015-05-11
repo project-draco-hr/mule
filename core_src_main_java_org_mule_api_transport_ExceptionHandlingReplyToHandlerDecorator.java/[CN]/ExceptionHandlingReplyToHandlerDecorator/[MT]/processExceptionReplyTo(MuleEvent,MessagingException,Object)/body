@@ -1,0 +1,21 @@
+{
+  MuleEvent result;
+  if (messagingExceptionHandler != null) {
+    result=messagingExceptionHandler.handleException(exception,exception.getEvent());
+  }
+ else {
+    result=exception.getEvent().getFlowConstruct().getExceptionListener().handleException(exception,event);
+  }
+  exception.setProcessedEvent(result);
+  if (!exception.handled()) {
+    delegate.processExceptionReplyTo(event,exception,replyTo);
+  }
+ else {
+    try {
+      delegate.processReplyTo(exception.getEvent(),exception.getEvent().getMessage(),null);
+    }
+ catch (    MuleException e) {
+      delegate.processExceptionReplyTo(exception.getEvent(),new MessagingException(exception.getEvent(),e),null);
+    }
+  }
+}
