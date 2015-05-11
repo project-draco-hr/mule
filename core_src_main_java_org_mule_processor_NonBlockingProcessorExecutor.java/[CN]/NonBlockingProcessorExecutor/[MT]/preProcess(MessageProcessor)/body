@@ -1,13 +1,11 @@
 {
   if (event.isAllowNonBlocking() && replyToHandler != null) {
     if ((processor instanceof MessageRouter || processor instanceof InterceptingMessageProcessor) && !(processor instanceof NonBlockingSupported)) {
-      if (logger.isInfoEnabled()) {
-        logger.info("The message processor {} does not currenlty support non-blocking execution and processing " + "will now fall back to blocking.  The 'non-blocking' processing strategy is not " + "recommended if unsupported message processors are being used.  ",processor);
-      }
+      logger.info("The message processor {} does not currenlty support non-blocking execution and " + "processing will now fall back to blocking.  The 'non-blocking' processing strategy is " + "not recommended if unsupported message processors are being used.  ",processor.getClass());
       event=new DefaultMuleEvent(event.getMessage(),event,true);
     }
     if (processor instanceof NonBlockingMessageProcessor) {
-      event=new DefaultMuleEvent(event,new CompletionHandlerReplyToHandlerAdaptor(new NonBlockingProcessingCompletionHandler()));
+      event=new DefaultMuleEvent(event,new NonBlockingProcessorExecutorReplyToHandler());
     }
   }
 }
