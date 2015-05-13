@@ -2,12 +2,17 @@
   Request grizzlyRequest=createGrizzlyRequest(request,responseTimeout,followRedirects,authentication);
   ListenableFuture<Response> future=asyncHttpClient.executeRequest(grizzlyRequest);
   try {
-    return createMuleResponse(future.get(responseTimeout,TimeUnit.MILLISECONDS));
+    return createMuleResponse(future.get());
   }
  catch (  InterruptedException e) {
     throw new IOException(e);
   }
 catch (  ExecutionException e) {
-    throw new IOException(e);
+    if (e.getCause() instanceof TimeoutException) {
+      throw (TimeoutException)e.getCause();
+    }
+ else {
+      throw new IOException(e);
+    }
   }
 }
