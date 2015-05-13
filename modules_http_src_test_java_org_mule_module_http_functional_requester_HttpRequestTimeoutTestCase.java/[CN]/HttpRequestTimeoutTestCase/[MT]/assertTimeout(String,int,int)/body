@@ -1,0 +1,28 @@
+{
+  final Latch requestTimeoutLatch=new Latch();
+  Thread thread=new Thread(){
+    @Override public void run(){
+      try {
+        Flow flow=(Flow)getFlowConstruct(flowName);
+        MuleEvent event=getTestEvent(TEST_MESSAGE);
+        event.setTimeout(responseTimeoutEvent);
+        event.setFlowVariable("timeout",responseTimeoutRequester);
+        try {
+          flow.process(event);
+        }
+ catch (        MessagingException e) {
+          assertThat(e.getCauseException(),instanceOf(TimeoutException.class));
+          requestTimeoutLatch.release();
+        }
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+;
+  thread.start();
+  assertTrue(requestTimeoutLatch.await(TEST_TIMEOUT,TimeUnit.MILLISECONDS));
+  thread.join();
+  serverLatch.release();
+}
