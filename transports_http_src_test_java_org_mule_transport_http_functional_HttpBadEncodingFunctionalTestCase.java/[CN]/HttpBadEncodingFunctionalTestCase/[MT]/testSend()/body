@@ -1,9 +1,7 @@
 {
-  MuleClient client=muleContext.getClient();
-  DefaultMuleMessage msg=new DefaultMuleMessage(TEST_MESSAGE.getBytes(),muleContext);
-  msg.setEncoding("UTFF-912");
-  MuleMessage reply=client.send("clientEndpoint",msg);
-  assertNotNull(reply);
-  assertEquals("500",reply.<Object>getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY));
-  assertNotNull(reply.getExceptionPayload());
+  GetMethod request=new GetMethod("http://localhost:" + dynamicPort.getValue());
+  request.addRequestHeader(CONTENT_TYPE_PROPERTY,"text/bar; charset=UTFF-912");
+  HttpClient httpClient=new HttpClient();
+  int responseCode=httpClient.executeMethod(request);
+  assertThat(responseCode,equalTo(SC_INTERNAL_SERVER_ERROR));
 }
