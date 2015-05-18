@@ -1,25 +1,24 @@
 {
-  ConfigResource[] allResources;
+  List<ConfigResource> allResources=new ArrayList<>();
   if (useMinimalConfigResource) {
-    allResources=new ConfigResource[configResources.length + 3];
-    allResources[0]=new ConfigResource(MULE_DOMAIN_REGISTRY_BOOTSTRAP_SPRING_CONFIG);
-    allResources[1]=new ConfigResource(MULE_MINIMAL_SPRING_CONFIG);
-    allResources[2]=new ConfigResource(MULE_SPRING_CONFIG);
-    System.arraycopy(configResources,0,allResources,3,configResources.length);
+    allResources.add(new ConfigResource(MULE_DOMAIN_REGISTRY_BOOTSTRAP_SPRING_CONFIG));
+    allResources.add(new ConfigResource(MULE_MINIMAL_SPRING_CONFIG));
+    allResources.add(new ConfigResource(MULE_SPRING_CONFIG));
+    allResources.addAll(Arrays.asList(configResources));
   }
  else   if (useDefaultConfigResource) {
-    allResources=new ConfigResource[configResources.length + 4];
-    allResources[0]=new ConfigResource(MULE_REGISTRY_BOOTSTRAP_SPRING_CONFIG);
-    allResources[1]=new ConfigResource(MULE_MINIMAL_SPRING_CONFIG);
-    allResources[2]=new ConfigResource(MULE_SPRING_CONFIG);
-    allResources[3]=new ConfigResource(MULE_DEFAULTS_CONFIG);
-    System.arraycopy(configResources,0,allResources,4,configResources.length);
+    allResources.add(new ConfigResource(MULE_REGISTRY_BOOTSTRAP_SPRING_CONFIG));
+    allResources.add(new ConfigResource(MULE_MINIMAL_SPRING_CONFIG));
+    allResources.add(new ConfigResource(MULE_SPRING_CONFIG));
+    allResources.add(new ConfigResource(MULE_DEFAULTS_CONFIG));
+    allResources.addAll(Arrays.asList(configResources));
   }
  else {
-    allResources=new ConfigResource[configResources.length + 1];
-    allResources[0]=new ConfigResource(MULE_SPRING_CONFIG);
-    System.arraycopy(configResources,0,allResources,1,configResources.length);
+    allResources.add(new ConfigResource(MULE_SPRING_CONFIG));
+    allResources.addAll(Arrays.asList(configResources));
   }
-  applicationContext=createApplicationContext(muleContext,allResources);
+  addResources(allResources);
+  ConfigResource[] configResourcesArray=new ConfigResource[allResources.size()];
+  applicationContext=createApplicationContext(muleContext,allResources.toArray(configResourcesArray));
   createSpringRegistry(muleContext,applicationContext);
 }
