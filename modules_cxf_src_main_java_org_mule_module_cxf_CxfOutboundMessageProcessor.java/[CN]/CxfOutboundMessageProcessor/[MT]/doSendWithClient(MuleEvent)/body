@@ -1,7 +1,7 @@
 {
   BindingOperationInfo bop=getOperation(event);
   Map<String,Object> props=getInovcationProperties(event);
-  Holder<MuleEvent> responseHolder=new Holder<MuleEvent>();
+  final Holder<MuleEvent> responseHolder=new Holder<MuleEvent>();
   props.put("holder",responseHolder);
   Map<String,Object> ctx=new HashMap<String,Object>();
   ctx.put(Client.REQUEST_CONTEXT,props);
@@ -16,6 +16,25 @@
   }
   ExchangeImpl exchange=new ExchangeImpl();
   exchange.put(StaxInEndingInterceptor.STAX_IN_NOCLOSE,Boolean.TRUE);
-  Object[] response=client.invoke(bop,getArgs(event),ctx,exchange);
-  return buildResponseMessage(event,responseHolder.value,response);
+  if (event.isAllowNonBlocking() && event.getReplyToHandler() != null) {
+    client.invoke(new ClientCallback(){
+      @Override public void handleResponse(      Map<String,Object> ctx,      Object[] res){
+        try {
+          event.getReplyToHandler().processReplyTo(buildResponseMessage(event,responseHolder.value,res),null,null);
+        }
+ catch (        MuleException ex) {
+          handleException(ctx,ex);
+        }
+      }
+      @Override public void handleException(      Map<String,Object> ctx,      Throwable ex){
+        event.getReplyToHandler().processExceptionReplyTo(wrapException(responseHolder.value,ex),null);
+      }
+    }
+,bop,getArgs(event),ctx,exchange);
+    return NonBlockingVoidMuleEvent.getInstance();
+  }
+ else {
+    Object[] response=client.invoke(bop,getArgs(event),ctx,exchange);
+    return buildResponseMessage(event,responseHolder.value,response);
+  }
 }

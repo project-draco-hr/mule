@@ -2,26 +2,28 @@
   try {
     MuleMessage req=reqEvent.getMessage();
     req.setOutboundProperty(HttpConnector.HTTP_DISABLE_STATUS_CODE_EXCEPTION_CHECK,Boolean.TRUE.toString());
-    MuleEvent resEvent=processNext(reqEvent,m.getExchange(),endpoint);
-    if (resEvent == null || VoidMuleEvent.getInstance().equals(resEvent)) {
-      m.getExchange().put(ClientImpl.FINISHED,Boolean.TRUE);
-      return;
-    }
-    m.getExchange().put(CxfConstants.MULE_EVENT,resEvent);
-    MuleMessage result=resEvent.getMessage();
-    InputStream is=getResponseBody(m,result);
-    if (is != null) {
-      Message inMessage=new MessageImpl();
-      String encoding=result.getEncoding();
-      inMessage.put(Message.ENCODING,encoding);
-      String contentType=result.getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE,"text/xml");
-      if (encoding != null && contentType.indexOf("charset") < 0) {
-        contentType+="; charset=" + result.getEncoding();
+    if (reqEvent.isAllowNonBlocking()) {
+      final ReplyToHandler originalReplyToHandler=reqEvent.getReplyToHandler();
+      reqEvent=new DefaultMuleEvent(reqEvent,new ReplyToHandler(){
+        @Override public void processReplyTo(        MuleEvent event,        MuleMessage returnMessage,        Object replyTo) throws MuleException {
+          try {
+            Holder<MuleEvent> holder=(Holder<MuleEvent>)m.getExchange().get("holder");
+            holder.value=event;
+            sendResultBackToCxf(m,event);
+          }
+ catch (          IOException e) {
+            processExceptionReplyTo(new MessagingException(event,e),replyTo);
+          }
+        }
+        @Override public void processExceptionReplyTo(        MessagingException exception,        Object replyTo){
+          originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
+        }
       }
-      inMessage.put(Message.CONTENT_TYPE,contentType);
-      inMessage.setContent(InputStream.class,is);
-      inMessage.setExchange(m.getExchange());
-      getMessageObserver().onMessage(inMessage);
+);
+    }
+    MuleEvent resEvent=processNext(reqEvent,m.getExchange(),endpoint);
+    if (!resEvent.equals(NonBlockingVoidMuleEvent.getInstance())) {
+      sendResultBackToCxf(m,resEvent);
     }
   }
  catch (  MuleException me) {

@@ -6,25 +6,25 @@
       if (!NonBlockingVoidMuleEvent.getInstance().equals(response)) {
         originalReplyToHandler.processReplyTo(response,null,null);
       }
-      processFinallly(event,null);
+      processFinally(event,null);
     }
-    @Override public void processExceptionReplyTo(    MuleEvent event,    MessagingException exception,    Object replyTo){
-      originalReplyToHandler.processExceptionReplyTo(exception.getEvent(),exception,null);
-      processFinallly(exception.getEvent(),exception);
+    @Override public void processExceptionReplyTo(    MessagingException exception,    Object replyTo){
+      originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
+      processFinally(exception.getEvent(),exception);
     }
   }
 );
   try {
     MuleEvent result=processNext(processRequest(event));
     if (!(result instanceof NonBlockingVoidMuleEvent)) {
-      return processResponse(event);
+      return processResponse(result);
     }
  else {
       return result;
     }
   }
  catch (  MessagingException exception) {
-    processFinallly(event,exception);
+    processFinally(event,exception);
     throw exception;
   }
 }
