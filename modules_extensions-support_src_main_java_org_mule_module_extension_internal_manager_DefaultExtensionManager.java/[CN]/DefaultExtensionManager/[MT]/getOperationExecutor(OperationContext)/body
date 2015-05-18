@@ -1,0 +1,16 @@
+{
+  Extension extension=register.getExtension(operationContext.getOperation());
+  Map<String,ConfigurationInstanceProvider> providers=register.getConfigurationInstanceProviders(extension);
+  int matches=providers.size();
+  if (matches == 1) {
+    ConfigurationInstanceProvider<Object> provider=providers.values().iterator().next();
+    return getOperationExecutor(provider,operationContext);
+  }
+ else   if (matches > 1) {
+    throw new IllegalStateException(String.format("No config-ref was specified for operation %s of extension %s, but %d are registered. Please specify which to use",operationContext.getOperation().getName(),extension.getName(),matches));
+  }
+ else {
+    attemptToCreateImplicitConfigurationInstance(extension,operationContext);
+    return getOperationExecutor(operationContext);
+  }
+}

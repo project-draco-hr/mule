@@ -1,0 +1,17 @@
+{
+  ResolverSet resolverSet=new ResolverSet();
+  for (  Parameter parameter : configuration.getParameters()) {
+    Object defaultValue=parameter.getDefaultValue();
+    if (defaultValue != null) {
+      ValueResolver<Object> valueResolver;
+      if (defaultValue instanceof String && muleContext.getExpressionManager().isExpression((String)defaultValue)) {
+        valueResolver=new EvaluateAndTransformValueResolver<>((String)defaultValue,parameter.getType());
+      }
+ else {
+        valueResolver=new StaticValueResolver<>(defaultValue);
+      }
+      resolverSet.add(parameter,valueResolver);
+    }
+  }
+  return resolverSet;
+}
