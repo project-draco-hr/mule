@@ -1,12 +1,18 @@
 {
   final HttpResponseHeaderBuilder httpResponseHeaderBuilder=new HttpResponseHeaderBuilder();
+  final Set<String> outboundProperties=event.getMessage().getOutboundPropertyNames();
   if (!disablePropertiesAsHeaders) {
-    final Set<String> outboundProperties=event.getMessage().getOutboundPropertyNames();
     for (    String outboundPropertyName : outboundProperties) {
       if (!outboundPropertyName.equals(HttpConstants.ResponseProperties.HTTP_STATUS_PROPERTY)) {
         final Object outboundPropertyValue=event.getMessage().getOutboundProperty(outboundPropertyName);
         httpResponseHeaderBuilder.addHeader(outboundPropertyName,outboundPropertyValue);
       }
+    }
+  }
+  if (!outboundProperties.contains(MuleProperties.CONTENT_TYPE_PROPERTY)) {
+    DataType<?> dataType=event.getMessage().getDataType();
+    if (!MimeTypes.ANY.equals(dataType.getMimeType())) {
+      httpResponseHeaderBuilder.addHeader(MuleProperties.CONTENT_TYPE_PROPERTY,DataTypeUtils.getContentType(dataType));
     }
   }
   ParameterMap resolvedHeaders=resolveParams(event,HttpParamType.HEADER);
