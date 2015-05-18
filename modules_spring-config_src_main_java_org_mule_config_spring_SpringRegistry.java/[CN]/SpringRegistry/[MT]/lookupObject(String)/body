@@ -1,30 +1,3 @@
 {
-  if (StringUtils.isBlank(key)) {
-    logger.warn(createStaticMessage("Detected a lookup attempt with an empty or null key").getMessage(),new Throwable().fillInStackTrace());
-    return null;
-  }
-  if (key.equals(SPRING_APPLICATION_CONTEXT) && applicationContext != null) {
-    return applicationContext;
-  }
- else {
-    Object object;
-    try {
-      object=applicationContext.getBean(key);
-    }
- catch (    NoSuchBeanDefinitionException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(e.getMessage(),e);
-      }
-      return null;
-    }
-    if (!applicationContext.isSingleton(key)) {
-      try {
-        getLifecycleManager().applyCompletedPhases(object);
-      }
- catch (      Exception e) {
-        throw new MuleRuntimeException(createStaticMessage("Could not apply lifecycle into prototype object " + key),e);
-      }
-    }
-    return object;
-  }
+  return (T)lookupObject(key,true);
 }
