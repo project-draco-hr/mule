@@ -1,12 +1,18 @@
 {
+  if (!closed.compareAndSet(false,true)) {
+    return;
+  }
   if (logger.isDebugEnabled()) {
     logger.debug("Closing the stream for the file " + file);
   }
   super.close();
-  if (!errorOccured && archiveFile != null) {
-    if (logger.isInfoEnabled()) {
-      logger.info("Move archiveTmpSendingFile (" + file + ") to archiveFolder ("+ archiveFile+ ")...");
+  remoteStream.close();
+  if (postProcessOnClose) {
+    try {
+      postProcess();
     }
-    FileUtils.moveFile(file,archiveFile);
+ catch (    Exception e) {
+      throw new MuleRuntimeException(e);
+    }
   }
 }

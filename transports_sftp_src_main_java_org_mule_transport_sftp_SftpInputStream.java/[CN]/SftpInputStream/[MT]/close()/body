@@ -1,23 +1,22 @@
 {
-  if (logger.isDebugEnabled()) {
-    logger.debug("Closing the stream for the file " + fileName);
-  }
-  try {
-    super.close();
-    if (autoDelete && !errorOccured) {
-      client.deleteFile(fileName);
+  if (closed.compareAndSet(false,true)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Closing the stream for the file " + fileName);
     }
-  }
- catch (  IOException e) {
-    logger.error("Error occured while closing file " + fileName,e);
-    throw e;
-  }
- finally {
     try {
-      ((SftpConnector)endpoint.getConnector()).releaseClient(endpoint,client);
+      super.close();
     }
- catch (    Exception e) {
-      logger.error(e.getMessage(),e);
+ catch (    IOException e) {
+      logger.error("Error occurred while closing file " + fileName,e);
+      throw e;
+    }
+    if (postProcessOnClose) {
+      try {
+        postProcess();
+      }
+ catch (      Exception e) {
+        throw new MuleRuntimeException(e);
+      }
     }
   }
 }

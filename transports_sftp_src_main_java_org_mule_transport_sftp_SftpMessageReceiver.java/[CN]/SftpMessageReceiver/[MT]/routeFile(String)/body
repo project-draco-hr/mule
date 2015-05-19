@@ -1,22 +1,44 @@
 {
+  final ValueHolder<InputStream> inputStreamReference=new ValueHolder<>();
   ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
-  executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
-    @Override public MuleEvent process() throws Exception {
-      SftpNotifier notifier=new SftpNotifier((SftpConnector)connector,createNullMuleMessage(),endpoint,flowConstruct.getName());
-      InputStream inputStream=sftpRRUtil.retrieveFile(path,notifier);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Routing file: " + path);
+  try {
+    executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
+      @Override public MuleEvent process() throws Exception {
+        SftpNotifier notifier=new SftpNotifier((SftpConnector)connector,createNullMuleMessage(),endpoint,flowConstruct.getName());
+        InputStream inputStream=sftpRRUtil.retrieveFile(path,notifier);
+        inputStreamReference.set(inputStream);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Routing file: " + path);
+        }
+        MuleMessage message=createMuleMessage(inputStream);
+        message.setProperty(SftpConnector.PROPERTY_FILENAME,path,PropertyScope.INBOUND);
+        message.setProperty(SftpConnector.PROPERTY_ORIGINAL_FILENAME,path,PropertyScope.INBOUND);
+        notifier.setMessage(message);
+        routeMessage(message);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Routed file: " + path);
+        }
+        return null;
       }
-      MuleMessage message=createMuleMessage(inputStream);
-      message.setProperty(SftpConnector.PROPERTY_FILENAME,path,PropertyScope.INBOUND);
-      message.setProperty(SftpConnector.PROPERTY_ORIGINAL_FILENAME,path,PropertyScope.INBOUND);
-      notifier.setMessage(message);
-      routeMessage(message);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Routed file: " + path);
-      }
-      return null;
+    }
+);
+    SftpStream sftpStream=getSftpStream(inputStreamReference);
+    if (sftpStream != null) {
+      sftpStream.performPostProcessingOnClose(true);
     }
   }
-);
+ catch (  Exception e) {
+    SftpStream sftpStream=getSftpStream(inputStreamReference);
+    if (sftpStream != null) {
+      sftpStream.setErrorOccurred();
+    }
+  }
+ finally {
+    SftpStream sftpStream=getSftpStream(inputStreamReference);
+    if (sftpStream != null) {
+      if (sftpStream.isClosed()) {
+        sftpStream.postProcess();
+      }
+    }
+  }
 }
