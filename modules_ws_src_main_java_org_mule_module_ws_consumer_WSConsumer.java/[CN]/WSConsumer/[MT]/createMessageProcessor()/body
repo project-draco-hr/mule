@@ -1,58 +1,9 @@
 {
   MessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder();
-  chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      try {
-        if (requestBody != null) {
-          event.getMessage().setPayload(requestBody);
-        }
-        copyAttachmentsRequest(event);
-        MuleEvent result=processNext(event);
-        copyAttachmentsResponse(result);
-        return result;
-      }
- catch (      DispatchException e) {
-        if (e.getCause() instanceof SoapFault) {
-          SoapFault soapFault=(SoapFault)e.getCause();
-          event.getMessage().setPayload(soapFault.getDetail());
-          throw new SoapFaultException(event,soapFault.getFaultCode(),soapFault.getSubCode(),soapFault.getMessage(),soapFault.getDetail());
-        }
- else {
-          throw e;
-        }
-      }
-    }
-  }
-);
-  chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      Object operation=event.getMessage().removeProperty(CxfConstants.OPERATION,PropertyScope.INVOCATION);
-      MuleEvent result=processNext(event);
-      if (operation != null) {
-        result.getMessage().setInvocationProperty(CxfConstants.OPERATION,operation);
-      }
-      return result;
-    }
-  }
-);
+  chainBuilder.chain(createCopyAttachmentsMessageProcessor());
+  chainBuilder.chain(createPropertyRemoverMessageProcessor(CxfConstants.OPERATION));
   chainBuilder.chain(createCxfOutboundMessageProcessor(config.getSecurity()));
-  chainBuilder.chain(new AbstractInterceptingMessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      List<String> outboundProperties=new ArrayList<String>(event.getMessage().getOutboundPropertyNames());
-      for (      String outboundProperty : outboundProperties) {
-        if (outboundProperty.startsWith(SOAP_HEADERS_PROPERTY_PREFIX)) {
-          event.getMessage().removeProperty(outboundProperty,PropertyScope.OUTBOUND);
-        }
-      }
-      MuleEvent result=processNext(event);
-      Object statusCode=result.getMessage().getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,null);
-      if (statusCode != null && !(statusCode instanceof String)) {
-        result.getMessage().setProperty(HttpConnector.HTTP_STATUS_PROPERTY,statusCode.toString(),PropertyScope.INBOUND);
-      }
-      return result;
-    }
-  }
-);
+  chainBuilder.chain(createSoapHeadersPropertiesRemoverMessageProcessor());
   chainBuilder.chain(config.createOutboundMessageProcessor());
   return chainBuilder.build();
 }

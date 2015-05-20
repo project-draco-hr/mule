@@ -1,0 +1,14 @@
+{
+  if (ex instanceof MessagingException) {
+    return (MessagingException)ex;
+  }
+  if (ex instanceof Fault) {
+    Fault fault=(Fault)ex;
+    if (fault.getCause() instanceof MuleException) {
+      MuleException muleException=(MuleException)fault.getCause();
+      return alwaysReturnMessagingException ? new MessagingException(event,muleException) : muleException;
+    }
+    return new DispatchException(MessageFactory.createStaticMessage(fault.getMessage()),event,this,fault);
+  }
+  return new DispatchException(MessageFactory.createStaticMessage(ExceptionHelper.getRootException(ex).getMessage()),event,this,ex);
+}

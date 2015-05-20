@@ -1,0 +1,12 @@
+{
+  MuleMessage request=new DefaultMuleMessage("TEST",(Map<String,Object>)null,muleContext);
+  MuleClient client=muleContext.getClient();
+  MuleMessage received=client.send("http://localhost:" + dynamicPort.getNumber() + "/echoClient",request,newOptions().method(POST.name()).disableStatusCodeValidation().build());
+  assertNotNull(received);
+  Object[] payload=deserializeResponse(received);
+  assertEquals("one-response",payload[0]);
+  assertEquals(null,payload[1]);
+  assertEquals("one-holder1",((Holder)payload[2]).value);
+  assertEquals("one-holder2",((Holder)payload[3]).value);
+  getSensingInstance("sensingRequestResponseProcessorEcho").assertRequestResponseThreadsDifferent();
+}
