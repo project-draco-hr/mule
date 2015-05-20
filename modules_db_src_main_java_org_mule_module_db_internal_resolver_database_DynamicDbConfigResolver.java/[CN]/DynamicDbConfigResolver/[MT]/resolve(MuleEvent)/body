@@ -1,0 +1,20 @@
+{
+  DataSourceConfig resolvedDataSourceConfig=this.dataSourceConfig.resolve(muleEvent);
+  DbConfig dbConfig=cache.get(resolvedDataSourceConfig);
+  if (dbConfig == null) {
+synchronized (cache) {
+      dbConfig=cache.get(resolvedDataSourceConfig);
+      if (dbConfig == null) {
+        try {
+          DataSource dynamicDataSource=dataSourceFactory.create(resolvedDataSourceConfig);
+          dbConfig=dbConfigFactory.create(generateDbConfigName(),dynamicDataSource);
+          cache.put(resolvedDataSourceConfig,dbConfig);
+        }
+ catch (        SQLException e) {
+          throw new UnresolvableDbConfigException("Cannot create dynamic dataSource",e);
+        }
+      }
+    }
+  }
+  return dbConfig;
+}

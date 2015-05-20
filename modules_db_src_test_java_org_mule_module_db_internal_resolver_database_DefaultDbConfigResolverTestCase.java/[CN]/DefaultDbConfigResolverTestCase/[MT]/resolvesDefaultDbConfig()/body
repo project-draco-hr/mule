@@ -1,10 +1,12 @@
 {
+  DbConfigResolver dbConfigResolver=mock(DbConfigResolver.class);
   DbConfig dbConfig=mock(DbConfig.class);
+  when(dbConfigResolver.resolve(muleEvent)).thenReturn(dbConfig);
   MuleRegistry registry=mock(MuleRegistry.class);
-  Collection<DbConfig> foundDbConfigs=new ArrayList<DbConfig>();
-  foundDbConfigs.add(dbConfig);
-  when(registry.lookupObjects(DbConfig.class)).thenReturn(foundDbConfigs);
-  DefaultDbConfigResolver dbConfigResolver=new DefaultDbConfigResolver(registry);
-  DbConfig resolvedDbConfig=dbConfigResolver.resolve(muleEvent);
+  Collection<DbConfigResolver> foundDbConfigResolvers=new ArrayList<>();
+  foundDbConfigResolvers.add(dbConfigResolver);
+  when(registry.lookupObjects(DbConfigResolver.class)).thenReturn(foundDbConfigResolvers);
+  DefaultDbConfigResolver defaultDbConfigResolver=new DefaultDbConfigResolver(registry);
+  DbConfig resolvedDbConfig=defaultDbConfigResolver.resolve(muleEvent);
   assertThat(dbConfig,sameInstance(resolvedDbConfig));
 }
