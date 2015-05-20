@@ -1,0 +1,18 @@
+{
+  validate();
+  dataSourceConfig.setUrl(getEffectiveUrl());
+  dataSourceFactory=createDataSourceFactory();
+  if (dataSourceConfig.isDynamic()) {
+    DataSourceFactory dataSourceFactory=new DataSourceFactory(name);
+    dataSourceFactory.setMuleContext(muleContext);
+    return new DynamicDbConfigResolver(name,dbConfigFactory,dataSourceFactory,dataSourceConfig);
+  }
+ else {
+    DataSource instanceDataSource=dataSource;
+    if (instanceDataSource == null) {
+      instanceDataSource=dataSourceFactory.create(dataSourceConfig);
+    }
+    DbConfig dbConfig=dbConfigFactory.create(name,instanceDataSource);
+    return new StaticDbConfigResolver(dbConfig);
+  }
+}
