@@ -3,6 +3,7 @@
   event=new DefaultMuleEvent(event,new ReplyToHandler(){
     @Override public void processReplyTo(    MuleEvent event,    MuleMessage returnMessage,    Object replyTo) throws MuleException {
       MuleEvent response=processResponse(new DefaultMuleEvent(event,originalReplyToHandler));
+      OptimizedRequestContext.unsafeSetEvent(response);
       if (!NonBlockingVoidMuleEvent.getInstance().equals(response)) {
         originalReplyToHandler.processReplyTo(response,null,null);
       }
@@ -14,6 +15,7 @@
     }
   }
 );
+  OptimizedRequestContext.unsafeSetEvent(event);
   try {
     MuleEvent result=processNext(processRequest(event));
     if (!(result instanceof NonBlockingVoidMuleEvent)) {
