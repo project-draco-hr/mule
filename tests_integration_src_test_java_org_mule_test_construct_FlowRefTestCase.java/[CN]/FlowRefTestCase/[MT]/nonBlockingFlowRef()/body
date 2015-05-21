@@ -1,0 +1,10 @@
+{
+  Response response=Request.Post(String.format("http://localhost:%s/%s",port.getNumber(),"nonBlockingFlowRefBasic")).connectTimeout(RECEIVE_TIMEOUT).bodyString(TEST_MESSAGE,ContentType.TEXT_PLAIN).execute();
+  HttpResponse httpResponse=response.returnResponse();
+  assertThat(httpResponse.getStatusLine().getStatusCode(),is(200));
+  assertThat(IOUtils.toString(httpResponse.getEntity().getContent()),is(TEST_MESSAGE));
+  SensingNullRequestResponseMessageProcessor flow1RequestResponseProcessor=muleContext.getRegistry().lookupObject(FLOW1_SENSING_PROCESSOR_NAME);
+  SensingNullRequestResponseMessageProcessor flow2RequestResponseProcessor=muleContext.getRegistry().lookupObject(FLOW2_SENSING_PROCESSOR_NAME);
+  assertThat(flow1RequestResponseProcessor.requestThread,not(equalTo(flow1RequestResponseProcessor.responseThread)));
+  assertThat(flow2RequestResponseProcessor.requestThread,not(equalTo(flow2RequestResponseProcessor.responseThread)));
+}
