@@ -1,0 +1,12 @@
+{
+  if (buffer == null) {
+    throw new IllegalArgumentException("Buffer argument cannot be null.");
+  }
+  if (!feedableBodyGenerator.asyncTransferInitiated) {
+    throw new IllegalStateException("Asynchronous transfer has not been initiated.");
+  }
+  blockUntilQueueFree(feedableBodyGenerator.context.getConnection());
+  final HttpContent content=feedableBodyGenerator.contentBuilder.content(buffer).last(last).build();
+  final CompletionHandler<WriteResult> handler=((last) ? new LastPacketCompletionHandler() : null);
+  feedableBodyGenerator.context.write(content,handler);
+}

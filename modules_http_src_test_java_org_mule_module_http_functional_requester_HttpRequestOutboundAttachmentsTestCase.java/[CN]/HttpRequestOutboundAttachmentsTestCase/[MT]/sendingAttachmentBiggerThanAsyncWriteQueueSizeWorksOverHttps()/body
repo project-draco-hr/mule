@@ -1,0 +1,8 @@
+{
+  MuleEvent event=getTestEvent(TEST_MESSAGE);
+  int maxAsyncWriteQueueSize=Integer.valueOf(sendBufferSize.getValue()) * 4;
+  event.getMessage().addOutboundAttachment(TEST_PART_NAME,new byte[maxAsyncWriteQueueSize * 2],TEXT);
+  Flow flow=(Flow)getFlowConstruct("requestFlowTls");
+  MuleEvent response=flow.process(event);
+  assertThat((Integer)response.getMessage().getInboundProperty(HTTP_STATUS_PROPERTY),equalTo(OK.getStatusCode()));
+}
