@@ -1,19 +1,25 @@
 {
   try {
     final Exchange exchange=new ExchangeImpl();
+    final MuleEvent originalEvent=event;
     if (event.isAllowNonBlocking()) {
       final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
       event=new DefaultMuleEvent(event,new ReplyToHandler(){
-        @Override public void processReplyTo(        MuleEvent event,        MuleMessage returnMessage,        Object replyTo) throws MuleException {
+        @Override public void processReplyTo(        MuleEvent responseEvent,        MuleMessage returnMessage,        Object replyTo) throws MuleException {
           try {
-            originalReplyToHandler.processReplyTo(event,returnMessage,replyTo);
+            exchange.put(CxfConstants.MULE_EVENT,responseEvent);
+            exchange.put(CxfConstants.NON_BLOCKING_RESPONSE,true);
+            exchange.getInMessage().getInterceptorChain().resume();
+            responseEvent=(MuleEvent)exchange.get(CxfConstants.MULE_EVENT);
+            responseEvent=processResponse(originalEvent,exchange,responseEvent);
+            originalReplyToHandler.processReplyTo(responseEvent,responseEvent.getMessage(),replyTo);
           }
  catch (          Exception e) {
             ExceptionPayload exceptionPayload=new DefaultExceptionPayload(e);
-            event.getMessage().setExceptionPayload(exceptionPayload);
+            responseEvent.getMessage().setExceptionPayload(exceptionPayload);
             returnMessage.setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,500);
-            event.setMessage(returnMessage);
-            processExceptionReplyTo(new MessagingException(event,e),replyTo);
+            responseEvent.setMessage(returnMessage);
+            processExceptionReplyTo(new MessagingException(responseEvent,e),replyTo);
           }
         }
         @Override public void processExceptionReplyTo(        MessagingException exception,        Object replyTo){

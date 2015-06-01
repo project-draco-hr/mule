@@ -63,6 +63,14 @@
   exchange.put(StaxInEndingInterceptor.STAX_IN_NOCLOSE,Boolean.TRUE);
   exchange.setInMessage(m);
   exchange.put(CxfConstants.MULE_EVENT,event);
-  d.getMessageObserver().onMessage(m);
+  try {
+    d.getMessageObserver().onMessage(m);
+  }
+ catch (  SuspendedInvocationException e) {
+    MuleEvent responseEvent=(MuleEvent)exchange.get(CxfConstants.MULE_EVENT);
+    if (responseEvent == null || !responseEvent.equals(NonBlockingVoidMuleEvent.getInstance())) {
+      throw e;
+    }
+  }
   return (MuleEvent)exchange.get(CxfConstants.MULE_EVENT);
 }
