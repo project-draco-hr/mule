@@ -1,6 +1,12 @@
 {
   if (event != null || event instanceof VoidMuleEvent) {
-    return next.process(event);
+    try {
+      return new ProcessorExecutorFactory().createProcessorExecutor(event,Collections.singletonList(next),MessageProcessorExecutionTemplate.createExceptionTransformerExecutionTemplate(),false).execute();
+    }
+ catch (    MessagingException e) {
+      event.getSession().setValid(false);
+      throw e;
+    }
   }
  else {
     return event;
