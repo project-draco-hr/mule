@@ -1,7 +1,9 @@
 {
   ExpressionManager expressionManager=event.getMuleContext().getExpressionManager();
-  MuleEvent enricherEvent;
-  enricherEvent=DefaultMuleEvent.copy(event);
+  MuleEvent enricherEvent=DefaultMuleEvent.copy(event);
+  if (event.isAllowNonBlocking() && event.getReplyToHandler() != null) {
+    enricherEvent=new DefaultMuleEvent(event.getMessage(),event,true);
+  }
   OptimizedRequestContext.unsafeSetEvent(enricherEvent);
   MuleEvent enrichmentEvent=enrichmentProcessor.process(enricherEvent);
   OptimizedRequestContext.unsafeSetEvent(event);
