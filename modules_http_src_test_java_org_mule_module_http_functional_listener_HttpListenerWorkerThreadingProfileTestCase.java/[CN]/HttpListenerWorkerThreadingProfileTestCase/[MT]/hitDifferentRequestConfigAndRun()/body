@@ -1,12 +1,14 @@
 {
-  sendRequestUntilNoMoreWorkers();
+  String url=String.format("http://localhost:%s",listenPort1.getNumber());
+  sendRequestUntilNoMoreWorkers("maxActiveThreadsConfigFlow",url,CUSTOM_MAX_THREADS_ACTIVE);
   try {
-    final Response response=Request.Post(String.format("http://localhost:%s",listenPort2.getNumber())).bodyByteArray(TEST_MESSAGE.getBytes()).connectTimeout(100).socketTimeout(100).execute();
+    url=String.format("http://localhost:%s",listenPort3.getNumber());
+    final Response response=httpClientExecutor.execute(Request.Post(url).bodyByteArray(TEST_MESSAGE.getBytes()).connectTimeout(100).socketTimeout(100));
     final HttpResponse httpResponse=response.returnResponse();
-    assertThat(httpResponse.getStatusLine().getStatusCode(),is(200));
+    assertThat(httpResponse.getStatusLine().getStatusCode(),is(OK.getStatusCode()));
     assertThat(IOUtils.toString(httpResponse.getEntity().getContent()),is(TEST_MESSAGE));
   }
   finally {
-    WaitMessageProcessor.waitingLatch.release();
+    waitingLatch.release();
   }
 }
