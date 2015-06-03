@@ -3,12 +3,20 @@
     final SystemExceptionHandler exceptionListener=muleContext.getExceptionListener();
     muleContext.setExceptionListener(new SystemExceptionHandler(){
       @Override public void handleException(      Exception exception,      RollbackSourceCallback rollbackMethod){
-        exceptionThrownLatch.countDown();
-        exceptionListener.handleException(exception,rollbackMethod);
+        try {
+          exceptionListener.handleException(exception,rollbackMethod);
+        }
+  finally {
+          exceptionThrownLatch.countDown();
+        }
       }
       @Override public void handleException(      Exception exception){
-        exceptionThrownLatch.countDown();
-        exceptionListener.handleException(exception);
+        try {
+          exceptionListener.handleException(exception);
+        }
+  finally {
+          exceptionThrownLatch.countDown();
+        }
       }
     }
 );
