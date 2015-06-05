@@ -8,11 +8,14 @@
     MuleEvent resultEvent=executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
       @Override public MuleEvent process() throws Exception {
         MuleEvent event=routeMessage(message);
-        MuleMessage returnedMessage=!getEndpoint().getExchangePattern().hasResponse() || event == null ? null : event.getMessage();
-        if (returnedMessage != null) {
-          returnedMessage.release();
+        if (event != null && !VoidMuleEvent.getInstance().equals(event) && getEndpoint().getExchangePattern().hasResponse()) {
+          MuleMessage returnedMessage=event.getMessage();
+          if (returnedMessage != null) {
+            returnedMessage.release();
+          }
+          return event;
         }
-        return returnedMessage == null ? null : event;
+        return null;
       }
     }
 );
