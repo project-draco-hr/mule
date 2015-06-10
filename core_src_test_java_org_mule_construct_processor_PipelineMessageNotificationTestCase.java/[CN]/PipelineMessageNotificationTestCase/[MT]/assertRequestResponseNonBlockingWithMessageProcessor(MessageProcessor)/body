@@ -1,0 +1,15 @@
+{
+  TriggerableMessageSource source=new TriggerableMessageSource();
+  pipeline.setMessageSource(source);
+  pipeline.setProcessingStrategy(new NonBlockingProcessingStrategy());
+  pipeline.setMessageProcessors(Collections.singletonList(messageProcessor));
+  pipeline.initialise();
+  SensingNullReplyToHandler nullReplyToHandler=new SensingNullReplyToHandler();
+  event=new DefaultMuleEvent(new DefaultMuleMessage("request",muleContext),MessageExchangePattern.REQUEST_RESPONSE,nullReplyToHandler,pipeline);
+  source.trigger(event);
+  nullReplyToHandler.latch.await(AbstractMuleContextTestCase.RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_START,false,null)));
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_END,false,null)));
+  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PipelineMessageNotification.PROCESS_COMPLETE,false,null)));
+  verify(notificationManager,times(3)).fireNotification(any(PipelineMessageNotification.class));
+}
