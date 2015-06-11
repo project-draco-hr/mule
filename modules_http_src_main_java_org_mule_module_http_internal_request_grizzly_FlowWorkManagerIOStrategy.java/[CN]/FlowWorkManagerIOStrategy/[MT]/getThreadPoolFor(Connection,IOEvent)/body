@@ -1,13 +1,15 @@
 {
   if (WORKER_THREAD_EVENT_SET.contains(ioEvent)) {
-    AsyncHandler handler=((HttpTransactionContext)connection.getAttributes().getAttribute(HttpTransactionContext.class.getName())).getAsyncHandler();
-    if (handler instanceof WorkManagerSource) {
-      try {
-        return ((WorkManagerSource)handler).getWorkManager();
+    try {
+      WorkManager workManager=getWorkManager(connection);
+      if (workManager != null) {
+        return workManager;
       }
- catch (      MuleException e) {
-        logger.warning("Unable to obtain Mule WorkManager instance for worker thread IO.  " + "WorkerIOStrategy  will be used instead.");
-      }
+    }
+ catch (    MuleException e) {
+    }
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Unable to obtain Mule WorkManager instance for worker thread IO. Grizzly " + "WorkerIOStrategy will be used instead.");
     }
     return connection.getTransport().getWorkerThreadPool();
   }
