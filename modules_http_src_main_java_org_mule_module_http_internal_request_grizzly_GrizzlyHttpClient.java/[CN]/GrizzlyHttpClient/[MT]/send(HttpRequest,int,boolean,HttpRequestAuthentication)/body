@@ -2,7 +2,14 @@
   Request grizzlyRequest=createGrizzlyRequest(request,responseTimeout,followRedirects,authentication);
   ListenableFuture<Response> future=asyncHttpClient.executeRequest(grizzlyRequest);
   try {
-    return createMuleResponse(future.get());
+    Response response=future.get();
+    if (response == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Null response returned by async client");
+      }
+      response=future.get();
+    }
+    return createMuleResponse(response);
   }
  catch (  InterruptedException e) {
     throw new IOException(e);
