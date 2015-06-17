@@ -3,15 +3,19 @@
   if (implicitConfiguration == null) {
     throw new IllegalStateException(String.format("Could not find a config for extension %s and none can be created automatically. Please define one",extension.getName()));
   }
-  ConfigurationObjectBuilder configurationObjectBuilder=new ConfigurationObjectBuilder(implicitConfiguration,buildImplicitConfigurationResolverSet(implicitConfiguration));
-  Object configurationInstance;
-  try {
-    configurationInstance=configurationObjectBuilder.build(asOperationContextAdapter(operationContext).getEvent());
+synchronized (implicitConfiguration) {
+    if (!register.getConfigurationInstanceProviders(extension).isEmpty()) {
+      return;
+    }
+    ConfigurationObjectBuilder configurationObjectBuilder=new ConfigurationObjectBuilder(implicitConfiguration,buildImplicitConfigurationResolverSet(implicitConfiguration));
+    Object configurationInstance;
+    try {
+      configurationInstance=configurationObjectBuilder.build(asOperationContextAdapter(operationContext).getEvent());
+    }
+ catch (    MuleException e) {
+      throw new MuleRuntimeException(e);
+    }
+    final String instanceName=objectNameHelper.getUniqueName(String.format("%s-%s",extension.getName(),implicitConfiguration.getName()));
+    registerConfigurationInstanceProvider(instanceName,new StaticConfigurationInstanceProvider<>(instanceName,implicitConfiguration,configurationInstance));
   }
- catch (  MuleException e) {
-    throw new MuleRuntimeException(e);
-  }
-  final String instanceName=objectNameHelper.getUniqueName(String.format("%s-%s",extension.getName(),implicitConfiguration.getName()));
-  registerConfigurationInstanceProvider(instanceName,new StaticConfigurationInstanceProvider<>(instanceName,implicitConfiguration,configurationInstance));
-  return configurationInstance;
 }

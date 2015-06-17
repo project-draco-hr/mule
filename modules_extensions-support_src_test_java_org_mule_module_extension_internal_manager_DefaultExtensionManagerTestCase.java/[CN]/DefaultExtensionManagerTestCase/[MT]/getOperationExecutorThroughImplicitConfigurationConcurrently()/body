@@ -1,0 +1,28 @@
+{
+  final long timeout=5;
+  final TimeUnit timeUnit=TimeUnit.SECONDS;
+  final int threadCount=2;
+  final Latch testLatch=new Latch();
+  final CountDownLatch joinerLatch=new CountDownLatch(threadCount);
+  discover();
+  when(extension1Configuration.getCapabilities(ParameterGroupCapability.class)).thenReturn(null);
+  when(extension1.getConfigurations()).thenAnswer(new Answer<List<Configuration>>(){
+    @Override public List<Configuration> answer(    InvocationOnMock invocation) throws Throwable {
+      new Thread(){
+        @Override public void run(){
+          testLatch.release();
+          extensionsManager.getOperationExecutor(extension1OperationContext);
+        }
+      }
+.start();
+      testLatch.await(timeout,timeUnit);
+      joinerLatch.countDown();
+      return Arrays.asList(extension1Configuration);
+    }
+  }
+);
+  OperationExecutor managedExecutor=extensionsManager.getOperationExecutor(extension1OperationContext);
+  assertThat(joinerLatch.await(5,TimeUnit.SECONDS),is(true));
+  assertThat(managedExecutor,is(sameInstance((OperationExecutor)executor)));
+  verify(extension1Operation).getExecutor(configInstance);
+}
