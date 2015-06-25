@@ -2,14 +2,15 @@
   if (StringUtils.isEmpty(sourceExpressionArg)) {
     sourceExpressionArg="#[payload:]";
   }
-  Object enrichmentObject=expressionManager.evaluate(sourceExpressionArg,enrichmentMessage);
-  if (enrichmentObject instanceof MuleMessage) {
-    enrichmentObject=((MuleMessage)enrichmentObject).getPayload();
+  TypedValue typedValue=expressionManager.evaluateTyped(sourceExpressionArg,enrichmentMessage);
+  if (typedValue.getValue() instanceof MuleMessage) {
+    MuleMessage muleMessage=(MuleMessage)typedValue.getValue();
+    typedValue=new TypedValue(muleMessage.getPayload(),muleMessage.getDataType());
   }
   if (!StringUtils.isEmpty(targetExpressionArg)) {
-    expressionManager.enrich(targetExpressionArg,currentMessage,enrichmentObject);
+    expressionManager.enrichTyped(targetExpressionArg,currentMessage,typedValue);
   }
  else {
-    currentMessage.setPayload(enrichmentObject);
+    currentMessage.setPayload(typedValue.getValue(),typedValue.getDataType());
   }
 }
