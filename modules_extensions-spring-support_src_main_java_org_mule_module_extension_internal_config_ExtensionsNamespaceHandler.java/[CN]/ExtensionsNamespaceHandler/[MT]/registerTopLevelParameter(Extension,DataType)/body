@@ -1,5 +1,5 @@
 {
-  parameterType.getQualifier().accept(new BaseDataQualifierVisitor(){
+  parameterType.getQualifier().accept(new AbstractDataQualifierVisitor(){
     @Override public void onPojo(){
       String name=hyphenize(getGlobalPojoTypeName(parameterType));
       if (topLevelParameters.put(extension,name)) {
@@ -13,18 +13,12 @@
     }
     @Override public void onMap(){
       DataType[] genericTypes=parameterType.getGenericTypes();
-      if (genericTypes == null) {
+      if (ArrayUtils.isEmpty(genericTypes)) {
         return;
       }
-      if (genericTypes.length >= 1) {
-        DataType keyType=genericTypes[0];
-        registerTopLevelParameter(extension,keyType);
-      }
-      if (genericTypes.length >= 2) {
-        DataType valueType=parameterType.getGenericTypes()[0];
-        valueType.getQualifier().accept(this);
-        registerTopLevelParameter(extension,valueType);
-      }
+      DataType keyType=genericTypes[0];
+      keyType.getQualifier().accept(this);
+      registerTopLevelParameter(extension,keyType);
     }
   }
 );
