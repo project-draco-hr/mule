@@ -1,12 +1,18 @@
 {
-  DataTypeConversionResolver dataTypeConversionResolver=getRegistry().lookupObject(MuleProperties.OBJECT_CONVERTER_RESOLVER);
   if (dataTypeConversionResolver == null) {
-    dataTypeConversionResolver=new DynamicDataTypeConversionResolver(this);
-    try {
-      getRegistry().registerObject(MuleProperties.OBJECT_CONVERTER_RESOLVER,dataTypeConversionResolver);
-    }
- catch (    RegistrationException e) {
-      throw new IllegalStateException(e);
+synchronized (this) {
+      if (dataTypeConversionResolver == null) {
+        dataTypeConversionResolver=getRegistry().lookupObject(MuleProperties.OBJECT_CONVERTER_RESOLVER);
+        if (dataTypeConversionResolver == null) {
+          dataTypeConversionResolver=new DynamicDataTypeConversionResolver(this);
+          try {
+            getRegistry().registerObject(MuleProperties.OBJECT_CONVERTER_RESOLVER,dataTypeConversionResolver);
+          }
+ catch (          RegistrationException e) {
+            throw new IllegalStateException(e);
+          }
+        }
+      }
     }
   }
   return dataTypeConversionResolver;
