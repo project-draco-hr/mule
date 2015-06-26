@@ -1,11 +1,11 @@
 {
   ObjectBuilder<?> groupBuilder=new DefaultObjectBuilder<>(group.getType());
   for (  Map.Entry<String,Field> parameter : group.getParameters().entrySet()) {
-    groupBuilder.addPropertyValue(parameter.getValue(),result.get(parameter.getKey()));
+    groupBuilder.addPropertyResolver(parameter.getValue(),new StaticValueResolver<>(result.get(parameter.getKey())));
   }
-  Object object=groupBuilder.build(VoidMuleEvent.getInstance());
-  setField(group.getField(),target,object);
+  Object groupValue=groupBuilder.build(VoidMuleEvent.getInstance());
+  setField(group.getField(),target,groupValue);
   for (  ValueSetter childSetter : childSetters) {
-    childSetter.set(object,result);
+    childSetter.set(groupValue,result);
   }
 }
