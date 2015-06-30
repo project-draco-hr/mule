@@ -1,5 +1,5 @@
 {
-  if (expectedType.getRawType().isInstance(object)) {
+  if (ClassUtils.isInstance(expectedType.getRawType(),object)) {
     return object;
   }
   Type expectedClass=expectedType.getRawType();
@@ -13,15 +13,12 @@
     transformer=muleContext.getRegistry().lookupTransformer(sourceDataType,targetDataType);
   }
  catch (  TransformerException e) {
-    return object;
+    throw new MessagingException(createStaticMessage(String.format("Expression '%s' was expected to return a value of type '%s' but a '%s' was found instead " + "and no suitable transformer could be located",evaluator.getRawValue(),expectedType.getRawType().getName(),object.getClass().getName())),event,e);
   }
-  if (transformer != null) {
-    if (transformer instanceof MessageTransformer) {
-      return (T)((MessageTransformer)transformer).transform(object,event);
-    }
+  if (transformer instanceof MessageTransformer) {
+    return (T)((MessageTransformer)transformer).transform(object,event);
+  }
  else {
-      return (T)transformer.transform(object);
-    }
+    return (T)transformer.transform(object);
   }
-  return object;
 }
