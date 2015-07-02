@@ -2,25 +2,30 @@
   final Class<?>[] parameterTypes=method.getParameterTypes();
   if (isEmpty(parameterTypes)) {
     argumentResolvers=new ArgumentResolver[]{};
+    return;
   }
-  Method operationMethod=reflectiveMethodOperationExecutor.getOperationMethod();
   argumentResolvers=new ArgumentResolver[parameterTypes.length];
-  Annotation[][] parameterAnnotations=operationMethod.getParameterAnnotations();
-  final String[] paramNames=MuleExtensionAnnotationParser.getParamNames(operationMethod);
+  Annotation[][] parameterAnnotations=method.getParameterAnnotations();
+  final String[] paramNames=MuleExtensionAnnotationParser.getParamNames(method);
   for (int i=0; i < parameterTypes.length; i++) {
     final Class<?> parameterType=parameterTypes[i];
     Map<Class<? extends Annotation>,Annotation> annotations=toMap(parameterAnnotations[i]);
-    if (MuleEvent.class.isAssignableFrom(parameterType)) {
-      argumentResolvers[i]=new EventArgumentResolver();
+    ArgumentResolver<?> argumentResolver;
+    if (annotations.containsKey(UseConfig.class)) {
+      argumentResolver=ConfigurationInstanceArgumentResolver.getInstance();
+    }
+ else     if (MuleEvent.class.isAssignableFrom(parameterType)) {
+      argumentResolver=EventArgumentResolver.getInstance();
     }
  else     if (MuleMessage.class.isAssignableFrom(parameterType)) {
-      argumentResolvers[i]=new MessageArgumentResolver();
+      argumentResolver=MessageArgumentResolver.getInstance();
     }
- else     if (annotations.get(ParameterGroup.class) != null) {
-      argumentResolvers[i]=new ParameterGroupArgumentResolver(parameterType);
+ else     if (annotations.containsKey(ParameterGroup.class)) {
+      argumentResolver=new ParameterGroupArgumentResolver(parameterType);
     }
  else {
-      argumentResolvers[i]=new ByParameterNameArgumentResolver<>(paramNames[i]);
+      argumentResolver=new ByParameterNameArgumentResolver<>(paramNames[i]);
     }
+    argumentResolvers[i]=argumentResolver;
   }
 }
