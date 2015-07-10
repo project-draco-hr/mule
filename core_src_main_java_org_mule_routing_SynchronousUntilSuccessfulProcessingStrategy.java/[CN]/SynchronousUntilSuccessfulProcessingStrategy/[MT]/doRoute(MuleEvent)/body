@@ -1,6 +1,7 @@
 {
   Exception lastExecutionException=null;
   try {
+    MuleEvent retryEvent=DefaultMuleEvent.copy(event);
     for (int i=0; i <= getUntilSuccessfulConfiguration().getMaxRetries(); i++) {
       try {
         return processResponseThroughAckResponseExpression(processEvent(event));
@@ -13,6 +14,7 @@
         lastExecutionException=e;
         if (i < getUntilSuccessfulConfiguration().getMaxRetries()) {
           Thread.sleep(getUntilSuccessfulConfiguration().getMillisBetweenRetries());
+          event=DefaultMuleEvent.copy(retryEvent);
         }
       }
     }

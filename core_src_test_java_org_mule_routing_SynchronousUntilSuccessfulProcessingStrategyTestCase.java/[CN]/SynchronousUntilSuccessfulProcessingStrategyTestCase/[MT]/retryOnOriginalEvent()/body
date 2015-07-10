@@ -1,6 +1,15 @@
 {
   when(mockUntilSuccessfulConfiguration.getFailureExpressionFilter()).thenReturn(mockAlwaysTrueFailureExpressionFilter);
   SynchronousUntilSuccessfulProcessingStrategy processingStrategy=createProcessingStrategy();
+  when(mockRoute.process(any(MuleEvent.class))).then(new Answer<MuleEvent>(){
+    @Override public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
+      MuleEvent argEvent=(MuleEvent)invocation.getArguments()[0];
+      assertThat(argEvent.getMessageAsString(),is(TEST_DATA));
+      argEvent.getMessage().setPayload(PROCESSED_DATA);
+      return argEvent;
+    }
+  }
+);
   try {
     processingStrategy.route(event);
     fail("processing should throw exception");
