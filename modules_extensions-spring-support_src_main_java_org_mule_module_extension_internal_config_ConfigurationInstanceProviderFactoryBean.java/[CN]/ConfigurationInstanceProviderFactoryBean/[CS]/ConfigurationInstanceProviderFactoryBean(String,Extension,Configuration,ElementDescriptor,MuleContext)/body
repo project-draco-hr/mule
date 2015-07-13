@@ -1,0 +1,13 @@
+{
+  final ExtensionManagerAdapter extensionManager=(ExtensionManagerAdapter)muleContext.getExtensionManager();
+  ResolverSet resolverSet=getResolverSet(element,configuration.getParameters());
+  ConfigurationObjectBuilder configurationObjectBuilder=new ConfigurationObjectBuilder(name,extension,configuration,resolverSet,extensionManager);
+  if (resolverSet.isDynamic()) {
+    configurationInstanceProvider=new DynamicConfigurationInstanceProvider<>(configurationObjectBuilder,resolverSet);
+  }
+ else {
+    Object configurationInstance=instantiateStaticConfiguration(muleContext,configurationObjectBuilder);
+    configurationInstanceProvider=new StaticConfigurationInstanceProvider<>(configurationInstance);
+  }
+  extensionManager.registerConfigurationInstanceProvider(extension,name,configurationInstanceProvider);
+}
