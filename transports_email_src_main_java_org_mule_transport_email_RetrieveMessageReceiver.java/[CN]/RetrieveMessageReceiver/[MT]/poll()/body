@@ -20,9 +20,10 @@ synchronized (folderLock) {
         if (count > 0) {
           int limit=Math.min(count,offset + batchSize - 1);
           Message[] messages=folder.getMessages(offset,limit);
+          boolean newMessagesReceived=containsNewMessages(messages);
           MessageCountEvent event=new MessageCountEvent(folder,MessageCountEvent.ADDED,true,messages);
           messagesAdded(event);
-          if (!castConnector().isDeleteReadMessages()) {
+          if (!castConnector().isDeleteReadMessages() || !newMessagesReceived) {
             offset+=batchSize;
           }
         }

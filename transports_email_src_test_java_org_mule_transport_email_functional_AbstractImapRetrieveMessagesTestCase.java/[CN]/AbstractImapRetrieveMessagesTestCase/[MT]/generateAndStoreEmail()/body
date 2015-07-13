@@ -1,7 +1,9 @@
 {
-  List<MimeMessage> messages=new ArrayList<MimeMessage>();
-  for (int i=0; i < NUMBER_OF_MESSAGES; i++) {
-    messages.add(GreenMailUtilities.toMessage(String.valueOf(i),DEFAULT_EMAIL,null));
+  generateAndStoreUnreadEmails(initialReadMessages);
+  GreenMailUser user=server.getManagers().getUserManager().getUser(DEFAULT_USER);
+  MailFolder folder=server.getManagers().getImapHostManager().getInbox(user);
+  for (  long messageId : folder.getMessageUids()) {
+    folder.setFlags(new Flags(SEEN),true,messageId,null,false);
   }
-  storeEmail(messages);
+  generateAndStoreUnreadEmails(UNREAD_MESSAGES);
 }
