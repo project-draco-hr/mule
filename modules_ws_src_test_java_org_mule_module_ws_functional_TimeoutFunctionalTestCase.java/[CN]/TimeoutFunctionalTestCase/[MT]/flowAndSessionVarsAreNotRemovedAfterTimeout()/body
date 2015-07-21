@@ -1,0 +1,17 @@
+{
+  final Latch serverLatch=new Latch();
+  getFunctionalTestComponent("server").setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      serverLatch.await();
+    }
+  }
+);
+  Flow flow=(Flow)getFlowConstruct("client");
+  MuleEvent event=getTestEvent("<echo/>");
+  event.setTimeout(1);
+  flow.process(event);
+  serverLatch.release();
+  MuleMessage message=muleContext.getClient().request("vm://out",RECEIVE_TIMEOUT);
+  assertThat(message.<String>getInboundProperty("flowVar"),equalTo("testFlowVar"));
+  assertThat(message.<String>getInboundProperty("sessionVar"),equalTo("testSessionVar"));
+}
