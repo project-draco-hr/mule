@@ -1,0 +1,52 @@
+{
+  LOG.trace("enter HttpConnection.open()");
+  final String host=(proxyHostName == null) ? hostName : proxyHostName;
+  final int port=(proxyHostName == null) ? portNumber : proxyPortNumber;
+  assertNotOpen();
+  if (LOG.isDebugEnabled()) {
+    LOG.debug("Open connection to " + host + ":"+ port);
+  }
+  try {
+    if (this.socket == null) {
+      usingSecureSocket=isSecure() && !isProxied();
+      ProtocolSocketFactory socketFactory=null;
+      if (isSecure() && isProxied()) {
+        Protocol defaultprotocol=Protocol.getProtocol("http");
+        socketFactory=defaultprotocol.getSocketFactory();
+      }
+ else {
+        socketFactory=this.protocolInUse.getSocketFactory();
+      }
+      this.socket=socketFactory.createSocket(host,port,localAddress,0,this.params);
+    }
+    socket.setTcpNoDelay(this.params.getTcpNoDelay());
+    socket.setSoTimeout(this.params.getSoTimeout());
+    int linger=this.params.getLinger();
+    if (linger >= 0) {
+      socket.setSoLinger(linger > 0,linger);
+    }
+    int sndBufSize=this.params.getSendBufferSize();
+    if (sndBufSize >= 0) {
+      socket.setSendBufferSize(sndBufSize);
+    }
+    int rcvBufSize=this.params.getReceiveBufferSize();
+    if (rcvBufSize >= 0) {
+      socket.setReceiveBufferSize(rcvBufSize);
+    }
+    int outbuffersize=socket.getSendBufferSize();
+    if ((outbuffersize > 2048) || (outbuffersize <= 0)) {
+      outbuffersize=2048;
+    }
+    int inbuffersize=socket.getReceiveBufferSize();
+    if ((inbuffersize > 2048) || (inbuffersize <= 0)) {
+      inbuffersize=2048;
+    }
+    inputStream=new BufferedInputStream(socket.getInputStream(),inbuffersize);
+    outputStream=new BufferedOutputStream(socket.getOutputStream(),outbuffersize);
+    isOpen=true;
+  }
+ catch (  IOException e) {
+    closeSocketAndStreams();
+    throw e;
+  }
+}

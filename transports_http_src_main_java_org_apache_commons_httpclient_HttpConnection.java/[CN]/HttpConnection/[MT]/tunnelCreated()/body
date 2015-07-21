@@ -1,0 +1,34 @@
+{
+  LOG.trace("enter HttpConnection.tunnelCreated()");
+  if (!isSecure() || !isProxied()) {
+    throw new IllegalStateException("Connection must be secure " + "and proxied to use this feature");
+  }
+  if (usingSecureSocket) {
+    throw new IllegalStateException("Already using a secure socket");
+  }
+  if (LOG.isDebugEnabled()) {
+    LOG.debug("Secure tunnel to " + this.hostName + ":"+ this.portNumber);
+  }
+  SecureProtocolSocketFactory socketFactory=(SecureProtocolSocketFactory)protocolInUse.getSocketFactory();
+  socket=socketFactory.createSocket(socket,hostName,portNumber,true);
+  int sndBufSize=this.params.getSendBufferSize();
+  if (sndBufSize >= 0) {
+    socket.setSendBufferSize(sndBufSize);
+  }
+  int rcvBufSize=this.params.getReceiveBufferSize();
+  if (rcvBufSize >= 0) {
+    socket.setReceiveBufferSize(rcvBufSize);
+  }
+  int outbuffersize=socket.getSendBufferSize();
+  if (outbuffersize > 2048) {
+    outbuffersize=2048;
+  }
+  int inbuffersize=socket.getReceiveBufferSize();
+  if (inbuffersize > 2048) {
+    inbuffersize=2048;
+  }
+  inputStream=new BufferedInputStream(socket.getInputStream(),inbuffersize);
+  outputStream=new BufferedOutputStream(socket.getOutputStream(),outbuffersize);
+  usingSecureSocket=true;
+  tunnelEstablished=true;
+}
