@@ -7,7 +7,9 @@
  else {
     try {
       MuleMessage reqMsg=event.getMessage();
-      reqMsg.setPayload(extractPayload(exchange.getInMessage()));
+      Object payload=extractPayload(exchange.getInMessage());
+      Class payloadClass=payload != null ? payload.getClass() : Object.class;
+      reqMsg.setPayload(payload,DataTypeFactory.create(payloadClass,cxfMmessageProcessor.getMimeType()));
       BindingOperationInfo bop=exchange.get(BindingOperationInfo.class);
       Service svc=exchange.get(Service.class);
       if (!cxfMmessageProcessor.isProxy()) {
