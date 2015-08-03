@@ -1,0 +1,12 @@
+{
+  when(context.isArtifactClassloader()).thenReturn(true);
+  contextConfigurer.configure(context);
+  ArgumentCaptor<RollingFileAppender> appenderCaptor=ArgumentCaptor.forClass(RollingFileAppender.class);
+  verify(context.getConfiguration()).addAppender(appenderCaptor.capture());
+  Appender perAppAppender=appenderCaptor.getValue();
+  assertThat(perAppAppender,notNullValue());
+  assertThat(perAppAppender.getName(),equalTo(PER_APP_FILE_APPENDER_NAME));
+  assertThat(perAppAppender.isStarted(),is(true));
+  LoggerConfig rootLogger=((AbstractConfiguration)context.getConfiguration()).getRootLogger();
+  verify(rootLogger).addAppender(perAppAppender,Level.ALL,null);
+}
