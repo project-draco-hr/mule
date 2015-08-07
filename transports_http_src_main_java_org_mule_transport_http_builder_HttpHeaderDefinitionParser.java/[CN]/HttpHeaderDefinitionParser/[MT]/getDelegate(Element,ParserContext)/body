@@ -1,0 +1,21 @@
+{
+  Node parentNode=element.getParentNode();
+  String parentContext=parentNode.getLocalName();
+  if (parentContext.equals("response-builder") || parentContext.equals("error-response-builder")) {
+    String responseBuilderParent=parentNode.getParentNode().getLocalName();
+    if (responseBuilderParent.equals(AbstractMuleBeanDefinitionParser.ROOT_ELEMENT) || responseBuilderParent.equals("listener")) {
+      return new HttpMessageSingleParamDefinitionParser(HttpSingleParam.class,HttpParamType.HEADER);
+    }
+ else {
+      MuleDefinitionParser parser=new ChildMapEntryDefinitionParser("headers","name","value");
+      parser.addCollection("headers");
+      return parser;
+    }
+  }
+ else   if (parentContext.equals("request-builder")) {
+    return new HttpMessageSingleParamDefinitionParser(HttpSingleParam.class,HttpParamType.HEADER);
+  }
+ else {
+    throw new IllegalStateException("No parser defined for " + element.getLocalName() + " in the context "+ parentContext);
+  }
+}

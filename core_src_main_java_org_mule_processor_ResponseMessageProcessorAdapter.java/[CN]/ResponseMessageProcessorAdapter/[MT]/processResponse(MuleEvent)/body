@@ -3,13 +3,6 @@
     return event;
   }
  else {
-    MuleEvent copy=(MuleEvent)((ThreadSafeAccess)event).newThreadCopy();
-    MuleEvent result=responseProcessor.process(event);
-    if (result == null || VoidMuleEvent.getInstance().equals(result)) {
-      return copy;
-    }
- else {
-      return result;
-    }
+    return new CopyOnNullNonBlockingProcessorExecutor(event,Collections.singletonList(responseProcessor),MessageProcessorExecutionTemplate.createExecutionTemplate(),true).execute();
   }
 }

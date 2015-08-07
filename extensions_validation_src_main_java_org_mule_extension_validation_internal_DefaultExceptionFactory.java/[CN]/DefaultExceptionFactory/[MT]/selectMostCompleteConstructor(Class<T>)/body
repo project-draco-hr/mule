@@ -1,0 +1,15 @@
+{
+  Collection<Constructor> candidate=getConstructors(exceptionType,withParameters(ValidationResult.class,MuleEvent.class));
+  if (!CollectionUtils.isEmpty(candidate)) {
+    return new ValidationResultAndEventConstructorDelegate<>((Constructor<T>)candidate.iterator().next());
+  }
+  candidate=getConstructors(exceptionType,withParameters(ValidationResult.class));
+  if (!CollectionUtils.isEmpty(candidate)) {
+    return new ValidationResultConstructorDelegate((Constructor<T>)candidate.iterator().next());
+  }
+  candidate=getConstructors(exceptionType,withParameters(String.class));
+  if (CollectionUtils.isEmpty(candidate)) {
+    throw new IllegalArgumentException(String.format("Exception type %s was expected to contain at least one accessible constructor with eia single String argument but a matching constructor " + "could not be found.",exceptionType.getCanonicalName()));
+  }
+  return new DirectMessageConstructorDelegate((Constructor<T>)candidate.iterator().next());
+}

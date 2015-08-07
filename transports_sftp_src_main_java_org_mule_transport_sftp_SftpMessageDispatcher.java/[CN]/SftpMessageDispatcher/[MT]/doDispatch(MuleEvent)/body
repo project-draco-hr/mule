@@ -1,6 +1,6 @@
 {
   String filename=buildFilename(event);
-  InputStream inputStream=generateInputStream(event);
+  InputStream inputStream=null;
   if (logger.isDebugEnabled()) {
     logger.debug("Writing file to: " + endpoint.getEndpointURI() + " ["+ filename+ "]");
   }
@@ -26,10 +26,22 @@
       }
     }
     if (sftpUtil.getDuplicateHandling().equals(SftpConnector.PROPERTY_DUPLICATE_HANDLING_APPEND)) {
-      client.storeFile(transferFilename,inputStream,SftpClient.WriteMode.APPEND);
+      if (event.getMessage().getPayload() instanceof OutputHandler) {
+        client.storeFile(transferFilename,event,(OutputHandler)event.getMessage().getPayload(),SftpClient.WriteMode.APPEND);
+      }
+ else {
+        inputStream=generateInputStream(event);
+        client.storeFile(transferFilename,inputStream,SftpClient.WriteMode.APPEND);
+      }
     }
  else {
-      client.storeFile(transferFilename,inputStream);
+      if (event.getMessage().getPayload() instanceof OutputHandler) {
+        client.storeFile(transferFilename,event,(OutputHandler)event.getMessage().getPayload());
+      }
+ else {
+        inputStream=generateInputStream(event);
+        client.storeFile(transferFilename,inputStream);
+      }
     }
     if (useTempDir) {
       client.rename(transferFilename,destDir + "/" + filename);
@@ -49,6 +61,8 @@
     if (client != null) {
       connector.releaseClient(endpoint,client);
     }
-    inputStream.close();
+    if (inputStream != null) {
+      inputStream.close();
+    }
   }
 }

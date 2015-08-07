@@ -1,5 +1,5 @@
 {
-  Flow flow=new Flow("flow",Mockito.mock(MuleContext.class));
+  Flow flow=new Flow("flow",Mockito.mock(MuleContext.class,RETURNS_DEEP_STUBS));
   DefaultMuleSession before=new DefaultMuleSession();
   before.setValid(false);
   before.setSecurityContext(createTestAuthentication());
@@ -9,7 +9,8 @@
   Mockito.when(muleContext.getRegistry()).thenReturn(registry);
   Mockito.when(muleContext.getExecutionClassLoader()).thenReturn(getClass().getClassLoader());
   Mockito.when(registry.lookupFlowConstruct("flow")).thenReturn(flow);
-  DefaultMuleSession after=(DefaultMuleSession)SerializationUtils.deserialize(SerializationUtils.serialize(before),muleContext);
+  ((MuleContextAware)serializer).setMuleContext(muleContext);
+  DefaultMuleSession after=serializer.deserialize(serializer.serialize(before));
   assertEquals(before.getId(),after.getId());
   assertEquals(before.isValid(),after.isValid());
   assertEquals(before.getProperty("foo"),after.getProperty("foo"));

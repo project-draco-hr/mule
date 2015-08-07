@@ -1,0 +1,17 @@
+{
+  this.filterChainContext=filterChainContext;
+  this.requestPacket=(HttpRequestPacket)httpContent.getHttpHeader();
+  isTransferEncodingChunked=httpContent.getHttpHeader().isChunked();
+  int contentLengthAsInt=0;
+  String contentLengthAsString=requestPacket.getHeader(HttpHeaders.Names.CONTENT_LENGTH);
+  if (contentLengthAsString != null) {
+    contentLengthAsInt=Integer.parseInt(contentLengthAsString);
+  }
+  this.contentLength=contentLengthAsInt;
+  InputStream contentInputStream=new BufferInputStream(httpContent.getContent());
+  boolean contentIsIncomplete=!httpContent.isLast();
+  if (contentIsIncomplete) {
+    contentInputStream=new BlockingTransferInputStream(filterChainContext,contentInputStream);
+  }
+  this.requestContent=contentInputStream;
+}

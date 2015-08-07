@@ -1,84 +1,37 @@
 {
   try {
-    final MessageImpl m=new MessageImpl();
-    final MuleMessage muleReqMsg=event.getMessage();
-    String method=muleReqMsg.getInboundProperty(HttpConnector.HTTP_METHOD_PROPERTY);
-    String ct=muleReqMsg.getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE);
-    if (ct != null) {
-      m.put(Message.CONTENT_TYPE,ct);
-    }
-    String path=muleReqMsg.getInboundProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY);
-    if (path == null) {
-      path="";
-    }
-    if (method != null) {
-      m.put(Message.HTTP_REQUEST_METHOD,method);
-      m.put(Message.PATH_INFO,path);
-      Object basePath=muleReqMsg.getInboundProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY);
-      m.put(Message.BASE_PATH,basePath);
-      method=method.toUpperCase();
-    }
-    if (!"GET".equals(method)) {
-      Object payload=event.getMessage().getPayload();
-      setPayload(event,m,payload);
-    }
-    String soapAction=getSoapAction(event.getMessage());
-    m.put(org.mule.module.cxf.SoapConstants.SOAP_ACTION_PROPERTY_CAPS,soapAction);
-    if (shouldSoapActionHeader()) {
-      Map<String,List<String>> protocolHeaders=new HashMap<String,List<String>>();
-      if (soapAction != null && !soapAction.isEmpty()) {
-        List<String> soapActions=new ArrayList<String>();
-        soapActions.add(soapAction);
-        protocolHeaders.put(SoapBindingConstants.SOAP_ACTION,soapActions);
-      }
-      String eventRequestUri=event.getMessageSourceURI().toString();
-      if (eventRequestUri.startsWith(JMS_TRANSPORT)) {
-        String contentType=muleReqMsg.getInboundProperty(SoapJMSConstants.CONTENTTYPE_FIELD);
-        if (contentType == null) {
-          contentType="text/xml";
+    final Exchange exchange=new ExchangeImpl();
+    final MuleEvent originalEvent=event;
+    if (event.isAllowNonBlocking()) {
+      final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
+      event=new DefaultMuleEvent(event,new ReplyToHandler(){
+        @Override public void processReplyTo(        MuleEvent responseEvent,        MuleMessage returnMessage,        Object replyTo) throws MuleException {
+          try {
+            exchange.put(CxfConstants.MULE_EVENT,responseEvent);
+            exchange.put(CxfConstants.NON_BLOCKING_RESPONSE,true);
+            exchange.getInMessage().getInterceptorChain().resume();
+            responseEvent=(MuleEvent)exchange.get(CxfConstants.MULE_EVENT);
+            responseEvent=processResponse(originalEvent,exchange,responseEvent);
+            originalReplyToHandler.processReplyTo(responseEvent,responseEvent.getMessage(),replyTo);
+          }
+ catch (          Exception e) {
+            ExceptionPayload exceptionPayload=new DefaultExceptionPayload(e);
+            responseEvent.getMessage().setExceptionPayload(exceptionPayload);
+            returnMessage.setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,500);
+            responseEvent.setMessage(returnMessage);
+            processExceptionReplyTo(new MessagingException(responseEvent,e),replyTo);
+          }
         }
-        protocolHeaders.put(SoapJMSConstants.CONTENTTYPE_FIELD,Collections.singletonList(contentType));
-        String requestUri=muleReqMsg.getInboundProperty(SoapJMSConstants.REQUESTURI_FIELD);
-        if (requestUri == null) {
-          requestUri=eventRequestUri;
+        @Override public void processExceptionReplyTo(        MessagingException exception,        Object replyTo){
+          originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
         }
-        protocolHeaders.put(SoapJMSConstants.REQUESTURI_FIELD,Collections.singletonList(requestUri));
       }
-      m.put(Message.PROTOCOL_HEADERS,protocolHeaders);
+);
+      OptimizedRequestContext.unsafeSetEvent(event);
     }
-    org.apache.cxf.transport.Destination d;
-    if (server != null) {
-      d=server.getDestination();
-    }
- else {
-      String serviceUri=getUri(event);
-      DestinationFactoryManager dfm=bus.getExtension(DestinationFactoryManager.class);
-      DestinationFactory df=dfm.getDestinationFactoryForUri(serviceUri);
-      EndpointInfo ei=new EndpointInfo();
-      ei.setAddress(serviceUri);
-      d=df.getDestination(ei);
-    }
-    m.put(LocalConduit.DIRECT_DISPATCH,Boolean.TRUE);
-    m.setDestination(d);
-    ExchangeImpl exchange=new ExchangeImpl();
-    exchange.put(StaxInEndingInterceptor.STAX_IN_NOCLOSE,Boolean.TRUE);
-    exchange.setInMessage(m);
-    exchange.put(CxfConstants.MULE_EVENT,event);
-    d.getMessageObserver().onMessage(m);
-    MuleEvent responseEvent=(MuleEvent)exchange.get(CxfConstants.MULE_EVENT);
-    if (responseEvent == null || VoidMuleEvent.getInstance().equals(responseEvent) || !event.getExchangePattern().hasResponse()) {
-      return null;
-    }
-    MuleMessage muleResMsg=responseEvent.getMessage();
-    muleResMsg.setPayload(getResponseOutputHandler(m));
-    Message faultMsg=m.getExchange().getOutFaultMessage();
-    if (faultMsg != null) {
-      Exception ex=faultMsg.getContent(Exception.class);
-      if (ex != null) {
-        ExceptionPayload exceptionPayload=new DefaultExceptionPayload(ex);
-        event.getMessage().setExceptionPayload(exceptionPayload);
-        muleResMsg.setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,500);
-      }
+    MuleEvent responseEvent=sendThroughCxf(event,exchange);
+    if (responseEvent == null || !responseEvent.equals(NonBlockingVoidMuleEvent.getInstance())) {
+      return processResponse(event,exchange,responseEvent);
     }
     return responseEvent;
   }

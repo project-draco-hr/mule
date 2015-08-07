@@ -1,0 +1,21 @@
+{
+  MessagePropertiesTransformer transformer=(MessagePropertiesTransformer)muleContext.getRegistry().lookupTransformer("testTransformer");
+  transformer.setMuleContext(muleContext);
+  assertNotNull(transformer);
+  assertNotNull(transformer.getAddProperties());
+  assertNotNull(transformer.getDeleteProperties());
+  assertEquals(2,transformer.getAddProperties().size());
+  assertEquals(2,transformer.getDeleteProperties().size());
+  assertEquals(1,transformer.getRenameProperties().size());
+  assertTrue(transformer.isOverwrite());
+  TypedValue typedValue=transformer.getAddProperties().get("Content-Type");
+  assertThat((String)typedValue.getValue(),equalTo("text/baz;charset=UTF-16BE"));
+  assertThat(typedValue.getDataType(),like(Object.class,MimeTypes.ANY,null));
+  typedValue=transformer.getAddProperties().get("key");
+  assertThat((String)typedValue.getValue(),equalTo("value"));
+  assertThat(typedValue.getDataType(),like(String.class,MimeTypes.ANY,null));
+  assertEquals("test-property1",transformer.getDeleteProperties().get(0));
+  assertEquals("test-property2",transformer.getDeleteProperties().get(1));
+  assertEquals("Faz",transformer.getRenameProperties().get("Foo"));
+  assertEquals(PropertyScope.OUTBOUND,transformer.getScope());
+}

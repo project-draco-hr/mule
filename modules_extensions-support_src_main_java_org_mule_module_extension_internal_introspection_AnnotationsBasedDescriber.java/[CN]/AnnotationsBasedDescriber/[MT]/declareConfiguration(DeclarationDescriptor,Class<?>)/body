@@ -1,0 +1,13 @@
+{
+  checkArgument(CollectionUtils.isEmpty(getOperationMethods(extensionType)),String.format("Class %s can't declare a configuration and operations at the same time",extensionType.getName()));
+  ConfigurationDescriptor configuration;
+  Configuration configurationAnnotation=extensionType.getAnnotation(Configuration.class);
+  if (configurationAnnotation != null) {
+    configuration=declaration.withConfig(configurationAnnotation.name()).describedAs(configurationAnnotation.description());
+  }
+ else {
+    configuration=declaration.withConfig(Extension.DEFAULT_CONFIG_NAME).describedAs(Extension.DEFAULT_CONFIG_DESCRIPTION);
+  }
+  configuration.instantiatedWith(new TypeAwareConfigurationInstantiator(extensionType));
+  declareConfigurationParameters(extensionType,configuration);
+}

@@ -5,10 +5,8 @@
     if (jobConfig == null) {
       throw new IllegalArgumentException(CoreMessages.objectIsNull(QuartzConnector.PROPERTY_JOB_CONFIG).getMessage());
     }
-    JobDetail jobDetail=new JobDetail();
-    jobDetail.setName(endpoint.getEndpointURI().getAddress());
     Class<? extends Job> jobClass=jobConfig.getJobClass();
-    jobDetail.setJobClass(jobClass);
+    JobBuilder jobBuilder=newJob(jobClass);
     isStateful=StatefulJob.class.isAssignableFrom(jobClass);
     JobDataMap jobDataMap=new JobDataMap();
     jobDataMap.put(QUARTZ_RECEIVER_PROPERTY,this.getReceiverKey());
@@ -24,10 +22,8 @@
     }
     if (job != null) {
       jobDataMap.put(QuartzConnector.PROPERTY_JOB_OBJECT,job);
-      jobDetail.setJobClass(jobClass);
     }
-    jobDetail.setJobDataMap(jobDataMap);
-    Trigger trigger;
+    jobBuilder.usingJobData(jobDataMap);
     String cronExpression=(String)endpoint.getProperty(QuartzConnector.PROPERTY_CRON_EXPRESSION);
     String repeatInterval=(String)endpoint.getProperty(QuartzConnector.PROPERTY_REPEAT_INTERVAL);
     String repeatCount=(String)endpoint.getProperty(QuartzConnector.PROPERTY_REPEAT_COUNT);
@@ -40,37 +36,24 @@
     if (jobGroupName == null) {
       jobGroupName=groupName;
     }
-    jobDetail.setGroup(groupName);
+    jobBuilder.withIdentity(endpoint.getEndpointURI().getAddress(),groupName);
+    TriggerBuilder triggerBuilder=newTrigger().withIdentity(endpoint.getEndpointURI().getAddress(),groupName).forJob(endpoint.getEndpointURI().getAddress(),jobGroupName);
     if (cronExpression != null) {
-      CronTrigger ctrigger=new CronTrigger();
-      ctrigger.setCronExpression(cronExpression);
-      trigger=ctrigger;
+      triggerBuilder.withSchedule(cronSchedule(cronExpression));
     }
  else     if (repeatInterval != null) {
-      SimpleTrigger strigger=new SimpleTrigger();
-      strigger.setRepeatInterval(Long.parseLong(repeatInterval));
-      if (repeatCount != null) {
-        strigger.setRepeatCount(Integer.parseInt(repeatCount));
-      }
- else {
-        strigger.setRepeatCount(-1);
-      }
-      trigger=strigger;
+      triggerBuilder.withSchedule(simpleSchedule().withIntervalInMilliseconds(Long.parseLong(repeatInterval)).withRepeatCount(repeatCount != null ? Integer.parseInt(repeatCount) : SimpleTrigger.REPEAT_INDEFINITELY));
     }
  else {
       throw new IllegalArgumentException(QuartzMessages.cronExpressionOrIntervalMustBeSet().getMessage());
     }
-    trigger.setName(endpoint.getEndpointURI().getAddress());
-    trigger.setGroup(groupName);
-    trigger.setJobName(endpoint.getEndpointURI().getAddress());
-    trigger.setJobGroup(jobGroupName);
     long start=System.currentTimeMillis();
     if (startDelay != null) {
       start+=Long.parseLong(startDelay);
     }
-    trigger.setStartTime(new Date(start));
+    triggerBuilder.startAt(new Date(start));
     try {
-      scheduler.scheduleJob(jobDetail,trigger);
+      scheduler.scheduleJob(jobBuilder.build(),triggerBuilder.build());
     }
  catch (    ObjectAlreadyExistsException oaee) {
       logger.warn("A quartz Job with name: " + endpoint.getEndpointURI().getAddress() + " has already been registered. Cannot register again");

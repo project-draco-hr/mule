@@ -1,0 +1,17 @@
+{
+  if (responseEvent == null || VoidMuleEvent.getInstance().equals(responseEvent) || !event.getExchangePattern().hasResponse()) {
+    return null;
+  }
+  MuleMessage muleResMsg=responseEvent.getMessage();
+  muleResMsg.setPayload(getResponseOutputHandler(exchange),DataTypeFactory.XML_STRING);
+  Message faultMsg=exchange.getOutFaultMessage();
+  if (faultMsg != null) {
+    Exception ex=faultMsg.getContent(Exception.class);
+    if (ex != null) {
+      ExceptionPayload exceptionPayload=new DefaultExceptionPayload(ex);
+      event.getMessage().setExceptionPayload(exceptionPayload);
+      muleResMsg.setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,500);
+    }
+  }
+  return responseEvent;
+}

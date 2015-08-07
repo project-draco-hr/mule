@@ -1,20 +1,11 @@
 {
-  builder.chain(new AbstractInterceptingMessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+  builder.chain(new AbstractRequestResponseMessageProcessor(){
+    @Override protected MuleEvent processRequest(    MuleEvent event) throws MuleException {
       muleContext.getNotificationManager().fireNotification(new PipelineMessageNotification(AbstractPipeline.this,event,PipelineMessageNotification.PROCESS_START));
-      MuleEvent result=null;
-      MessagingException exceptionThrown=null;
-      try {
-        return processNext(event);
-      }
- catch (      MessagingException me) {
-        exceptionThrown=me;
-        throw me;
-      }
- finally {
-        MuleEvent notificationEvent=result != null ? result : event;
-        muleContext.getNotificationManager().fireNotification(new PipelineMessageNotification(AbstractPipeline.this,notificationEvent,PipelineMessageNotification.PROCESS_COMPLETE,exceptionThrown));
-      }
+      return super.processRequest(event);
+    }
+    @Override protected void processFinally(    MuleEvent event,    MessagingException exception){
+      muleContext.getNotificationManager().fireNotification(new PipelineMessageNotification(AbstractPipeline.this,event,PipelineMessageNotification.PROCESS_COMPLETE,exception));
     }
   }
 );

@@ -1,0 +1,14 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("Creating http server socket for ip %s and path %s",serverAddress.getIp(),serverAddress.getPort());
+  }
+  if (servers.containsKey(serverAddress)) {
+    throw new IllegalStateException(String.format("Could not create a server for %s since there's already one.",serverAddress));
+  }
+  startTransportIfNotStarted();
+  httpServerFilterDelegate.addFilterForAddress(serverAddress,createHttpServerFilter(usePersistentConnections,connectionIdleTimeout));
+  executorProvider.addExecutor(serverAddress,workManagerSource);
+  final GrizzlyServer grizzlyServer=new GrizzlyServer(serverAddress,transport,httpListenerRegistry);
+  servers.put(serverAddress,grizzlyServer);
+  return grizzlyServer;
+}

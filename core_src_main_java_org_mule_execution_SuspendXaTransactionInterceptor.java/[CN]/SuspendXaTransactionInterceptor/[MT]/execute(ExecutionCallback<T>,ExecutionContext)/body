@@ -1,0 +1,23 @@
+{
+  Transaction suspendedXATx=null;
+  Transaction tx=TransactionCoordination.getInstance().getTransaction();
+  byte action=transactionConfig.getAction();
+  if ((action == TransactionConfig.ACTION_NONE || action == TransactionConfig.ACTION_ALWAYS_BEGIN) && tx != null && tx.isXA()) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("suspending XA tx " + action + ", "+ "current TX: "+ tx);
+    }
+    suspendedXATx=tx;
+    suspendXATransaction(suspendedXATx);
+  }
+  try {
+    T result=next.execute(callback,executionContext);
+    resumeXaTransactionIfRequired(suspendedXATx);
+    return result;
+  }
+ catch (  MessagingException e) {
+    if (processOnException) {
+      TransactionCoordination.getInstance().resumeXaTransactionIfAvailable();
+    }
+    throw e;
+  }
+}

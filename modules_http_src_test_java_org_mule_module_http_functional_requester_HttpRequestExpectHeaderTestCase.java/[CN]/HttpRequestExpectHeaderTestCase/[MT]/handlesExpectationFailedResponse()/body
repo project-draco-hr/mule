@@ -1,0 +1,14 @@
+{
+  startExpectFailedServer();
+  Flow flow=(Flow)getFlowConstruct(REQUEST_FLOW_NAME);
+  MuleEvent event=getTestEvent(new InputStream(){
+    @Override public int read() throws IOException {
+      throw new IOException("Payload should not be consumed");
+    }
+  }
+);
+  event.getMessage().setOutboundProperty(EXPECT,CONTINUE);
+  MuleEvent response=flow.process(event);
+  assertThat(response.getMessage().<Integer>getInboundProperty(HTTP_STATUS_PROPERTY),equalTo(EXPECTATION_FAILED.getStatusCode()));
+  stopServer();
+}

@@ -1,0 +1,12 @@
+{
+  handlerExtender=new EchoRequestHandlerExtender(){
+    @Override protected String selectRequestPartToReturn(    org.eclipse.jetty.server.Request baseRequest){
+      return body;
+    }
+  }
+;
+  Response response=Request.Post(getProxyUrl("test")).bodyString("Some Text",ContentType.DEFAULT_TEXT).connectTimeout(RECEIVE_TIMEOUT).execute();
+  HttpResponse httpResponse=response.returnResponse();
+  assertThat(httpResponse.getStatusLine().getStatusCode(),is(200));
+  assertThat(IOUtils.toString(httpResponse.getEntity().getContent()),is("Some Text"));
+}

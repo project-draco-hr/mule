@@ -1,0 +1,9 @@
+{
+  MuleMessage request=new DefaultMuleMessage("hello",(Map<String,Object>)null,muleContext);
+  MuleClient client=muleContext.getClient();
+  MuleMessage received=client.send("http://localhost:" + dynamicPort.getNumber() + "/helloClientProxy",request,newOptions().method(POST.name()).disableStatusCodeValidation().build());
+  String contentType=received.getInboundProperty("contentType");
+  assertNotNull(contentType);
+  assertTrue(contentType.contains("charset"));
+  getSensingInstance("sensingRequestResponseProcessorProxy").assertRequestResponseThreadsDifferent();
+}

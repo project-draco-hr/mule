@@ -1,0 +1,37 @@
+{
+  MimeMultipart mimeMultipart=null;
+  List<HttpPart> parts=Lists.newArrayList();
+  try {
+    mimeMultipart=new MimeMultipart(new ByteArrayDataSource(content,contentType));
+  }
+ catch (  MessagingException e) {
+    throw new IOException(e);
+  }
+  try {
+    int partCount=mimeMultipart.getCount();
+    for (int i=0; i < partCount; i++) {
+      BodyPart part=mimeMultipart.getBodyPart(i);
+      String filename=part.getFileName();
+      String partName=filename;
+      String[] contentDispositions=part.getHeader(CONTENT_DISPOSITION_PART_HEADER);
+      if (contentDispositions != null) {
+        String contentDisposition=contentDispositions[0];
+        if (contentDisposition.contains(NAME_ATTRIBUTE)) {
+          partName=contentDisposition.substring(contentDisposition.indexOf(NAME_ATTRIBUTE) + NAME_ATTRIBUTE.length() + 2);
+          partName=partName.substring(0,partName.indexOf("\""));
+        }
+      }
+      HttpPart httpPart=new HttpPart(partName,filename,IOUtils.toByteArray(part.getInputStream()),part.getContentType(),part.getSize());
+      Enumeration<Header> headers=part.getAllHeaders();
+      while (headers.hasMoreElements()) {
+        Header header=headers.nextElement();
+        httpPart.addHeader(header.getName(),header.getValue());
+      }
+      parts.add(httpPart);
+    }
+  }
+ catch (  MessagingException e) {
+    throw new IOException(e);
+  }
+  return parts;
+}

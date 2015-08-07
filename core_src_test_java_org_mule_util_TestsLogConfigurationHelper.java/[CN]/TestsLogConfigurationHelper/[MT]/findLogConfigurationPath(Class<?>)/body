@@ -1,0 +1,21 @@
+{
+  String encodedFolder=testClass.getClassLoader().getResource("").getPath().toString();
+  String folderPath;
+  try {
+    folderPath=URLDecoder.decode(encodedFolder,Charset.defaultCharset().name());
+  }
+ catch (  UnsupportedEncodingException e) {
+    return NULL_CONFIG_FILE;
+  }
+  File folder=new File(folderPath);
+  if (folder != null && "target".equals(folder.getParentFile().getName())) {
+    folder=folder.getParentFile();
+  }
+  File logConfigFile=FileUtils.findFileByName(folder,"log4j2-test.xml",true);
+  if (logConfigFile == null) {
+    logConfigFile=FileUtils.findFileByName(folder,"log4j2.xml",true);
+  }
+  String logConfigPath=logConfigFile != null && logConfigFile.isFile() ? logConfigFile.getAbsolutePath() : NULL_CONFIG_FILE;
+  LOGGING_CONFIG_CACHE.set(logConfigPath);
+  return logConfigPath;
+}

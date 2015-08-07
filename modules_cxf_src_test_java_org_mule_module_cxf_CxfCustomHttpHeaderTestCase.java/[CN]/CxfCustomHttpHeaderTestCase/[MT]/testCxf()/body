@@ -1,18 +1,17 @@
 {
-  Object payload=new Object[]{"Test String"};
+  String endpointAddress="http://localhost:" + dynamicPort.getValue() + "/services/TestComponent";
   String myProperty="myProperty";
-  HashMap<String,Object> props=new HashMap<String,Object>();
+  HashMap<String,Object> props=new HashMap<>();
   props.put(MuleProperties.MULE_USER_PROPERTY,"alan");
   props.put(MuleProperties.MULE_METHOD_PROPERTY,"onReceive");
   props.put(myProperty,myProperty);
-  MuleClient client=muleContext.getClient();
-  MuleMessage reply=client.send("cxf:" + endpointAddress,payload,props);
+  MuleMessage reply=muleContext.getClient().send(String.format(endpointAddress),new DefaultMuleMessage(REQUEST_PAYLOAD,props,muleContext),HTTP_REQUEST_OPTIONS);
   assertNotNull(reply);
   assertNotNull(reply.getPayload());
-  assertEquals("Test String Received",reply.getPayloadAsString());
-  Thread.sleep(3000);
-  assertEquals(2,notificationMsgList.size());
-  assertEquals("alan",notificationMsgList.get(0).getOutboundProperty(MuleProperties.MULE_USER_PROPERTY));
-  assertNull(notificationMsgList.get(0).getOutboundProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY));
-  assertEquals(myProperty,notificationMsgList.get(0).getOutboundProperty(myProperty));
+  assertEquals(SOAP_RESPONSE,reply.getPayloadAsString());
+  latch.await(3000,SECONDS);
+  assertEquals(1,notificationMsgList.size());
+  assertEquals("alan",notificationMsgList.get(0).getInboundProperty(MuleProperties.MULE_USER_PROPERTY));
+  assertNull(notificationMsgList.get(0).getInboundProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY));
+  assertEquals(myProperty,notificationMsgList.get(0).getInboundProperty(myProperty));
 }

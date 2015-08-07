@@ -1,0 +1,12 @@
+{
+  if (event.isAllowNonBlocking() && replyToHandler != null) {
+    if (!processorSupportsNonBlocking(processor)) {
+      logger.info("The message processor {} does not currently support non-blocking execution and " + "processing will now fall back to blocking.  The 'non-blocking' processing strategy is " + "not recommended if unsupported message processors are being used.  ",processor.getClass());
+      event=new DefaultMuleEvent(event.getMessage(),event,true);
+    }
+    if (processor instanceof NonBlockingMessageProcessor) {
+      event=new DefaultMuleEvent(event,new NonBlockingProcessorExecutorReplyToHandler());
+    }
+    OptimizedRequestContext.unsafeSetEvent(event);
+  }
+}

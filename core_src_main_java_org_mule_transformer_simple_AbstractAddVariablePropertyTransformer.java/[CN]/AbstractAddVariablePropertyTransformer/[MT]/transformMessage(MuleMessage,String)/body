@@ -5,12 +5,22 @@
     logger.error("Setting Null variable keys is not supported, this entry is being ignored");
   }
  else {
-    Object value=valueEvaluator.resolveValue(message);
-    if (value == null) {
-      logger.info(MessageFormat.format("Variable with key \"{0}\", not found on message using \"{1}\". Since the value was marked optional, nothing was set on the message for this variable",key,valueEvaluator.getRawValue()));
+    TypedValue typedValue=valueEvaluator.resolveTypedValue(message);
+    if (typedValue.getValue() == null || typedValue.getValue() instanceof NullPayload) {
+      message.removeProperty(key,getScope());
+      if (logger.isDebugEnabled()) {
+        logger.debug(MessageFormat.format("Variable with key \"{0}\", not found on message using \"{1}\". Since the value was marked optional, nothing was set on the message for this variable",key,valueEvaluator.getRawValue()));
+      }
     }
  else {
-      message.setProperty(key,value,getScope());
+      if (!StringUtils.isEmpty(mimeType) || !StringUtils.isEmpty(encoding)) {
+        DataType<?> dataType=DataTypeFactory.create(typedValue.getValue().getClass(),getMimeType());
+        dataType.setEncoding(getEncoding());
+        message.setProperty(key,typedValue.getValue(),getScope(),dataType);
+      }
+ else {
+        message.setProperty(key,typedValue.getValue(),getScope(),typedValue.getDataType());
+      }
     }
   }
   return message;

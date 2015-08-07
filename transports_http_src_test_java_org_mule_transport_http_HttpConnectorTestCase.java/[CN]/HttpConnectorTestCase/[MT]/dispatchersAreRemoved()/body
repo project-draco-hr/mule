@@ -1,0 +1,15 @@
+{
+  DefaultOutboundEndpoint endpoint=(DefaultOutboundEndpoint)muleContext.getEndpointFactory().getOutboundEndpoint("http://localhost:8080");
+  HttpConnector httpConnector=(HttpConnector)endpoint.getConnector();
+  httpConnector.start();
+  MessageDispatcher initialDispatcher=httpConnector.borrowDispatcher(endpoint);
+  httpConnector.returnDispatcher(endpoint,initialDispatcher);
+  MessageDispatcher shouldBeSameDispatcher=httpConnector.borrowDispatcher(endpoint);
+  assertThat(shouldBeSameDispatcher,is(sameInstance(initialDispatcher)));
+  httpConnector.returnDispatcher(endpoint,shouldBeSameDispatcher);
+  endpoint.getMessageProcessorChain(null);
+  endpoint.dispose();
+  MessageDispatcher shouldBeANewDispatcher=httpConnector.borrowDispatcher(endpoint);
+  assertThat(shouldBeANewDispatcher,not(sameInstance(initialDispatcher)));
+  httpConnector.returnDispatcher(endpoint,shouldBeANewDispatcher);
+}

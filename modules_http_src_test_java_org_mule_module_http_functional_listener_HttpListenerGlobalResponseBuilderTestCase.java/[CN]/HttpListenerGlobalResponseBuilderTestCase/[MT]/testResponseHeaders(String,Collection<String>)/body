@@ -1,0 +1,15 @@
+{
+  final Response response=Request.Get(url).connectTimeout(1000).execute();
+  final HttpResponse httpResponse=response.returnResponse();
+  assertThat(isDateValid(httpResponse.getFirstHeader(HttpHeaders.Names.DATE).getValue()),Is.is(true));
+  final Header[] userAgentHeaders=httpResponse.getHeaders(HttpHeaders.Names.USER_AGENT);
+  final Collection<String> headerValues=CollectionUtils.collect(Arrays.asList(userAgentHeaders),new Transformer(){
+    @Override public Object transform(    Object input){
+      Header header=(Header)input;
+      return header.getValue();
+    }
+  }
+);
+  assertThat(userAgentHeaders.length,is(userAgentHeaderValues.size()));
+  assertThat(headerValues,Matchers.containsInAnyOrder(userAgentHeaderValues.toArray(new String[userAgentHeaderValues.size()])));
+}

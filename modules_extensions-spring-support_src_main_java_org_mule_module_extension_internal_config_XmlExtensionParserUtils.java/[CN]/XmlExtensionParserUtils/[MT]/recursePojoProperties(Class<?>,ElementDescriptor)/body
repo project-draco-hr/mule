@@ -1,0 +1,23 @@
+{
+  ObjectBuilder builder=new DefaultObjectBuilder(declaringClass);
+  for (  Field field : getParameterFields(declaringClass)) {
+    if (IntrospectionUtils.isIgnored(field)) {
+      continue;
+    }
+    String parameterName=getAlias(field);
+    DataType dataType=getFieldDataType(field);
+    ValueResolver resolver=getResolverFromAttribute(element,parameterName,dataType,null);
+    if (resolver == null) {
+      parameterName=hyphenize(parameterName);
+      ElementDescriptor childElement=element.getChildByName(parameterName);
+      if (childElement != null) {
+        ObjectBuilder childBuilder=recursePojoProperties(dataType.getRawType(),childElement);
+        resolver=new ObjectBuilderValueResolver(childBuilder);
+      }
+    }
+    if (resolver != null) {
+      builder.addPropertyResolver(field,resolver);
+    }
+  }
+  return builder;
+}

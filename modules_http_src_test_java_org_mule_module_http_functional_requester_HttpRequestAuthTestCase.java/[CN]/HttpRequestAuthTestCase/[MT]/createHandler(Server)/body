@@ -1,0 +1,47 @@
+{
+  AbstractHandler handler=super.createHandler(server);
+  String realmPath=null;
+  try {
+    realmPath=FileUtils.getResourcePath("realm.properties",getClass());
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  LoginService loginService=new HashLoginService("TestRealm",realmPath);
+  server.addBean(loginService);
+  Constraint basicConstraint=new Constraint();
+  basicConstraint.setName("auth");
+  basicConstraint.setRoles(new String[]{"user"});
+  basicConstraint.setAuthenticate(true);
+  ConstraintMapping basicConstraintMapping=new ConstraintMapping();
+  basicConstraintMapping.setConstraint(basicConstraint);
+  basicConstraintMapping.setPathSpec("/*");
+  ConstraintSecurityHandler basicSecurityHandler=new ConstraintSecurityHandler(){
+    @Override public void handle(    String pathInContext,    Request baseRequest,    HttpServletRequest request,    HttpServletResponse response) throws IOException, ServletException {
+      requestCount++;
+      super.handle(pathInContext,baseRequest,request,response);
+    }
+  }
+;
+  basicSecurityHandler.setAuthenticator(new BasicAuthenticator());
+  basicSecurityHandler.setConstraintMappings(new ConstraintMapping[]{basicConstraintMapping});
+  ContextHandler basicContext=new ContextHandler("/basic");
+  basicContext.setHandler(basicSecurityHandler);
+  Constraint digestConstraint=new Constraint();
+  digestConstraint.setName("auth");
+  digestConstraint.setRoles(new String[]{"user"});
+  digestConstraint.setAuthenticate(true);
+  ConstraintMapping digestConstraintMapping=new ConstraintMapping();
+  digestConstraintMapping.setConstraint(digestConstraint);
+  digestConstraintMapping.setPathSpec("/*");
+  ConstraintSecurityHandler digestSecurityHandler=new ConstraintSecurityHandler();
+  digestSecurityHandler.setAuthenticator(new DigestAuthenticator());
+  digestSecurityHandler.setConstraintMappings(new ConstraintMapping[]{digestConstraintMapping});
+  ContextHandler digestContext=new ContextHandler("/digest");
+  digestContext.setHandler(digestSecurityHandler);
+  basicSecurityHandler.setHandler(handler);
+  digestSecurityHandler.setHandler(handler);
+  ContextHandlerCollection handlers=new ContextHandlerCollection();
+  handlers.setHandlers(new Handler[]{basicContext,digestContext});
+  return handlers;
+}

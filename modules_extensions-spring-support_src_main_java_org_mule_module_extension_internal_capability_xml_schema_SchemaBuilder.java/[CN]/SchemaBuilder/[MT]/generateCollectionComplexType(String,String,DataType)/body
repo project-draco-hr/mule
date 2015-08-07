@@ -1,0 +1,21 @@
+{
+  final LocalComplexType collectionComplexType=new LocalComplexType();
+  final ExplicitGroup sequence=new ExplicitGroup();
+  collectionComplexType.setSequence(sequence);
+  final TopLevelElement collectionItemElement=new TopLevelElement();
+  collectionItemElement.setName(name);
+  collectionItemElement.setMinOccurs(BigInteger.ZERO);
+  collectionItemElement.setMaxOccurs(SchemaConstants.UNBOUNDED);
+  final DataType genericType=getFirstGenericType(type);
+  genericType.getQualifier().accept(new AbstractDataQualifierVisitor(){
+    @Override public void onPojo(){
+      collectionItemElement.setComplexType(newLocalComplexTypeWithBase(genericType,description));
+    }
+    @Override protected void defaultOperation(){
+      collectionItemElement.setComplexType(generateComplexValueType(genericType));
+    }
+  }
+);
+  sequence.getParticle().add(objectFactory.createElement(collectionItemElement));
+  return collectionComplexType;
+}

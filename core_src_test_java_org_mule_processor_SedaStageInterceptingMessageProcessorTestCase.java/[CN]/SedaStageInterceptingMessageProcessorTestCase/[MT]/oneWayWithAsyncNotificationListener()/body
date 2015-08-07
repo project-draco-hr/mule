@@ -1,0 +1,14 @@
+{
+  CountDownLatch notificationLatch=new CountDownLatch(2);
+  AsynMessageFiringNotificationListener listener=new AsynMessageFiringNotificationListener(notificationLatch);
+  muleContext.registerListener(listener);
+  MuleEvent event=MuleTestUtils.getTestEvent(TEST_MESSAGE,MessageExchangePattern.ONE_WAY,muleContext);
+  assertAsync(messageProcessor,event);
+  notificationLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
+  assertThat(listener.asyncScheduledEvent,is(notNullValue()));
+  assertThat(listener.asyncScheduledEvent,is(sameInstance(event)));
+  assertThat(listener.asyncScheduledEvent,is(not(sameInstance(target.sensedEvent))));
+  assertThat(listener.asyncCompleteEvent,is(notNullValue()));
+  assertThat(listener.asyncCompleteEvent,is(not(sameInstance(event))));
+  assertThat(listener.asyncCompleteEvent,is(sameInstance(target.sensedEvent)));
+}

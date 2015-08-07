@@ -1,0 +1,20 @@
+{
+  getFunctionalTestComponent("serverFlow").setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      requestPayload=context.getMessage().getPayloadAsString();
+      requestURI=context.getMessage().getInboundProperty(HTTP_REQUEST_URI);
+    }
+  }
+);
+  proxyServer.start();
+  Flow flow=(Flow)getFlowConstruct("clientFlow");
+  MuleEvent event=getTestEvent(TEST_MESSAGE);
+  event.setFlowVariable("host",requestHost);
+  event.setFlowVariable("path",PATH);
+  event=flow.process(event);
+  assertThat(requestPayload,equalTo(TEST_MESSAGE));
+  assertThat(requestURI,equalTo(PATH));
+  assertThat(event.getMessage().<Integer>getInboundProperty(HTTP_STATUS_PROPERTY),equalTo(OK.getStatusCode()));
+  assertThat(event.getMessage().getPayloadAsString(),equalTo(OK_RESPONSE));
+  proxyServer.stop();
+}

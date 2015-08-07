@@ -15,9 +15,9 @@
     if (logger.isTraceEnabled()) {
       logger.trace("Invoking next MessageProcessor: '" + next.getClass().getName() + "' ");
     }
-    MessageProcessorExecutionTemplate executionTemplateToUse=(!(next instanceof MessageProcessorChain)) ? messageProcessorExecutorWithNotifications : messageProcessorExecutorWithoutNotifications;
+    MessageProcessorExecutionTemplate executionTemplate=(!(next instanceof MessageProcessorChain)) ? messageProcessorExecutorWithNotifications : messageProcessorExecutorWithoutNotifications;
     try {
-      return executionTemplateToUse.execute(next,event);
+      return new ProcessorExecutorFactory().createProcessorExecutor(event,Collections.singletonList(next),executionTemplate,false).execute();
     }
  catch (    MessagingException e) {
       event.getSession().setValid(false);

@@ -1,0 +1,35 @@
+{
+  deploymentService.start();
+  ArtifactDescriptor domainDescriptor=sharedHttpDomainDescriptor;
+  ArtifactDescriptor appADescriptor=sharedHttpAppADescriptor;
+  ArtifactDescriptor appBDescriptor=sharedHttpAppBDescriptor;
+  addPackedDomainFromResource(domainDescriptor.zipPath);
+  addPackedAppFromResource(appADescriptor.zipPath);
+  addPackedAppFromResource(appBDescriptor.zipPath);
+  assertDeploymentSuccess(domainDeploymentListener,domainDescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,appADescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,appBDescriptor.id);
+  Domain domain=findADomain(domainDescriptor.id,1);
+  assertThat(domain.getMuleContext().getRegistry().get("http-listener-config"),not(is(nullValue())));
+  ArtifactClassLoader initialArtifactClassLoader=domain.getArtifactClassLoader();
+  reset(domainDeploymentListener);
+  reset(applicationDeploymentListener);
+  File domainFolder=new File(domainsDir.getPath(),domainDescriptor.id);
+  File configFile=new File(domainFolder,domainDescriptor.configFilePath);
+  FileUtils.touch(configFile);
+  assertUndeploymentSuccess(applicationDeploymentListener,appADescriptor.id);
+  assertUndeploymentSuccess(applicationDeploymentListener,appBDescriptor.id);
+  assertUndeploymentSuccess(domainDeploymentListener,domainDescriptor.id);
+  assertDeploymentSuccess(domainDeploymentListener,domainDescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,appADescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,appBDescriptor.id);
+  domain=findADomain(domainDescriptor.id,1);
+  ArtifactClassLoader artifactClassLoaderAfterRedeployment=domain.getArtifactClassLoader();
+  assertThat(artifactClassLoaderAfterRedeployment,not(sameInstance(initialArtifactClassLoader)));
+  removeAppAnchorFile(appADescriptor.id);
+  removeAppAnchorFile(appBDescriptor.id);
+  removeDomainAnchorFile(domainDescriptor.id);
+  assertUndeploymentSuccess(applicationDeploymentListener,appADescriptor.id);
+  assertUndeploymentSuccess(applicationDeploymentListener,appBDescriptor.id);
+  assertUndeploymentSuccess(domainDeploymentListener,domainDescriptor.id);
+}

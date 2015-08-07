@@ -1,0 +1,28 @@
+{
+  if (IMPLICIT_ARGUMENT_TYPES.contains(parameterType.getRawType()) || annotations.containsKey(UseConfig.class)) {
+    return null;
+  }
+  DataType dataType=parameterType;
+  ParameterDescriptor parameter=new ParameterDescriptor();
+  parameter.setName(getParameterName(paramName,(Parameter)annotations.get(Parameter.class)));
+  parameter.setType(dataType);
+  Optional optional=(Optional)annotations.get(Optional.class);
+  if (optional != null) {
+    parameter.setRequired(false);
+    parameter.setDefaultValue(getDefaultValue(optional));
+  }
+ else {
+    parameter.setRequired(true);
+  }
+  Payload payload=(Payload)annotations.get(Payload.class);
+  if (payload != null) {
+    parameter.setRequired(false);
+    parameter.setDefaultValue("#[payload]");
+    parameter.setHidden(true);
+  }
+  RestrictedTo typeRestriction=(RestrictedTo)annotations.get(RestrictedTo.class);
+  if (typeRestriction != null) {
+    parameter.setTypeRestriction(typeRestriction.value());
+  }
+  return parameter;
+}

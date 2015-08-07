@@ -1,27 +1,28 @@
 {
-  for (  Map.Entry<String,Object> entry : addProperties.entrySet()) {
+  for (  Map.Entry<String,TypedValue> entry : addProperties.entrySet()) {
     if (entry.getKey() == null) {
       logger.error("Setting Null property keys is not supported, this entry is being ignored");
     }
  else {
       final String key=entry.getKey();
-      Object value=entry.getValue();
-      Object realValue=value;
+      TypedValue typedValue=entry.getValue();
+      Object value=typedValue.getValue();
       if (muleContext.getExpressionManager().isExpression(value.toString())) {
-        realValue=muleContext.getExpressionManager().evaluate(value.toString(),message);
+        value=muleContext.getExpressionManager().evaluate(value.toString(),message);
       }
-      if (realValue != null) {
+      if (value != null) {
+        DataType<?> propertyDataType=createPropertyDataType(value,typedValue.getDataType());
         if (message.getProperty(key,scope) != null) {
           if (overwrite) {
             logger.debug("Overwriting message property " + key);
-            message.setProperty(key,realValue,scope);
+            message.setProperty(key,value,scope,propertyDataType);
           }
  else           if (logger.isDebugEnabled()) {
-            logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,realValue,scope));
+            logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,value,scope));
           }
         }
  else {
-          message.setProperty(key,realValue,scope);
+          message.setProperty(key,value,scope,propertyDataType);
         }
       }
  else       if (logger.isInfoEnabled()) {

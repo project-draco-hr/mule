@@ -1,6 +1,23 @@
 {
-  this.event=event;
-  MuleEvent result=new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage().getPayload() + appendString,muleContext),event);
-  this.resultEvent=result;
-  return result;
+  if (nonBlocking && event.isAllowNonBlocking()) {
+    executor.execute(new Runnable(){
+      @Override public void run(){
+        try {
+          threads++;
+          event.getReplyToHandler().processReplyTo(innerProcess(event),null,null);
+        }
+ catch (        MessagingException e) {
+          event.getReplyToHandler().processExceptionReplyTo(e,null);
+        }
+catch (        MuleException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+);
+    return NonBlockingVoidMuleEvent.getInstance();
+  }
+ else {
+    return innerProcess(event);
+  }
 }

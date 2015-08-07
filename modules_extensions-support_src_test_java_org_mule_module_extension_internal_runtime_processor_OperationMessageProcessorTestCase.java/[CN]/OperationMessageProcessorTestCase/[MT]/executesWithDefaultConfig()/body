@@ -1,0 +1,12 @@
+{
+  configurationInstanceName=null;
+  messageProcessor=createOperationMessageProcessor();
+  Object defaultConfigInstance=new Object();
+  when(extensionManager.getConfigurationInstance(same(extension),any(OperationContext.class))).thenReturn(defaultConfigInstance);
+  ArgumentCaptor<OperationContext> operationContextCaptor=ArgumentCaptor.forClass(OperationContext.class);
+  messageProcessor.process(event);
+  verify(operationExecutor).execute(operationContextCaptor.capture());
+  OperationContext operationContext=operationContextCaptor.getValue();
+  assertThat(operationContext,is(instanceOf(OperationContextAdapter.class)));
+  assertThat(operationContext.getConfigurationInstance(),is(sameInstance(defaultConfigInstance)));
+}

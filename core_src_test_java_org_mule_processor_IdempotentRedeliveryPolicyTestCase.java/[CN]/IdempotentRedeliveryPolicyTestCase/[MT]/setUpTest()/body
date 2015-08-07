@@ -14,6 +14,7 @@
   muleLockFactory.initialise();
   when(mockMuleContext.getLockFactory()).thenReturn(muleLockFactory);
   when(mockMuleContext.getRegistry().get(MuleProperties.OBJECT_STORE_MANAGER)).thenReturn(mockObjectStoreManager);
+  when(mockMuleContext.getConfiguration().getDefaultEncoding()).thenReturn(UTF_8);
   final InMemoryObjectStore inMemoryObjectStore=new InMemoryObjectStore();
   when(mockObjectStoreManager.getObjectStore(anyString(),anyBoolean(),anyInt(),anyInt(),anyInt())).thenAnswer(new Answer<ObjectStore>(){
     @Override public ObjectStore answer(    InvocationOnMock invocation) throws Throwable {
@@ -22,6 +23,7 @@
   }
 );
   when(event.getMessage()).thenReturn(message);
+  IdempotentRedeliveryPolicyTestCase.serializer=SerializationTestUtils.getJavaSerializerWithMockContext();
   irp.setMaxRedeliveryCount(MAX_REDELIVERY_COUNT);
   irp.setUseSecureHash(true);
   irp.setFlowConstruct(mock(FlowConstruct.class));

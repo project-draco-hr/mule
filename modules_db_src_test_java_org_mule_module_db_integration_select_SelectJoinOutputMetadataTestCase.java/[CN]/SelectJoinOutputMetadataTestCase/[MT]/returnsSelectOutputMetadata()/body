@@ -1,0 +1,12 @@
+{
+  Flow flowConstruct=(Flow)muleContext.getRegistry().lookupFlowConstruct("joinMetadata");
+  List<MessageProcessor> messageProcessors=flowConstruct.getMessageProcessors();
+  AbstractSingleQueryDbMessageProcessor queryMessageProcessor=(AbstractSingleQueryDbMessageProcessor)messageProcessors.get(0);
+  Result<MetaData> outputMetaData=queryMessageProcessor.getOutputMetaData(null);
+  DefaultListMetaDataModel listMetaDataModel=(DefaultListMetaDataModel)outputMetaData.get().getPayload();
+  assertThat(ArrayList.class.getName(),equalTo(listMetaDataModel.getImplementationClass()));
+  DefinedMapMetaDataModel mapDataModel=(DefinedMapMetaDataModel)listMetaDataModel.getElementModel();
+  assertThat(mapDataModel.getKeys().size(),equalTo(2));
+  assertThat(mapDataModel.getValueMetaDataModel("NAME"),not(isNull()));
+  assertThat(mapDataModel.getValueMetaDataModel("NAME2"),not(isNull()));
+}

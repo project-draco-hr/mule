@@ -3,8 +3,6 @@
   if (jobConfig == null) {
     throw new IllegalArgumentException(CoreMessages.objectIsNull(QuartzConnector.PROPERTY_JOB_CONFIG).getMessage());
   }
-  JobDetail jobDetail=new JobDetail();
-  jobDetail.setName(endpoint.getEndpointURI().getAddress() + "-" + event.getId());
   JobDataMap jobDataMap=new JobDataMap();
   jobDataMap.put(QuartzConnector.PROPERTY_JOB_DYNAMIC,Boolean.TRUE);
   MuleMessage msg=event.getMessage();
@@ -19,7 +17,6 @@
     String endpointRef=event.getMuleContext().getExpressionManager().parse(scheduledDispatchJobConfig.getEndpointRef(),event);
     jobDataMap.put("endpointRef",endpointRef);
   }
-  jobDetail.setJobDataMap(jobDataMap);
   Job job=null;
   Object payload=event.getMessage().getPayload();
   if (jobConfig instanceof CustomJobConfig) {
@@ -30,13 +27,12 @@
     jobConfig=((CustomJobFromMessageConfig)jobConfig).getJobConfig(msg);
   }
   jobDataMap.put(QuartzConnector.PROPERTY_JOB_CONFIG,jobConfig);
-  jobDetail.setJobClass(jobConfig.getJobClass());
+  Class<? extends Job> jobClass=jobConfig.getJobClass();
   if (job != null) {
     jobDataMap.put(QuartzConnector.PROPERTY_JOB_OBJECT,job);
-    jobDetail.setJobClass(CustomJob.class);
+    jobClass=CustomJob.class;
   }
   jobDataMap.put(QuartzConnector.PROPERTY_PAYLOAD,payload);
-  Trigger trigger;
   String cronExpression=jobDataMap.getString(QuartzConnector.PROPERTY_CRON_EXPRESSION);
   String repeatInterval=jobDataMap.getString(QuartzConnector.PROPERTY_REPEAT_INTERVAL);
   String repeatCount=jobDataMap.getString(QuartzConnector.PROPERTY_REPEAT_COUNT);
@@ -49,35 +45,22 @@
   if (jobGroupName == null) {
     jobGroupName=groupName;
   }
-  jobDetail.setGroup(groupName);
+  JobDetail jobDetail=newJob(jobClass).withIdentity(endpoint.getEndpointURI().getAddress() + "-" + event.getId(),groupName).usingJobData(jobDataMap).build();
+  TriggerBuilder triggerBuilder=newTrigger().withIdentity(endpoint.getEndpointURI().toString() + "-" + event.getId(),groupName).forJob(jobDetail.getKey().getName(),jobGroupName);
   if (cronExpression != null) {
-    CronTrigger ctrigger=new CronTrigger();
-    ctrigger.setCronExpression(cronExpression);
-    trigger=ctrigger;
+    triggerBuilder.withSchedule(cronSchedule(cronExpression));
   }
  else   if (repeatInterval != null) {
-    SimpleTrigger strigger=new SimpleTrigger();
-    strigger.setRepeatInterval(Long.parseLong(repeatInterval));
-    if (repeatCount != null) {
-      strigger.setRepeatCount(Integer.parseInt(repeatCount));
-    }
- else {
-      strigger.setRepeatCount(-1);
-    }
-    trigger=strigger;
+    triggerBuilder.withSchedule(simpleSchedule().withIntervalInMilliseconds(Long.parseLong(repeatInterval)).withRepeatCount(repeatCount != null ? Integer.parseInt(repeatCount) : SimpleTrigger.REPEAT_INDEFINITELY));
   }
  else {
     throw new IllegalArgumentException(QuartzMessages.cronExpressionOrIntervalMustBeSet().getMessage());
   }
-  trigger.setName(endpoint.getEndpointURI().toString() + "-" + event.getId());
-  trigger.setGroup(groupName);
-  trigger.setJobName(jobDetail.getName());
-  trigger.setJobGroup(jobGroupName);
   Scheduler scheduler=((QuartzConnector)this.getConnector()).getQuartzScheduler();
   long start=System.currentTimeMillis();
   if (startDelay != null) {
     start+=Long.parseLong(startDelay);
   }
-  trigger.setStartTime(new Date(start));
-  scheduler.scheduleJob(jobDetail,trigger);
+  triggerBuilder.startAt(new Date(start));
+  scheduler.scheduleJob(jobDetail,triggerBuilder.build());
 }

@@ -1,17 +1,26 @@
 {
   ProxyClientMessageProcessorBuilder cxfBuilder=new ProxyClientMessageProcessorBuilder();
-  Map<String,Object> configProperties=new HashMap<String,Object>();
+  Map<String,Object> outConfigProperties=new HashMap<>();
+  Map<String,Object> inConfigProperties=new HashMap<>();
   cxfBuilder.setMtomEnabled(mtomEnabled);
   cxfBuilder.setMuleContext(muleContext);
   cxfBuilder.setSoapVersion(soapVersion.getVersion());
   if (security != null && security.hasStrategies()) {
     for (    SecurityStrategy strategy : security.getStrategies()) {
-      strategy.apply(configProperties);
+      strategy.apply(outConfigProperties,inConfigProperties);
     }
     if (cxfBuilder.getOutInterceptors() == null) {
       cxfBuilder.setOutInterceptors(new ArrayList<Interceptor<? extends Message>>());
     }
-    cxfBuilder.getOutInterceptors().add(new WSS4JOutInterceptor(configProperties));
+    if (cxfBuilder.getInInterceptors() == null) {
+      cxfBuilder.setInInterceptors(new ArrayList<Interceptor<? extends Message>>());
+    }
+    if (!outConfigProperties.isEmpty()) {
+      cxfBuilder.getOutInterceptors().add(new WSS4JOutInterceptor(outConfigProperties));
+    }
+    if (!inConfigProperties.isEmpty()) {
+      cxfBuilder.getInInterceptors().add(new WSS4JInInterceptor(inConfigProperties));
+    }
   }
   CxfOutboundMessageProcessor cxfOutboundMessageProcessor=cxfBuilder.build();
   cxfOutboundMessageProcessor.getClient().getInInterceptors().add(new CheckFaultInterceptor());

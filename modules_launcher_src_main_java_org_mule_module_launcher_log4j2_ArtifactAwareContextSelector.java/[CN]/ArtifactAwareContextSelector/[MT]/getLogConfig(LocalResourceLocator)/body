@@ -4,12 +4,19 @@
     appLogConfig=localResourceLocator.findLocalResource("log4j2.xml");
   }
   if (appLogConfig == null) {
-    return null;
+    File defaultConfigFile=new File(MuleContainerBootstrapUtils.getMuleHome(),"conf");
+    defaultConfigFile=new File(defaultConfigFile,"log4j2.xml");
+    try {
+      appLogConfig=defaultConfigFile.toURI().toURL();
+    }
+ catch (    MalformedURLException e) {
+      throw new MuleRuntimeException(createStaticMessage("Could not locate log config in MULE_HOME"),e);
+    }
   }
   try {
     return appLogConfig.toURI();
   }
  catch (  URISyntaxException e) {
-    throw new MuleRuntimeException(MessageFactory.createStaticMessage("Could not read log file " + appLogConfig),e);
+    throw new MuleRuntimeException(createStaticMessage("Could not read log file " + appLogConfig),e);
   }
 }

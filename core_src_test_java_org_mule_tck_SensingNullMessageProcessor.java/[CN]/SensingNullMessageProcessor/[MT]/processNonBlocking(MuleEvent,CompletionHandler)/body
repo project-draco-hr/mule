@@ -1,0 +1,19 @@
+{
+  sense(event);
+  Executors.newSingleThreadExecutor().execute(new Runnable(){
+    @Override public void run(){
+      try {
+        MuleEvent eventToProcess=event;
+        if (StringUtils.isNotEmpty(appendString)) {
+          eventToProcess=append(eventToProcess);
+        }
+        event.getReplyToHandler().processReplyTo(eventToProcess,null,null);
+        latch.countDown();
+      }
+ catch (      MuleException e) {
+        event.getReplyToHandler().processExceptionReplyTo(new MessagingException(event,e),null);
+      }
+    }
+  }
+);
+}

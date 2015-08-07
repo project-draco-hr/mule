@@ -1,5 +1,6 @@
 {
   MuleClient client=muleContext.getClient();
-  MuleMessage exception=client.send("http://localhost:" + dynamicPort.getNumber(),null,null);
-  assertEquals("500",exception.getInboundProperty("http.status","0"));
+  final HttpRequestOptions httpRequestOptions=newOptions().disableStatusCodeValidation().build();
+  MuleMessage exception=client.send("http://localhost:" + dynamicPort.getNumber(),getTestMuleMessage(NullPayload.getInstance()),httpRequestOptions);
+  assertThat(exception.getInboundProperty("http.status",0),is(500));
 }

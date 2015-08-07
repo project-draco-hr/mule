@@ -1,8 +1,8 @@
 {
   try {
     if (quartzScheduler.isStarted()) {
-      if (quartzScheduler.getTrigger(getName(),groupName) == null) {
-        CronTrigger cronTrigger=new CronTrigger(getName(),groupName,jobName,groupName,cronExpression);
+      if (quartzScheduler.getTrigger(TriggerKey.triggerKey(getName(),groupName)) == null) {
+        CronTrigger cronTrigger=newTrigger().withIdentity(getName(),groupName).forJob(jobName,groupName).withSchedule(cronSchedule(cronExpression)).build();
         quartzScheduler.scheduleJob(cronTrigger);
       }
  else {
@@ -12,8 +12,5 @@
   }
  catch (  SchedulerException e) {
     throw new DefaultMuleException(couldNotScheduleJob(),e);
-  }
-catch (  ParseException e) {
-    throw new DefaultMuleException(invalidCronExpression(),e);
   }
 }

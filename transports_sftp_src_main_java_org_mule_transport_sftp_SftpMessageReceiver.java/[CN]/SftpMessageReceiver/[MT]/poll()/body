@@ -3,7 +3,19 @@
     logger.debug("Polling. Called at endpoint " + endpoint.getEndpointURI());
   }
   try {
-    String[] files=sftpRRUtil.getAvailableFiles(false);
+    if (!connected.get()) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Skipping poll since message receiver is not yet connected");
+      }
+      return;
+    }
+    String[] files;
+    try {
+      files=sftpRRUtil.getAvailableFiles(false);
+    }
+ catch (    Exception e) {
+      throw new ConnectException(e,this);
+    }
     if (files.length == 0) {
       if (logger.isDebugEnabled()) {
         logger.debug("Polling. No matching files found at endpoint " + endpoint.getEndpointURI());
@@ -17,12 +29,12 @@
         if (getLifecycleState().isStopping()) {
           break;
         }
-        Lock fileLock=lockFactory.createLock(connector.getName() + file);
+        Lock fileLock=lockFactory.createLock(createLockId(file));
         if (fileLock.tryLock(10,TimeUnit.MILLISECONDS)) {
           try {
             routeFile(file);
           }
- catch (          Exception e) {
+  finally {
             fileLock.unlock();
           }
         }

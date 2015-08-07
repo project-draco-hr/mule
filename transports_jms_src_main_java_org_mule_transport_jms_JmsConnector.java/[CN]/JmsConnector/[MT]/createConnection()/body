@@ -12,7 +12,7 @@
   }
   connectionFactory=connectionFactoryDecorator.decorate(connectionFactory,this,muleContext);
   Connection connection;
-  if (username != null) {
+  if (!cacheJmsSessions && username != null) {
     connection=jmsSupport.createConnection(connectionFactory,username,password);
   }
  else {
@@ -22,7 +22,7 @@
     if (clientId != null && !clientId.equals(connection.getClientID())) {
       connection.setClientID(getClientId());
     }
-    if (!embeddedMode) {
+    if (!embeddedMode && connection.getExceptionListener() == null) {
       connection.setExceptionListener(this);
     }
   }

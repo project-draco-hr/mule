@@ -1,0 +1,16 @@
+{
+  MessagePropertiesTransformer t=new MessagePropertiesTransformer();
+  Map<String,TypedValue> add=new HashMap<>();
+  add.put("addedProperty",new TypedValue("overwrittenValue",DataType.STRING_DATA_TYPE));
+  t.setAddTypedProperties(add);
+  t.setOverwrite(false);
+  t.setMuleContext(muleContext);
+  DefaultMuleMessage msg=new DefaultMuleMessage("message",muleContext);
+  msg.setProperty("addedProperty","originalValue",PropertyScope.INVOCATION);
+  DefaultMuleMessage transformed=(DefaultMuleMessage)t.transform(msg,(String)null);
+  assertSame(msg,transformed);
+  assertEquals(msg.getUniqueId(),transformed.getUniqueId());
+  assertEquals(msg.getPayload(),transformed.getPayload());
+  compareProperties(msg,transformed);
+  assertEquals("originalValue",transformed.getInvocationProperty("addedProperty"));
+}

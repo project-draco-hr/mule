@@ -2,14 +2,14 @@
   if (updatedSession == null) {
     return;
   }
-  Map<String,Object> oldProperties=this.properties;
-  createPropertiesMap();
-  for (  String propertyKey : updatedSession.getPropertyNamesAsSet()) {
-    this.properties.put(propertyKey,updatedSession.<Object>getProperty(propertyKey));
-  }
-  for (  Map.Entry<String,Object> property : oldProperties.entrySet()) {
-    if (!this.properties.containsKey(property.getKey()) && !(oldProperties.get(property.getKey()) instanceof Serializable)) {
-      this.properties.put(property.getKey(),oldProperties.get(property.getKey()));
+  Iterator<Entry<String,TypedValue>> propertyIterator=properties.entrySet().iterator();
+  while (propertyIterator.hasNext()) {
+    final Entry<String,TypedValue> entry=propertyIterator.next();
+    if (entry.getValue().getValue() instanceof Serializable) {
+      propertyIterator.remove();
     }
+  }
+  for (  String updatedPropertyKey : updatedSession.getPropertyNamesAsSet()) {
+    this.properties.put(updatedPropertyKey,createTypedValue(updatedSession,updatedPropertyKey));
   }
 }

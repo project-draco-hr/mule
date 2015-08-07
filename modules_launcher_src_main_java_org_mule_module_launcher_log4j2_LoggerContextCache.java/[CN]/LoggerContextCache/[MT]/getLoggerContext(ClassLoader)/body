@@ -1,0 +1,19 @@
+{
+  final LoggerContext ctx;
+  try {
+    final int key=computeKey(classLoader);
+    ctx=activeContexts.get(key,new Callable<LoggerContext>(){
+      @Override public LoggerContext call() throws Exception {
+        return artifactAwareContextSelector.buildContext(classLoader);
+      }
+    }
+);
+  }
+ catch (  ExecutionException e) {
+    throw new MuleRuntimeException(createStaticMessage("Could not init logger context "),e);
+  }
+  if (ctx.getState() == LifeCycle.State.INITIALIZED) {
+    ctx.start();
+  }
+  return ctx;
+}

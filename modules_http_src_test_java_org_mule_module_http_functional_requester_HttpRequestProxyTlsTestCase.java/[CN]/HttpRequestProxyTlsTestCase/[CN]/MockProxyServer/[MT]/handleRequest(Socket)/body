@@ -1,0 +1,23 @@
+{
+  BufferedReader reader=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()),1);
+  while (reader.readLine().trim().isEmpty()) {
+  }
+  OutputStream os=clientSocket.getOutputStream();
+  os.write(PROXY_RESPONSE.getBytes());
+  os.flush();
+  final Socket server=new Socket("localhost",serverPort);
+  Thread responseThread=new Thread(){
+    @Override public void run(){
+      try {
+        IOUtils.copy(server.getInputStream(),clientSocket.getOutputStream());
+      }
+ catch (      IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+;
+  responseThread.start();
+  IOUtils.copy(clientSocket.getInputStream(),server.getOutputStream());
+  responseThread.join();
+}

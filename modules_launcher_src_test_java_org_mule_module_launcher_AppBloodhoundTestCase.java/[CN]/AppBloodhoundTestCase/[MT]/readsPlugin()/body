@@ -1,0 +1,13 @@
+{
+  File pluginDir=MuleFoldersUtil.getAppPluginsFolder(APP_NAME);
+  pluginDir.mkdirs();
+  copyResourceAs("plugins/groovy-plugin.zip",pluginDir,"groovy-plugin.zip");
+  ApplicationDescriptor desc=new DefaultAppBloodhound().fetch(APP_NAME);
+  Set<PluginDescriptor> plugins=desc.getPlugins();
+  assertThat(plugins.size(),equalTo(1));
+  final PluginDescriptor plugin=plugins.iterator().next();
+  assertThat(plugin.getName(),equalTo("groovy-plugin"));
+  final PluginClasspath cp=plugin.getClasspath();
+  assertThat(cp.toURLs().length,equalTo(2));
+  assertThat(cp.getRuntimeLibs()[0].toExternalForm(),endsWith("groovy-all-1.8.0.jar"));
+}

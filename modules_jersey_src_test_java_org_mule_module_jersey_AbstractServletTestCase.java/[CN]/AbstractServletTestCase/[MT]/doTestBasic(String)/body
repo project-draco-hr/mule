@@ -1,16 +1,13 @@
 {
   MuleClient client=muleContext.getClient();
-  MuleMessage result=client.send(root + "/helloworld","",null);
+  MuleMessage result=client.send(root + "/helloworld",getTestMuleMessage(),newOptions().method(POST.name()).build());
   assertEquals((Integer)200,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
   assertEquals("Hello World",result.getPayloadAsString());
-  result=client.send(root + "/hello","",null);
+  result=client.send(root + "/hello",getTestMuleMessage(),newOptions().disableStatusCodeValidation().build());
   assertEquals((Integer)404,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
-  Map<String,Object> props=new HashMap<String,Object>();
-  props.put(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_GET);
-  result=client.send(root + "/helloworld","",props);
+  result=client.send(root + "/helloworld",getTestMuleMessage(),newOptions().disableStatusCodeValidation().build());
   assertEquals((Integer)405,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
-  props.put(HttpConnector.HTTP_METHOD_PROPERTY,HttpConstants.METHOD_DELETE);
-  result=client.send(root + "/helloworld","",props);
+  result=client.send(root + "/helloworld",getTestMuleMessage(),newOptions().method(DELETE.name()).disableStatusCodeValidation().build());
   assertEquals("Hello World Delete",result.getPayloadAsString());
   assertEquals((Integer)200,result.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0));
 }

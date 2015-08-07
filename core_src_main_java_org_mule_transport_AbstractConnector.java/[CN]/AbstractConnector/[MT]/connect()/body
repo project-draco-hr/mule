@@ -7,39 +7,45 @@
   }
   RetryCallback callback=new RetryCallback(){
     @Override public void doWork(    RetryContext context) throws Exception {
-      if (validateConnections && context.getLastFailure() instanceof ConnectException) {
-        Connectable failed=((ConnectException)context.getLastFailure()).getFailed();
-        if (!failed.validateConnection(context).isOk()) {
-          throw new ConnectException(MessageFactory.createStaticMessage("Still unable to connect to resource " + failed.getClass().getName()),context.getLastFailure(),failed);
-        }
-      }
-      doConnect();
-      if (receivers != null) {
-        for (        MessageReceiver receiver : receivers.values()) {
-          final List<MuleException> errors=new ArrayList<MuleException>();
-          try {
-            if (logger.isDebugEnabled()) {
-              logger.debug("Connecting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
-            }
-            receiver.connect();
-            if (isStarted()) {
-              receiver.start();
-            }
-          }
- catch (          MuleException e) {
-            logger.error(e);
-            errors.add(e);
-          }
-          if (!errors.isEmpty()) {
-            throw errors.get(0);
+      connectionLock.lock();
+      try {
+        if (validateConnections && context.getLastFailure() instanceof ConnectException) {
+          Connectable failed=((ConnectException)context.getLastFailure()).getFailed();
+          if (!failed.validateConnection(context).isOk()) {
+            throw new ConnectException(MessageFactory.createStaticMessage("Still unable to connect to resource " + failed.getClass().getName()),context.getLastFailure(),failed);
           }
         }
+        doConnect();
+        if (receivers != null) {
+          for (          MessageReceiver receiver : receivers.values()) {
+            final List<MuleException> errors=new ArrayList<MuleException>();
+            try {
+              if (logger.isDebugEnabled()) {
+                logger.debug("Connecting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+              }
+              receiver.connect();
+              if (isStarted()) {
+                receiver.start();
+              }
+            }
+ catch (            MuleException e) {
+              logger.error(e);
+              errors.add(e);
+            }
+            if (!errors.isEmpty()) {
+              throw errors.get(0);
+            }
+          }
+        }
+        setConnected(true);
+        setConnecting(false);
+        logger.info("Connected: " + getWorkDescription());
+        if (startOnConnect && !isStarted() && !isStarting()) {
+          startAfterConnect();
+        }
       }
-      setConnected(true);
-      setConnecting(false);
-      logger.info("Connected: " + getWorkDescription());
-      if (startOnConnect && !isStarted() && !isStarting()) {
-        startAfterConnect();
+  finally {
+        connectionLock.unlock();
       }
     }
     @Override public String getWorkDescription(){

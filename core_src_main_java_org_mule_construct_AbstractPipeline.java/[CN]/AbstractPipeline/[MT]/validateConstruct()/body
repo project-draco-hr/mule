@@ -4,7 +4,10 @@
   boolean userConfiguredAsyncProcessingStrategy=processingStrategy instanceof AsynchronousProcessingStrategy && userConfiguredProcessingStrategy;
   boolean redeliveryHandlerConfigured=isRedeliveryPolicyConfigured();
   if (userConfiguredAsyncProcessingStrategy && (!isMessageSourceCompatibleWithAsync(messageSource) || (redeliveryHandlerConfigured))) {
-    throw new FlowConstructInvalidException(CoreMessages.createStaticMessage("One of the inbound endpoint configured on this Flow is not compatible with an asynchronous processing strategy.  Either because it is request-response, has a transaction defined, or messaging redelivered is configured."),this);
+    throw new FlowConstructInvalidException(CoreMessages.createStaticMessage("One of the inbound endpoint configured on this Flow is not " + "compatible with an asynchronous processing strategy.  Either " + "because it is request-response, has a transaction defined, or "+ "messaging redelivered is configured."),this);
+  }
+  if (processingStrategy instanceof NonBlockingProcessingStrategy && messageSource != null && !(messageSource instanceof NonBlockingMessageSource)) {
+    throw new FlowConstructInvalidException(CoreMessages.createStaticMessage("The non-blocking processing strategy currently only supports " + "non-blocking messages sources"),this);
   }
   if (!userConfiguredProcessingStrategy && redeliveryHandlerConfigured) {
     setProcessingStrategy(new SynchronousProcessingStrategy());

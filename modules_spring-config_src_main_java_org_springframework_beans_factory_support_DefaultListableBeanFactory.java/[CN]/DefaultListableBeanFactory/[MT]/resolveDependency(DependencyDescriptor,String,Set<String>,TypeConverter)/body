@@ -1,0 +1,19 @@
+{
+  descriptor.initParameterNameDiscovery(getParameterNameDiscoverer());
+  if (descriptor.getDependencyType().equals(javaUtilOptionalClass)) {
+    return new OptionalDependencyFactory().createOptionalDependency(descriptor,beanName);
+  }
+ else   if (descriptor.getDependencyType().equals(ObjectFactory.class)) {
+    return new DependencyObjectFactory(descriptor,beanName);
+  }
+ else   if (descriptor.getDependencyType().equals(javaxInjectProviderClass)) {
+    return new DependencyProviderFactory().createDependencyProvider(descriptor,beanName);
+  }
+ else {
+    Object result=getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(descriptor,beanName);
+    if (result == null) {
+      result=doResolveDependency(descriptor,beanName,autowiredBeanNames,typeConverter);
+    }
+    return result;
+  }
+}

@@ -13,18 +13,17 @@ synchronized (folderLock) {
           }
         }
  catch (        Exception e) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("ignoring exception: " + e.getMessage());
-          }
+          handleFolderException("opening",e);
         }
         int count=folder.getMessageCount();
         int batchSize=getBatchSize(count);
         if (count > 0) {
           int limit=Math.min(count,offset + batchSize - 1);
           Message[] messages=folder.getMessages(offset,limit);
+          boolean newMessagesReceived=containsNewMessages(messages);
           MessageCountEvent event=new MessageCountEvent(folder,MessageCountEvent.ADDED,true,messages);
           messagesAdded(event);
-          if (!castConnector().isDeleteReadMessages()) {
+          if (!castConnector().isDeleteReadMessages() || !newMessagesReceived) {
             offset+=batchSize;
           }
         }
@@ -39,10 +38,10 @@ synchronized (folderLock) {
       }
  finally {
         try {
-          folder.close(true);
+          closeFolder();
         }
  catch (        Exception e) {
-          logger.error("Failed to close pop3  inbox: " + e.getMessage());
+          logger.error(String.format(FOLDER_EXCEPTION_FORMAT,"closing",folder.getFullName(),e.getMessage()));
         }
       }
     }

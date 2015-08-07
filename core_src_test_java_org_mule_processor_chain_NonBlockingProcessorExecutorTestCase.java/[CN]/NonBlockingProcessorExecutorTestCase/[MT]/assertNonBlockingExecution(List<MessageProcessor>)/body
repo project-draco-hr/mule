@@ -1,0 +1,17 @@
+{
+  ProcessorExecutor executor=createProcessorExecutor(processors);
+  if (event.getExchangePattern() == MessageExchangePattern.REQUEST_RESPONSE) {
+    assertThat(executor.execute(),CoreMatchers.<MuleEvent>equalTo(NonBlockingVoidMuleEvent.getInstance()));
+  }
+ else {
+    assertThat(executor.execute(),equalTo(event));
+  }
+  nullReplyToHandler.latch.await(LATCH_TIMEOUT,TimeUnit.MILLISECONDS);
+  assertThat(processor1.event,is(notNullValue()));
+  assertThat(processor1.thread,equalTo(Thread.currentThread()));
+  assertThat(processor2.event,is(notNullValue()));
+  assertThat(processor2.thread,not(equalTo(processor1.thread)));
+  assertThat(processor3.event,is(notNullValue()));
+  assertThat(processor3.thread,not(equalTo(processor2.thread)));
+  assertThat(nullReplyToHandler.event.getMessageAsString(),equalTo(RESULT));
+}

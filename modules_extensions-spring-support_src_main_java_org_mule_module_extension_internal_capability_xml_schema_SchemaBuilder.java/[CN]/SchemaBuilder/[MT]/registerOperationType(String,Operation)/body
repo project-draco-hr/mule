@@ -1,0 +1,40 @@
+{
+  final QName base=MULE_ABSTRACT_MESSAGE_PROCESSOR_TYPE;
+  TopLevelComplexType complexType=new TopLevelComplexType();
+  complexType.setName(name);
+  ComplexContent complexContent=new ComplexContent();
+  complexType.setComplexContent(complexContent);
+  final ExtensionType complexContentExtension=new ExtensionType();
+  complexContentExtension.setBase(base);
+  complexContent.setExtension(complexContentExtension);
+  Attribute configAttr=createAttribute(ATTRIBUTE_NAME_CONFIG,ATTRIBUTE_DESCRIPTION_CONFIG,true,SUBSTITUTABLE_NAME);
+  complexContentExtension.getAttributeOrAttributeGroup().add(configAttr);
+  final ExplicitGroup all=new ExplicitGroup();
+  complexContentExtension.setSequence(all);
+  for (  final Parameter parameter : operation.getParameters()) {
+    if (isHidden(parameter)) {
+      continue;
+    }
+    DataType parameterType=parameter.getType();
+    DataQualifier parameterQualifier=parameterType.getQualifier();
+    if (isOperation(parameterType)) {
+      String maxOccurs=parameterQualifier == DataQualifier.LIST ? "unbounded" : "1";
+      generateNestedProcessorElement(all,parameter,maxOccurs);
+    }
+ else {
+      parameterQualifier.accept(new AbstractDataQualifierVisitor(){
+        @Override public void onList(){
+          generateCollectionElement(all,parameter,false);
+        }
+        @Override protected void defaultOperation(){
+          complexContentExtension.getAttributeOrAttributeGroup().add(createAttribute(parameter,parameter.isRequired()));
+        }
+      }
+);
+    }
+  }
+  if (all.getParticle().size() == 0) {
+    complexContentExtension.setSequence(null);
+  }
+  schema.getSimpleTypeOrComplexTypeOrGroup().add(complexType);
+}

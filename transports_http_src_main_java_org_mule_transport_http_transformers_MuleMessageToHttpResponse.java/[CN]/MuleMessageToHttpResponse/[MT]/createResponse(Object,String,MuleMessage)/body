@@ -14,7 +14,13 @@
   }
   String contentType=msg.getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE);
   if (contentType == null) {
-    contentType=msg.getInvocationProperty(HttpConstants.HEADER_CONTENT_TYPE);
+    DataType<?> dataType=msg.getDataType();
+    if (!MimeTypes.ANY.equals(dataType.getMimeType())) {
+      contentType=DataTypeUtils.getContentType(dataType);
+    }
+ else {
+      contentType=msg.getInvocationProperty(HttpConstants.HEADER_CONTENT_TYPE);
+    }
   }
   response.setStatusLine(HttpVersion.parse(version),status);
   if (contentType != null) {

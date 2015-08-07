@@ -1,0 +1,8 @@
+{
+  CountDownLatch latch=new CountDownLatch(2);
+  TestConnectorMessageNotificationListener listener=new TestConnectorMessageNotificationListener(latch,"http://localhost:" + httpPort.getValue() + "/basePath/requestPath");
+  muleContext.getNotificationManager().addListener(listener);
+  runFlow("requestFlow",TEST_MESSAGE);
+  latch.await(1000,TimeUnit.MILLISECONDS);
+  assertThat(listener.getNotificationActionNames(),contains(getActionName(MESSAGE_REQUEST_BEGIN),getActionName(MESSAGE_REQUEST_END)));
+}

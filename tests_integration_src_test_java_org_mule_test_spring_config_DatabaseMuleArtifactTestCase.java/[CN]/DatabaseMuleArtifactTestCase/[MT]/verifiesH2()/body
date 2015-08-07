@@ -1,0 +1,14 @@
+{
+  loadDriver("org.h2.Driver");
+  String config="<jdbc:connector name=\"jdbcConnector\" pollingFrequency=\"1000\" dataSource-ref=\"h2Datasource\" queryTimeout=\"3000\" xmlns:jdbc=\"http://www.mulesoft.org/schema/mule/jdbc\"/>";
+  Document document=XMLUnit.buildControlDocument(config);
+  String refDef="<spring:bean xmlns:spring=\"http://www.springframework.org/schema/beans\" class=\"org.h2.jdbcx.JdbcConnectionPool\" destroy-method=\"dispose\" id=\"h2Datasource\">" + "  <spring:constructor-arg>" + "    <spring:bean class=\"org.h2.jdbcx.JdbcDataSource\">"+ "      <spring:property name=\"URL\" value=\"jdbc:h2:dbname\"/>"+ "      <spring:property name=\"user\" value=\"user\"/>"+ "      <spring:property name=\"password\" value=\"password\"/>"+ "    </spring:bean>"+ "  </spring:constructor-arg>"+ "</spring:bean>";
+  XmlConfigurationCallback callback=new DatabaseConfigurationCallback(Collections.singletonMap("h2Datasource",refDef));
+  doTest(document,callback);
+  refDef="<spring:bean xmlns:spring=\"http://www.springframework.org/schema/beans\" class=\"org.enhydra.jdbc.standard.StandardXADataSource\" destroy-method=\"shutdown\" id=\"h2Datasource\">" + "<spring:property name=\"driverName\" value=\"org.h2.Driver\"/>" + "<spring:property name=\"url\" value=\"jdbc:h2:dbname\"/>"+ "<spring:property name=\"user\" value=\"user\"/>"+ "<spring:property name=\"password\" value=\"password\"/>"+ "</spring:bean>";
+  callback=new DatabaseConfigurationCallback(Collections.singletonMap("h2Datasource",refDef));
+  doTest(document,callback);
+  refDef="<spring:bean xmlns:spring=\"http://www.springframework.org/schema/beans\" class=\"org.apache.commons.dbcp.BasicDataSource\" destroy-method=\"close\" id=\"h2Datasource\">" + "<spring:property name=\"driverClassName\" value=\"org.h2.Driver\"/>" + "<spring:property name=\"url\" value=\"jdbc:h2:dbname\"/>"+ "<spring:property name=\"username\" value=\"user\"/>"+ "<spring:property name=\"password\" value=\"password\"/>"+ "</spring:bean>";
+  callback=new DatabaseConfigurationCallback(Collections.singletonMap("h2Datasource",refDef));
+  doTest(document,callback);
+}
