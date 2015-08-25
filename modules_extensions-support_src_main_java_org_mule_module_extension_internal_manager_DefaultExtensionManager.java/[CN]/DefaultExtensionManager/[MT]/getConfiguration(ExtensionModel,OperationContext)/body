@@ -1,0 +1,15 @@
+{
+  List<ConfigurationProvider<?>> providers=extensionRegistry.getExtensionState(extensionModel).getConfigurationProviders();
+  int matches=providers.size();
+  if (matches == 1) {
+    ConfigurationProvider<?> provider=providers.get(0);
+    return (C)provider.get(operationContext);
+  }
+ else   if (matches > 1) {
+    throw new IllegalStateException(String.format("No config-ref was specified for operation '%s' of extension '%s', but %d are registered. Please specify which to use",operationContext.getOperationModel().getName(),extensionModel.getName(),matches));
+  }
+ else {
+    attemptToCreateImplicitConfiguration(extensionModel,operationContext);
+    return getConfiguration(extensionModel,operationContext);
+  }
+}
