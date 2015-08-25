@@ -1,0 +1,16 @@
+{
+  String packageName=extensionType.getPackage().getName();
+  String classFileName=extensionType.getName().substring(packageName.length() + 1) + ".class";
+  String classFilePath=extensionType.getResource(classFileName).toString();
+  String packagePath=packageName.replace(".","/");
+  classFilePath=classFilePath.substring(0,classFilePath.lastIndexOf(packagePath));
+  int pathIndex=classFilePath.lastIndexOf("/target/");
+  String manifestUrl=String.format("%s/target/test-classes/META-INF/MANIFEST.MF",classFilePath.substring(0,pathIndex + 1));
+  try (InputStream manifestInputStream=new URL(manifestUrl).openStream()){
+    Manifest manifest=new Manifest(manifestInputStream);
+    return manifest.getMainAttributes().getValue(new Attributes.Name("Implementation-Version"));
+  }
+ catch (  IOException e) {
+    return null;
+  }
+}
