@@ -1,0 +1,27 @@
+{
+  ExpirableDynamicConfigurationInstance configurationInstance;
+  cacheReadLock.lock();
+  try {
+    configurationInstance=cache.get(resolverSetResult);
+    if (configurationInstance != null) {
+      configurationInstance.accountUsage();
+      return configurationInstance;
+    }
+  }
+  finally {
+    cacheReadLock.unlock();
+  }
+  cacheWriteLock.lock();
+  try {
+    configurationInstance=cache.get(resolverSetResult);
+    if (configurationInstance == null) {
+      configurationInstance=createConfigurationInstance(resolverSetResult);
+      cache.put(resolverSetResult,configurationInstance);
+    }
+    configurationInstance.accountUsage();
+    return configurationInstance;
+  }
+  finally {
+    cacheWriteLock.unlock();
+  }
+}
