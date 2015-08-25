@@ -1,15 +1,15 @@
 {
   final ManagedMap<String,ManagedList<MessageProcessor>> nestedOperations=new ManagedMap<>();
-  for (  final Parameter parameter : operation.getParameters()) {
-    final DataType type=parameter.getType();
+  for (  final ParameterModel parameterModel : operationModel.getParameterModels()) {
+    final DataType type=parameterModel.getType();
     type.getQualifier().accept(new AbstractDataQualifierVisitor(){
       @Override public void onOperation(){
-        nestedOperations.put(parameter.getName(),parseNestedProcessor(element,parameter,parserContext));
+        nestedOperations.put(parameterModel.getName(),parseNestedProcessor(element,parameterModel,parserContext));
       }
       @Override public void onList(){
         DataType[] generics=type.getGenericTypes();
         if (!ArrayUtils.isEmpty(generics) && generics[0].getQualifier() == DataQualifier.OPERATION) {
-          nestedOperations.put(parameter.getName(),parseNestedProcessor(element,parameter,parserContext));
+          nestedOperations.put(parameterModel.getName(),parseNestedProcessor(element,parameterModel,parserContext));
         }
       }
     }

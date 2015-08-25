@@ -1,0 +1,25 @@
+{
+  parameterType.getQualifier().accept(new AbstractDataQualifierVisitor(){
+    @Override public void onPojo(){
+      String name=hyphenize(getTopLevelTypeName(parameterType));
+      if (topLevelParameters.put(extensionModel,name)) {
+        registerBeanDefinitionParser(name,new TopLevelParameterTypeBeanDefinitionParser(parameterType));
+      }
+    }
+    @Override public void onList(){
+      if (!ArrayUtils.isEmpty(parameterType.getGenericTypes())) {
+        registerTopLevelParameter(extensionModel,parameterType.getGenericTypes()[0]);
+      }
+    }
+    @Override public void onMap(){
+      DataType[] genericTypes=parameterType.getGenericTypes();
+      if (ArrayUtils.isEmpty(genericTypes)) {
+        return;
+      }
+      DataType keyType=genericTypes[0];
+      keyType.getQualifier().accept(this);
+      registerTopLevelParameter(extensionModel,keyType);
+    }
+  }
+);
+}

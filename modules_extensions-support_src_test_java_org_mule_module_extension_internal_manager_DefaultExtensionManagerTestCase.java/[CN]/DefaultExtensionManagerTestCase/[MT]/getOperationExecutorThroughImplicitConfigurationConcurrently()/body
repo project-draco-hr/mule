@@ -5,23 +5,23 @@
   final Latch testLatch=new Latch();
   final CountDownLatch joinerLatch=new CountDownLatch(threadCount);
   discover();
-  when(extension1Configuration.getCapabilities(ParameterGroupCapability.class)).thenReturn(null);
-  when(extension1.getConfigurations()).thenAnswer(new Answer<List<Configuration>>(){
-    @Override public List<Configuration> answer(    InvocationOnMock invocation) throws Throwable {
+  when(extension1ConfigurationModel.getCapabilities(ParameterGroupCapability.class)).thenReturn(null);
+  when(extensionModel1.getConfigurations()).thenAnswer(new Answer<List<ConfigurationModel>>(){
+    @Override public List<ConfigurationModel> answer(    InvocationOnMock invocation) throws Throwable {
       new Thread(){
         @Override public void run(){
           testLatch.release();
-          extensionsManager.getConfigurationInstance(extension1,extension1OperationContext);
+          extensionsManager.getConfiguration(extensionModel1,extension1OperationContext);
         }
       }
 .start();
       testLatch.await(timeout,timeUnit);
       joinerLatch.countDown();
-      return Arrays.asList(extension1Configuration);
+      return Arrays.asList(extension1ConfigurationModel);
     }
   }
 );
-  Object configurationInstance=extensionsManager.getConfigurationInstance(extension1,extension1OperationContext);
+  Object configurationInstance=extensionsManager.getConfiguration(extensionModel1,extension1OperationContext);
   assertThat(joinerLatch.await(5,TimeUnit.SECONDS),is(true));
   assertThat(configurationInstance,is(sameInstance(configInstance)));
 }
