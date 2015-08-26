@@ -30,7 +30,12 @@
   if (notification.getSource() instanceof MuleMessage) {
     MuleMessage message=(MuleMessage)notification.getSource();
     msgType=message.getPayload().getClass().getName();
-    correlationId=(String)message.getProperty("MULE_CORRELATION_ID","?");
+    if (message.getPropertyNames(OUTBOUND).contains(MULE_CORRELATION_ID_PROPERTY)) {
+      correlationId=message.getProperty(MULE_CORRELATION_ID_PROPERTY,OUTBOUND);
+    }
+ else {
+      correlationId="?";
+    }
   }
   if (logger.isDebugEnabled()) {
     logger.debug("OnNotification: " + notification.EVENT_NAME + "\nAction="+ action+ " "+ info+ " "+ size+ "\nEndpoint="+ endpoint+ "\nTimestamp="+ timestamp+ "\nMsgType="+ msgType+ "\nResourceId="+ resourceId+ "\nCorrelationId="+ correlationId+ "");
