@@ -1,10 +1,13 @@
 {
-  NonBlockingProcessorExecutor.this.event=new DefaultMuleEvent(event,replyToHandler);
-  OptimizedRequestContext.unsafeSetEvent(event);
   try {
-    resume();
+    resume(event);
   }
- catch (  MessagingException e) {
-    processExceptionReplyTo(e,replyTo);
+ catch (  Throwable e) {
+    if (e instanceof MessagingException) {
+      processExceptionReplyTo((MessagingException)e,replyTo);
+    }
+ else {
+      processExceptionReplyTo(new MessagingException(event,e),replyTo);
+    }
   }
 }

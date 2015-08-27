@@ -16,6 +16,20 @@
       builder.addHeader(MuleProperties.CONTENT_TYPE_PROPERTY,DataTypeUtils.getContentType(dataType));
     }
   }
+  if (requester.getConfig().isEnableCookies()) {
+    try {
+      Map<String,List<String>> headers=requester.getConfig().getCookieManager().get(URI.create(resolvedUri),Collections.<String,List<String>>emptyMap());
+      List<String> cookies=headers.get(COOKIE);
+      if (cookies != null) {
+        for (        String cookie : cookies) {
+          builder.addHeader(COOKIE,cookie);
+        }
+      }
+    }
+ catch (    IOException e) {
+      logger.warn("Error reading cookies for URI " + resolvedUri,e);
+    }
+  }
   builder.setEntity(createRequestEntity(builder,event,resolvedMethod));
   return builder;
 }
