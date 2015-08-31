@@ -1,0 +1,18 @@
+{
+  ConfigurationModel implicitConfigurationModel=getImplicitConfiguration(extensionModel);
+  if (implicitConfigurationModel == null) {
+    throw new IllegalStateException(String.format("Could not find a config for extension '%s' and none can be created automatically. Please define one",extensionModel.getName()));
+  }
+synchronized (implicitConfigurationModel) {
+    final String instanceName=String.format("%s-%s",extensionModel.getName(),implicitConfigurationModel.getName());
+    ConfigurationObjectBuilder configurationObjectBuilder=new ConfigurationObjectBuilder(implicitConfigurationModel,buildImplicitConfigurationResolverSet(implicitConfigurationModel));
+    C configuration;
+    try {
+      configuration=(C)configurationObjectBuilder.build(asOperationContextAdapter(operationContext).getEvent());
+    }
+ catch (    MuleException e) {
+      throw new MuleRuntimeException(e);
+    }
+    return new DeclaredConfiguration<>(instanceName,implicitConfigurationModel,configuration);
+  }
+}

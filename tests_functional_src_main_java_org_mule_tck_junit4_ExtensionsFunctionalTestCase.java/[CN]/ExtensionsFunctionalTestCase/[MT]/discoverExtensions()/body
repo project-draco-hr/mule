@@ -1,0 +1,27 @@
+{
+  Describer[] describers=getDescribers();
+  if (ArrayUtils.isEmpty(describers)) {
+    Class<?>[] annotatedClasses=getAnnotatedExtensionClasses();
+    if (!ArrayUtils.isEmpty(annotatedClasses)) {
+      describers=new Describer[annotatedClasses.length];
+      int i=0;
+      for (      Class<?> annotatedClass : annotatedClasses) {
+        describers[i++]=new AnnotationsBasedDescriber(annotatedClass);
+      }
+    }
+  }
+  if (ArrayUtils.isEmpty(describers)) {
+    extensionManager.discoverExtensions(getClass().getClassLoader());
+  }
+ else {
+    loadExtensionsFromDescribers(extensionManager,describers);
+  }
+  ResourcesGenerator generator=new ExtensionsTestInfrastructureResourcesGenerator(serviceRegistry,generatedResourcesDirectory);
+  List<GenerableResourceContributor> resourceContributors=getGenerableResourceContributors();
+  for (  ExtensionModel extensionModel : extensionManager.getExtensions()) {
+    for (    GenerableResourceContributor contributor : resourceContributors) {
+      contributor.contribute(extensionModel,generator);
+    }
+  }
+  generateResourcesAndAddToClasspath(generator);
+}

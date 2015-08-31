@@ -1,9 +1,9 @@
 {
   Class<?> extensionClass=AnnotationProcessorUtils.classFor(extensionElement,processingEnv);
   Describer describer=new AnnotationsBasedDescriber(extensionClass,new FixedVersionResolver());
-  DescribingContext context=new DefaultDescribingContext(describer.describe().getRootDeclaration());
-  context.getCustomParameters().put(EXTENSION_ELEMENT,extensionElement);
-  context.getCustomParameters().put(PROCESSING_ENVIRONMENT,processingEnv);
-  context.getCustomParameters().put(ROUND_ENVIRONMENT,roundEnvironment);
-  return extensionFactory.createFrom(context.getDeclarationDescriptor(),context);
+  DescribingContext context=new DescribingContextFactory(new SpiServiceRegistry(),extensionClass.getClassLoader()).newDescribingContext();
+  context.addParameter(EXTENSION_ELEMENT,extensionElement);
+  context.addParameter(PROCESSING_ENVIRONMENT,processingEnv);
+  context.addParameter(ROUND_ENVIRONMENT,roundEnvironment);
+  return extensionFactory.createFrom(describer.describe(context),context);
 }
