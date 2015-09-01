@@ -19,7 +19,12 @@
   for (  String name : resolvedHeaders.keySet()) {
     final Collection<String> paramValues=resolvedHeaders.getAll(name);
     for (    String value : paramValues) {
-      httpResponseHeaderBuilder.addHeader(name,value);
+      if (TRANSFER_ENCODING.equals(name) && !supportsTransferEncoding(event)) {
+        logger.debug("Client HTTP version is lower than 1.1 so the unsupported 'Transfer-Encoding' header has been removed and 'Content-Length' will be sent instead.");
+      }
+ else {
+        httpResponseHeaderBuilder.addHeader(name,value);
+      }
     }
   }
   final String configuredContentType=httpResponseHeaderBuilder.getContentType();
@@ -34,7 +39,7 @@
       warnNoMultipartContentTypeButMultipartEntity(httpResponseHeaderBuilder.getContentType());
     }
     httpEntity=createMultipartEntity(event,httpResponseHeaderBuilder.getContentType());
-    resolveEncoding(httpResponseHeaderBuilder,existingTransferEncoding,existingContentLength,(ByteArrayHttpEntity)httpEntity);
+    resolveEncoding(httpResponseHeaderBuilder,existingTransferEncoding,existingContentLength,supportsTransferEncoding(event),(ByteArrayHttpEntity)httpEntity);
   }
  else {
     final Object payload=event.getMessage().getPayload();
@@ -53,7 +58,9 @@
     }
  else     if (payload instanceof InputStream) {
       if (responseStreaming == ALWAYS || (responseStreaming == AUTO && existingContentLength == null)) {
-        setupChunkedEncoding(httpResponseHeaderBuilder);
+        if (supportsTransferEncoding(event)) {
+          setupChunkedEncoding(httpResponseHeaderBuilder);
+        }
         httpEntity=new InputStreamHttpEntity((InputStream)payload);
       }
  else {
@@ -65,7 +72,7 @@
  else {
       try {
         ByteArrayHttpEntity byteArrayHttpEntity=new ByteArrayHttpEntity(event.getMessage().getPayloadAsBytes());
-        resolveEncoding(httpResponseHeaderBuilder,existingTransferEncoding,existingContentLength,byteArrayHttpEntity);
+        resolveEncoding(httpResponseHeaderBuilder,existingTransferEncoding,existingContentLength,supportsTransferEncoding(event),byteArrayHttpEntity);
         httpEntity=byteArrayHttpEntity;
       }
  catch (      Exception e) {
