@@ -1,8 +1,15 @@
 {
-  ConfigurationHolder configurationHolder=implicitConfigurationFactory.createImplicitConfiguration(extensionModel,operationContext,this);
-  if (configurationHolder != null) {
-    Object configuration=configurationHolder.getConfiguration();
-    registerConfigurationProvider(extensionModel,configurationHolder.getName(),new StaticConfigurationProvider<>(configuration));
-    registerConfiguration(extensionModel,configurationHolder.getName(),configuration);
+synchronized (extensionModel) {
+    if (!extensionRegistry.getExtensionState(extensionModel).getConfigurationProviders().isEmpty()) {
+      return true;
+    }
+    DeclaredConfiguration<?> declaredConfiguration=implicitConfigurationFactory.createImplicitConfiguration(extensionModel,operationContext);
+    if (declaredConfiguration != null) {
+      Object configuration=declaredConfiguration.getValue();
+      registerConfigurationProvider(extensionModel,new StaticConfigurationProvider<>(declaredConfiguration.getName(),declaredConfiguration.getModel(),configuration));
+      registerConfiguration(extensionModel,declaredConfiguration.getName(),configuration);
+      return true;
+    }
+    return false;
   }
 }
