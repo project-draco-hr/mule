@@ -1,8 +1,14 @@
 {
-  MuleContext muleContext=templateUriBuilder.getMuleContext();
-  String resolvedAddress=templateUriBuilder.getEncodedConstructor();
-  if (muleContext.getExpressionManager().isExpression(resolvedAddress)) {
-    resolvedAddress=muleContext.getExpressionManager().parse(resolvedAddress,event,true);
+  final MuleContext muleContext=templateUriBuilder.getMuleContext();
+  String resolvedAddress=templateUriBuilder.getTransformedConstructor(new Transformer(){
+    @Override public Object transform(    Object input){
+      String token=(String)input;
+      if (muleContext.getExpressionManager().isExpression(token)) {
+        token=muleContext.getExpressionManager().parse(token,event,true);
+      }
+      return token;
+    }
   }
+,URL_ENCODER);
   return resolvedAddress;
 }
