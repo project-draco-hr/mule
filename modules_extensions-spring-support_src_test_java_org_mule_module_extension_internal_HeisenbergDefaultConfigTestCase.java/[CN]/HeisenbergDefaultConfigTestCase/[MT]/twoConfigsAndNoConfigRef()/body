@@ -1,10 +1,11 @@
 {
   ExtensionManager extensionManager=muleContext.getExtensionManager();
-  ExtensionModel extensionModel=extensionManager.getExtensions().iterator().next();
+  ExtensionModel extensionModel=extensionManager.getExtensions().stream().findFirst().get();
   assertThat(extensionModel.getName(),is(EXTENSION_NAME));
-  ConfigurationProvider<Object> configurationProvider=mock(ConfigurationProvider.class);
   when(configurationProvider.getName()).thenReturn("secondConfig");
-  extensionManager.registerConfigurationProvider(extensionModel,configurationProvider);
+  when(configurationProvider.getModel()).thenReturn(configurationModel);
+  when(configurationModel.getExtensionModel()).thenReturn(extensionModel);
+  extensionManager.registerConfigurationProvider(configurationProvider);
   expectedException.expectCause(IsInstanceOf.<IllegalStateException>instanceOf(IllegalStateException.class));
   runFlow("sayMyName");
 }

@@ -2,12 +2,12 @@
   configurationName=null;
   messageProcessor=createOperationMessageProcessor();
   Object defaultConfigInstance=new Object();
-  DeclaredConfiguration<Object> implicitConfiguration=new DeclaredConfiguration<>(CONFIG_NAME,configurationModel,defaultConfigInstance);
-  when(extensionManager.getConfiguration(same(extensionModel),any(OperationContext.class))).thenReturn(implicitConfiguration);
+  when(configurationInstance.getValue()).thenReturn(defaultConfigInstance);
+  when(extensionManager.getConfiguration(extensionModel,event)).thenReturn(configurationInstance);
   ArgumentCaptor<OperationContext> operationContextCaptor=ArgumentCaptor.forClass(OperationContext.class);
   messageProcessor.process(event);
   verify(operationExecutor).execute(operationContextCaptor.capture());
   OperationContext operationContext=operationContextCaptor.getValue();
   assertThat(operationContext,is(instanceOf(OperationContextAdapter.class)));
-  assertThat(operationContext.getConfiguration(),is(sameInstance(defaultConfigInstance)));
+  assertThat(operationContext.getConfiguration().getValue(),is(sameInstance(defaultConfigInstance)));
 }

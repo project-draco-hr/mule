@@ -1,0 +1,25 @@
+{
+  before(context,interceptors);
+  Object result=null;
+  Exception exception=null;
+  try {
+    result=executor.execute(context);
+    onSuccess(context,result,interceptors);
+  }
+ catch (  Exception e) {
+    exception=onError(context,retryRequestHolder,e,interceptors);
+  }
+ finally {
+    after(context,result,interceptors);
+  }
+  if (exception != null) {
+    InterceptorsRetryRequest retryRequest=retryRequestHolder.get();
+    if (retryRequest != null && retryRequest.isRetryRequested()) {
+      result=executeWithInterceptors(executor,context,interceptors,retryRequestHolder);
+    }
+ else {
+      throw exception;
+    }
+  }
+  return result;
+}
