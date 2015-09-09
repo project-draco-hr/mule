@@ -1,0 +1,14 @@
+{
+  QueuePersistenceObjectStore<Serializable> store=getObjectStore();
+  String id=UUID.getUUID();
+  Serializable value=new SerializableWrapper(new NonSerializableObject());
+  File queueFile=createStoreFile(id);
+  try {
+    store.store(new QueueKey(QUEUE_NAME,id),value);
+    fail();
+  }
+ catch (  ObjectStoreException e) {
+    assertThat(e.getCause(),instanceOf(SerializationException.class));
+    assertThat(queueFile.exists(),is(false));
+  }
+}
