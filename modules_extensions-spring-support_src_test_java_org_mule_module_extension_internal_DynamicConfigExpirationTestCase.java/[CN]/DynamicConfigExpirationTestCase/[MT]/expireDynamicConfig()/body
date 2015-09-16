@@ -2,10 +2,10 @@
   final String myName="Walt";
   final MuleEvent event=getTestEvent(myName);
   String returnedName=runFlow("dynamic",event).getMessage().getPayloadAsString();
-  HeisenbergExtension config=muleContext.getRegistry().lookupObject(HeisenbergExtension.class);
+  HeisenbergExtension config=(HeisenbergExtension)muleContext.getExtensionManager().getConfiguration("heisenberg",event).getValue();
   assertThat(returnedName,is(myName));
   assertThat(config.getPersonalInfo().getName(),is(myName));
-  PollingProber prober=new PollingProber(5000,100);
+  PollingProber prober=new PollingProber(5000,1000);
   prober.check(new JUnitProbe(){
     @Override protected boolean test() throws Exception {
       assertThat(config.getStop(),is(1));
@@ -17,4 +17,6 @@
     }
   }
 );
+  assertThat(config.getInitialise(),is(1));
+  assertThat(config.getStart(),is(1));
 }
