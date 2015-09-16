@@ -1,0 +1,24 @@
+{
+  readLock.lock();
+  try {
+    if (connection != null) {
+      return connection;
+    }
+  }
+  finally {
+    readLock.unlock();
+  }
+  writeLock.lock();
+  try {
+    if (connection != null) {
+      return connection;
+    }
+    if (muleContext.isStopped() || muleContext.isStopping()) {
+      throw new IllegalStateException("Mule is shutting down... cannot create a new connection");
+    }
+    return connection=connectionHandler.connect((Config)operationContext.getConfiguration().getValue());
+  }
+  finally {
+    writeLock.unlock();
+  }
+}

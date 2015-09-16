@@ -1,0 +1,29 @@
+{
+  boolean handlerStopped=false;
+  writeLock.lock();
+  try {
+    if (connection != null) {
+      connectionHandler.disconnect(connection);
+    }
+  }
+ catch (  Exception e) {
+    try {
+      stopHandlerSilently();
+    }
+  finally {
+      handlerStopped=true;
+    }
+    throw e;
+  }
+ finally {
+    connection=null;
+    try {
+      if (!handlerStopped) {
+        stopHandler();
+      }
+    }
+  finally {
+      writeLock.unlock();
+    }
+  }
+}
