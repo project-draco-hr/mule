@@ -1,0 +1,13 @@
+{
+  when(endpoint.getConnector()).thenReturn(connector);
+  when(connector.createSftpClient(endpoint,notifier)).thenReturn(sftpClient);
+  when(sftpClient.retrieveFile(FILE_TXT)).thenThrow(IOException.class);
+  SftpReceiverRequesterUtil requesterUtil=new SftpReceiverRequesterUtil(endpoint);
+  expectedException.expect(IOException.class);
+  try {
+    requesterUtil.retrieveFile(FILE_TXT,notifier);
+  }
+  finally {
+    verify(connector).releaseClient(endpoint,sftpClient);
+  }
+}
