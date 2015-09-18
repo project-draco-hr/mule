@@ -1,0 +1,22 @@
+{
+  FilePayload filePayload=getExistingFile(directoryPath);
+  Path path=Paths.get(filePayload.getPath());
+  if (!filePayload.isDirectory()) {
+    throw cannotListFileException(path);
+  }
+  if (!tryChangeWorkingDirectory(path.toString())) {
+    throw exception(format("Could not change working directory to '%s' while trying to list that directory",path));
+  }
+  List<FilePayload> accumulator=new LinkedList<>();
+  try {
+    doList(path,accumulator,recursive,matcher);
+    if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+      throw exception(format("Failed to list files on directory '%s'",path));
+    }
+    changeWorkingDirectory(path);
+  }
+ catch (  Exception e) {
+    throw exception(format("Failed to list files on directory '%s'",path),e);
+  }
+  return accumulator;
+}

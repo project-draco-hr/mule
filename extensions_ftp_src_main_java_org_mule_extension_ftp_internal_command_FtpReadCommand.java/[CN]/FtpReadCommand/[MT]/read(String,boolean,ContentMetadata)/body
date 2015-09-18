@@ -1,0 +1,21 @@
+{
+  FtpFilePayload filePayload=getExistingFile(filePath);
+  if (filePayload.isDirectory()) {
+    throw cannotReadDirectoryException(Paths.get(filePayload.getPath()));
+  }
+  try {
+    filePayload=new FtpFilePayload(resolvePath(filePath),client.listFiles(filePath)[0],config);
+  }
+ catch (  Exception e) {
+    throw exception("Found exception while trying to list path " + filePath,e);
+  }
+  Path path=Paths.get(filePayload.getPath());
+  if (lock) {
+    filePayload=new FtpFilePayload(filePayload,fileSystem.lock(path));
+  }
+ else {
+    fileSystem.verifyNotLocked(path);
+  }
+  fileSystem.updateContentMetadata(filePayload,contentMetadata);
+  return filePayload;
+}

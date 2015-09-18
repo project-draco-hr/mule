@@ -1,0 +1,17 @@
+{
+  if (isLocked()) {
+    throw new IllegalStateException("Lock is already acquired");
+  }
+  try {
+    channel=FileChannel.open(path,openOptions);
+    lock=channel.tryLock();
+    return isLocked();
+  }
+ catch (  Exception e) {
+    release();
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info(String.format("Could not obtain lock on path ''%s'' due to the following exception",path),e);
+    }
+    return false;
+  }
+}
