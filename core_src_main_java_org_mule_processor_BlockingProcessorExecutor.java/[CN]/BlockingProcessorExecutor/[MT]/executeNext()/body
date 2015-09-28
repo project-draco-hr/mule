@@ -2,9 +2,10 @@
   MessageProcessor processor=nextProcessor();
   preProcess(processor);
   if (copyOnVoidEvent && processorMayReturnVoidEvent(processor)) {
-    MuleEvent copy=OptimizedRequestContext.criticalSetEvent(event);
+    MuleEvent copy=((event instanceof ThreadSafeAccess) ? new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage()),event) : event);
     MuleEvent result=messageProcessorExecutionTemplate.execute(processor,event);
     if (isUseEventCopy(result)) {
+      OptimizedRequestContext.unsafeSetEvent(copy);
       result=copy;
     }
     return result;
