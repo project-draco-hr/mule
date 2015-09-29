@@ -1,13 +1,13 @@
 {
   ProcessorExecutor executor=createProcessorExecutor(processors);
-  assertThat(RequestContext.getEvent(),is(nullValue()));
   if (event.getExchangePattern() == MessageExchangePattern.REQUEST_RESPONSE) {
     assertThat(executor.execute().getMessageAsString(),equalTo(RESULT));
-    assertThat(RequestContext.getEvent(),is(nullValue()));
+    assertThat(RequestContext.getEvent(),requestResponseMatcher);
   }
  else {
-    assertThat(executor.execute(),equalTo(event));
-    assertThat(RequestContext.getEvent(),not(nullValue()));
+    assertThat(executor.execute().getId(),equalTo(event.getId()));
+    assertThat(executor.execute().getMessage(),equalTo(event.getMessage()));
+    assertThat(RequestContext.getEvent(),not(sameInstance(event)));
   }
   assertThat(processor1.event,is(notNullValue()));
   assertThat(processor1.thread,equalTo(Thread.currentThread()));
