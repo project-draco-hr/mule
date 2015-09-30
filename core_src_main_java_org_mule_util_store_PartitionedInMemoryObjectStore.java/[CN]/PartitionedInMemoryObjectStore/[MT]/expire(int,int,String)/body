@@ -1,19 +1,17 @@
 {
-  final long now=System.nanoTime();
+  final long now=getCurrentNanoTime();
   int expiredEntries=0;
-  Map.Entry<Long,Serializable> oldestEntry;
-  ConcurrentSkipListMap<Long,Serializable> store=getExpirtyInfoPartition(partitionName);
+  ExpiryEntry oldestEntry;
+  ConcurrentLinkedQueue<ExpiryEntry> store=getExpiryInfoPartition(partitionName);
   ConcurrentMap<Serializable,T> partition=getPartition(partitionName);
   trimToMaxSize(store,maxEntries,partition);
   if (entryTTL == UNBOUNDED) {
     return;
   }
-  while ((oldestEntry=store.firstEntry()) != null) {
-    Long oldestKey=oldestEntry.getKey();
-    long oldestKeyValue=oldestKey.longValue();
-    if (TimeUnit.NANOSECONDS.toMillis(now - oldestKeyValue) >= entryTTL) {
-      partition.remove(oldestEntry.getValue());
-      store.remove(oldestKey);
+  while ((oldestEntry=store.peek()) != null) {
+    if (TimeUnit.NANOSECONDS.toMillis(now - oldestEntry.getTime()) >= entryTTL) {
+      oldestEntry=store.remove();
+      partition.remove(oldestEntry.getKey());
       expiredEntries++;
     }
  else {

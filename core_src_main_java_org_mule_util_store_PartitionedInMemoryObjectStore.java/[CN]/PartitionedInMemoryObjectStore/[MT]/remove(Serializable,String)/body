@@ -3,16 +3,13 @@
   if (removedValue == null) {
     throw new ObjectDoesNotExistException();
   }
-  Iterator<Map.Entry<Long,Serializable>> localIterator=getExpirtyInfoPartition(partitionName).entrySet().iterator();
-  Map.Entry<Long,Serializable> localEntry;
-  Long timestamp=null;
-  while (localIterator.hasNext()) {
-    localEntry=localIterator.next();
-    if (key.equals(localEntry.getValue())) {
-      timestamp=localEntry.getKey();
+  Iterator<ExpiryEntry> iterator=getExpiryInfoPartition(partitionName).iterator();
+  while (iterator.hasNext()) {
+    ExpiryEntry entry=iterator.next();
+    if (key.equals(entry.getKey())) {
+      iterator.remove();
       break;
     }
   }
-  getExpirtyInfoPartition(partitionName).remove(timestamp);
   return removedValue;
 }
