@@ -1,0 +1,18 @@
+{
+  Runtime runtime=Runtime.getRuntime();
+  runtime.gc();
+  long memBefore=runtime.totalMemory() - runtime.freeMemory();
+  runtime.gc();
+  long memMiddle=runtime.totalMemory() - runtime.freeMemory();
+  System.out.println(memMiddle - memBefore);
+  for (int i=0; i < 5000; ++i) {
+    MuleEvent event=buildEvent(UUID.getUUID());
+    manager.onPipelineNotificationStart(buildPipelineNotification(event,ROOT_FLOW_NAME));
+    for (int j=0; j < 10; ++j) {
+      manager.onPipelineNotificationStart(buildPipelineNotification(event,NESTED_FLOW_NAME + j));
+    }
+  }
+  runtime.gc();
+  long memAfter=runtime.totalMemory() - runtime.freeMemory();
+  System.out.println(memAfter - memMiddle);
+}
