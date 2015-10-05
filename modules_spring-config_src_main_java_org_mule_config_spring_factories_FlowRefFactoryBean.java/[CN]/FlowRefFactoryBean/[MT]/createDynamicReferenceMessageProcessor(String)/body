@@ -6,7 +6,7 @@
     MessageProcessor dynamicReference=new FlowRefMessageProcessor(){
       @Override public MuleEvent process(      MuleEvent event) throws MuleException {
         String flowName=muleContext.getExpressionManager().parse(refName,event);
-        MessageProcessor dynamicMessageProcessor=getReferencedFlow(flowName,event.getFlowConstruct());
+        final MessageProcessor dynamicMessageProcessor=getReferencedFlow(flowName,event.getFlowConstruct());
         Collection<MessageProcessingFlowStackManager> flowStackManagers=applicationContext.getBeansOfType(MessageProcessingFlowStackManager.class).values();
         if (dynamicMessageProcessor instanceof SubFlowMessageProcessor) {
           for (          MessageProcessingFlowStackManager messageProcessingFlowStackManager : flowStackManagers) {
@@ -14,7 +14,12 @@
           }
         }
         try {
-          return dynamicMessageProcessor.process(event);
+          return new FlowRefMessageProcessor(){
+            @Override public MuleEvent process(            MuleEvent event) throws MuleException {
+              return dynamicMessageProcessor.process(event);
+            }
+          }
+.process(event);
         }
   finally {
           if (dynamicMessageProcessor instanceof SubFlowMessageProcessor) {
