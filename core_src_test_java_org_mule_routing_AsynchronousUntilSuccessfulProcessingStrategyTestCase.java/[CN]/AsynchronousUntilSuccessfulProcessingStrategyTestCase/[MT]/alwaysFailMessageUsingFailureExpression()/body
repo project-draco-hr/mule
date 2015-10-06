@@ -2,8 +2,8 @@
   when(mockUntilSuccessfulConfiguration.getDlqMP()).thenReturn(null);
   when(mockUntilSuccessfulConfiguration.getFailureExpressionFilter()).thenReturn(mockAlwaysTrueFailureExpressionFilter);
   executeUntilSuccessfulFailingRoute(new FailCallback(){
-    @Override public void doFail(){
-      throw new RuntimeException(EXPECTED_FAILURE_MSG);
+    @Override public void doFail() throws MessagingException {
+      throw new MessagingException(CoreMessages.createStaticMessage(EXPECTED_FAILURE_MSG),mockEvent,mockRoute);
     }
   }
 );
@@ -11,7 +11,7 @@
   waitUntilExceptionIsHandled();
   verify(mockEvent.getFlowConstruct().getExceptionListener(),times(1)).handleException(argThat(new ArgumentMatcher<Exception>(){
     @Override public boolean matches(    Object item){
-      return item instanceof RetryPolicyExhaustedException && EXPECTED_FAILURE_MSG.equals(((RetryPolicyExhaustedException)item).getCause().getMessage());
+      return item instanceof RetryPolicyExhaustedException && ((RetryPolicyExhaustedException)item).getMessage().contains("until-successful retries exhausted. Last exception message was: " + EXPECTED_FAILURE_MSG);
     }
   }
 ),eq(mockEvent));
