@@ -4,16 +4,27 @@
     buf.append(message.getMessage()).append(". ");
   }
   if (muleMessage != null) {
-    Object payload=muleMessage.getPayload();
-    if (payload == null) {
-      payload=NullPayload.getInstance();
+    if (DefaultMuleConfiguration.verboseExceptions) {
+      Object payload=muleMessage.getPayload();
+      if (payload == null) {
+        payload=NullPayload.getInstance();
+      }
+      if (isConsumable(muleMessage.getPayload().getClass())) {
+        addInfo(PAYLOAD_INFO_KEY,abbreviate(payload.toString(),1000));
+      }
+ else {
+        try {
+          addInfo(PAYLOAD_INFO_KEY,muleMessage.getPayloadAsString());
+        }
+ catch (        Exception e) {
+          addInfo(PAYLOAD_INFO_KEY,format("%s while getting payload: %s",e.getClass().getName(),e.getMessage()));
+        }
+      }
     }
-    buf.append(CoreMessages.messageIsOfType(payload.getClass()).getMessage());
-    addInfo("Payload",StringUtils.abbreviate(payload.toString(),1000));
   }
  else {
     buf.append("The current MuleMessage is null! Please report this to ").append(MuleManifest.getDevListEmail());
-    addInfo("Payload",NullPayload.getInstance().toString());
+    addInfo(PAYLOAD_INFO_KEY,NullPayload.getInstance().toString());
   }
   return buf.toString();
 }
