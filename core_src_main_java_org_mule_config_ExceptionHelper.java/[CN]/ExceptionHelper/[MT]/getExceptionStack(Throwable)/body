@@ -6,7 +6,6 @@
   buf.append(rootMuleReader.getMessage(rootMule)).append(" (").append(rootMule.getClass().getName()).append(")").append(SystemUtils.LINE_SEPARATOR);
   if (verbose) {
     int processedElements=0;
-    int nonMuleElements=0;
     int processedMuleElements=1;
     for (    StackTraceElement stackTraceElement : root.getStackTrace()) {
       if (processedMuleElements > EXCEPTION_THRESHOLD) {
@@ -15,15 +14,8 @@
       ++processedElements;
       if (stackTraceElement.getClassName().matches(MULE_PACKAGE_REGEXP)) {
         ++processedMuleElements;
-        if (nonMuleElements > 0) {
-          buf.append("  (").append(nonMuleElements).append(" more...)").append(SystemUtils.LINE_SEPARATOR);
-        }
-        buf.append("  ").append(stackTraceElement.getClassName()).append(":").append(stackTraceElement.getLineNumber()).append(SystemUtils.LINE_SEPARATOR);
-        nonMuleElements=0;
       }
- else {
-        ++nonMuleElements;
-      }
+      buf.append("  ").append(stackTraceElement.getClassName()).append(".").append(stackTraceElement.getMethodName()).append(":").append(stackTraceElement.getLineNumber()).append(")").append(SystemUtils.LINE_SEPARATOR);
     }
     if (root.getStackTrace().length - processedElements > 0) {
       buf.append("  (").append(root.getStackTrace().length - processedElements).append(" more...)").append(SystemUtils.LINE_SEPARATOR);
