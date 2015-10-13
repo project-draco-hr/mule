@@ -1,0 +1,22 @@
+{
+  List<String> planetNames=new ArrayList<>();
+  planetNames.add(EARTH.getName());
+  planetNames.add(MARS.getName());
+  when(message.getPayload()).thenReturn(planetNames);
+  when(event.getMessage()).thenReturn(message);
+  when(dbConnectionFactory.createConnection(TransactionalAction.NOT_SUPPORTED)).thenReturn(connection);
+  when(dbConfigResolver.resolve(event)).thenReturn(dbConfig);
+  when(dbConfig.getConnectionFactory()).thenReturn(dbConnectionFactory);
+  when(queryResolver.resolve(argThat(equalTo(connection)),any(MuleEvent.class))).thenReturn(new Query(QUERY_TEMPLATE_WITH_NAMED_PARAM));
+  final ParamValueResolver paramValueResolver=mock(ParamValueResolver.class);
+  when(paramValueResolver.resolveParams(any(MuleEvent.class),any(List.class))).thenReturn(Collections.singletonList(new QueryParamValue(null,EARTH.getName()))).thenReturn(Collections.singletonList(new QueryParamValue(null,MARS.getName())));
+  PreparedBulkUpdateMessageProcessor processor=new PreparedBulkUpdateMessageProcessor(dbConfigResolver,queryResolver,null,NOT_SUPPORTED,Collections.singletonList(UPDATE),paramValueResolver);
+  processor.setMuleContext(muleContext);
+  final List<FieldDebugInfo> debugInfo=processor.getDebugInfo(event);
+  assertThat(debugInfo.size(),equalTo(2));
+  List<FieldDebugInfo> queryFields=new ArrayList<>();
+  queryFields.add(createFieldDebugInfo(SQL_TEXT_DEBUG_FIELD,String.class,QUERY_SQL));
+  queryFields.add(createFieldDebugInfo(TYPE_DEBUG_FIELD,String.class,UPDATE.toString()));
+  assertThat(debugInfo,hasItem(objectLike(QUERY_DEBUG_FIELD,Query.class,queryFields)));
+  assertThat(debugInfo,hasItem(objectLike(INPUT_PARAMS_DEBUG_FIELD,List.class,createExpectedParamSets())));
+}

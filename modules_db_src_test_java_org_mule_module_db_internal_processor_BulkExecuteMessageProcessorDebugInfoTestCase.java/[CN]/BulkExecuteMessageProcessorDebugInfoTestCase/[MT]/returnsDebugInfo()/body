@@ -1,0 +1,13 @@
+{
+  when(dbConnectionFactory.createConnection(TransactionalAction.NOT_SUPPORTED)).thenReturn(connection);
+  when(dbConfigResolver.resolve(event)).thenReturn(dbConfig);
+  when(dbConfig.getConnectionFactory()).thenReturn(dbConnectionFactory);
+  final BulkQuery bulkQuery=new BulkQuery();
+  bulkQuery.add(new QueryTemplate(DELETE_QUERY,DELETE,Collections.<QueryParam>emptyList()));
+  bulkQuery.add(new QueryTemplate(INSERT_QUERY,QueryType.INSERT,Collections.<QueryParam>emptyList()));
+  when(bulkQueryResolver.resolve(event)).thenReturn(bulkQuery);
+  final BulkExecuteMessageProcessor bulkExecuteMessageProcessor=new BulkExecuteMessageProcessor(dbConfigResolver,bulkQueryResolver,null,NOT_SUPPORTED);
+  final List<FieldDebugInfo> debugInfo=bulkExecuteMessageProcessor.getDebugInfo(event);
+  assertThat(debugInfo.size(),equalTo(1));
+  assertThat(debugInfo,hasItem(objectLike(QUERIES_DEBUG_FIELD,List.class,createExpectedQueries())));
+}

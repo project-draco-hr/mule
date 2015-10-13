@@ -1,0 +1,11 @@
+{
+  when(dbConnectionFactory.createConnection(TransactionalAction.NOT_SUPPORTED)).thenReturn(connection);
+  when(dbConfigResolver.resolve(event)).thenReturn(dbConfig);
+  when(dbConfig.getConnectionFactory()).thenReturn(dbConnectionFactory);
+  final QueryResolutionException resolutionException=new QueryResolutionException("Error");
+  when(queryResolver.resolve(connection,event)).thenThrow(resolutionException);
+  AbstractSingleQueryDbMessageProcessor processor=createMessageProcessor();
+  final List<FieldDebugInfo> debugInfo=processor.getDebugInfo(event);
+  assertThat(debugInfo.size(),equalTo(1));
+  assertThat(debugInfo,hasItem(fieldLike(SQL_TEXT_DEBUG_FIELD,String.class,resolutionException)));
+}
