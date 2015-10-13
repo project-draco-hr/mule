@@ -1,0 +1,27 @@
+{
+  MuleEvent eventToUse=resolveSource(muleEvent);
+  final List<FieldDebugInfo> fields=new ArrayList<>();
+  BulkQuery bulkQuery;
+  try {
+    bulkQuery=bulkQueryResolver.resolve(eventToUse);
+  }
+ catch (  QueryResolutionException e) {
+    fields.add(createFieldDebugInfo(QUERIES_DEBUG_FIELD,List.class,e));
+    return fields;
+  }
+  try {
+    validateQueryTemplates(bulkQuery.getQueryTemplates());
+  }
+ catch (  IllegalArgumentException e) {
+    fields.add(createFieldDebugInfo(QUERIES_DEBUG_FIELD,List.class,e));
+    return fields;
+  }
+  final List<FieldDebugInfo> queries=new ArrayList<>();
+  int queryIndex=1;
+  for (  QueryTemplate queryTemplate : bulkQuery.getQueryTemplates()) {
+    final FieldDebugInfo fieldDebugInfo=createQueryFieldDebugInfo(QUERY_DEBUG_FIELD + queryIndex++,queryTemplate);
+    queries.add(fieldDebugInfo);
+  }
+  fields.add(createFieldDebugInfo(QUERIES_DEBUG_FIELD,List.class,queries));
+  return fields;
+}

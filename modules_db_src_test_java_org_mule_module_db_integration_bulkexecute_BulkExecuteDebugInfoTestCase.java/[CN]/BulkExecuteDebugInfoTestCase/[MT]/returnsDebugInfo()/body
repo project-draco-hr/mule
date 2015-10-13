@@ -1,0 +1,13 @@
+{
+  Flow flowConstruct=(Flow)muleContext.getRegistry().lookupFlowConstruct("bulkUpdateRequestResponse");
+  List<MessageProcessor> messageProcessors=flowConstruct.getMessageProcessors();
+  AbstractDbMessageProcessor queryMessageProcessor=(AbstractDbMessageProcessor)messageProcessors.get(0);
+  final MuleEvent muleEvent=getTestEvent(TEST_MESSAGE);
+  final List<FieldDebugInfo> debugInfo=queryMessageProcessor.getDebugInfo(muleEvent);
+  assertThat(debugInfo,is(not(nullValue())));
+  assertThat(debugInfo.size(),equalTo(1));
+  final List<FieldDebugInfo> queriesDebugInfo=new ArrayList<>();
+  queriesDebugInfo.add(createQueryFieldDebugInfo(QUERY1,QUERY_TEMPLATE1));
+  queriesDebugInfo.add(createQueryFieldDebugInfo(QUERY2,QUERY_TEMPLATE2));
+  assertThat(debugInfo,hasItem(objectLike(QUERIES_DEBUG_FIELD,List.class,queriesDebugInfo)));
+}
