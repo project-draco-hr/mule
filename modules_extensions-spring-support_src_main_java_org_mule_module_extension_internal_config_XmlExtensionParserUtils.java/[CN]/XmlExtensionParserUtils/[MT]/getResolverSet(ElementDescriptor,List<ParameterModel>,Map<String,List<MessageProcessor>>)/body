@@ -7,7 +7,16 @@
     }
  else {
       ValueResolver<?> resolver=parseParameter(element,parameterModel);
-      resolverSet.add(parameterModel,resolver != null ? resolver : new StaticValueResolver(null));
+      if (resolver == null) {
+        resolver=new StaticValueResolver(null);
+      }
+      if (resolver.isDynamic() && parameterModel.getExpressionSupport() == ExpressionSupport.NOT_SUPPORTED) {
+        throw new ConfigurationException(createStaticMessage(String.format("An expression value was given for parameter '%s' but it doesn't support expressions",parameterModel.getName())));
+      }
+      if (!resolver.isDynamic() && parameterModel.getExpressionSupport() == ExpressionSupport.REQUIRED && parameterModel.isRequired()) {
+        throw new ConfigurationException(createStaticMessage(String.format("A fixed value was given for parameter '%s' but it only supports expressions",parameterModel.getName())));
+      }
+      resolverSet.add(parameterModel,resolver);
     }
   }
   return resolverSet;
