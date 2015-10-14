@@ -10,17 +10,12 @@
   }
   final ObjectFieldDebugInfo objectFieldDebugInfo=(ObjectFieldDebugInfo)fieldDebugInfo;
   final List<FieldDebugInfo> fieldDebugInfos=objectFieldDebugInfo.getValue();
-  if (fields.size() != fieldDebugInfos.size()) {
+  if (fieldMatchers.size() != fieldDebugInfos.size()) {
     return false;
   }
   try {
-    for (    FieldDebugInfo field : fields) {
-      if (field instanceof ObjectFieldDebugInfo) {
-        assertThat(fieldDebugInfos,hasItem(objectLike(field.getName(),field.getType(),((ObjectFieldDebugInfo)field).getValue())));
-      }
- else {
-        assertThat(fieldDebugInfos,hasItem(fieldLike(field.getName(),field.getType(),field.getValue())));
-      }
+    for (    Matcher<FieldDebugInfo> fieldMatcher : fieldMatchers) {
+      assertThat(fieldDebugInfos,hasItem(fieldMatcher));
     }
     return true;
   }
