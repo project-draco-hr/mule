@@ -8,28 +8,12 @@
         String flowName=muleContext.getExpressionManager().parse(refName,event);
         final MessageProcessor dynamicMessageProcessor=getReferencedFlow(flowName,event.getFlowConstruct());
         setResolvedMessageProcessor(dynamicMessageProcessor);
-        Collection<MessageProcessingFlowStackManager> flowStackManagers=applicationContext.getBeansOfType(MessageProcessingFlowStackManager.class).values();
-        if (dynamicMessageProcessor instanceof SubFlowMessageProcessor) {
-          for (          MessageProcessingFlowStackManager messageProcessingFlowStackManager : flowStackManagers) {
-            messageProcessingFlowStackManager.onFlowStart(event,flowName);
+        return new NonBlockingMessageProcessor(){
+          @Override public MuleEvent process(          MuleEvent event) throws MuleException {
+            return dynamicMessageProcessor.process(event);
           }
         }
-        try {
-          return new NonBlockingMessageProcessor(){
-            @Override public MuleEvent process(            MuleEvent event) throws MuleException {
-              return dynamicMessageProcessor.process(event);
-            }
-          }
 .process(event);
-        }
-  finally {
-          setResolvedMessageProcessor(null);
-          if (dynamicMessageProcessor instanceof SubFlowMessageProcessor) {
-            for (            MessageProcessingFlowStackManager messageProcessingFlowStackManager : flowStackManagers) {
-              messageProcessingFlowStackManager.onFlowComplete(event);
-            }
-          }
-        }
       }
     }
 ;

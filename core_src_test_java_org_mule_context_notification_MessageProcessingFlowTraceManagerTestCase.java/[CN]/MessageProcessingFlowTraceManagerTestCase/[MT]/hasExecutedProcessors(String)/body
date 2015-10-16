@@ -1,0 +1,27 @@
+{
+  return new TypeSafeMatcher<ProcessorsTrace>(){
+    private List<Matcher> failed=new ArrayList<>();
+    @Override protected boolean matchesSafely(    ProcessorsTrace processorsTrace){
+      Matcher<Collection<? extends Object>> sizeMatcher=hasSize(expectedProcessors.length);
+      if (!sizeMatcher.matches(processorsTrace.getExecutedProcessors())) {
+        failed.add(sizeMatcher);
+      }
+      int i=0;
+      for (      String expectedProcessor : expectedProcessors) {
+        Matcher processorItemMatcher=is(expectedProcessor);
+        if (!processorItemMatcher.matches(processorsTrace.getExecutedProcessors().get(i))) {
+          failed.add(processorItemMatcher);
+        }
+        ++i;
+      }
+      return failed.isEmpty();
+    }
+    @Override public void describeTo(    Description description){
+      description.appendValue(Arrays.asList(expectedProcessors));
+    }
+    @Override protected void describeMismatchSafely(    ProcessorsTrace item,    Description description){
+      description.appendText("was ").appendValue(item.getExecutedProcessors());
+    }
+  }
+;
+}

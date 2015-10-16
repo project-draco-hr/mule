@@ -1,0 +1,14 @@
+{
+  MuleEvent event=buildEvent("newAnnotatedComponentCall");
+  String flowName=ROOT_FLOW_NAME;
+  PipelineMessageNotification pipelineNotification=buildPipelineNotification(event,flowName);
+  assertThat(getContextInfo(event),is(""));
+  manager.onPipelineNotificationStart(pipelineNotification);
+  assertThat(getContextInfo(event),is("at " + flowName));
+  AnnotatedObject annotatedMessageProcessor=(AnnotatedObject)mock(MessageProcessor.class,withSettings().extraInterfaces(AnnotatedObject.class));
+  when(annotatedMessageProcessor.getAnnotation(any(QName.class))).thenReturn("annotatedName");
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(event,(MessageProcessor)annotatedMessageProcessor,"/comp"));
+  assertThat(getContextInfo(event),is("at " + flowName + "(/comp @ "+ APP_ID+ " (annotatedName))"));
+  manager.onPipelineNotificationComplete(pipelineNotification);
+  assertThat(getContextInfo(event),is(""));
+}
