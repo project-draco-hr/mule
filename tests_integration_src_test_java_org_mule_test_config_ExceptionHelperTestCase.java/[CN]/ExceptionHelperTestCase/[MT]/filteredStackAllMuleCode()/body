@@ -1,0 +1,14 @@
+{
+  int calls=5;
+  try {
+    generateStackEntries(calls,new Closure(){
+      @Override public void execute(      Object input){
+        throw new RuntimeException(new DefaultMuleException(MessageFactory.createStaticMessage("foo")));
+      }
+    }
+);
+  }
+ catch (  Exception e) {
+    assertThat(ExceptionHelper.getExceptionStack(e),StringByLineMatcher.matchesLineByLine("foo (org.mule.api.DefaultMuleException)","  org.mule.test.config.ExceptionHelperTestCase$3.execute:","  org.mule.test.config.ExceptionHelperTestCase.generateStackEntries:","  org.mule.test.config.ExceptionHelperTestCase.generateStackEntries:","  (" + (calls + 12) + " more...)"));
+  }
+}

@@ -24,6 +24,18 @@
   }
   String soapAction=getSoapAction(event.getMessage());
   m.put(SoapConstants.SOAP_ACTION_PROPERTY_CAPS,soapAction);
+  org.apache.cxf.transport.Destination d;
+  if (server != null) {
+    d=server.getDestination();
+  }
+ else {
+    String serviceUri=getUri(event);
+    DestinationFactoryManager dfm=bus.getExtension(DestinationFactoryManager.class);
+    DestinationFactory df=dfm.getDestinationFactoryForUri(serviceUri);
+    EndpointInfo ei=new EndpointInfo();
+    ei.setAddress(serviceUri);
+    d=df.getDestination(ei);
+  }
   if (shouldSoapActionHeader()) {
     Map<String,List<String>> protocolHeaders=new HashMap<String,List<String>>();
     if (soapAction != null && !soapAction.isEmpty()) {
@@ -32,7 +44,7 @@
       protocolHeaders.put(SoapBindingConstants.SOAP_ACTION,soapActions);
     }
     String eventRequestUri=event.getMessageSourceURI().toString();
-    if (eventRequestUri.startsWith(JMS_TRANSPORT)) {
+    if (eventRequestUri.startsWith(JMS_TRANSPORT) || SoapJMSConstants.SOAP_JMS_NAMESPACE.equals(((MuleUniversalDestination)d).getEndpointInfo().getTransportId())) {
       String contentType=muleReqMsg.getInboundProperty(SoapJMSConstants.CONTENTTYPE_FIELD);
       if (contentType == null) {
         contentType="text/xml";
@@ -45,18 +57,6 @@
       protocolHeaders.put(SoapJMSConstants.REQUESTURI_FIELD,Collections.singletonList(requestUri));
     }
     m.put(Message.PROTOCOL_HEADERS,protocolHeaders);
-  }
-  org.apache.cxf.transport.Destination d;
-  if (server != null) {
-    d=server.getDestination();
-  }
- else {
-    String serviceUri=getUri(event);
-    DestinationFactoryManager dfm=bus.getExtension(DestinationFactoryManager.class);
-    DestinationFactory df=dfm.getDestinationFactoryForUri(serviceUri);
-    EndpointInfo ei=new EndpointInfo();
-    ei.setAddress(serviceUri);
-    d=df.getDestination(ei);
   }
   m.put(LocalConduit.DIRECT_DISPATCH,Boolean.TRUE);
   m.setDestination(d);

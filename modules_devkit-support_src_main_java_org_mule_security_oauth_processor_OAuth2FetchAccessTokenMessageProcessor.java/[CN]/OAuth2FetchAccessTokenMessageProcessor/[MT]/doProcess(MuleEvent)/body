@@ -2,7 +2,7 @@
   MuleEvent restoredEvent=this.restoreOriginalEvent(event);
   this.notifyCallbackReception(event);
   try {
-    OAuth2Adapter oauthAdapter=this.oauthManager.createAdapter(((String)event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER)));
+    OAuth2Adapter oauthAdapter=this.oauthManager.createAdapter(restoredEvent,((String)event.getMessage().getInvocationProperty(OAuthProperties.VERIFIER)));
     if (oauthAdapter.getAccessTokenUrl() == null) {
       oauthAdapter.setAccessTokenUrl(this.getAccessTokenUrl());
     }
@@ -20,7 +20,7 @@
     message.removeProperty(OAuthProperties.CALLBACK_LOCATION,PropertyScope.OUTBOUND);
   }
  catch (  Exception e) {
-    throw new MessagingException(MessageFactory.createStaticMessage("Unable to fetch access token"),event,e);
+    throw new MessagingException(MessageFactory.createStaticMessage("Unable to fetch access token"),event,e,this);
   }
   return restoredEvent;
 }

@@ -3,9 +3,14 @@
     return messageProcessor.process(event);
   }
  catch (  MessagingException messagingException) {
-    throw messagingException;
+    if (messagingException.getFailingMessageProcessor() == null) {
+      throw putContext(messagingException,messageProcessor,event);
+    }
+ else {
+      throw putContext(messagingException,messagingException.getFailingMessageProcessor(),event);
+    }
   }
 catch (  Throwable ex) {
-    throw new MessagingException(event,ex,messageProcessor);
+    throw putContext(new MessagingException(event,ex,messageProcessor),messageProcessor,event);
   }
 }

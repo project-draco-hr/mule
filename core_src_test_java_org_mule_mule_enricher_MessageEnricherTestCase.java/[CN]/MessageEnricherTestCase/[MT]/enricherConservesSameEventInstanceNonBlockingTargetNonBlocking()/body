@@ -1,0 +1,11 @@
+{
+  SensingNullMessageProcessor sensingNullMessageProcessor=new SensingNullMessageProcessor();
+  MessageEnricher enricher=createNonBlockingEnricher(sensingNullMessageProcessor);
+  SensingNullReplyToHandler nullReplyToHandler=new SensingNullReplyToHandler();
+  final MuleEvent in=createNonBlockingEvent(nullReplyToHandler);
+  MuleEvent out=processEnricherInChain(enricher,in);
+  nullReplyToHandler.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
+  assertThat(sensingNullMessageProcessor.event.getMessage(),not(sameInstance(in.getMessage())));
+  assertThat(out,is(instanceOf(NonBlockingVoidMuleEvent.class)));
+  assertThat(nullReplyToHandler.event.getMessage(),is(sameInstance(in.getMessage())));
+}

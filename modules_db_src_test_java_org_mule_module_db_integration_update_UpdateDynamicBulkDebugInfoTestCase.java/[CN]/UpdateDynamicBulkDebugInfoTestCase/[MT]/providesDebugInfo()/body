@@ -1,0 +1,13 @@
+{
+  Flow flowConstruct=(Flow)muleContext.getRegistry().lookupFlowConstruct("updateBulk");
+  List<MessageProcessor> messageProcessors=flowConstruct.getMessageProcessors();
+  AbstractDbMessageProcessor queryMessageProcessor=(AbstractDbMessageProcessor)messageProcessors.get(0);
+  List<String> planetNames=new ArrayList<>();
+  planetNames.add("EARTH");
+  planetNames.add("MARS");
+  final MuleEvent muleEvent=getTestEvent(planetNames);
+  final List<FieldDebugInfo> debugInfo=queryMessageProcessor.getDebugInfo(muleEvent);
+  assertThat(debugInfo,is(not(nullValue())));
+  assertThat(debugInfo.size(),equalTo(1));
+  assertThat(debugInfo,hasItem(objectLike(QUERIES_DEBUG_FIELD,List.class,createExpectedQueryMatchers())));
+}

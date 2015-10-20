@@ -1,0 +1,19 @@
+{
+  when(mockUntilSuccessfulConfiguration.getDlqMP()).thenReturn(null);
+  when(mockUntilSuccessfulConfiguration.getFailureExpressionFilter()).thenReturn(mockAlwaysTrueFailureExpressionFilter);
+  executeUntilSuccessfulFailingRoute(new FailCallback(){
+    @Override public void doFail() throws MessagingException {
+      throw new MessagingException(mockEvent,new RuntimeException(EXPECTED_FAILURE_MSG));
+    }
+  }
+);
+  waitUntilRouteIsExecuted();
+  waitUntilExceptionIsHandled();
+  verify(mockEvent.getFlowConstruct().getExceptionListener(),times(1)).handleException(argThat(new ArgumentMatcher<Exception>(){
+    @Override public boolean matches(    Object item){
+      return item instanceof RetryPolicyExhaustedException && ((RetryPolicyExhaustedException)item).getMessage().contains("until-successful retries exhausted. Last exception message was: " + EXPECTED_FAILURE_MSG);
+    }
+  }
+),eq(mockEvent));
+  verify(mockDLQ,never()).process(any(MuleEvent.class));
+}

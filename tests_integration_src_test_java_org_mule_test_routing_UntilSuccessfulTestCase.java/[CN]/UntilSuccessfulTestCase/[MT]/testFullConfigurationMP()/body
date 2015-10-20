@@ -8,4 +8,10 @@
     assertEquals(payload,receivedPayloads.get(i));
   }
   ponderUntilMessageCountReceivedByCustomMP(1);
+  ExceptionPayload dlqExceptionPayload=CustomMP.getProcessedMessages().get(0).getExceptionPayload();
+  assertThat(dlqExceptionPayload,is(notNullValue()));
+  assertThat(dlqExceptionPayload.getException(),instanceOf(RetryPolicyExhaustedException.class));
+  assertThat(dlqExceptionPayload.getException().getMessage(),containsString("until-successful retries exhausted. Last exception message was: Failure expression positive when processing event"));
+  assertThat(dlqExceptionPayload.getException().getCause(),instanceOf(MuleRuntimeException.class));
+  assertThat(dlqExceptionPayload.getException().getMessage(),containsString("Failure expression positive when processing event"));
 }

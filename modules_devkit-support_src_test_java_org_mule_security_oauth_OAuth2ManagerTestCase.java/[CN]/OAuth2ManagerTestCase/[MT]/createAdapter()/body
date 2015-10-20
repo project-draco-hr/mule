@@ -1,16 +1,18 @@
 {
   final String verifier="verifier";
-  when(adapter.getAuthorizationUrl()).thenReturn("authorizationUrl");
-  when(adapter.getAccessTokenUrl()).thenReturn("accessTokenUrl");
+  final String authorizationUrl="authorizationUrl";
+  final String accessTokenUrl="accessTokenUrl";
+  when(event.getFlowVariable(BaseOAuth2Manager.AUTHORIZATION_URL)).thenReturn(authorizationUrl);
+  when(event.getFlowVariable(BaseOAuth2Manager.ACCESS_TOKEN_URL)).thenReturn(accessTokenUrl);
   when(adapter.getConsumerKey()).thenReturn("consumerKey");
   when(adapter.getConsumerSecret()).thenReturn("consumerSecret");
-  OAuth2Adapter adapter=this.manager.createAdapter(verifier);
-  assertSame(adapter,this.adapter);
-  verify(adapter).setOauthVerifier(Mockito.eq(verifier));
-  verify(adapter).setAuthorizationUrl(Mockito.eq(this.adapter.getAuthorizationUrl()));
-  verify(adapter).setAccessTokenUrl(Mockito.eq(this.adapter.getAccessTokenUrl()));
-  verify(adapter).setConsumerKey(Mockito.eq(this.adapter.getConsumerKey()));
-  verify(adapter).setConsumerSecret(Mockito.eq(this.adapter.getConsumerSecret()));
-  verify(this.manager).setCustomProperties(adapter);
-  verify((MuleContextAware)adapter,Mockito.atLeastOnce()).setMuleContext(this.muleContext);
+  OAuth2Adapter adapter=manager.createAdapter(event,verifier);
+  assertSame(adapter,adapter);
+  verify(adapter).setOauthVerifier(eq(verifier));
+  verify(adapter).setAuthorizationUrl(authorizationUrl);
+  verify(adapter).setAccessTokenUrl(accessTokenUrl);
+  verify(adapter).setConsumerKey(eq(adapter.getConsumerKey()));
+  verify(adapter).setConsumerSecret(eq(adapter.getConsumerSecret()));
+  verify(manager).setCustomProperties(adapter);
+  verify((MuleContextAware)adapter,Mockito.atLeastOnce()).setMuleContext(muleContext);
 }
