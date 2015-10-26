@@ -8,6 +8,10 @@
   finally {
     readLock.unlock();
   }
+  Optional<ConnectionProvider> connectionProvider=operationContext.getConfiguration().getConnectionProvider();
+  if (!connectionProvider.isPresent()) {
+    throw new IllegalStateException(String.format("Operation '%s' of extension '%s' requires a connection but was executed with config '%s' which " + "is not associated to a connection provider",operationContext.getOperationModel().getName(),operationContext.getConfiguration().getModel().getExtensionModel().getName(),operationContext.getConfiguration().getName()));
+  }
   writeLock.lock();
   try {
     if (connection != null) {
@@ -16,7 +20,7 @@
     if (muleContext.isStopped() || muleContext.isStopping()) {
       throw new IllegalStateException("Mule is shutting down... cannot create a new connection");
     }
-    return connection=connectionHandler.connect((Config)operationContext.getConfiguration().getValue());
+    return connection=connectionProvider.get().connect(operationContext.getConfiguration().getValue());
   }
   finally {
     writeLock.unlock();

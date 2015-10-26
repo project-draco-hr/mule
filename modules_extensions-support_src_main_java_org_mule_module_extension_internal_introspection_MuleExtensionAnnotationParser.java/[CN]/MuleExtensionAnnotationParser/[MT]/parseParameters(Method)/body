@@ -5,18 +5,16 @@
   }
   DataType[] parameterTypes=IntrospectionUtils.getMethodArgumentTypes(method);
   Annotation[][] parameterAnnotations=method.getParameterAnnotations();
-  List<ParameterDescriptor> parameterDescriptors=new LinkedList<>();
+  List<ParsedParameter> parsedParameters=new LinkedList<>();
   for (int i=0; i < paramNames.size(); i++) {
     Map<Class<? extends Annotation>,Annotation> annotations=toMap(parameterAnnotations[i]);
     if (annotations.containsKey(ParameterGroup.class)) {
-      parseGroupParameters(parameterTypes[i],parameterDescriptors);
+      parseGroupParameters(parameterTypes[i],parsedParameters);
     }
  else {
-      ParameterDescriptor parameterDescriptor=doParseParameter(paramNames.get(i),parameterTypes[i],annotations);
-      if (parameterDescriptor != null) {
-        parameterDescriptors.add(parameterDescriptor);
-      }
+      ParsedParameter parsedParameter=doParseParameter(paramNames.get(i),parameterTypes[i],annotations);
+      parsedParameters.add(parsedParameter);
     }
   }
-  return parameterDescriptors;
+  return parsedParameters;
 }

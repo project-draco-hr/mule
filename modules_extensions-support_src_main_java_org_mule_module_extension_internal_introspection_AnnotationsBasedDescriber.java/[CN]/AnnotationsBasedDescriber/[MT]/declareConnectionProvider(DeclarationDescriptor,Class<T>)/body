@@ -1,0 +1,15 @@
+{
+  String name=DEFAULT_CONNECTION_PROVIDER_NAME;
+  String description=EMPTY;
+  Provider providerAnnotation=providerClass.getAnnotation(Provider.class);
+  if (providerAnnotation != null) {
+    name=providerAnnotation.name() + CUSTOM_CONNECTION_PROVIDER_SUFFIX;
+    description=providerAnnotation.description();
+  }
+  List<Class<?>> providerGenerics=getInterfaceGenerics(providerClass,ConnectionProvider.class);
+  if (providerGenerics.size() != 2) {
+    throw new IllegalModelDefinitionException(String.format("Connection provider class '%s' was expected to have 2 generic types " + "(one for the config type and another for the connection type) but %d were found",providerClass.getName(),providerGenerics.size()));
+  }
+  ConnectionProviderDescriptor providerDescriptor=declaration.withConnectionProvider(name).describedAs(description).createdWith(new DefaultConnectionProviderFactory<>(providerClass)).forConfigsOfType(providerGenerics.get(0)).whichGivesConnectionsOfType(providerGenerics.get(1)).withModelProperty(ImplementingTypeModelProperty.KEY,new ImplementingTypeModelProperty(providerClass));
+  declareAnnotatedParameters(providerClass,providerDescriptor,providerDescriptor.with());
+}

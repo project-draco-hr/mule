@@ -1,0 +1,24 @@
+{
+  for (  final ParameterModel parameterModel : parameterModels) {
+    parameterModel.getType().getQualifier().accept(new AbstractDataQualifierVisitor(){
+      private boolean forceOptional=false;
+      @Override public void onList(){
+        forceOptional=true;
+        defaultOperation();
+        generateCollectionElement(choice,parameterModel,true);
+      }
+      @Override public void onPojo(){
+        forceOptional=false;
+        defaultOperation();
+        registerComplexTypeChildElement(choice,parameterModel.getName(),parameterModel.getDescription(),parameterModel.getType(),isRequired(parameterModel,forceOptional));
+      }
+      @Override protected void defaultOperation(){
+        type.getAttributeOrAttributeGroup().add(createAttribute(parameterModel,isRequired(parameterModel,forceOptional)));
+      }
+    }
+);
+  }
+  if (!choice.getParticle().isEmpty()) {
+    type.setChoice(choice);
+  }
+}
