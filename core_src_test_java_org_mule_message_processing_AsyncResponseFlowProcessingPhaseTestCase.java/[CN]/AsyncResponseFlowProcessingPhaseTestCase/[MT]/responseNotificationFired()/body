@@ -1,0 +1,13 @@
+{
+  doAnswer(new Answer(){
+    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      ResponseCompletionCallback callback=(ResponseCompletionCallback)invocationOnMock.getArguments()[1];
+      callback.responseSentWithFailure(mockException,mockMuleEvent);
+      return null;
+    }
+  }
+).when(mockTemplate).sendResponseToClient(any(MuleEvent.class),any(ResponseCompletionCallback.class));
+  phase.runPhase(mockTemplate,mockContext,mockNotifier);
+  verify(notificationHelper).fireNotification(any(MuleEvent.class),isNull(String.class),any(FlowConstruct.class),eq(MESSAGE_RESPONSE));
+  verify(notificationHelper,never()).fireNotification(any(MuleEvent.class),isNull(String.class),any(FlowConstruct.class),eq(MESSAGE_ERROR_RESPONSE));
+}
