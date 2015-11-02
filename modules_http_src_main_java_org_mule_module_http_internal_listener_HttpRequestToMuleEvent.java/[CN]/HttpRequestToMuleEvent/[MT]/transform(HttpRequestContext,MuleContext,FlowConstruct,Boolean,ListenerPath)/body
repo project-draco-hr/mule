@@ -15,6 +15,7 @@
   new HttpMessagePropertiesResolver().setMethod(request.getMethod()).setProtocol(request.getProtocol().asString()).setUri(request.getUri()).setListenerPath(listenerPath).setRemoteHostAddress(resolveRemoteHostAddress(requestContext)).setScheme(requestContext.getScheme()).setClientCertificate(requestContext.getClientConnection().getClientCertificate()).addPropertiesTo(inboundProperties);
   final Map<String,DataHandler> inboundAttachments=new HashMap<>();
   Object payload=NullPayload.getInstance();
+  final String contentTypeValue=request.getHeaderValue(HttpHeaders.Names.CONTENT_TYPE);
   if (parseRequest) {
     final HttpEntity entity=request.getEntity();
     if (entity != null && !(entity instanceof EmptyHttpEntity)) {
@@ -22,7 +23,6 @@
         inboundAttachments.putAll(HttpPartDataSource.createDataHandlerFrom(((MultipartHttpEntity)entity).getParts()));
       }
  else {
-        final String contentTypeValue=request.getHeaderValue(HttpHeaders.Names.CONTENT_TYPE);
         if (contentTypeValue != null) {
           final MediaType mediaType=MediaType.parse(contentTypeValue);
           String encoding=mediaType.charset().isPresent() ? mediaType.charset().get().name() : Charset.defaultCharset().name();
@@ -52,5 +52,6 @@
     }
   }
   final DefaultMuleMessage defaultMuleMessage=new DefaultMuleMessage(payload,inboundProperties,outboundProperties,inboundAttachments,muleContext);
+  defaultMuleMessage.setMimeType(contentTypeValue);
   return new DefaultMuleEvent(defaultMuleMessage,resolveUri(requestContext),MessageExchangePattern.REQUEST_RESPONSE,flowConstruct,new DefaultMuleSession());
 }
