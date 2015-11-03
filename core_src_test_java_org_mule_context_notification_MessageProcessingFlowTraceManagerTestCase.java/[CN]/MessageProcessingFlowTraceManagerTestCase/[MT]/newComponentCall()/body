@@ -1,0 +1,12 @@
+{
+  MuleEvent event=buildEvent("newComponentCall");
+  String flowName=ROOT_FLOW_NAME;
+  PipelineMessageNotification pipelineNotification=buildPipelineNotification(event,flowName);
+  assertThat(getContextInfo(event),is(""));
+  manager.onPipelineNotificationStart(pipelineNotification);
+  assertThat(getContextInfo(event),is("at " + ROOT_FLOW_NAME));
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(event,mock(MessageProcessor.class),"/comp"));
+  assertThat(getContextInfo(event),is("at " + ROOT_FLOW_NAME + "(/comp @ "+ APP_ID+ ")"));
+  manager.onPipelineNotificationComplete(pipelineNotification);
+  assertThat(getContextInfo(event),is(""));
+}
