@@ -1,16 +1,14 @@
 {
-  Enumeration<Driver> drivers=DriverManager.getDrivers();
+  Enumeration<Driver> drivers=getDrivers();
   while (drivers.hasMoreElements()) {
     Driver driver=drivers.nextElement();
-    try {
-      logger.debug("Deregistering driver: {}",driver.getClass());
-      DriverManager.deregisterDriver(driver);
-      if (isOracleDriver(driver)) {
-        deregisterOracleDiagnosabilityMBean();
-      }
+    if (isDriverLoadedByThisClassLoader(driver)) {
+      doDeregisterDriver(driver);
     }
- catch (    Exception e) {
-      logger.warn(String.format("Can not deregister driver %s. This can cause a memory leak.",driver.getClass()),e);
+ else {
+      if (logger.isDebugEnabled()) {
+        logger.debug(format("Skipping deregister driver %s. It wasn't loaded by the classloader of the artifact being released.",driver.getClass()));
+      }
     }
   }
 }
