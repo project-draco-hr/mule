@@ -1,0 +1,17 @@
+{
+  addExplodedDomainFromResource(sharedHttpDomainBundleDescriptor.zipPath,sharedHttpDomainBundleDescriptor.id);
+  File domainConfigFile=new File(domainsDir + sharedHttpDomainBundleDescriptor.path,DOMAIN_CONFIG_FILE_LOCATION);
+  String correctDomainConfigContent=IOUtils.toString(new FileInputStream(domainConfigFile));
+  String wrongDomainFileContext=correctDomainConfigContent.replace("http-listener-config","http-listener-config-wrong");
+  FileUtils.copyInputStreamToFile(new ByteArrayInputStream(wrongDomainFileContext.getBytes()),domainConfigFile);
+  deploymentService.start();
+  assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainDescriptor.id);
+  assertDeploymentFailure(applicationDeploymentListener,sharedHttpAppADescriptor.id);
+  assertDeploymentFailure(applicationDeploymentListener,sharedHttpAppBDescriptor.id);
+  reset(applicationDeploymentListener);
+  reset(domainDeploymentListener);
+  FileUtils.copyInputStreamToFile(new ByteArrayInputStream(correctDomainConfigContent.getBytes()),domainConfigFile);
+  assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainDescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,sharedHttpAppADescriptor.id);
+  assertDeploymentSuccess(applicationDeploymentListener,sharedHttpAppBDescriptor.id);
+}

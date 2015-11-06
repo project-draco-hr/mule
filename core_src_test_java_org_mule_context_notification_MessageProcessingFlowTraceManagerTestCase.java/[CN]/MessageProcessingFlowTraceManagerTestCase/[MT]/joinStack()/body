@@ -1,0 +1,22 @@
+{
+  MuleEvent event=buildEvent("joinStack");
+  String flowName=ROOT_FLOW_NAME;
+  PipelineMessageNotification pipelineNotification=buildPipelineNotification(event,flowName);
+  assertThat(getContextInfo(event),is(""));
+  manager.onPipelineNotificationStart(pipelineNotification);
+  assertThat(getContextInfo(event),is("at " + flowName));
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(event,mock(MessageProcessor.class),"/scatter-gather"));
+  assertThat(getContextInfo(event),is("at " + flowName + "(/scatter-gather @ "+ APP_ID+ ")"));
+  MuleEvent eventCopy0=buildEvent("joinStack_0",event.getFlowCallStack().clone(),event.getProcessorsTrace());
+  MuleEvent eventCopy1=buildEvent("joinStack_1",event.getFlowCallStack().clone(),event.getProcessorsTrace());
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy0,mock(MessageProcessor.class),"/route_0"));
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy1,mock(MessageProcessor.class),NESTED_FLOW_NAME + "_ref"));
+  PipelineMessageNotification pipelineNotificationNested=buildPipelineNotification(eventCopy1,NESTED_FLOW_NAME);
+  manager.onPipelineNotificationStart(pipelineNotificationNested);
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy1,mock(MessageProcessor.class),"/route_1"));
+  assertThat(getContextInfo(eventCopy1),is("at " + NESTED_FLOW_NAME + "(/route_1 @ "+ APP_ID+ ")"+ System.lineSeparator()+ "at "+ ROOT_FLOW_NAME+ "("+ NESTED_FLOW_NAME+ "_ref @ "+ APP_ID+ ")"));
+  manager.onPipelineNotificationComplete(pipelineNotificationNested);
+  assertThat(getContextInfo(event),is("at " + flowName + "(/scatter-gather @ "+ APP_ID+ ")"));
+  manager.onPipelineNotificationComplete(pipelineNotification);
+  assertThat(getContextInfo(event),is(""));
+}

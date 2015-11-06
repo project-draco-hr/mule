@@ -1,14 +1,15 @@
 {
   if (trans.size() > 1) {
     if (logger.isDebugEnabled()) {
-      logger.debug("Comparing transformers for best match: input = " + input + " output = "+ output+ " Possible transformers = "+ trans);
+      logger.debug("Comparing transformers for best match: source = " + input + " target = "+ output+ " Possible transformers = "+ trans);
     }
     List<TransformerWeighting> weightings=calculateTransformerWeightings(trans,input,output);
     TransformerWeighting maxWeighting=weightings.get(weightings.size() - 1);
     for (int index=weightings.size() - 2; index >= 0 && maxWeighting.compareTo(weightings.get(index)) == 0; index--) {
       TransformerWeighting current=weightings.get(index);
       if (!maxWeighting.getTransformer().getClass().equals(current.getTransformer().getClass())) {
-        throw new ResolverException(CoreMessages.transformHasMultipleMatches(input,output,current.getTransformer(),maxWeighting.getTransformer()));
+        List<Transformer> transformers=Arrays.asList(current.getTransformer(),maxWeighting.getTransformer());
+        throw new ResolverException(CoreMessages.transformHasMultipleMatches(input,output,transformers));
       }
     }
     return maxWeighting.getTransformer();

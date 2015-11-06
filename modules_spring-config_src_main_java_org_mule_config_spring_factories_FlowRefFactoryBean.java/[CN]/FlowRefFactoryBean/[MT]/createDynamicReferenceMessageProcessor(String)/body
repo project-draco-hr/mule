@@ -3,31 +3,17 @@
     throw new MuleRuntimeException(CoreMessages.objectIsNull(name));
   }
  else   if (!referenceCache.containsKey(name)) {
-    MessageProcessor dynamicReference=new FlowRefMessageProcessor(){
+    MessageProcessor dynamicReference=new FlowRefMessageProcessorContainer(){
       @Override public MuleEvent process(      MuleEvent event) throws MuleException {
         String flowName=muleContext.getExpressionManager().parse(refName,event);
         final MessageProcessor dynamicMessageProcessor=getReferencedFlow(flowName,event.getFlowConstruct());
-        Collection<MessageProcessingFlowStackManager> flowStackManagers=applicationContext.getBeansOfType(MessageProcessingFlowStackManager.class).values();
-        if (dynamicMessageProcessor instanceof SubFlowMessageProcessor) {
-          for (          MessageProcessingFlowStackManager messageProcessingFlowStackManager : flowStackManagers) {
-            messageProcessingFlowStackManager.onFlowStart(event,flowName);
+        setResolvedMessageProcessor(dynamicMessageProcessor);
+        return new NonBlockingMessageProcessor(){
+          @Override public MuleEvent process(          MuleEvent event) throws MuleException {
+            return dynamicMessageProcessor.process(event);
           }
         }
-        try {
-          return new NonBlockingMessageProcessor(){
-            @Override public MuleEvent process(            MuleEvent event) throws MuleException {
-              return dynamicMessageProcessor.process(event);
-            }
-          }
 .process(event);
-        }
-  finally {
-          if (dynamicMessageProcessor instanceof SubFlowMessageProcessor) {
-            for (            MessageProcessingFlowStackManager messageProcessingFlowStackManager : flowStackManagers) {
-              messageProcessingFlowStackManager.onFlowComplete(event);
-            }
-          }
-        }
       }
     }
 ;
