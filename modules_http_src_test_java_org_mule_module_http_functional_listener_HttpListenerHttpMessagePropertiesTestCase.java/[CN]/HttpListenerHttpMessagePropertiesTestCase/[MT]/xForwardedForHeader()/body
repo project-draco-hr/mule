@@ -3,7 +3,9 @@
   Post(url).connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage message=muleContext.getClient().request("vm://out",RECEIVE_TIMEOUT);
   assertThat(message.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),startsWith("/127.0.0.1:"));
-  Post(url).addHeader(HttpHeaders.Names.X_FORWARDED_FOR,"/192.1.2.3:1234").connectTimeout(RECEIVE_TIMEOUT).execute();
+  assertThat(message.<String>getInboundProperty(HttpHeaders.Names.X_FORWARDED_FOR),nullValue());
+  Post(url).addHeader(HttpHeaders.Names.X_FORWARDED_FOR,"clientIp, proxy1Ip").connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage forwardedMessage=muleContext.getClient().request("vm://out",RECEIVE_TIMEOUT);
-  assertThat(forwardedMessage.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),is("/192.1.2.3:1234"));
+  assertThat(forwardedMessage.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),startsWith("/127.0.0.1:"));
+  assertThat(forwardedMessage.<String>getInboundProperty(HttpHeaders.Names.X_FORWARDED_FOR),is("clientIp, proxy1Ip"));
 }
