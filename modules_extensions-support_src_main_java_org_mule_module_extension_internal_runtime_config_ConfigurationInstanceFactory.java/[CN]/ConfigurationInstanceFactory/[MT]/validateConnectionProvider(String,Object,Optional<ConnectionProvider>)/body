@@ -1,0 +1,14 @@
+{
+  if (!optionalConnectionProvider.isPresent()) {
+    return;
+  }
+  Class<? extends ConnectionProvider> providerClass=optionalConnectionProvider.get().getClass();
+  List<Class<?>> providerGenerics=getInterfaceGenerics(providerClass,ConnectionProvider.class);
+  if (!configurationValue.getClass().isAssignableFrom(providerGenerics.get(0))) {
+    throw invalidConnectionProviderException(name);
+  }
+  Class<?> connectionType=getOperationsConnectionType(configurationModel.getExtensionModel());
+  if (connectionType != null && !providerGenerics.get(1).isAssignableFrom(connectionType)) {
+    throw invalidConnectionProviderException(name);
+  }
+}

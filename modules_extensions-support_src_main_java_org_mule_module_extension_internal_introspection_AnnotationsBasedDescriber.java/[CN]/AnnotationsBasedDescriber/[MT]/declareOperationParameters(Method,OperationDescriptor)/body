@@ -1,8 +1,14 @@
 {
-  List<org.mule.module.extension.internal.introspection.ParameterDescriptor> descriptors=MuleExtensionAnnotationParser.parseParameters(method);
-  for (  org.mule.module.extension.internal.introspection.ParameterDescriptor parameterDescriptor : descriptors) {
-    ParameterDescriptor parameter=parameterDescriptor.isRequired() ? operation.with().requiredParameter(parameterDescriptor.getName()) : operation.with().optionalParameter(parameterDescriptor.getName()).defaultingTo(parameterDescriptor.getDefaultValue());
-    parameter.describedAs(EMPTY).ofType(parameterDescriptor.getType());
-    addTypeRestrictions(parameter,parameterDescriptor);
+  List<ParsedParameter> descriptors=MuleExtensionAnnotationParser.parseParameters(method);
+  for (  ParsedParameter parsedParameter : descriptors) {
+    if (parsedParameter.isAdvertised()) {
+      ParameterDescriptor parameter=parsedParameter.isRequired() ? operation.with().requiredParameter(parsedParameter.getName()) : operation.with().optionalParameter(parsedParameter.getName()).defaultingTo(parsedParameter.getDefaultValue());
+      parameter.describedAs(EMPTY).ofType(parsedParameter.getType());
+      addTypeRestrictions(parameter,parsedParameter);
+    }
+    Connection connectionAnnotation=parsedParameter.getAnnotation(Connection.class);
+    if (connectionAnnotation != null) {
+      operation.withModelProperty(ConnectionTypeModelProperty.KEY,new ConnectionTypeModelProperty(parsedParameter.getType().getRawType()));
+    }
   }
 }
