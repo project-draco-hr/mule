@@ -16,15 +16,17 @@
   splitter.setBatchSize(batchSize);
   splitter.setCounterVariableName(counterVariableName);
   splitter.setMuleContext(muleContext);
-  messageProcessors.add(0,splitter);
-  messageProcessors.add(new MessageFilter(new Filter(){
+  ownedMessageProcessors=new ArrayList<>(messageProcessors.size() + 2);
+  ownedMessageProcessors.add(splitter);
+  ownedMessageProcessors.addAll(messageProcessors);
+  ownedMessageProcessors.add(new MessageFilter(new Filter(){
     @Override public boolean accept(    MuleMessage message){
       return false;
     }
   }
 ));
   try {
-    this.ownedMessageProcessor=new DefaultMessageProcessorChainBuilder().chain(messageProcessors).build();
+    this.ownedRootMessageProcessor=new DefaultMessageProcessorChainBuilder().chain(ownedMessageProcessors).build();
   }
  catch (  MuleException e) {
     throw new InitialisationException(e,this);
