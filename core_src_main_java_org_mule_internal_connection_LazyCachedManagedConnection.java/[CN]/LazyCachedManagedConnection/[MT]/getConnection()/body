@@ -1,0 +1,22 @@
+{
+  readLock.lock();
+  try {
+    if (connection != null) {
+      return connection;
+    }
+  }
+  finally {
+    readLock.unlock();
+  }
+  writeLock.lock();
+  try {
+    if (connection != null) {
+      return connection;
+    }
+    assertNotStopping(muleContext,"Mule is shutting down... Cannot establish new connections");
+    return connection=connectionProvider.connect(config);
+  }
+  finally {
+    writeLock.unlock();
+  }
+}
