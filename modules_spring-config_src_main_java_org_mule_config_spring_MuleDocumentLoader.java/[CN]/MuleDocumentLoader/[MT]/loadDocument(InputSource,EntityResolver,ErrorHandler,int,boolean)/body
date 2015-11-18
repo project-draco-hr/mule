@@ -1,11 +1,9 @@
 {
-  DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
-  if (logger.isDebugEnabled()) {
-    logger.debug("Using JAXP provider [" + factory.getClass().getName() + "]");
-  }
-  Document doc=factory.newDocumentBuilder().newDocument();
-  XMLReader documentReader=createDocumentReader(validationMode,namespaceAware);
-  SAXSource xmlSource=new SAXSource(createAnnotator(entityResolver,errorHandler,doc,documentReader),inputSource);
-  createSaxToDomTransformer(validationMode).transform(xmlSource,new DOMResult(doc));
+  ByteArrayOutputStream output=new ByteArrayOutputStream();
+  IOUtils.copy(inputSource.getByteStream(),output);
+  InputSource defaultInputSource=new InputSource(new ByteArrayInputStream(output.toByteArray()));
+  InputSource enrichInputSource=new InputSource(new ByteArrayInputStream(output.toByteArray()));
+  Document doc=defaultLoader.loadDocument(defaultInputSource,entityResolver,errorHandler,validationMode,namespaceAware);
+  createSaxAnnotator(doc).parse(enrichInputSource);
   return doc;
 }
