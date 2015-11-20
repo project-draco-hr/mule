@@ -4,6 +4,7 @@
   String correctDomainConfigContent=IOUtils.toString(new FileInputStream(domainConfigFile));
   String wrongDomainFileContext=correctDomainConfigContent.replace("http-listener-config","http-listener-config-wrong");
   FileUtils.copyInputStreamToFile(new ByteArrayInputStream(wrongDomainFileContext.getBytes()),domainConfigFile);
+  long firstFileTimestamp=domainConfigFile.lastModified();
   deploymentService.start();
   assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainDescriptor.id);
   assertDeploymentFailure(applicationDeploymentListener,sharedHttpAppADescriptor.id);
@@ -11,6 +12,7 @@
   reset(applicationDeploymentListener);
   reset(domainDeploymentListener);
   FileUtils.copyInputStreamToFile(new ByteArrayInputStream(correctDomainConfigContent.getBytes()),domainConfigFile);
+  alterTimestampIfNeeded(domainConfigFile,firstFileTimestamp);
   assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainDescriptor.id);
   assertDeploymentSuccess(applicationDeploymentListener,sharedHttpAppADescriptor.id);
   assertDeploymentSuccess(applicationDeploymentListener,sharedHttpAppBDescriptor.id);

@@ -1,17 +1,12 @@
 {
   Prober prober=new PollingProber(DEPLOYMENT_TIMEOUT,100);
-  prober.check(new Probe(){
-    @Override public boolean isSatisfied(){
-      try {
-        verify(listener,times(1)).onMuleContextCreated(eq(appName),any(MuleContext.class));
-        return true;
-      }
- catch (      AssertionError e) {
-        return false;
-      }
+  prober.check(new JUnitProbe(){
+    @Override public boolean test(){
+      verify(listener,times(1)).onMuleContextCreated(eq(appName),any(MuleContext.class));
+      return true;
     }
     @Override public String describeFailure(){
-      return String.format("Did not received notification '%s' for app '%s'","onMuleContextCreated",appName);
+      return String.format("Did not received notification '%s' for app '%s'","onMuleContextCreated",appName) + System.lineSeparator() + super.describeFailure();
     }
   }
 );

@@ -1,17 +1,12 @@
 {
   Prober prober=new PollingProber(DEPLOYMENT_TIMEOUT,100);
-  prober.check(new Probe(){
-    @Override public boolean isSatisfied(){
-      try {
-        verify(listener,times(1)).onDeploymentSuccess(artifactName);
-        return true;
-      }
- catch (      AssertionError e) {
-        return false;
-      }
+  prober.check(new JUnitProbe(){
+    @Override protected boolean test() throws Exception {
+      verify(listener,times(1)).onDeploymentSuccess(artifactName);
+      return true;
     }
     @Override public String describeFailure(){
-      return "Failed to deploy application: " + artifactName;
+      return "Failed to deploy application: " + artifactName + System.lineSeparator()+ super.describeFailure();
     }
   }
 );
