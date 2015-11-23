@@ -1,9 +1,11 @@
 {
   final MyListener listener=new MyListener();
   muleContext.getNotificationManager().addListener(listener);
+  Flow flow=(Flow)getFlowConstruct("pollfoo");
+  PollingMessageSource pollingMessageSource=(PollingMessageSource)flow.getMessageSource();
   prober.check(new Probe(){
     @Override public boolean isSatisfied(){
-      return listener.getNotifications().size() > 1 && "pollName".equals(listener.getNotifications().get(0));
+      return listener.getNotifications().size() > 1 && pollingMessageSource.getPollingUniqueName().equals(listener.getNotifications().get(0).getEndpoint());
     }
     @Override public String describeFailure(){
       return "The notification was never sent";

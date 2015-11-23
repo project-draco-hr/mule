@@ -1,15 +1,25 @@
 {
-  final TestPollingWorker job=new TestPollingWorker(receiver);
-  CronScheduler scheduler=createScheduler(job);
+  PollingWorker mockPollingWorker=mock(PollingWorker.class);
+  CronScheduler scheduler=createScheduler(mockPollingWorker);
   scheduler.initialise();
   scheduler.start();
   scheduler.stop();
+  reset(mockPollingWorker);
+  verify(mockPollingWorker,never()).run();
   scheduler.start();
-  assertFalse(job.wasRun);
   scheduler.schedule();
   pollingProber.check(new Probe(){
     @Override public boolean isSatisfied(){
-      return job.wasRun;
+      try {
+        verify(mockPollingWorker,atLeastOnce()).run();
+        return true;
+      }
+ catch (      Exception e) {
+        throw new RuntimeException("unexpected exception from mock task");
+      }
+catch (      AssertionError e) {
+        return false;
+      }
     }
     @Override public String describeFailure(){
       return "The scheduler was never run";
