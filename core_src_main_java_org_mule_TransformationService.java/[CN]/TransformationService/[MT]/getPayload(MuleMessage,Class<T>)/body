@@ -1,0 +1,19 @@
+{
+  DataType<T> dataType=DataTypeFactory.create(outputType);
+  if (message instanceof MuleMessageCollection) {
+    MuleMessageCollection messageCollection=(MuleMessageCollection)message;
+    if (messageCollection.isInvalidatedPayload()) {
+      return getPayload(messageCollection,outputType);
+    }
+ else {
+      List<T> results=new ArrayList<>(messageCollection.getMessageList().size());
+      for (      MuleMessage messageInList : messageCollection.getMessageList()) {
+        results.add(getPayload(messageInList,dataType,messageInList.getEncoding()));
+      }
+      return results;
+    }
+  }
+ else {
+    return getPayload(message,dataType,message.getEncoding());
+  }
+}
