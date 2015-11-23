@@ -1,0 +1,21 @@
+{
+  if (resultType == null) {
+    throw new IllegalArgumentException(CoreMessages.objectIsNull("resultType").getMessage());
+  }
+  DataType source=DataTypeFactory.createFromObject(message);
+  if (resultType.isCompatibleWith(source)) {
+    return (T)message.getPayload();
+  }
+  Transformer transformer=muleContext.getRegistry().lookupTransformer(source,resultType);
+  if (transformer == null) {
+    throw new TransformerException(CoreMessages.noTransformerFoundForMessage(source,resultType));
+  }
+  Object result=transformer.transform(message,encoding);
+  if (!resultType.getType().isAssignableFrom(result.getClass())) {
+    throw new TransformerException(CoreMessages.transformOnObjectNotOfSpecifiedType(resultType,result));
+  }
+  if (((DefaultMuleMessage)message).isPayloadConsumed(source.getType())) {
+    message.setPayload(result,message.getDataType());
+  }
+  return (T)result;
+}
