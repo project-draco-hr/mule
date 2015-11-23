@@ -1,0 +1,17 @@
+{
+  when(sftpConnector.getMuleMessageFactory().create(anyObject(),anyString(),eq(muleContext))).thenAnswer(new Answer<MuleMessage>(){
+    @Override public MuleMessage answer(    InvocationOnMock invocation) throws Throwable {
+      SftpFileArchiveInputStream inputStream=null;
+      if (invocation.getArguments()[0] != null) {
+        inputStream=(SftpFileArchiveInputStream)spy(invocation.getArguments()[0]);
+      }
+      return new DefaultMuleMessage(inputStream,muleContext);
+    }
+  }
+);
+  MuleMessage message=requester.request(30);
+  SftpFileArchiveInputStream inputStream=(SftpFileArchiveInputStream)message.getPayload();
+  verify(inputStream,never()).postProcess();
+  inputStream.close();
+  verify(inputStream).postProcess();
+}

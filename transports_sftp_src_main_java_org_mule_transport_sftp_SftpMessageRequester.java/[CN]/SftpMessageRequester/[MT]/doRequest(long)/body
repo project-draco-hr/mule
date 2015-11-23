@@ -3,9 +3,12 @@
   if (files.length == 0)   return null;
   String path=files[0];
   SftpNotifier notifier=new SftpNotifier((SftpConnector)connector,createNullMuleMessage(),endpoint,endpoint.getName());
-  InputStream inputStream=sftpRRUtil.retrieveFile(path,notifier);
+  SftpStream sftpStream=(SftpStream)sftpRRUtil.retrieveFile(path,notifier);
+  if (sftpStream != null) {
+    sftpStream.performPostProcessingOnClose(true);
+  }
   logger.debug("Routing file: " + path);
-  MuleMessage message=createMuleMessage(inputStream);
+  MuleMessage message=createMuleMessage(sftpStream);
   message.setProperty(SftpConnector.PROPERTY_ORIGINAL_FILENAME,path,PropertyScope.INBOUND);
   notifier.setMessage(message);
   return message;
