@@ -1,10 +1,11 @@
 {
   assertNotStopping(muleContext,"Mule is shutting down... cannot bind new connections");
-  ManagedConnectionAdapter<Connection> managedConnection=new LazyCachedManagedConnection<>(owner,connectionProvider,muleContext);
-  ManagedConnectionAdapter<Connection> previous=null;
+  connectionProvider=new LifecycleAwareConnectionProviderWrapper<>(connectionProvider,muleContext);
+  ConnectionHandlingStrategyAdapter<Config,Connection> managementStrategy=getManagementStrategy(owner,connectionProvider);
+  ConnectionHandlingStrategyAdapter<Config,Connection> previous=null;
   writeLock.lock();
   try {
-    previous=connections.put(new ConnectionKey(owner),managedConnection);
+    previous=connections.put(new ConnectionKey(owner),managementStrategy);
   }
   finally {
     writeLock.unlock();
@@ -12,5 +13,4 @@
   if (previous != null) {
     close(previous);
   }
-  return managedConnection;
 }
