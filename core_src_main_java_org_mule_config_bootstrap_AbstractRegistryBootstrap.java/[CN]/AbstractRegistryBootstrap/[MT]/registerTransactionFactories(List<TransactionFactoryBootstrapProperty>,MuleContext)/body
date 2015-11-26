@@ -1,0 +1,11 @@
+{
+  for (  TransactionFactoryBootstrapProperty bootstrapProperty : singleTransactionFactories) {
+    try {
+      final Class<?> supportedType=bootstrapProperty.getService().forName(bootstrapProperty.getTransactionResourceClassName());
+      context.getTransactionFactoryManager().registerTransactionFactory(supportedType,(TransactionFactory)bootstrapProperty.getService().instantiateClass(bootstrapProperty.getTransactionFactoryClassName()));
+    }
+ catch (    NoClassDefFoundError|ClassNotFoundException ncdfe) {
+      throwExceptionIfNotOptional(bootstrapProperty.getOptional(),ncdfe,bootstrapProperty);
+    }
+  }
+}
