@@ -1,40 +1,35 @@
 {
-  List<Properties> bootstraps;
+  List<BootstrapService> bootstrapServices;
   try {
-    bootstraps=discoverer.discover();
+    bootstrapServices=muleContext.getRegistryBootstrapServiceDiscoverer().discover();
   }
- catch (  BootstrapException e) {
+ catch (  Exception e) {
     throw new InitialisationException(e,this);
   }
   int objectCounter=1;
-  int transformerCounter=1;
-  Properties transformers=new OrderedProperties();
-  Properties namedObjects=new OrderedProperties();
-  Properties unnamedObjects=new OrderedProperties();
-  Map<String,String> singleTransactionFactories=new LinkedHashMap<>();
-  for (  Properties bootstrap : bootstraps) {
-    for (    Map.Entry entry : bootstrap.entrySet()) {
-      final String key=(String)entry.getKey();
-      if (key.contains(OBJECT_KEY)) {
-        String newKey=key.substring(0,key.lastIndexOf(".")) + objectCounter++;
-        unnamedObjects.put(newKey,entry.getValue());
+  List<TransformerBootstrapProperty> transformers=new LinkedList<>();
+  List<ObjectBootstrapProperty> namedObjects=new LinkedList<>();
+  List<ObjectBootstrapProperty> unnamedObjects=new LinkedList<>();
+  List<TransactionFactoryBootstrapProperty> singleTransactionFactories=new LinkedList<>();
+  for (  BootstrapService bootstrapService : bootstrapServices) {
+    Properties bootstrapProperties=bootstrapService.getProperties();
+    for (    Map.Entry entry : bootstrapProperties.entrySet()) {
+      final String propertyKey=(String)entry.getKey();
+      final String propertyValue=(String)entry.getValue();
+      if (propertyKey.contains(OBJECT_KEY)) {
+        String newKey=propertyKey.substring(0,propertyKey.lastIndexOf(".")) + objectCounter++;
+        unnamedObjects.add(createObjectBootstrapProperty(bootstrapService,newKey,propertyValue));
       }
- else       if (key.contains(TRANSFORMER_KEY)) {
-        String newKey=key.substring(0,key.lastIndexOf(".")) + transformerCounter++;
-        transformers.put(newKey,entry.getValue());
+ else       if (propertyKey.contains(TRANSFORMER_KEY)) {
+        transformers.add(createTransformerBootstrapProperty(bootstrapService,propertyValue));
       }
- else       if (key.contains(SINGLE_TX)) {
-        if (!key.contains(".transaction.resource")) {
-          String transactionResourceKey=key.replace(".transaction.factory",".transaction.resource");
-          String transactionResource=bootstrap.getProperty(transactionResourceKey);
-          if (transactionResource == null) {
-            throw new InitialisationException(CoreMessages.createStaticMessage(String.format("Theres no transaction resource specified for transaction factory %s",key)),this);
-          }
-          singleTransactionFactories.put((String)entry.getValue(),transactionResource);
+ else       if (propertyKey.contains(SINGLE_TX)) {
+        if (!propertyKey.contains(TRANSACTION_RESOURCE_SUFFIX)) {
+          singleTransactionFactories.add(createTransactionFactoryBootstrapProperty(bootstrapService,bootstrapProperties,propertyKey,propertyValue));
         }
       }
  else {
-        namedObjects.put(key,entry.getValue());
+        namedObjects.add(createObjectBootstrapProperty(bootstrapService,propertyKey,propertyValue));
       }
     }
   }

@@ -1,0 +1,16 @@
+{
+  String transactionResourceKey=propertyKey.replace(".transaction.factory",TRANSACTION_RESOURCE_SUFFIX);
+  String transactionResource=bootstrapProperties.getProperty(transactionResourceKey);
+  if (transactionResource == null) {
+    throw new InitialisationException(CoreMessages.createStaticMessage(String.format("There is no transaction resource specified for transaction factory %s",propertyKey)),this);
+  }
+  String transactionResourceClassNameProperties=transactionResource;
+  boolean optional=false;
+  int index=transactionResourceClassNameProperties.indexOf(",");
+  if (index > -1) {
+    Properties p=PropertiesUtils.getPropertiesFromString(transactionResourceClassNameProperties.substring(index + 1),',');
+    optional=p.containsKey(OPTIONAL_ATTRIBUTE);
+  }
+  final String transactionResourceClassName=(index == -1 ? transactionResourceClassNameProperties : transactionResourceClassNameProperties.substring(0,index));
+  return new TransactionFactoryBootstrapProperty(bootstrapService,ArtifactType.APP,optional,propertyValue,transactionResourceClassName);
+}
