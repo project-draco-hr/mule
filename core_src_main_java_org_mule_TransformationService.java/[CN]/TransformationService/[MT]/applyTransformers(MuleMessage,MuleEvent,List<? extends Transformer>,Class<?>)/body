@@ -1,8 +1,10 @@
 {
+  MuleMessage result=message;
   if (!transformers.isEmpty()) {
-    applyAllTransformers(message,event,transformers);
+    result=applyAllTransformers(message,event,transformers);
   }
-  if (null != outputType && !message.getPayload().getClass().isAssignableFrom(outputType)) {
-    message.setPayload(getPayload(message,DataTypeFactory.create(outputType)));
+  if (null != outputType && !result.getPayload().getClass().isAssignableFrom(outputType)) {
+    result=new DefaultMuleMessage(getPayload(result,DataTypeFactory.create(outputType)),result,muleContext);
   }
+  return result;
 }

@@ -6,23 +6,14 @@
  else {
     result=transformer.transform(message);
   }
-  RequestContext.internalRewriteEvent(message,false);
-  if (message.getOriginalPayload() == null && muleContext.getConfiguration().isCacheMessageOriginalPayload()) {
-    message.setOriginalPayload(message.getPayload());
-  }
   if (result instanceof MuleMessage) {
     if (!result.equals(message)) {
-synchronized (message) {
-        MuleMessage resultMessage=(MuleMessage)result;
-        message.setPayload(resultMessage.getPayload(),resultMessage.getDataType());
-        message.setOriginalPayload(resultMessage.getOriginalPayload());
-        message.copyMessageProperties(resultMessage);
-        message.copyAttachments(resultMessage);
-      }
+      MuleMessage transformResult=(MuleMessage)result;
+      return new DefaultMuleMessage(result,transformResult,muleContext,transformResult.getDataType());
     }
+    return message;
   }
  else {
-    final DataType<?> mergedDataType=mergeDataType(message,message.getDataType(),transformer.getReturnDataType());
-    message.setPayload(result,mergedDataType);
+    return new DefaultMuleMessage(result,message,muleContext,mergeDataType(message,transformer.getReturnDataType()));
   }
 }
