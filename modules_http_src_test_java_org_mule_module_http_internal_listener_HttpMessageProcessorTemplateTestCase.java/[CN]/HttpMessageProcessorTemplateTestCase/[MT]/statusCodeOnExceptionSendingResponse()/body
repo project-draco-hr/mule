@@ -1,0 +1,10 @@
+{
+  MuleEvent testEvent=createMockEvent();
+  HttpResponseReadyCallback responseReadyCallback=mock(HttpResponseReadyCallback.class);
+  RuntimeException expected=new RuntimeException("Some exception");
+  doThrow(expected).when(responseReadyCallback).responseReady(any(HttpResponse.class),any(ResponseStatusCallback.class));
+  HttpMessageProcessorTemplate httpMessageProcessorTemplate=new HttpMessageProcessorTemplate(testEvent,mock(MessageProcessor.class),responseReadyCallback,null,HttpResponseBuilder.emptyInstance(mock(MuleContext.class)));
+  ResponseCompletionCallback responseCompletionCallback=mock(ResponseCompletionCallback.class);
+  httpMessageProcessorTemplate.sendResponseToClient(testEvent,responseCompletionCallback);
+  verify(responseCompletionCallback).responseSentWithFailure(expected,testEvent);
+}
