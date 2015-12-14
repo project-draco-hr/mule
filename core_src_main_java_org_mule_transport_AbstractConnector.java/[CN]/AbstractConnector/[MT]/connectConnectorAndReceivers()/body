@@ -1,0 +1,30 @@
+{
+  doConnect();
+  if (receivers != null) {
+    for (    MessageReceiver receiver : receivers.values()) {
+      final List<MuleException> errors=new ArrayList<MuleException>();
+      try {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Connecting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+        }
+        receiver.connect();
+        if (isStarted()) {
+          receiver.start();
+        }
+      }
+ catch (      MuleException e) {
+        logger.error(e);
+        errors.add(e);
+      }
+      if (!errors.isEmpty()) {
+        throw errors.get(0);
+      }
+    }
+  }
+  setConnected(true);
+  setConnecting(false);
+  logger.info("Connected: " + getConnectionDescription());
+  if (startOnConnect && !isStarted() && !isStarting()) {
+    startAfterConnect();
+  }
+}
