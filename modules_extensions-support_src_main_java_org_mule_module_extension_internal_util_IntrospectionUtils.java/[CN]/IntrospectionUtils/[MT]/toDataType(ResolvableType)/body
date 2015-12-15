@@ -1,13 +1,25 @@
 {
   Class<?> rawClass=type.getRawClass();
   ResolvableType[] generics=type.getGenerics();
+  DataType resolvedDataType;
   if (isOperation(rawClass)) {
-    return DataType.of(OperationModel.class);
+    resolvedDataType=DataType.of(OperationModel.class);
   }
-  if (List.class.isAssignableFrom(rawClass)) {
-    if (!ArrayUtils.isEmpty(generics) && isOperation(generics[0].getRawClass())) {
-      return DataType.of(rawClass,OperationModel.class);
+ else   if (List.class.isAssignableFrom(rawClass)) {
+    if (!ArrayUtils.isEmpty(generics) && generics[0].getRawClass() != null) {
+      if (isOperation(generics[0].getRawClass())) {
+        resolvedDataType=DataType.of(rawClass,OperationModel.class);
+      }
+ else {
+        resolvedDataType=DataType.of(rawClass,toRawTypes(generics));
+      }
+    }
+ else {
+      resolvedDataType=DataType.of(List.class,Object.class);
     }
   }
-  return DataType.of(rawClass,toRawTypes(generics));
+ else {
+    resolvedDataType=DataType.of(rawClass,toRawTypes(generics));
+  }
+  return resolvedDataType;
 }

@@ -19,23 +19,7 @@
       generateNestedProcessorElement(all,parameterModel,maxOccurs);
     }
  else {
-      parameterQualifier.accept(new AbstractDataQualifierVisitor(){
-        private boolean forceOptional=false;
-        @Override public void onList(){
-          forceOptional=true;
-          defaultOperation();
-          generateCollectionElement(all,parameterModel,true);
-        }
-        @Override public void onPojo(){
-          forceOptional=true;
-          defaultOperation();
-          registerComplexTypeChildElement(all,parameterModel.getName(),parameterModel.getDescription(),parameterModel.getType(),false);
-        }
-        @Override protected void defaultOperation(){
-          complexContentExtension.getAttributeOrAttributeGroup().add(createAttribute(parameterModel,isRequired(parameterModel,forceOptional)));
-        }
-      }
-);
+      parameterQualifier.accept(getParameterDeclarationVisitor(complexContentExtension,all,parameterModel));
     }
   }
   if (all.getParticle().size() == 0) {
