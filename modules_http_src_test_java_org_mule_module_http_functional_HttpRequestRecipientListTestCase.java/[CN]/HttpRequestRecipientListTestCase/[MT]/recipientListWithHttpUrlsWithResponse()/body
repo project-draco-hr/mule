@@ -3,10 +3,10 @@
   testEvent.getMessage().setProperty("urls",Arrays.asList(getUrlForPort(port1),getUrlForPort(port2),getUrlForPort(port3)),PropertyScope.INBOUND);
   final MuleEvent response=((Flow)getFlowConstruct("recipientListFlow")).process(testEvent);
   assertThat(response,notNullValue());
-  assertThat(response.getMessage(),IsInstanceOf.instanceOf(MuleMessageCollection.class));
-  MuleMessageCollection aggregatedResponse=(MuleMessageCollection)response.getMessage();
-  assertThat(aggregatedResponse.size(),is(3));
-  final MuleMessage[] messages=aggregatedResponse.getMessagesAsArray();
+  assertThat(response.getMessage().getPayload(),IsInstanceOf.instanceOf(List.class));
+  MuleMessage aggregatedResponse=response.getMessage();
+  assertThat(((List<MuleMessage>)aggregatedResponse.getPayload()).size(),is(3));
+  final MuleMessage[] messages=(MuleMessage[])((List<MuleMessage>)aggregatedResponse.getPayload()).toArray();
   for (int i=0; i < messages.length; i++) {
     MuleMessage message=messages[i];
     assertThat(message,notNullValue());

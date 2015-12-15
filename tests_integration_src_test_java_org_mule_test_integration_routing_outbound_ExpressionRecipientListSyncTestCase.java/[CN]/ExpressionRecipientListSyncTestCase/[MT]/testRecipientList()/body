@@ -7,12 +7,12 @@
   props.put("recipient3","vm://service3.queue?exchangePattern=request-response");
   MuleMessage result=client.send("vm://distributor.queue",message,props);
   assertNotNull(result);
-  assertTrue(result instanceof MuleMessageCollection);
-  MuleMessageCollection coll=(MuleMessageCollection)result;
-  assertEquals(3,coll.size());
-  MuleMessage[] results=coll.getMessagesAsArray();
-  for (int i=0; i < results.length; i++) {
-    MuleMessage muleMessage=results[i];
+  assertTrue(result.getPayload() instanceof List);
+  List<MuleMessage> results=(List<MuleMessage>)result.getPayload();
+  assertEquals(3,results.size());
+  MuleMessage[] resultsArray=results.toArray(new MuleMessage[3]);
+  for (int i=0; i < resultsArray.length; i++) {
+    MuleMessage muleMessage=resultsArray[i];
     assertEquals("test " + (i + 1) + " Received",muleMessage.getPayload());
   }
 }
