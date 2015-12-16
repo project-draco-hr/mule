@@ -1,0 +1,29 @@
+{
+  DefaultMuleMessage newMessage=new DefaultMuleMessage(payload,currentMessage,currentMessage.getMuleContext());
+  Map<String,DataHandler> attachments=new HashMap<String,DataHandler>(3);
+  for (  String name : currentMessage.getOutboundAttachmentNames()) {
+    attachments.put(name,getOutboundAttachment(name));
+  }
+  Map<String,Object> newInboundProperties=new HashMap<String,Object>(3);
+  for (  String name : currentMessage.getOutboundPropertyNames()) {
+    newInboundProperties.put(name,currentMessage.getOutboundProperty(name));
+  }
+  newMessage.clearProperties(INBOUND);
+  newMessage.clearProperties(INVOCATION);
+  newMessage.clearProperties(PropertyScope.OUTBOUND);
+  for (  Map.Entry<String,Object> s : newInboundProperties.entrySet()) {
+    DataType<?> propertyDataType=currentMessage.getPropertyDataType(s.getKey(),PropertyScope.OUTBOUND);
+    newMessage.setInboundProperty(s.getKey(),s.getValue(),propertyDataType);
+  }
+  newMessage.inboundAttachments.clear();
+  newMessage.outboundAttachments.clear();
+  for (  Map.Entry<String,DataHandler> s : attachments.entrySet()) {
+    newMessage.addInboundAttachment(s.getKey(),s.getValue());
+  }
+  newMessage.setCorrelationId(currentMessage.getCorrelationId());
+  newMessage.setCorrelationGroupSize(currentMessage.getCorrelationGroupSize());
+  newMessage.setCorrelationSequence(currentMessage.getCorrelationSequence());
+  newMessage.setReplyTo(currentMessage.getReplyTo());
+  newMessage.setEncoding(currentMessage.getEncoding());
+  return newMessage;
+}

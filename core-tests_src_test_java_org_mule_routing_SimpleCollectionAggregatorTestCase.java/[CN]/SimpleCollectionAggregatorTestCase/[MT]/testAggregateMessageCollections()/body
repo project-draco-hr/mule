@@ -10,12 +10,14 @@
   MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
   MuleMessage message3=new DefaultMuleMessage("test event C",muleContext);
   MuleMessage message4=new DefaultMuleMessage("test event D",muleContext);
-  MuleMessageCollection messageCollection1=new DefaultMessageCollection(muleContext);
-  MuleMessageCollection messageCollection2=new DefaultMessageCollection(muleContext);
-  messageCollection1.addMessage(message1);
-  messageCollection1.addMessage(message2);
-  messageCollection2.addMessage(message3);
-  messageCollection2.addMessage(message4);
+  List<MuleMessage> list=new ArrayList<>();
+  List<MuleMessage> list2=new ArrayList<>();
+  list.add(message1);
+  list.add(message2);
+  list2.add(message3);
+  list2.add(message4);
+  MuleMessage messageCollection1=new DefaultMuleMessage(list,muleContext);
+  MuleMessage messageCollection2=new DefaultMuleMessage(list2,muleContext);
   messageCollection1.setCorrelationGroupSize(2);
   messageCollection1.setCorrelationId(messageCollection1.getUniqueId());
   messageCollection2.setCorrelationGroupSize(2);
@@ -28,10 +30,10 @@
   assertNotNull(resultEvent);
   MuleMessage resultMessage=resultEvent.getMessage();
   assertNotNull(resultMessage);
-  List<List<String>> payload=(List<List<String>>)resultMessage.getPayload();
+  List<MuleMessage> payload=(List<MuleMessage>)resultMessage.getPayload();
   assertEquals(2,payload.size());
-  assertEquals("test event A",((List)payload.get(0)).get(0));
-  assertEquals("test event B",((List)payload.get(0)).get(1));
-  assertEquals("test event C",((List)payload.get(1)).get(0));
-  assertEquals("test event D",((List)payload.get(1)).get(1));
+  assertEquals("test event A",((List<MuleMessage>)payload.get(0).getPayload()).get(0).getPayload());
+  assertEquals("test event B",((List<MuleMessage>)payload.get(0).getPayload()).get(1).getPayload());
+  assertEquals("test event C",((List<MuleMessage>)payload.get(1).getPayload()).get(0).getPayload());
+  assertEquals("test event D",((List<MuleMessage>)payload.get(1).getPayload()).get(1).getPayload());
 }
