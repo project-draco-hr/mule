@@ -5,8 +5,9 @@
   get.setDoAuthentication(false);
   try {
     int status=client.executeMethod(get);
-    assertEquals(HttpConstants.SC_UNAUTHORIZED,status);
-    assertThat(get.getResponseBodyAsString(),startsWith("Registered authentication is set to org.mule.transport.http.filters.HttpBasicAuthenticationFilter " + "but there was no security context on the session. Authentication denied on endpoint"));
+    assertEquals(UNAUTHORIZED.getStatusCode(),status);
+    String expectedMessage=String.format("Registered authentication is set to org.mule.module.http.internal.filter.HttpBasicAuthenticationFilter " + "but there was no security context on the session. Authentication denied on endpoint %s.",get.getURI().getURI());
+    assertThat(get.getResponseBodyAsString(),startsWith(expectedMessage));
   }
   finally {
     get.releaseConnection();
