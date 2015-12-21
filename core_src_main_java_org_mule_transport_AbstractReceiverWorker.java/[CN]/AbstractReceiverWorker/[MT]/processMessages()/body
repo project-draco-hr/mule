@@ -61,12 +61,15 @@
     }
   }
 ;
+  ClassLoader originalCl=currentThread().getContextClassLoader();
   try {
+    currentThread().setContextClassLoader(endpoint.getMuleContext().getExecutionClassLoader());
     List<MuleEvent> results=executionTemplate.execute(processingCallback);
     handleResults(handleEventResults(results));
   }
   finally {
     messages.clear();
     RequestContext.clear();
+    currentThread().setContextClassLoader(originalCl);
   }
 }
