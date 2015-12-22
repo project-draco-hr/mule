@@ -1,7 +1,9 @@
 {
-  LocalMuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://storedProcedureStreamingError",TEST_MESSAGE,null);
-  assertThat(response.getExceptionPayload(),notNullValue());
-  assertThat(response.getExceptionPayload().getRootException().getMessage(),equalTo("Failing test on purpose"));
-  assertThat(response.getPayload(),is(instanceOf(NullPayload.class)));
+  try {
+    runFlow("storedProcedureStreamingError",TEST_MESSAGE);
+    fail("Exception expected");
+  }
+ catch (  Exception e) {
+    assertThat(e.getMessage(),containsString("Failing test on purpose"));
+  }
 }

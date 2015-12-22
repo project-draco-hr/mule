@@ -1,11 +1,11 @@
 {
-  LocalMuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://testRequestResponse","foo",null);
+  final MuleEvent responseEvent=runFlow("defaultQueryRequestResponse","foo");
+  final MuleMessage response=responseEvent.getMessage();
   assertThat(response.getPayload(),is(instanceOf(Map.class)));
   Map payload=(Map)response.getPayload();
   assertThat(payload.size(),equalTo(1));
   int expectedUpdateCount=testDatabase instanceof DerbyTestDatabase ? 0 : 1;
-  assertThat((Integer)payload.get("updateCount1"),equalTo(expectedUpdateCount));
+  assertThat(payload.get("updateCount1"),equalTo(expectedUpdateCount));
   List<Map<String,String>> result=selectData("select * from PLANET where POSITION=4",getDefaultDataSource());
   assertRecords(result,new Record(new Field("NAME","foo"),new Field("POSITION",4)));
 }

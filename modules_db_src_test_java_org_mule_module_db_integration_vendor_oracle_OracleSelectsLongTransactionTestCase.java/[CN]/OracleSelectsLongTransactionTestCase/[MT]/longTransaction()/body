@@ -3,7 +3,8 @@
   for (int i=0; i < 500; i++) {
     sequence.add(i);
   }
-  LocalMuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://testLongTransaction",new DefaultMuleMessage(sequence,muleContext));
+  final DefaultMuleEvent muleEvent=new DefaultMuleEvent(new DefaultMuleMessage(sequence,muleContext),MessageExchangePattern.REQUEST_RESPONSE,null);
+  final MuleEvent responseEvent=runFlow("longTransaction",muleEvent);
+  final MuleMessage response=responseEvent.getMessage();
   assertThat(response.getExceptionPayload(),nullValue());
 }

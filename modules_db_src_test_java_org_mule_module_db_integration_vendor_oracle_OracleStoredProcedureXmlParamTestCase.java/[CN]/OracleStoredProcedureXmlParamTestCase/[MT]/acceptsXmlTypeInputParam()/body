@@ -3,11 +3,13 @@
   Connection connection=defaultDataSource.getConnection();
   try {
     Object xmlType=OracleXmlType.createXmlType(connection,Alien.ET.getXml());
-    LocalMuleClient client=muleContext.getClient();
     Map<String,Object> messageProperties=new HashMap<String,Object>();
     messageProperties.put("name","Monguito");
     messageProperties.put(DESCRIPTION_FIELD,xmlType);
-    MuleMessage response=client.send("vm://xmlTypeInputParam",TEST_MESSAGE,messageProperties);
+    final DefaultMuleMessage muleMessage=new DefaultMuleMessage(TEST_MESSAGE,messageProperties,Collections.emptyMap(),Collections.emptyMap(),muleContext);
+    final DefaultMuleEvent muleEvent=new DefaultMuleEvent(muleMessage,MessageExchangePattern.REQUEST_RESPONSE,null);
+    final MuleEvent responseEvent=runFlow("xmlTypeInputParam",muleEvent);
+    final MuleMessage response=responseEvent.getMessage();
     assertThat(response.getPayload(),is(instanceOf(Map.class)));
     Map<String,Object> mapPayload=(Map)response.getPayload();
     assertThat(mapPayload.size(),equalTo(0));
