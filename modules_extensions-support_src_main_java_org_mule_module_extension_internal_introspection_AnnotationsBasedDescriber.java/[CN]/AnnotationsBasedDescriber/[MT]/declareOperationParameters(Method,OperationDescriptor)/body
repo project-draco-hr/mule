@@ -1,5 +1,7 @@
 {
   List<ParsedParameter> descriptors=MuleExtensionAnnotationParser.parseParameters(method);
+  checkAnnotationIsNotUsedMoreThanOnce(method,operation,UseConfig.class);
+  checkAnnotationIsNotUsedMoreThanOnce(method,operation,Connection.class);
   for (  ParsedParameter parsedParameter : descriptors) {
     if (parsedParameter.isAdvertised()) {
       ParameterDescriptor parameter=parsedParameter.isRequired() ? operation.with().requiredParameter(parsedParameter.getName()) : operation.with().optionalParameter(parsedParameter.getName()).defaultingTo(parsedParameter.getDefaultValue());
@@ -9,6 +11,10 @@
     Connection connectionAnnotation=parsedParameter.getAnnotation(Connection.class);
     if (connectionAnnotation != null) {
       operation.withModelProperty(ConnectionTypeModelProperty.KEY,new ConnectionTypeModelProperty(parsedParameter.getType().getRawType()));
+    }
+    UseConfig useConfig=parsedParameter.getAnnotation(UseConfig.class);
+    if (useConfig != null) {
+      operation.withModelProperty(ConfigTypeModelProperty.KEY,new ConfigTypeModelProperty(parsedParameter.getType().getRawType()));
     }
   }
 }
