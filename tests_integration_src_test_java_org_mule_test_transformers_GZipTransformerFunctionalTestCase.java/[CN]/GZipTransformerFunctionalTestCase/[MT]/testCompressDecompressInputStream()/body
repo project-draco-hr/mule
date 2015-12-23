@@ -1,10 +1,12 @@
 {
   ByteArrayInputStream bis=new ByteArrayInputStream(TEST_DATA.getBytes());
   MuleClient client=muleContext.getClient();
-  MuleMessage compressedResponse=client.send("vm://compressInput",bis,null);
+  MuleEvent muleEvent=runFlow("compressInput",bis);
+  MuleMessage compressedResponse=muleEvent.getMessage();
   assertNotNull(compressedResponse);
   assertTrue(compressedResponse.getPayload() instanceof InputStream);
-  MuleMessage uncompressedResponse=client.send("vm://decompressInput",compressedResponse.getPayload(),null);
+  muleEvent=runFlow("decompressInput",compressedResponse.getPayload());
+  MuleMessage uncompressedResponse=muleEvent.getMessage();
   assertNotNull(uncompressedResponse);
   assertTrue(uncompressedResponse.getPayload() instanceof InputStream);
   byte[] uncompressedByteArray=IOUtils.toByteArray((InputStream)uncompressedResponse.getPayload());

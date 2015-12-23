@@ -2,7 +2,8 @@
   Flow flow=getFlow("dynamicFlow");
   UberAwareMessageProcessor awareMessageProcessor=new UberAwareMessageProcessor();
   flow.dynamicPipeline(null).injectBefore(awareMessageProcessor).resetAndUpdate();
-  MuleMessage result=client.send("vm://dynamic","source->",null);
+  final MuleEvent muleEvent=runFlow("dynamicFlow","source->");
+  MuleMessage result=muleEvent.getMessage();
   assertEquals("source->(pre)(static)",getPayloadAsString(result));
   assertNotNull(awareMessageProcessor.getFlowConstruct());
   assertNotNull(awareMessageProcessor.getMuleContext());

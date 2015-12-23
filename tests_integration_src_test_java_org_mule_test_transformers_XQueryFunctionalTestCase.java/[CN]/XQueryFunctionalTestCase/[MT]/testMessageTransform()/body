@@ -3,11 +3,12 @@
   XMLUnit.setIgnoreComments(true);
   String srcData=IOUtils.getResourceAsString("org/mule/test/integration/xml/cd-catalog.xml",getClass());
   String resultData=IOUtils.getResourceAsString("org/mule/test/integration/xml/cd-catalog-result-with-params.xml",getClass());
-  MuleClient client=muleContext.getClient();
   Map<String,Object> props=new HashMap<String,Object>();
   props.put("ListTitle","MyList");
   props.put("ListRating",new Integer(6));
-  MuleMessage message=client.send("vm://test.in",srcData,props);
+  final DefaultMuleMessage muleMessage=new DefaultMuleMessage(srcData,props,null,null,muleContext);
+  final MuleEvent muleEvent=runFlow("Echo",muleMessage);
+  MuleMessage message=muleEvent.getMessage();
   assertNotNull(message);
   assertNull(message.getExceptionPayload());
   assertTrue(XMLUnit.compareXML(getPayloadAsString(message),resultData).similar());
