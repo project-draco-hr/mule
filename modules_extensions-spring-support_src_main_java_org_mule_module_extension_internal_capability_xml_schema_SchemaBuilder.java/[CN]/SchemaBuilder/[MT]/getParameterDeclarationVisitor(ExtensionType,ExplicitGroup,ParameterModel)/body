@@ -4,19 +4,27 @@
     @Override public void onList(){
       forceOptional=true;
       defaultOperation();
-      if (shouldGenerateChildElements(parameterModel.getType().getGenericTypes()[0])) {
+      DataType genericType=parameterModel.getType().getGenericTypes()[0];
+      if (genericType != null && shouldGenerateListChildElements(genericType)) {
         generateCollectionElement(all,parameterModel,true);
       }
     }
     @Override public void onPojo(){
       forceOptional=true;
       defaultOperation();
-      if (shouldGenerateChildElements(parameterModel.getType())) {
+      if (shouldGeneratePojoChildElements(parameterModel.getType().getRawType())) {
         registerComplexTypeChildElement(all,parameterModel.getName(),parameterModel.getDescription(),parameterModel.getType(),false);
       }
     }
     @Override protected void defaultOperation(){
       extensionType.getAttributeOrAttributeGroup().add(createAttribute(parameterModel,isRequired(parameterModel,forceOptional)));
+    }
+    private boolean shouldGenerateListChildElements(    DataType type){
+      boolean isPojo=type.getQualifier().equals(POJO);
+      return (isPojo && shouldGeneratePojoChildElements(type.getRawType())) || (!isPojo && isInstantiable(type.getRawType()));
+    }
+    private boolean shouldGeneratePojoChildElements(    Class<?> type){
+      return IntrospectionUtils.isInstantiable(type) && !getExposedFields(type).isEmpty();
     }
   }
 ;
