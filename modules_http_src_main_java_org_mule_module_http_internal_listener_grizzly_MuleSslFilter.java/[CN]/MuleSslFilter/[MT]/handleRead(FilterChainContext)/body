@@ -1,6 +1,12 @@
 {
-  ctx.getAttributes().setAttribute(HTTPS.getScheme(),true);
-  NextAction nextAction=super.handleRead(ctx);
-  ctx.getAttributes().setAttribute(SSL_SESSION_ATTRIBUTE_KEY,getSslSession(ctx));
-  return nextAction;
+  try {
+    ctx.getAttributes().setAttribute(HTTPS.getScheme(),true);
+    NextAction nextAction=super.handleRead(ctx);
+    ctx.getAttributes().setAttribute(SSL_SESSION_ATTRIBUTE_KEY,getSslSession(ctx));
+    return nextAction;
+  }
+ catch (  SSLHandshakeException e) {
+    logger.error("SSL handshake error: " + e.getMessage());
+    throw e;
+  }
 }
