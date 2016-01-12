@@ -1,10 +1,6 @@
 {
   ClientPasswordCallback.setPassword("wrongPassword");
-  MuleMessage request=new DefaultMuleMessage("hello",(Map<String,Object>)null,muleContext);
-  MuleClient client=muleContext.getClient();
-  MuleMessage received=client.send("vm://greetMe",request);
-  assertNotNull(received);
-  assertNotNull(received.getExceptionPayload());
-  assertTrue(received.getExceptionPayload().getException().getCause() instanceof SOAPFaultException);
-  assertTrue(((SOAPFaultException)received.getExceptionPayload().getException().getCause()).getMessage().contains("The security token could not be authenticated"));
+  expectedException.expectCause(instanceOf(SOAPFaultException.class));
+  expectedException.expectMessage("The security token could not be authenticated");
+  runFlow("cxfClient",getTestMuleMessage("hello"));
 }
