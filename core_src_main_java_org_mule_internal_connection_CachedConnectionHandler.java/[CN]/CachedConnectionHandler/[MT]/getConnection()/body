@@ -1,9 +1,11 @@
 {
+  Connection oldConnection;
   readLock.lock();
   try {
-    if (connection != null) {
+    if (connection != null && validateConnection(connection).isValid()) {
       return connection;
     }
+    oldConnection=connection;
   }
   finally {
     readLock.unlock();
@@ -11,10 +13,13 @@
   writeLock.lock();
   try {
     if (connection != null) {
-      return connection;
+      if (connection != oldConnection) {
+        return connection;
+      }
+      disconnectAndCleanConnection(connection);
     }
-    assertNotStopping(muleContext,"Mule is shutting down... Cannot establish new connections");
-    return connection=connectionProvider.connect(config);
+    connection=createConnection();
+    return connection;
   }
   finally {
     writeLock.unlock();
