@@ -1,7 +1,13 @@
 {
   ConnectionProvider provider=super.build(result);
-  if (poolingProfile != null) {
-    provider=new PooledConnectionProviderWrapper(provider,poolingProfile);
+  ConnectionHandlingTypeModelProperty connectionHandlingType=providerModel.getModelProperty(ConnectionHandlingTypeModelProperty.KEY);
+  if (connectionHandlingType != null) {
+    if (connectionHandlingType.isPooled()) {
+      provider=new PooledConnectionProviderWrapper(provider,poolingProfile,disableValidation);
+    }
+    if (connectionHandlingType.isCached()) {
+      provider=new CachedConnectionProviderWrapper(provider,disableValidation);
+    }
   }
   return provider;
 }
