@@ -1,0 +1,13 @@
+{
+  Credentials credentials=new MuleCredentials(CREDENTIALS_USER,CREDENTIALS_PASSWORD.toCharArray());
+  URI uri=new URI(URI_WITH_CREDENTIALS);
+  when(mockMuleEvent.getCredentials()).thenReturn(credentials);
+  when(mockMuleEvent.getMessageSourceURI()).thenReturn(uri);
+  when(mockMuleEvent.getMessage()).thenReturn(message);
+  when(mockImmutableEndpoint.getProperty(HttpConstants.HEADER_AUTHORIZATION)).thenReturn(null);
+  when(mockImmutableEndpoint.getEncoding()).thenReturn(encoding);
+  when(mockImmutableEndpoint.getEndpointURI()).thenReturn(new MuleEndpointURI(URI_WITH_CREDENTIALS,muleContext));
+  connector.setupClientAuthorization(mockMuleEvent,mockHttpMethod,mockHttpClient,mockImmutableEndpoint);
+  verify(mockHttpMethod,atLeast(1)).addRequestHeader(eq(HttpConstants.HEADER_AUTHORIZATION),anyString());
+  verify(mockHttpClient.getState(),never()).setCredentials(isA(AuthScope.class),isA(org.apache.commons.httpclient.Credentials.class));
+}
