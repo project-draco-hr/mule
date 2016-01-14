@@ -18,10 +18,26 @@
             if (receiver.getFlowConstruct().getLifecycleState().isStarted()) {
               receiver.start();
             }
+ else             if (retryPolicyTemplate instanceof AsynchronousRetryTemplate) {
+              String timeout=System.getProperty(MULE_CONTEXT_START_TIMEOUT_SYSTEM_PROPERTY,DEFAULT_CONTEXT_START_TIMEOUT);
+              if (!muleContext.waitUntilStarted(Integer.valueOf(timeout))) {
+                String errorMessage="Timeout waiting for mule context to be completely started.";
+                logger.error(errorMessage);
+                errors.add(new DefaultMuleException(errorMessage));
+              }
+ else {
+                receiver.start();
+              }
+            }
           }
  catch (          MuleException e) {
             logger.error(e);
             errors.add(e);
+          }
+catch (          InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error(e);
+            errors.add(new DefaultMuleException(e));
           }
           if (!errors.isEmpty()) {
             throw errors.get(0);
