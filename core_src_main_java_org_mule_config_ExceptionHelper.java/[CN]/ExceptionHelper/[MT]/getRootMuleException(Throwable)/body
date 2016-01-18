@@ -1,9 +1,11 @@
 {
   Throwable cause=t;
   MuleException exception=null;
+  Map muleExceptionInfo=new HashMap<>();
   while (cause != null) {
     if (cause instanceof MuleException) {
       exception=(MuleException)cause;
+      muleExceptionInfo.putAll(exception.getInfo());
     }
     final Throwable tempCause=getExceptionReader(cause).getCause(cause);
     if (DefaultMuleConfiguration.fullStackTraces) {
@@ -15,6 +17,9 @@
     if (t == cause) {
       break;
     }
+  }
+  if (exception != null) {
+    exception.getInfo().putAll(muleExceptionInfo);
   }
   return exception;
 }
