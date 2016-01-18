@@ -3,8 +3,9 @@
   for (int i=0; i < 100; i++) {
     payload+=TEST_MESSAGE;
   }
-  muleContext.getClient().send("vm://message-chunk-split-aggregate-in",new DefaultMuleMessage(payload,muleContext));
-  final MuleMessage result=muleContext.getClient().request("vm://message-chunk-split-aggregate-out",RECEIVE_TIMEOUT);
+  flowRunner("message-chunk-split-aggregate").withPayload(getTestMuleMessage(payload)).run();
+  LocalMuleClient client=muleContext.getClient();
+  final MuleMessage result=client.request("test://message-chunk-split-aggregate-out",RECEIVE_TIMEOUT);
   assertNotNull(result);
   assertNotSame(payload,result.getPayload());
   assertEquals(payload,getPayloadAsString(result));

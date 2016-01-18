@@ -1,12 +1,5 @@
 {
-  MuleClient client=muleContext.getClient();
-  client.dispatch("vm://in",getMatchMessage(),null);
-  MuleMessage message=client.request("vm://match1",RECEIVE_TIMEOUT);
+  MuleMessage message=flowRunner("test").withPayload(getMatchMessage()).run().getMessage();
   assertNotNull(message);
-  assertFalse(message.getPayload() instanceof NullPayload);
-  if (!matchSingle) {
-    message=client.request("vm://match2",RECEIVE_TIMEOUT);
-    assertNotNull(message);
-    assertFalse(message.getPayload() instanceof NullPayload);
-  }
+  assertThat(message.getPayload(),is("match"));
 }

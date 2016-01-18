@@ -1,17 +1,17 @@
 {
   MuleClient client=muleContext.getClient();
-  MuleMessage result=client.send("inboundEndpoint","some data",null);
+  FlowRunner baseRunner=flowRunner("In-Out_Out-Only-Service").withPayload("some data");
+  MuleMessage result=baseRunner.run().getMessage();
   assertNotNull(result);
-  assertEquals("foo header not received",getPayloadAsString(result));
-  Map<String,Object> props=new HashMap<String,Object>();
-  props.put("foo","bar");
-  result=client.send("inboundEndpoint","some data",props);
+  assertThat(getPayloadAsString(result),is("foo header not received"));
+  baseRunner.reset();
+  result=baseRunner.withInboundProperty("foo","bar").run().getMessage();
   assertNotNull(result);
-  assertEquals("foo header received",getPayloadAsString(result));
-  result=client.request("receivedEndpoint",TIMEOUT);
+  assertThat(getPayloadAsString(result),is("foo header received"));
+  result=client.request("test://received",RECEIVE_TIMEOUT);
   assertNotNull(result);
-  assertEquals("foo header received",getPayloadAsString(result));
-  result=client.request("notReceivedEndpoint",TIMEOUT);
+  assertThat(getPayloadAsString(result),is("foo header received"));
+  result=client.request("test://notReceived",RECEIVE_TIMEOUT);
   assertNotNull(result);
-  assertEquals("foo header not received",getPayloadAsString(result));
+  assertThat(getPayloadAsString(result),is("foo header not received"));
 }

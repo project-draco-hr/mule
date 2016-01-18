@@ -2,11 +2,10 @@
   final Collection<String> payload=new ArrayList<String>();
   payload.add("pyotr");
   payload.add("ilych");
-  MuleMessage parent=new DefaultMuleMessage(payload,muleContext);
-  MuleMessage result=client.send("vm://input-5",parent);
-  assertTrue(result.getPayload() instanceof Collection);
+  MuleMessage result=flowRunner("parent-message-config").withPayload(payload).run().getMessage();
+  assertThat(result.getPayload(),instanceOf(Collection.class));
   Collection<?> resultPayload=(Collection<?>)result.getPayload();
-  assertEquals(2,resultPayload.size());
+  assertThat(resultPayload,hasSize(2));
   assertSame(payload,resultPayload);
-  assertSame(parent.getPayload(),((MuleMessage)result.getInboundProperty("parent")).getPayload());
+  assertSame(payload,((MuleMessage)result.getOutboundProperty("parent")).getPayload());
 }

@@ -6,7 +6,6 @@
   }
 );
   final Latch endDlqFlowLatch=new Latch();
-  LocalMuleClient client=muleContext.getClient();
   FunctionalTestComponent functionalTestComponent=getFunctionalTestComponent("dlq-out");
   functionalTestComponent.setEventCallback(new EventCallback(){
     @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
@@ -14,7 +13,7 @@
     }
   }
 );
-  client.send("vm://in","message",null,RECEIVE_TIMEOUT);
+  flowRunner("in-flow").withPayload("message").run();
   if (!endDlqFlowLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS)) {
     fail("message wasn't received by dlq flow");
   }

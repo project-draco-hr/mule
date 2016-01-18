@@ -2,15 +2,15 @@
   final Collection<String> payload=new ArrayList<String>();
   payload.add("julio");
   payload.add("sosa");
-  MuleMessage result=client.send("vm://input-1",payload,null);
-  assertTrue(result.getPayload() instanceof Collection);
+  MuleMessage result=flowRunner("minimal-config").withPayload(payload).run().getMessage();
+  assertThat(result.getPayload(),instanceOf(Collection.class));
   Collection<?> resultPayload=(Collection<?>)result.getPayload();
-  assertEquals(2,resultPayload.size());
+  assertThat(resultPayload,hasSize(2));
   assertSame(payload,resultPayload);
-  MuleMessage out=client.request("vm://out",getTestTimeoutSecs());
-  assertTrue(out.getPayload() instanceof String);
-  assertEquals("julio",out.getPayload());
-  out=client.request("vm://out",getTestTimeoutSecs());
-  assertTrue(out.getPayload() instanceof String);
-  assertEquals("sosa",out.getPayload());
+  MuleMessage out=client.request("test://out",getTestTimeoutSecs());
+  assertThat(out.getPayload(),instanceOf(String.class));
+  assertThat(out.getPayload(),is("julio"));
+  out=client.request("test://out",getTestTimeoutSecs());
+  assertThat(out.getPayload(),instanceOf(String.class));
+  assertThat(out.getPayload(),is("sosa"));
 }

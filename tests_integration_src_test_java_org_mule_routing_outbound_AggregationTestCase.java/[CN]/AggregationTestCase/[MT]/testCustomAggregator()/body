@@ -1,8 +1,7 @@
 {
   MuleClient client=muleContext.getClient();
-  String payload="Long string that wil be broken uop into multiple messages";
-  client.dispatch("vm://in2",payload,null);
-  MuleMessage msg=client.request("vm://collectionCreated2",5000);
+  flowRunner("SplitterFlow2").withPayload(PAYLOAD).asynchronously().run();
+  MuleMessage msg=client.request("test://collectionCreated2",RECEIVE_TIMEOUT);
   assertNotNull(msg);
   assertNotNull(msg.getPayload());
   assertTrue(msg.getPayload() instanceof List);
@@ -14,5 +13,5 @@
     baos.write((byte[])event.getMessage().getPayload());
   }
   String aggregated=baos.toString();
-  assertEquals(payload,aggregated);
+  assertEquals(PAYLOAD,aggregated);
 }

@@ -5,13 +5,13 @@
   Map<String,Object> props=new HashMap<String,Object>();
   props.put("names",names);
   MuleMessage message=new DefaultMuleMessage("message payload",props,muleContext);
-  MuleMessage result=client.send("vm://input-3",message);
-  assertTrue(result.getPayload() instanceof String);
-  assertEquals(names.size(),((Collection<?>)message.getOutboundProperty("names")).size());
-  MuleMessage out=client.request("vm://out",getTestTimeoutSecs());
-  assertTrue(out.getPayload() instanceof String);
-  assertEquals("residente",out.getPayload());
-  out=client.request("vm://out",getTestTimeoutSecs());
-  assertTrue(out.getPayload() instanceof String);
-  assertEquals("visitante",out.getPayload());
+  MuleMessage result=flowRunner("minimal-config-expression").withPayload("message payload").withInboundProperties(props).run().getMessage();
+  assertThat(result.getPayload(),instanceOf(String.class));
+  assertThat(((Collection<?>)message.getOutboundProperty("names")),hasSize(names.size()));
+  MuleMessage out=client.request("test://out",getTestTimeoutSecs());
+  assertThat(out.getPayload(),instanceOf(String.class));
+  assertThat(out.getPayload(),is("residente"));
+  out=client.request("test://out",getTestTimeoutSecs());
+  assertThat(out.getPayload(),instanceOf(String.class));
+  assertThat(out.getPayload(),is("visitante"));
 }

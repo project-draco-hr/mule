@@ -1,14 +1,14 @@
 {
-  MuleEvent muleEvent=runFlow("dynamicFlow","source->");
+  MuleEvent muleEvent=flowRunner("dynamicFlow").withPayload("source->").run();
   MuleMessage result=muleEvent.getMessage();
   assertEquals("source->(static)",getPayloadAsString(result));
   Flow flow=getFlow("dynamicFlow");
   String pipelineId=flow.dynamicPipeline(null).injectBefore(new StringAppendTransformer("(pre)")).resetAndUpdate();
-  muleEvent=runFlow("dynamicFlow","source->");
+  muleEvent=flowRunner("dynamicFlow").withPayload("source->").run();
   result=muleEvent.getMessage();
   assertEquals("source->(pre)(static)",getPayloadAsString(result));
   flow.dynamicPipeline(pipelineId).injectBefore(new StringAppendTransformer("(pre1)"),new StringAppendTransformer("(pre2)")).resetAndUpdate();
-  muleEvent=runFlow("dynamicFlow","source->");
+  muleEvent=flowRunner("dynamicFlow").withPayload("source->").run();
   result=muleEvent.getMessage();
   assertEquals("source->(pre1)(pre2)(static)",getPayloadAsString(result));
 }

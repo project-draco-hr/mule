@@ -5,17 +5,17 @@
   payload.add("un baion");
   payload.add("bang bang");
   payload.add("la mosca");
-  MuleMessage result=client.send("vm://input-4",payload,null);
-  assertTrue(result.getPayload() instanceof Collection);
+  MuleMessage result=flowRunner("partitioned-config").withPayload(payload).run().getMessage();
+  assertThat(result.getPayload(),instanceOf(Collection.class));
   Collection<?> resultPayload=(Collection<?>)result.getPayload();
-  assertEquals(5,resultPayload.size());
+  assertThat(resultPayload,hasSize(5));
   assertSame(payload,resultPayload);
-  MuleMessage out=client.request("vm://out",getTestTimeoutSecs());
-  assertTrue(out.getPayload() instanceof Collection);
+  MuleMessage out=client.request("test://out",getTestTimeoutSecs());
+  assertThat(out.getPayload(),instanceOf(Collection.class));
   Collection<?> outPayload=(Collection<?>)out.getPayload();
-  assertEquals(3,outPayload.size());
-  out=client.request("vm://out",getTestTimeoutSecs());
-  assertTrue(out.getPayload() instanceof Collection);
+  assertThat(outPayload,hasSize(3));
+  out=client.request("test://out",getTestTimeoutSecs());
+  assertThat(out.getPayload(),instanceOf(Collection.class));
   outPayload=(Collection<?>)out.getPayload();
-  assertEquals(2,outPayload.size());
+  assertThat(outPayload,hasSize(2));
 }

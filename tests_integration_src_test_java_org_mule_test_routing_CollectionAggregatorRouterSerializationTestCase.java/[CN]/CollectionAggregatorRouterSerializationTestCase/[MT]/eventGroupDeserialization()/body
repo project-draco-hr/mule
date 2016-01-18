@@ -1,10 +1,10 @@
 {
   muleContext.getRegistry().registerObject(MuleProperties.OBJECT_STORE_DEFAULT_IN_MEMORY_NAME,new EventGroupSerializerObjectStore<Serializable>());
-  MuleClient client=muleContext.getClient();
   List<String> list=Arrays.asList("first","second");
-  client.dispatch("vm://splitter",list,null);
-  MuleMessage request=client.request("vm://out?connector=queue",10000);
+  flowRunner("splitter").withPayload(list).asynchronously().run();
+  MuleClient client=muleContext.getClient();
+  MuleMessage request=client.request("test://out",RECEIVE_TIMEOUT);
   assertNotNull(request);
-  assertTrue(request.getPayload() instanceof List);
-  assertEquals(list.size(),((List<MuleMessage>)request.getPayload()).size());
+  assertThat(request.getPayload(),instanceOf(List.class));
+  assertThat(((List<MuleMessage>)request.getPayload()),hasSize(list.size()));
 }

@@ -6,8 +6,8 @@
     list.add(msg);
   }
   MuleMessage msgCollection=new DefaultMuleMessage(list,muleContext);
-  MuleMessage result=client.send("vm://input-7",msgCollection);
-  assertThat(result.getInboundProperty("totalMessages"),is(10));
-  assertEquals(msgCollection.getPayload(),result.getPayload());
+  MuleMessage result=flowRunner("message-collection-config").withPayload(msgCollection).run().getMessage();
+  assertThat(result.getOutboundProperty("totalMessages"),is(10));
+  assertThat(result.getPayload(),is(msgCollection.getPayload()));
   FlowAssert.verify("message-collection-config");
 }

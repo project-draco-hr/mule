@@ -1,14 +1,9 @@
 {
-  MuleClient client=muleContext.getClient();
-  MuleMessage result=client.send("inboundEndpoint","some data",null);
-  assertNull(result);
-  MuleMessage msg=getTestMuleMessage("some data");
-  msg.setOutboundProperty("foo","bar");
-  result=client.send("inboundEndpoint",msg);
+  FlowRunner baseRunner=flowRunner("In-Out_Out-Only-Async-Service").withPayload("some data");
+  MuleEvent event=baseRunner.run();
+  assertNull(event);
+  baseRunner.reset();
+  MuleMessage result=baseRunner.withInboundProperty("foo","bar").run().getMessage();
   assertNotNull(result);
   assertEquals("got it!",getPayloadAsString(result));
-  FlowConstruct async=muleContext.getRegistry().lookupFlowConstruct("In-Out_Out-Only-Async-Service");
-  FlowConstruct external=muleContext.getRegistry().lookupFlowConstruct("ExternalApp");
-  assertEquals(2,async.getStatistics().getProcessedEvents());
-  assertEquals(1,external.getStatistics().getProcessedEvents());
 }

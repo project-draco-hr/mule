@@ -1,0 +1,26 @@
+{
+  replyToHandler=new SensingNullReplyToHandler();
+  eventBuilder.withReplyToHandler(replyToHandler);
+  responseEventTransformer=new Transformer(){
+    @Override public Object transform(    Object input){
+      MuleEvent responseEvent=(MuleEvent)input;
+      SensingNullReplyToHandler nullSensingReplyToHandler=(SensingNullReplyToHandler)replyToHandler;
+      if (NonBlockingVoidMuleEvent.getInstance() == responseEvent) {
+        try {
+          if (!nullSensingReplyToHandler.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS)) {
+            throw new RuntimeException("No Non-Blocking Response");
+          }
+          if (nullSensingReplyToHandler.exception != null) {
+            throw nullSensingReplyToHandler.exception;
+          }
+        }
+ catch (        Exception e) {
+          throw new MuleRuntimeException(e);
+        }
+      }
+      return nullSensingReplyToHandler.event;
+    }
+  }
+;
+  return this;
+}

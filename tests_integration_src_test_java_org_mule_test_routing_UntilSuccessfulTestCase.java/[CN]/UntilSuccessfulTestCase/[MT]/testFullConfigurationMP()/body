@@ -1,11 +1,11 @@
 {
   final String payload=RandomStringUtils.randomAlphanumeric(20);
-  final MuleMessage response=client.send("vm://input-2MP",payload,null);
-  assertEquals("ACK",getPayloadAsString(response));
+  final MuleMessage response=flowRunner("full-config-with-mp").withPayload(payload).run().getMessage();
+  assertThat(getPayloadAsString(response),is("ACK"));
   final List<Object> receivedPayloads=ponderUntilMessageCountReceivedByTargetMessageProcessor(3);
-  assertEquals(3,receivedPayloads.size());
+  assertThat(receivedPayloads,hasSize(3));
   for (int i=0; i <= 2; i++) {
-    assertEquals(payload,receivedPayloads.get(i));
+    assertThat(receivedPayloads.get(i),is(payload));
   }
   ponderUntilMessageCountReceivedByCustomMP(1);
   ExceptionPayload dlqExceptionPayload=CustomMP.getProcessedMessages().get(0).getExceptionPayload();

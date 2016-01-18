@@ -1,13 +1,10 @@
 {
-  MuleClient client=muleContext.getClient();
   MuleMessage response=null;
-  HashMap<String,Object> propertyMap=new HashMap<String,Object>();
-  propertyMap.put("method","retrieveReferenceData");
-  response=client.send("refOneInbound","a request",propertyMap);
+  response=flowRunner("refServiceOne").withPayload("a request").withInboundProperty("method","retrieveReferenceData").run().getMessage();
   Object payload=response.getPayload();
-  assertTrue("should be a string",payload instanceof String);
-  assertEquals("ServiceOne",payload);
-  response=client.send("refTwoInbound","another request",propertyMap);
+  assertThat(payload,instanceOf(String.class));
+  assertThat(payload,is("ServiceOne"));
+  response=flowRunner("refServiceTwo").withPayload("another request").withInboundProperty("method","retrieveReferenceData").run().getMessage();
   payload=response.getPayload();
   if ((payload == null) || (response.getExceptionPayload() != null)) {
     DefaultExceptionPayload exPld=(DefaultExceptionPayload)response.getExceptionPayload();
@@ -18,6 +15,6 @@
       fail(exPld.toString());
     }
   }
-  assertTrue("should be a string",payload instanceof String);
-  assertEquals("ServiceTwo",payload);
+  assertThat(payload,instanceOf(String.class));
+  assertThat(payload,is("ServiceTwo"));
 }
