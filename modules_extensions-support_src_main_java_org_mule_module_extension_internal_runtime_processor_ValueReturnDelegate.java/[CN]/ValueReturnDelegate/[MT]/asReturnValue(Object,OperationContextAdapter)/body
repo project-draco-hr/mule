@@ -1,0 +1,19 @@
+{
+  MuleEvent event=operationContext.getEvent();
+  if (value instanceof MuleMessage) {
+    event.setMessage(merge(event.getMessage(),(MuleMessage)value));
+  }
+ else {
+    event.getMessage().setPayload(value);
+  }
+  ContentMetadata contentMetadata=operationContext.getVariable(CONTENT_METADATA);
+  if (contentMetadata != null) {
+    final ContentType contentType=contentMetadata.getOutputContentType();
+    final MuleMessage message=event.getMessage();
+    final Object payload=message.getPayload();
+    final DataType<?> dataType=DataTypeFactory.createWithEncoding(payload.getClass(),contentType.getEncoding().name());
+    dataType.setMimeType(contentType.getMimeType());
+    ((DefaultMuleMessage)message).setPayload(message.getPayload(),dataType);
+  }
+  return event;
+}
