@@ -2,5 +2,9 @@
   if (outputType == null) {
     throw new TransformerException(CoreMessages.objectIsNull("outputType"));
   }
-  return getMuleContext().getTransformationService().getPayload(message,outputType);
+  MuleMessage transformedMessage=getMuleContext().getTransformationService().transform(message,outputType);
+  if (isConsumable(message.getPayload().getClass())) {
+    setMessage(transformedMessage);
+  }
+  return (T)transformedMessage.getPayload();
 }
