@@ -1,10 +1,12 @@
 {
   super.processStreamingAttribute(streamingValue);
   InsensitiveMapRowHandler recordHandler=new InsensitiveMapRowHandler();
+  BeanDefinition beanDefinition;
   if (Boolean.parseBoolean(streamingValue)) {
-    resultSetHandler=new IteratorResultSetHandler(recordHandler);
+    beanDefinition=genericBeanDefinition(IteratorResultSetHandler.class).addConstructorArgValue(recordHandler).addConstructorArgReference("db.statementStreamingResultSetCloser").getBeanDefinition();
   }
  else {
-    resultSetHandler=new ListResultSetHandler(recordHandler);
+    beanDefinition=genericBeanDefinition(ListResultSetHandler.class).addConstructorArgValue(recordHandler).getBeanDefinition();
   }
+  getRegistry().registerBeanDefinition(resultSetHandlerBeanName,beanDefinition);
 }
