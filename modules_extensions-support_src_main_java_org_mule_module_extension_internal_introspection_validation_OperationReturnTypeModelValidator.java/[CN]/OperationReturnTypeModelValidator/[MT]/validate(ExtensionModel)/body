@@ -1,7 +1,14 @@
 {
   for (  OperationModel operationModel : model.getOperationModels()) {
     if (operationModel.getReturnType() == null) {
-      throw new IllegalOperationModelDefinitionException(String.format("Operation '%s' in Extension '%s' is missing a return type",operationModel.getName(),model.getName()));
+      throw missingReturnTypeException(model,operationModel);
+    }
+    Class<?> returnType=operationModel.getReturnType().getRawType();
+    if (returnType == null) {
+      throw missingReturnTypeException(model,operationModel);
+    }
+    if (MuleEvent.class.isAssignableFrom(returnType)) {
+      throw new IllegalOperationModelDefinitionException(String.format("Operation '%s' in Extension '%s' specifies '%s' as a return type. Operations are " + "not allowed to return objects of that type",operationModel.getName(),model.getName(),MuleEvent.class.getName()));
     }
   }
 }
