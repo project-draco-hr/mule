@@ -1,8 +1,18 @@
 {
+  mediator=new DefaultExecutionMediator(new NullExceptionEnricher(),new DefaultConnectionManager(muleContext));
   when(configurationInstance.getStatistics()).thenReturn(configurationStats);
+  when(configurationInstance.getName()).thenReturn(DUMMY_NAME);
+  when(configurationInstance.getModel()).thenReturn(configurationModel);
+  when(configurationModel.getExtensionModel()).thenReturn(extensionModel);
+  when(extensionModel.getName()).thenReturn(DUMMY_NAME);
   when(operationExecutor.execute(operationContext)).thenReturn(result);
   when(operationExceptionExecutor.execute(operationContext)).thenThrow(exception);
   when(operationContext.getConfiguration()).thenReturn(configurationInstance);
+  when(operationContext.getConfiguration().getModel().getExtensionModel().getName()).thenReturn(DUMMY_NAME);
+  final CachedConnectionProviderWrapper<Object,Object> connectionProviderWrapper=new CachedConnectionProviderWrapper<>(null,false,new SimpleRetryPolicyTemplate(10,RETRY_COUNT));
+  LifecycleUtils.initialiseIfNeeded(connectionProviderWrapper,true,muleContext);
+  Optional<ConnectionProvider> connectionProvider=Optional.of(connectionProviderWrapper);
+  when(configurationInstance.getConnectionProvider()).thenReturn(connectionProvider);
   when(exceptionEnricher.enrichException(exception)).thenReturn(new HeisenbergException(ERROR));
   setInterceptors((Interceptable)configurationInstance,configurationInterceptor1,configurationInterceptor2);
   setInterceptors((Interceptable)operationExecutor,operationInterceptor1,operationInterceptor2);

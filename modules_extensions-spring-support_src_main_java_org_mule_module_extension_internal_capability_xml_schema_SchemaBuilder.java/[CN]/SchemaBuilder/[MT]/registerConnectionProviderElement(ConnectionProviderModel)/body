@@ -10,16 +10,17 @@
   complexContent.setExtension(providerType);
   complexType.setComplexContent(complexContent);
   schema.getSimpleTypeOrComplexTypeOrGroup().add(providerElement);
-  final ExplicitGroup choice=new ExplicitGroup();
-  choice.setMinOccurs(ZERO);
-  choice.setMaxOccurs(UNBOUNDED);
+  final ExplicitGroup sequence=new ExplicitGroup();
   ConnectionHandlingTypeModelProperty connectionHandlingType=providerModel.getModelProperty(ConnectionHandlingTypeModelProperty.KEY);
   if (connectionHandlingType != null) {
     if (connectionHandlingType.isPooled() || connectionHandlingType.isCached()) {
-      addConnectionProviderPoolingProfile(choice,providerModel);
       addValidationFlag(providerType);
+      addConnectionProviderRetryPolicy(sequence);
+    }
+    if (connectionHandlingType.isPooled()) {
+      addConnectionProviderPoolingProfile(sequence,providerModel);
     }
   }
-  registerParameters(providerType,choice,providerModel.getParameterModels());
+  registerParameters(providerType,sequence,providerModel.getParameterModels());
   return this;
 }
