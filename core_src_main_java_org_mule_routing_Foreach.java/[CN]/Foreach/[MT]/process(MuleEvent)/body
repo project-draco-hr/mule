@@ -11,12 +11,17 @@
   MuleMessage message=event.getMessage();
   boolean transformed=false;
   if (xpathCollection) {
-    transformed=transformPayloadIfNeeded(message);
+    MuleMessage transformedMessage=transformPayloadIfNeeded(message);
+    if (transformedMessage != message) {
+      transformed=true;
+      message=transformedMessage;
+      event.setMessage(transformedMessage);
+    }
   }
   message.setInvocationProperty(parentMessageProp,message);
   ownedRootMessageProcessor.process(event);
   if (transformed) {
-    transformBack(message);
+    event.setMessage(transformBack(message));
   }
   if (previousCounterVar != null) {
     event.setFlowVariable(counterVariableName,previousCounterVar);
