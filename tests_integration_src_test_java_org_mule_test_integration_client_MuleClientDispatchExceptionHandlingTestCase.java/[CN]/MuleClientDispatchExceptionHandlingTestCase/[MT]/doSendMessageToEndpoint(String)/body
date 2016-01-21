@@ -1,0 +1,15 @@
+{
+  innerFlowLatch=new Latch();
+  exceptionLatch=new Latch();
+  eventPropagated=true;
+  isSameMessage=true;
+  LocalMuleClient client=muleContext.getClient();
+  MuleMessage result=client.send(endpoint,getTestMuleMessage("Original Message"));
+  boolean innerFlowCalled=innerFlowLatch.await(3,TimeUnit.SECONDS);
+  assertThat(innerFlowCalled,is(true));
+  boolean exceptionHandled=exceptionLatch.await(3,TimeUnit.SECONDS);
+  assertThat(exceptionHandled,is(true));
+  assertThat(isSameMessage,is(true));
+  assertThat(eventPropagated,is(true));
+  assertThat(result,notNullValue(MuleMessage.class));
+}
