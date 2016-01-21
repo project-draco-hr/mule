@@ -1,17 +1,17 @@
 {
   MuleClient client=muleContext.getClient();
-  client.dispatch("vm://distributor.queue",new Apple(),null);
-  List<Object> results=new ArrayList<Object>(3);
-  MuleMessage result=client.request("vm://collector.queue",5000);
+  Apple apple=new Apple();
+  client.dispatch("vm://distributor.queue",apple,null);
+  List<Apple> results=new ArrayList<>(3);
+  MuleMessage result=client.request("vm://collector.queue",RECEIVE_TIMEOUT);
   assertNotNull(result);
-  results.add(result.getPayload());
-  result=client.request("vm://collector.queue",3000);
+  results.add((Apple)result.getPayload());
+  result=client.request("vm://collector.queue",RECEIVE_TIMEOUT);
   assertNotNull(result);
-  results.add(result.getPayload());
-  result=client.request("vm://collector.queue",3000);
+  results.add((Apple)result.getPayload());
+  result=client.request("vm://collector.queue",RECEIVE_TIMEOUT);
   assertNotNull(result);
-  results.add(result.getPayload());
-  assertTrue(results.contains("Apple Received in ServiceOne"));
-  assertTrue(results.contains("Apple Received in ServiceTwo"));
-  assertTrue(results.contains("Apple Received in ServiceThree"));
+  results.add((Apple)result.getPayload());
+  assertThat(results.size(),equalTo(3));
+  FlowAssert.verify();
 }

@@ -4,20 +4,5 @@
   MuleClient client=muleContext.getClient();
   MuleMessage request=new DefaultMuleMessage(fruitBowl,muleContext);
   client.dispatch("vm://distributor.queue",request);
-  List<Object> results=new ArrayList<Object>(3);
-  MuleMessage result=client.request("vm://collector.queue",5000);
-  assertNotNull(result);
-  assertEquals(request.getMessageRootId(),result.getMessageRootId());
-  results.add(result.getPayload());
-  result=client.request("vm://collector.queue",3000);
-  assertNotNull(result);
-  assertEquals(request.getMessageRootId(),result.getMessageRootId());
-  results.add(result.getPayload());
-  result=client.request("vm://collector.queue",3000);
-  assertNotNull(result);
-  assertEquals(request.getMessageRootId(),result.getMessageRootId());
-  results.add(result.getPayload());
-  assertTrue(results.contains("Apple Received in ServiceOne"));
-  assertTrue(results.contains("Banana Received in ServiceTwo"));
-  assertTrue(results.contains("Orange Received in ServiceThree"));
+  FlowAssert.verify();
 }
