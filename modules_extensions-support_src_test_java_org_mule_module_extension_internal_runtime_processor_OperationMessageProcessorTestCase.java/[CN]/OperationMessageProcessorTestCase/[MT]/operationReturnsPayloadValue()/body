@@ -2,5 +2,9 @@
   Object value=new Object();
   when(operationExecutor.execute(any(OperationContext.class))).thenReturn(value);
   messageProcessor.process(event);
-  verify(event.getMessage()).setPayload(value);
+  ArgumentCaptor<org.mule.api.MuleMessage> captor=ArgumentCaptor.forClass(org.mule.api.MuleMessage.class);
+  verify(event).setMessage(captor.capture());
+  MuleMessage message=captor.getValue();
+  assertThat(message,is(notNullValue()));
+  assertThat(message.getPayload(),is(sameInstance(value)));
 }

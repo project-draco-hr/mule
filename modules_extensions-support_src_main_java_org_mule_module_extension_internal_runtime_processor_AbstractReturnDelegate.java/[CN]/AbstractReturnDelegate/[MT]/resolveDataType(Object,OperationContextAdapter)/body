@@ -1,0 +1,16 @@
+{
+  ContentMetadata contentMetadata=operationContext.getVariable(CONTENT_METADATA);
+  if (contentMetadata == null) {
+    if (value instanceof MuleMessage) {
+      return ((MuleMessage)value).getDataType();
+    }
+    return null;
+  }
+  if (value == null || value instanceof NullPayload) {
+    return null;
+  }
+  final ContentType contentType=contentMetadata.getOutputContentType();
+  final DataType dataType=DataTypeFactory.createWithEncoding(value.getClass(),contentType.getEncoding().name());
+  dataType.setMimeType(contentType.getMimeType());
+  return dataType;
+}
