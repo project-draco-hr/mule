@@ -7,8 +7,19 @@
     }
   }
 );
-  useInvalidPath("/");
+  usePath("/");
   assertThat(RequestContext.getEvent(),is(nullValue()));
-  requestHandlerRef.get().handleRequest(mock(HttpRequestContext.class),mock(HttpResponseReadyCallback.class));
-  assertThat(RequestContext.getEvent(),not(nullValue()));
+  HttpResponseReadyCallback responseCallback=mock(HttpResponseReadyCallback.class);
+  doAnswer(new Answer<Void>(){
+    @Override public Void answer(    InvocationOnMock invocation) throws Throwable {
+      assertThat(RequestContext.getEvent(),not(nullValue()));
+      return null;
+    }
+  }
+).when(responseCallback).responseReady(any(HttpResponse.class),any(ResponseStatusCallback.class));
+  HttpRequest request=buildGetRootRequest(HTTP_1_1);
+  when(request.getHeaderValue("host")).thenReturn("localhost");
+  HttpRequestContext requestContext=buildRequestContext(request);
+  requestHandlerRef.get().handleRequest(requestContext,responseCallback);
+  assertThat(RequestContext.getEvent(),is(nullValue()));
 }

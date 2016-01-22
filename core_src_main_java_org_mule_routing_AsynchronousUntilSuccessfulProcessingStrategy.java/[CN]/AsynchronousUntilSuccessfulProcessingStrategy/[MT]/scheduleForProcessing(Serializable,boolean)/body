@@ -1,14 +1,14 @@
 {
-  this.scheduledPool.schedule(new Callable<Object>(){
-    @Override public Object call() throws Exception {
-      try {
-        retrieveAndProcessEvent(eventStoreKey);
-      }
- catch (      Exception e) {
-        incrementProcessAttemptCountAndRescheduleOrRemoveFromStore(eventStoreKey,e);
-      }
-      return null;
-    }
+  if (firstTime) {
+    submitForProcessing(eventStoreKey);
   }
-,firstTime ? 0 : getUntilSuccessfulConfiguration().getMillisBetweenRetries(),TimeUnit.MILLISECONDS);
+ else {
+    this.scheduledRetriesPool.schedule(new Callable<Object>(){
+      @Override public Object call() throws Exception {
+        submitForProcessing(eventStoreKey);
+        return null;
+      }
+    }
+,getUntilSuccessfulConfiguration().getMillisBetweenRetries(),TimeUnit.MILLISECONDS);
+  }
 }

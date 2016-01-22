@@ -2,12 +2,16 @@
   super.parseChild(element,parserContext,builder);
   if (asynchronous) {
     BeanDefinitionBuilder bdb=BeanDefinitionBuilder.genericBeanDefinition(AsynchronousRetryTemplate.class);
-    String asynchWrapperName=parserContext.getReaderContext().generateBeanName(bdb.getBeanDefinition());
-    String retryPolicyName=getBeanName(element);
-    bdb.addConstructorArgReference(retryPolicyName);
-    BeanDefinitionHolder holder=new BeanDefinitionHolder(bdb.getBeanDefinition(),asynchWrapperName);
-    registerBeanDefinition(holder,parserContext.getRegistry());
-    BeanDefinition parent=parserContext.getRegistry().getBeanDefinition(getParentBeanName(element));
-    parent.getPropertyValues().addPropertyValue(getPropertyName(element),new RuntimeBeanReference(asynchWrapperName));
+    if (isConfigElement(element)) {
+      element.removeAttribute(ATTRIBUTE_ID);
+      element.setAttribute(ATTRIBUTE_ID,getBeanName(element));
+      wrapDelegateRetryPolicy(element,parserContext,bdb,OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE);
+    }
+ else {
+      String asynchWrapperName=parserContext.getReaderContext().generateBeanName(bdb.getBeanDefinition());
+      wrapDelegateRetryPolicy(element,parserContext,bdb,asynchWrapperName);
+      BeanDefinition parent=parserContext.getRegistry().getBeanDefinition(getParentBeanName(element));
+      parent.getPropertyValues().addPropertyValue(getPropertyName(element),new RuntimeBeanReference(asynchWrapperName));
+    }
   }
 }

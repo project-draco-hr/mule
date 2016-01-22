@@ -1,7 +1,7 @@
 {
   ExecutionTemplate<List<MuleEvent>> executionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(receiver.getEndpoint().getMuleContext(),endpoint.getTransactionConfig());
   ExecutionCallback<List<MuleEvent>> processingCallback=new ExecutionCallback<List<MuleEvent>>(){
-    public List<MuleEvent> process() throws Exception {
+    @Override public List<MuleEvent> process() throws Exception {
       final Transaction tx=TransactionCoordination.getInstance().getTransaction();
       if (tx != null) {
         bindTransaction(tx);
@@ -55,11 +55,15 @@
     }
   }
 ;
+  ClassLoader originalCl=currentThread().getContextClassLoader();
   try {
+    currentThread().setContextClassLoader(endpoint.getMuleContext().getExecutionClassLoader());
     List<MuleEvent> results=executionTemplate.execute(processingCallback);
     handleResults(handleEventResults(results));
   }
   finally {
     messages.clear();
+    RequestContext.clear();
+    currentThread().setContextClassLoader(originalCl);
   }
 }

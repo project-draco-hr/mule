@@ -1,10 +1,9 @@
 {
   MuleEvent testEvent=createMockEvent();
-  HttpMessageProcessorTemplate httpMessageProcessorTemplate=new HttpMessageProcessorTemplate(testEvent,mock(MessageProcessor.class),new HttpResponseReadyCallback(){
-    @Override public void responseReady(    HttpResponse response,    ResponseStatusCallback responseStatusCallback){
-      assertThat(response.getStatusCode(),is(INTERNAL_SERVER_ERROR));
-    }
-  }
-,null,HttpResponseBuilder.emptyInstance(mock(MuleContext.class)));
+  HttpResponseReadyCallback responseReadyCallback=mock(HttpResponseReadyCallback.class);
+  ArgumentCaptor<HttpResponse> httpResponseCaptor=ArgumentCaptor.forClass(HttpResponse.class);
+  doNothing().when(responseReadyCallback).responseReady(httpResponseCaptor.capture(),any(ResponseStatusCallback.class));
+  HttpMessageProcessorTemplate httpMessageProcessorTemplate=new HttpMessageProcessorTemplate(testEvent,mock(MessageProcessor.class),responseReadyCallback,null,HttpResponseBuilder.emptyInstance(mock(MuleContext.class)));
   httpMessageProcessorTemplate.sendFailureResponseToClient(new MessagingException(CoreMessages.createStaticMessage(TEST_MESSAGE),testEvent),null);
+  assertThat(httpResponseCaptor.getValue().getStatusCode(),is(INTERNAL_SERVER_ERROR.getStatusCode()));
 }
