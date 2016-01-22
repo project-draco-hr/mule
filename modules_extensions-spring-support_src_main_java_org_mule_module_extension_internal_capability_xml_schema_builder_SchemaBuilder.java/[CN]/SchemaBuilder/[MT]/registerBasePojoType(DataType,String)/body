@@ -1,0 +1,41 @@
+{
+  final TopLevelComplexType complexType=new TopLevelComplexType();
+  registeredComplexTypesHolders.put(type,new ComplexTypeHolder(complexType,type));
+  complexType.setName(type.getName());
+  complexType.setAnnotation(createDocAnnotation(description));
+  ComplexContent complexContent=new ComplexContent();
+  complexType.setComplexContent(complexContent);
+  final ExtensionType extension=new ExtensionType();
+  extension.setBase(MULE_ABSTRACT_EXTENSION_TYPE);
+  complexContent.setExtension(extension);
+  final ExplicitGroup all=new ExplicitGroup();
+  extension.setSequence(all);
+  for (  Field field : getExposedFields(type.getRawType())) {
+    if (isIgnored(field)) {
+      continue;
+    }
+    final String name=getAlias(field);
+    final DataType fieldType=getFieldDataType(field);
+    final boolean required=isRequired(field);
+    final Object defaultValue=getDefaultValue(field);
+    final ExpressionSupport expressionSupport=getExpressionSupport(field);
+    fieldType.getQualifier().accept(new AbstractDataQualifierVisitor(){
+      @Override public void onList(){
+        generateCollectionElement(all,name,EMPTY,fieldType,required);
+      }
+      @Override public void onMap(){
+        generateMapElement(all,name,EMPTY,fieldType,required);
+      }
+      @Override public void onPojo(){
+        registerComplexTypeChildElement(all,name,EMPTY,fieldType,false);
+      }
+      @Override protected void defaultOperation(){
+        Attribute attribute=createAttribute(name,EMPTY,fieldType,defaultValue,required,expressionSupport);
+        extension.getAttributeOrAttributeGroup().add(attribute);
+      }
+    }
+);
+  }
+  schema.getSimpleTypeOrComplexTypeOrGroup().add(complexType);
+  return complexType;
+}
