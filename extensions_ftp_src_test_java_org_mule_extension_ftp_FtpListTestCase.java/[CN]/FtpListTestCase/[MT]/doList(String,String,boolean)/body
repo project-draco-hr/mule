@@ -1,6 +1,10 @@
 {
-  MuleEvent event=getTestEvent("");
-  event.setFlowVariable("path",path);
-  event.setFlowVariable("recursive",recursive);
-  return (List<FilePayload>)runFlow(flowName,event).getMessage().getPayload();
+  TreeNode node=(TreeNode)flowRunner(flowName).withFlowVariable("path",path).withFlowVariable("recursive",recursive).run().getMessage().getPayload();
+  assertThat(node,is(notNullValue()));
+  assertThat(node.getContent(),is(nullValue()));
+  FileAttributes attributes=node.getAttributes();
+  assertThat(attributes.isDirectory(),is(true));
+  assertThat(attributes.getPath(),equalTo(Paths.get("/",BASE_DIR).resolve(path).toString()));
+  assertThat(attributes.isDirectory(),is(true));
+  return node;
 }

@@ -1,0 +1,19 @@
+{
+  for (  File child : parent.listFiles()) {
+    Path path=child.toPath();
+    FileAttributes attributes=new LocalFileAttributes(path);
+    if (!matcher.test(attributes)) {
+      continue;
+    }
+    if (child.isDirectory()) {
+      TreeNode.Builder childNodeBuilder=TreeNode.Builder.forDirectory(attributes);
+      treeNodeBuilder.addChild(childNodeBuilder);
+      if (recursive) {
+        doList(child,childNodeBuilder,recursive,message,matcher);
+      }
+    }
+ else {
+      treeNodeBuilder.addChild(TreeNode.Builder.forFile(fileSystem.read(message,child.getAbsolutePath(),false)));
+    }
+  }
+}
