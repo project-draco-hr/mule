@@ -1,0 +1,20 @@
+{
+  MuleMessage message=event.getMessage();
+  final Set<String> propertyNames=new HashSet<String>(message.getPropertyNames(scope));
+  for (  String expression : deleteProperties) {
+    for (    String key : propertyNames) {
+      if (key.matches(expression)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("Removing property: '%s' from scope: '%s'",key,scope.getScopeName()));
+        }
+        message.removeProperty(key,scope);
+      }
+ else {
+        WildcardFilter filter=new WildcardFilter(expression);
+        if (filter.accept(key)) {
+          message.removeProperty(key,scope);
+        }
+      }
+    }
+  }
+}

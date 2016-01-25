@@ -1,0 +1,34 @@
+{
+  for (  Map.Entry<String,TypedValue> entry : addProperties.entrySet()) {
+    if (entry.getKey() == null) {
+      logger.error("Setting Null property keys is not supported, this entry is being ignored");
+    }
+ else {
+      final String key=entry.getKey();
+      TypedValue typedValue=entry.getValue();
+      Object value=typedValue.getValue();
+      if (muleContext.getExpressionManager().isExpression(value.toString())) {
+        value=muleContext.getExpressionManager().evaluate(value.toString(),event);
+      }
+      MuleMessage message=event.getMessage();
+      if (value != null) {
+        DataType<?> propertyDataType=createPropertyDataType(value,typedValue.getDataType());
+        if (message.getProperty(key,scope) != null) {
+          if (overwrite) {
+            logger.debug("Overwriting message property " + key);
+            message.setProperty(key,value,scope,propertyDataType);
+          }
+ else           if (logger.isDebugEnabled()) {
+            logger.debug(MessageFormat.format("Message already contains the property and overwrite is false, skipping: key={0}, value={1}, scope={2}",key,value,scope));
+          }
+        }
+ else {
+          message.setProperty(key,value,scope,propertyDataType);
+        }
+      }
+ else       if (logger.isInfoEnabled()) {
+        logger.info(MessageFormat.format("Property with key ''{0}'', not found on message using ''{1}''. Since the value was marked optional, nothing was set on the message for this property",key,value));
+      }
+    }
+  }
+}

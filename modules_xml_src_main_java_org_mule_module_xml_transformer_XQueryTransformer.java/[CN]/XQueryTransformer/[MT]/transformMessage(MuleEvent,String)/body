@@ -1,0 +1,56 @@
+{
+  try {
+    XQPreparedExpression transformer=null;
+    try {
+      transformer=(XQPreparedExpression)transformerPool.borrowObject();
+      bindParameters(transformer,event);
+      bindDocument(event.getMessage().getPayload(),transformer);
+      XQResultSequence result=transformer.executeQuery();
+      List<Object> results=new ArrayList<Object>();
+      Class<?> type=returnType.getType();
+      while (result.next()) {
+        XQItem item=result.getItem();
+        if (Node.class.isAssignableFrom(type) || Node[].class.isAssignableFrom(type)) {
+          results.add(getItemValue(item));
+        }
+ else         if (String.class.isAssignableFrom(type) || String[].class.isAssignableFrom(type)) {
+          results.add(item.getItemAsString(null));
+        }
+ else         if (XMLStreamReader.class.isAssignableFrom(type) || XMLStreamReader[].class.isAssignableFrom(type)) {
+          try {
+            results.add(item.getItemAsStream());
+          }
+ catch (          XQException e) {
+            throw new TransformerException(XmlMessages.streamNotAvailble(getName()));
+          }
+        }
+ else {
+          try {
+            results.add(item.getObject());
+          }
+ catch (          XQException e) {
+            throw new TransformerException(XmlMessages.objectNotAvailble(getName()));
+          }
+        }
+      }
+      if (!Collection.class.isAssignableFrom(type)) {
+        if (results.isEmpty()) {
+          return null;
+        }
+        return results.size() == 1 ? results.get(0) : results.toArray();
+      }
+ else {
+        return results;
+      }
+    }
+  finally {
+      if (transformer != null) {
+        unbindParameters(transformer);
+        transformerPool.returnObject(transformer);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

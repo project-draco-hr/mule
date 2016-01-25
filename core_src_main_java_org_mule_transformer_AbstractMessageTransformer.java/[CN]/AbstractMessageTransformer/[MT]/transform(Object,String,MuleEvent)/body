@@ -18,6 +18,10 @@
   if (src instanceof MuleMessage) {
     message=(MuleMessage)src;
   }
+ else   if (src instanceof MuleEvent) {
+    event=(MuleEvent)src;
+    message=event.getMessage();
+  }
  else   if (muleContext.getConfiguration().isAutoWrapMessageAwareTransform()) {
     message=new DefaultMuleMessage(src,muleContext);
   }
@@ -26,13 +30,20 @@
       throw new TransformerMessagingException(CoreMessages.noCurrentEventForTransformer(),event,this);
     }
     message=event.getMessage();
-    if (!message.getPayload().equals(src)) {
-      throw new IllegalStateException("Transform payload does not match current event");
-    }
   }
   Object result;
+  if (event == null) {
+    Map<String,Object> flowVars=new HashMap<>();
+    for (    String var : message.getInvocationPropertyNames()) {
+      flowVars.put(var,message.getInvocationProperty(var));
+    }
+    event=new DefaultMuleEvent(message,MessageExchangePattern.REQUEST_RESPONSE,new DefaultLocalMuleClient.MuleClientFlowConstruct(muleContext));
+    for (    Map.Entry<String,Object> var : flowVars.entrySet()) {
+      event.setFlowVariable(var.getKey(),var.getValue());
+    }
+  }
   try {
-    result=transformMessage(message,enc);
+    result=transformMessage(event,enc);
   }
  catch (  TransformerException e) {
     throw new TransformerMessagingException(e.getI18nMessage(),event,this,e);
