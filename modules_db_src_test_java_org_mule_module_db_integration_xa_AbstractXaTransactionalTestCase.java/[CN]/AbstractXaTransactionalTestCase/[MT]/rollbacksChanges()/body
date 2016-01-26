@@ -1,7 +1,6 @@
 {
-  LocalMuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://testRollback",TEST_MESSAGE,null);
-  assertTrue(response.getPayload() instanceof NullPayload);
+  MessagingException e=runTransactionalFlowExpectingException("jdbcRollback",ACTION_ALWAYS_BEGIN,new XaTransactionFactory());
+  assertThat(e.getCause(),instanceOf(IllegalStateException.class));
   List<Map<String,String>> result=selectData("select * from PLANET where POSITION=4",getDefaultDataSource());
   assertRecords(result,new Record(new Field("NAME",MARS.getName()),new Field("POSITION",4)));
 }
