@@ -6,9 +6,13 @@
   }
   try {
     WSDLReader wsdlReader=WSDLFactory.newInstance().newWSDLReader();
-    wsdlDefinition=wsdlReader.readWSDL(url.toString());
+    URLConnection urlConnection=url.openConnection();
+    if (url.getUserInfo() != null) {
+      urlConnection.setRequestProperty("Authorization","Basic " + Base64.encodeBytes(url.getUserInfo().getBytes()));
+    }
+    wsdlDefinition=wsdlReader.readWSDL(url.toString(),new InputSource(urlConnection.getInputStream()));
   }
- catch (  WSDLException e) {
+ catch (  WSDLException|IOException e) {
     throw new InitialisationException(e,this);
   }
   Service service=wsdlDefinition.getService(new QName(wsdlDefinition.getTargetNamespace(),config.getService()));

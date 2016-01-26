@@ -3,6 +3,14 @@
     muleContext.registerListener(new ConnectionNotificationListener<ConnectionNotification>(){
       @Override public void onNotification(      ConnectionNotification notification){
         if (notification.getAction() == expectedAction) {
+          long currentNotificationTimestamp=System.currentTimeMillis();
+          if (previousNotificationTimestamp.isPresent()) {
+            long timeBetweenNotifications=currentNotificationTimestamp - previousNotificationTimestamp.get();
+            if (!minimumTimeBetweenNotifications.isPresent() || minimumTimeBetweenNotifications.get() > timeBetweenNotifications) {
+              minimumTimeBetweenNotifications=Optional.of(timeBetweenNotifications);
+            }
+          }
+          previousNotificationTimestamp=Optional.of(currentNotificationTimestamp);
           notificationReceivedLatch.countDown();
         }
       }

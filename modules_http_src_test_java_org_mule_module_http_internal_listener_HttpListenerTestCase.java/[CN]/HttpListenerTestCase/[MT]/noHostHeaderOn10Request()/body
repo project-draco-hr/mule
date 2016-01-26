@@ -1,0 +1,16 @@
+{
+  final AtomicReference<RequestHandler> requestHandlerRef=new AtomicReference<>();
+  when(mockHttpListenerConfig.addRequestHandler(any(ListenerRequestMatcher.class),any(RequestHandler.class))).then(new Answer<RequestHandlerManager>(){
+    @Override public RequestHandlerManager answer(    InvocationOnMock invocation) throws Throwable {
+      requestHandlerRef.set((RequestHandler)invocation.getArguments()[1]);
+      return null;
+    }
+  }
+);
+  usePath("/");
+  HttpRequest request=buildGetRootRequest(HTTP_1_0);
+  HttpRequestContext requestContext=buildRequestContext(request);
+  HttpResponseReadyCallback responseCallback=mock(HttpResponseReadyCallback.class);
+  requestHandlerRef.get().handleRequest(requestContext,responseCallback);
+  assertResponse(responseCallback,OK.getStatusCode());
+}

@@ -3,16 +3,14 @@
   try {
     dispatcher=borrowDispatcher(endpoint);
     boolean fireNotification=event.isNotificationsEnabled();
-    EndpointMessageNotification beginNotification=null;
     if (fireNotification) {
       if (notificationMessageProcessor == null) {
         notificationMessageProcessor=new OutboundNotificationMessageProcessor(endpoint);
       }
-      beginNotification=notificationMessageProcessor.createBeginNotification(event);
+      notificationMessageProcessor.dispatchNotification(notificationMessageProcessor.createBeginNotification(event),event);
     }
     MuleEvent result=dispatcher.process(event);
     if (fireNotification) {
-      notificationMessageProcessor.dispatchNotification(beginNotification,event);
       notificationMessageProcessor.process((result != null && !VoidMuleEvent.getInstance().equals(result)) ? result : event);
     }
     return result;
