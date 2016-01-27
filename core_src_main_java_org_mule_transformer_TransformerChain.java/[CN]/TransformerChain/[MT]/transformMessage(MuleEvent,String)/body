@@ -1,0 +1,21 @@
+{
+  MuleMessage result=event.getMessage();
+  Object temp=event.getMessage();
+  Transformer lastTransformer=null;
+  for (Iterator iterator=transformers.iterator(); iterator.hasNext(); ) {
+    lastTransformer=(Transformer)iterator.next();
+    temp=lastTransformer.transform(temp);
+    if (temp instanceof MuleMessage) {
+      result=(MuleMessage)temp;
+    }
+ else {
+      result.setPayload(temp);
+    }
+  }
+  if (lastTransformer != null && lastTransformer.getReturnDataType().getType().equals(MuleMessage.class)) {
+    return result;
+  }
+ else {
+    return result.getPayload();
+  }
+}
