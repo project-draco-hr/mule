@@ -1,26 +1,23 @@
 {
-  before(context,interceptors);
   Object result=null;
   Throwable exception=null;
+  InterceptorsExecutionResult beforeExecutionResult=before(context,interceptors);
   try {
-    result=executor.execute(context);
-    onSuccess(context,result,interceptors);
+    if (beforeExecutionResult.isOk()) {
+      result=executor.execute(context);
+      onSuccess(context,result,interceptors);
+    }
+ else {
+      interceptors=beforeExecutionResult.getExecutedInterceptors();
+      throw beforeExecutionResult.getThrowable();
+    }
   }
- catch (  Exception e) {
+ catch (  Throwable e) {
     exception=processException(e);
     exception=onError(context,retryRequestHolder,exception,interceptors);
   }
  finally {
     after(context,result,interceptors);
   }
-  if (exception != null) {
-    InterceptorsRetryRequest retryRequest=retryRequestHolder.get();
-    if (retryRequest != null && retryRequest.isRetryRequested()) {
-      result=executeWithInterceptors(executor,context,interceptors,retryRequestHolder);
-    }
- else {
-      throw exception;
-    }
-  }
-  return result;
+  return new OperationExecutionResult(result,exception,Optional.ofNullable(retryRequestHolder.get()));
 }
