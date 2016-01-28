@@ -1,6 +1,7 @@
 {
   final String hyphenizedFieldName=hyphenize(fieldName);
   final String singularName=singularize(hyphenizedFieldName);
+  final String pluralName=pluralize(hyphenizedFieldName);
   final ValueHolder<ValueResolver> resolverReference=new ValueHolder<>();
   DataQualifierVisitor visitor=new AbstractDataQualifierVisitor(){
     /** 
@@ -15,6 +16,23 @@
  */
     @Override public void onList(){
       resolverReference.set(parseCollection(element,fieldName,hyphenizedFieldName,singularName,defaultValue,dataType));
+    }
+    /** 
+ * A map type. Might be defined in an inner element or referenced
+ * from an attribute
+ */
+    @Override public void onMap(){
+      String parentname;
+      String childname;
+      if (StringUtils.equals(pluralName,hyphenizedFieldName)) {
+        parentname=hyphenizedFieldName;
+        childname=singularName;
+      }
+ else {
+        parentname=pluralName;
+        childname=hyphenizedFieldName;
+      }
+      resolverReference.set(parseMap(element,fieldName,parentname,childname,defaultValue,dataType));
     }
     @Override public void onPojo(){
       resolverReference.set(parsePojo(element,fieldName,hyphenizedFieldName,dataType,defaultValue));

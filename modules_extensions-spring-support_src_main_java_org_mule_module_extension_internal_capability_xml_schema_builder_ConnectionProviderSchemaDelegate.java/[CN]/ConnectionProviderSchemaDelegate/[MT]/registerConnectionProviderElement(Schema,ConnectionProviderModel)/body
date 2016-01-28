@@ -1,0 +1,27 @@
+{
+  Element providerElement=new TopLevelElement();
+  providerElement.setName(providerModel.getName());
+  providerElement.setSubstitutionGroup(MULE_EXTENSION_CONNECTION_PROVIDER_ELEMENT);
+  LocalComplexType complexType=new LocalComplexType();
+  providerElement.setComplexType(complexType);
+  ExtensionType providerType=new ExtensionType();
+  providerType.setBase(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
+  ComplexContent complexContent=new ComplexContent();
+  complexContent.setExtension(providerType);
+  complexType.setComplexContent(complexContent);
+  schema.getSimpleTypeOrComplexTypeOrGroup().add(providerElement);
+  final ExplicitGroup choice=new ExplicitGroup();
+  choice.setMinOccurs(ZERO);
+  choice.setMaxOccurs(UNBOUNDED);
+  ConnectionHandlingTypeModelProperty connectionHandlingType=providerModel.getModelProperty(ConnectionHandlingTypeModelProperty.KEY);
+  if (connectionHandlingType != null) {
+    if (connectionHandlingType.isPooled() || connectionHandlingType.isCached()) {
+      addValidationFlag(providerType);
+      addConnectionProviderRetryPolicy(choice);
+    }
+    if (connectionHandlingType.isPooled()) {
+      addConnectionProviderPoolingProfile(choice,providerModel);
+    }
+  }
+  builder.registerParameters(providerType,choice,providerModel.getParameterModels());
+}

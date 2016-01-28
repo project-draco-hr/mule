@@ -1,5 +1,5 @@
 {
-  final DataType itemsType=collectionType.getGenericTypes().length > 0 ? collectionType.getGenericTypes()[0] : DataType.of(Object.class);
+  final DataType itemsType=ArrayUtils.isEmpty(collectionType.getGenericTypes()) ? DataType.of(Object.class) : collectionType.getGenericTypes()[0];
   final List<ValueResolver<Object>> resolvers=new LinkedList<>();
   for (  final ElementDescriptor item : collectionElement.getChildsByName(childElementName)) {
     DataQualifierVisitor visitor=new AbstractDataQualifierVisitor(){
@@ -7,8 +7,7 @@
         resolvers.add(new ObjectBuilderValueResolver(recursePojoProperties(itemsType.getRawType(),item)));
       }
       @Override protected void defaultOperation(){
-        String value=item.getAttribute(SchemaConstants.ATTRIBUTE_NAME_VALUE);
-        resolvers.add(getResolverFromValue(value,itemsType));
+        resolvers.add(getResolverFromValue(item.getAttribute(ATTRIBUTE_NAME_VALUE),itemsType));
       }
     }
 ;

@@ -1,0 +1,42 @@
+{
+  final LocalComplexType mapComplexType=new LocalComplexType();
+  final ExplicitGroup mapEntrySequence=new ExplicitGroup();
+  mapComplexType.setSequence(mapEntrySequence);
+  final TopLevelElement mapEntryElement=new TopLevelElement();
+  mapEntryElement.setName(NameUtils.singularize(name));
+  mapEntryElement.setMinOccurs(ZERO);
+  mapEntryElement.setMaxOccurs(SchemaConstants.UNBOUNDED);
+  final DataType keyType=getFirstGenericType(type);
+  final DataType valueType=type.getGenericTypes()[1];
+  final LocalComplexType entryComplexType=new LocalComplexType();
+  final Attribute keyAttribute=createAttribute(ATTRIBUTE_NAME_KEY,keyType,true,ExpressionSupport.REQUIRED);
+  entryComplexType.getAttributeOrAttributeGroup().add(keyAttribute);
+  valueType.getQualifier().accept(new AbstractDataQualifierVisitor(){
+    @Override public void onPojo(){
+      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,false,SUPPORTED));
+      ExplicitGroup singleItemSequence=new ExplicitGroup();
+      singleItemSequence.setMaxOccurs("1");
+      LocalComplexType itemComplexType=newLocalComplexTypeWithBase(valueType,description);
+      TopLevelElement itemElement=createTopLevelElement(NameUtils.getTopLevelTypeName(valueType),ZERO,"1",itemComplexType);
+      singleItemSequence.getParticle().add(objectFactory.createElement(itemElement));
+      entryComplexType.setSequence(singleItemSequence);
+    }
+    @Override public void onList(){
+      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,false,SUPPORTED));
+      entryComplexType.setSequence(new ExplicitGroup());
+      LocalComplexType itemComplexType=new LocalComplexType();
+      DataType itemType=ArrayUtils.isEmpty(valueType.getGenericTypes()) ? DataType.of(Object.class) : valueType.getGenericTypes()[0];
+      itemComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,itemType,true,REQUIRED));
+      String itemName=hyphenize(NameUtils.singularize(name)).concat("-item");
+      TopLevelElement itemElement=createTopLevelElement(itemName,ZERO,SchemaConstants.UNBOUNDED,itemComplexType);
+      entryComplexType.getSequence().getParticle().add(objectFactory.createElement(itemElement));
+    }
+    @Override protected void defaultOperation(){
+      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,true,SUPPORTED));
+    }
+  }
+);
+  mapEntryElement.setComplexType(entryComplexType);
+  mapEntrySequence.getParticle().add(objectFactory.createElement(mapEntryElement));
+  return mapComplexType;
+}
