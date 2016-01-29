@@ -1,6 +1,7 @@
 {
-  ContentMetadata contentMetadata=operationContext.getVariable(CONTENT_METADATA);
-  if (contentMetadata == null) {
+  String mimeType=operationContext.getTypeSafeParameter(MIME_TYPE_PARAMETER_NAME,String.class);
+  String encoding=operationContext.getTypeSafeParameter(ENCODING_PARAMETER_NAME,String.class);
+  if (encoding == null && mimeType == null) {
     if (value instanceof MuleMessage) {
       return ((MuleMessage)value).getDataType();
     }
@@ -9,8 +10,12 @@
   if (value == null || value instanceof NullPayload) {
     return null;
   }
-  final ContentType contentType=contentMetadata.getOutputContentType();
-  final DataType dataType=DataTypeFactory.createWithEncoding(value.getClass(),contentType.getEncoding().name());
-  dataType.setMimeType(contentType.getMimeType());
+  final DataType dataType=DataTypeFactory.create(value.getClass());
+  if (encoding != null) {
+    dataType.setEncoding(encoding);
+  }
+  if (mimeType != null) {
+    dataType.setMimeType(mimeType);
+  }
   return dataType;
 }
