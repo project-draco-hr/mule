@@ -1,14 +1,8 @@
 {
-  Flow flow=(Flow)getFlowConstruct("soapFaultWithoutCatchExceptionStrategy");
-  try {
-    flow.process(getTestEvent(FAIL_REQUEST));
-    fail();
-  }
- catch (  MessagingException e) {
-    MuleMessage response=e.getEvent().getMessage();
-    assertNotNull(response.getExceptionPayload());
-    SoapFaultException soapFault=(SoapFaultException)response.getExceptionPayload().getException();
-    assertTrue(soapFault.getMessage().startsWith("Hello"));
-    assertEquals("Server",soapFault.getFaultCode().getLocalPart());
-  }
+  MessagingException e=flowRunner("soapFaultWithoutCatchExceptionStrategy").withPayload(FAIL_REQUEST).runExpectingException();
+  MuleMessage response=e.getEvent().getMessage();
+  assertNotNull(response.getExceptionPayload());
+  SoapFaultException soapFault=(SoapFaultException)response.getExceptionPayload().getException();
+  assertThat(soapFault.getMessage(),startsWith("Hello"));
+  assertThat(soapFault.getFaultCode().getLocalPart(),is("Server"));
 }

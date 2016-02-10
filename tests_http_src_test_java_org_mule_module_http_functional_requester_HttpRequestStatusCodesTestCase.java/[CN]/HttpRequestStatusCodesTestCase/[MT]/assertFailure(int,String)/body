@@ -1,14 +1,5 @@
 {
-  Flow flow=(Flow)getFlowConstruct(flowName);
-  MuleEvent event=getTestEvent(TEST_MESSAGE);
-  event.getMessage().setInvocationProperty("code",statusCode);
-  try {
-    flow.process(event);
-    fail();
-  }
- catch (  MessagingException e) {
-    MuleMessage response=e.getEvent().getMessage();
-    assertNotNull(response.getExceptionPayload());
-    assertTrue(response.getExceptionPayload().getException() instanceof ResponseValidatorException);
-  }
+  MessagingException e=flowRunner(flowName).withPayload(TEST_MESSAGE).withFlowVariable("code",statusCode).runExpectingException();
+  MuleMessage response=e.getEvent().getMessage();
+  assertThat(response.getExceptionPayload().getException(),instanceOf(ResponseValidatorException.class));
 }

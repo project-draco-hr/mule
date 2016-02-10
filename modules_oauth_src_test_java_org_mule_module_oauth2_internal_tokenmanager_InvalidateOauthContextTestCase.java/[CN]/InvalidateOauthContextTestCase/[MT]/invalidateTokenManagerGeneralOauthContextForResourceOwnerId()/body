@@ -3,9 +3,7 @@
   final ConfigOAuthContext configOAuthContext=tokenManagerConfig.getConfigOAuthContext();
   loadResourceOwnerWithAccessToken(configOAuthContext,RESOURCE_OWNER_JOHN);
   loadResourceOwnerWithAccessToken(configOAuthContext,RESOURCE_OWNER_TONY);
-  final MuleEvent testEvent=getTestEvent(TEST_MESSAGE);
-  testEvent.setFlowVariable("resourceOwnerId",RESOURCE_OWNER_TONY);
-  ((Flow)getFlowConstruct("invalidateOauthContextWithResourceOwnerId")).process(testEvent);
+  flowRunner("invalidateOauthContextWithResourceOwnerId").withPayload(TEST_MESSAGE).withFlowVariable("resourceOwnerId",RESOURCE_OWNER_TONY).run();
   assertThatOAuthContextWasCleanForUser(configOAuthContext,RESOURCE_OWNER_TONY);
   assertThat(configOAuthContext.getContextForResourceOwner(RESOURCE_OWNER_JOHN).getAccessToken(),Is.is(ACCESS_TOKEN));
 }

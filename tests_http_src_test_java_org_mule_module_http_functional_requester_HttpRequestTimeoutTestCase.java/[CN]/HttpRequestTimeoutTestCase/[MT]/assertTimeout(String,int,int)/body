@@ -3,17 +3,11 @@
   Thread thread=new Thread(){
     @Override public void run(){
       try {
-        Flow flow=(Flow)getFlowConstruct(flowName);
-        MuleEvent event=getTestEvent(TEST_MESSAGE);
-        event.setTimeout(responseTimeoutEvent);
-        event.setFlowVariable("timeout",responseTimeoutRequester);
-        try {
-          flow.process(event);
-        }
- catch (        MessagingException e) {
-          assertThat(e.getCauseException(),instanceOf(TimeoutException.class));
-          requestTimeoutLatch.release();
-        }
+        FlowRunner runner=flowRunner(flowName).withPayload(TEST_MESSAGE).withFlowVariable("timeout",responseTimeoutRequester);
+        runner.buildEvent().setTimeout(responseTimeoutEvent);
+        MessagingException e=runner.runExpectingException();
+        assertThat(e.getCauseException(),instanceOf(TimeoutException.class));
+        requestTimeoutLatch.release();
       }
  catch (      Exception e) {
         throw new RuntimeException(e);

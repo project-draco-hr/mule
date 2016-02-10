@@ -1,11 +1,8 @@
 {
-  Flow flow=(Flow)getFlowConstruct("headerOverride");
-  MuleEvent event=getTestEvent(TEST_MESSAGE);
   Map<String,String> params=new HashMap<>();
   params.put("testName1","testValueNew");
   params.put("testName2","testValue2");
-  event.getMessage().setInvocationProperty("headers",params);
-  flow.process(event);
+  flowRunner("headerOverride").withPayload(TEST_MESSAGE).withFlowVariable("headers",params).run();
   final Collection<String> values=headers.get("testName1");
   assertThat(values,Matchers.containsInAnyOrder(Arrays.asList("testValue1","testValueNew").toArray(new String[2])));
   assertThat(getFirstReceivedHeader("testName2"),equalTo("testValue2"));

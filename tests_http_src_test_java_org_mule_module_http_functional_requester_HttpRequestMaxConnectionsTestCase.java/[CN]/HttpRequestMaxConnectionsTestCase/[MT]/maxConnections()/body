@@ -2,13 +2,10 @@
   Flow flow=(Flow)getFlowConstruct("limitedConnections");
   Thread t1=processAsynchronously(flow);
   messageArrived.await();
-  try {
-    flow.process(createEvent(SMALL_RESPONSE_TIMEOUT));
-    fail("Max connections should be reached.");
-  }
- catch (  MessagingException e) {
-    assertThat(e.getCause(),instanceOf(IOException.class));
-  }
+  FlowRunner runner=flowRunner("limitedConnections");
+  setEventTimeout(runner.buildEvent(),SMALL_RESPONSE_TIMEOUT);
+  MessagingException e=runner.runExpectingException();
+  assertThat(e.getCause(),instanceOf(IOException.class));
   messageHold.release();
   t1.join();
 }

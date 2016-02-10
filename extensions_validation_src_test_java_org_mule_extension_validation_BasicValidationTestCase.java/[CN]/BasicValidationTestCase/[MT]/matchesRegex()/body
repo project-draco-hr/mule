@@ -1,15 +1,10 @@
 {
   final String regex="[tT]rue";
-  MuleEvent event=getTestEvent("true");
-  event.setFlowVariable("regexp",regex);
-  event.setFlowVariable("caseSensitive",false);
-  assertValid("matchesRegex",event);
+  FlowRunner runner=flowRunner("matchesRegex").withPayload("true").withFlowVariable("regexp",regex).withFlowVariable("caseSensitive",false);
+  assertValid(runner);
   String testValue="TRUE";
-  event.getMessage().setPayload(testValue);
-  assertValid("matchesRegex",event);
-  event.setFlowVariable("caseSensitive",true);
-  assertInvalid("matchesRegex",event,messages.regexDoesNotMatch(testValue,regex));
+  assertValid(runner.withPayload(testValue));
+  assertInvalid(runner.withFlowVariable("caseSensitive",true),messages.regexDoesNotMatch(testValue,regex));
   testValue="tTrue";
-  event.getMessage().setPayload(testValue);
-  assertInvalid("matchesRegex",event,messages.regexDoesNotMatch(testValue,regex));
+  assertInvalid(runner.withPayload(testValue),messages.regexDoesNotMatch(testValue,regex));
 }
