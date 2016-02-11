@@ -1,0 +1,31 @@
+{
+  final DataType keyType=mapType.getGenericTypes().length > 1 ? mapType.getGenericTypes()[0] : DataType.of(Object.class);
+  final DataType valueType=mapType.getGenericTypes().length > 1 ? mapType.getGenericTypes()[1] : DataType.of(Object.class);
+  final List<ValueResolver<Object>> keyResolvers=new LinkedList<>();
+  final List<ValueResolver<Object>> valueResolvers=new LinkedList<>();
+  for (  final ElementDescriptor item : mapElement.getChildsByName(childElementName)) {
+    keyResolvers.add(getResolverFromValue(item.getAttribute(ATTRIBUTE_NAME_KEY),keyType));
+    valueType.getQualifier().accept(new AbstractDataQualifierVisitor(){
+      @Override public void onPojo(){
+        valueResolvers.add(parsePojo(item,ATTRIBUTE_NAME_VALUE,getTopLevelTypeName(valueType),valueType,null));
+      }
+      @Override public void onList(){
+        ValueResolver<Object> resolver;
+        String valueAsExpression=item.getAttribute(ATTRIBUTE_NAME_VALUE);
+        if (!StringUtils.isBlank(valueAsExpression)) {
+          resolver=getResolverFromValue(valueAsExpression,valueType);
+        }
+ else {
+          String itemName=hyphenize(NameUtils.singularize(childElementName)).concat("-item");
+          resolver=parseCollectionAsInnerElement(item,itemName,valueType);
+        }
+        valueResolvers.add(resolver);
+      }
+      @Override protected void defaultOperation(){
+        valueResolvers.add(getResolverFromValue(item.getAttribute(ATTRIBUTE_NAME_VALUE),valueType));
+      }
+    }
+);
+  }
+  return MapValueResolver.of((Class<Map>)mapType.getRawType(),keyResolvers,valueResolvers);
+}

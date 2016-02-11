@@ -27,7 +27,13 @@
         generateMapElement(all,name,EMPTY,fieldType,required);
       }
       @Override public void onPojo(){
-        registerComplexTypeChildElement(all,name,EMPTY,fieldType,false);
+        if (TlsContextFactory.class.isAssignableFrom(fieldType.getRawType())) {
+          addTlsSupport(extension,all);
+          return;
+        }
+        if (shouldGeneratePojoChildElements(fieldType.getRawType())) {
+          registerComplexTypeChildElement(all,name,EMPTY,fieldType,false);
+        }
       }
       @Override protected void defaultOperation(){
         Attribute attribute=createAttribute(name,EMPTY,fieldType,defaultValue,required,expressionSupport);

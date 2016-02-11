@@ -19,6 +19,10 @@
     }
     @Override public void onPojo(){
       forceOptional=true;
+      if (TlsContextFactory.class.isAssignableFrom(parameterModel.getType().getRawType())) {
+        addTlsSupport(extensionType,all);
+        return;
+      }
       defaultOperation();
       if (shouldGeneratePojoChildElements(parameterModel.getType().getRawType())) {
         registerComplexTypeChildElement(all,parameterModel.getName(),parameterModel.getDescription(),parameterModel.getType(),false);
@@ -31,9 +35,6 @@
       boolean isPojo=type.getQualifier().equals(POJO);
       boolean isPrimitive=type.getRawType().isPrimitive() || ClassUtils.isPrimitiveWrapper(type.getRawType());
       return isPrimitive || (isPojo && shouldGeneratePojoChildElements(type.getRawType())) || (!isPojo && isInstantiable(type.getRawType()));
-    }
-    private boolean shouldGeneratePojoChildElements(    Class<?> type){
-      return IntrospectionUtils.isInstantiable(type) && !getExposedFields(type).isEmpty();
     }
   }
 ;
