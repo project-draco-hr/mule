@@ -5,8 +5,8 @@
   final String customHeader="X-Custom-Header";
   headers.put(customHeader,"value");
   client.dispatch(String.format("http://localhost:%d/in",httpPort.getNumber()),new DefaultMuleMessage(payload,headers,muleContext),newOptions().method(POST.name()).build());
-  MuleMessage msg=client.request("vm://out",10000);
+  MuleMessage msg=client.request("test://out",RECEIVE_TIMEOUT);
   assertNotNull(msg);
-  assertEquals(payload,getPayloadAsString(msg));
-  assertEquals("value",msg.getInboundProperty(customHeader));
+  assertThat(getPayloadAsString(msg),is(payload));
+  assertThat(msg.getInboundProperty(customHeader),is("value"));
 }

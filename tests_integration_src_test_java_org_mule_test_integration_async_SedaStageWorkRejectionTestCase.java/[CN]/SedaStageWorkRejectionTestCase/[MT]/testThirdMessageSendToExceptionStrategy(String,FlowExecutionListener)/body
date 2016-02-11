@@ -2,17 +2,17 @@
   MuleClient client=muleContext.getClient();
   int nrMessages=3;
   for (int i=0; i < nrMessages; i++) {
-    client.dispatch(inUrl,TEST_MESSAGE + i,null);
+    flowRunner(flowName).withPayload(TEST_MESSAGE + i).asynchronously().run();
   }
   flowExecutionListener.waitUntilFlowIsComplete();
   for (int i=0; i < 2; i++) {
-    MuleMessage result=client.request("vm://out",RECEIVE_TIMEOUT);
+    MuleMessage result=client.request("test://out",RECEIVE_TIMEOUT);
     assertThat(result,is(notNullValue()));
     assertThat(result.getExceptionPayload(),is(nullValue()));
     assertThat(result.getPayload(),not(instanceOf(NullPayload.class)));
     assertThat(getPayloadAsString(result),containsString(TEST_MESSAGE));
   }
-  assertThat(client.request("vm://out",RECEIVE_TIMEOUT / 5),is(nullValue()));
-  MuleMessage result=client.request("vm://exception",RECEIVE_TIMEOUT);
+  assertThat(client.request("test://out",RECEIVE_TIMEOUT / 5),is(nullValue()));
+  MuleMessage result=client.request("test://exception",RECEIVE_TIMEOUT);
   assertThat(result,is(notNullValue()));
 }

@@ -3,11 +3,10 @@
   payload.add("rosa");
   payload.add("maria");
   payload.add("florencia");
-  MuleMessage parent=new DefaultMuleMessage(payload,muleContext);
-  MuleMessage result=client.send("vm://input-14",parent);
-  assertTrue(result.getPayload() instanceof Collection);
+  MuleMessage result=flowRunner("counter-two-foreach-independence").withPayload(payload).run().getMessage();
+  assertThat(result.getPayload(),instanceOf(Collection.class));
   Collection<?> resultPayload=(Collection<?>)result.getPayload();
-  assertEquals(3,resultPayload.size());
+  assertThat(resultPayload,hasSize(3));
   assertSame(payload,resultPayload);
-  assertThat(result.getInboundProperty("msg-total-messages"),is(3));
+  assertThat(result.getOutboundProperty("msg-total-messages"),is(3));
 }

@@ -12,14 +12,21 @@
   FunctionalTestComponent aggregator=(FunctionalTestComponent)getComponent("aggregator");
   MuleClient client=muleContext.getClient();
   List<String> list=Arrays.asList("first","second");
-  client.dispatch("vm://splitter",list,null);
-  Thread.sleep(5000);
-  assertEquals("Correlation timeout should not have happened.",0,correlationTimeoutCount.intValue());
-  assertEquals("Vortex received wrong number of messages.",1,vortex.getReceivedMessagesCount());
-  assertEquals("Wrong message received","second",vortex.getLastReceivedMessage());
-  assertEquals("Aggregator received wrong number of messages.",1,aggregator.getReceivedMessagesCount());
-  assertEquals("Wrong message received","first",((List<MuleMessage>)aggregator.getLastReceivedMessage()).get(0).getPayload());
-  Thread.sleep(9000);
-  assertEquals("Other messages never received by aggregator.",1,aggregator.getReceivedMessagesCount());
-  assertNotNull(client.request("vm://out?connector=queue",10000));
+  flowRunner("splitter").withPayload(list).asynchronously().run();
+  Thread.sleep(RECEIVE_TIMEOUT);
+  assertThat("Correlation timeout should not have happened.",correlationTimeoutCount.intValue(),is(0));
+  assertThat("Vortex received wrong number of messages.",vortex.getReceivedMessagesCount(),is(1));
+  assertThat("Wrong message received",vortex.getLastReceivedMessage(),is("second"));
+  assertThat("Aggregator received wrong number of messages.",aggregator.getReceivedMessagesCount(),is(1));
+  assertThat("Wrong message received",((List<MuleMessage>)aggregator.getLastReceivedMessage()).get(0).getPayload(),is("first"));
+  new PollingProber(2 * RECEIVE_TIMEOUT,200).check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return aggregator.getReceivedMessagesCount() == 1;
+    }
+    @Override public String describeFailure(){
+      return "Other messages never received by aggregator.";
+    }
+  }
+);
+  assertNotNull(client.request("test://out",RECEIVE_TIMEOUT));
 }

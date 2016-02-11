@@ -1,26 +1,2 @@
 {
-  final AtomicInteger messagePartsCount=new AtomicInteger(0);
-  final Latch chunkingReceiverLatch=new Latch();
-  muleContext.registerListener(new FunctionalTestNotificationListener(){
-    @Override public void onNotification(    ServerNotification notification){
-      assertEquals("ChunkingReceiver",notification.getResourceIdentifier());
-      Object reply=((FunctionalTestNotification)notification).getReplyMessage();
-      assertEquals(data + " Received",reply);
-      chunkingReceiverLatch.countDown();
-    }
-  }
-,"ChunkingReceiver");
-  muleContext.registerListener(new EndpointMessageNotificationListener<EndpointMessageNotification>(){
-    @Override public void onNotification(    EndpointMessageNotification notification){
-      if (notification.getAction() == EndpointMessageNotification.MESSAGE_RECEIVED) {
-        messagePartsCount.getAndIncrement();
-      }
-      assertEquals("ChunkingReceiver",notification.getResourceIdentifier());
-    }
-  }
-,"ChunkingReceiver");
-  MuleClient client=muleContext.getClient();
-  client.dispatch("vm://inbound.channel",data,null);
-  assertTrue(chunkingReceiverLatch.await(20L,TimeUnit.SECONDS));
-  assertEquals(partsCount,messagePartsCount.get());
 }

@@ -3,11 +3,10 @@
   payload.add("wolfgang");
   payload.add("amadeus");
   payload.add("mozart");
-  MuleMessage parent=new DefaultMuleMessage(payload,muleContext);
-  MuleMessage result=client.send("vm://input-6",parent);
-  assertTrue(result.getPayload() instanceof Collection);
+  MuleMessage result=flowRunner("counter-config").withPayload(payload).run().getMessage();
+  assertThat(result.getPayload(),instanceOf(Collection.class));
   Collection<?> resultPayload=(Collection<?>)result.getPayload();
-  assertEquals(3,resultPayload.size());
+  assertThat(resultPayload,hasSize(3));
   assertSame(payload,resultPayload);
-  assertThat(result.getInboundProperty("msg-last-index"),is(3));
+  assertThat(result.getOutboundProperty("msg-last-index"),is(3));
 }

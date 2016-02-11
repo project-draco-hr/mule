@@ -1,11 +1,8 @@
 {
-  MuleMessage message=new DefaultMuleMessage("data",muleContext);
-  MuleEvent event=new DefaultMuleEvent(message,getTestInboundEndpoint(""),getTestFlow());
   Object nonSerializable=new Object();
-  message.setInvocationProperty("P1","value");
-  message.setInvocationProperty("P2",nonSerializable);
-  message.setInvocationProperty("testThread",Thread.currentThread());
-  testFlow("AsyncFlow",event);
+  FlowRunner runner=flowRunner("AsyncFlow").withPayload("data").withInvocationProperty("P1","value").withInvocationProperty("P2",nonSerializable).withInvocationProperty("testThread",Thread.currentThread()).asynchronously();
+  MuleMessage message=runner.buildEvent().getMessage();
+  runner.run();
   assertNotNull(message.getInvocationProperty("P1"));
   assertNotNull(message.getInvocationProperty("P2"));
   assertNull(message.getInvocationProperty("P3"));

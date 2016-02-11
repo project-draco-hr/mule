@@ -1,13 +1,10 @@
 {
-  DefaultLocalMuleClient client=new DefaultLocalMuleClient(muleContext);
-  HashMap<String,Object> props=new HashMap<String,Object>();
+  Map<String,Object> props=new HashMap<String,Object>();
   props.put("username","ross");
   props.put("pass","ross");
-  MuleMessage result=client.send("vm://test","hi",props);
+  MuleMessage result=flowRunner("test").withPayload("hi").withInboundProperties(props).run().getMessage();
   assertNull(result.getExceptionPayload());
   props.put("pass","badpass");
-  MuleMessage resultMessage=client.send("vm://test","hi",props);
-  assertNotNull(resultMessage);
-  assertNotNull(resultMessage.getExceptionPayload());
-  assertEquals(BadCredentialsException.class,resultMessage.getExceptionPayload().getRootException().getClass());
+  MessagingException e=flowRunner("test").withPayload("hi").withInboundProperties(props).runExpectingException();
+  assertThat(ExceptionHelper.getRootException(e),instanceOf(BadCredentialsException.class));
 }

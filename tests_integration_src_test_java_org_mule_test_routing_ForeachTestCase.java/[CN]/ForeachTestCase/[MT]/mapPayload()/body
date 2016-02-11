@@ -2,11 +2,10 @@
   final Map<String,String> payload=new HashMap<String,String>();
   payload.put("name","david");
   payload.put("surname","bowie");
-  MuleMessage parent=new DefaultMuleMessage(payload,muleContext);
-  MuleMessage result=client.send("vm://input-8",parent);
-  assertTrue(result.getPayload() instanceof Map);
+  MuleMessage result=flowRunner("map-config").withPayload(payload).run().getMessage();
+  assertThat(result.getPayload(),instanceOf(Map.class));
   Map<?,?> resultPayload=(Map<?,?>)result.getPayload();
-  assertEquals(payload.size(),resultPayload.size());
-  assertThat(result.getInboundProperty("totalMessages"),is(payload.size()));
+  assertThat(resultPayload.entrySet(),hasSize(payload.size()));
+  assertThat(result.getOutboundProperty("totalMessages"),is(payload.size()));
   assertSame(payload,resultPayload);
 }

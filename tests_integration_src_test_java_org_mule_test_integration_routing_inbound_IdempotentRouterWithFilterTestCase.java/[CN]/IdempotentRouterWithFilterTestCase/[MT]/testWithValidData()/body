@@ -1,16 +1,8 @@
 {
-  MuleClient myClient;
-  DefaultMuleMessage myMessage=new DefaultMuleMessage("Mule is the best!",muleContext);
-  MuleMessage response=null;
-  try {
-    myClient=muleContext.getClient();
-    myClient.dispatch("vm://FromTestCase",myMessage);
-    response=myClient.request("vm://ToTestCase",5000);
-  }
- catch (  MuleException e) {
-    fail(e.getDetailedMessage());
-  }
+  flowRunner("IdempotentPlaceHolder").withPayload("Mule is the best!").asynchronously().run();
+  MuleClient myClient=muleContext.getClient();
+  MuleMessage response=myClient.request("test://ToTestCase",RECEIVE_TIMEOUT);
   assertNotNull(response);
   assertNotNull(response.getPayload());
-  assertEquals("Mule is the best!",response.getPayload());
+  assertThat(response.getPayload(),is("Mule is the best!"));
 }

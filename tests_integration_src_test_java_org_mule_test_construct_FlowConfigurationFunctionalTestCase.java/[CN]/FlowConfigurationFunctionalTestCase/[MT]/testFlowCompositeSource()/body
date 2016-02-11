@@ -1,7 +1,11 @@
 {
   final Flow flow=muleContext.getRegistry().lookupObject("flow2");
-  assertEquals(StartableCompositeMessageSource.class,flow.getMessageSource().getClass());
+  CompositeMessageSource compositeSource=(CompositeMessageSource)flow.getMessageSource();
+  assertEquals(StartableCompositeMessageSource.class,compositeSource.getClass());
   assertEquals(2,flow.getMessageProcessors().size());
-  assertEquals("01xyz",getPayloadAsString(muleContext.getClient().send("vm://in2",new DefaultMuleMessage("0",muleContext))));
-  assertEquals("01xyz",getPayloadAsString(muleContext.getClient().send("vm://in3",new DefaultMuleMessage("0",muleContext))));
+  final List<MessageSource> sources=compositeSource.getSources();
+  TestSimpleMessageSource source1=(TestSimpleMessageSource)sources.get(0);
+  TestSimpleMessageSource source2=(TestSimpleMessageSource)sources.get(1);
+  assertEquals("01xyz",getPayloadAsString(source1.fireEvent(getTestEvent("0")).getMessage()));
+  assertEquals("01xyz",getPayloadAsString(source2.fireEvent(getTestEvent("0")).getMessage()));
 }

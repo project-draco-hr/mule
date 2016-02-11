@@ -1,13 +1,14 @@
 {
-  MuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://input","XYZ",null);
-  assertEquals("XYZ is a string",getPayloadAsString(response));
-  response=client.send("vm://input",Integer.valueOf(9),null);
-  assertEquals("9 is an integer",getPayloadAsString(response));
-  response=client.send("vm://input",Long.valueOf(42),null);
-  assertEquals("42 is a number",getPayloadAsString(response));
-  response=client.send("vm://input",Boolean.TRUE,null);
-  assertNotNull(response);
-  assertNotNull(response.getExceptionPayload());
-  assertEquals(CouldNotRouteOutboundMessageException.class,response.getExceptionPayload().getException().getClass());
+  MuleMessage response=flowRunner("test-router").withPayload("XYZ").run().getMessage();
+  assertThat(getPayloadAsString(response),is("XYZ is a string"));
+  response=flowRunner("test-router").withPayload(Integer.valueOf(9)).run().getMessage();
+  assertThat(getPayloadAsString(response),is("9 is an integer"));
+  response=flowRunner("test-router").withPayload(Long.valueOf(42)).run().getMessage();
+  assertThat(getPayloadAsString(response),is("42 is a number"));
+  try {
+    response=flowRunner("test-router").withPayload(Boolean.TRUE).run().getMessage();
+  }
+ catch (  MessagingException e) {
+    assertThat(e,instanceOf(CouldNotRouteOutboundMessageException.class));
+  }
 }
