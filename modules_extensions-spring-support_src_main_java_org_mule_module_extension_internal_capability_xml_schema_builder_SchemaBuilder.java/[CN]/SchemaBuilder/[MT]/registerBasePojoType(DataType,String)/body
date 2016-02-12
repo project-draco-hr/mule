@@ -8,8 +8,6 @@
   final ExtensionType extension=new ExtensionType();
   extension.setBase(MULE_ABSTRACT_EXTENSION_TYPE);
   complexContent.setExtension(extension);
-  final ExplicitGroup all=new ExplicitGroup();
-  extension.setSequence(all);
   for (  Field field : getExposedFields(type.getRawType())) {
     if (isIgnored(field)) {
       continue;
@@ -21,18 +19,28 @@
     final ExpressionSupport expressionSupport=getExpressionSupport(field);
     fieldType.getQualifier().accept(new AbstractDataQualifierVisitor(){
       @Override public void onList(){
+        final ExplicitGroup all=getOrCreateSequenceGroup(extension);
         generateCollectionElement(all,name,EMPTY,fieldType,required);
       }
       @Override public void onMap(){
+        final ExplicitGroup all=getOrCreateSequenceGroup(extension);
         generateMapElement(all,name,EMPTY,fieldType,required);
       }
       @Override public void onPojo(){
         if (TlsContextFactory.class.isAssignableFrom(fieldType.getRawType())) {
+          final ExplicitGroup all=getOrCreateSequenceGroup(extension);
           addTlsSupport(extension,all);
           return;
         }
         if (shouldGeneratePojoChildElements(fieldType.getRawType())) {
-          registerComplexTypeChildElement(all,name,EMPTY,fieldType,false);
+          if (ExpressionSupport.REQUIRED != expressionSupport) {
+            final ExplicitGroup all=getOrCreateSequenceGroup(extension);
+            registerComplexTypeChildElement(all,name,EMPTY,fieldType,false);
+          }
+ else {
+            defaultOperation();
+            registerPojoType(fieldType,EMPTY);
+          }
         }
       }
       @Override protected void defaultOperation(){
