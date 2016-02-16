@@ -8,13 +8,13 @@
   final TransactionConfig nestedConfig=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_BEGIN);
   nestedConfig.setFactory(new XaTransactionFactory());
   executionTemplate.execute(new ExecutionCallback<Void>(){
-    public Void process() throws Exception {
+    @Override public Void process() throws Exception {
       ExecutionTemplate<Void> innerExecutionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(muleContext,nestedConfig);
       final Transaction firstTx=tm.getTransaction();
       assertNotNull(firstTx);
       assertEquals(firstTx.getStatus(),Status.STATUS_ACTIVE);
       return innerExecutionTemplate.execute(new ExecutionCallback<Void>(){
-        public Void process() throws Exception {
+        @Override public Void process() throws Exception {
           Transaction secondTx=tm.getTransaction();
           assertNotNull(secondTx);
           assertEquals(firstTx.getStatus(),Status.STATUS_ACTIVE);
