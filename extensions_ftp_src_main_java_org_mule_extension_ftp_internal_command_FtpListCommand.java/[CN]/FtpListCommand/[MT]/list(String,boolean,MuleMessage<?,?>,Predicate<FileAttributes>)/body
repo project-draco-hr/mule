@@ -1,0 +1,22 @@
+{
+  FileAttributes fileAttributes=getExistingFile(directoryPath);
+  Path path=Paths.get(fileAttributes.getPath());
+  if (!fileAttributes.isDirectory()) {
+    throw cannotListFileException(path);
+  }
+  if (!tryChangeWorkingDirectory(path.toString())) {
+    throw exception(format("Could not change working directory to '%s' while trying to list that directory",path));
+  }
+  TreeNode.Builder treeNodeBuilder=TreeNode.Builder.forDirectory(fileAttributes);
+  try {
+    doList(path,treeNodeBuilder,recursive,message,matcher);
+    if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+      throw exception(format("Failed to list files on directory '%s'",path));
+    }
+    changeWorkingDirectory(path);
+  }
+ catch (  Exception e) {
+    throw exception(format("Failed to list files on directory '%s'",path),e);
+  }
+  return treeNodeBuilder.build();
+}
