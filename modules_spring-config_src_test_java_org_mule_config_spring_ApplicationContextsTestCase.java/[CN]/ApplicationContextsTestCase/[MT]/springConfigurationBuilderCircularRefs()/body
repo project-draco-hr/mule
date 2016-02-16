@@ -1,0 +1,13 @@
+{
+  context=new DefaultMuleContextFactory().createMuleContext();
+  ApplicationContext appContext=new ClassPathXmlApplicationContext("application-context-circular-ref.xml");
+  ConfigurationBuilder builder=new SpringConfigurationBuilder(appContext);
+  builder.configure(context);
+  context.start();
+  Object seed=context.getRegistry().lookupObject("seed");
+  ((Seed)seed).awaitInitialize(INIT_WAIT_TIMEOUT_MILLIS,TimeUnit.MILLISECONDS);
+  Object apple=context.getRegistry().lookupObject("apple");
+  assertThat(apple,not(nullValue()));
+  assertThat(apple,instanceOf(Apple.class));
+  assertThat(((Apple)apple).getSeed(),sameInstance(seed));
+}
