@@ -1,7 +1,15 @@
 {
-  URIBuilder uriBuilder=new URIBuilder();
-  uriBuilder.setProtocol(requestContext.getScheme());
-  uriBuilder.setHost(resolveTargetHost(requestContext.getRequest()));
-  uriBuilder.setPath(requestContext.getRequest().getPath());
-  return uriBuilder.getEndpoint().getUri();
+  try {
+    String hostAndPort=resolveTargetHost(requestContext.getRequest());
+    String[] hostAndPortParts=hostAndPort.split(":");
+    String host=hostAndPortParts[0];
+    int port=requestContext.getScheme().equals(HttpConstants.Protocols.HTTP) ? 80 : 4343;
+    if (hostAndPortParts.length > 1) {
+      port=Integer.valueOf(hostAndPortParts[1]);
+    }
+    return new URI(requestContext.getScheme(),null,host,port,requestContext.getRequest().getPath(),null,null);
+  }
+ catch (  URISyntaxException e) {
+    throw new MuleRuntimeException(e);
+  }
 }

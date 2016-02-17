@@ -16,17 +16,14 @@
   try {
     for (int i=0; i < routes.size(); i++) {
       MessageProcessor mp=getRoute(i,event);
-      OutboundEndpoint endpoint=mp instanceof OutboundEndpoint ? (OutboundEndpoint)mp : null;
-      if (endpoint == null || endpoint.getFilter() == null || (endpoint.getFilter() != null && endpoint.getFilter().accept(message))) {
-        AbstractRoutingStrategy.validateMessageIsNotConsumable(event,message);
-        MuleMessage clonedMessage=cloneMessage(event,message);
-        MuleEvent result=sendRequest(event,createEventToRoute(event,clonedMessage),mp,true);
-        if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
-          results.add(result);
-        }
-        if (!continueRoutingMessageAfter(result)) {
-          break;
-        }
+      AbstractRoutingStrategy.validateMessageIsNotConsumable(event,message);
+      MuleMessage clonedMessage=cloneMessage(event,message);
+      MuleEvent result=sendRequest(event,createEventToRoute(event,clonedMessage),mp,true);
+      if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
+        results.add(result);
+      }
+      if (!continueRoutingMessageAfter(result)) {
+        break;
       }
     }
   }
