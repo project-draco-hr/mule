@@ -1,9 +1,20 @@
 {
   String encoding=Charset.defaultCharset().name();
   if (responseContentType != null) {
-    MediaType mediaType=MediaType.parse(responseContentType);
-    if (mediaType.charset().isPresent()) {
-      encoding=mediaType.charset().get().name();
+    try {
+      MediaType mediaType=MediaType.parse(responseContentType);
+      if (mediaType.charset().isPresent()) {
+        encoding=mediaType.charset().get().name();
+      }
+    }
+ catch (    IllegalArgumentException e) {
+      if (Boolean.parseBoolean(System.getProperty(SYSTEM_PROPERTY_PREFIX + "strictContentType"))) {
+        throw e;
+      }
+ else {
+        logger.warn(String.format("%s when parsing Content-Type '%s': %s",e.getClass().getName(),responseContentType,e.getMessage()));
+        logger.warn(String.format("Using defualt encoding: %s",encoding));
+      }
     }
   }
   return encoding;
