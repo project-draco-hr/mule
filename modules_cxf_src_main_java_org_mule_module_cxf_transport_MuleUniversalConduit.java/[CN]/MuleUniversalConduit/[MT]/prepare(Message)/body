@@ -13,14 +13,12 @@
 ;
   MuleEvent event=(MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT);
   boolean decoupled=event != null && message.getExchange().getInMessage() != null;
-  OutboundEndpoint ep=null;
   if (event == null || VoidMuleEvent.getInstance().equals(event) || decoupled) {
     MuleContext muleContext=configuration.getMuleContext();
     MuleMessage muleMsg=new DefaultMuleMessage(handler,muleContext);
     String url=setupURL(message);
     try {
-      ep=getEndpoint(muleContext,url);
-      event=new DefaultMuleEvent(muleMsg,ep.getExchangePattern(),(FlowConstruct)null);
+      event=new DefaultMuleEvent(muleMsg,(FlowConstruct)null);
     }
  catch (    Exception e) {
       throw new Fault(e);
@@ -34,11 +32,10 @@
   }
   message.put(CxfConstants.MULE_EVENT,event);
   final MuleEvent finalEvent=event;
-  final OutboundEndpoint finalEndpoint=ep;
   AbstractPhaseInterceptor<Message> i=new AbstractPhaseInterceptor<Message>(Phase.PRE_STREAM){
     public void handleMessage(    Message m) throws Fault {
       try {
-        dispatchMuleMessage(m,finalEvent,finalEndpoint);
+        dispatchMuleMessage(m,finalEvent);
       }
  catch (      MuleException e) {
         throw new Fault(e);
