@@ -2,23 +2,23 @@
   return new AbstractDataQualifierVisitor(){
     private boolean forceOptional=false;
     @Override public void onList(){
-      forceOptional=shouldForceOptional();
-      defaultOperation();
       DataType genericType=parameterModel.getType().getGenericTypes()[0];
+      forceOptional=shouldForceOptional(genericType.getRawType());
+      defaultOperation();
       if (shouldGenerateDataTypeChildElements(genericType,parameterModel)) {
         generateCollectionElement(all,parameterModel,true);
       }
     }
     @Override public void onMap(){
-      forceOptional=shouldForceOptional();
-      defaultOperation();
       DataType genericType=parameterModel.getType().getGenericTypes()[0];
+      forceOptional=shouldForceOptional(genericType.getRawType());
+      defaultOperation();
       if (shouldGenerateDataTypeChildElements(genericType,parameterModel)) {
         generateMapElement(all,parameterModel,true);
       }
     }
     @Override public void onPojo(){
-      forceOptional=shouldForceOptional();
+      forceOptional=shouldForceOptional(parameterModel.getType().getRawType());
       if (TlsContextFactory.class.isAssignableFrom(parameterModel.getType().getRawType())) {
         addTlsSupport(extensionType,all);
         return;
@@ -48,8 +48,8 @@
     private boolean shouldGeneratePojoChildElements(    Class<?> type){
       return IntrospectionUtils.isInstantiable(type) && !getExposedFields(type).isEmpty();
     }
-    private boolean shouldForceOptional(){
-      return !parameterModel.isRequired() || ExpressionSupport.REQUIRED != parameterModel.getExpressionSupport();
+    private boolean shouldForceOptional(    Class<?> type){
+      return !parameterModel.isRequired() || (IntrospectionUtils.isInstantiable(type) && ExpressionSupport.REQUIRED != parameterModel.getExpressionSupport());
     }
   }
 ;
