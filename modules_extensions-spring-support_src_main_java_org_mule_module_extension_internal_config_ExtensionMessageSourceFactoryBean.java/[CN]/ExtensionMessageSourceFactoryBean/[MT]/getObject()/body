@@ -3,7 +3,11 @@
   if (resolverSet.isDynamic()) {
     throw dynamicParameterException(resolverSet,sourceModel,element);
   }
-  ExtensionMessageSource messageSource=new ExtensionMessageSource(extensionModel,getSourceFactory(resolverSet),configurationProviderName,getThreadingProfile());
+  retryPolicyTemplate=parserDelegate.getInfrastructureParameter(RetryPolicyTemplate.class);
+  if (retryPolicyTemplate == null) {
+    retryPolicyTemplate=connectionManagerAdapter.getDefaultRetryPolicyTemplate();
+  }
+  ExtensionMessageSource messageSource=new ExtensionMessageSource(extensionModel,getSourceFactory(resolverSet),configurationProviderName,getThreadingProfile(),retryPolicyTemplate);
   muleContext.getInjector().inject(messageSource);
   return messageSource;
 }
