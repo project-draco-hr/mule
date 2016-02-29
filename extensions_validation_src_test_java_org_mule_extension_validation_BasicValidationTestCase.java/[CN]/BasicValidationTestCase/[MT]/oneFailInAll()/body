@@ -1,14 +1,11 @@
 {
-  try {
-    runFlow("all",getAllEvent(INVALID_EMAIL,VALID_URL));
-    fail("was expecting a failure");
-  }
- catch (  Exception e) {
-    Throwable root=ExceptionUtils.getRootCause(e);
-    assertThat(root,is(instanceOf(MultipleValidationException.class)));
-    MultipleValidationResult result=((MultipleValidationException)root).getMultipleValidationResult();
-    assertThat(result.getFailedValidationResults(),hasSize(1));
-    assertThat(result.isError(),is(true));
-    assertThat(result.getMessage(),is(messages.invalidEmail(INVALID_EMAIL).getMessage()));
-  }
+  FlowRunner runner=flowRunner("all");
+  cofigureGetAllRunner(runner,INVALID_EMAIL,VALID_URL);
+  Exception e=runner.runExpectingException();
+  Throwable root=ExceptionUtils.getRootCause(e);
+  assertThat(root,is(instanceOf(MultipleValidationException.class)));
+  MultipleValidationResult result=((MultipleValidationException)root).getMultipleValidationResult();
+  assertThat(result.getFailedValidationResults(),hasSize(1));
+  assertThat(result.isError(),is(true));
+  assertThat(result.getMessage(),is(messages.invalidEmail(INVALID_EMAIL).getMessage()));
 }

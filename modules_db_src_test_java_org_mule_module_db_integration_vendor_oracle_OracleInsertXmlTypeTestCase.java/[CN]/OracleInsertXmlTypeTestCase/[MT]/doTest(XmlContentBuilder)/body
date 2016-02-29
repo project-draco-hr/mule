@@ -3,12 +3,7 @@
   Connection connection=defaultDataSource.getConnection();
   try {
     testDatabase.executeUpdate(connection,"DELETE FROM ALIEN");
-    LocalMuleClient client=muleContext.getClient();
-    Map<String,Object> messageProperties=new HashMap<String,Object>();
-    messageProperties.put("name",Alien.ET.getName());
-    final DefaultMuleMessage muleMessage=new DefaultMuleMessage(TEST_MESSAGE,messageProperties,Collections.emptyMap(),Collections.emptyMap(),muleContext);
-    final DefaultMuleEvent muleEvent=new DefaultMuleEvent(muleMessage,MessageExchangePattern.REQUEST_RESPONSE,null);
-    final MuleEvent responseEvent=runFlow("insertXmlType",muleEvent);
+    final MuleEvent responseEvent=flowRunner("insertXmlType").withPayload(TEST_MESSAGE).withInboundProperty("name",Alien.ET.getName()).run();
     return responseEvent.getMessage();
   }
   finally {

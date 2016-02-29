@@ -1,11 +1,10 @@
 {
-  Flow flow=(Flow)getFlowConstruct("soapFaultWithCatchExceptionStrategy");
   ExceptionListener listener=new ExceptionListener(muleContext);
-  MuleMessage response=flow.process(getTestEvent(FAIL_REQUEST)).getMessage();
+  MuleMessage response=flowRunner("soapFaultWithCatchExceptionStrategy").withPayload(FAIL_REQUEST).run().getMessage();
   listener.waitUntilAllNotificationsAreReceived();
   assertXMLEqual(EXPECTED_SOAP_FAULT_DETAIL,getPayloadAsString(response));
   assertNull(response.getExceptionPayload());
   SoapFaultException soapFault=response.getOutboundProperty("soapFaultException");
-  assertTrue(soapFault.getMessage().startsWith("Hello"));
-  assertEquals("Server",soapFault.getFaultCode().getLocalPart());
+  assertThat(soapFault.getMessage(),startsWith("Hello"));
+  assertThat(soapFault.getFaultCode().getLocalPart(),is("Server"));
 }

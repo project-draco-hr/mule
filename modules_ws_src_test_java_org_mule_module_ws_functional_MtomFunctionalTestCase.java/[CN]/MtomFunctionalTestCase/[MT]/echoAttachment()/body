@@ -1,8 +1,5 @@
 {
   String request="<ns:echoAttachment xmlns:ns=\"http://consumer.ws.module.mule.org/\"><attachment>" + "<xop:Include xmlns:xop=\"http://www.w3.org/2004/08/xop/include\" href=\"cid:testAttachmentId\"/>" + "</attachment></ns:echoAttachment>";
-  Flow flow=(Flow)getFlowConstruct("clientEchoAttachment");
-  MuleEvent event=getTestEvent(request);
-  addAttachment(event.getMessage(),TEST_FILE_ATTACHMENT,"testAttachmentId");
-  event=flow.process(event);
+  MuleEvent event=flowRunner("clientEchoAttachment").withPayload(request).withOutboundAttachment("testAttachmentId",buildDataHandler(TEST_FILE_ATTACHMENT)).run();
   assertAttachmentInResponse(event.getMessage(),TEST_FILE_ATTACHMENT);
 }

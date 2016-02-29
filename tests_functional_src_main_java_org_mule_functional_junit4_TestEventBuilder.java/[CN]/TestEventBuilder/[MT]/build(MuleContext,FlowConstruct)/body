@@ -1,6 +1,9 @@
 {
-  final DefaultMuleMessage muleMessage=new DefaultMuleMessage(payload,inboundProperties,outboundProperties,Collections.emptyMap(),muleContext);
+  final DefaultMuleMessage muleMessage=new DefaultMuleMessage(payload,inboundProperties,outboundProperties,inboundAttachments,muleContext);
   DefaultMuleEvent event=new DefaultMuleEvent((DefaultMuleMessage)spyTransformer.transform(muleMessage),URI.create("none"),"none",exchangePattern,flow,new DefaultMuleSession(),muleContext.getConfiguration().getDefaultResponseTimeout(),null,null,"UTF-8",transacted,null,replyToHandler);
+  for (  Entry<String,Attachment> outboundAttachmentEntry : outboundAttachments.entrySet()) {
+    outboundAttachmentEntry.getValue().addOutboundTo(muleMessage,outboundAttachmentEntry.getKey());
+  }
   for (  Entry<String,Object> sessionPropertyEntry : sessionProperties.entrySet()) {
     muleMessage.setProperty(sessionPropertyEntry.getKey(),sessionPropertyEntry.getValue(),SESSION);
   }

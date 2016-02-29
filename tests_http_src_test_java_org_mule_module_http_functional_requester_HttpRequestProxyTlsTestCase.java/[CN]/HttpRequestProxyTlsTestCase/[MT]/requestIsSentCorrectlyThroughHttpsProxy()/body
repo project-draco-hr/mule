@@ -7,11 +7,7 @@
   }
 );
   proxyServer.start();
-  Flow flow=(Flow)getFlowConstruct("clientFlow");
-  MuleEvent event=getTestEvent(TEST_MESSAGE);
-  event.setFlowVariable("host",requestHost);
-  event.setFlowVariable("path",PATH);
-  event=flow.process(event);
+  MuleEvent event=flowRunner("clientFlow").withPayload(TEST_MESSAGE).withFlowVariable("host",requestHost).withFlowVariable("path",PATH).run();
   assertThat(requestPayload,equalTo(TEST_MESSAGE));
   assertThat(requestURI,equalTo(PATH));
   assertThat(event.getMessage().<Integer>getInboundProperty(HTTP_STATUS_PROPERTY),equalTo(OK.getStatusCode()));
