@@ -13,13 +13,16 @@
   entryComplexType.getAttributeOrAttributeGroup().add(keyAttribute);
   valueType.getQualifier().accept(new AbstractDataQualifierVisitor(){
     @Override public void onPojo(){
-      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,false,SUPPORTED));
-      ExplicitGroup singleItemSequence=new ExplicitGroup();
-      singleItemSequence.setMaxOccurs("1");
-      LocalComplexType itemComplexType=newLocalComplexTypeWithBase(valueType,description);
-      TopLevelElement itemElement=createTopLevelElement(NameUtils.getTopLevelTypeName(valueType),ZERO,"1",itemComplexType);
-      singleItemSequence.getParticle().add(objectFactory.createElement(itemElement));
-      entryComplexType.setSequence(singleItemSequence);
+      final boolean shouldGenerateChildElement=shouldGeneratePojoChildElements(valueType.getRawType());
+      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,!shouldGenerateChildElement,SUPPORTED));
+      if (shouldGenerateChildElement) {
+        ExplicitGroup singleItemSequence=new ExplicitGroup();
+        singleItemSequence.setMaxOccurs("1");
+        LocalComplexType itemComplexType=newLocalComplexTypeWithBase(valueType,description);
+        TopLevelElement itemElement=createTopLevelElement(NameUtils.getTopLevelTypeName(valueType),ZERO,"1",itemComplexType);
+        singleItemSequence.getParticle().add(objectFactory.createElement(itemElement));
+        entryComplexType.setSequence(singleItemSequence);
+      }
     }
     @Override public void onList(){
       entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,false,SUPPORTED));
