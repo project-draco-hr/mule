@@ -1,6 +1,6 @@
 {
   try {
-    EventGroup eventGroup=eventGroups.retrieve(groupId);
+    EventGroup eventGroup=(EventGroup)correlatorStore.retrieve(groupId,getEventGroupsPartitionKey());
     if (!eventGroup.isInitialised()) {
       try {
         DeserializationPostInitialisable.Implementation.init(eventGroup,muleContext);
@@ -9,6 +9,7 @@
         throw new ObjectStoreException(e);
       }
     }
+    eventGroup.initEventsStore(correlatorStore);
     return eventGroup;
   }
  catch (  ObjectDoesNotExistException e) {

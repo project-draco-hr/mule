@@ -1,0 +1,10 @@
+{
+  MuleClient client=muleContext.getClient();
+  List<String> list=Arrays.asList("first","second");
+  flowRunner("splitter").withPayload(list).run();
+  MuleMessageCollection request=(MuleMessageCollection)client.request("vm://out",10000);
+  assertNotNull(request);
+  assertEquals(list.size(),request.size());
+  assertThat(CustomPartitionableObjectStore.askedForKey,not(nullValue()));
+  assertThat(CustomPartitionableObjectStore.askedForPartition,not(nullValue()));
+}

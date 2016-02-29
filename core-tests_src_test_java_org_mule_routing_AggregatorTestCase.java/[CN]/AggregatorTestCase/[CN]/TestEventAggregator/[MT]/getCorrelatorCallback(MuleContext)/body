@@ -1,6 +1,6 @@
 {
   return new EventCorrelatorCallback(){
-    public boolean shouldAggregateEvents(    EventGroup events){
+    @Override public boolean shouldAggregateEvents(    EventGroup events){
       eventCount++;
       if (eventCount == eventThreshold) {
         eventCount=0;
@@ -8,10 +8,10 @@
       }
       return false;
     }
-    public EventGroup createEventGroup(    MuleEvent event,    Object groupId){
-      return new EventGroup(groupId,muleContext,eventThreshold,false,this.getClass().getName());
+    @Override public EventGroup createEventGroup(    MuleEvent event,    Object groupId){
+      return new EventGroup(groupId,muleContext,eventThreshold,storePrefix);
     }
-    public MuleEvent aggregateEvents(    EventGroup events) throws AggregationException {
+    @Override public MuleEvent aggregateEvents(    EventGroup events) throws AggregationException {
       if (events.size() != eventThreshold) {
         throw new IllegalStateException("eventThreshold not yet reached?");
       }

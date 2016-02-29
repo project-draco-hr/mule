@@ -5,16 +5,16 @@
   buf.append("id=").append(groupId);
   buf.append(", expected size=").append(expectedSize);
   try {
-synchronized (events) {
+synchronized (this) {
       int currentSize;
-      currentSize=events.allKeys().size();
+      currentSize=eventsObjectStore.allKeys(eventsPartitionKey).size();
       buf.append(", current events=").append(currentSize);
       if (currentSize > 0) {
         buf.append(" [");
-        Iterator<Serializable> i=events.allKeys().iterator();
+        Iterator<Serializable> i=eventsObjectStore.allKeys(eventsPartitionKey).iterator();
         while (i.hasNext()) {
           Serializable id=i.next();
-          buf.append(events.retrieve(id).getMessage().getUniqueId());
+          buf.append(eventsObjectStore.retrieve(id,eventsPartitionKey).getMessage().getUniqueId());
           if (i.hasNext()) {
             buf.append(", ");
           }

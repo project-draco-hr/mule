@@ -1,9 +1,9 @@
 {
   try {
-    for (    Serializable o : expiredAndDispatchedGroups.allKeys()) {
-      Long time=expiredAndDispatchedGroups.retrieve(o);
+    for (    Serializable o : (List<Serializable>)correlatorStore.allKeys(getExpiredAndDispatchedPartitionKey())) {
+      Long time=(Long)correlatorStore.retrieve(o,getExpiredAndDispatchedPartitionKey());
       if (time + groupTimeToLive < System.currentTimeMillis()) {
-        expiredAndDispatchedGroups.remove(o);
+        correlatorStore.remove(o,getExpiredAndDispatchedPartitionKey());
         logger.warn(MessageFormat.format("Discarding group {0}",o));
       }
     }
