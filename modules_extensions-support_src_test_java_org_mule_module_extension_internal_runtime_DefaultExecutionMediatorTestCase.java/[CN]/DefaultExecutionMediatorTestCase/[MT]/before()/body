@@ -1,14 +1,16 @@
 {
-  mediator=new DefaultExecutionMediator(new NullExceptionEnricher(),new DefaultConnectionManager(muleContext));
   when(configurationInstance.getStatistics()).thenReturn(configurationStats);
   when(configurationInstance.getName()).thenReturn(DUMMY_NAME);
   when(configurationInstance.getModel()).thenReturn(configurationModel);
   when(configurationModel.getExtensionModel()).thenReturn(extensionModel);
   when(extensionModel.getName()).thenReturn(DUMMY_NAME);
+  when(extensionModel.getExceptionEnricherFactory()).thenReturn(Optional.empty());
+  when(operationModel.getExceptionEnricherFactory()).thenReturn(Optional.empty());
   when(operationExecutor.execute(operationContext)).thenReturn(result);
   when(operationExceptionExecutor.execute(operationContext)).thenThrow(exception);
   when(operationContext.getConfiguration()).thenReturn(configurationInstance);
   when(operationContext.getConfiguration().getModel().getExtensionModel().getName()).thenReturn(DUMMY_NAME);
+  mediator=new DefaultExecutionMediator(extensionModel,operationModel,new DefaultConnectionManager(muleContext));
   final CachedConnectionProviderWrapper<Object,Object> connectionProviderWrapper=new CachedConnectionProviderWrapper<>(null,false,new SimpleRetryPolicyTemplate(10,RETRY_COUNT));
   LifecycleUtils.initialiseIfNeeded(connectionProviderWrapper,true,muleContext);
   Optional<ConnectionProvider> connectionProvider=Optional.of(connectionProviderWrapper);
