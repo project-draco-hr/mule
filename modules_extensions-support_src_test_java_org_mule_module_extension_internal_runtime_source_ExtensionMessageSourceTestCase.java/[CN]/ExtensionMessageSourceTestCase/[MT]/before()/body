@@ -3,10 +3,9 @@
   when(threadingProfile.createWorkManager(anyString(),eq(muleContext.getConfiguration().getShutdownTimeout()))).thenReturn(workManager);
   when(sourceFactory.createSource()).thenReturn(source);
   when(muleMessage.getMuleContext()).thenReturn(muleContext);
+  when(sourceModel.getExceptionEnricherFactory()).thenReturn(Optional.empty());
+  when(extensionModel.getExceptionEnricherFactory()).thenReturn(Optional.empty());
   LifecycleUtils.initialiseIfNeeded(retryPolicyTemplate,muleContext);
-  messageSource=new ExtensionMessageSource(extensionModel,sourceFactory,CONFIG_NAME,threadingProfile,retryPolicyTemplate);
-  messageSource.setListener(messageProcessor);
-  messageSource.setFlowConstruct(flowConstruct);
   muleContext.getRegistry().registerObject(OBJECT_EXTENSION_MANAGER,extensionManager);
-  muleContext.getInjector().inject(messageSource);
+  messageSource=getNewExtensionMessageSourceInstance();
 }
