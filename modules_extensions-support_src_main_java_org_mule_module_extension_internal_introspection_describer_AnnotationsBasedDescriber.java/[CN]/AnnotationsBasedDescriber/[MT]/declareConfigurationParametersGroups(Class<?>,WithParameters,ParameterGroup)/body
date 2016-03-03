@@ -7,12 +7,24 @@
     Set<ParameterDescriptor> parameters=declareSingleParameters(getExposedFields(field.getType()),with);
     if (!parameters.isEmpty()) {
       ParameterGroup group=new ParameterGroup(field.getType(),field);
+      PlacementModelProperty groupPlacement=null;
       groups.add(group);
+      if (field.isAnnotationPresent(Placement.class)) {
+        Placement placement=field.getAnnotation(Placement.class);
+        groupPlacement=new ImmutablePlacementModelProperty(placement.order(),placement.group(),placement.tab());
+      }
+ else {
+        groupPlacement=parent != null ? parent.getModelProperty(PlacementModelProperty.KEY) : null;
+      }
       for (      ParameterDescriptor descriptor : parameters) {
+        if (groupPlacement != null) {
+          group.addModelProperty(PlacementModelProperty.KEY,groupPlacement);
+          descriptor.withModelProperty(PlacementModelProperty.KEY,groupPlacement);
+        }
         ParameterDeclaration parameter=descriptor.getDeclaration();
         group.addParameter(parameter.getName(),getField(field.getType(),getMemberName(parameter,parameter.getName()),parameter.getType().getRawType()));
       }
-      List<ParameterGroup> childGroups=declareConfigurationParametersGroups(field.getType(),with);
+      List<ParameterGroup> childGroups=declareConfigurationParametersGroups(field.getType(),with,group);
       if (!CollectionUtils.isEmpty(childGroups)) {
         group.addModelProperty(ParameterGroupModelProperty.KEY,new ParameterGroupModelProperty(childGroups));
       }
