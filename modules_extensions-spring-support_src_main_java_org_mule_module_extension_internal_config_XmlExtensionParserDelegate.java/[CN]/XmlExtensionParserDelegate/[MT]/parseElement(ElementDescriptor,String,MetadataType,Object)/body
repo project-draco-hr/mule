@@ -1,0 +1,49 @@
+{
+  final String hyphenizedFieldName=hyphenize(fieldName);
+  final String singularName=singularize(hyphenizedFieldName);
+  final ValueHolder<ValueResolver> resolverReference=new ValueHolder<>();
+  metadataType.accept(new MetadataTypeVisitor(){
+    /** 
+ * An attribute of a generic type
+ */
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      resolverReference.set(getResolverFromValue(getAttributeValue(element,fieldName,defaultValue),metadataType));
+    }
+    /** 
+ * A collection type. Might be defined in an inner element or referenced
+ * from an attribute
+ */
+    @Override public void visitArrayType(    ArrayType arrayType){
+      resolverReference.set(parseCollection(element,fieldName,hyphenizedFieldName,singularName,defaultValue,arrayType));
+    }
+    /** 
+ * A map type. Might be defined in an inner element or referenced
+ * from an attribute
+ */
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      final String pluralName=pluralize(hyphenizedFieldName);
+      String parentName;
+      String childname;
+      if (StringUtils.equals(pluralName,hyphenizedFieldName)) {
+        parentName=hyphenizedFieldName;
+        childname=singularName;
+      }
+ else {
+        parentName=pluralName;
+        childname=hyphenizedFieldName;
+      }
+      resolverReference.set(parseMap(element,fieldName,parentName,childname,defaultValue,dictionaryType));
+    }
+    @Override public void visitObject(    ObjectType objectType){
+      resolverReference.set(parsePojo(element,fieldName,hyphenizedFieldName,objectType,defaultValue));
+    }
+    @Override public void visitDateTime(    DateTimeType dateTimeType){
+      resolverReference.set(parseCalendar(element,fieldName,dateTimeType,defaultValue));
+    }
+    @Override public void visitDate(    DateType dateType){
+      resolverReference.set(parseDate(element,fieldName,dateType,defaultValue));
+    }
+  }
+);
+  return resolverReference.get();
+}

@@ -1,0 +1,20 @@
+{
+  final LocalComplexType collectionComplexType=new LocalComplexType();
+  final ExplicitGroup sequence=new ExplicitGroup();
+  collectionComplexType.setSequence(sequence);
+  final TopLevelElement collectionItemElement=createTopLevelElement(name,ZERO,SchemaConstants.UNBOUNDED);
+  final MetadataType genericType=metadataType.getType();
+  genericType.accept(new MetadataTypeVisitor(){
+    @Override public void visitObject(    ObjectType objectType){
+      collectionItemElement.setComplexType(newLocalComplexTypeWithBase(objectType,description));
+    }
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      LocalComplexType complexType=new LocalComplexType();
+      complexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,genericType,true,SUPPORTED));
+      collectionItemElement.setComplexType(complexType);
+    }
+  }
+);
+  sequence.getParticle().add(objectFactory.createElement(collectionItemElement));
+  return collectionComplexType;
+}

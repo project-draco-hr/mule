@@ -1,0 +1,19 @@
+{
+  parameterType.accept(new MetadataTypeVisitor(){
+    @Override public void visitObject(    ObjectType objectType){
+      String name=hyphenize(getTopLevelTypeName(objectType));
+      if (topLevelParameters.put(extensionModel,name)) {
+        registerParser(name,new TopLevelParameterTypeBeanDefinitionParser(parameterType));
+      }
+    }
+    @Override public void visitArrayType(    ArrayType arrayType){
+      registerTopLevelParameter(extensionModel,arrayType.getType());
+    }
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      MetadataType keyType=dictionaryType.getKeyType();
+      keyType.accept(this);
+      registerTopLevelParameter(extensionModel,keyType);
+    }
+  }
+);
+}

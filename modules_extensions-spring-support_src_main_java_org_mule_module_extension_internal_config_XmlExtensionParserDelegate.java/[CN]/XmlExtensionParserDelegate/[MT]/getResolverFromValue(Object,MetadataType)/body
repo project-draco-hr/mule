@@ -1,0 +1,28 @@
+{
+  if (isExpressionFunction(expectedType) && value != null) {
+    return new ExpressionFunctionValueResolver<>((String)value,getGenericTypeAt((ObjectType)expectedType,1).get());
+  }
+  final Class<Object> expectedClass=getType(expectedType);
+  if (isExpression(value,parser)) {
+    return new TypeSafeExpressionValueResolver((String)value,expectedClass);
+  }
+  if (value != null) {
+    final ValueHolder<ValueResolver> resolverValueHolder=new ValueHolder<>();
+    expectedType.accept(new BasicTypeMetadataVisitor(){
+      @Override protected void visitBasicType(      MetadataType metadataType){
+        if (conversionService.canConvert(value.getClass(),expectedClass)) {
+          resolverValueHolder.set(new StaticValueResolver(conversionService.convert(value,expectedClass)));
+        }
+ else {
+          defaultVisit(metadataType);
+        }
+      }
+      @Override protected void defaultVisit(      MetadataType metadataType){
+        resolverValueHolder.set(new RegistryLookupValueResolver(value.toString()));
+      }
+    }
+);
+    return resolverValueHolder.get();
+  }
+  return null;
+}

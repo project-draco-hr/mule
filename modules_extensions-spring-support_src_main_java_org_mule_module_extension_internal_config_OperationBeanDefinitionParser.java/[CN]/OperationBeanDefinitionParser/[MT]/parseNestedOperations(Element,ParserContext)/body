@@ -1,16 +1,20 @@
 {
   final ManagedMap<String,ManagedList<MessageProcessor>> nestedOperations=new ManagedMap<>();
   for (  final ParameterModel parameterModel : operationModel.getParameterModels()) {
-    final DataType type=parameterModel.getType();
-    type.getQualifier().accept(new AbstractDataQualifierVisitor(){
-      @Override public void onOperation(){
-        nestedOperations.put(parameterModel.getName(),parseNestedProcessor(element,parameterModel,parserContext));
-      }
-      @Override public void onList(){
-        DataType[] generics=type.getGenericTypes();
-        if (!ArrayUtils.isEmpty(generics) && generics[0].getQualifier() == DataQualifier.OPERATION) {
+    final MetadataType type=parameterModel.getType();
+    type.accept(new MetadataTypeVisitor(){
+      @Override public void visitObject(      ObjectType objectType){
+        if (isOperation(objectType)) {
           nestedOperations.put(parameterModel.getName(),parseNestedProcessor(element,parameterModel,parserContext));
         }
+      }
+      @Override public void visitArrayType(      ArrayType arrayType){
+        if (isOperation(arrayType.getType())) {
+          nestedOperations.put(parameterModel.getName(),parseNestedProcessor(element,parameterModel,parserContext));
+        }
+      }
+      private boolean isOperation(      MetadataType metadataType){
+        return NestedProcessor.class.isAssignableFrom(JavaTypeUtils.getType(metadataType));
       }
     }
 );
