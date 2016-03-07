@@ -1,15 +1,15 @@
 {
   Configuration configuration=context.getConfiguration();
-  if (!(configuration.getConfigurationMonitor() instanceof FileConfigurationMonitor)) {
-    File configFile=null;
-    if (context.getConfigFile() != null) {
-      configFile=new File(context.getConfigFile().getPath());
-    }
- else     if (!StringUtils.isEmpty(configuration.getName())) {
-      configFile=new File(configuration.getName());
-    }
-    if (configFile != null && configuration instanceof Reconfigurable) {
-      configuration.setConfigurationMonitor(new FileConfigurationMonitor((Reconfigurable)configuration,configFile,getListeners(configuration),DEFAULT_MONITOR_INTERVAL_SECS));
-    }
+  File configFile=null;
+  if (context.getConfigFile() != null) {
+    configFile=new File(context.getConfigFile().getPath());
+  }
+ else   if (!StringUtils.isEmpty(configuration.getName())) {
+    configFile=new File(configuration.getName());
+  }
+  if (configFile != null && configuration instanceof Reconfigurable) {
+    configuration.getWatchManager().setIntervalSeconds(DEFAULT_MONITOR_INTERVAL_SECS);
+    FileWatcher watcher=new ConfiguratonFileWatcher((Reconfigurable)configuration,getListeners(configuration));
+    configuration.getWatchManager().watchFile(configFile,watcher);
   }
 }
