@@ -11,14 +11,13 @@
   final ExplicitGroup all=new ExplicitGroup();
   complexContentExtension.setSequence(all);
   for (  final ParameterModel parameterModel : parametrizedModel.getParameterModels()) {
-    DataType parameterType=parameterModel.getType();
-    DataQualifier parameterQualifier=parameterType.getQualifier();
+    MetadataType parameterType=parameterModel.getType();
     if (isOperation(parameterType)) {
-      String maxOccurs=parameterQualifier == DataQualifier.LIST ? UNBOUNDED : "1";
+      String maxOccurs=parameterType instanceof ArrayType ? UNBOUNDED : "1";
       generateNestedProcessorElement(all,parameterModel,maxOccurs);
     }
  else {
-      parameterQualifier.accept(getParameterDeclarationVisitor(complexContentExtension,all,parameterModel));
+      parameterType.accept(getParameterDeclarationVisitor(complexContentExtension,all,parameterModel));
     }
   }
   if (all.getParticle().size() == 0) {

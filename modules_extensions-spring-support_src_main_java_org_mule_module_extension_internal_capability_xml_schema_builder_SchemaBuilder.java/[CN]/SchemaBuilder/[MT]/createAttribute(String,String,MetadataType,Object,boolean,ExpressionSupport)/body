@@ -1,0 +1,37 @@
+{
+  final Attribute attribute=new Attribute();
+  attribute.setUse(required ? SchemaConstants.USE_REQUIRED : SchemaConstants.USE_OPTIONAL);
+  attribute.setAnnotation(createDocAnnotation(description));
+  if (defaultValue instanceof String && StringUtils.isNotBlank(defaultValue.toString())) {
+    attribute.setDefault(defaultValue.toString());
+  }
+  type.accept(new MetadataTypeVisitor(){
+    @Override public void visitString(    StringType stringType){
+      Optional<EnumAnnotation> enumAnnotation=MetadataTypeUtils.getSingleAnnotation(stringType,EnumAnnotation.class);
+      if (enumAnnotation.isPresent()) {
+        visitEnum(stringType);
+      }
+ else {
+        defaultVisit(stringType);
+      }
+    }
+    private void visitEnum(    StringType stringType){
+      attribute.setName(name);
+      Class<? extends Enum> enumType;
+      try {
+        enumType=getType(stringType);
+      }
+ catch (      Exception e) {
+        throw new IllegalParameterModelDefinitionException(String.format("Parameter '%s' refers to an enum class which couldn't be loaded.",name),e);
+      }
+      attribute.setType(new QName(schema.getTargetNamespace(),enumType.getName() + SchemaConstants.ENUM_TYPE_SUFFIX));
+      registeredEnums.add(enumType);
+    }
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      attribute.setName(name);
+      attribute.setType(SchemaTypeConversion.convertType(type,expressionSupport));
+    }
+  }
+);
+  return attribute;
+}

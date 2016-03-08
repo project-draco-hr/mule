@@ -1,22 +1,22 @@
 {
-  List<ParsedParameter> descriptors=MuleExtensionAnnotationParser.parseParameters(method);
+  List<ParsedParameter> descriptors=MuleExtensionAnnotationParser.parseParameters(method,typeLoader);
   checkAnnotationIsNotUsedMoreThanOnce(method,operation,UseConfig.class);
   checkAnnotationIsNotUsedMoreThanOnce(method,operation,Connection.class);
   for (  ParsedParameter parsedParameter : descriptors) {
     if (parsedParameter.isAdvertised()) {
       ParameterDescriptor parameter=parsedParameter.isRequired() ? operation.with().requiredParameter(parsedParameter.getName()) : operation.with().optionalParameter(parsedParameter.getName()).defaultingTo(parsedParameter.getDefaultValue());
-      parameter.withExpressionSupport(IntrospectionUtils.getExpressionSupport(parsedParameter));
+      parameter.withExpressionSupport(IntrospectionUtils.getExpressionSupport(parsedParameter.getAnnotation(Expression.class)));
       parameter.describedAs(EMPTY).ofType(parsedParameter.getType());
       addTypeRestrictions(parameter,parsedParameter);
       parseDisplayAnnotations(parsedParameter,parameter);
     }
     Connection connectionAnnotation=parsedParameter.getAnnotation(Connection.class);
     if (connectionAnnotation != null) {
-      operation.withModelProperty(ConnectionTypeModelProperty.KEY,new ConnectionTypeModelProperty(parsedParameter.getType().getRawType()));
+      operation.withModelProperty(ConnectionTypeModelProperty.KEY,new ConnectionTypeModelProperty(getType(parsedParameter.getType(),typeLoader.getClassLoader())));
     }
     UseConfig useConfig=parsedParameter.getAnnotation(UseConfig.class);
     if (useConfig != null) {
-      operation.withModelProperty(ConfigTypeModelProperty.KEY,new ConfigTypeModelProperty(parsedParameter.getType().getRawType()));
+      operation.withModelProperty(ConfigTypeModelProperty.KEY,new ConfigTypeModelProperty(getType(parsedParameter.getType())));
     }
   }
 }

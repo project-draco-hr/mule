@@ -1,49 +1,51 @@
 {
-  return new AbstractDataQualifierVisitor(){
+  return new MetadataTypeVisitor(){
     private boolean forceOptional=false;
-    @Override public void onList(){
-      DataType genericType=parameterModel.getType().getGenericTypes()[0];
-      forceOptional=shouldForceOptional(genericType.getRawType());
-      defaultOperation();
+    @Override public void visitArrayType(    ArrayType arrayType){
+      MetadataType genericType=arrayType.getType();
+      forceOptional=shouldForceOptional(getType(genericType));
+      defaultVisit(arrayType);
       if (shouldGenerateDataTypeChildElements(genericType,parameterModel)) {
         generateCollectionElement(all,parameterModel,true);
       }
     }
-    @Override public void onMap(){
-      DataType genericType=parameterModel.getType().getGenericTypes()[0];
-      forceOptional=shouldForceOptional(genericType.getRawType());
-      defaultOperation();
-      if (shouldGenerateDataTypeChildElements(genericType,parameterModel)) {
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      MetadataType keyType=dictionaryType.getKeyType();
+      forceOptional=shouldForceOptional(getType(keyType));
+      defaultVisit(dictionaryType);
+      if (shouldGenerateDataTypeChildElements(keyType,parameterModel)) {
         generateMapElement(all,parameterModel,true);
       }
     }
-    @Override public void onPojo(){
-      forceOptional=shouldForceOptional(parameterModel.getType().getRawType());
-      if (TlsContextFactory.class.isAssignableFrom(parameterModel.getType().getRawType())) {
+    @Override public void visitObject(    ObjectType objectType){
+      final Class<?> clazz=getType(objectType);
+      forceOptional=shouldForceOptional(clazz);
+      if (TlsContextFactory.class.isAssignableFrom(clazz)) {
         addTlsSupport(extensionType,all);
         return;
       }
-      defaultOperation();
+      defaultVisit(objectType);
       if (ExpressionSupport.REQUIRED != parameterModel.getExpressionSupport()) {
-        if (shouldGeneratePojoChildElements(parameterModel.getType().getRawType())) {
-          registerComplexTypeChildElement(all,parameterModel.getName(),parameterModel.getDescription(),parameterModel.getType(),false);
+        if (shouldGeneratePojoChildElements(clazz)) {
+          registerComplexTypeChildElement(all,parameterModel.getName(),parameterModel.getDescription(),objectType,false);
         }
       }
  else {
-        registerPojoType(parameterModel.getType(),parameterModel.getDescription());
+        registerPojoType(objectType,parameterModel.getDescription());
       }
     }
-    @Override protected void defaultOperation(){
+    @Override protected void defaultVisit(    MetadataType metadataType){
       extensionType.getAttributeOrAttributeGroup().add(createAttribute(parameterModel,isRequired(parameterModel,forceOptional)));
     }
-    private boolean shouldGenerateDataTypeChildElements(    DataType type,    ParameterModel parameterModel){
-      if (type == null) {
+    private boolean shouldGenerateDataTypeChildElements(    MetadataType metadataType,    ParameterModel parameterModel){
+      if (metadataType == null) {
         return false;
       }
       boolean isExpressionRequired=ExpressionSupport.REQUIRED == parameterModel.getExpressionSupport();
-      boolean isPojo=type.getQualifier().equals(POJO);
-      boolean isPrimitive=type.getRawType().isPrimitive() || ClassUtils.isPrimitiveWrapper(type.getRawType());
-      return !isExpressionRequired && (isPrimitive || (isPojo && shouldGeneratePojoChildElements(type.getRawType())) || (!isPojo && isInstantiable(type.getRawType())));
+      boolean isPojo=metadataType instanceof ObjectType;
+      Class<?> clazz=getType(metadataType);
+      boolean isPrimitive=clazz.isPrimitive() || ClassUtils.isPrimitiveWrapper(clazz);
+      return !isExpressionRequired && (isPrimitive || (isPojo && shouldGeneratePojoChildElements(clazz)) || (!isPojo && isInstantiable(clazz)));
     }
     private boolean shouldGeneratePojoChildElements(    Class<?> type){
       return IntrospectionUtils.isInstantiable(type) && !getExposedFields(type).isEmpty();
