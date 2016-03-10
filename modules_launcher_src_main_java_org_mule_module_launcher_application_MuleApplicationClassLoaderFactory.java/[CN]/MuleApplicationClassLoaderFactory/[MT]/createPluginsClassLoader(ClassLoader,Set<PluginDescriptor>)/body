@@ -1,0 +1,12 @@
+{
+  List<ClassLoader> classLoaders=new LinkedList<>();
+  classLoaders.add(parent);
+  for (  PluginDescriptor descriptor : plugins) {
+    URL[] urls=new URL[descriptor.getRuntimeLibs().length + 1];
+    urls[0]=descriptor.getRuntimeClassesDir();
+    System.arraycopy(descriptor.getRuntimeLibs(),0,urls,1,descriptor.getRuntimeLibs().length);
+    final MuleArtifactClassLoader pluginClassLoader=new MuleArtifactClassLoader(descriptor.getName(),urls,parent,descriptor.getLoaderOverrides());
+    classLoaders.add(pluginClassLoader);
+  }
+  return new CompositeClassLoader(parent,classLoaders);
+}

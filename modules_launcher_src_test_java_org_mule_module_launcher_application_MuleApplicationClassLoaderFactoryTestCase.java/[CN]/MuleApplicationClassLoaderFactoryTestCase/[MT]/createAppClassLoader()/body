@@ -1,0 +1,21 @@
+{
+  previousMuleHome=System.setProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY,tempMuleHome.getRoot().getAbsolutePath());
+  List<URL> urls=new LinkedList<>();
+  File classesDir=getAppClassesFolder(APP_NAME);
+  Assert.assertThat(classesDir.mkdirs(),is(true));
+  FileUtils.stringToFile(new File(classesDir,RESOURCE_IN_CLASSES_AND_JAR).getAbsolutePath(),"Some text");
+  FileUtils.stringToFile(new File(classesDir,RESOURCE_JUST_IN_CLASSES).getAbsolutePath(),"Some text");
+  urls.add(classesDir.toURI().toURL());
+  File libDir=getAppLibFolder(APP_NAME);
+  Assert.assertThat(libDir.mkdirs(),is(true));
+  URL resourceSrcJarFile=Thread.currentThread().getContextClassLoader().getResource("test-jar-with-resources.jar");
+  assertNotNull(resourceSrcJarFile);
+  File srcJarFile=new File(resourceSrcJarFile.getFile());
+  jarFile=new File(libDir,"test-jar-with-resources.jar");
+  FileUtils.copyFile(srcJarFile,jarFile,false);
+  urls.add(jarFile.toURI().toURL());
+  File domainDir=MuleFoldersUtil.getDomainFolder(DOMAIN_NAME);
+  Assert.assertThat(domainDir.mkdirs(),is(true));
+  FileUtils.stringToFile(new File(domainDir,RESOURCE_JUST_IN_DOMAIN).getAbsolutePath(),"Some text");
+  domainCL=new MuleSharedDomainClassLoader(DOMAIN_NAME,Thread.currentThread().getContextClassLoader());
+}

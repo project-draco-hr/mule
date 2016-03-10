@@ -1,19 +1,13 @@
 {
-  final String domain=descriptor.getDomain();
-  ClassLoader parent;
-  if (domain == null) {
-    parent=domainClassLoaderRepository.getDefaultDomainClassLoader().getClassLoader();
+  ClassLoader parent=getParentClassLoader(descriptor);
+  List<URL> urls=new LinkedList<>();
+  try {
+    urls.add(MuleFoldersUtil.getAppClassesFolder(descriptor.getName()).toURI().toURL());
+    urls.addAll(findJars(descriptor.getName(),MuleFoldersUtil.getAppLibFolder(descriptor.getName()),true));
+    urls.addAll(findJars(descriptor.getName(),MuleFoldersUtil.getMulePerAppLibFolder(),true));
   }
- else {
-    parent=domainClassLoaderRepository.getDomainClassLoader(domain).getClassLoader();
+ catch (  IOException e) {
+    throw new RuntimeException("Unable to create classloader for application",e);
   }
-  final Set<PluginDescriptor> plugins=descriptor.getPlugins();
-  if (!plugins.isEmpty()) {
-    URL[] pluginLibs=descriptor.getSharedPluginLibs();
-    if (pluginLibs != null && pluginLibs.length != 0) {
-      parent=new GoodCitizenClassLoader(pluginLibs,parent);
-    }
-    parent=new MulePluginsClassLoader(parent,plugins);
-  }
-  return new MuleApplicationClassLoader(descriptor.getName(),parent,descriptor.getLoaderOverrides(),nativeLibraryFinderFactory.create(descriptor.getName()));
+  return new MuleApplicationClassLoader(descriptor.getName(),parent,descriptor.getLoaderOverrides(),nativeLibraryFinderFactory.create(descriptor.getName()),urls);
 }
