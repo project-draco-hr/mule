@@ -25,8 +25,22 @@
         pd.setLoaderOverride(values);
       }
     }
-    PluginClasspath cp=PluginClasspath.from(tmpDir);
-    pd.setClasspath(cp);
+    try {
+      pd.setRuntimeClassesDir(new File(tmpDir,"classes").toURI().toURL());
+      final File libDir=new File(tmpDir,"lib");
+      URL[] urls=new URL[0];
+      if (libDir.exists()) {
+        final File[] jars=libDir.listFiles((FilenameFilter)new SuffixFileFilter(".jar"));
+        urls=new URL[jars.length];
+        for (int i=0; i < jars.length; i++) {
+          urls[i]=jars[i].toURI().toURL();
+        }
+      }
+      pd.setRuntimeLibs(urls);
+    }
+ catch (    MalformedURLException e) {
+      throw new IllegalArgumentException("Failed to create plugin descriptor " + tmpDir);
+    }
     pds.add(pd);
   }
   return pds;

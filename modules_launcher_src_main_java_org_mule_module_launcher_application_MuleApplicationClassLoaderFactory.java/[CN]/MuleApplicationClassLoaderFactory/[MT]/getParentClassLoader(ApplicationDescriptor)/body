@@ -1,0 +1,19 @@
+{
+  final String domain=descriptor.getDomain();
+  ClassLoader parent;
+  if (domain == null) {
+    parent=domainClassLoaderRepository.getDefaultDomainClassLoader().getClassLoader();
+  }
+ else {
+    parent=domainClassLoaderRepository.getDomainClassLoader(domain).getClassLoader();
+  }
+  final Set<PluginDescriptor> plugins=descriptor.getPlugins();
+  if (!plugins.isEmpty()) {
+    URL[] pluginLibs=descriptor.getSharedPluginLibs();
+    if (pluginLibs != null && pluginLibs.length != 0) {
+      parent=new GoodCitizenClassLoader(pluginLibs,parent);
+    }
+    parent=createPluginsClassLoader(parent,plugins);
+  }
+  return parent;
+}
