@@ -1,3 +1,12 @@
 {
-  return (ConnectionHandlingStrategyAdapter<Config,Connection>)connectionProvider.getHandlingStrategy(new DefaultConnectionHandlingStrategyFactory(config,connectionProvider,muleContext));
+  PoolingProfile poolingProfile;
+  if (connectionProvider instanceof ConnectionProviderWrapper) {
+    poolingProfile=((ConnectionProviderWrapper)connectionProvider).getPoolingProfile().orElse(getDefaultPoolingProfile());
+  }
+ else {
+    poolingProfile=getDefaultPoolingProfile();
+  }
+  ConnectionHandlingStrategyFactory<Config,Connection> connectionHandlingStrategyFactory;
+  connectionHandlingStrategyFactory=new DefaultConnectionHandlingStrategyFactory<>(config,connectionProvider,poolingProfile,muleContext);
+  return (ConnectionHandlingStrategyAdapter<Config,Connection>)connectionProvider.getHandlingStrategy(connectionHandlingStrategyFactory);
 }
