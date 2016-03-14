@@ -1,11 +1,11 @@
 {
-  RequireNameField property=configurationModel.getModelProperty(RequireNameField.KEY);
+  RequireNameField property=configurationModel.getModelProperty(RequireNameField.class).orElse(null);
   if (property == null) {
     return;
   }
   final Field configNameField=property.getConfigNameField();
   if (!configNameField.getDeclaringClass().isInstance(configValue)) {
-    throw new RuntimeException("otup[");
+    throw new IllegalConfigurationModelDefinitionException(String.format("Config field name '%s' is not declared on config class '%s'",configNameField.toString(),configValue.getClass().getName()));
   }
   configNameField.setAccessible(true);
   setField(configNameField,configValue,name);
