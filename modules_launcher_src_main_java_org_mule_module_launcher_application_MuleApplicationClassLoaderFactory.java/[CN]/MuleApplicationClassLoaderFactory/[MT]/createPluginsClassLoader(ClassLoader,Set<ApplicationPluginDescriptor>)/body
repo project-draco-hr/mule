@@ -1,0 +1,13 @@
+{
+  List<ClassLoader> classLoaders=new LinkedList<>();
+  classLoaders.add(parent);
+  for (  ApplicationPluginDescriptor descriptor : plugins) {
+    URL[] urls=new URL[descriptor.getRuntimeLibs().length + 1];
+    urls[0]=descriptor.getRuntimeClassesDir();
+    System.arraycopy(descriptor.getRuntimeLibs(),0,urls,1,descriptor.getRuntimeLibs().length);
+    final MuleArtifactClassLoader pluginClassLoader=new MuleArtifactClassLoader(descriptor.getName(),urls,parent,descriptor.getLoaderOverrides());
+    ArtifactClassLoaderFilter filter=new ArtifactClassLoaderFilter(descriptor);
+    classLoaders.add(new FilteringArtifactClassLoader(descriptor.getName(),pluginClassLoader,filter));
+  }
+  return new CompositeClassLoader(parent,classLoaders);
+}

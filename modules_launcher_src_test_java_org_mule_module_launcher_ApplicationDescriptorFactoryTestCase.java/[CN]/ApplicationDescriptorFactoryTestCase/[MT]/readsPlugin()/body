@@ -1,0 +1,17 @@
+{
+  File pluginDir=getAppPluginsFolder(APP_NAME);
+  pluginDir.mkdirs();
+  copyResourceAs("plugins/groovy-plugin.zip",pluginDir,"groovy-plugin1.zip");
+  copyResourceAs("plugins/groovy-plugin.zip",pluginDir,"groovy-plugin2.zip");
+  final ApplicationDescriptorFactory applicationDescriptorFactory=new ApplicationDescriptorFactory();
+  final ApplicationPluginDescriptorFactory pluginDescriptorFactory=mock(ApplicationPluginDescriptorFactory.class);
+  final ApplicationPluginDescriptor expectedPluginDescriptor1=mock(ApplicationPluginDescriptor.class);
+  final ApplicationPluginDescriptor expectedPluginDescriptor2=mock(ApplicationPluginDescriptor.class);
+  when(pluginDescriptorFactory.create(any())).thenReturn(expectedPluginDescriptor1).thenReturn(expectedPluginDescriptor2);
+  applicationDescriptorFactory.setPluginDescriptorFactory(pluginDescriptorFactory);
+  ApplicationDescriptor desc=applicationDescriptorFactory.create(getAppFolder(APP_NAME));
+  Set<ApplicationPluginDescriptor> plugins=desc.getPlugins();
+  assertThat(plugins.size(),equalTo(2));
+  assertThat(plugins,hasItem(equalTo(expectedPluginDescriptor1)));
+  assertThat(plugins,hasItem(equalTo(expectedPluginDescriptor2)));
+}
