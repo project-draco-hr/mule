@@ -1,0 +1,35 @@
+{
+  if (!artifactFolder.exists()) {
+    throw new IllegalArgumentException(format("Application directory does not exist: '%s'",artifactFolder));
+  }
+  final String appName=artifactFolder.getName();
+  @SuppressWarnings("unchecked") Collection<File> deployFiles=FileUtils.listFiles(artifactFolder,new WildcardFileFilter("mule-deploy.*"),null);
+  if (deployFiles.size() > 1) {
+    throw new ArtifactDescriptorCreateException(format("More than one mule-deploy descriptors found in application '%s'",appName));
+  }
+  ApplicationDescriptor desc;
+  try {
+    if (deployFiles.isEmpty()) {
+      desc=new EmptyApplicationDescriptor(appName);
+    }
+ else {
+      final File descriptorFile=deployFiles.iterator().next();
+      final String ext=FilenameUtils.getExtension(descriptorFile.getName());
+      final DescriptorParser descriptorParser=parserRegistry.get(ext);
+      if (descriptorParser == null) {
+        throw new ArtifactDescriptorCreateException(format("Unsupported deployment descriptor format for app '%s': %s",appName,ext));
+      }
+      desc=descriptorParser.parse(descriptorFile,appName);
+      desc.setName(appName);
+    }
+    final File appPropsFile=new File(artifactFolder,ApplicationDescriptor.DEFAULT_APP_PROPERTIES_RESOURCE);
+    setApplicationProperties(desc,appPropsFile);
+    final Set<ApplicationPluginDescriptor> plugins=parsePluginDescriptors(artifactFolder,desc);
+    desc.setPlugins(plugins);
+    desc.setSharedPluginLibs(findSharedPluginLibs(appName));
+  }
+ catch (  IOException e) {
+    throw new ArtifactDescriptorCreateException("Unable to create application descriptor",e);
+  }
+  return desc;
+}

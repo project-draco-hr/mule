@@ -1,0 +1,17 @@
+{
+  final File pluginsDir=new File(appDir,MuleFoldersUtil.PLUGINS_FOLDER);
+  String[] pluginZips=pluginsDir.list(new SuffixFileFilter(".zip"));
+  if (pluginZips == null || pluginZips.length == 0) {
+    return Collections.emptySet();
+  }
+  Arrays.sort(pluginZips);
+  Set<ApplicationPluginDescriptor> pds=new HashSet<>(pluginZips.length);
+  for (  String pluginZip : pluginZips) {
+    final String pluginName=StringUtils.removeEnd(pluginZip,".zip");
+    final File tmpDir=new File(MuleContainerBootstrapUtils.getMuleTmpDir(),appDescriptor.getName() + "/plugins/" + pluginName);
+    FileUtils.unzip(new File(pluginsDir,pluginZip),tmpDir);
+    final ApplicationPluginDescriptor pd=pluginDescriptorFactory.create(tmpDir);
+    pds.add(pd);
+  }
+  return pds;
+}

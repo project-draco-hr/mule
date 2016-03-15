@@ -1,0 +1,47 @@
+{
+  final String pluginName=pluginFolder.getName();
+  final ApplicationPluginDescriptor descriptor=new ApplicationPluginDescriptor();
+  descriptor.setRootFolder(pluginFolder);
+  descriptor.setName(pluginName);
+  final File pluginPropsFile=new File(pluginFolder,PLUGIN_PROPERTIES);
+  if (pluginPropsFile.exists()) {
+    Properties props=new Properties();
+    try {
+      props.load(new FileReader(pluginPropsFile));
+    }
+ catch (    IOException e) {
+      throw new ArtifactDescriptorCreateException("Cannot read plugin.properties file",e);
+    }
+    final String overrideString=props.getProperty(PROPERTY_LOADER_OVERRIDE);
+    if (StringUtils.isNotBlank(overrideString)) {
+      Set<String> values=new HashSet<>();
+      final String[] overrides=overrideString.split(",");
+      Collections.addAll(values,overrides);
+      descriptor.setLoaderOverride(values);
+    }
+    String exportedClasses=props.getProperty(PROPERTY_LOADER_EXPORTED);
+    if (StringUtils.isNotBlank(exportedClasses)) {
+      Set<String> values=new HashSet<>();
+      final String[] exports=exportedClasses.split(",");
+      Collections.addAll(values,exports);
+      descriptor.setExportedPrefixNames(values);
+    }
+  }
+  try {
+    descriptor.setRuntimeClassesDir(new File(pluginFolder,"classes").toURI().toURL());
+    final File libDir=new File(pluginFolder,"lib");
+    URL[] urls=new URL[0];
+    if (libDir.exists()) {
+      final File[] jars=libDir.listFiles((FilenameFilter)new SuffixFileFilter(".jar"));
+      urls=new URL[jars.length];
+      for (int i=0; i < jars.length; i++) {
+        urls[i]=jars[i].toURI().toURL();
+      }
+    }
+    descriptor.setRuntimeLibs(urls);
+  }
+ catch (  MalformedURLException e) {
+    throw new ArtifactDescriptorCreateException("Failed to create plugin descriptor " + pluginFolder);
+  }
+  return descriptor;
+}
