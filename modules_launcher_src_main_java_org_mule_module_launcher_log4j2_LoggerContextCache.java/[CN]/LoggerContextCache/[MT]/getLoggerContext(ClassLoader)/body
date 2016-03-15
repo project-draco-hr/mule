@@ -1,13 +1,20 @@
 {
   final LoggerContext ctx;
   try {
-    final int key=computeKey(classLoader);
-    ctx=activeContexts.get(key,new Callable<LoggerContext>(){
-      @Override public LoggerContext call() throws Exception {
-        return artifactAwareContextSelector.buildContext(classLoader);
+    final Integer key=computeKey(classLoader);
+    if (builtContexts.containsKey(key)) {
+      ctx=builtContexts.get(key);
+    }
+ else {
+synchronized (this) {
+        if (builtContexts.containsKey(key)) {
+          ctx=builtContexts.get(key);
+        }
+ else {
+          ctx=doGetLoggerContext(classLoader,key);
+        }
       }
     }
-);
   }
  catch (  ExecutionException e) {
     throw new MuleRuntimeException(createStaticMessage("Could not init logger context "),e);
