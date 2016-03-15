@@ -9,5 +9,11 @@
   if (generics.getGenericTypes().size() != 2) {
     return false;
   }
-  return MuleEvent.class.isAssignableFrom(getType(generics.getGenericTypes().get(0)));
+  final String genericClassName=generics.getGenericTypes().get(0);
+  try {
+    return MuleEvent.class.isAssignableFrom(ClassUtils.getClass(genericClassName));
+  }
+ catch (  ClassNotFoundException e) {
+    throw new MuleRuntimeException(MessageFactory.createStaticMessage("Could not load class " + genericClassName),e);
+  }
 }
