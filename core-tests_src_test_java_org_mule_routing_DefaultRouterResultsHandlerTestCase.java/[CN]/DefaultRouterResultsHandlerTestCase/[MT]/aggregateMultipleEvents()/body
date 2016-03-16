@@ -1,14 +1,14 @@
 {
   MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
-  message1.setInvocationProperty("key1","value1");
   MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
-  message2.setInvocationProperty("key2","value2");
   MuleMessage message3=new DefaultMuleMessage("test event C",muleContext);
-  message3.setInvocationProperty("key3","value3");
   MuleEvent event1=new DefaultMuleEvent(message1,flow);
+  event1.setFlowVariable("key1","value1");
   MuleSession session=event1.getSession();
   MuleEvent event2=new DefaultMuleEvent(message2,flow,session);
+  event2.setFlowVariable("key2","value2");
   MuleEvent event3=new DefaultMuleEvent(message3,flow,session);
+  event3.setFlowVariable("key3","value3");
   event1.getSession().setProperty("key","value");
   event2.getSession().setProperty("key1","value1");
   event2.getSession().setProperty("key2","value2");
@@ -23,8 +23,9 @@
   assertTrue(result.getMessage().getPayload() instanceof List<?>);
   assertEquals(message2,((List<MuleMessage>)result.getMessage().getPayload()).get(0));
   assertEquals(message3,((List<MuleMessage>)result.getMessage().getPayload()).get(1));
-  assertNull(result.getMessage().getInvocationProperty("key2"));
-  assertNull(result.getMessage().getInvocationProperty("key3"));
+  assertEquals("value1",result.getFlowVariable("key1"));
+  assertNull(result.getFlowVariable("key2"));
+  assertNull(result.getFlowVariable("key3"));
   assertEquals(event1.getMessage().getMessageRootId(),result.getMessage().getMessageRootId());
   assertEquals("value",result.getSession().getProperty("key"));
   assertEquals("value1",result.getSession().getProperty("key1"));

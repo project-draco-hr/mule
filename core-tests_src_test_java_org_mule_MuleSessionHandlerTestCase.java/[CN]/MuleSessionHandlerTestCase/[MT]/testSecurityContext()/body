@@ -1,14 +1,13 @@
 {
-  DefaultMuleMessage message=new DefaultMuleMessage("Test Message",muleContext);
+  MuleEvent event=MuleTestUtils.getTestEvent("Test Message",muleContext);
   SessionHandler handler=new SerializeAndEncodeSessionHandler();
-  MuleSession session=new DefaultMuleSession();
   Credentials credentials=new MuleCredentials("joe","secret".toCharArray());
   SecurityContext sc=new DefaultSecurityContextFactory().create(new DefaultMuleAuthentication(credentials));
-  session.setSecurityContext(sc);
-  handler.storeSessionInfoToMessage(session,message);
-  Object s=removeProperty(message);
-  message.setInboundProperty(MuleProperties.MULE_SESSION_PROPERTY,s);
-  session=handler.retrieveSessionInfoFromMessage(message);
+  event.getSession().setSecurityContext(sc);
+  handler.storeSessionInfoToMessage(event.getSession(),event.getMessage());
+  Object s=removeProperty(event);
+  event.getMessage().setProperty(MuleProperties.MULE_SESSION_PROPERTY,s,PropertyScope.INBOUND);
+  MuleSession session=handler.retrieveSessionInfoFromMessage(event.getMessage());
   sc=session.getSecurityContext();
   assertEquals("joe",sc.getAuthentication().getPrincipal());
 }

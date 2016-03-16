@@ -7,20 +7,5 @@
     }
     return result;
   }
-  ClassLoader originalContextClassLoader=Thread.currentThread().getContextClassLoader();
-  try {
-    Thread.currentThread().setContextClassLoader(expressionEvaluationClassLoader);
-    Map<String,Object> flowVars=new HashMap<>();
-    for (    String var : message.getInvocationPropertyNames()) {
-      flowVars.put(var,message.getInvocationProperty(var));
-    }
-    MuleEvent event=new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,new Flow("",muleContext));
-    for (    Map.Entry<String,Object> var : flowVars.entrySet()) {
-      event.setFlowVariable(var.getKey(),var.getValue());
-    }
-    return muleContext.getExpressionManager().evaluateBoolean(expr,event,nullReturnsTrue,!nullReturnsTrue);
-  }
-  finally {
-    Thread.currentThread().setContextClassLoader(originalContextClassLoader);
-  }
+  return accept(new DefaultMuleEvent(message,MessageExchangePattern.ONE_WAY,new Flow("",muleContext)));
 }

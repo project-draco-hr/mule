@@ -1,12 +1,11 @@
 {
-  DefaultMuleMessage message=new DefaultMuleMessage("Test Message",muleContext);
-  MuleSession session=new DefaultMuleSession();
+  MuleEvent event=MuleTestUtils.getTestEvent("Test Message",muleContext);
   SessionHandler handler=new SerializeAndEncodeSessionHandler();
   NotSerializableClass clazz=new NotSerializableClass();
-  session.setProperty("foo",clazz);
-  handler.storeSessionInfoToMessage(session,message);
-  Object s=removeProperty(message);
-  message.setInboundProperty(MuleProperties.MULE_SESSION_PROPERTY,s);
-  session=handler.retrieveSessionInfoFromMessage(message);
+  event.getSession().setProperty("foo",clazz);
+  handler.storeSessionInfoToMessage(event.getSession(),event.getMessage());
+  Object s=removeProperty(event);
+  event.getMessage().setProperty(MuleProperties.MULE_SESSION_PROPERTY,s,PropertyScope.INBOUND);
+  MuleSession session=handler.retrieveSessionInfoFromMessage(event.getMessage());
   assertNull(session.getProperty("foo"));
 }
