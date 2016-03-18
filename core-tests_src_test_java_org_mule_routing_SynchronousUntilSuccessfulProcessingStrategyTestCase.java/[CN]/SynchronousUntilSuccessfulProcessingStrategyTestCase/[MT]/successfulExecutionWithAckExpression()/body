@@ -7,7 +7,16 @@
   SynchronousUntilSuccessfulProcessingStrategy processingStrategy=createProcessingStrategy();
   when(mockRoute.process(event)).thenReturn(event);
   assertThat(processingStrategy.route(event),is(event));
-  verify(mockRoute).process(event);
+  verify(mockRoute).process(argThat(new BaseMatcher<MuleEvent>(){
+    @Override public void describeTo(    Description description){
+      description.appendText("MuleEvent matcher and asserter");
+    }
+    @Override public boolean matches(    Object item){
+      return event.getId().equals(((MuleEvent)item).getId());
+    }
+  }
+));
   verify(mockUntilSuccessfulConfiguration.getMuleContext().getExpressionManager()).evaluate(ackExpression,event);
   verify(event.getMessage()).setPayload(expressionEvalutaionResult);
+  assertThat(RequestContext.getEvent(),is(event));
 }
