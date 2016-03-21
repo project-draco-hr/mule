@@ -14,7 +14,13 @@
     cookieManager=new CookieManager();
   }
   String threadNamePrefix=format(THREAD_NAME_PREFIX_PATTERN,ThreadNameHelper.getPrefix(muleContext),name);
-  GrizzlyHttpClientConfiguration configuration=new GrizzlyHttpClientConfiguration.Builder().setTlsContextFactory(tlsContext).setProxyConfig(proxyConfig).setClientSocketProperties(clientSocketProperties).setMaxConnections(maxConnections).setUsePersistentConnections(usePersistentConnections).setConnectionIdleTimeout(connectionIdleTimeout).setThreadNamePrefix(threadNamePrefix).setOwnerName(name).build();
-  httpClient=new GrizzlyHttpClient(configuration);
+  HttpClientConfiguration configuration=new HttpClientConfiguration.Builder().setTlsContextFactory(tlsContext).setProxyConfig(proxyConfig).setClientSocketProperties(clientSocketProperties).setMaxConnections(maxConnections).setUsePersistentConnections(usePersistentConnections).setConnectionIdleTimeout(connectionIdleTimeout).setThreadNamePrefix(threadNamePrefix).setOwnerName(name).build();
+  HttpClientFactory httpClientFactory=muleContext.getRegistry().get(OBJECT_HTTP_CLIENT_FACTORY);
+  if (httpClientFactory == null) {
+    httpClient=new GrizzlyHttpClient(configuration);
+  }
+ else {
+    httpClient=httpClientFactory.create(configuration);
+  }
   httpClient.initialise();
 }
