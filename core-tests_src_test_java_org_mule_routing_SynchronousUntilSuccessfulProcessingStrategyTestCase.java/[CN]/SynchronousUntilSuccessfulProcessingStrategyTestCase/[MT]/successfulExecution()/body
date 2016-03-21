@@ -1,6 +1,13 @@
 {
   SynchronousUntilSuccessfulProcessingStrategy processingStrategy=createProcessingStrategy();
-  when(mockRoute.process(event)).thenReturn(event);
-  assertThat(processingStrategy.route(event),is(event));
+  when(mockRoute.process(event)).thenAnswer(new Answer<MuleEvent>(){
+    @Override public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
+      return (MuleEvent)invocation.getArguments()[0];
+    }
+  }
+);
+  MuleEvent response=processingStrategy.route(event);
+  assertThat(response,is(event));
   verify(mockRoute).process(event);
+  assertThat(RequestContext.getEvent(),sameInstance(response));
 }
