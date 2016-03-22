@@ -12,18 +12,14 @@
       if (!event.getMuleContext().waitUntilStarted(event.getTimeout())) {
         throw new MessagingException(MessageFactory.createStaticMessage("Timeout waiting for mule context to be completely started"),event,this);
       }
-      MuleMessage resultMessage=doSend(event);
-      if (resultMessage != null) {
-        resultMessage.setMessageRootId(event.getMessage().getMessageRootId());
-        resultMessage.setEncoding(resultMessage.getEncoding());
-        MuleSession storedSession=connector.getSessionHandler().retrieveSessionInfoFromMessage(resultMessage);
-        event.getSession().merge(storedSession);
-        DefaultMuleEvent resultEvent=new DefaultMuleEvent(resultMessage,event);
-        OptimizedRequestContext.unsafeSetEvent(resultEvent);
-        return resultEvent;
+      if (isNonBlocking(event)) {
+        doSendNonBlocking(event,new NonBlockingSendCompletionHandler(event,((Flow)event.getFlowConstruct()).getWorkManager(),connector));
+        RequestContext.clear();
+        return NonBlockingVoidMuleEvent.getInstance();
       }
  else {
-        return null;
+        MuleMessage resultMessage=doSend(event);
+        return createResponseEvent(resultMessage,event);
       }
     }
  else {
