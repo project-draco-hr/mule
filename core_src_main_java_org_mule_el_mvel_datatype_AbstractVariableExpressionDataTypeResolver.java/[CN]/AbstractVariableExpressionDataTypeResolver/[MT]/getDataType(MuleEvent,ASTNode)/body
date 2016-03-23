@@ -1,0 +1,23 @@
+{
+  final Accessor accessor=node.getAccessor();
+  if (accessor instanceof VariableAccessor) {
+    VariableAccessor variableAccessor=(VariableAccessor)accessor;
+    if (variableAccessor.getProperty().equals(propertyName)) {
+      final AccessorNode nextNode=variableAccessor.getNextNode();
+      String propertyName=null;
+      if (nextNode instanceof MapAccessorNest) {
+        final MapAccessorNest mapAccesorNest=(MapAccessorNest)nextNode;
+        if (mapAccesorNest.getProperty().isLiteralOnly()) {
+          propertyName=(String)((ExecutableLiteral)mapAccesorNest.getProperty()).getLiteral();
+        }
+      }
+ else       if (nextNode instanceof MapAccessor) {
+        propertyName=(String)((MapAccessor)nextNode).getProperty();
+      }
+      if (propertyName != null) {
+        return getVariableDataType(event,propertyName);
+      }
+    }
+  }
+  return null;
+}

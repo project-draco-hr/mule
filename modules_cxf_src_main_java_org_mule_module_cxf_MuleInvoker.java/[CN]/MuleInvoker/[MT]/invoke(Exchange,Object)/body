@@ -18,11 +18,11 @@
         if (targetClass != null) {
           m=matchMethod(m,targetClass);
         }
-        reqMsg.setProperty(MuleProperties.MULE_METHOD_PROPERTY,m,PropertyScope.INVOCATION);
+        event.setFlowVariable(MuleProperties.MULE_METHOD_PROPERTY,m);
       }
       if (bop != null) {
-        reqMsg.setProperty(CxfConstants.INBOUND_OPERATION,bop.getOperationInfo().getName(),PropertyScope.INVOCATION);
-        reqMsg.setProperty(CxfConstants.INBOUND_SERVICE,svc.getName(),PropertyScope.INVOCATION);
+        event.setFlowVariable(CxfConstants.INBOUND_OPERATION,bop.getOperationInfo().getName());
+        event.setFlowVariable(CxfConstants.INBOUND_SERVICE,svc.getName());
       }
       ErrorHandlingExecutionTemplate errorHandlingExecutionTemplate=ErrorHandlingExecutionTemplate.createErrorHandlingExecutionTemplate(event.getMuleContext(),event.getFlowConstruct().getExceptionListener());
       responseEvent=errorHandlingExecutionTemplate.execute(new ExecutionCallback<MuleEvent>(){
@@ -35,7 +35,7 @@
  catch (    MuleException e) {
       exchange.put(CxfConstants.MULE_EVENT,event);
       Throwable cause=e;
-      if (Boolean.valueOf((String)event.getMessage().getInvocationProperty(CxfConstants.UNWRAP_MULE_EXCEPTIONS))) {
+      if (Boolean.valueOf((String)event.getFlowVariable(CxfConstants.UNWRAP_MULE_EXCEPTIONS))) {
         cause=ExceptionHelper.getNonMuleException(e);
         if (cause instanceof ScriptException && cause.getCause() != null) {
           cause=cause.getCause();

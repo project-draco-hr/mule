@@ -6,22 +6,15 @@
     throw new MessagingException(group.getMessageCollectionEvent(),e);
   }
   if (isFailOnTimeout()) {
-    MuleMessage messageCollection;
-    try {
-      messageCollection=group.toMessageCollection();
-    }
- catch (    ObjectStoreException e) {
-      throw new MessagingException(group.getMessageCollectionEvent(),e);
-    }
-    muleContext.fireNotification(new RoutingNotification(messageCollection,null,RoutingNotification.CORRELATION_TIMEOUT));
-    MuleEvent groupCollectionEvent=group.getMessageCollectionEvent();
+    MuleEvent messageCollectionEvent=group.getMessageCollectionEvent();
+    muleContext.fireNotification(new RoutingNotification(messageCollectionEvent.getMessage(),null,RoutingNotification.CORRELATION_TIMEOUT));
     try {
       group.clear();
     }
  catch (    ObjectStoreException e) {
       logger.warn("Failed to clear group with id " + group.getGroupId() + " since underlying ObjectStore threw Exception:"+ e.getMessage());
     }
-    throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),groupCollectionEvent);
+    throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),messageCollectionEvent);
   }
  else {
     if (logger.isDebugEnabled()) {
