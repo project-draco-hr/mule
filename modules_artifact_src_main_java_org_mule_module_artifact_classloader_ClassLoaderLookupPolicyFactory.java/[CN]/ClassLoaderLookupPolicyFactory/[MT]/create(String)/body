@@ -1,0 +1,32 @@
+{
+  Set<String> overridden=new HashSet<>();
+  Set<String> blocked=new HashSet<>();
+  if (!StringUtils.isEmpty(config)) {
+    final String[] overrides=config.split(LIST_SEPARATOR);
+    if (overrides.length != 0) {
+      for (      String override : overrides) {
+        override=StringUtils.defaultString(override).trim();
+        boolean isBlocked=override.startsWith(BLOCKED_PACKAGE_PREFIX);
+        if (isBlocked) {
+          override=override.substring(1);
+        }
+        String dottedOverride;
+        if (override.endsWith(PACKAGE_SEPARATOR)) {
+          dottedOverride=override;
+          override=override.substring(0,override.length() - 1);
+        }
+ else {
+          dottedOverride=override + PACKAGE_SEPARATOR;
+        }
+        if (isSystemPackage(dottedOverride)) {
+          throw new IllegalArgumentException("Can't override a system package. Offending value: " + override);
+        }
+        overridden.add(override);
+        if (isBlocked) {
+          blocked.add(override);
+        }
+      }
+    }
+  }
+  return new ClassLoaderLookupPolicy(overridden,blocked);
+}

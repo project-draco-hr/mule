@@ -1,10 +1,9 @@
 {
-  final File pluginFolder=new File(pluginsFolder.getRoot(),PLUGIN_NAME);
-  assertThat(pluginFolder.mkdir(),is(true));
-  final Set<String> loaderOverrides=new HashSet<>();
-  loaderOverrides.add("org.foo");
-  loaderOverrides.add("org.bar");
-  new PluginPropertiesBuilder(pluginFolder).overriding(loaderOverrides).build();
+  final File pluginFolder=createPluginFolder();
+  final String overrides="org.foo, org.bar";
+  final ClassLoaderLookupPolicy classLoaderLookupPolicy=mock(ClassLoaderLookupPolicy.class);
+  when(classLoaderLookupPolicyFactory.create(overrides)).thenReturn(classLoaderLookupPolicy);
+  new PluginPropertiesBuilder(pluginFolder).overriding(overrides).build();
   final ApplicationPluginDescriptor pluginDescriptor=descriptorFactory.create(pluginFolder);
-  new PluginDescriptorChecker(pluginFolder).overriding(loaderOverrides).assertPluginDescriptor(pluginDescriptor);
+  new PluginDescriptorChecker(pluginFolder).configuredWith(classLoaderLookupPolicy).assertPluginDescriptor(pluginDescriptor);
 }
