@@ -1,16 +1,16 @@
 {
-  addPackedAppFromResource(brokenAppDescriptor.zipPath);
+  addPackedAppFromBuilder(brokenAppFileBuilder);
   deploymentService.start();
-  assertDeploymentFailure(applicationDeploymentListener,brokenAppDescriptor.id);
+  assertDeploymentFailure(applicationDeploymentListener,brokenAppFileBuilder.getId());
   reset(applicationDeploymentListener);
   Thread.sleep(FILE_TIMESTAMP_PRECISION_MILLIS);
-  assertAppsDir(new String[]{"broken-app.zip"},NONE,true);
-  assertAppsDir(NONE,new String[]{dummyAppDescriptor.id},false);
+  assertAppsDir(new String[]{brokenAppFileBuilder.getDeployedPath()},NONE,true);
+  assertAppsDir(NONE,new String[]{brokenAppFileBuilder.getId()},false);
   assertEquals("No apps should have been registered with Mule.",0,deploymentService.getApplications().size());
   final Map<URL,Long> zombieMap=deploymentService.getZombieApplications();
   assertEquals("Wrong number of zombie apps registered.",1,zombieMap.size());
   final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
-  assertEquals("Wrong URL tagged as zombie.","broken-app.zip",new File(zombie.getKey().getFile()).getName());
+  assertEquals("Wrong URL tagged as zombie.",brokenAppFileBuilder.getDeployedPath(),new File(zombie.getKey().getFile()).getName());
   assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
   try {
     assertDeploymentFailure(applicationDeploymentListener,"broken-app.zip");

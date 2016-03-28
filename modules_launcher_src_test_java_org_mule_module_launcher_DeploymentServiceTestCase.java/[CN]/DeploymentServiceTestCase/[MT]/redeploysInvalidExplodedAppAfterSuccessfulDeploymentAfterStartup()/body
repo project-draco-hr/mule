@@ -1,13 +1,14 @@
 {
   deploymentService.start();
-  addExplodedAppFromResource(dummyAppDescriptor.zipPath,dummyAppDescriptor.id);
-  assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyAppDescriptor.id);
-  assertAppsDir(NONE,new String[]{dummyAppDescriptor.id},true);
+  addExplodedAppFromBuilder(dummyAppDescriptorFileBuilder);
+  assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyAppDescriptorFileBuilder.getId());
+  assertAppsDir(NONE,new String[]{dummyAppDescriptorFileBuilder.getId()},true);
   reset(applicationDeploymentListener);
-  File originalConfigFile=new File(appsDir + dummyAppDescriptor.path,MULE_CONFIG_XML_FILE);
-  URL url=getClass().getResource(brokenDomainDescriptor.configFilePath);
+  File originalConfigFile=new File(appsDir + "/" + dummyAppDescriptorFileBuilder.getDeployedPath(),MULE_CONFIG_XML_FILE);
+  assertThat(originalConfigFile.exists(),is(true));
+  URL url=getClass().getResource(BROKEN_CONFIG_XML);
   File newConfigFile=new File(url.toURI());
   FileUtils.copyFile(newConfigFile,originalConfigFile);
-  assertDeploymentFailure(applicationDeploymentListener,dummyAppDescriptor.id);
-  assertStatus(dummyAppDescriptor.id,ApplicationStatus.DEPLOYMENT_FAILED);
+  assertDeploymentFailure(applicationDeploymentListener,dummyAppDescriptorFileBuilder.getId());
+  assertStatus(dummyAppDescriptorFileBuilder.getId(),ApplicationStatus.DEPLOYMENT_FAILED);
 }
