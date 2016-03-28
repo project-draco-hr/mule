@@ -1,16 +1,10 @@
 {
-  List<ConfigurationProvider> providers=extensionRegistry.getConfigurationProviders(extensionModel);
-  int matches=providers.size();
-  if (matches == 1) {
-    return providers.get(0).get(muleEvent);
+  Optional<ConfigurationProvider<C>> provider=getConfigurationProvider(extensionModel);
+  if (provider.isPresent()) {
+    return provider.get().get(muleEvent);
   }
- else   if (matches > 1) {
-    throw new IllegalStateException(String.format("No config-ref was specified for operation of extension '%s', but %d are registered. Please specify which to use",extensionModel.getName(),matches));
+  if (attemptToCreateImplicitConfiguration(extensionModel,(MuleEvent)muleEvent)) {
+    return getConfiguration(extensionModel,muleEvent);
   }
- else {
-    if (attemptToCreateImplicitConfiguration(extensionModel,(MuleEvent)muleEvent)) {
-      return getConfiguration(extensionModel,muleEvent);
-    }
-    throw new IllegalStateException(String.format("No config-ref was specified for operation of extension '%s' and no implicit configuration could be inferred. Please define one.",extensionModel.getName()));
-  }
+  throw new IllegalStateException(String.format("No config-ref was specified for operation of extension '%s' and no implicit configuration could be inferred. Please define one.",extensionModel.getName()));
 }
