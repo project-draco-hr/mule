@@ -1,0 +1,26 @@
+{
+  Flow flow=(Flow)muleContext.getRegistry().lookupFlowConstruct(componentId.getFlowName());
+  if (flow == null) {
+    throw new InvalidComponentIdException(MessageFactory.createStaticMessage(String.format(PROCESSOR_NOT_FOUND,componentId.getComponentPath())));
+  }
+  try {
+    if (!componentId.getComponentPath().equals("-1")) {
+      try {
+        return ((MetadataAware)flow.getMessageProcessors().get(Integer.parseInt(componentId.getComponentPath())));
+      }
+ catch (      IndexOutOfBoundsException|NumberFormatException e) {
+        throw new InvalidComponentIdException(MessageFactory.createStaticMessage(String.format(PROCESSOR_NOT_FOUND,componentId.getComponentPath())),e);
+      }
+    }
+ else {
+      final MessageSource messageSource=flow.getMessageSource();
+      if (messageSource == null) {
+        throw new InvalidComponentIdException(MessageFactory.createStaticMessage(SOURCE_NOT_FOUND));
+      }
+      return (MetadataAware)messageSource;
+    }
+  }
+ catch (  ClassCastException e) {
+    throw new InvalidComponentIdException(MessageFactory.createStaticMessage(PROCESSOR_NOT_METADATA_AWARE),e);
+  }
+}

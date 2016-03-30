@@ -1,10 +1,24 @@
 {
   configureMockEvent(event);
+  when(operationModel.getName()).thenReturn(getClass().getName());
   when(operationModel.getReturnType()).thenReturn(toMetadataType(String.class));
   when(operationModel.getExecutor()).thenReturn(operationExecutorFactory);
+  when(operationExecutorFactory.createExecutor()).thenReturn(operationExecutor);
   when(operationModel.getExceptionEnricherFactory()).thenReturn(Optional.of(exceptionEnricherFactory));
   when(exceptionEnricherFactory.createEnricher()).thenReturn(new NullExceptionEnricher());
-  when(operationExecutorFactory.createExecutor()).thenReturn(operationExecutor);
+  when(operationModel.getMetadataResolverFactory()).thenReturn(metadataResolverFactory);
+  when(metadataResolverFactory.getKeyResolver()).thenReturn(new TestNoConfigMetadataResolver());
+  when(metadataResolverFactory.getContentResolver()).thenReturn(new TestNoConfigMetadataResolver());
+  when(metadataResolverFactory.getOutputResolver()).thenReturn(new TestNoConfigMetadataResolver());
+  when(keyParamMock.getName()).thenReturn("type");
+  when(keyParamMock.getType()).thenReturn(stringType);
+  when(keyParamMock.getModelProperty(MetadataModelProperty.class)).thenReturn(Optional.of(new MetadataModelProperty(true,false)));
+  when(contentMock.getName()).thenReturn("content");
+  when(contentMock.getType()).thenReturn(stringType);
+  when(contentMock.getModelProperty(MetadataModelProperty.class)).thenReturn(Optional.of(new MetadataModelProperty(false,true)));
+  when(operationModel.getParameterModels()).thenReturn(Arrays.asList(keyParamMock,contentMock));
+  when(operationModel.getReturnType()).thenReturn(returnTypeMock);
+  when(operationModel.getAttributesType()).thenReturn(returnTypeMock);
   when(resolverSet.resolve(event)).thenReturn(parameters);
   when(configurationInstance.getName()).thenReturn(CONFIG_NAME);
   when(configurationInstance.getModel()).thenReturn(configurationModel);
