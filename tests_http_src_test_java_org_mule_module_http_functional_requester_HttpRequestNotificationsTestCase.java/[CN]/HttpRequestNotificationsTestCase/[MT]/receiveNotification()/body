@@ -5,4 +5,10 @@
   flowRunner("requestFlow").withPayload(TEST_MESSAGE).run();
   latch.await(1000,TimeUnit.MILLISECONDS);
   assertThat(listener.getNotificationActionNames(),contains(getActionName(MESSAGE_REQUEST_BEGIN),getActionName(MESSAGE_REQUEST_END)));
+  MuleMessage message=listener.getNotifications(getActionName(MESSAGE_REQUEST_END)).get(0).getSource();
+  assertThat((Integer)message.getInboundProperty(HTTP_STATUS_PROPERTY),equalTo(200));
+  assertThat((String)message.getInboundProperty(HTTP_REASON_PROPERTY),equalTo("OK"));
+  MuleMessage requestMessage=listener.getNotifications(getActionName(MESSAGE_REQUEST_BEGIN)).get(0).getSource();
+  assertThat(requestMessage.getUniqueId(),equalTo(message.getUniqueId()));
+  assertThat(requestMessage.getMessageRootId(),equalTo(message.getMessageRootId()));
 }

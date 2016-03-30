@@ -23,10 +23,14 @@
       payload=HttpParser.decodeString(IOUtils.toString(responseInputStream),encoding);
     }
   }
-  MuleMessage message=new DefaultMuleMessage(muleEvent.getMessage().getPayload(),inboundProperties,null,inboundAttachments,muleContext,muleEvent.getMessage().getDataType());
+  String requestMessageId=muleEvent.getMessage().getUniqueId();
+  String requestMessageRootId=muleEvent.getMessage().getMessageRootId();
+  DefaultMuleMessage message=new DefaultMuleMessage(muleEvent.getMessage().getPayload(),inboundProperties,null,inboundAttachments,muleContext,muleEvent.getMessage().getDataType());
   if (encoding != null) {
     message.setEncoding(encoding);
   }
+  message.setUniqueId(requestMessageId);
+  message.setMessageRootId(requestMessageRootId);
   muleEvent.setMessage(message);
   setResponsePayload(payload,muleEvent);
   if (requester.getConfig().isEnableCookies()) {
