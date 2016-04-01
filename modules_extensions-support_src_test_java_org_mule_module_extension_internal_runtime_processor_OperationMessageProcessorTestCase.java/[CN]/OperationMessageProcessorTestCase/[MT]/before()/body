@@ -4,6 +4,7 @@
   when(operationModel.getReturnType()).thenReturn(toMetadataType(String.class));
   when(operationModel.getExecutor()).thenReturn(operationExecutorFactory);
   when(operationExecutorFactory.createExecutor()).thenReturn(operationExecutor);
+  when(operationModel.getName()).thenReturn(OPERATION_NAME);
   when(operationModel.getExceptionEnricherFactory()).thenReturn(Optional.of(exceptionEnricherFactory));
   when(exceptionEnricherFactory.createEnricher()).thenReturn(new NullExceptionEnricher());
   when(operationModel.getMetadataResolverFactory()).thenReturn(metadataResolverFactory);
@@ -19,15 +20,21 @@
   when(operationModel.getParameterModels()).thenReturn(Arrays.asList(keyParamMock,contentMock));
   when(operationModel.getReturnType()).thenReturn(returnTypeMock);
   when(operationModel.getAttributesType()).thenReturn(returnTypeMock);
+  when(operationExecutorFactory.createExecutor()).thenReturn(operationExecutor);
   when(resolverSet.resolve(event)).thenReturn(parameters);
   when(configurationInstance.getName()).thenReturn(CONFIG_NAME);
   when(configurationInstance.getModel()).thenReturn(configurationModel);
   when(configurationInstance.getValue()).thenReturn(configuration);
+  when(configurationInstance.getConnectionProvider()).thenReturn(Optional.of(connectionProviderWrapper));
+  when(configurationProvider.get(event)).thenReturn(configurationInstance);
+  when(configurationProvider.getModel()).thenReturn(configurationModel);
+  when(configurationModel.getOperationModel(OPERATION_NAME)).thenReturn(Optional.of(operationModel));
   connectionManager=new DefaultConnectionManager(muleContext);
   connectionManager.initialise();
   when(connectionProviderWrapper.getRetryPolicyTemplate()).thenReturn(connectionManager.getDefaultRetryPolicyTemplate());
-  when(configurationInstance.getConnectionProvider()).thenReturn(Optional.of(connectionProviderWrapper));
   when(extensionManager.getConfiguration(CONFIG_NAME,event)).thenReturn(configurationInstance);
   when(extensionManager.getConfiguration(extensionModel,event)).thenReturn(configurationInstance);
+  when(extensionManager.getConfigurationProvider(extensionModel)).thenReturn(Optional.of(configurationProvider));
+  when(extensionManager.getConfigurationProvider(CONFIG_NAME)).thenReturn(Optional.of(configurationProvider));
   messageProcessor=createOperationMessageProcessor();
 }

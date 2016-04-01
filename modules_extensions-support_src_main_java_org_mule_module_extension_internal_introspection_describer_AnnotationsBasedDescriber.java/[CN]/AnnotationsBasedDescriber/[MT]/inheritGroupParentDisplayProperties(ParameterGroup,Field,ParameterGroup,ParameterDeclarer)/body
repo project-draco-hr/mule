@@ -1,0 +1,19 @@
+{
+  ParameterDeclaration parameter=parameterDeclarer.getDeclaration();
+  DisplayModelProperty parameterDisplayProperty=parameterDeclarer.getDeclaration().getModelProperty(DisplayModelProperty.class).orElse(null);
+  DisplayModelPropertyBuilder builder=parameterDisplayProperty == null ? DisplayModelPropertyBuilder.create() : DisplayModelPropertyBuilder.create(parameterDisplayProperty);
+  DisplayModelProperty groupDisplay=null;
+  DisplayModelProperty parentDisplay=parent != null ? parent.getModelProperty(DisplayModelProperty.class).orElse(null) : null;
+  if (parentDisplay != null) {
+    builder.groupName(parentDisplay.getGroupName()).tabName(parentDisplay.getTabName()).order(parentDisplay.getOrder());
+    groupDisplay=builder.build();
+  }
+ else {
+    groupDisplay=parseDisplayAnnotations(field,field.getName(),builder);
+  }
+  if (groupDisplay != null) {
+    parameterDeclarer.withModelProperty(groupDisplay);
+    group.addModelProperty(groupDisplay);
+  }
+  return parameter;
+}
