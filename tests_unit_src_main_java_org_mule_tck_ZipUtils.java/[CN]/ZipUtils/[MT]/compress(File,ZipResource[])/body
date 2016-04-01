@@ -1,8 +1,12 @@
 {
   try (ZipOutputStream out=new ZipOutputStream(new FileOutputStream(targetFile))){
     for (    ZipResource zipResource : resources) {
-      try (FileInputStream in=new FileInputStream(zipResource.getFile())){
-        out.putNextEntry(new ZipEntry(zipResource.getName()));
+      URL resourceUrl=ClassUtils.getResource(zipResource.file,ZipUtils.class);
+      if (resourceUrl == null) {
+        resourceUrl=new File(zipResource.file).toURI().toURL();
+      }
+      try (FileInputStream in=new FileInputStream(resourceUrl.getFile())){
+        out.putNextEntry(new ZipEntry(zipResource.alias == null ? zipResource.file : zipResource.alias));
         byte[] buffer=new byte[1024];
         int count;
         while ((count=in.read(buffer)) > 0) {
