@@ -3,10 +3,14 @@
     return;
   }
   disposedContexts.put(key,loggerContext);
-  executorService.schedule(new Runnable(){
-    @Override public void run(){
-      disposedContexts.cleanUp();
+synchronized (executorService) {
+    if (!executorService.isShutdown()) {
+      executorService.schedule(new Runnable(){
+        @Override public void run(){
+          disposedContexts.cleanUp();
+        }
+      }
+,disposeDelayInMillis + 1,TimeUnit.MILLISECONDS);
     }
   }
-,disposeDelayInMillis + 1,TimeUnit.MILLISECONDS);
 }
