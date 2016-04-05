@@ -7,7 +7,10 @@
     return domainArtifactClassLoaders.get(domain);
   }
   validateDomain(domain);
-  ArtifactClassLoader classLoader=new MuleSharedDomainClassLoader(domain,getClass().getClassLoader());
+  final List<URL> urls=getDomainUrls(domain);
+  final Map<String,ClassLoaderLookupStrategy> domainLookStrategies=getLookStrategiesFrom(urls);
+  final ClassLoaderLookupPolicy domainLookupPolicy=containerLookupPolicy.extend(domainLookStrategies);
+  ArtifactClassLoader classLoader=new MuleSharedDomainClassLoader(domain,getClass().getClassLoader(),domainLookupPolicy,urls);
   classLoader=createClassLoaderUnregisterWrapper(classLoader);
   domainArtifactClassLoaders.put(domain,classLoader);
   return classLoader;

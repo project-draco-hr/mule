@@ -1,0 +1,19 @@
+{
+  final String packageName=getPackageName(className);
+  ClassLoaderLookupStrategy lookupStrategy=lookupStrategies.get(packageName);
+  if (lookupStrategy == null) {
+synchronized (this) {
+      lookupStrategy=lookupStrategies.get(packageName);
+      if (lookupStrategy == null) {
+        if (isSystemPackage(packageName)) {
+          lookupStrategy=PARENT_ONLY;
+        }
+ else {
+          lookupStrategy=CHILD_FIRST;
+        }
+        lookupStrategies.put(packageName,lookupStrategy);
+      }
+    }
+  }
+  return lookupStrategy;
+}

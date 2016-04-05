@@ -1,5 +1,8 @@
 {
   String domainName="custom-domain";
-  assertThat(new File(muleHomeFolder,MULE_DOMAIN_FOLDER + File.separator + domainName).mkdirs(),is(true));
-  assertThat(new MuleDomainClassLoaderRepository().getDomainClassLoader(domainName).getClassLoader(),instanceOf(MuleSharedDomainClassLoader.class));
+  final File domainFolder=MuleFoldersUtil.getDomainFolder(domainName);
+  assertThat(domainFolder.mkdirs(),is(true));
+  final ArtifactClassLoader domainClassLoader=new MuleDomainClassLoaderRepository(lookupPolicy).getDomainClassLoader(domainName);
+  assertThat(domainClassLoader.getClassLoader(),instanceOf(MuleSharedDomainClassLoader.class));
+  assertThat(domainClassLoader.getArtifactName(),equalTo(domainName));
 }
