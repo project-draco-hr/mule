@@ -3,6 +3,15 @@
   when(domainClassLoaderRepository.getDomainClassLoader(DOMAIN_NAME)).thenReturn(domainCL);
   final NativeLibraryFinderFactory nativeLibraryFinderFactory=mock(NativeLibraryFinderFactory.class);
   MuleApplicationClassLoaderFactory classLoaderFactory=new MuleApplicationClassLoaderFactory(domainClassLoaderRepository,nativeLibraryFinderFactory);
+  final PackageDiscoverer packageDiscoverer=mock(PackageDiscoverer.class);
+  final Set<String> packages=new HashSet<>();
+  packages.add("org.foo");
+  when(packageDiscoverer.findPackages(any())).thenReturn(packages);
+  classLoaderFactory.setPackageDiscoverer(packageDiscoverer);
+  final ClassLoaderLookupPolicy sharedLibLookupPolicy=mock(ClassLoaderLookupPolicy.class);
+  when(domainLookupPolicy.extend(anyMap())).thenReturn(sharedLibLookupPolicy);
+  final ClassLoaderLookupPolicy pluginLookupPolicy=mock(ClassLoaderLookupPolicy.class);
+  when(sharedLibLookupPolicy.extend(anyMap())).thenReturn(pluginLookupPolicy);
   final ApplicationDescriptor descriptor=new ApplicationDescriptor();
   descriptor.setName(APP_NAME);
   descriptor.setDomain(DOMAIN_NAME);
@@ -15,6 +24,7 @@
   final MuleApplicationClassLoader artifactClassLoader=(MuleApplicationClassLoader)classLoaderFactory.create(descriptor);
   assertThat(artifactClassLoader.getURLs(),is(equalTo(artifactClassLoader.getURLs())));
   assertThat(artifactClassLoader.getParent(),is(instanceOf(CompositeClassLoader.class)));
-  assertThat(artifactClassLoader.getParent().getParent(),is(instanceOf(GoodCitizenClassLoader.class)));
+  assertThat(artifactClassLoader.getParent().getParent(),is(instanceOf(FineGrainedControlClassLoader.class)));
+  assertThat(((FineGrainedControlClassLoader)artifactClassLoader.getParent().getParent()).getClassLoaderLookupPolicy(),is(sharedLibLookupPolicy));
   assertThat(artifactClassLoader.getParent().getParent().getParent(),is(domainCL));
 }

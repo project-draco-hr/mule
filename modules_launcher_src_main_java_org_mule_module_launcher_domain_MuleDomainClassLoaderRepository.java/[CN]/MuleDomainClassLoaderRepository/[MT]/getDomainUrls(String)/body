@@ -1,0 +1,27 @@
+{
+  try {
+    List<URL> urls=new LinkedList<>();
+    urls.add(MuleFoldersUtil.getDomainFolder(domain).toURI().toURL());
+    File domainLibraryFolder=getDomainLibFolder(domain);
+    if (domainLibraryFolder.exists()) {
+      Collection<File> jars=listFiles(domainLibraryFolder,new String[]{"jar"},false);
+      if (logger.isDebugEnabled()) {
+        StringBuilder sb=new StringBuilder();
+        sb.append("Loading Shared ClassLoader Domain: ").append(domain).append(SystemUtils.LINE_SEPARATOR);
+        sb.append("=============================").append(SystemUtils.LINE_SEPARATOR);
+        for (        File jar : jars) {
+          sb.append(jar.toURI().toURL()).append(SystemUtils.LINE_SEPARATOR);
+        }
+        sb.append("=============================").append(SystemUtils.LINE_SEPARATOR);
+        logger.debug(sb.toString());
+      }
+      for (      File jar : jars) {
+        urls.add(jar.toURI().toURL());
+      }
+    }
+    return urls;
+  }
+ catch (  MalformedURLException e) {
+    throw new DeploymentException(CoreMessages.createStaticMessage(format("Cannot read domain '%s' libraries",domain)),e);
+  }
+}

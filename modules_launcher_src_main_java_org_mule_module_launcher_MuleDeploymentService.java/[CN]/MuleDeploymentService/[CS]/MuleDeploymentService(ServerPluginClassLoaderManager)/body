@@ -1,13 +1,15 @@
 {
-  DomainClassLoaderRepository domainClassLoaderRepository=new MuleDomainClassLoaderRepository();
+  final MuleClassLoaderLookupPolicy containerLookupPolicy=new MuleClassLoaderLookupPolicy(Collections.emptyMap(),SYSTEM_PACKAGES);
+  DomainClassLoaderRepository domainClassLoaderRepository=new MuleDomainClassLoaderRepository(containerLookupPolicy);
   ArtifactClassLoaderFactory applicationClassLoaderFactory=new MuleApplicationClassLoaderFactory(domainClassLoaderRepository,new DefaultNativeLibraryFinderFactory());
   applicationClassLoaderFactory=new CompositeApplicationClassLoaderFactory(applicationClassLoaderFactory,serverPluginClassLoaderManager);
   DefaultDomainFactory domainFactory=new DefaultDomainFactory(domainClassLoaderRepository);
   domainFactory.setDeploymentListener(domainDeploymentListener);
-  DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,domainFactory);
+  final ApplicationDescriptorFactory applicationDescriptorFactory=new ApplicationDescriptorFactory(new ApplicationPluginDescriptorFactory(new ArtifactClassLoaderFilterFactory()));
+  DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,domainFactory,applicationDescriptorFactory);
   applicationFactory.setDeploymentListener(applicationDeploymentListener);
-  ArtifactDeployer<Application> applicationMuleDeployer=new DefaultArtifactDeployer<Application>();
-  ArtifactDeployer<Domain> domainMuleDeployer=new DefaultArtifactDeployer<Domain>();
+  ArtifactDeployer<Application> applicationMuleDeployer=new DefaultArtifactDeployer<>();
+  ArtifactDeployer<Domain> domainMuleDeployer=new DefaultArtifactDeployer<>();
   this.applicationDeployer=new DefaultArchiveDeployer<>(applicationMuleDeployer,applicationFactory,applications,deploymentLock,NOP_ARTIFACT_DEPLOYMENT_TEMPLATE);
   this.applicationDeployer.setDeploymentListener(applicationDeploymentListener);
   this.domainDeployer=new DomainArchiveDeployer(new DefaultArchiveDeployer<>(domainMuleDeployer,domainFactory,domains,deploymentLock,new DomainDeploymentTemplate(applicationDeployer,this)),applicationDeployer,applicationMuleDeployer,this);
