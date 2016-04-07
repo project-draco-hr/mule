@@ -1,0 +1,18 @@
+{
+  String domain=descriptor.getName();
+  Preconditions.checkArgument(domain != null,"Domain name cannot be null");
+  if (domain.equals(DomainFactory.DEFAULT_DOMAIN_NAME)) {
+    return getDefaultDomainClassLoader();
+  }
+  if (domainArtifactClassLoaders.containsKey(domain)) {
+    return domainArtifactClassLoaders.get(domain);
+  }
+  validateDomain(domain);
+  final List<URL> urls=getDomainUrls(domain);
+  final Map<String,ClassLoaderLookupStrategy> domainLookStrategies=getLookStrategiesFrom(urls);
+  final ClassLoaderLookupPolicy domainLookupPolicy=containerLookupPolicy.extend(domainLookStrategies);
+  ArtifactClassLoader classLoader=new MuleSharedDomainClassLoader(domain,getClass().getClassLoader(),domainLookupPolicy,urls);
+  classLoader=createClassLoaderUnregisterWrapper(classLoader);
+  domainArtifactClassLoaders.put(domain,classLoader);
+  return classLoader;
+}
