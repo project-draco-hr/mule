@@ -33,6 +33,12 @@
         if (shouldGeneratePojoChildElements(clazz)) {
           registerComplexTypeChildElement(all,parameterModel.getName(),parameterModel.getDescription(),objectType,false);
         }
+ else {
+          List<MetadataType> subTypes=subTypesMapping.getSubTypes(parameterModel.getType());
+          if (!subTypes.isEmpty()) {
+            registerPojoSubtypes(subTypes,all);
+          }
+        }
       }
  else {
         registerPojoType(objectType,parameterModel.getDescription());
@@ -55,7 +61,7 @@
       return IntrospectionUtils.isInstantiable(type) && !getExposedFields(type).isEmpty();
     }
     private boolean shouldForceOptional(    Class<?> type){
-      return !parameterModel.isRequired() || (IntrospectionUtils.isInstantiable(type) && ExpressionSupport.REQUIRED != parameterModel.getExpressionSupport());
+      return !parameterModel.isRequired() || !subTypesMapping.getSubTypes(parameterModel.getType()).isEmpty() || (IntrospectionUtils.isInstantiable(type) && ExpressionSupport.REQUIRED != parameterModel.getExpressionSupport());
     }
   }
 ;

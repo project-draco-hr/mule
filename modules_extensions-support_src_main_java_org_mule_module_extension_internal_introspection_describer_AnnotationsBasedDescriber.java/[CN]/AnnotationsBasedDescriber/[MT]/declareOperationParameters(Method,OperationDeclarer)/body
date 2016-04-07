@@ -3,6 +3,7 @@
   checkAnnotationIsNotUsedMoreThanOnce(method,operation,UseConfig.class);
   checkAnnotationIsNotUsedMoreThanOnce(method,operation,Connection.class);
   for (  ParsedParameter parsedParameter : descriptors) {
+    final Class<?> parameterType=getType(parsedParameter.getType(),typeLoader.getClassLoader());
     if (parsedParameter.isAdvertised()) {
       ParameterDeclarer parameter=parsedParameter.isRequired() ? operation.withRequiredParameter(parsedParameter.getName()) : operation.withOptionalParameter(parsedParameter.getName()).defaultingTo(parsedParameter.getDefaultValue());
       parameter.withExpressionSupport(IntrospectionUtils.getExpressionSupport(parsedParameter.getAnnotation(Expression.class)));
@@ -16,11 +17,11 @@
     }
     Connection connectionAnnotation=parsedParameter.getAnnotation(Connection.class);
     if (connectionAnnotation != null) {
-      operation.withModelProperty(new ConnectionTypeModelProperty(getType(parsedParameter.getType(),typeLoader.getClassLoader())));
+      operation.withModelProperty(new ConnectionTypeModelProperty(parameterType));
     }
     UseConfig useConfig=parsedParameter.getAnnotation(UseConfig.class);
     if (useConfig != null) {
-      operation.withModelProperty(new ConfigTypeModelProperty(getType(parsedParameter.getType())));
+      operation.withModelProperty(new ConfigTypeModelProperty(parameterType));
     }
   }
 }
