@@ -1,17 +1,11 @@
 {
-  try {
-    addThrottlingHeaders(responseBuilder);
-    final HttpResponse httpResponse;
-    if (muleEvent == null) {
-      httpResponse=responseBuilder.setStatusCode(OK_STATUS_CODE).build();
-    }
+  addThrottlingHeaders(responseBuilder);
+  final HttpResponse httpResponse;
+  if (muleEvent == null) {
+    httpResponse=responseBuilder.setStatusCode(OK_STATUS_CODE).build();
+  }
  else {
-      httpResponse=this.responseBuilder.build(responseBuilder,muleEvent);
-    }
-    return httpResponse;
+    httpResponse=doBuildResponse(muleEvent,responseBuilder,responseCompletationCallback);
   }
- catch (  Exception e) {
-    responseCompletationCallback.responseSentWithFailure(e,muleEvent);
-    return responseBuilder.setStatusCode(INTERNAL_SERVER_ERROR.getStatusCode()).setReasonPhrase(INTERNAL_SERVER_ERROR.getReasonPhrase()).build();
-  }
+  return httpResponse;
 }
