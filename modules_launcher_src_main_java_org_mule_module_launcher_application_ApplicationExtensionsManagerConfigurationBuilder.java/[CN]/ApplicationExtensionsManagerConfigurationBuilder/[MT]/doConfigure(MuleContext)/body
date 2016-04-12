@@ -1,0 +1,28 @@
+{
+  ExtensionManager extensionManager=new DefaultExtensionManager();
+  ((DefaultMuleContext)muleContext).setExtensionManager(extensionManager);
+  initialiseIfNeeded(extensionManager,muleContext);
+  for (  ApplicationPlugin applicationPlugin : applicationPlugins) {
+    final ServiceLoader<Describer> describers=ServiceLoader.load(Describer.class,new ClassLoader(null){
+      @Override public Class<?> loadClass(      String name) throws ClassNotFoundException {
+        return applicationPlugin.getArtifactClassLoader().getClassLoader().loadClass(name);
+      }
+      @Override protected URL findResource(      String name){
+        return super.findResource(name);
+      }
+      @Override protected Enumeration<URL> findResources(      String name) throws IOException {
+        return applicationPlugin.getArtifactClassLoader().findResources(name);
+      }
+    }
+);
+    for (    Describer describer : describers) {
+      if (logger.isDebugEnabled()) {
+        System.out.println("Discovered extension: " + describer.getClass().getName());
+      }
+      ExtensionDeclarer declarer=describer.describe(new DefaultDescribingContext());
+      final DefaultExtensionFactory extensionFactory=new DefaultExtensionFactory(new SpiServiceRegistry(),applicationPlugin.getArtifactClassLoader().getClassLoader());
+      final RuntimeExtensionModel extensionModel=extensionFactory.createFrom(declarer);
+      extensionManager.registerExtension(extensionModel);
+    }
+  }
+}

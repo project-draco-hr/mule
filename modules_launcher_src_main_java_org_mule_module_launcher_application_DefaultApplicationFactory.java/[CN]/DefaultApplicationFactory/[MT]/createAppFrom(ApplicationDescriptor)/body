@@ -1,11 +1,12 @@
 {
-  DefaultMuleApplication delegate;
-  if (StringUtils.isEmpty(descriptor.getDomain())) {
-    delegate=new DefaultMuleApplication(descriptor,applicationClassLoaderFactory,domainFactory.createDefaultDomain());
+  ArtifactClassLoader parent=domainRepository.getDomain(descriptor.getDomain()).getArtifactClassLoader();
+  parent=getSharedLibClassLoader(descriptor,parent);
+  final List<ApplicationPlugin> applicationPlugins=createApplicationPlugins(parent,descriptor.getPlugins());
+  if (!applicationPlugins.isEmpty()) {
+    parent=createCompositePluginClassLoader(parent,applicationPlugins);
   }
- else {
-    delegate=new DefaultMuleApplication(descriptor,applicationClassLoaderFactory,domainFactory.createArtifact(descriptor.getDomain()));
-  }
+  final ArtifactClassLoader deploymentClassLoader=applicationClassLoaderFactory.create(parent,descriptor);
+  DefaultMuleApplication delegate=new DefaultMuleApplication(descriptor,deploymentClassLoader,applicationPlugins,domainRepository);
   if (deploymentListener != null) {
     delegate.setDeploymentListener(deploymentListener);
   }

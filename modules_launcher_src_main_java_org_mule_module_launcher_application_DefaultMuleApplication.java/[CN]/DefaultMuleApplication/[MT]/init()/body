@@ -1,12 +1,12 @@
 {
   if (logger.isInfoEnabled()) {
-    logger.info(miniSplash(String.format("Initializing app '%s'",descriptor.getName())));
+    logger.info(miniSplash(format("Initializing app '%s'",descriptor.getName())));
   }
   try {
-    ConfigurationBuilder cfgBuilder=domain.createApplicationConfigurationBuilder(this);
+    ConfigurationBuilder cfgBuilder=domainRepository.getDomain(descriptor.getDomain()).createApplicationConfigurationBuilder(this);
     if (!cfgBuilder.isConfigured()) {
       List<ConfigurationBuilder> builders=new LinkedList<>();
-      builders.add(new ExtensionsManagerConfigurationBuilder());
+      builders.add(new ApplicationExtensionsManagerConfigurationBuilder(applicationPlugins));
       builders.add(createConfigurationBuilderFromApplicationProperties());
       builders.add(cfgBuilder);
       DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
@@ -20,6 +20,6 @@
  catch (  Exception e) {
     setStatusToFailed();
     logger.error(null,ExceptionUtils.getRootCause(e));
-    throw new DeploymentInitException(CoreMessages.createStaticMessage(ExceptionUtils.getRootCauseMessage(e)),e);
+    throw new DeploymentInitException(createStaticMessage(ExceptionUtils.getRootCauseMessage(e)),e);
   }
 }

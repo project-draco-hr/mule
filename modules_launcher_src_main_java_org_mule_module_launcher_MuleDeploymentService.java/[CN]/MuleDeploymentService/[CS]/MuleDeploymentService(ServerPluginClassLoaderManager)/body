@@ -1,18 +1,24 @@
 {
   final MuleClassLoaderLookupPolicy containerLookupPolicy=new MuleClassLoaderLookupPolicy(Collections.emptyMap(),SYSTEM_PACKAGES);
-  DomainClassLoaderRepository domainClassLoaderRepository=new MuleDomainClassLoaderRepository(containerLookupPolicy);
-  ArtifactClassLoaderFactory applicationClassLoaderFactory=new MuleApplicationClassLoaderFactory(domainClassLoaderRepository,new DefaultNativeLibraryFinderFactory());
+  ArtifactClassLoaderFactory<DomainDescriptor> domainClassLoaderFactory=new DomainClassLoaderFactory(containerLookupPolicy);
+  ArtifactClassLoaderFactory applicationClassLoaderFactory=new MuleApplicationClassLoaderFactory(new DefaultNativeLibraryFinderFactory());
   applicationClassLoaderFactory=new CompositeApplicationClassLoaderFactory(applicationClassLoaderFactory,serverPluginClassLoaderManager);
-  DefaultDomainFactory domainFactory=new DefaultDomainFactory(domainClassLoaderRepository);
+  DefaultDomainFactory domainFactory=new DefaultDomainFactory(domainClassLoaderFactory,domainManager);
   domainFactory.setDeploymentListener(domainDeploymentListener);
+  try {
+    domainFactory.createArtifact(DEFAULT_DOMAIN_NAME);
+  }
+ catch (  IOException e) {
+    throw new IllegalStateException("Cannot create default domain");
+  }
   final ApplicationDescriptorFactory applicationDescriptorFactory=new ApplicationDescriptorFactory(new ApplicationPluginDescriptorFactory(new ArtifactClassLoaderFilterFactory()));
-  DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,domainFactory,applicationDescriptorFactory);
+  DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,applicationDescriptorFactory,domainManager);
   applicationFactory.setDeploymentListener(applicationDeploymentListener);
   ArtifactDeployer<Application> applicationMuleDeployer=new DefaultArtifactDeployer<>();
   ArtifactDeployer<Domain> domainMuleDeployer=new DefaultArtifactDeployer<>();
   this.applicationDeployer=new DefaultArchiveDeployer<>(applicationMuleDeployer,applicationFactory,applications,deploymentLock,NOP_ARTIFACT_DEPLOYMENT_TEMPLATE);
   this.applicationDeployer.setDeploymentListener(applicationDeploymentListener);
-  this.domainDeployer=new DomainArchiveDeployer(new DefaultArchiveDeployer<>(domainMuleDeployer,domainFactory,domains,deploymentLock,new DomainDeploymentTemplate(applicationDeployer,this)),applicationDeployer,applicationMuleDeployer,this);
+  this.domainDeployer=new DomainArchiveDeployer(new DefaultArchiveDeployer<>(domainMuleDeployer,domainFactory,domains,deploymentLock,new DomainDeploymentTemplate(applicationDeployer,this)),applicationDeployer,this);
   this.domainDeployer.setDeploymentListener(domainDeploymentListener);
   this.deploymentDirectoryWatcher=new DeploymentDirectoryWatcher(domainDeployer,applicationDeployer,domains,applications,deploymentLock);
 }
