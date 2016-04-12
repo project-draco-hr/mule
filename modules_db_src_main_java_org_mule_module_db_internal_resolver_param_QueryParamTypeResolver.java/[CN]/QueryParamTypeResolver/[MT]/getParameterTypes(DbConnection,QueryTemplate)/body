@@ -6,11 +6,16 @@
     int parameterTypeId=parameterMetaData.getParameterType(queryParam.getIndex());
     String parameterTypeName=parameterMetaData.getParameterTypeName(queryParam.getIndex());
     DbType dbType;
-    try {
-      dbType=dbTypeManager.lookup(connection,parameterTypeId,parameterTypeName);
+    if (parameterTypeName == null) {
+      dbType=UnknownDbType.getInstance();
     }
- catch (    UnknownDbTypeException e) {
-      dbType=new ResolvedDbType(parameterTypeId,parameterTypeName);
+ else {
+      try {
+        dbType=dbTypeManager.lookup(connection,parameterTypeId,parameterTypeName);
+      }
+ catch (      UnknownDbTypeException e) {
+        dbType=new ResolvedDbType(parameterTypeId,parameterTypeName);
+      }
     }
     paramTypes.put(queryParam.getIndex(),dbType);
   }
