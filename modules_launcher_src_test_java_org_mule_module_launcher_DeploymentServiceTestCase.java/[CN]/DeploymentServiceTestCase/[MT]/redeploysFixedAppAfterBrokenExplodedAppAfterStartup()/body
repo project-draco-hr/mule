@@ -3,10 +3,17 @@
   addExplodedAppFromBuilder(incompleteAppFileBuilder);
   assertDeploymentFailure(applicationDeploymentListener,incompleteAppFileBuilder.getId());
   reset(applicationDeploymentListener);
-  File originalConfigFile=new File(appsDir + "/" + incompleteAppFileBuilder.getDeployedPath(),MULE_CONFIG_XML_FILE);
-  URL url=getClass().getResource(EMPTY_DOMAIN_CONFIG_XML);
-  File newConfigFile=new File(url.toURI());
-  FileUtils.copyFile(newConfigFile,originalConfigFile);
+  ReentrantLock deploymentLock=deploymentService.getLock();
+  deploymentLock.lock();
+  try {
+    File originalConfigFile=new File(appsDir + "/" + incompleteAppFileBuilder.getDeployedPath(),MULE_CONFIG_XML_FILE);
+    URL url=getClass().getResource(EMPTY_DOMAIN_CONFIG_XML);
+    File newConfigFile=new File(url.toURI());
+    copyFile(newConfigFile,originalConfigFile);
+  }
+  finally {
+    deploymentLock.unlock();
+  }
   assertApplicationDeploymentSuccess(applicationDeploymentListener,incompleteAppFileBuilder.getId());
   addPackedAppFromBuilder(emptyAppFileBuilder);
   assertApplicationDeploymentSuccess(applicationDeploymentListener,emptyAppFileBuilder.getId());
