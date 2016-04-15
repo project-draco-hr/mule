@@ -1,0 +1,25 @@
+{
+  try {
+    buildRouteChains();
+    if (threadingProfile == null) {
+      threadingProfile=muleContext.getDefaultThreadingProfile();
+    }
+    if (aggregationStrategy == null) {
+      aggregationStrategy=new CollectAllAggregationStrategy();
+    }
+    if (timeout <= 0) {
+      timeout=Long.MAX_VALUE;
+    }
+    if (threadingProfile.isDoThreading()) {
+      workManager=threadingProfile.createWorkManager(ThreadNameHelper.getPrefix(muleContext) + "ScatterGatherWorkManager",muleContext.getConfiguration().getShutdownTimeout());
+    }
+ else {
+      workManager=new SerialWorkManager();
+    }
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+  super.initialise();
+  initialised=true;
+}

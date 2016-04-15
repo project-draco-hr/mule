@@ -1,0 +1,52 @@
+{
+  DataType<?> sourceType=DataTypeFactory.create(src.getClass());
+  if (!isSourceDataTypeSupported(sourceType)) {
+    if (isIgnoreBadInput()) {
+      logger.debug("Source type is incompatible with this transformer and property 'ignoreBadInput' is set to true, so the transformer chain will continue.");
+      return src;
+    }
+ else {
+      Message msg=CoreMessages.transformOnObjectUnsupportedTypeOfEndpoint(getName(),src.getClass());
+      throw new TransformerMessagingException(msg,event,this);
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("Applying transformer %s (%s)",getName(),getClass().getName()));
+    logger.debug(String.format("Object before transform: %s",StringMessageUtils.toString(src)));
+  }
+  MuleMessage message;
+  if (src instanceof MuleMessage) {
+    message=(MuleMessage)src;
+  }
+ else   if (src instanceof MuleEvent) {
+    event=(MuleEvent)src;
+    message=event.getMessage();
+  }
+ else   if (muleContext.getConfiguration().isAutoWrapMessageAwareTransform()) {
+    message=new DefaultMuleMessage(src,muleContext);
+  }
+ else {
+    if (event == null) {
+      throw new TransformerMessagingException(CoreMessages.noCurrentEventForTransformer(),event,this);
+    }
+    message=event.getMessage();
+  }
+  Object result;
+  if (event == null) {
+    event=new DefaultMuleEvent(message,MessageExchangePattern.REQUEST_RESPONSE,new DefaultLocalMuleClient.MuleClientFlowConstruct(muleContext));
+  }
+  try {
+    result=transformMessage(event,enc);
+  }
+ catch (  TransformerException e) {
+    throw new TransformerMessagingException(e.getI18nMessage(),event,this,e);
+  }
+  if (result == null) {
+    result=NullPayload.getInstance();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("Object after transform: %s",StringMessageUtils.toString(result)));
+  }
+  result=checkReturnClass(result,event);
+  return result;
+}

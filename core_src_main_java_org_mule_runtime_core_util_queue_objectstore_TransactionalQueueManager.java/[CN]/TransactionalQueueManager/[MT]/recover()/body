@@ -1,0 +1,23 @@
+{
+  findAllQueueStores();
+  for (  QueueStore store : queueObjectStores) {
+    if (!store.isPersistent()) {
+      continue;
+    }
+    try {
+      List<Serializable> keys=store.allKeys();
+      for (      Serializable key : keys) {
+        if (key instanceof QueueKey) {
+          QueueKey queueKey=(QueueKey)key;
+          QueueInfo queue=getQueue(queueKey.queueName);
+          if (queue.isQueueTransient()) {
+            queue.putNow(queueKey.id);
+          }
+        }
+      }
+    }
+ catch (    Exception e) {
+      throw new ResourceManagerSystemException(e);
+    }
+  }
+}

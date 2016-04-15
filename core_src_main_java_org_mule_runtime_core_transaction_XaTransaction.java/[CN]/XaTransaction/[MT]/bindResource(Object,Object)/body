@@ -1,0 +1,20 @@
+{
+  ResourceKey normalizedKey=getResourceEntry(key,resource);
+  if (resources.containsKey(key)) {
+    throw new IllegalTransactionStateException(CoreMessages.transactionResourceAlreadyListedForKey(key));
+  }
+  resources.put(normalizedKey,resource);
+  if (key == null) {
+    logger.error("Key for bound resource " + resource + " is null");
+  }
+  if (resource instanceof MuleXaObject) {
+    MuleXaObject xaObject=(MuleXaObject)resource;
+    xaObject.enlist();
+  }
+ else   if (resource instanceof XAResource) {
+    enlistResource((XAResource)resource);
+  }
+ else {
+    logger.error("Bound resource " + resource + " is neither a MuleXaObject nor XAResource");
+  }
+}

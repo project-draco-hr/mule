@@ -1,0 +1,38 @@
+{
+  Object[] payload=getPayloadFromMessage(context);
+  Method method;
+  InvocationResult result;
+  method=this.getMethodByArguments(component,payload);
+  if (method != null) {
+    return invokeMethod(component,method,payload);
+  }
+  Class<?>[] types=ClassUtils.getClassTypes(payload);
+  List<Method> methods=ClassUtils.getSatisfiableMethods(component.getClass(),types,isAcceptVoidMethods(),false,ignoredMethods,filter);
+  int numMethods=methods.size();
+  if (numMethods > 1) {
+    result=new InvocationResult(this,InvocationResult.State.FAILED);
+    result.setErrorTooManyMatchingMethods(component,types,StringMessageUtils.toString(methods));
+    return result;
+  }
+ else   if (numMethods == 1) {
+    method=this.addMethodByArguments(component,methods.get(0),payload);
+  }
+ else {
+    methods=ClassUtils.getSatisfiableMethods(component.getClass(),ClassUtils.getClassTypes(payload),true,true,ignoredMethods);
+    numMethods=methods.size();
+    if (numMethods > 1) {
+      result=new InvocationResult(this,InvocationResult.State.FAILED);
+      result.setErrorTooManyMatchingMethods(component,types,StringMessageUtils.toString(methods));
+      return result;
+    }
+ else     if (numMethods == 1) {
+      method=this.addMethodByArguments(component,methods.get(0),payload);
+    }
+ else {
+      result=new InvocationResult(this,InvocationResult.State.FAILED);
+      result.setErrorNoMatchingMethods(component,ClassUtils.getClassTypes(payload));
+      return result;
+    }
+  }
+  return invokeMethod(component,method,payload);
+}

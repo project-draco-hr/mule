@@ -1,0 +1,35 @@
+{
+  super.initialise();
+  if (useSecureHash && idExpression != null) {
+    useSecureHash=false;
+    if (logger.isWarnEnabled()) {
+      logger.warn("Disabling useSecureHash in idempotent-redelivery-policy since an idExpression has been configured");
+    }
+  }
+  if (!useSecureHash && messageDigestAlgorithm != null) {
+    throw new InitialisationException(CoreMessages.initialisationFailure(String.format("The message digest algorithm '%s' was specified when a secure hash will not be used",messageDigestAlgorithm)),this);
+  }
+  if (!useSecureHash && idExpression == null) {
+    throw new InitialisationException(CoreMessages.initialisationFailure("No method for identifying messages was specified"),this);
+  }
+  if (useSecureHash) {
+    if (messageDigestAlgorithm == null) {
+      messageDigestAlgorithm="SHA-256";
+    }
+    try {
+      MessageDigest.getInstance(messageDigestAlgorithm);
+    }
+ catch (    NoSuchAlgorithmException e) {
+      throw new InitialisationException(CoreMessages.initialisationFailure(String.format("Exception '%s' initializing message digest algorithm %s",e.getMessage(),messageDigestAlgorithm)),this);
+    }
+  }
+  String appName=muleContext.getConfiguration().getId();
+  String flowName=flowConstruct.getName();
+  idrId=String.format("%s-%s-%s",appName,flowName,"idr");
+  lockFactory=muleContext.getLockFactory();
+  if (store == null) {
+    store=new ProvidedObjectStoreWrapper<>(null,internalObjectStoreFactory());
+  }
+  initialiseIfNeeded(objectToByteArray,muleContext);
+  initialiseIfNeeded(byteArrayToHexString,muleContext);
+}

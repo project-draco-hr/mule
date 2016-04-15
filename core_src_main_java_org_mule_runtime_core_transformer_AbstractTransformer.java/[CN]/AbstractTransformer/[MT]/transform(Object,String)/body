@@ -1,0 +1,34 @@
+{
+  Object payload=src;
+  if (src instanceof MuleMessage) {
+    MuleMessage message=(MuleMessage)src;
+    if ((!isSourceDataTypeSupported(MULE_MESSAGE_DATA_TYPE,true) && !(this instanceof AbstractMessageTransformer))) {
+      src=((MuleMessage)src).getPayload();
+      payload=message.getPayload();
+    }
+  }
+  DataType<?> sourceType=DataTypeFactory.create(payload.getClass());
+  if (!isSourceDataTypeSupported(sourceType)) {
+    if (ignoreBadInput && !useExtendedTransformations()) {
+      logger.debug("Source type is incompatible with this transformer and property 'ignoreBadInput' is set to true, so the transformer chain will continue.");
+      return payload;
+    }
+ else {
+      Message msg=CoreMessages.transformOnObjectUnsupportedTypeOfEndpoint(getName(),payload.getClass());
+      throw new TransformerException(msg,this);
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("Applying transformer %s (%s)",getName(),getClass().getName()));
+    logger.debug(String.format("Object before transform: %s",StringMessageUtils.toString(payload)));
+  }
+  Object result=doTransform(payload,enc);
+  if (result == null) {
+    result=NullPayload.getInstance();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("Object after transform: %s",StringMessageUtils.toString(result)));
+  }
+  TransformerUtils.checkTransformerReturnClass(this,result);
+  return result;
+}

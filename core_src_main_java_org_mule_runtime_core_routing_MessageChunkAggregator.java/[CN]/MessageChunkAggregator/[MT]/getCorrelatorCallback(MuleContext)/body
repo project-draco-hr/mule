@@ -1,0 +1,49 @@
+{
+  return new CollectionCorrelatorCallback(muleContext,storePrefix){
+    /** 
+ * This method is invoked if the shouldAggregate method is called and
+ * returns true. Once this method returns an aggregated message the event
+ * group is removed from the router
+ * @param events the event group for this request
+ * @return an aggregated message
+ * @throws org.mule.runtime.core.routing.AggregationException if the aggregation
+ * fails. in this scenario the whole event group is removed
+ * and passed to the exception handler for this componenet
+ */
+    @Override public MuleEvent aggregateEvents(    EventGroup events) throws AggregationException {
+      MuleEvent[] collectedEvents;
+      try {
+        collectedEvents=events.toArray(false);
+      }
+ catch (      ObjectStoreException e) {
+        throw new AggregationException(events,MessageChunkAggregator.this,e);
+      }
+      MuleEvent firstEvent=collectedEvents[0];
+      Arrays.sort(collectedEvents,eventComparator);
+      ByteArrayOutputStream baos=new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
+      try {
+        for (        MuleEvent event : collectedEvents) {
+          baos.write(event.getMessageAsBytes());
+        }
+        MuleMessage message;
+        try {
+          final Object deserialized=muleContext.getObjectSerializer().deserialize(baos.toByteArray());
+          message=new DefaultMuleMessage(deserialized,firstEvent.getMessage(),muleContext);
+        }
+ catch (        SerializationException e) {
+          message=new DefaultMuleMessage(baos.toByteArray(),firstEvent.getMessage(),muleContext);
+        }
+        message.setCorrelationGroupSize(-1);
+        message.setCorrelationSequence(-1);
+        return new DefaultMuleEvent(message,firstEvent,getMergedSession(events.toArray()));
+      }
+ catch (      Exception e) {
+        throw new AggregationException(events,MessageChunkAggregator.this,e);
+      }
+ finally {
+        IOUtils.closeQuietly(baos);
+      }
+    }
+  }
+;
+}

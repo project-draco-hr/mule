@@ -1,0 +1,21 @@
+{
+  if (object instanceof Disposable) {
+    try {
+      return object.getClass().getMethod(Disposable.PHASE_NAME);
+    }
+ catch (    NoSuchMethodException e) {
+    }
+  }
+  List<AnnotationMetaData> metaData=AnnotationUtils.getMethodAnnotations(object.getClass(),PreDestroy.class);
+  if (metaData.size() == 0) {
+    return null;
+  }
+ else   if (metaData.size() > 1) {
+    throw new IllegalArgumentException(CoreMessages.objectHasMoreThanOnePreDestroyAnnotation(object.getClass()).getMessage());
+  }
+ else {
+    Method m=(Method)metaData.get(0).getMember();
+    new JSR250ValidatorProcessor().validateLifecycleMethod(m);
+    return m;
+  }
+}

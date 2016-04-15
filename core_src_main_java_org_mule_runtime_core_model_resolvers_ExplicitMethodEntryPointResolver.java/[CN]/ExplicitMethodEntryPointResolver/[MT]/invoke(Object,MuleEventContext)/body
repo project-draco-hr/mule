@@ -1,0 +1,31 @@
+{
+  if (methods == null || methods.size() == 0) {
+    throw new IllegalStateException(CoreMessages.objectIsNull("methods").toString());
+  }
+  Object[] payload=getPayloadFromMessage(context);
+  Class<?>[] classTypes=ClassUtils.getClassTypes(payload);
+  Method method=null;
+  for (Iterator<String> iterator=methods.iterator(); iterator.hasNext(); ) {
+    String methodName=iterator.next();
+    method=getMethodByName(component,methodName,context);
+    if (method == null) {
+      method=ClassUtils.getMethod(component.getClass(),methodName,classTypes,true);
+    }
+    if (method != null) {
+      addMethodByName(component,method,context);
+      Class<?>[] parameterTypes=method.getParameterTypes();
+      if (ClassUtils.compare(parameterTypes,classTypes,false,true)) {
+        break;
+      }
+ else {
+        method=null;
+      }
+    }
+  }
+  if (method == null) {
+    InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
+    result.setErrorNoMatchingMethods(component,classTypes);
+    return result;
+  }
+  return invokeMethod(component,method,payload);
+}

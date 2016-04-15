@@ -1,0 +1,31 @@
+{
+  final String dataTypePairHash=getDataTypeSourceResultPairHash(source,result);
+  List<Transformer> results=(List<Transformer>)transformerListCache.get(dataTypePairHash);
+  if (results != null) {
+    return results;
+  }
+  results=new ArrayList<Transformer>(2);
+  Lock readLock=transformersLock.readLock();
+  readLock.lock();
+  try {
+    for (    Transformer transformer : transformers) {
+      if (!(transformer instanceof Converter)) {
+        continue;
+      }
+      DataType returnDataType=transformer.getReturnDataType();
+      if (result.isCompatibleWith(returnDataType) && transformer.isSourceDataTypeSupported(source)) {
+        results.add(transformer);
+      }
+    }
+  }
+  finally {
+    readLock.unlock();
+  }
+  List<Transformer> concurrentlyAddedTransformers=(List<Transformer>)transformerListCache.putIfAbsent(dataTypePairHash,results);
+  if (concurrentlyAddedTransformers != null) {
+    return concurrentlyAddedTransformers;
+  }
+ else {
+    return results;
+  }
+}

@@ -1,0 +1,18 @@
+{
+  processors.add(processor1);
+  processors.add(processor2);
+  processors.add(processor3);
+  OptimizedRequestContext.unsafeSetEvent(event);
+  when(event.getFlowConstruct()).thenReturn(mock(Flow.class));
+  MuleMessage message=new DefaultMuleMessage("",muleContext);
+  when(event.getId()).thenReturn(RandomStringUtils.randomNumeric(3));
+  when(event.getMessage()).thenReturn(message);
+  when(event.getMuleContext()).thenReturn(muleContext);
+  when(executionTemplate.execute(any(MessageProcessor.class),any(MuleEvent.class))).thenAnswer(new Answer<MuleEvent>(){
+    @Override public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
+      return ((MessageProcessor)invocation.getArguments()[0]).process((MuleEvent)invocation.getArguments()[1]);
+    }
+  }
+);
+  when(muleContext.getTransformationService()).thenReturn(new TransformationService(muleContext));
+}

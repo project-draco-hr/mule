@@ -1,0 +1,32 @@
+{
+  try {
+    if (src instanceof String) {
+      return src.toString().getBytes(outputEncoding);
+    }
+ else     if (src instanceof InputStream) {
+      InputStream is=(InputStream)src;
+      ByteArrayOutputStream byteOut=new ByteArrayOutputStream();
+      try {
+        IOUtils.copyLarge(is,byteOut);
+      }
+  finally {
+        is.close();
+      }
+      return byteOut.toByteArray();
+    }
+ else     if (src instanceof OutputHandler) {
+      ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+      try {
+        ((OutputHandler)src).write(RequestContext.getEvent(),bytes);
+        return bytes.toByteArray();
+      }
+ catch (      IOException e) {
+        throw new TransformerException(this,e);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+  return super.doTransform(src,outputEncoding);
+}

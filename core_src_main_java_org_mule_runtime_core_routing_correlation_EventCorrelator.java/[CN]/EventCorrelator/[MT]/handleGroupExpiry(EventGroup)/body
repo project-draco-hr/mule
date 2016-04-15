@@ -1,0 +1,49 @@
+{
+  try {
+    removeEventGroup(group);
+  }
+ catch (  ObjectStoreException e) {
+    throw new MessagingException(group.getMessageCollectionEvent(),e);
+  }
+  if (isFailOnTimeout()) {
+    MuleEvent messageCollectionEvent=group.getMessageCollectionEvent();
+    muleContext.fireNotification(new RoutingNotification(messageCollectionEvent.getMessage(),null,RoutingNotification.CORRELATION_TIMEOUT));
+    try {
+      group.clear();
+    }
+ catch (    ObjectStoreException e) {
+      logger.warn("Failed to clear group with id " + group.getGroupId() + " since underlying ObjectStore threw Exception:"+ e.getMessage());
+    }
+    throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),messageCollectionEvent);
+  }
+ else {
+    if (logger.isDebugEnabled()) {
+      logger.debug(MessageFormat.format("Aggregator expired, but ''failOnTimeOut'' is false. Forwarding {0} events out of {1} " + "total for group ID: {2}",group.size(),group.expectedSize(),group.getGroupId()));
+    }
+    try {
+      if (!(group.getCreated() + groupTimeToLive < System.currentTimeMillis())) {
+        MuleEvent newEvent=callback.aggregateEvents(group);
+        group.clear();
+        newEvent.getMessage().setCorrelationId(group.getGroupId().toString());
+        if (!correlatorStore.contains((Serializable)group.getGroupId(),getExpiredAndDispatchedPartitionKey())) {
+          if (timeoutMessageProcessor != null) {
+            timeoutMessageProcessor.process(newEvent);
+          }
+ else {
+            throw new MessagingException(CoreMessages.createStaticMessage(MessageFormat.format("Group {0} timed out, but no timeout message processor was " + "configured.",group.getGroupId())),newEvent);
+          }
+          correlatorStore.store((Serializable)group.getGroupId(),group.getCreated(),getExpiredAndDispatchedPartitionKey());
+        }
+ else {
+          logger.warn(MessageFormat.format("Discarding group {0}",group.getGroupId()));
+        }
+      }
+    }
+ catch (    MessagingException me) {
+      throw me;
+    }
+catch (    Exception e) {
+      throw new MessagingException(group.getMessageCollectionEvent(),e);
+    }
+  }
+}

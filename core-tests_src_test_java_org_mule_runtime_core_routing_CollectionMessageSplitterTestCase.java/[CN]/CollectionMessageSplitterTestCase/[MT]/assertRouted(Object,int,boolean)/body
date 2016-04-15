@@ -1,0 +1,35 @@
+{
+  Flow fc=getTestFlow();
+  MuleSession session=getTestSession(fc,muleContext);
+  Map<String,Object> inboundProps=new HashMap<String,Object>();
+  inboundProps.put("inbound1","1");
+  inboundProps.put("inbound2",2);
+  inboundProps.put("inbound3",session);
+  Map<String,Object> outboundProps=new HashMap<String,Object>();
+  outboundProps.put("outbound1","3");
+  outboundProps.put("outbound2",4);
+  outboundProps.put("outbound3",session);
+  Map<String,Object> invocationProps=new HashMap<String,Object>();
+  invocationProps.put("invoke1","5");
+  invocationProps.put("invoke2",6);
+  invocationProps.put("invoke3",session);
+  Set<Integer> expectedSequences=new HashSet<Integer>();
+  for (int i=1; i <= count; i++) {
+    expectedSequences.add(i);
+  }
+  MuleMessage toSplit=new DefaultMuleMessage(payload,inboundProps,outboundProps,null,muleContext);
+  CollectionSplitter splitter=new CollectionSplitter();
+  splitter.setMuleContext(muleContext);
+  Grabber grabber=new Grabber();
+  splitter.setListener(grabber);
+  DefaultMuleEvent event=new DefaultMuleEvent(toSplit,fc,session);
+  for (  Map.Entry<String,Object> entry : invocationProps.entrySet()) {
+    event.setFlowVariable(entry.getKey(),entry.getValue());
+  }
+  splitter.process(event);
+  List<MuleEvent> splits=grabber.getEvents();
+  assertEquals(count,splits.size());
+  Set<Object> actualSequences=new HashSet<Object>();
+  assertSplitParts(count,counted,inboundProps,outboundProps,invocationProps,splits,actualSequences);
+  assertEquals(expectedSequences,actualSequences);
+}

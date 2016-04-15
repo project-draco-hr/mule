@@ -1,0 +1,14 @@
+{
+  MuleRegistry muleRegistry=mock(MuleRegistry.class);
+  when(muleContext.getRegistry()).thenReturn(muleRegistry);
+  Transformer aToBConverter=new MockConverterBuilder().from(dataTypeA).to(dataTypeB).weighting(1).build();
+  Transformer betterAToBConverter=new MockConverterBuilder().from(dataTypeA).to(dataTypeB).weighting(2).build();
+  ArrayList<Transformer> transformers=new ArrayList<Transformer>();
+  transformers.add(aToBConverter);
+  transformers.add(betterAToBConverter);
+  when(muleRegistry.lookupTransformers(dataTypeA,dataTypeB)).thenReturn(transformers);
+  TypeBasedTransformerResolver resolver=new TypeBasedTransformerResolver();
+  resolver.setMuleContext(muleContext);
+  Transformer resolvedTransformer=resolver.resolve(dataTypeA,dataTypeB);
+  assertEquals(betterAToBConverter,resolvedTransformer);
+}

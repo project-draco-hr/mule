@@ -1,0 +1,42 @@
+{
+  Method method=null;
+  Object[] payload=getPayloadFromMessage(context);
+  if (payload == null) {
+    return new InvocationResult(this,InvocationResult.State.NOT_SUPPORTED);
+  }
+  for (  String methodName : methods) {
+    method=getMethodByName(component,methodName,context);
+    if (method == null) {
+      method=ClassUtils.getMethod(component.getClass(),methodName,getMethodArgumentTypes(payload));
+    }
+    if (method != null) {
+      addMethodByName(component,method,context);
+      break;
+    }
+  }
+  if (method == null) {
+    if (isEnableDiscovery()) {
+      Class<?>[] argTypes=getMethodArgumentTypes(payload);
+      List<Method> methods=ClassUtils.getSatisfiableMethods(component.getClass(),argTypes,isAcceptVoidMethods(),false,getIgnoredMethods(),filter);
+      if (methods.size() > 1) {
+        InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
+        result.setErrorTooManyMatchingMethods(component,argTypes,StringMessageUtils.toString(methods));
+        return result;
+      }
+ else       if (methods.size() == 1) {
+        method=this.addMethodByArguments(component,methods.get(0),getPayloadFromMessage(context));
+      }
+ else {
+        InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
+        result.setErrorNoMatchingMethods(component,ClassUtils.NO_ARGS_TYPE);
+        return result;
+      }
+    }
+ else {
+      InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
+      result.setErrorNoMatchingMethodsCalled(component,StringMessageUtils.toString(methods));
+      return result;
+    }
+  }
+  return invokeMethod(component,method,getPayloadFromMessage(context));
+}

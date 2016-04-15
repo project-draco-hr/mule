@@ -1,0 +1,74 @@
+{
+  final String groupId=messageInfoMapping.getCorrelationId(event);
+  if (logger.isTraceEnabled()) {
+    try {
+      logger.trace(String.format("Received async reply message for correlationID: %s%n%s%n%s",groupId,StringMessageUtils.truncate(StringMessageUtils.toString(event.getMessage().getPayload()),200,false),StringMessageUtils.headersToString(event.getMessage())));
+    }
+ catch (    Exception e) {
+    }
+  }
+  if (groupId == null || groupId.equals("-1")) {
+    throw new RoutingException(CoreMessages.noCorrelationId(),event,timeoutMessageProcessor);
+  }
+  while (true) {
+    try {
+      if (isGroupAlreadyProcessed(groupId)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("An event was received for an event group that has already been processed, " + "this is probably because the async-reply timed out. Correlation Id is: " + groupId + ". Dropping event");
+        }
+        muleContext.fireNotification(new RoutingNotification(event.getMessage(),event.getMessageSourceURI().toString(),RoutingNotification.MISSED_AGGREGATION_GROUP_EVENT));
+        return null;
+      }
+    }
+ catch (    ObjectStoreException e) {
+      throw new RoutingException(event,timeoutMessageProcessor,e);
+    }
+    EventGroup group;
+    try {
+      group=this.getEventGroup(groupId);
+    }
+ catch (    ObjectStoreException e) {
+      throw new RoutingException(event,timeoutMessageProcessor,e);
+    }
+    if (group == null) {
+      try {
+        EventGroup eventGroup=callback.createEventGroup(event,groupId);
+        eventGroup.initEventsStore(correlatorStore);
+        group=this.addEventGroup(eventGroup);
+      }
+ catch (      ObjectStoreException e) {
+        throw new RoutingException(event,timeoutMessageProcessor,e);
+      }
+    }
+synchronized (groupsLock) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Adding event to aggregator group: " + groupId);
+      }
+      try {
+        group.addEvent(event);
+      }
+ catch (      ObjectStoreException e) {
+        throw new RoutingException(event,timeoutMessageProcessor,e);
+      }
+      if (callback.shouldAggregateEvents(group)) {
+        MuleEvent returnEvent=callback.aggregateEvents(group);
+        returnEvent.getMessage().setCorrelationId(groupId);
+        String rootId=group.getCommonRootId();
+        if (rootId != null) {
+          returnEvent.getMessage().setMessageRootId(rootId);
+        }
+        try {
+          this.removeEventGroup(group);
+          group.clear();
+        }
+ catch (        ObjectStoreException e) {
+          throw new RoutingException(event,timeoutMessageProcessor,e);
+        }
+        return returnEvent;
+      }
+ else {
+        return null;
+      }
+    }
+  }
+}

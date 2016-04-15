@@ -1,0 +1,14 @@
+{
+  ObjectPool pool=createPoolWithExhaustedAction(PoolingProfile.WHEN_EXHAUSTED_WAIT);
+  assertEquals(0,pool.getNumActive());
+  borrowObjectsUntilPoolIsFull(pool);
+  long before=System.currentTimeMillis();
+  try {
+    pool.borrowObject();
+    fail("WHEN_EXHAUSTED_WAIT was specified but the pool returned an object");
+  }
+ catch (  NoSuchElementException nse) {
+    long delta=System.currentTimeMillis() - before;
+    assertTrue(delta >= MAX_WAIT);
+  }
+}

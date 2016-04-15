@@ -1,0 +1,36 @@
+{
+  if (!isCompressed(bytes)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Data already uncompressed; doing nothing");
+    }
+    return bytes;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Uncompressing message of size: " + bytes.length);
+  }
+  ByteArrayInputStream bais=null;
+  GZIPInputStream gzis=null;
+  ByteArrayOutputStream baos=null;
+  try {
+    bais=new ByteArrayInputStream(bytes);
+    gzis=new GZIPInputStream(bais);
+    baos=new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
+    IOUtils.copy(gzis,baos);
+    gzis.close();
+    bais.close();
+    byte[] uncompressedByteArray=baos.toByteArray();
+    baos.close();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Uncompressed message to size: " + uncompressedByteArray.length);
+    }
+    return uncompressedByteArray;
+  }
+ catch (  IOException ioex) {
+    throw ioex;
+  }
+ finally {
+    IOUtils.closeQuietly(gzis);
+    IOUtils.closeQuietly(bais);
+    IOUtils.closeQuietly(baos);
+  }
+}

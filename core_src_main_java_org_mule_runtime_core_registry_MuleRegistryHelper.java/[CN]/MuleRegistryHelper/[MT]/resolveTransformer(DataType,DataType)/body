@@ -1,0 +1,21 @@
+{
+  Lock readLock=transformerResolversLock.readLock();
+  readLock.lock();
+  try {
+    for (    TransformerResolver resolver : transformerResolvers) {
+      try {
+        Transformer trans=resolver.resolve(source,result);
+        if (trans != null) {
+          return trans;
+        }
+      }
+ catch (      ResolverException e) {
+        throw new TransformerException(CoreMessages.noTransformerFoundForMessage(source,result),e);
+      }
+    }
+  }
+  finally {
+    readLock.unlock();
+  }
+  return null;
+}

@@ -1,0 +1,24 @@
+{
+  final int maxEntries=5;
+  final int entryTTL=UNBOUNDED;
+  final ListableObjectStore os=objectStoreFactory.createObjectStore("myOs",maxEntries,entryTTL,1000);
+  os.store(0,0);
+  ensureMilisecondChanged();
+  for (int i=1; i < maxEntries + 1; i++) {
+    os.store(i,i);
+  }
+  PollingProber prober=new PollingProber(5000,1000);
+  prober.check(new JUnitProbe(){
+    @Override public boolean test() throws Exception {
+      assertThat(os.allKeys().size(),is(maxEntries));
+      for (int i=1; i < maxEntries + 1; i++) {
+        assertThat(os.contains(i),is(true));
+      }
+      return true;
+    }
+    @Override public String describeFailure(){
+      return "objectStore was not trimmed";
+    }
+  }
+);
+}

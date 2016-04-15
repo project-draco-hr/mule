@@ -1,0 +1,26 @@
+{
+  final Thread callerThread=Thread.currentThread();
+  MuleWorkManager wm=new MuleWorkManager(ThreadingProfile.DEFAULT_THREADING_PROFILE,null,5000);
+  wm.setMuleContext(muleContext);
+  try {
+    wm.start();
+    wm.doWork(new Work(){
+      public void release(){
+      }
+      public void run(){
+        Thread calleeThread=Thread.currentThread();
+        assertEquals("WorkManager.doWork() should have been executed in the same thread.",callerThread,calleeThread);
+        if (logger.isDebugEnabled()) {
+          logger.debug("WORK: " + Thread.currentThread());
+        }
+      }
+    }
+);
+    if (logger.isDebugEnabled()) {
+      logger.debug("MAIN: " + Thread.currentThread());
+    }
+  }
+  finally {
+    wm.dispose();
+  }
+}

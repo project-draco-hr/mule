@@ -1,0 +1,34 @@
+{
+  final QueueManager mgr=createQueueManager();
+  mgr.start();
+  final Latch latch=new Latch();
+  Thread t=new Thread(){
+    @Override public void run(){
+      try {
+        latch.countDown();
+        Thread.sleep(200);
+        QueueSession s=mgr.getQueueSession();
+        Queue q=s.getQueue("queue1");
+        assertEquals("Queue size",0,q.size());
+        q.put("String1");
+      }
+ catch (      Exception e) {
+      }
+    }
+  }
+;
+  t.start();
+  latch.await();
+  long t0=System.currentTimeMillis();
+  QueueSession s=mgr.getQueueSession();
+  Queue q=s.getQueue("queue1");
+  assertEquals("Queue size",0,q.size());
+  Object o=q.take();
+  long t1=System.currentTimeMillis();
+  t.join();
+  assertNotNull(o);
+  assertEquals("Queue content","String1",o);
+  assertEquals("Queue size",0,q.size());
+  assertTrue(t1 - t0 > 100);
+  mgr.stop();
+}

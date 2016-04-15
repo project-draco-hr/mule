@@ -1,0 +1,14 @@
+{
+  PartitionedPersistentObjectStore<String> partitionedStore=new PartitionedPersistentObjectStore<String>(muleContext);
+  partitionedStore.open();
+  muleContext.getRegistry().registerObject(MuleProperties.OBJECT_STORE_DEFAULT_PERSISTENT_NAME,partitionedStore);
+  ObjectStoreManager manager=muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_STORE_MANAGER);
+  ListableObjectStore<String> store=manager.getObjectStore("persistencePart2",true);
+  assertTrue(store instanceof ObjectStorePartition);
+  ObjectStore<String> baseStore=((ObjectStorePartition<String>)store).getBaseStore();
+  assertTrue(baseStore instanceof PartitionedPersistentObjectStore);
+  assertSame(baseStore,muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_STORE_DEFAULT_PERSISTENT_NAME));
+  testObjectStore(store);
+  testObjectStoreExpiry(manager.<ObjectStore<String>>getObjectStore("persistenceExpPart2",true,-1,1000,200));
+  testObjectStoreMaxEntries(manager.<ListableObjectStore<String>>getObjectStore("persistenceMaxPart2",true,10,10000,200));
+}

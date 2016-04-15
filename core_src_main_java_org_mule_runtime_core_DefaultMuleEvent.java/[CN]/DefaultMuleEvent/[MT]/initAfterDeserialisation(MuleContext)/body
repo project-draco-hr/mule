@@ -1,0 +1,25 @@
+{
+  if (message instanceof DefaultMuleMessage) {
+    ((DefaultMuleMessage)message).initAfterDeserialisation(muleContext);
+    setMessage(message);
+  }
+  if (replyToHandler instanceof DefaultReplyToHandler) {
+    ((DefaultReplyToHandler)replyToHandler).initAfterDeserialisation(muleContext);
+  }
+  if (replyToDestination instanceof DeserializationPostInitialisable) {
+    try {
+      DeserializationPostInitialisable.Implementation.init(replyToDestination,muleContext);
+    }
+ catch (    Exception e) {
+      throw new DefaultMuleException(e);
+    }
+  }
+  if (serializedData == null) {
+    return;
+  }
+  String serviceName=this.getTransientServiceName();
+  if (serviceName != null) {
+    flowConstruct=muleContext.getRegistry().lookupFlowConstruct(serviceName);
+  }
+  serializedData=null;
+}

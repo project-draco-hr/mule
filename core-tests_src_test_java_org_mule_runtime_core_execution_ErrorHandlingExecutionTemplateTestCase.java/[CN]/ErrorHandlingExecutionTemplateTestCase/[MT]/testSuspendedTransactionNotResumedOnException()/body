@@ -1,0 +1,19 @@
+{
+  mockTransaction.setXA(true);
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  TransactionCoordination.getInstance().suspendCurrentTransaction();
+  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
+  configureExceptionListener(null,null);
+  ExecutionTemplate executionTemplate=createExceptionHandlingTransactionTemplate();
+  try {
+    executionTemplate.execute(TransactionTemplateTestUtils.getFailureTransactionCallback(mockMessagingException));
+    fail("MessagingException must be thrown");
+  }
+ catch (  MessagingException e) {
+  }
+  verify(mockTransaction,VerificationModeFactory.times(0)).resume();
+  verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
+  verify(mockTransaction,VerificationModeFactory.times(0)).setRollbackOnly();
+  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
+}

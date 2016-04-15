@@ -1,0 +1,22 @@
+{
+  OrFilter filter=new OrFilter();
+  assertEquals(0,filter.getFilters().size());
+  assertFalse(filter.accept(new DefaultMuleMessage("foo",muleContext)));
+  WildcardFilter left=new WildcardFilter("blah.blah.*");
+  WildcardFilter right=new WildcardFilter("blah.b*");
+  filter=new OrFilter(left,right);
+  assertEquals(2,filter.getFilters().size());
+  assertTrue(filter.accept(new DefaultMuleMessage("blah.blah.blah",muleContext)));
+  assertTrue(right.accept(new DefaultMuleMessage("blah.blah",muleContext)));
+  assertTrue(!left.accept(new DefaultMuleMessage("blah.blah",muleContext)));
+  assertTrue(filter.accept(new DefaultMuleMessage("blah.blah",muleContext)));
+  assertTrue(!filter.accept(new DefaultMuleMessage("blah.x.blah",muleContext)));
+  filter=new OrFilter();
+  LinkedList filters=new LinkedList();
+  filters.addLast(left);
+  filters.addLast(right);
+  filter.setFilters(filters);
+  assertTrue(filter.accept(new DefaultMuleMessage("blah.blah.blah",muleContext)));
+  assertTrue(filter.accept(new DefaultMuleMessage("blah.blah",muleContext)));
+  assertTrue(!filter.accept(new DefaultMuleMessage("blah.x.blah",muleContext)));
+}

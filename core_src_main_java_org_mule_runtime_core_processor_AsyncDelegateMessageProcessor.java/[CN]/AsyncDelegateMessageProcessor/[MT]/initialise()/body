@@ -1,0 +1,25 @@
+{
+  if (delegate == null) {
+    throw new InitialisationException(CoreMessages.objectIsNull("delegate message processor"),this);
+  }
+  if (processingStrategy == null) {
+    throw new InitialisationException(CoreMessages.objectIsNull("processingStrategy"),this);
+  }
+  validateFlowConstruct();
+  StageNameSource nameSource=null;
+  if (name != null) {
+    nameSource=((StageNameSourceProvider)flowConstruct).getAsyncStageNameSource(name);
+  }
+ else {
+    nameSource=((StageNameSourceProvider)flowConstruct).getAsyncStageNameSource();
+  }
+  MessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder(flowConstruct);
+  processingStrategy.configureProcessors(Collections.singletonList(delegate),nameSource,builder,muleContext);
+  try {
+    target=builder.build();
+  }
+ catch (  MuleException e) {
+    throw new InitialisationException(e,this);
+  }
+  super.initialise();
+}

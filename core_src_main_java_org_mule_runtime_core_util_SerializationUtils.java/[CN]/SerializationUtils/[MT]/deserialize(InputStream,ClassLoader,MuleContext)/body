@@ -1,0 +1,35 @@
+{
+  if (inputStream == null) {
+    throw new IllegalArgumentException("The InputStream must not be null");
+  }
+  if (cl == null) {
+    throw new IllegalArgumentException("The ClassLoader must not be null");
+  }
+  ObjectInputStream in=null;
+  try {
+    in=new ClassLoaderObjectInputStream(cl,inputStream);
+    Object obj=in.readObject();
+    if (obj instanceof DeserializationPostInitialisable) {
+      DeserializationPostInitialisable.Implementation.init(obj,muleContext);
+    }
+    return obj;
+  }
+ catch (  ClassNotFoundException ex) {
+    throw new SerializationException(ex);
+  }
+catch (  IOException ex) {
+    throw new SerializationException(ex);
+  }
+catch (  Exception ex) {
+    throw new SerializationException(ex);
+  }
+ finally {
+    try {
+      if (in != null) {
+        in.close();
+      }
+    }
+ catch (    IOException ex) {
+    }
+  }
+}

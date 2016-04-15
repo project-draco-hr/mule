@@ -1,0 +1,39 @@
+{
+  if (results == null) {
+    return null;
+  }
+ else   if (results.size() == 1) {
+    MuleEvent event=results.get(0);
+    if (event == null || event instanceof VoidMuleEvent) {
+      return event;
+    }
+ else     if (event != null && event.getMessage() != null) {
+      if (returnCollectionWithSingleResult) {
+        return createMessageCollectionWithSingleMessage(event,muleContext);
+      }
+ else {
+        return event;
+      }
+    }
+ else {
+      return VoidMuleEvent.getInstance();
+    }
+  }
+ else {
+    List<MuleEvent> nonNullResults=(List<MuleEvent>)CollectionUtils.select(results,new Predicate(){
+      public boolean evaluate(      Object object){
+        return !VoidMuleEvent.getInstance().equals(object) && object != null && ((MuleEvent)object).getMessage() != null;
+      }
+    }
+);
+    if (nonNullResults.size() == 0) {
+      return VoidMuleEvent.getInstance();
+    }
+ else     if (nonNullResults.size() == 1) {
+      return nonNullResults.get(0);
+    }
+ else {
+      return createMessageCollection(nonNullResults,previous,muleContext);
+    }
+  }
+}

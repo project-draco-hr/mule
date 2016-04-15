@@ -1,0 +1,21 @@
+{
+  String resolvedVariable=resolveVariable(event);
+  Serializable watermarkValue=null;
+  try {
+    watermarkValue=objectStore.retrieve(resolvedVariable);
+  }
+ catch (  ObjectDoesNotExistException ex) {
+    try {
+      watermarkValue=WatermarkUtils.evaluate(defaultExpression,event);
+    }
+ catch (    NotSerializableException nse) {
+      logger.warn(String.format("Default watermark expression '%s' returned not serializable value",this.defaultExpression),nse);
+    }
+  }
+  if (watermarkValue != null) {
+    event.setFlowVariable(resolvedVariable,watermarkValue);
+  }
+ else {
+    logger.warn(CoreMessages.nullWatermark().getMessage());
+  }
+}

@@ -1,0 +1,34 @@
+{
+  if (outboundTransformer == null) {
+    throw new IllegalArgumentException(CoreMessages.objectIsNull("outboundTransformer").getMessage());
+  }
+  try {
+    Class returnClass=outboundTransformer.getReturnDataType().getType();
+    if (returnClass == null) {
+      logger.warn("No return class was set on transformer: " + outboundTransformer + ". Attempting to work out how to treat the result transformation");
+      Object result=outboundTransformer.transform(o);
+      byte[] bytes;
+      if (result instanceof byte[]) {
+        bytes=(byte[])result;
+      }
+ else {
+        bytes=result.toString().getBytes(encoding);
+      }
+      out.write(bytes);
+    }
+ else     if (returnClass.equals(byte[].class)) {
+      byte[] b=(byte[])outboundTransformer.transform(o);
+      out.write(b);
+    }
+ else     if (returnClass.equals(String.class)) {
+      String s=(String)outboundTransformer.transform(o);
+      out.write(s.getBytes(encoding));
+    }
+ else {
+      throw new TransformerException(CoreMessages.transformFailedFrom(o.getClass()));
+    }
+  }
+ catch (  IOException e) {
+    throw new TransformerException(CoreMessages.transformFailedFrom(o.getClass()),e);
+  }
+}

@@ -1,0 +1,32 @@
+{
+  boolean isRenamed=false;
+  if (srcFile != null && destFile != null) {
+    logger.debug("Moving file " + srcFile.getAbsolutePath() + " to "+ destFile.getAbsolutePath());
+    if (!destFile.exists()) {
+      try {
+        if (srcFile.isFile()) {
+          logger.debug("Trying to rename file");
+          isRenamed=srcFile.renameTo(destFile);
+          if (!isRenamed && srcFile.exists()) {
+            logger.debug("Trying hard copy, assuming partition crossing ...");
+            isRenamed=renameFileHard(srcFile,destFile);
+          }
+          logger.debug("File renamed: " + isRenamed);
+        }
+ else {
+          logger.debug(srcFile.getAbsolutePath() + " is not a valid file");
+        }
+      }
+ catch (      Exception e) {
+        logger.debug("Error moving file from " + srcFile.getAbsolutePath() + " to "+ destFile.getAbsolutePath(),e);
+      }
+    }
+ else {
+      logger.debug("Error renaming file " + srcFile.getAbsolutePath() + ". Destination file "+ destFile.getAbsolutePath()+ " already exists.");
+    }
+  }
+ else {
+    logger.debug("Error renaming file. Source or destination file is null.");
+  }
+  return isRenamed;
+}

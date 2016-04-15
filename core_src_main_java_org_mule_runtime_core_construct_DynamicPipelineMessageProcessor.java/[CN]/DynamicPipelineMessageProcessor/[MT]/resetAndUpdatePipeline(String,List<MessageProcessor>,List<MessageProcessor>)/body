@@ -1,0 +1,16 @@
+{
+  checkPipelineId(id);
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder(flow);
+  builder.chain(preMessageProcessors);
+  builder.chain(staticChain);
+  builder.chain(postMessageProcessors);
+  MessageProcessorChain newChain=builder.build();
+  Lifecycle preChainOld=preChain;
+  Lifecycle postChainOld=postChain;
+  preChain=new SimpleMessageProcessorChain(preMessageProcessors);
+  postChain=new SimpleMessageProcessorChain(postMessageProcessors);
+  initDynamicChains();
+  super.setListener(newChain);
+  disposeDynamicChains(preChainOld,postChainOld);
+  return getPipelineId();
+}

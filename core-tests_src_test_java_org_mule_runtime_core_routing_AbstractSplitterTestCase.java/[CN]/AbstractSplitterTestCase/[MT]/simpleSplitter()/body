@@ -1,0 +1,24 @@
+{
+  TestSplitter splitter=new TestSplitter();
+  MultipleEventSensingMessageProcessor listener=new MultipleEventSensingMessageProcessor();
+  splitter.setListener(listener);
+  splitter.setMuleContext(muleContext);
+  Apple apple=new Apple();
+  Banana banana=new Banana();
+  Orange orange=new Orange();
+  FruitBowl fruitBowl=new FruitBowl();
+  fruitBowl.addFruit(apple);
+  fruitBowl.addFruit(banana);
+  fruitBowl.addFruit(orange);
+  MuleEvent inEvent=new DefaultMuleEvent(new DefaultMuleMessage(fruitBowl,muleContext),getTestEvent(""));
+  MuleEvent resultEvent=splitter.process(inEvent);
+  assertEquals(3,listener.events.size());
+  assertTrue(listener.events.get(0).getMessage().getPayload() instanceof Fruit);
+  assertTrue(listener.events.get(1).getMessage().getPayload() instanceof Fruit);
+  assertTrue(listener.events.get(2).getMessage().getPayload() instanceof Fruit);
+  assertThat(resultEvent.getMessage().getPayload(),instanceOf(List.class));
+  assertEquals(3,((List<MuleMessage>)resultEvent.getMessage().getPayload()).size());
+  assertTrue(((List<MuleMessage>)resultEvent.getMessage().getPayload()).get(0).getPayload() instanceof Fruit);
+  assertTrue(((List<MuleMessage>)resultEvent.getMessage().getPayload()).get(1).getPayload() instanceof Fruit);
+  assertTrue(((List<MuleMessage>)resultEvent.getMessage().getPayload()).get(2).getPayload() instanceof Fruit);
+}

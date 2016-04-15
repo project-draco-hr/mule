@@ -1,0 +1,48 @@
+{
+  List<MuleEvent> responses=new ArrayList<MuleEvent>(works.size());
+  long remainingTimeout=timeout;
+  for (int routeIndex=0; routeIndex < works.size(); routeIndex++) {
+    MuleEvent response=null;
+    Exception exception=null;
+    ProcessingMuleEventWork work=works.get(routeIndex);
+    MessageProcessor route=routes.get(routeIndex);
+    long startedAt=System.currentTimeMillis();
+    try {
+      response=work.getResult(remainingTimeout,TimeUnit.MILLISECONDS);
+    }
+ catch (    ResponseTimeoutException e) {
+      exception=e;
+    }
+catch (    InterruptedException e) {
+      throw new DefaultMuleException(MessageFactory.createStaticMessage(String.format("Was interrupted while waiting for route %d",routeIndex)),e);
+    }
+catch (    MessagingException e) {
+      exception=wrapInDispatchException(e.getEvent(),routeIndex,route,e);
+    }
+catch (    Exception e) {
+      exception=wrapInDispatchException(event,routeIndex,route,e);
+    }
+    remainingTimeout-=System.currentTimeMillis() - startedAt;
+    if (exception != null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug(String.format("route %d generated exception for MuleEvent %s",routeIndex,event.getId()),exception);
+      }
+      if (exception instanceof MessagingException) {
+        response=DefaultMuleEvent.copy(((MessagingException)exception).getEvent());
+      }
+ else {
+        response=DefaultMuleEvent.copy(event);
+      }
+      if (response.getMessage().getExceptionPayload() == null) {
+        response.getMessage().setExceptionPayload(new DefaultExceptionPayload(exception));
+      }
+    }
+ else {
+      if (logger.isDebugEnabled()) {
+        logger.debug(String.format("route %d executed successfully for event %s",routeIndex,event.getId()));
+      }
+    }
+    responses.add(response);
+  }
+  return aggregationStrategy.aggregate(new AggregationContext(event,responses));
+}

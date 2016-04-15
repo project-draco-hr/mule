@@ -1,0 +1,26 @@
+{
+  if (localContext != null && !queue.isQueueTransactional()) {
+    return ((QueueTransactionContext)localContext).offer(queue,item,timeout);
+  }
+ else {
+    try {
+      Serializable id=queueManager.doStore(queue,item);
+      try {
+        if (!queue.offer(id,0,timeout)) {
+          queueManager.doRemove(queue,id);
+          return false;
+        }
+ else {
+          return true;
+        }
+      }
+ catch (      InterruptedException e) {
+        queueManager.doRemove(queue,id);
+        throw e;
+      }
+    }
+ catch (    ObjectStoreException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  try {
+    Connection connection=borrowConnection();
+    ConnectionValidationResult validationResult=connectionProvider.validate(connection);
+    if (validationResult == null) {
+      LOGGER.debug(NULL_VALIDATION_RESULT_ERROR_MESSAGE);
+      pool.invalidateObject(connection);
+      throw new ConnectionException(NULL_VALIDATION_RESULT_ERROR_MESSAGE);
+    }
+ else     if (!validationResult.isValid()) {
+      pool.invalidateObject(connection);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Error validating connection: {}. Invalidating connection.",validationResult.getMessage());
+      }
+      throw new ConnectionException(validationResult.getMessage(),validationResult.getException());
+    }
+    return new PooledConnectionHandler<>(config,connection,pool,poolingListener);
+  }
+ catch (  ConnectionException e) {
+    throw e;
+  }
+catch (  NoSuchElementException e) {
+    throw new ConnectionException("Connection pool is exhausted");
+  }
+catch (  Exception e) {
+    throw new ConnectionException("An exception was found trying to obtain a connection",e);
+  }
+}

@@ -1,0 +1,17 @@
+{
+  QueueManager mgr=createQueueManager();
+  mgr.start();
+  QueueSession s=mgr.getQueueSession();
+  Queue q=s.getQueue("warmRecoverQueue");
+  int toPopulate=500;
+  Random rnd=new Random();
+  for (int j=0; j < toPopulate; j++) {
+    byte[] o=new byte[2048];
+    rnd.nextBytes(o);
+    q.put(o);
+  }
+  assertEquals(q.size(),toPopulate);
+  mgr.stop();
+  mgr.start();
+  assertEquals(toPopulate,q.size());
+}

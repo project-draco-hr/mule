@@ -1,0 +1,13 @@
+{
+  MessageProcessor intSetter=new MessageProcessor(){
+    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
+      event.getMessage().setPayload(Integer.valueOf(1));
+      return event;
+    }
+  }
+;
+  FirstSuccessful fs=createFirstSuccessfulRouter(intSetter,new StringAppendTransformer("abc"));
+  fs.setFailureExpression("#[payload is Integer]");
+  fs.initialise();
+  assertEquals("abc",fs.process(getTestEvent("")).getMessageAsString());
+}

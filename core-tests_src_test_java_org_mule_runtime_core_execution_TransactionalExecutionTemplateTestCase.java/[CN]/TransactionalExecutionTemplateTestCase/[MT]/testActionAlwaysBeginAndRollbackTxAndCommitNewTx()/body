@@ -1,0 +1,14 @@
+{
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  when(mockTransaction.isRollbackOnly()).thenReturn(true);
+  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_BEGIN);
+  ExecutionTemplate executionTemplate=createExecutionTemplate(config);
+  config.setFactory(new TestTransactionFactory(mockNewTransaction));
+  Object result=executionTemplate.execute(getEmptyTransactionCallback());
+  assertThat((MuleEvent)result,is(RETURN_VALUE));
+  verify(mockTransaction).rollback();
+  verify(mockNewTransaction).commit();
+  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
+  verify(mockNewTransaction,VerificationModeFactory.times(0)).rollback();
+  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
+}

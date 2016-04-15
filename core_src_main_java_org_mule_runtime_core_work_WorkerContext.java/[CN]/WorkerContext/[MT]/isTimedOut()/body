@@ -1,0 +1,16 @@
+{
+  if (0 == startTimeOut || startTimeOut == MuleWorkManager.INDEFINITE) {
+    return false;
+  }
+  boolean isTimeout=acceptedTime + startTimeOut > 0 && System.currentTimeMillis() > acceptedTime + startTimeOut;
+  if (logger.isDebugEnabled()) {
+    logger.debug(this + " accepted at " + acceptedTime+ (isTimeout ? " has timed out." : " has not timed out. ")+ retryCount+ " retries have been performed.");
+  }
+  if (isTimeout) {
+    workException=new WorkRejectedException(this + " has timed out.",WorkException.START_TIMED_OUT);
+    workListener.workRejected(new WorkEvent(this,WorkEvent.WORK_REJECTED,worker,workException));
+    return true;
+  }
+  retryCount++;
+  return isTimeout;
+}

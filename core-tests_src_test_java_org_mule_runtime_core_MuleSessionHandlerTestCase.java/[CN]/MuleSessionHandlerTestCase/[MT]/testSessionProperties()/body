@@ -1,0 +1,23 @@
+{
+  MuleEvent event=MuleTestUtils.getTestEvent("Test Message",muleContext);
+  SessionHandler handler=new SerializeAndEncodeSessionHandler();
+  String string="bar";
+  event.getSession().setProperty("fooString",string);
+  Date date=new Date(0);
+  event.getSession().setProperty("fooDate",date);
+  List<String> list=createList();
+  event.getSession().setProperty("fooList",list);
+  handler.storeSessionInfoToMessage(event.getSession(),event.getMessage());
+  Object s=removeProperty(event);
+  event.getMessage().setProperty(MuleProperties.MULE_SESSION_PROPERTY,s,PropertyScope.INBOUND);
+  MuleSession session=handler.retrieveSessionInfoFromMessage(event.getMessage());
+  Object obj=session.getProperty("fooString");
+  assertTrue(obj instanceof String);
+  assertEquals(string,obj);
+  obj=session.getProperty("fooDate");
+  assertTrue("Object should be a Date but is " + obj.getClass().getName(),obj instanceof Date);
+  assertEquals(date,obj);
+  obj=session.getProperty("fooList");
+  assertTrue("Object should be a List but is " + obj.getClass().getName(),obj instanceof List);
+  assertEquals(list,obj);
+}

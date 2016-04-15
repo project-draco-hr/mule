@@ -1,0 +1,21 @@
+{
+  if (t == null) {
+    return null;
+  }
+  StackTraceElement[] trace=t.getStackTrace();
+  List<StackTraceElement> newTrace=new ArrayList<StackTraceElement>();
+  for (  StackTraceElement stackTraceElement : trace) {
+    if (!isMuleInternalClass(stackTraceElement.getClassName())) {
+      newTrace.add(stackTraceElement);
+    }
+  }
+  StackTraceElement[] clean=new StackTraceElement[newTrace.size()];
+  newTrace.toArray(clean);
+  t.setStackTrace(clean);
+  Throwable cause=t.getCause();
+  while (cause != null) {
+    sanitize(cause);
+    cause=cause.getCause();
+  }
+  return t;
+}

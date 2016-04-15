@@ -1,0 +1,16 @@
+{
+  Converter xmlToInputStream=new MockConverterBuilder().named("xmlToInputStream").from(XML_DATA_TYPE).to(INPUT_STREAM_DATA_TYPE).weighting(1).build();
+  Converter xmlToString=new MockConverterBuilder().named("xmlToString").from(XML_DATA_TYPE).to(STRING_DATA_TYPE).weighting(1).build();
+  Converter inputStreamToJson=new MockConverterBuilder().named("inputStreamToJson").from(INPUT_STREAM_DATA_TYPE).to(JSON_DATA_TYPE).weighting(2).build();
+  Converter stringToJson=new MockConverterBuilder().named("stringToJson").from(STRING_DATA_TYPE).to(JSON_DATA_TYPE).weighting(1).build();
+  graphResolver.transformerChange(xmlToInputStream,TransformerResolver.RegistryAction.ADDED);
+  graphResolver.transformerChange(xmlToString,TransformerResolver.RegistryAction.ADDED);
+  graphResolver.transformerChange(inputStreamToJson,TransformerResolver.RegistryAction.ADDED);
+  graphResolver.transformerChange(stringToJson,TransformerResolver.RegistryAction.ADDED);
+  Transformer transformer=graphResolver.resolve(XML_DATA_TYPE,JSON_DATA_TYPE);
+  assertTrue(transformer instanceof CompositeConverter);
+  CompositeConverter compositeConverter=(CompositeConverter)transformer;
+  assertEquals(2,compositeConverter.getConverters().size());
+  assertEquals(xmlToInputStream,compositeConverter.getConverters().get(0));
+  assertEquals(inputStreamToJson,compositeConverter.getConverters().get(1));
+}

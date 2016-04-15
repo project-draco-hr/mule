@@ -1,0 +1,13 @@
+{
+  ((ThreadSafeAccess)eventToEnrich).resetAccessControl();
+  final ExpressionManager expressionManager=eventToEnrich.getMuleContext().getExpressionManager();
+  if (event != null && !VoidMuleEvent.getInstance().equals(eventToEnrich)) {
+    for (    EnrichExpressionPair pair : enrichExpressionPairs) {
+      enrich(eventToEnrich,event,pair.getSource(),pair.getTarget(),expressionManager);
+    }
+  }
+  if (muleContext != null && muleContext.getConfiguration().isEnricherPropagatesSessionVariableChanges()) {
+    eventToEnrich=new DefaultMuleEvent(eventToEnrich.getMessage(),eventToEnrich,event.getSession());
+  }
+  return OptimizedRequestContext.unsafeSetEvent(eventToEnrich);
+}

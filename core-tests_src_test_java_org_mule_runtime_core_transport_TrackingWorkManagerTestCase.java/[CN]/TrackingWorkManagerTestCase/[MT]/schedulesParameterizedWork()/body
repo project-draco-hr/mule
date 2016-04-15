@@ -1,0 +1,16 @@
+{
+  final Work work=mock(Work.class);
+  long startTimeout=0;
+  ExecutionContext execContext=mock(ExecutionContext.class);
+  WorkListener workListener=mock(WorkListener.class);
+  final ArgumentCaptor<Work> argument=ArgumentCaptor.forClass(Work.class);
+  doAnswer(new Answer(){
+    @Override public Object answer(    InvocationOnMock invocation) throws Throwable {
+      argument.getValue().run();
+      return null;
+    }
+  }
+).when(delegateWorkManager).scheduleWork(argument.capture(),eq(startTimeout),eq(execContext),Matchers.<WorkListener>any());
+  trackingWorkManager.scheduleWork(work,startTimeout,execContext,workListener);
+  verify(work).run();
+}

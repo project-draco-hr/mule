@@ -1,0 +1,24 @@
+{
+  final long now=getCurrentNanoTime();
+  int expiredEntries=0;
+  ExpiryEntry oldestEntry;
+  ConcurrentLinkedQueue<ExpiryEntry> store=getExpiryInfoPartition(partitionName);
+  ConcurrentMap<Serializable,T> partition=getPartition(partitionName);
+  trimToMaxSize(store,maxEntries,partition);
+  if (entryTTL == UNBOUNDED) {
+    return;
+  }
+  while ((oldestEntry=store.peek()) != null) {
+    if (TimeUnit.NANOSECONDS.toMillis(now - oldestEntry.getTime()) >= entryTTL) {
+      oldestEntry=store.remove();
+      partition.remove(oldestEntry.getKey());
+      expiredEntries++;
+    }
+ else {
+      break;
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Expired " + expiredEntries + " old entries");
+  }
+}

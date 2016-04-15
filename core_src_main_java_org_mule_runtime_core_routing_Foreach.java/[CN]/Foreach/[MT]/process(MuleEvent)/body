@@ -1,0 +1,39 @@
+{
+  String parentMessageProp=rootMessageVariableName != null ? rootMessageVariableName : ROOT_MESSAGE_PROPERTY;
+  Object previousCounterVar=null;
+  Object previousRootMessageVar=null;
+  if (event.getFlowVariableNames().contains(counterVariableName)) {
+    previousCounterVar=event.getFlowVariable(counterVariableName);
+  }
+  if (event.getFlowVariableNames().contains(parentMessageProp)) {
+    previousRootMessageVar=event.getFlowVariable(parentMessageProp);
+  }
+  MuleMessage message=event.getMessage();
+  boolean transformed=false;
+  if (xpathCollection) {
+    MuleMessage transformedMessage=transformPayloadIfNeeded(message);
+    if (transformedMessage != message) {
+      transformed=true;
+      message=transformedMessage;
+      event.setMessage(transformedMessage);
+    }
+  }
+  event.setFlowVariable(parentMessageProp,message);
+  doProcess(event);
+  if (transformed) {
+    event.setMessage(transformBack(message));
+  }
+  if (previousCounterVar != null) {
+    event.setFlowVariable(counterVariableName,previousCounterVar);
+  }
+ else {
+    event.removeFlowVariable(counterVariableName);
+  }
+  if (previousRootMessageVar != null) {
+    event.setFlowVariable(parentMessageProp,previousRootMessageVar);
+  }
+ else {
+    event.removeFlowVariable(parentMessageProp);
+  }
+  return event;
+}

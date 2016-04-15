@@ -1,0 +1,18 @@
+{
+  ctx.initialise();
+  new DefaultsConfigurationBuilder().configure(ctx);
+  final AtomicReference<MuleContext> contextFromNotification=new AtomicReference<MuleContext>();
+  final AtomicReference<String> resourceId=new AtomicReference<String>();
+  MuleContextNotificationListener<MuleContextNotification> listener=new MuleContextNotificationListener<MuleContextNotification>(){
+    public void onNotification(    MuleContextNotification notification){
+      contextFromNotification.set(notification.getMuleContext());
+      resourceId.set(notification.getResourceIdentifier());
+    }
+  }
+;
+  ctx.registerListener(listener);
+  ctx.start();
+  assertNotNull(contextFromNotification.get());
+  assertSame(ctx,contextFromNotification.get());
+  assertEquals(ctx.getConfiguration().getId(),resourceId.get());
+}

@@ -1,0 +1,42 @@
+{
+  Object result=event.getMuleContext().getExpressionManager().evaluate(config.getFullExpression(expressionManager),event);
+  if (result instanceof Object[]) {
+    result=Arrays.asList((Object[])result);
+  }
+  if (result instanceof Collection<?>) {
+    List<MuleEvent> messages=new ArrayList<>();
+    for (    Object object : (Collection<?>)result) {
+      messages.add(new DefaultMuleEvent(new DefaultMuleMessage(object,muleContext),event));
+    }
+    return messages;
+  }
+ else   if (result instanceof Map<?,?>) {
+    List<MuleEvent> list=new LinkedList<>();
+    Set<Map.Entry<?,?>> set=((Map)result).entrySet();
+    for (    Entry<?,?> entry : set) {
+      MuleMessage message=new DefaultMuleMessage(entry.getValue(),muleContext);
+      MuleEvent newEvent=new DefaultMuleEvent(message,event);
+      newEvent.setFlowVariable(MapSplitter.MAP_ENTRY_KEY,entry.getKey());
+      list.add(newEvent);
+    }
+    return list;
+  }
+ else   if (result instanceof MuleMessage) {
+    return Collections.singletonList(new DefaultMuleEvent((MuleMessage)result,event));
+  }
+ else   if (result instanceof NodeList) {
+    NodeList nodeList=(NodeList)result;
+    List<MuleEvent> messages=new ArrayList<>(nodeList.getLength());
+    for (int i=0; i < nodeList.getLength(); i++) {
+      messages.add(new DefaultMuleEvent(new DefaultMuleMessage(nodeList.item(i),muleContext),event));
+    }
+    return messages;
+  }
+ else   if (result == null) {
+    return new ArrayList<MuleEvent>();
+  }
+ else {
+    logger.info("The expression does not evaluate to a type that can be split: " + result.getClass().getName());
+    return Collections.<MuleEvent>singletonList(new DefaultMuleEvent(new DefaultMuleMessage(result,muleContext),event));
+  }
+}

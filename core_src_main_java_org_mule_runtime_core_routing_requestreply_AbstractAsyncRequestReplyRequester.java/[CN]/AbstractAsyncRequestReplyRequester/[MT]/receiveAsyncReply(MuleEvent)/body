@@ -1,0 +1,51 @@
+{
+  String asyncReplyCorrelationId=getAsyncReplyCorrelationId(event);
+  Latch asyncReplyLatch=locks.get(asyncReplyCorrelationId);
+  boolean interruptedWhileWaiting=false;
+  boolean resultAvailable=false;
+  MuleEvent result=null;
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Waiting for async reply message with id: " + asyncReplyCorrelationId);
+    }
+    if (timeout <= 0) {
+      asyncReplyLatch.await();
+      resultAvailable=true;
+    }
+ else {
+      resultAvailable=asyncReplyLatch.await(timeout,TimeUnit.MILLISECONDS);
+    }
+    if (!resultAvailable) {
+      postLatchAwait(asyncReplyCorrelationId);
+      asyncReplyLatch.await(1000,TimeUnit.MILLISECONDS);
+      resultAvailable=asyncReplyLatch.getCount() == 0;
+    }
+  }
+ catch (  InterruptedException e) {
+    interruptedWhileWaiting=true;
+  }
+ finally {
+    locks.remove(asyncReplyCorrelationId);
+    result=responseEvents.remove(asyncReplyCorrelationId);
+    if (interruptedWhileWaiting) {
+      Thread.currentThread().interrupt();
+      return null;
+    }
+  }
+  if (resultAvailable) {
+    if (result == null) {
+      throw new IllegalStateException("Response MuleEvent is null");
+    }
+    return OptimizedRequestContext.criticalSetEvent(result);
+  }
+ else {
+    addProcessed(asyncReplyCorrelationId);
+    if (failOnTimeout) {
+      event.getMuleContext().fireNotification(new RoutingNotification(event.getMessage(),null,RoutingNotification.ASYNC_REPLY_TIMEOUT));
+      throw new ResponseTimeoutException(CoreMessages.responseTimedOutWaitingForId((int)timeout,asyncReplyCorrelationId),event,null);
+    }
+ else {
+      return null;
+    }
+  }
+}

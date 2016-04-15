@@ -1,0 +1,14 @@
+{
+  if (workManager == null) {
+    throw new IllegalStateException("Cannot schedule a work till the workManager is initialized. Probably the connector hasn't been initialized yet");
+  }
+  RetryWorker worker=new RetryWorker(delegate,callback,workManager,startLatch);
+  FutureRetryContext context=worker.getRetryContext();
+  try {
+    workManager.scheduleWork(worker);
+  }
+ catch (  WorkException e) {
+    throw new RetryPolicyExhaustedException(e,callback.getWorkOwner());
+  }
+  return context;
+}

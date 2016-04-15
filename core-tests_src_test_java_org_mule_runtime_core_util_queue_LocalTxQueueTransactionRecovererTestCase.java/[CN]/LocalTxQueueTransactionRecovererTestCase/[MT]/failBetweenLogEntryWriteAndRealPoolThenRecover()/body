@@ -1,0 +1,13 @@
+{
+  MuleEvent testEvent=getTestEvent(MESSAGE_CONTENT);
+  inQueue.offer(testEvent,0,TIMEOUT);
+  persistentTransactionContext.poll(inQueue,TIMEOUT);
+  txLog.close();
+  txLog=new LocalTxQueueTransactionJournal(temporaryFolder.getRoot().getAbsolutePath(),muleContext);
+  queueTransactionRecoverer.recover();
+  Serializable muleEvent=inQueue.poll(TIMEOUT);
+  assertThat(muleEvent,notNullValue());
+  assertThat(testEvent.equals(muleEvent),is(true));
+  muleEvent=inQueue.poll(TIMEOUT);
+  assertThat(muleEvent,nullValue());
+}

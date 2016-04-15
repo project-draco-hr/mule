@@ -1,0 +1,15 @@
+{
+  TransactionCoordination.getInstance().bindTransaction(mockTransaction);
+  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_NONE);
+  config.setInteractWithExternal(true);
+  mockExternalTransactionFactory=mock(ExternalTransactionAwareTransactionFactory.class);
+  config.setFactory(mockExternalTransactionFactory);
+  Transaction externalTransaction=mock(Transaction.class);
+  when(mockExternalTransactionFactory.joinExternalTransaction(mockMuleContext)).thenReturn(externalTransaction);
+  ExecutionTemplate executionTemplate=createExecutionTemplate(config);
+  Object result=executionTemplate.execute(getEmptyTransactionCallback());
+  assertThat((MuleEvent)result,is(RETURN_VALUE));
+  verify(mockTransaction).commit();
+  verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
+  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
+}

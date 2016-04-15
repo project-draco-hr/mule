@@ -1,0 +1,16 @@
+{
+  assertEquals(0,SleepyTask.activeTasks.get());
+  executor.setRejectedExecutionHandler(new LastRejectedWaitPolicy());
+  executor.shutdown();
+  List<Runnable> tasks=new ArrayList<Runnable>();
+  tasks.add(new SleepyTask("rejected",1000));
+  LinkedList<Thread> submitters=this.execute(tasks);
+  assertFalse(submitters.isEmpty());
+  Thread.sleep(1000);
+  LinkedList<Map<Thread,Throwable>> exceptions=threadGroup.collectedExceptions();
+  assertEquals(1,exceptions.size());
+  Map.Entry<Thread,Throwable> threadFailure=exceptions.getFirst().entrySet().iterator().next();
+  assertEquals(submitters.getFirst(),threadFailure.getKey());
+  assertEquals(RejectedExecutionException.class,threadFailure.getValue().getClass());
+  assertEquals(0,SleepyTask.activeTasks.get());
+}

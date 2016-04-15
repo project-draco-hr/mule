@@ -1,0 +1,26 @@
+{
+  ExecutionTemplate<MuleEvent> executionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(muleContext,getTransactionConfig());
+  ExecutionCallback<MuleEvent> processingCallback=new ExecutionCallback<MuleEvent>(){
+    @Override public MuleEvent process() throws Exception {
+      try {
+        return route(event);
+      }
+ catch (      RoutingException e) {
+        throw e;
+      }
+catch (      Exception e) {
+        throw new RoutingException(event,AbstractOutboundRouter.this,e);
+      }
+    }
+  }
+;
+  try {
+    return executionTemplate.execute(processingCallback);
+  }
+ catch (  MuleException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new DefaultMuleException(e);
+  }
+}

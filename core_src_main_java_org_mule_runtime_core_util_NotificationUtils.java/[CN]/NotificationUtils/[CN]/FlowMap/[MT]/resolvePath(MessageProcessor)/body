@@ -1,0 +1,18 @@
+{
+  String path=flowMap.get(processor);
+  if (path != null) {
+    return path;
+  }
+ else {
+    for (    Entry<MessageProcessor,String> flowMapEntries : flowMap.entrySet()) {
+      if (flowMapEntries.getKey() instanceof DynamicMessageProcessorContainer && !resolvedDynamicContainers.contains(flowMapEntries.getKey())) {
+        FlowMap resolvedInnerPaths=((DynamicMessageProcessorContainer)flowMapEntries.getKey()).buildInnerPaths();
+        if (resolvedInnerPaths != null) {
+          flowMap.putAll(resolvedInnerPaths.getFlowMap());
+          resolvedDynamicContainers.add(flowMapEntries.getKey());
+        }
+      }
+    }
+    return flowMap.get(processor);
+  }
+}

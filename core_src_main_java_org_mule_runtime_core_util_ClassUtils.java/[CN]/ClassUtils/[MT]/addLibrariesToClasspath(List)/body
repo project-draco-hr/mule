@@ -1,0 +1,14 @@
+{
+  ClassLoader sys=ClassLoader.getSystemClassLoader();
+  if (!(sys instanceof URLClassLoader)) {
+    throw new IllegalArgumentException("PANIC: Mule has been started with an unsupported classloader: " + sys.getClass().getName() + ". "+ "Please report this error to user<at>mule<dot>codehaus<dot>org");
+  }
+  URLClassLoader sysCl=(URLClassLoader)sys;
+  Class refClass=URLClassLoader.class;
+  Method methodAddUrl=refClass.getDeclaredMethod("addURL",new Class[]{URL.class});
+  methodAddUrl.setAccessible(true);
+  for (Iterator it=urls.iterator(); it.hasNext(); ) {
+    URL url=(URL)it.next();
+    methodAddUrl.invoke(sysCl,url);
+  }
+}

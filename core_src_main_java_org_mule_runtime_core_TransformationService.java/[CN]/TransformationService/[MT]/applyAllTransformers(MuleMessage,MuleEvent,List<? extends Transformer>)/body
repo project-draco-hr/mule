@@ -1,0 +1,44 @@
+{
+  MuleMessage result=message;
+  if (!transformers.isEmpty()) {
+    for (int index=0; index < transformers.size(); index++) {
+      Transformer transformer=transformers.get(index);
+      Class<?> srcCls=result.getPayload().getClass();
+      DataType<?> originalSourceType=DataTypeFactory.create(srcCls);
+      if (transformer.isSourceDataTypeSupported(originalSourceType)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Using " + transformer + " to transform payload.");
+        }
+        result=transformMessage(result,event,transformer);
+      }
+ else {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Transformer " + transformer + " doesn't support the source payload: "+ srcCls);
+        }
+        if (useExtendedTransformations()) {
+          if (canSkipTransformer(result,transformers,index)) {
+            continue;
+          }
+          Transformer implicitTransformer=muleContext.getDataTypeConverterResolver().resolve(originalSourceType,transformer.getSourceDataTypes());
+          if (implicitTransformer != null) {
+            if (logger.isDebugEnabled()) {
+              logger.debug("Performing implicit transformation with: " + transformer);
+            }
+            result=transformMessage(result,event,implicitTransformer);
+            result=transformMessage(result,event,transformer);
+          }
+ else {
+            throw new IllegalArgumentException("Cannot apply transformer " + transformer + " on source payload: "+ srcCls);
+          }
+        }
+ else         if (!transformer.isIgnoreBadInput()) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Exiting from transformer chain (ignoreBadInput = false)");
+          }
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}

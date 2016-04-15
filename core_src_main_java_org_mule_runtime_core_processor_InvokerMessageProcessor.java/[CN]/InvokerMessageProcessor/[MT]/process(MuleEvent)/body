@@ -1,0 +1,17 @@
+{
+  MuleEvent resultEvent=event;
+  Object[] args=evaluateArguments(event,arguments);
+  if (logger.isDebugEnabled()) {
+    logger.debug(String.format("Invoking  '%s' of '%s' with arguments: '%s'",method.getName(),object,args));
+  }
+  try {
+    Object result=method.invoke(object,args);
+    if (!method.getReturnType().equals(void.class)) {
+      resultEvent=createResultEvent(event,result);
+    }
+  }
+ catch (  Exception e) {
+    throw new MessagingException(CoreMessages.failedToInvoke(object.toString()),event,e,this);
+  }
+  return resultEvent;
+}

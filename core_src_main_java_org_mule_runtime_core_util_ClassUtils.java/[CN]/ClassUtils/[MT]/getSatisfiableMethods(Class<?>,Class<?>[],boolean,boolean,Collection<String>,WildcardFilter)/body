@@ -1,0 +1,23 @@
+{
+  List<Method> result=new ArrayList<Method>();
+  if (ignoredMethodNames == null) {
+    ignoredMethodNames=Collections.emptySet();
+  }
+  Method[] methods=implementation.getMethods();
+  for (int i=0; i < methods.length; i++) {
+    Method method=methods[i];
+    if (filter != null && filter.accept(method.getName())) {
+      continue;
+    }
+    Class<?>[] methodParams=method.getParameterTypes();
+    if (compare(methodParams,parameterTypes,matchOnObject)) {
+      if (!ignoredMethodNames.contains(method.getName())) {
+        String returnType=method.getReturnType().getName();
+        if ((returnType.equals("void") && voidOk) || !returnType.equals("void")) {
+          result.add(method);
+        }
+      }
+    }
+  }
+  return result;
+}

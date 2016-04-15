@@ -1,0 +1,29 @@
+{
+  if (o == null) {
+    return;
+  }
+  if (ignoreType(o.getClass())) {
+    return;
+  }
+  if (!getLifecycleClass().isAssignableFrom(o.getClass())) {
+    return;
+  }
+  if (o instanceof LifecycleStateEnabled) {
+    if (((LifecycleStateEnabled)o).getLifecycleState().isPhaseComplete(this.getName())) {
+      return;
+    }
+ else     if (!((LifecycleStateEnabled)o).getLifecycleState().isValidTransition(this.getName())) {
+      return;
+    }
+  }
+  try {
+    lifecycleMethod.invoke(o);
+  }
+ catch (  final Exception e) {
+    Throwable t=ExceptionHelper.unwrap(e);
+    if (t instanceof LifecycleException) {
+      throw (LifecycleException)t;
+    }
+    throw new LifecycleException(CoreMessages.failedToInvokeLifecycle(lifecycleMethod.getName(),o),ExceptionHelper.getNonMuleException(t),o);
+  }
+}

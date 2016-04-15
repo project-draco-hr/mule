@@ -1,0 +1,30 @@
+{
+  final CountDownLatch latch=new CountDownLatch(3);
+  Transaction transaction=new DummyTransaction(muleContext);
+  muleContext.registerListener(new TransactionNotificationListener<TransactionNotification>(){
+    public void onNotification(    TransactionNotification notification){
+      if (notification.getAction() == TransactionNotification.TRANSACTION_BEGAN) {
+        assertEquals("begin",notification.getActionName());
+        latch.countDown();
+      }
+ else {
+        if (notification.getAction() == TransactionNotification.TRANSACTION_COMMITTED) {
+          assertEquals("commit",notification.getActionName());
+          latch.countDown();
+        }
+ else {
+          if (notification.getAction() == TransactionNotification.TRANSACTION_ROLLEDBACK) {
+            assertEquals("rollback",notification.getActionName());
+            latch.countDown();
+          }
+        }
+      }
+    }
+  }
+,transaction.getId());
+  transaction.begin();
+  transaction.commit();
+  transaction.rollback();
+  latch.await(2000,TimeUnit.MILLISECONDS);
+  assertEquals("There are still some notifications left unfired.",0,latch.getCount());
+}

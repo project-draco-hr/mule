@@ -1,0 +1,26 @@
+{
+  if (MuleProperties.MULE_ENCODING_PROPERTY.equals(key)) {
+    getDataType().setEncoding((String)value);
+  }
+ else   if (MuleProperties.CONTENT_TYPE_PROPERTY.equalsIgnoreCase(key)) {
+    try {
+      MimeType mimeType=new MimeType((String)value);
+      getDataType().setMimeType(mimeType.getPrimaryType() + "/" + mimeType.getSubType());
+      String encoding=mimeType.getParameter("charset");
+      if (!StringUtils.isEmpty(encoding)) {
+        getDataType().setEncoding(encoding);
+      }
+    }
+ catch (    MimeTypeParseException e) {
+      if (Boolean.parseBoolean(System.getProperty(SYSTEM_PROPERTY_PREFIX + "strictContentType"))) {
+        throw new IllegalArgumentException("Invalid Content-Type property value",e);
+      }
+ else {
+        String encoding=Charset.defaultCharset().name();
+        logger.warn(String.format("%s when parsing Content-Type '%s': %s",e.getClass().getName(),value,e.getMessage()));
+        logger.warn(String.format("Using defualt encoding: %s",encoding));
+        getDataType().setEncoding(encoding);
+      }
+    }
+  }
+}

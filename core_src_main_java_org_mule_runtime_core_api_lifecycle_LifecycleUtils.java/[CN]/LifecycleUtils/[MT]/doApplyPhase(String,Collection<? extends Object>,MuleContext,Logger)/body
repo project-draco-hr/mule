@@ -1,0 +1,38 @@
+{
+  if (CollectionUtils.isEmpty(objects)) {
+    return;
+  }
+  for (  Object object : objects) {
+    object=unwrap(object);
+    if (object == null) {
+      continue;
+    }
+    try {
+      if (Initialisable.PHASE_NAME.equals(phase)) {
+        if (muleContext != null) {
+          initialiseIfNeeded(object,muleContext);
+        }
+ else {
+          initialiseIfNeeded(object);
+        }
+      }
+ else       if (Startable.PHASE_NAME.equals(phase)) {
+        startIfNeeded(object);
+      }
+ else       if (Stoppable.PHASE_NAME.equals(phase)) {
+        stopIfNeeded(object);
+      }
+ else       if (Disposable.PHASE_NAME.equals(phase) && object instanceof Disposable) {
+        disposeIfNeeded(object,logger);
+      }
+    }
+ catch (    MuleException e) {
+      if (logger != null) {
+        logger.error(format("Could not apply %s phase on object of class %s",phase,object.getClass().getName()),e);
+      }
+ else {
+        throw e;
+      }
+    }
+  }
+}

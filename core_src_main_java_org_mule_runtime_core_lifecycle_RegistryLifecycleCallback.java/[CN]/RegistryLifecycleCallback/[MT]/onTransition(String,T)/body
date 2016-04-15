@@ -1,0 +1,18 @@
+{
+  LifecyclePhase phase=registryLifecycleManager.phases.get(phaseName);
+  if (LOGGER.isDebugEnabled()) {
+    LOGGER.debug(String.format("Applying lifecycle phase: %s for registry: %s",phase,object.getClass().getSimpleName()));
+  }
+  if (phase instanceof ContainerManagedLifecyclePhase) {
+    phase.applyLifecycle(object);
+    return;
+  }
+  Set<Object> duplicates=new HashSet<>();
+  for (  LifecycleObject lifecycleObject : phase.getOrderedLifecycleObjects()) {
+    lifecycleObject.firePreNotification(registryLifecycleManager.muleContext);
+    Collection<?> targetsObj=lookupObjectsForLifecycle(lifecycleObject);
+    doApplyLifecycle(phase,duplicates,lifecycleObject,targetsObj);
+    lifecycleObject.firePostNotification(registryLifecycleManager.muleContext);
+  }
+  interceptor.onPhaseCompleted(phase);
+}

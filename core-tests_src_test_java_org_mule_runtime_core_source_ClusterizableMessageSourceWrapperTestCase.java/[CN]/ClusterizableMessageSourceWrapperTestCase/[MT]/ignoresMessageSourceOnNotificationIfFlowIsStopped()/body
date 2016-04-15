@@ -1,0 +1,13 @@
+{
+  when(muleContext.isPrimaryPollingInstance()).thenReturn(true);
+  wrapper.setMuleContext(muleContext);
+  Mockito.doAnswer(new Answer<Void>(){
+    @Override public Void answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      ((PrimaryNodeLifecycleNotificationListener)invocationOnMock.getArguments()[0]).onNotification(new ClusterNodeNotification("",1));
+      return null;
+    }
+  }
+).when(muleContext).registerListener(isA(PrimaryNodeLifecycleNotificationListener.class));
+  wrapper.initialise();
+  verify(messageSource,times(0)).start();
+}

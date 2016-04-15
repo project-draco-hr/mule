@@ -1,0 +1,46 @@
+{
+  List<BootstrapService> bootstrapServices;
+  try {
+    bootstrapServices=muleContext.getRegistryBootstrapServiceDiscoverer().discover();
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+  int objectCounter=1;
+  List<TransformerBootstrapProperty> transformers=new LinkedList<>();
+  List<ObjectBootstrapProperty> namedObjects=new LinkedList<>();
+  List<ObjectBootstrapProperty> unnamedObjects=new LinkedList<>();
+  List<TransactionFactoryBootstrapProperty> singleTransactionFactories=new LinkedList<>();
+  for (  BootstrapService bootstrapService : bootstrapServices) {
+    Properties bootstrapProperties=bootstrapService.getProperties();
+    for (    Map.Entry entry : bootstrapProperties.entrySet()) {
+      final String propertyKey=(String)entry.getKey();
+      final String propertyValue=(String)entry.getValue();
+      if (propertyKey.contains(OBJECT_KEY)) {
+        String newKey=propertyKey.substring(0,propertyKey.lastIndexOf(".")) + objectCounter++;
+        unnamedObjects.add(createObjectBootstrapProperty(bootstrapService,newKey,propertyValue));
+      }
+ else       if (propertyKey.contains(TRANSFORMER_KEY)) {
+        transformers.add(createTransformerBootstrapProperty(bootstrapService,propertyValue));
+      }
+ else       if (propertyKey.contains(SINGLE_TX)) {
+        if (!propertyKey.contains(TRANSACTION_RESOURCE_SUFFIX)) {
+          singleTransactionFactories.add(createTransactionFactoryBootstrapProperty(bootstrapService,bootstrapProperties,propertyKey,propertyValue));
+        }
+      }
+ else {
+        namedObjects.add(createObjectBootstrapProperty(bootstrapService,propertyKey,propertyValue));
+      }
+    }
+  }
+  try {
+    registerUnnamedObjects(unnamedObjects);
+    registerTransformers();
+    registerTransformers(transformers);
+    registerObjects(namedObjects);
+    registerTransactionFactories(singleTransactionFactories,muleContext);
+  }
+ catch (  Exception e1) {
+    throw new InitialisationException(e1,this);
+  }
+}

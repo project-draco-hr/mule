@@ -1,0 +1,25 @@
+{
+  Throwable root=getRootException(t);
+  MuleException rootMule=getRootMuleException(t);
+  StringBuilder buf=new StringBuilder();
+  ExceptionReader rootMuleReader=getExceptionReader(rootMule);
+  buf.append(rootMuleReader.getMessage(rootMule)).append(" (").append(rootMule.getClass().getName()).append(")").append(SystemUtils.LINE_SEPARATOR);
+  if (verbose) {
+    int processedElements=0;
+    int processedMuleElements=1;
+    for (    StackTraceElement stackTraceElement : root.getStackTrace()) {
+      if (processedMuleElements > EXCEPTION_THRESHOLD) {
+        break;
+      }
+      ++processedElements;
+      if (stackTraceElement.getClassName().matches(MULE_PACKAGE_REGEXP)) {
+        ++processedMuleElements;
+      }
+      buf.append("  ").append(stackTraceElement.getClassName()).append(".").append(stackTraceElement.getMethodName()).append(":").append(stackTraceElement.getLineNumber()).append(")").append(SystemUtils.LINE_SEPARATOR);
+    }
+    if (root.getStackTrace().length - processedElements > 0) {
+      buf.append("  (").append(root.getStackTrace().length - processedElements).append(" more...)").append(SystemUtils.LINE_SEPARATOR);
+    }
+  }
+  return buf.toString();
+}

@@ -1,0 +1,27 @@
+{
+  String processorsPrefix="processors";
+  String esPrefix="es";
+  MessageProcessorPathElement processorPathElement=pathElement.addChild(processorsPrefix);
+  List<MessageProcessor> filteredMessageProcessorList=new ArrayList<MessageProcessor>();
+  for (  MessageProcessor messageProcessor : getMessageProcessors()) {
+    if (messageProcessor instanceof InterceptingMessageProcessor) {
+{
+        filteredMessageProcessorList.add(messageProcessor);
+        break;
+      }
+    }
+ else {
+      filteredMessageProcessorList.add(messageProcessor);
+    }
+  }
+  NotificationUtils.addMessageProcessorPathElements(filteredMessageProcessorList,processorPathElement);
+  if (exceptionListener instanceof MessageProcessorContainer) {
+    String esGlobalName=getExceptionStrategyGlobalName();
+    MessageProcessorPathElement exceptionStrategyPathElement=pathElement;
+    if (esGlobalName != null) {
+      exceptionStrategyPathElement=exceptionStrategyPathElement.addChild(esGlobalName);
+    }
+    exceptionStrategyPathElement=exceptionStrategyPathElement.addChild(esPrefix);
+    ((MessageProcessorContainer)exceptionListener).addMessageProcessorPathElements(exceptionStrategyPathElement);
+  }
+}

@@ -1,0 +1,14 @@
+{
+  URL baseUrl=DefaultMuleContextTestCase.class.getClassLoader().getResource(".");
+  File file=new File(baseUrl.getFile() + SpiUtils.SERVICE_ROOT + ServiceType.EXCEPTION.getPath()+ "/"+ TEST_PROTOCOL+ "-exception-mappings.properties");
+  createExceptionMappingFile(file,INITIAL_VALUE);
+  MuleContext ctx=muleContextFactory.createMuleContext();
+  String value=ExceptionHelper.getErrorMapping(TEST_PROTOCOL,IllegalArgumentException.class,ctx);
+  assertThat(value,is(INITIAL_VALUE));
+  ctx.dispose();
+  createExceptionMappingFile(file,VALUE_AFTER_REDEPLOY);
+  ctx=muleContextFactory.createMuleContext();
+  ctx.setExecutionClassLoader(getClass().getClassLoader());
+  value=ExceptionHelper.getErrorMapping(TEST_PROTOCOL,IllegalArgumentException.class,ctx);
+  assertThat(value,is(VALUE_AFTER_REDEPLOY));
+}

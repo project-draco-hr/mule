@@ -1,0 +1,27 @@
+{
+  when(mockUntilSuccessfulConfiguration.getDlqMP()).thenReturn(mockDLQ);
+  when(mockUntilSuccessfulConfiguration.getFailureExpressionFilter()).thenReturn(mockAlwaysTrueFailureExpressionFilter);
+  executeUntilSuccessfulFailingRoute(new FailCallback(){
+    @Override public void doFail() throws MessagingException {
+      throw new MessagingException(CoreMessages.createStaticMessage(EXPECTED_FAILURE_MSG),mockEvent,mockRoute);
+    }
+  }
+);
+  waitUntilRouteIsExecuted();
+  waitUntilExceptionIsHandled();
+  verify(mockEvent.getFlowConstruct().getExceptionListener(),never()).handleException(any(Exception.class),any(MuleEvent.class));
+  verify(mockDLQ,times(1)).process(argThat(new ArgumentMatcher<MuleEvent>(){
+    @Override public boolean matches(    Object argument){
+      MuleEvent argEvent=(MuleEvent)argument;
+      verify(argEvent.getMessage(),times(1)).setExceptionPayload(argThat(new ArgumentMatcher<ExceptionPayload>(){
+        @Override public boolean matches(        Object argument){
+          assertThat(((ExceptionPayload)argument).getException().getMessage(),containsString("until-successful retries exhausted. Last exception message was: " + EXPECTED_FAILURE_MSG));
+          return true;
+        }
+      }
+));
+      return true;
+    }
+  }
+));
+}

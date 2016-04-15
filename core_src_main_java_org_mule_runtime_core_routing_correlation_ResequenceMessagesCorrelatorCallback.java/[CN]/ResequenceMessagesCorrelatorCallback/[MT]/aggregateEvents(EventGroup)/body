@@ -1,0 +1,16 @@
+{
+  MuleEvent[] results;
+  try {
+    results=(events == null) ? new MuleEvent[0] : events.toArray(false);
+  }
+ catch (  ObjectStoreException e) {
+    throw new AggregationException(events,null,e);
+  }
+  Arrays.sort(results,eventComparator);
+  for (int i=0; i < results.length; i++) {
+    if (results[i] instanceof ThreadSafeAccess) {
+      results[i]=(MuleEvent)((ThreadSafeAccess)results[i]).newThreadCopy();
+    }
+  }
+  return new DefaultMuleEvent(new DefaultMuleMessage(results,muleContext),results[0]);
+}

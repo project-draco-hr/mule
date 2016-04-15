@@ -1,0 +1,14 @@
+{
+  configureExceptionListener(null,null);
+  ExecutionTemplate executionTemplate=createExceptionHandlingTransactionTemplate();
+  try {
+    executionTemplate.execute(TransactionTemplateTestUtils.getFailureTransactionCallbackStartsTransaction(mockMessagingException,mockTransaction));
+    fail("MessagingException must be thrown");
+  }
+ catch (  MessagingException e) {
+  }
+  verify(mockTransaction,VerificationModeFactory.times(1)).setRollbackOnly();
+  verify(mockTransaction,VerificationModeFactory.times(1)).rollback();
+  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
+  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
+}

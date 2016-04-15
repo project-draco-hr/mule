@@ -1,0 +1,37 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug(message);
+  }
+  if (logger.isTraceEnabled()) {
+    try {
+      logger.trace("Request payload: \n" + StringMessageUtils.truncate(muleContext.getTransformationService().getPayloadForLogging(message),100,false));
+    }
+ catch (    Exception e) {
+      logger.trace("Request payload: \n(unable to retrieve payload: " + e.getMessage());
+    }
+  }
+  MuleEvent result;
+  try {
+    result=sendRequestEvent(routedEvent,message,route,awaitResponse);
+  }
+ catch (  MessagingException me) {
+    throw me;
+  }
+catch (  Exception e) {
+    throw new RoutingException(routedEvent,null,e);
+  }
+  if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
+    MuleMessage resultMessage=result.getMessage();
+    if (logger.isTraceEnabled()) {
+      if (resultMessage != null) {
+        try {
+          logger.trace("Response payload: \n" + StringMessageUtils.truncate(muleContext.getTransformationService().getPayloadForLogging(resultMessage),100,false));
+        }
+ catch (        Exception e) {
+          logger.trace("Response payload: \n(unable to retrieve payload: " + e.getMessage());
+        }
+      }
+    }
+  }
+  return result;
+}

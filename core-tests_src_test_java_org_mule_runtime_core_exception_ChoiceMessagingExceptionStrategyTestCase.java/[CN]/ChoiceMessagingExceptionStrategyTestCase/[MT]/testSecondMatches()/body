@@ -1,0 +1,14 @@
+{
+  ChoiceMessagingExceptionStrategy choiceMessagingExceptionStrategy=new ChoiceMessagingExceptionStrategy();
+  choiceMessagingExceptionStrategy.setMuleContext(mockMuleContext);
+  choiceMessagingExceptionStrategy.setExceptionListeners(new ArrayList<MessagingExceptionHandlerAcceptor>(Arrays.<MessagingExceptionHandlerAcceptor>asList(mockTestExceptionStrategy1,mockTestExceptionStrategy2)));
+  when(mockMuleContext.getDefaultExceptionStrategy()).thenReturn(mockDefaultTestExceptionStrategy2);
+  choiceMessagingExceptionStrategy.initialise();
+  when(mockTestExceptionStrategy1.accept(mockMuleEvent)).thenReturn(false);
+  when(mockTestExceptionStrategy2.accept(mockMuleEvent)).thenReturn(true);
+  when(mockDefaultTestExceptionStrategy2.accept(mockMuleEvent)).thenReturn(true);
+  choiceMessagingExceptionStrategy.handleException(mockException,mockMuleEvent);
+  verify(mockTestExceptionStrategy1,VerificationModeFactory.times(0)).handleException(any(Exception.class),any(MuleEvent.class));
+  verify(mockDefaultTestExceptionStrategy2,VerificationModeFactory.times(0)).handleException(any(Exception.class),any(MuleEvent.class));
+  verify(mockTestExceptionStrategy2,VerificationModeFactory.times(1)).handleException(mockException,mockMuleEvent);
+}

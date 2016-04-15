@@ -1,0 +1,10 @@
+{
+  final DataType expectedDataType=DataTypeFactory.create(String.class,JSON);
+  expectedDataType.setEncoding(CUSTOM_ENCODING);
+  MVELExpressionLanguage expressionLanguage=(MVELExpressionLanguage)muleContext.getExpressionLanguage();
+  final CompiledExpression compiledExpression=(CompiledExpression)compileExpression("foo = 'unused'",new ParserContext(expressionLanguage.getParserConfiguration()));
+  MuleEvent testEvent=getTestEvent(TEST_MESSAGE);
+  testEvent.setFlowVariable("foo","bar");
+  dataTypePropagator.propagate(testEvent,new TypedValue(TEST_MESSAGE,expectedDataType),compiledExpression);
+  assertThat(testEvent.getFlowVariableDataType("foo"),like(String.class,JSON,CUSTOM_ENCODING));
+}

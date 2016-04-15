@@ -1,0 +1,27 @@
+{
+  Collection<File> fileKeys=new ArrayList<File>(files.keySet());
+  for (  File file : fileKeys) {
+    long lastModifiedTime=files.get(file).longValue();
+    long newModifiedTime=file.exists() ? file.lastModified() : -1;
+    if (newModifiedTime != lastModifiedTime) {
+      files.put(file,new Long(newModifiedTime));
+      for (Iterator<WeakReference<FileListener>> j=listeners.iterator(); j.hasNext(); ) {
+        WeakReference<FileListener> reference=j.next();
+        FileListener listener=reference.get();
+        if (listener == null) {
+          j.remove();
+        }
+ else {
+          try {
+            listener.fileChanged(file);
+          }
+ catch (          IOException e) {
+            if (exceptionListener != null) {
+              exceptionListener.exceptionThrown(e);
+            }
+          }
+        }
+      }
+    }
+  }
+}

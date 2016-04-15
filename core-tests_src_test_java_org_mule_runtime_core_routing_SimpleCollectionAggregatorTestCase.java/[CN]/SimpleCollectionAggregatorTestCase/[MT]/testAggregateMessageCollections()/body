@@ -1,0 +1,38 @@
+{
+  MuleSession session=getTestSession(getTestFlow(),muleContext);
+  Flow flow=getTestFlow("test",Apple.class);
+  assertNotNull(flow);
+  SimpleCollectionAggregator router=new SimpleCollectionAggregator();
+  router.setMuleContext(muleContext);
+  router.setFlowConstruct(flow);
+  router.initialise();
+  MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
+  MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
+  MuleMessage message3=new DefaultMuleMessage("test event C",muleContext);
+  MuleMessage message4=new DefaultMuleMessage("test event D",muleContext);
+  List<MuleMessage> list=new ArrayList<>();
+  List<MuleMessage> list2=new ArrayList<>();
+  list.add(message1);
+  list.add(message2);
+  list2.add(message3);
+  list2.add(message4);
+  MuleMessage messageCollection1=new DefaultMuleMessage(list,muleContext);
+  MuleMessage messageCollection2=new DefaultMuleMessage(list2,muleContext);
+  messageCollection1.setCorrelationGroupSize(2);
+  messageCollection1.setCorrelationId(messageCollection1.getUniqueId());
+  messageCollection2.setCorrelationGroupSize(2);
+  messageCollection2.setCorrelationId(messageCollection1.getUniqueId());
+  MuleEvent event1=new DefaultMuleEvent(messageCollection1,flow);
+  MuleEvent event2=new DefaultMuleEvent(messageCollection2,flow);
+  assertNull(router.process(event1));
+  MuleEvent resultEvent=router.process(event2);
+  assertNotNull(resultEvent);
+  MuleMessage resultMessage=resultEvent.getMessage();
+  assertNotNull(resultMessage);
+  List<MuleMessage> payload=(List<MuleMessage>)resultMessage.getPayload();
+  assertEquals(2,payload.size());
+  assertEquals("test event A",((List<MuleMessage>)payload.get(0).getPayload()).get(0).getPayload());
+  assertEquals("test event B",((List<MuleMessage>)payload.get(0).getPayload()).get(1).getPayload());
+  assertEquals("test event C",((List<MuleMessage>)payload.get(1).getPayload()).get(0).getPayload());
+  assertEquals("test event D",((List<MuleMessage>)payload.get(1).getPayload()).get(1).getPayload());
+}

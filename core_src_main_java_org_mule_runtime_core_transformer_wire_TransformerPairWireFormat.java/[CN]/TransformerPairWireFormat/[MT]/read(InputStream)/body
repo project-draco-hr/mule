@@ -1,0 +1,18 @@
+{
+  if (inboundTransformer == null) {
+    throw new IllegalArgumentException(CoreMessages.objectIsNull("inboundTransformer").getMessage());
+  }
+  if (inboundTransformer.isSourceDataTypeSupported(DataTypeFactory.INPUT_STREAM)) {
+    return inboundTransformer.transform(in);
+  }
+ else {
+    try {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream();
+      IOUtils.copy(in,baos);
+      return inboundTransformer.transform(baos.toByteArray());
+    }
+ catch (    IOException e) {
+      throw new DefaultMuleException(CoreMessages.failedToReadPayload(),e);
+    }
+  }
+}
