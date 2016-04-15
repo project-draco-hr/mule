@@ -1,0 +1,23 @@
+{
+  final ManagedMap<String,ManagedList<MessageProcessor>> nestedOperations=new ManagedMap<>();
+  for (  final ParameterModel parameterModel : operationModel.getParameterModels()) {
+    final MetadataType type=parameterModel.getType();
+    type.accept(new MetadataTypeVisitor(){
+      @Override public void visitObject(      ObjectType objectType){
+        if (isOperation(objectType)) {
+          nestedOperations.put(parameterModel.getName(),parseNestedProcessor(element,parameterModel,parserContext));
+        }
+      }
+      @Override public void visitArrayType(      ArrayType arrayType){
+        if (isOperation(arrayType.getType())) {
+          nestedOperations.put(parameterModel.getName(),parseNestedProcessor(element,parameterModel,parserContext));
+        }
+      }
+      private boolean isOperation(      MetadataType metadataType){
+        return NestedProcessor.class.isAssignableFrom(JavaTypeUtils.getType(metadataType));
+      }
+    }
+);
+  }
+  return nestedOperations;
+}

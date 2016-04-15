@@ -1,0 +1,12 @@
+{
+  Flow flowConstruct=(Flow)muleContext.getRegistry().lookupFlowConstruct(flowName);
+  List<MessageProcessor> messageProcessors=flowConstruct.getMessageProcessors();
+  AbstractSingleQueryDbMessageProcessor queryMessageProcessor=(AbstractSingleQueryDbMessageProcessor)messageProcessors.get(0);
+  Result<MetaData> inputMetaData=queryMessageProcessor.getInputMetaData();
+  DefinedMapMetaDataModel mapDataModel=(DefinedMapMetaDataModel)inputMetaData.get().getPayload();
+  assertThat(mapDataModel.getKeys().size(),equalTo(2));
+  MetaDataModel id=mapDataModel.getValueMetaDataModel("position");
+  assertThat(id.getDataType(),equalTo(testDatabase.getIdFieldInputMetaDataType()));
+  MetaDataModel data=mapDataModel.getValueMetaDataModel("name");
+  assertThat(data.getDataType(),equalTo(DataType.STRING));
+}

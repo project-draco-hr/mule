@@ -1,0 +1,90 @@
+{
+  try {
+    int depth=0;
+    boolean isDocument=false;
+    handleStartDocument();
+    int event=staxStreamReader.getEventType();
+    if (event == XMLStreamConstants.START_DOCUMENT) {
+      isDocument=true;
+      event=staxStreamReader.next();
+      while (event != XMLStreamConstants.START_ELEMENT) {
+switch (event) {
+case XMLStreamConstants.COMMENT:
+          handleComment();
+        break;
+case XMLStreamConstants.PROCESSING_INSTRUCTION:
+      handlePI();
+    break;
+}
+event=staxStreamReader.next();
+}
+}
+if (event != XMLStreamConstants.START_ELEMENT) throw new IllegalStateException("The current event is not START_ELEMENT\n but" + event);
+do {
+switch (event) {
+case XMLStreamConstants.START_ELEMENT:
+depth++;
+handleStartElement();
+break;
+case XMLStreamConstants.END_ELEMENT:
+handleEndElement();
+depth--;
+break;
+case XMLStreamConstants.CHARACTERS:
+handleCharacters();
+break;
+case XMLStreamConstants.ENTITY_REFERENCE:
+handleEntityReference();
+break;
+case XMLStreamConstants.PROCESSING_INSTRUCTION:
+handlePI();
+break;
+case XMLStreamConstants.COMMENT:
+handleComment();
+break;
+case XMLStreamConstants.DTD:
+handleDTD();
+break;
+case XMLStreamConstants.ATTRIBUTE:
+handleAttribute();
+break;
+case XMLStreamConstants.NAMESPACE:
+handleNamespace();
+break;
+case XMLStreamConstants.CDATA:
+handleCDATA();
+break;
+case XMLStreamConstants.ENTITY_DECLARATION:
+handleEntityDecl();
+break;
+case XMLStreamConstants.NOTATION_DECLARATION:
+handleNotationDecl();
+break;
+case XMLStreamConstants.SPACE:
+handleSpace();
+break;
+default :
+throw new InternalError("processing event: " + event);
+}
+event=staxStreamReader.next();
+}
+ while (depth != 0);
+if (isDocument) {
+while (event != XMLStreamConstants.END_DOCUMENT) {
+switch (event) {
+case XMLStreamConstants.COMMENT:
+handleComment();
+break;
+case XMLStreamConstants.PROCESSING_INSTRUCTION:
+handlePI();
+break;
+}
+event=staxStreamReader.next();
+}
+}
+handleEndDocument();
+}
+ catch (SAXException e) {
+throw new XMLStreamException(e);
+}
+}

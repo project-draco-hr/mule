@@ -1,0 +1,15 @@
+{
+  Object payload=new Object();
+  DataType dataType=mock(DataType.class);
+  Serializable oldAttributes=mock(Serializable.class);
+  when(operationExecutor.execute(any(OperationContext.class))).thenReturn(new DefaultMuleMessage(payload,dataType));
+  when(event.getMessage()).thenReturn(new DefaultMuleMessage("",mock(DataType.class),oldAttributes));
+  ArgumentCaptor<DefaultMuleMessage> captor=ArgumentCaptor.forClass(DefaultMuleMessage.class);
+  messageProcessor.process(event);
+  verify(event).setMessage(captor.capture());
+  MuleMessage message=captor.getValue();
+  assertThat(message,is(notNullValue()));
+  assertThat(message.getPayload(),is(sameInstance(payload)));
+  assertThat(message.getAttributes(),is(sameInstance(oldAttributes)));
+  assertThat(message.getDataType(),is(sameInstance(dataType)));
+}

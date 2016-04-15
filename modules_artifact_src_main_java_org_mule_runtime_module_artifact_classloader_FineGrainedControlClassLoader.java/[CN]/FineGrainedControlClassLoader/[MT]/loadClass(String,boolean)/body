@@ -1,0 +1,30 @@
+{
+  Class<?> result=findLoadedClass(name);
+  if (result != null) {
+    return result;
+  }
+  final ClassLoaderLookupStrategy lookupStrategy=lookupPolicy.getLookupStrategy(name);
+  if (lookupStrategy == PARENT_ONLY) {
+    result=findParentClass(name);
+  }
+ else   if (lookupStrategy == PARENT_FIRST) {
+    try {
+      result=findParentClass(name);
+    }
+ catch (    ClassNotFoundException e) {
+      result=findClass(name);
+    }
+  }
+ else {
+    try {
+      result=findClass(name);
+    }
+ catch (    ClassNotFoundException e) {
+      result=findParentClass(name);
+    }
+  }
+  if (resolve) {
+    resolveClass(result);
+  }
+  return result;
+}

@@ -1,0 +1,27 @@
+{
+  customPropertyEditorsCache=new HashMap<Class<?>,Class<PropertyEditor>>();
+  try {
+    Enumeration<URL> urls=ClassUtils.getResources(CUSTOM_PROPERTY_EDITOR_RESOURCE_NAME,getClass());
+    while (urls.hasMoreElements()) {
+      URL url=urls.nextElement();
+      Properties props=new Properties();
+      InputStream stream=url.openStream();
+      try {
+        props.load(stream);
+        for (        Map.Entry<Object,Object> entry : props.entrySet()) {
+          String target=(String)entry.getKey();
+          String editor=(String)entry.getValue();
+          Class<?> requiredType=ClassUtils.loadClass(target,getClass());
+          Class<PropertyEditor> propertyEditorClass=ClassUtils.loadClass(editor,getClass());
+          customPropertyEditorsCache.put(requiredType,propertyEditorClass);
+        }
+      }
+  finally {
+        IOUtils.closeQuietly(stream);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new IllegalStateException("Error loading custom property editors",e);
+  }
+}

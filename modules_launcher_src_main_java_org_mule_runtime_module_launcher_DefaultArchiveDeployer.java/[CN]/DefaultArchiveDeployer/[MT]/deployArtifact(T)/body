@@ -1,0 +1,22 @@
+{
+  try {
+    deploymentListener.onDeploymentStart(artifact.getArtifactName());
+    guardedDeploy(artifact);
+    artifactArchiveInstaller.createAnchorFile(artifact.getArtifactName());
+    deploymentListener.onDeploymentSuccess(artifact.getArtifactName());
+    artifactZombieMap.remove(artifact.getArtifactName());
+  }
+ catch (  Throwable t) {
+    String msg=miniSplash(String.format("Failed to deploy artifact '%s', see below",artifact.getArtifactName()));
+    logger.error(msg,t);
+    addZombieApp(artifact);
+    deploymentListener.onDeploymentFailure(artifact.getArtifactName(),t);
+    if (t instanceof DeploymentException) {
+      throw (DeploymentException)t;
+    }
+ else {
+      msg="Failed to deploy artifact: " + artifact.getArtifactName();
+      throw new DeploymentException(MessageFactory.createStaticMessage(msg),t);
+    }
+  }
+}

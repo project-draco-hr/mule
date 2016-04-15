@@ -1,0 +1,17 @@
+{
+  List<MuleCoreExtension> extensions=new LinkedList<>();
+  MuleCoreExtension extension1=mock(MuleCoreExtension.class);
+  MuleCoreExtension extension2=mock(MuleCoreExtension.class);
+  extensions.add(extension1);
+  extensions.add(extension2);
+  when(coreExtensionDiscoverer.discover()).thenReturn(extensions);
+  List<MuleCoreExtension> orderedExtensions=new LinkedList<>();
+  orderedExtensions.add(extension2);
+  orderedExtensions.add(extension1);
+  when(coreExtensionDependencyResolver.resolveDependencies(extensions)).thenReturn(orderedExtensions);
+  coreExtensionManager.initialise();
+  coreExtensionManager.start();
+  InOrder ordered=inOrder(extension1,extension2);
+  ordered.verify(extension2).start();
+  ordered.verify(extension1).start();
+}

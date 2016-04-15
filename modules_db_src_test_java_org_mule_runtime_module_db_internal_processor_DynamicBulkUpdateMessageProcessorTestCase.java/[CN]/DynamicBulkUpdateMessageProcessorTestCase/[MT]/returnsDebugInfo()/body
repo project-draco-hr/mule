@@ -1,0 +1,14 @@
+{
+  when(message.getPayload()).thenReturn(getPlanetNames());
+  when(event.getMessage()).thenReturn(message);
+  when(dbConnectionFactory.createConnection(TransactionalAction.NOT_SUPPORTED)).thenReturn(connection);
+  when(dbConfigResolver.resolve(event)).thenReturn(dbConfig);
+  when(dbConfig.getConnectionFactory()).thenReturn(dbConnectionFactory);
+  when(queryResolver.resolve(any(DbConnection.class),any(MuleEvent.class))).thenReturn(new Query(QUERY_TEMPLATE1)).thenReturn(new Query(QUERY_TEMPLATE2));
+  final DynamicBulkUpdateMessageProcessor dynamicBulkUpdateMessageProcessor=new DynamicBulkUpdateMessageProcessor(dbConfigResolver,queryResolver,null,NOT_SUPPORTED,Collections.singletonList(QueryType.UPDATE));
+  dynamicBulkUpdateMessageProcessor.setMuleContext(muleContext);
+  final List<FieldDebugInfo<?>> debugInfo=dynamicBulkUpdateMessageProcessor.getDebugInfo(event);
+  assertThat(debugInfo,is(not(nullValue())));
+  assertThat(debugInfo.size(),equalTo(1));
+  assertThat(debugInfo,hasItem(objectLike(QUERIES_DEBUG_FIELD,List.class,createExpectedQueryMatchers())));
+}

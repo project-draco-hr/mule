@@ -1,0 +1,47 @@
+{
+  final ByteArrayOutputStream cache=new ByteArrayOutputStream();
+  final DelegatingOutputStream delegating=new DelegatingOutputStream(cache);
+  message.setContent(OutputStream.class,delegating);
+  message.setContent(DelegatingOutputStream.class,delegating);
+  OutputHandler handler=new OutputHandler(){
+    public void write(    MuleEvent event,    OutputStream out) throws IOException {
+      out.write(cache.toByteArray());
+      delegating.setOutputStream(out);
+      message.getInterceptorChain().doIntercept(message);
+    }
+  }
+;
+  MuleEvent event=(MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT);
+  boolean decoupled=event != null && message.getExchange().getInMessage() != null;
+  if (event == null || VoidMuleEvent.getInstance().equals(event) || decoupled) {
+    MuleContext muleContext=configuration.getMuleContext();
+    MuleMessage muleMsg=new DefaultMuleMessage(handler,muleContext);
+    String url=setupURL(message);
+    try {
+      event=new DefaultMuleEvent(muleMsg,(FlowConstruct)null);
+    }
+ catch (    Exception e) {
+      throw new Fault(e);
+    }
+  }
+ else {
+    event.getMessage().setPayload(handler,DataTypeFactory.XML_STRING);
+  }
+  if (!decoupled) {
+    message.getExchange().put(CxfConstants.MULE_EVENT,event);
+  }
+  message.put(CxfConstants.MULE_EVENT,event);
+  final MuleEvent finalEvent=event;
+  AbstractPhaseInterceptor<Message> i=new AbstractPhaseInterceptor<Message>(Phase.PRE_STREAM){
+    public void handleMessage(    Message m) throws Fault {
+      try {
+        dispatchMuleMessage(m,finalEvent);
+      }
+ catch (      MuleException e) {
+        throw new Fault(e);
+      }
+    }
+  }
+;
+  message.getInterceptorChain().add(i);
+}

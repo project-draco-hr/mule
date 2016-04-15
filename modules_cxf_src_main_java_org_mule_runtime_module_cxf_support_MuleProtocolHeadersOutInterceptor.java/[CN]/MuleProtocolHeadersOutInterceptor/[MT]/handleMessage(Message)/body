@@ -1,0 +1,28 @@
+{
+  MuleEvent event=(MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT);
+  if (event == null || event instanceof NonBlockingVoidMuleEvent) {
+    return;
+  }
+  MuleMessage muleMsg=event.getMessage();
+  if (muleMsg == null) {
+    return;
+  }
+  extractAndSetContentType(message,muleMsg);
+  extractAndSet(message,muleMsg,Message.RESPONSE_CODE,HTTP_STATUS_PROPERTY);
+  String method=(String)message.get(Message.HTTP_REQUEST_METHOD);
+  if (method == null) {
+    method=POST.name();
+  }
+  muleMsg.setOutboundProperty(HTTP_METHOD_PROPERTY,method);
+  Map<String,List<String>> reqHeaders=CastUtils.cast((Map<?,?>)message.get(Message.PROTOCOL_HEADERS));
+  if (reqHeaders != null) {
+    for (    Map.Entry<String,List<String>> e : reqHeaders.entrySet()) {
+      String key=e.getKey();
+      String val=format(e.getValue());
+      muleMsg.setOutboundProperty(key,val);
+    }
+  }
+  if (!Boolean.TRUE.equals(message.containsKey(Message.REQUESTOR_ROLE))) {
+    message.getInterceptorChain().pause();
+  }
+}

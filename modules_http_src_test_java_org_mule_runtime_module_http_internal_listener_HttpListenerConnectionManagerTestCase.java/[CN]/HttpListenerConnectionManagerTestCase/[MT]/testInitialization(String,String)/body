@@ -1,0 +1,17 @@
+{
+  final HttpListenerConnectionManager connectionManager=new HttpListenerConnectionManager();
+  final MuleContext mockMuleContext=mock(MuleContext.class,Answers.RETURNS_DEEP_STUBS.get());
+  connectionManager.setMuleContext(mockMuleContext);
+  WorkManagerSource mockWorkManagerSource=mock(WorkManagerSource.class);
+  when((Object)(mockMuleContext.getRegistry().lookupObject(TcpServerSocketProperties.class))).thenReturn(mock(TcpServerSocketProperties.class));
+  connectionManager.initialise();
+  connectionManager.createServer(new ServerAddress(firstIp,PORT),mockWorkManagerSource,false,CONNECTION_IDLE_TIMEOUT);
+  expectedException.expect(MuleRuntimeException.class);
+  expectedException.expectMessage(String.format(HttpListenerConnectionManager.SERVER_ALREADY_EXISTS_FORMAT,PORT,secondIp));
+  try {
+    connectionManager.createServer(new ServerAddress(secondIp,PORT),mockWorkManagerSource,false,CONNECTION_IDLE_TIMEOUT);
+  }
+  finally {
+    connectionManager.dispose();
+  }
+}

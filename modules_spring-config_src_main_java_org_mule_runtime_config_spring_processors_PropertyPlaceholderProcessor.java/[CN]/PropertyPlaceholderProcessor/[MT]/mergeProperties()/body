@@ -1,0 +1,23 @@
+{
+  RegistryProperties props=new RegistryProperties();
+  props.putAll(super.mergeProperties());
+  props.put("mule.working.dir",muleContext.getConfiguration().getWorkingDirectory());
+  if (factories != null) {
+    for (Iterator iterator=factories.entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)iterator.next();
+      if (entry.getKey() == null) {
+        throw new NullPointerException(CoreMessages.objectIsNull("Factories.Key").getMessage());
+      }
+      if (entry.getValue() == null) {
+        throw new NullPointerException(CoreMessages.objectIsNull("Factories.Value").getMessage());
+      }
+      try {
+        props.put(entry.getKey(),((PropertyFactory)entry.getValue()).create(props));
+      }
+ catch (      Exception e) {
+        throw new IOException("Failed to invoke PropertyFactory: " + entry.getValue() + ". Error is: "+ e.toString());
+      }
+    }
+  }
+  return props;
+}

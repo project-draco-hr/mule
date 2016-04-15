@@ -1,0 +1,23 @@
+{
+  final Class<Object> objectClass=getType(objectType);
+  final ObjectBuilder builder=new DefaultObjectBuilder(objectClass);
+  for (  ObjectFieldType objectField : objectType.getFields()) {
+    final MetadataType fieldType=objectField.getValue();
+    final String parameterName=objectField.getKey().getName().getLocalPart();
+    ValueResolver resolver=getResolverFromAttribute(element,parameterName,fieldType,null);
+    if (resolver == null && fieldType instanceof ObjectType) {
+      ElementDescriptor childElement=element.getChildByName(hyphenize(parameterName));
+      if (childElement != null) {
+        ObjectBuilder childBuilder=createObjectBuilder((ObjectType)fieldType,childElement);
+        resolver=new ObjectBuilderValueResolver(childBuilder);
+      }
+    }
+    if (resolver != null) {
+      Field field=IntrospectionUtils.getFieldByAlias(objectClass,parameterName,getType(fieldType));
+      if (field != null) {
+        builder.addPropertyResolver(field,resolver);
+      }
+    }
+  }
+  return builder;
+}

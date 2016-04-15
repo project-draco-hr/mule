@@ -1,0 +1,19 @@
+{
+  try {
+    stateEvaluator=new AttributeEvaluator(state).initialize(muleContext.getExpressionManager());
+    final HttpListenerBuilder httpListenerBuilder=new HttpListenerBuilder(muleContext);
+    final String flowName="authorization-request-handler-" + localAuthorizationUrl;
+    final Flow flow=DynamicFlowFactory.createDynamicFlow(muleContext,flowName,createLocalAuthorizationUrlListener());
+    httpListenerBuilder.setUrl(new URL(localAuthorizationUrl)).setSuccessStatusCode(REDIRECT_STATUS_CODE).setFlow(flow);
+    if (oauthConfig.getTlsContext() != null) {
+      httpListenerBuilder.setTlsContextFactory(oauthConfig.getTlsContext());
+    }
+    this.listener=httpListenerBuilder.build();
+    this.listener.initialise();
+    this.listener.start();
+  }
+ catch (  MalformedURLException e) {
+    logger.warn("Could not parse provided url %s. Validate that the url is correct",localAuthorizationUrl);
+    throw new DefaultMuleException(e);
+  }
+}

@@ -1,0 +1,18 @@
+{
+  final Map<String,VariableElement> variableElements=getFieldsAnnotatedWith(element,Parameter.class);
+  TypeElement traversingElement=element;
+  while (traversingElement != null && !Object.class.getName().equals(traversingElement.getQualifiedName().toString())) {
+    Class<?> declaringClass=AnnotationProcessorUtils.classFor(traversingElement,processingEnv);
+    for (    ParameterDeclaration parameter : parameters) {
+      Field field=IntrospectionUtils.getField(declaringClass,parameter);
+      if (field != null && variableElements.containsKey(field.getName())) {
+        parameter.setDescription(getJavaDocSummary(processingEnv,variableElements.get(field.getName())));
+      }
+    }
+    traversingElement=(TypeElement)processingEnv.getTypeUtils().asElement(traversingElement.getSuperclass());
+  }
+  for (  VariableElement variableElement : getFieldsAnnotatedWith(element,ParameterGroup.class).values()) {
+    TypeElement typeElement=(TypeElement)processingEnv.getTypeUtils().asElement(variableElement.asType());
+    documentConfigurationParameters(parameters,typeElement);
+  }
+}

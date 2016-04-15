@@ -1,0 +1,28 @@
+{
+  final ClassLoaderLookupStrategy lookupStrategy=lookupPolicy.getLookupStrategy(name);
+  Class<?> result;
+  if (lookupStrategy == PARENT_ONLY) {
+    result=getParent().loadClass(name);
+  }
+ else   if (lookupStrategy == PARENT_FIRST) {
+    try {
+      result=getParent().loadClass(name);
+    }
+ catch (    ClassNotFoundException e) {
+      result=doLoadClass(name);
+    }
+  }
+ else {
+    result=doLoadClass(name);
+    if (result == null) {
+      result=getParent().loadClass(name);
+    }
+  }
+  if (result != null) {
+    if (resolve) {
+      resolveClass(result);
+    }
+    return result;
+  }
+  throw new ClassNotFoundException(String.format("Cannot load class '%s'",name));
+}

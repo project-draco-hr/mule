@@ -1,0 +1,29 @@
+{
+  if (singleton != null) {
+    return singleton;
+  }
+  Resource resource=null;
+  Object value=environment.get(Context.PROVIDER_URL);
+  String key="jndi.xml";
+  if (value == null) {
+    resource=new ClassPathResource(key);
+  }
+ else {
+    if (value instanceof Resource) {
+      resource=(Resource)value;
+    }
+ else {
+      ResourceEditor editor=new ResourceEditor();
+      key=value.toString();
+      editor.setAsText(key);
+      resource=(Resource)editor.getValue();
+    }
+  }
+  BeanFactory context=loadContext(resource,key);
+  Context answer=(Context)context.getBean("jndi");
+  if (answer == null) {
+    log.warn("No JNDI context available in JNDI resource: " + resource);
+    answer=new DefaultSpringJndiContext(environment,new ConcurrentHashMap());
+  }
+  return answer;
+}

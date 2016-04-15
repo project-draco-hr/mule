@@ -1,0 +1,39 @@
+{
+  AbstractBeanDefinition beanDefinition=bean.getBeanDefinition();
+  String oldName=SpringXMLUtils.attributeName(attribute);
+  String oldValue=attribute.getNodeValue();
+  if (attribute.getNamespaceURI() == null) {
+    if (!beanConfig.isIgnored(oldName)) {
+      logger.debug(attribute + " for " + beanDefinition.getBeanClassName());
+      String newName=bestGuessName(beanConfig,oldName,beanDefinition.getBeanClassName());
+      Object newValue=beanConfig.translateValue(oldName,oldValue);
+      addPropertyWithReference(beanDefinition.getPropertyValues(),beanConfig.getSingleProperty(oldName),newName,newValue);
+    }
+  }
+ else   if (isAnnotationsPropertyAvailable(beanDefinition.getBeanClass())) {
+    QName name;
+    if (attribute.getPrefix() != null) {
+      name=new QName(attribute.getNamespaceURI(),attribute.getLocalName(),attribute.getPrefix());
+    }
+ else {
+      name=new QName(attribute.getNamespaceURI(),attribute.getLocalName());
+    }
+    Object value=beanConfig.translateValue(oldName,oldValue);
+    addAnnotationValue(beanDefinition.getPropertyValues(),name,value);
+    MuleContext muleContext=MuleArtifactContext.getCurrentMuleContext().get();
+    if (muleContext != null) {
+      Map<QName,Set<Object>> annotations=muleContext.getConfigurationAnnotations();
+      Set<Object> values=annotations.get(name);
+      if (values == null) {
+        values=new HashSet<Object>();
+        annotations.put(name,values);
+      }
+      values.add(value);
+    }
+  }
+ else {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Cannot assign " + beanDefinition.getBeanClass() + " to "+ AnnotatedObject.class);
+    }
+  }
+}

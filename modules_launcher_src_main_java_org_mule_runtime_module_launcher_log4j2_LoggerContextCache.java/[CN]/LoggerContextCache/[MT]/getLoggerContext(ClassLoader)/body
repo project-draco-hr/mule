@@ -1,0 +1,26 @@
+{
+  final LoggerContext ctx;
+  try {
+    final Integer key=computeKey(classLoader);
+    if (builtContexts.containsKey(key)) {
+      ctx=builtContexts.get(key);
+    }
+ else {
+synchronized (this) {
+        if (builtContexts.containsKey(key)) {
+          ctx=builtContexts.get(key);
+        }
+ else {
+          ctx=doGetLoggerContext(classLoader,key);
+        }
+      }
+    }
+  }
+ catch (  ExecutionException e) {
+    throw new MuleRuntimeException(createStaticMessage("Could not init logger context "),e);
+  }
+  if (ctx.getState() == LifeCycle.State.INITIALIZED) {
+    ctx.start();
+  }
+  return ctx;
+}

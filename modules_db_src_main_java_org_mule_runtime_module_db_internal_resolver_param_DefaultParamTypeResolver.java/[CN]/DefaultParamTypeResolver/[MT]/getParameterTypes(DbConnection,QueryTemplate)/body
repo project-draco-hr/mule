@@ -1,0 +1,20 @@
+{
+  Map<Integer,DbType> resolvedParamTypes=new HashMap<Integer,DbType>();
+  Map<Integer,DbType> metadataParamTypes=null;
+  for (  QueryParam queryParam : queryTemplate.getParams()) {
+    if (queryParam.getType() instanceof UnknownDbType) {
+      if (metadataParamTypes == null) {
+        metadataParamTypes=getParamTypesUsingMetadata(connection,queryTemplate);
+      }
+      resolvedParamTypes.put(queryParam.getIndex(),metadataParamTypes.get(queryParam.getIndex()));
+    }
+ else     if (queryParam.getType() instanceof DynamicDbType) {
+      DbType dbType=dbTypeManager.lookup(connection,queryParam.getType().getName());
+      resolvedParamTypes.put(queryParam.getIndex(),dbType);
+    }
+ else {
+      resolvedParamTypes.put(queryParam.getIndex(),queryParam.getType());
+    }
+  }
+  return resolvedParamTypes;
+}

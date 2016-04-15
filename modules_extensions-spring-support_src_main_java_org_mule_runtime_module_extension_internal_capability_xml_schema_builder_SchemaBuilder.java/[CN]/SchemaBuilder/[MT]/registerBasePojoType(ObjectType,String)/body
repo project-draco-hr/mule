@@ -1,0 +1,53 @@
+{
+  final TopLevelComplexType complexType=new TopLevelComplexType();
+  final Class<?> clazz=getType(metadataType);
+  registeredComplexTypesHolders.put(clazz,new ComplexTypeHolder(complexType,metadataType));
+  complexType.setName(NameUtils.sanitizeName(clazz.getName()));
+  complexType.setAnnotation(createDocAnnotation(description));
+  ComplexContent complexContent=new ComplexContent();
+  complexType.setComplexContent(complexContent);
+  final ExtensionType extension=new ExtensionType();
+  extension.setBase(MULE_ABSTRACT_EXTENSION_TYPE);
+  complexContent.setExtension(extension);
+  for (  ObjectFieldType field : metadataType.getFields()) {
+    final String name=field.getKey().getName().getLocalPart();
+    final MetadataType fieldType=field.getValue();
+    final Class<?> fieldClass=getType(field);
+    final String defaultValue=MetadataTypeUtils.getDefaultValue(metadataType).orElse(null);
+    final ExpressionSupport expressionSupport=TypeUtils.getExpressionSupport(field);
+    fieldType.accept(new MetadataTypeVisitor(){
+      @Override public void visitArrayType(      ArrayType arrayType){
+        final ExplicitGroup all=getOrCreateSequenceGroup(extension);
+        generateCollectionElement(all,name,EMPTY,arrayType,field.isRequired());
+      }
+      @Override public void visitDictionary(      DictionaryType dictionaryType){
+        final ExplicitGroup all=getOrCreateSequenceGroup(extension);
+        generateMapElement(all,name,EMPTY,dictionaryType,field.isRequired());
+      }
+      @Override public void visitObject(      ObjectType objectType){
+        if (TlsContextFactory.class.isAssignableFrom(fieldClass)) {
+          final ExplicitGroup all=getOrCreateSequenceGroup(extension);
+          addTlsSupport(extension,all);
+          return;
+        }
+        if (shouldGeneratePojoChildElements(fieldClass)) {
+          if (ExpressionSupport.REQUIRED != expressionSupport) {
+            final ExplicitGroup all=getOrCreateSequenceGroup(extension);
+            registerComplexTypeChildElement(all,name,EMPTY,objectType,false);
+          }
+ else {
+            defaultVisit(objectType);
+            registerPojoType(objectType,EMPTY);
+          }
+        }
+      }
+      @Override protected void defaultVisit(      MetadataType metadataType){
+        Attribute attribute=createAttribute(name,EMPTY,fieldType,defaultValue,field.isRequired(),expressionSupport);
+        extension.getAttributeOrAttributeGroup().add(attribute);
+      }
+    }
+);
+  }
+  schema.getSimpleTypeOrComplexTypeOrGroup().add(complexType);
+  return complexType;
+}

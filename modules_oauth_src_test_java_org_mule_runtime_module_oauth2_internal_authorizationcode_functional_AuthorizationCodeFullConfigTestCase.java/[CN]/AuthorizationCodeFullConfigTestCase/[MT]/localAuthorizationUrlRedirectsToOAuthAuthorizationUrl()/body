@@ -1,0 +1,8 @@
+{
+  wireMockRule.stubFor(get(urlMatching(AUTHORIZE_PATH + ".*")).willReturn(aResponse().withStatus(200)));
+  HttpRequestOptions options=newOptions().enableFollowsRedirect().tlsContextFactory(createClientTlsContextFactory()).build();
+  muleContext.getClient().send(localAuthorizationUrl.getValue(),getTestMuleMessage(NullPayload.getInstance()),options);
+  final List<LoggedRequest> requests=findAll(getRequestedFor(urlMatching(AUTHORIZE_PATH + ".*")));
+  assertThat(requests.size(),is(1));
+  AuthorizationRequestAsserter.create((requests.get(0))).assertMethodIsGet().assertClientIdIs(clientId.getValue()).assertRedirectUriIs(redirectUrl.getValue()).assertScopeIs(scopes.getValue()).assertStateIs(state.getValue()).assertContainsCustomParameter(authenticationRequestParam1.getValue(),authenticationRequestValue1.getValue()).assertContainsCustomParameter(authenticationRequestParam2.getValue(),authenticationRequestValue2.getValue()).assertResponseTypeIsCode();
+}

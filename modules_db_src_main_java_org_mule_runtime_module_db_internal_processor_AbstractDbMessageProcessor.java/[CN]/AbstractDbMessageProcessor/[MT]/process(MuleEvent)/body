@@ -1,0 +1,37 @@
+{
+  DbConnection connection=null;
+  DbConfig dbConfig=dbConfigResolver.resolve(muleEvent);
+  try {
+    connection=dbConfig.getConnectionFactory().createConnection(transactionalAction);
+  }
+ catch (  SQLException e) {
+    throw new DbConnectionException(e,dbConfig);
+  }
+  try {
+    Object result=executeQuery(connection,muleEvent);
+    if (mustCloseConnection()) {
+      try {
+        dbConfig.getConnectionFactory().releaseConnection(connection);
+      }
+  finally {
+        connection=null;
+      }
+    }
+    if (target == null || "".equals(target) || "#[payload]".equals(target)) {
+      muleEvent.getMessage().setPayload(result);
+    }
+ else {
+      muleContext.getExpressionManager().enrich(target,muleEvent,result);
+    }
+    return processNext(muleEvent);
+  }
+ catch (  SQLException e) {
+    streamingResultSetCloser.closeResultSets(connection);
+    throw new MessagingException(muleEvent,e,this);
+  }
+ finally {
+    if (mustCloseConnection()) {
+      dbConfig.getConnectionFactory().releaseConnection(connection);
+    }
+  }
+}

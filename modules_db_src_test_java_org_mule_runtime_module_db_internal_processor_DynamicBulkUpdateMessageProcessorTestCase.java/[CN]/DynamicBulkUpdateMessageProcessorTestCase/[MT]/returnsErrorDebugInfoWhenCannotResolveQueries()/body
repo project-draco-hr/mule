@@ -1,0 +1,14 @@
+{
+  when(message.getPayload()).thenReturn(getPlanetNames());
+  when(event.getMessage()).thenReturn(message);
+  when(dbConnectionFactory.createConnection(TransactionalAction.NOT_SUPPORTED)).thenReturn(connection);
+  when(dbConfigResolver.resolve(event)).thenReturn(dbConfig);
+  when(dbConfig.getConnectionFactory()).thenReturn(dbConnectionFactory);
+  final QueryResolutionException queryResolutionException=new QueryResolutionException("Error");
+  when(queryResolver.resolve(any(DbConnection.class),any(MuleEvent.class))).thenThrow(queryResolutionException);
+  final DynamicBulkUpdateMessageProcessor dynamicBulkUpdateMessageProcessor=new DynamicBulkUpdateMessageProcessor(dbConfigResolver,queryResolver,null,NOT_SUPPORTED,Collections.singletonList(QueryType.UPDATE));
+  dynamicBulkUpdateMessageProcessor.setMuleContext(muleContext);
+  final List<FieldDebugInfo<?>> debugInfo=dynamicBulkUpdateMessageProcessor.getDebugInfo(event);
+  assertThat(debugInfo.size(),equalTo(1));
+  assertThat(debugInfo,hasItem(fieldLike(QUERIES_DEBUG_FIELD,List.class,queryResolutionException)));
+}

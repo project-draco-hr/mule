@@ -1,0 +1,19 @@
+{
+  final ApplicationDescriptor descriptor=new ApplicationDescriptor();
+  descriptor.setName(APP_NAME);
+  descriptor.setDomain(DOMAIN_NAME);
+  final File[] resourceFiles=new File[0];
+  descriptor.setConfigResourcesFile(resourceFiles);
+  when(applicationDescriptorFactory.create(any())).thenReturn(descriptor);
+  final Domain domain=createDomain(DOMAIN_NAME);
+  final ClassLoaderLookupPolicy sharedLibLookupPolicy=mock(ClassLoaderLookupPolicy.class);
+  when(domain.getArtifactClassLoader().getClassLoaderLookupPolicy().extend(anyMap())).thenReturn(sharedLibLookupPolicy);
+  final ArtifactClassLoader applicationArtifactClassLoader=mock(ArtifactClassLoader.class);
+  when(applicationClassLoaderFactory.create(any(),argThat(equalTo(descriptor)))).thenReturn(applicationArtifactClassLoader);
+  final Application application=applicationFactory.createArtifact(APP_NAME);
+  assertThat(application.getDomain(),is(domain));
+  assertThat(application.getArtifactClassLoader(),is(applicationArtifactClassLoader));
+  assertThat(application.getDescriptor(),is(descriptor));
+  assertThat(application.getArtifactName(),is(APP_NAME));
+  assertThat(application.getResourceFiles(),is(resourceFiles));
+}

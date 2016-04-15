@@ -1,0 +1,23 @@
+{
+  String serverId=StringUtils.defaultIfEmpty(servletContext.getInitParameter("mule.serverId"),null);
+  if (serverId == null) {
+    final File tempDir=(File)servletContext.getAttribute(ATTR_JAVAX_SERVLET_CONTEXT_TEMPDIR);
+    final String contextName=FilenameUtils.getBaseName(tempDir.toString());
+    serverId=contextName;
+  }
+  WebappMuleXmlConfigurationBuilder builder=new WebappMuleXmlConfigurationBuilder(servletContext,configResource);
+  MuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
+  String muleAppConfig=servletContext.getInitParameter(INIT_PARAMETER_MULE_APP_CONFIG) != null ? servletContext.getInitParameter(INIT_PARAMETER_MULE_APP_CONFIG) : PropertiesMuleConfigurationFactory.getMuleAppConfiguration(configResource);
+  DefaultMuleConfiguration muleConfiguration=new PropertiesMuleConfigurationFactory(muleAppConfig).createConfiguration();
+  muleConfiguration.setContainerMode(true);
+  if (serverId != null) {
+    muleConfiguration.setId(serverId);
+  }
+  MuleContextBuilder muleContextBuilder=new DefaultMuleContextBuilder();
+  muleContextBuilder.setMuleConfiguration(muleConfiguration);
+  final ApplicationContext parentContext=(ApplicationContext)servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+  if (parentContext != null) {
+    builder.setParentContext(parentContext);
+  }
+  return muleContextFactory.createMuleContext(builder,muleContextBuilder);
+}

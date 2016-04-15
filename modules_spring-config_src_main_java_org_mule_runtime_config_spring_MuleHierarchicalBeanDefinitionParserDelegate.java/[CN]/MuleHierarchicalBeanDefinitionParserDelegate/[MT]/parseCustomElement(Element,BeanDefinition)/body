@@ -1,0 +1,53 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("parsing: " + SpringXMLUtils.elementToString(element));
+  }
+  validate(element);
+  if (SpringXMLUtils.isBeansNamespace(element)) {
+    return handleSpringElements(element,parent);
+  }
+ else {
+    String namespaceUri=element.getNamespaceURI();
+    NamespaceHandler handler=getReaderContext().getNamespaceHandlerResolver().resolve(namespaceUri);
+    if (handler == null) {
+      getReaderContext().error("Unable to locate NamespaceHandler for namespace [" + namespaceUri + "]",element);
+      return null;
+    }
+    boolean noRecurse=false;
+    boolean forceRecurse=false;
+    BeanDefinition finalChild;
+    do {
+      ParserContext parserContext=new ParserContext(getReaderContext(),this,parent);
+      finalChild=handler.parse(element,parserContext);
+      registerBean(element,finalChild);
+      noRecurse=noRecurse || testFlag(finalChild,MULE_NO_RECURSE);
+      forceRecurse=forceRecurse || testFlag(finalChild,MULE_FORCE_RECURSE);
+    }
+ while (null != finalChild && testFlag(finalChild,MULE_REPEAT_PARSE));
+    boolean isRecurse;
+    if (noRecurse) {
+      isRecurse=false;
+    }
+ else {
+      if (forceRecurse) {
+        isRecurse=true;
+      }
+ else {
+        isRecurse=SpringXMLUtils.isMuleNamespace(element);
+      }
+    }
+    if (isRecurse) {
+      NodeList list=element.getChildNodes();
+      for (int i=0; i < list.getLength(); i++) {
+        if (list.item(i) instanceof Element) {
+          parseCustomElement((Element)list.item(i),finalChild);
+        }
+      }
+    }
+    if (testFlag(finalChild,MULE_POST_CHILDREN)) {
+      ParserContext parserContext=new ParserContext(getReaderContext(),this,parent);
+      finalChild=handler.parse(element,parserContext);
+    }
+    return finalChild;
+  }
+}

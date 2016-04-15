@@ -1,0 +1,34 @@
+{
+  List<FieldDebugInfo<?>> debugInfo=new ArrayList<>();
+  DbConfig dbConfig;
+  try {
+    dbConfig=dbConfigResolver.resolve(muleEvent);
+  }
+ catch (  UnresolvableDbConfigException e) {
+    debugInfo.add(createFieldDebugInfo(DbDebugInfoUtils.CONFIG_DEBUG_FIELD,DbConfig.class,e));
+    return debugInfo;
+  }
+  DbConnection connection;
+  try {
+    connection=dbConfig.getConnectionFactory().createConnection(NOT_SUPPORTED);
+  }
+ catch (  SQLException e) {
+    debugInfo.add(createFieldDebugInfo(DbDebugInfoUtils.CONNECTION_DEBUG_FIELD,DbConnection.class,e));
+    return debugInfo;
+  }
+  try {
+    debugInfo=getMessageProcessorDebugInfo(connection,muleEvent);
+    try {
+      dbConfig.getConnectionFactory().releaseConnection(connection);
+    }
+  finally {
+      connection=null;
+    }
+    return debugInfo;
+  }
+  finally {
+    if (connection != null && mustCloseConnection()) {
+      dbConfig.getConnectionFactory().releaseConnection(connection);
+    }
+  }
+}

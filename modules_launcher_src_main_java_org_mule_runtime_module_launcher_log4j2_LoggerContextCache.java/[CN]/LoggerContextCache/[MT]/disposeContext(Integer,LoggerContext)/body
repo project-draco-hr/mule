@@ -1,0 +1,16 @@
+{
+  if (isDisposedClassLoader(key)) {
+    return;
+  }
+  disposedContexts.put(key,loggerContext);
+synchronized (executorService) {
+    if (!executorService.isShutdown()) {
+      executorService.schedule(new Runnable(){
+        @Override public void run(){
+          disposedContexts.cleanUp();
+        }
+      }
+,disposeDelayInMillis + 1,TimeUnit.MILLISECONDS);
+    }
+  }
+}

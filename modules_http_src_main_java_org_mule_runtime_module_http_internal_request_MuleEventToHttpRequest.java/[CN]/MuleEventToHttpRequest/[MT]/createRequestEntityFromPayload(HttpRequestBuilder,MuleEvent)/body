@@ -1,0 +1,40 @@
+{
+  Object payload=muleEvent.getMessage().getPayload();
+  if (!muleEvent.getMessage().getOutboundAttachmentNames().isEmpty()) {
+    try {
+      return createMultiPart(muleEvent.getMessage());
+    }
+ catch (    IOException e) {
+      throw new MessagingException(muleEvent,e);
+    }
+  }
+  if (doStreaming(requestBuilder,muleEvent)) {
+    if (payload instanceof InputStream) {
+      return new InputStreamHttpEntity((InputStream)payload);
+    }
+ else {
+      try {
+        return new InputStreamHttpEntity(new ByteArrayInputStream(muleEvent.getMessageAsBytes()));
+      }
+ catch (      Exception e) {
+        throw new MessagingException(muleEvent,e);
+      }
+    }
+  }
+ else {
+    String contentType=requestBuilder.getHeaders().get(CONTENT_TYPE);
+    if (contentType == null || contentType.equals(APPLICATION_X_WWW_FORM_URLENCODED)) {
+      if (muleEvent.getMessage().getPayload() instanceof Map) {
+        String body=HttpParser.encodeString(muleEvent.getEncoding(),(Map)payload);
+        requestBuilder.addHeader(CONTENT_TYPE,APPLICATION_X_WWW_FORM_URLENCODED);
+        return new ByteArrayHttpEntity(body.getBytes());
+      }
+    }
+    try {
+      return new ByteArrayHttpEntity(muleEvent.getMessageAsBytes());
+    }
+ catch (    Exception e) {
+      throw new MessagingException(muleEvent,e);
+    }
+  }
+}

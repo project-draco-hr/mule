@@ -1,0 +1,25 @@
+{
+  deploymentService.start();
+  addExplodedDomainFromBuilder(dummyDomainFileBuilder,dummyDomainFileBuilder.getId());
+  addExplodedAppFromBuilder(dummyDomainApp1FileBuilder,dummyDomainApp1FileBuilder.getId());
+  addExplodedAppFromBuilder(dummyDomainApp2FileBuilder,dummyDomainApp2FileBuilder.getId());
+  addExplodedAppFromBuilder(dummyDomainApp3FileBuilder,dummyDomainApp3FileBuilder.getId());
+  assertDeploymentSuccess(domainDeploymentListener,dummyDomainFileBuilder.getId());
+  assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyDomainApp1FileBuilder.getId());
+  assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyDomainApp2FileBuilder.getId());
+  assertDeploymentFailure(applicationDeploymentListener,dummyDomainApp3FileBuilder.getId());
+  reset(domainDeploymentListener);
+  reset(applicationDeploymentListener);
+  deploymentService.getLock().lock();
+  try {
+    doRedeployDummyDomainByChangingConfigFileWithGoodOne();
+    doRedeployAppByChangingConfigFileWithGoodOne(dummyDomainApp3FileBuilder.getDeployedPath());
+  }
+  finally {
+    deploymentService.getLock().unlock();
+  }
+  assertDeploymentSuccess(domainDeploymentListener,dummyDomainFileBuilder.getId());
+  assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyDomainApp1FileBuilder.getId());
+  assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyDomainApp2FileBuilder.getId());
+  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp3FileBuilder.getId());
+}

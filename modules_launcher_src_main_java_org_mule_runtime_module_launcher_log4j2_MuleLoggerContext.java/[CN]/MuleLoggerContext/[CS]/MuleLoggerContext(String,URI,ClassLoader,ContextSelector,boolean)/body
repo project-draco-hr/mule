@@ -1,0 +1,25 @@
+{
+  super(name,null,configLocn);
+  configFile=configLocn;
+  this.contextSelector=contextSelector;
+  this.standlone=standalone;
+  ownerClassLoaderHash=ownerClassLoader != null ? ownerClassLoader.hashCode() : getClass().getClassLoader().getSystemClassLoader().hashCode();
+  if (ownerClassLoader instanceof ArtifactClassLoader) {
+    artifactClassloader=true;
+    artifactName=((ArtifactClassLoader)ownerClassLoader).getArtifactName();
+    applicationClassloader=ownerClassLoader instanceof ApplicationClassLoader;
+  }
+ else {
+    artifactClassloader=false;
+    applicationClassloader=false;
+    artifactName=null;
+  }
+  Collection<Field> candidateFields=getAllFields(LoggerContext.class,withName("loggers"));
+  if (candidateFields.size() == 1) {
+    loggersField=candidateFields.iterator().next();
+    loggersField.setAccessible(true);
+  }
+ else {
+    loggersField=null;
+  }
+}

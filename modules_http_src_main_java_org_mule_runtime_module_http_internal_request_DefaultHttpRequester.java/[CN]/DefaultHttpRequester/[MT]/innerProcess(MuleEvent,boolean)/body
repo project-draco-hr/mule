@@ -1,0 +1,23 @@
+{
+  HttpAuthentication authentication=requestConfig.getAuthentication();
+  HttpRequest httpRequest=createHttpRequest(muleEvent,authentication);
+  HttpResponse response;
+  try {
+    notificationHelper.fireNotification(this,muleEvent,httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_BEGIN);
+    response=getHttpClient().send(httpRequest,resolveResponseTimeout(muleEvent),followRedirects.resolveBooleanValue(muleEvent),resolveAuthentication(muleEvent));
+  }
+ catch (  Exception e) {
+    checkIfRemotelyClosed(e);
+    throw new MessagingException(CoreMessages.createStaticMessage("Error sending HTTP request"),muleEvent,e,this);
+  }
+  httpResponseToMuleEvent.convert(muleEvent,response,httpRequest.getUri());
+  notificationHelper.fireNotification(this,muleEvent,httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_END);
+  if (resendRequest(muleEvent,checkRetry,authentication)) {
+    consumePayload(muleEvent);
+    muleEvent=innerProcess(muleEvent,false);
+  }
+ else {
+    validateResponse(muleEvent);
+  }
+  return muleEvent;
+}

@@ -1,0 +1,20 @@
+{
+  ArgumentCaptor<ByteSource> byteSourceCaptor=ArgumentCaptor.forClass(ByteSource.class);
+  ByteSource byteSource=mock(ByteSource.class);
+  when(byteSource.contentEquals(byteSourceCaptor.capture())).thenReturn(true);
+  assert_().about(javaSources()).that(testSourceFiles()).withCompilerOptions("-Aextension.version=1.0.0-dev").processedWith(new ExtensionResourcesGeneratorAnnotationProcessor()).compilesWithoutError().and().generatesFileNamed(StandardLocation.SOURCE_OUTPUT,"","mule-documentation.xsd").withContents(byteSource);
+  ByteSource generatedByteSource=byteSourceCaptor.getValue();
+  assertThat(generatedByteSource,is(notNullValue()));
+  String generatedSchema=IOUtils.toString(generatedByteSource.openStream());
+  assertXpath(generatedSchema,"//xs:attribute[@name='configParameter']/xs:annotation/xs:documentation","Config parameter");
+  assertXpath(generatedSchema,"//xs:attribute[@name='value1']/xs:annotation/xs:documentation",GROUP_PARAMETER_1);
+  assertXpath(generatedSchema,"//xs:attribute[@name='value2']/xs:annotation/xs:documentation",GROUP_PARAMETER_2);
+  assertXpath(generatedSchema,"//xs:element[@name='operation']/xs:annotation/xs:documentation","Test Operation");
+  assertXpath(generatedSchema,"//xs:complexType[@name='OperationType']/xs:complexContent/xs:extension/xs:attribute[@name='value']/xs:annotation/xs:documentation","test value");
+  assertXpath(generatedSchema,"//xs:complexType[@name='OperationType']/xs:complexContent/xs:extension/xs:attribute[@name='value1']/xs:annotation/xs:documentation",GROUP_PARAMETER_1);
+  assertXpath(generatedSchema,"//xs:complexType[@name='OperationType']/xs:complexContent/xs:extension/xs:attribute[@name='value2']/xs:annotation/xs:documentation",GROUP_PARAMETER_2);
+  assertXpath(generatedSchema,"//xs:element[@name='ignore-operation-should-be-ignored']/xs:annotation/xs:documentation","");
+  assertXpath(generatedSchema,"//xs:element[@name='private-operation-should-be-ignored']/xs:annotation/xs:documentation","");
+  assertXpath(generatedSchema,"//xs:element[@name='operation-with-blank-parameter-description']/xs:annotation/xs:documentation","Test Operation with blank parameter description");
+  assertXpath(generatedSchema,"//xs:complexType[@name='OperationWithBlankParameterDescriptionType']/xs:complexContent/xs:extension/xs:attribute[@name='value']/xs:annotation/xs:documentation","");
+}

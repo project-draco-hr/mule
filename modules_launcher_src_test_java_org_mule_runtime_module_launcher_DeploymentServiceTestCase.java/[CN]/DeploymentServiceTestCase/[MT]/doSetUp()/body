@@ -1,0 +1,18 @@
+{
+  super.doSetUp();
+  final String tmpDir=System.getProperty("java.io.tmpdir");
+  muleHome=new File(new File(tmpDir,"mule home"),getClass().getSimpleName() + System.currentTimeMillis());
+  appsDir=new File(muleHome,"apps");
+  appsDir.mkdirs();
+  domainsDir=new File(muleHome,"domains");
+  domainsDir.mkdirs();
+  System.setProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY,muleHome.getCanonicalPath());
+  final File domainFolder=getDomainFolder(DEFAULT_DOMAIN_NAME);
+  assertThat(domainFolder.mkdirs(),is(true));
+  new File(muleHome,"lib/shared/default").mkdirs();
+  applicationDeploymentListener=mock(DeploymentListener.class);
+  domainDeploymentListener=mock(DeploymentListener.class);
+  deploymentService=new MuleDeploymentService(new MuleServerPluginClassLoaderManager());
+  deploymentService.addDeploymentListener(applicationDeploymentListener);
+  deploymentService.addDomainDeploymentListener(domainDeploymentListener);
+}

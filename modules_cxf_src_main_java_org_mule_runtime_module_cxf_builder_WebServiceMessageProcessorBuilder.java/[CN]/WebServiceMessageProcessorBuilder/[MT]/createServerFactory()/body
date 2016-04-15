@@ -1,0 +1,25 @@
+{
+  ServerFactoryBean sfb;
+  if (CxfConstants.SIMPLE_FRONTEND.equals(frontend)) {
+    sfb=new ServerFactoryBean();
+    sfb.setDataBinding(new AegisDatabinding());
+  }
+ else   if (CxfConstants.JAX_WS_FRONTEND.equals(frontend)) {
+    sfb=new JaxWsServerFactoryBean();
+  }
+ else {
+    throw new CreateException(CxfMessages.invalidFrontend(frontend),this);
+  }
+  if (serviceClass == null) {
+    throw new DefaultMuleException(CxfMessages.serviceClassRequiredWithPassThrough());
+  }
+  sfb.setServiceClass(serviceClass);
+  logger.info("Built CXF Inbound MessageProcessor for service class " + serviceClass.getName());
+  if (databinding != null) {
+    sfb.setDataBinding(databinding);
+  }
+  if (getService() != null && getNamespace() != null) {
+    sfb.setServiceName(new QName(getNamespace(),getService()));
+  }
+  return sfb;
+}

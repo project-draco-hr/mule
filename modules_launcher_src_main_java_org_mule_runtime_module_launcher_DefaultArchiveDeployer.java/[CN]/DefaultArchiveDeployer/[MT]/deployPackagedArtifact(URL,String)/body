@@ -1,0 +1,16 @@
+{
+  ZombieFile zombieFile=artifactZombieMap.get(artifactName);
+  if (zombieFile != null) {
+    if (zombieFile.isFor(artifactUrl) && !zombieFile.updatedZombieApp()) {
+      return null;
+    }
+  }
+  T artifact=(T)CollectionUtils.find(artifacts,new BeanPropertyValueEqualsPredicate(ARTIFACT_NAME_PROPERTY,artifactName));
+  if (artifact != null) {
+    deploymentTemplate.preRedeploy(artifact);
+    undeployArtifact(artifactName);
+  }
+  T deployedAtifact=deployPackagedArtifact(artifactUrl);
+  deploymentTemplate.postRedeploy(deployedAtifact);
+  return deployedAtifact;
+}

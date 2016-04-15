@@ -1,0 +1,22 @@
+{
+  InputStream in=IOUtils.getResourceAsStream(getSecretKeyRingFileName(),getClass());
+  PGPSecretKeyRingCollection collection=new PGPSecretKeyRingCollection(in);
+  in.close();
+  secretKey=collection.getSecretKey(Long.valueOf(getSecretAliasId()));
+  if (secretKey == null) {
+    StringBuilder message=new StringBuilder();
+    message.append('\n');
+    Iterator iterator=collection.getKeyRings();
+    while (iterator.hasNext()) {
+      PGPSecretKeyRing ring=(PGPSecretKeyRing)iterator.next();
+      Iterator secretKeysIterator=ring.getSecretKeys();
+      while (secretKeysIterator.hasNext()) {
+        PGPSecretKey k=(PGPSecretKey)secretKeysIterator.next();
+        message.append("Key: ");
+        message.append(k.getKeyID());
+        message.append('\n');
+      }
+    }
+    throw new InitialisationException(PGPMessages.noSecretKeyFoundButAvailable(message.toString()),this);
+  }
+}

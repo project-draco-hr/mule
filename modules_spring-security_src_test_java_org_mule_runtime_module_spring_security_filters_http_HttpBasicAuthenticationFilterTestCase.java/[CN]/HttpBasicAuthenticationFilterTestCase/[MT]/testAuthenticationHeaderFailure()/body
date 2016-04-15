@@ -1,0 +1,21 @@
+{
+  MuleEvent oldEvent=RequestContext.getEvent();
+  MuleEvent event=this.getTestEvent("a");
+  MuleMessage message=event.getMessage();
+  message.setProperty(AUTHORIZATION,"Basic a",PropertyScope.INBOUND);
+  RequestContext.setEvent(event);
+  HttpBasicAuthenticationFilter filter=new HttpBasicAuthenticationFilter();
+  SecurityManager manager=mock(SecurityManager.class);
+  filter.setSecurityManager(manager);
+  doThrow(new UnauthorisedException(null,(MuleEvent)null)).when(manager).authenticate((Authentication)anyObject());
+  try {
+    filter.authenticate(event);
+    fail("An UnauthorisedException should be thrown");
+  }
+ catch (  UnauthorisedException e) {
+    assertNotNull(event.getMessage().getProperty("WWW-Authenticate",OUTBOUND));
+    assertEquals("Basic realm=",event.getMessage().getProperty("WWW-Authenticate",OUTBOUND));
+    verify(manager);
+  }
+  RequestContext.setEvent(oldEvent);
+}

@@ -1,0 +1,19 @@
+{
+  Map<String,Initialisable> objects=new LinkedHashMap<>();
+  for (int i=1; i <= 5; i++) {
+    final String key=String.valueOf(i);
+    objects.put(key,newInitialisable());
+  }
+  Map<String,?> childsOf1=new LinkedHashMap<>(objects);
+  childsOf1.remove("1");
+  childsOf1.remove("4");
+  childsOf1.remove("5");
+  Map<String,Object> childsOf4=new LinkedHashMap<>();
+  childsOf4.put("5",objects.get("5"));
+  when(springRegistry.getDependencies("1")).thenReturn((Map<String,Object>)childsOf1);
+  when(springRegistry.getDependencies("4")).thenReturn(childsOf4);
+  when(springRegistry.lookupEntriesForLifecycle(Initialisable.class)).thenReturn(objects);
+  InOrder inOrder=inOrder(objects.values().toArray());
+  callback.onTransition(Initialisable.PHASE_NAME,springRegistry);
+  verifyInitialisation(inOrder,objects,"2","3","1","5","4");
+}

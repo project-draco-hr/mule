@@ -1,0 +1,22 @@
+{
+  if (ClassUtils.isConsumable(muleEvent.getMessage().getPayload().getClass())) {
+    muleEvent.setMessage(muleEvent.getMuleContext().getTransformationService().transform(muleEvent.getMessage(),DataTypeFactory.STRING));
+  }
+  accessToken=expressionManager.parse(tokenResponseConfiguration.getAccessToken(),muleEvent);
+  accessToken=isEmpty(accessToken) ? null : accessToken;
+  if (accessToken == null) {
+    logger.error("Could not extract access token from token URL. Expressions used to retrieve access token was " + tokenResponseConfiguration.getAccessToken());
+  }
+  if (retrieveRefreshToken) {
+    refreshToken=expressionManager.parse(tokenResponseConfiguration.getRefreshToken(),muleEvent);
+    refreshToken=isEmpty(refreshToken) ? null : refreshToken;
+    if (refreshToken == null) {
+      logger.error("Could not extract refresh token from token URL. Expressions used to retrieve refresh token was " + tokenResponseConfiguration.getRefreshToken());
+    }
+  }
+  expiresIn=expressionManager.parse(tokenResponseConfiguration.getExpiresIn(),muleEvent);
+  customResponseParameters=new HashMap<>();
+  for (  ParameterExtractor parameterExtractor : tokenResponseConfiguration.getParameterExtractors()) {
+    customResponseParameters.put(parameterExtractor.getParamName(),expressionManager.evaluate(parameterExtractor.getValue(),muleEvent));
+  }
+}

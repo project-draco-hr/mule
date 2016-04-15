@@ -1,0 +1,12 @@
+{
+  DepthXMLStreamReader xmlReader=getXMLStreamReader(message);
+  if (!StaxUtils.toNextElement(xmlReader)) {
+    message.setContent(Exception.class,new RuntimeException("There must be a method name element."));
+  }
+  String opName=xmlReader.getLocalName();
+  if (isRequestor(message) && opName.endsWith("Response")) {
+    opName=opName.substring(0,opName.length() - 8);
+  }
+  BindingOperationInfo operation=getOperation(message,new QName(xmlReader.getNamespaceURI(),opName));
+  message.getExchange().put(BindingOperationInfo.class,operation);
+}

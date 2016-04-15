@@ -1,0 +1,18 @@
+{
+  final Latch latch=new Latch();
+  muleContext.registerListener(new SecurityNotificationListener<SecurityNotification>(){
+    @Override public void onNotification(    SecurityNotification notification){
+      latch.countDown();
+    }
+  }
+);
+  MuleClient client=muleContext.getClient();
+  MuleMessage result=client.request("test://toclient",5000);
+  assertNotNull(result);
+  assertEquals("foo",getPayloadAsString(result));
+  result=client.request("test://toclient2",1000);
+  assertNotNull(result);
+  int status=result.getInboundProperty(HTTP_STATUS_PROPERTY,0);
+  assertEquals(401,status);
+  assertTrue(latch.await(1000,TimeUnit.MILLISECONDS));
+}

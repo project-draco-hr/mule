@@ -1,0 +1,14 @@
+{
+  if (jmxSupport == null) {
+    jmxSupportFactory=AutoDiscoveryJmxSupportFactory.getInstance();
+    jmxSupport=jmxSupportFactory.getJmxSupport();
+  }
+  MBeanServer mBeanServer=ManagementFactory.getPlatformMBeanServer();
+  final String jmxNameForMule=String.format("%s:%s",JmxSupport.DEFAULT_JMX_DOMAIN_PREFIX,WrapperManagerAgent.WRAPPER_JMX_NAME);
+  ObjectName on=jmxSupport.getObjectName(jmxNameForMule);
+  if (!mBeanServer.isRegistered(on)) {
+    mBeanServer.registerMBean(new WrapperManager(),on);
+  }
+  WrapperManagerMBean proxy=MBeanServerInvocationHandler.newProxyInstance(mBeanServer,on,WrapperManagerMBean.class,false);
+  return proxy;
+}

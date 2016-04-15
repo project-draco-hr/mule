@@ -1,0 +1,33 @@
+{
+  Object xpathResult;
+  boolean accept=false;
+  try {
+    xpathResult=xpathEvaluator.evaluate(pattern,node,RequestContext.getEvent());
+  }
+ catch (  Exception e) {
+    if (logger.isWarnEnabled()) {
+      logger.warn(ClassUtils.getSimpleName(getClass()) + " filter rejected message because of an error while evaluating the expression: " + e.getMessage(),e);
+    }
+    return false;
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug(MessageFormat.format("{0} Expression result = ''{1}'' -  Expected value = ''{2}''",ClassUtils.getSimpleName(getClass()),xpathResult,expectedValue));
+  }
+  if (xpathResult != null && !"".equals(xpathResult)) {
+    accept=xpathResult.toString().equals(expectedValue);
+  }
+ else {
+    if ("null".equals(expectedValue)) {
+      accept=true;
+    }
+ else {
+      if (logger.isDebugEnabled()) {
+        logger.debug(MessageFormat.format("{0} expression evaluates to null: {1}",ClassUtils.getSimpleName(getClass()),pattern));
+      }
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug(MessageFormat.format("{0} accept object  : {1}",ClassUtils.getSimpleName(getClass()),accept));
+  }
+  return accept;
+}

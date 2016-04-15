@@ -1,0 +1,45 @@
+{
+  org.dom4j.io.SAXReader reader=new org.dom4j.io.SAXReader();
+  if (externalSchemaLocation != null) {
+    reader.setValidation(true);
+    reader.setFeature(APACHE_XML_FEATURES_VALIDATION_SCHEMA,true);
+    reader.setFeature(APACHE_XML_FEATURES_VALIDATION_SCHEMA_FULL_CHECKING,true);
+    InputStream xsdAsStream=IOUtils.getResourceAsStream(externalSchemaLocation,XMLUtils.class);
+    if (xsdAsStream == null) {
+      throw new IllegalArgumentException("Couldn't find schema at " + externalSchemaLocation);
+    }
+    reader.setProperty(JAXP_PROPERTIES_SCHEMA_LANGUAGE,JAXP_PROPERTIES_SCHEMA_LANGUAGE_VALUE);
+    reader.setProperty(JAXP_PROPERTIES_SCHEMA_SOURCE,xsdAsStream);
+  }
+  if (obj instanceof org.dom4j.Document) {
+    return (org.dom4j.Document)obj;
+  }
+ else   if (obj instanceof org.w3c.dom.Document) {
+    org.dom4j.io.DOMReader domReader=new org.dom4j.io.DOMReader();
+    return domReader.read((org.w3c.dom.Document)obj);
+  }
+ else   if (obj instanceof org.xml.sax.InputSource) {
+    return reader.read((org.xml.sax.InputSource)obj);
+  }
+ else   if (obj instanceof javax.xml.transform.Source || obj instanceof javax.xml.stream.XMLStreamReader) {
+    XmlToDomDocument tr=new XmlToDomDocument();
+    tr.setMuleContext(muleContext);
+    tr.setReturnDataType(DataTypeFactory.create(org.dom4j.Document.class));
+    return (org.dom4j.Document)tr.transform(obj);
+  }
+ else   if (obj instanceof java.io.InputStream) {
+    return reader.read((java.io.InputStream)obj);
+  }
+ else   if (obj instanceof String) {
+    return reader.read(new StringReader((String)obj));
+  }
+ else   if (obj instanceof byte[]) {
+    return reader.read(new StringReader(new String((byte[])obj)));
+  }
+ else   if (obj instanceof File) {
+    return reader.read((File)obj);
+  }
+ else {
+    return null;
+  }
+}

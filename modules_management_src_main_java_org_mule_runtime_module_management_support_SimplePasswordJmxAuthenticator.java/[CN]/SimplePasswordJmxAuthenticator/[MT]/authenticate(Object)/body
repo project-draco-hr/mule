@@ -1,0 +1,21 @@
+{
+  if (authToken == null) {
+    throw new SecurityException("No authentication token available");
+  }
+  if (!(authToken instanceof String[]) || ((String[])authToken).length != 2) {
+    throw new SecurityException("Unsupported credentials format");
+  }
+  String[] authentication=(String[])authToken;
+  String username=StringUtils.defaultString(authentication[0]);
+  String password=StringUtils.defaultString(authentication[1]);
+  if (!credentials.containsKey(username)) {
+    throw new SecurityException("Unauthenticated user: " + username);
+  }
+  Object pass=credentials.get(username);
+  if (!password.equals(pass == null ? "" : pass.toString())) {
+    throw new SecurityException("Invalid password");
+  }
+  Set<Principal> principals=new HashSet<Principal>();
+  principals.add(new JMXPrincipal(username));
+  return new Subject(true,principals,Collections.EMPTY_SET,Collections.EMPTY_SET);
+}

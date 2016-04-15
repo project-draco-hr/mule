@@ -1,0 +1,24 @@
+{
+  final ValueHolder<Boolean> contextWasAccessibleDuringShutdown=new ValueHolder<>(true);
+  PollingProber pollingProber=new PollingProber(1000,10);
+  pollingProber.check(new JUnitProbe(){
+    @Override protected boolean test() throws Exception {
+      if (context.getState().equals(LifeCycle.State.STOPPED)) {
+        return true;
+      }
+ else {
+        LoggerContext currentContext=getContext();
+        if (currentContext != null && currentContext != context) {
+          contextWasAccessibleDuringShutdown.set(false);
+        }
+        return false;
+      }
+    }
+    @Override public String describeFailure(){
+      return "context was not stopped";
+    }
+  }
+);
+  assertThat(context,not(getContext()));
+  assertThat(contextWasAccessibleDuringShutdown.get(),is(true));
+}

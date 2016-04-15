@@ -1,0 +1,26 @@
+{
+  Transformer transformer;
+  try {
+    transformer=event.getMuleContext().getRegistry().lookupTransformer(sourceDataType,targetDataType);
+  }
+ catch (  TransformerException e) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(String.format("Could not find transformer for content of type '%s' to '%s'",content.getClass().getName(),targetDataType.getType().getName()),e);
+    }
+    return null;
+  }
+  try {
+    if (transformer instanceof MessageTransformer) {
+      return ((MessageTransformer)transformer).transform(content,event);
+    }
+ else {
+      return transformer.transform(content);
+    }
+  }
+ catch (  Exception e) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(String.format("Found exception trying to transform content of type '%s' to '%s'",content.getClass().getName(),targetDataType.getType().getName()),e);
+    }
+    return null;
+  }
+}

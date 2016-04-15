@@ -1,0 +1,14 @@
+{
+  final MuleEvent responseEvent=flowRunner("defaultQueryRequestResponse").withPayload(TEST_MESSAGE).run();
+  final MuleMessage response=responseEvent.getMessage();
+  Map payload=(Map)response.getPayload();
+  if (testDatabase instanceof MySqlTestDatabase) {
+    assertThat(payload.size(),equalTo(3));
+    assertThat(payload.get("updateCount1"),equalTo(0));
+  }
+ else {
+    assertThat(payload.size(),equalTo(2));
+  }
+  assertRecords(payload.get("resultSet1"),getVenusRecord());
+  assertRecords(payload.get("resultSet2"),getEarthRecord(),getMarsRecord());
+}

@@ -1,0 +1,31 @@
+{
+  return new AbstractRequestResponseMessageProcessor(){
+    @Override protected MuleEvent processRequest(    MuleEvent event) throws MuleException {
+      if (requestBody != null) {
+        event.getMessage().setPayload(requestBody);
+      }
+      copyAttachmentsRequest(event);
+      return super.processRequest(event);
+    }
+    @Override protected MuleEvent processNext(    MuleEvent event) throws MuleException {
+      try {
+        return super.processNext(event);
+      }
+ catch (      DispatchException e) {
+        if (e.getCause() instanceof SoapFault) {
+          SoapFault soapFault=(SoapFault)e.getCause();
+          event.getMessage().setPayload(soapFault.getDetail());
+          throw new SoapFaultException(event,soapFault.getFaultCode(),soapFault.getSubCode(),soapFault.getMessage(),soapFault.getDetail(),this);
+        }
+ else {
+          throw e;
+        }
+      }
+    }
+    @Override protected MuleEvent processResponse(    MuleEvent event) throws MuleException {
+      copyAttachmentsResponse(event);
+      return super.processResponse(event);
+    }
+  }
+;
+}

@@ -1,0 +1,17 @@
+{
+  NewContextParameters parameters=resolveContextParameters(classLoader);
+  if (parameters == null) {
+    return getDefaultContext(selector);
+  }
+  MuleLoggerContext loggerContext=new MuleLoggerContext(parameters.contextName,parameters.loggerConfigFile,classLoader,selector,isStandalone());
+  if (classLoader instanceof ArtifactClassLoader) {
+    final ArtifactClassLoader artifactClassLoader=(ArtifactClassLoader)classLoader;
+    artifactClassLoader.addShutdownListener(new ShutdownListener(){
+      @Override public void execute(){
+        selector.destroyLoggersFor(ArtifactAwareContextSelector.resolveLoggerContextClassLoader(classLoader));
+      }
+    }
+);
+  }
+  return loggerContext;
+}

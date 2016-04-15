@@ -1,0 +1,22 @@
+{
+  if (resEvent != null && !VoidMuleEvent.getInstance().equals(resEvent)) {
+    m.getExchange().put(CxfConstants.MULE_EVENT,resEvent);
+    MuleMessage result=resEvent.getMessage();
+    InputStream is=getResponseBody(m,resEvent);
+    if (is != null) {
+      Message inMessage=new MessageImpl();
+      String encoding=result.getEncoding();
+      inMessage.put(Message.ENCODING,encoding);
+      String contentType=result.getInboundProperty(CONTENT_TYPE,"text/xml");
+      if (encoding != null && contentType.indexOf("charset") < 0) {
+        contentType+="; charset=" + result.getEncoding();
+      }
+      inMessage.put(Message.CONTENT_TYPE,contentType);
+      inMessage.setContent(InputStream.class,is);
+      inMessage.setExchange(m.getExchange());
+      getMessageObserver().onMessage(inMessage);
+      return;
+    }
+  }
+  m.getExchange().put(ClientImpl.FINISHED,Boolean.TRUE);
+}

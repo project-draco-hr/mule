@@ -1,0 +1,19 @@
+{
+  addExplodedDomainFromBuilder(sharedHttpBundleDomainFileBuilder);
+  File domainConfigFile=new File(domainsDir + "/" + sharedHttpBundleDomainFileBuilder.getDeployedPath(),DOMAIN_CONFIG_FILE_LOCATION);
+  String correctDomainConfigContent=IOUtils.toString(new FileInputStream(domainConfigFile));
+  String wrongDomainFileContext=correctDomainConfigContent.replace("http-listener-config","http-listener-config-wrong");
+  FileUtils.copyInputStreamToFile(new ByteArrayInputStream(wrongDomainFileContext.getBytes()),domainConfigFile);
+  long firstFileTimestamp=domainConfigFile.lastModified();
+  deploymentService.start();
+  assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainFileBuilder.getId());
+  assertDeploymentFailure(applicationDeploymentListener,httpAAppFileBuilder.getId());
+  assertDeploymentFailure(applicationDeploymentListener,httpBAppFileBuilder.getId());
+  reset(applicationDeploymentListener);
+  reset(domainDeploymentListener);
+  FileUtils.copyInputStreamToFile(new ByteArrayInputStream(correctDomainConfigContent.getBytes()),domainConfigFile);
+  alterTimestampIfNeeded(domainConfigFile,firstFileTimestamp);
+  assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainFileBuilder.getId());
+  assertDeploymentSuccess(applicationDeploymentListener,httpAAppFileBuilder.getId());
+  assertDeploymentSuccess(applicationDeploymentListener,httpBAppFileBuilder.getId());
+}

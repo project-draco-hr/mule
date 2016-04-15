@@ -1,0 +1,22 @@
+{
+  if (httpRequester.getConfig() != null && tlsContextFactory != null) {
+    throw new IllegalStateException("The request config and the TLS context factory cannot be configured at the same time");
+  }
+  if (tlsContextFactory != null) {
+    DefaultHttpRequesterConfig requesterConfig=new DefaultHttpRequesterConfig();
+    requesterConfig.setTlsContext(tlsContextFactory);
+    requesterConfig.setProtocol(HTTPS);
+    muleContext.getRegistry().registerObject(new ObjectNameHelper(muleContext).getUniqueName("auto-generated-request-config"),requesterConfig);
+    httpRequester.setConfig(requesterConfig);
+  }
+ else   if (httpRequester.getConfig() == null) {
+    DefaultHttpRequesterConfig requestConfig=muleContext.getRegistry().get(DEFAULT_HTTP_REQUEST_CONFIG_NAME);
+    if (requestConfig == null) {
+      requestConfig=new DefaultHttpRequesterConfig();
+      muleContext.getRegistry().registerObject(DEFAULT_HTTP_REQUEST_CONFIG_NAME,requestConfig);
+    }
+    httpRequester.setConfig(requestConfig);
+  }
+  httpRequester.initialise();
+  return httpRequester;
+}

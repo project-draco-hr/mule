@@ -1,0 +1,11 @@
+{
+  getFunctionalTestComponent("server").setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      errorCollector.checkThat(context.getMessage().getInboundProperty(HTTP_HEADER),notNullValue());
+      errorCollector.checkThat(context.getMessage().getInboundProperty(SOAP_HEADER_IN),nullValue());
+      errorCollector.checkThat(context.getMessage().getInboundProperty(SOAP_HEADER_INOUT),nullValue());
+    }
+  }
+);
+  flowRunner("testFlow").withPayload(ECHO_HEADERS_REQUEST).withOutboundProperty(SOAP_HEADER_IN,REQUEST_HEADER_IN).withOutboundProperty(SOAP_HEADER_INOUT,REQUEST_HEADER_INOUT).withOutboundProperty(HTTP_HEADER,TEST_MESSAGE).run();
+}

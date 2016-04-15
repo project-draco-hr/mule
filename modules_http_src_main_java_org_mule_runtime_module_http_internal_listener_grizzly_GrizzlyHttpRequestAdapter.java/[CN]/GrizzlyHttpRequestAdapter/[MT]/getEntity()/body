@@ -1,0 +1,26 @@
+{
+  try {
+    if (this.body == null) {
+      final String contentTypeValue=getHeaderValue(HttpHeaders.Names.CONTENT_TYPE);
+      if (contentTypeValue != null && contentTypeValue.contains("multipart")) {
+        final Collection<HttpPart> parts=HttpParser.parseMultipartContent(requestContent,contentTypeValue);
+        this.body=new MultipartHttpEntity(parts);
+      }
+ else {
+        if (isTransferEncodingChunked) {
+          this.body=new InputStreamHttpEntity(requestContent);
+        }
+ else         if (contentLength > 0) {
+          this.body=new InputStreamHttpEntity(contentLength,requestContent);
+        }
+ else {
+          this.body=new EmptyHttpEntity();
+        }
+      }
+    }
+    return this.body;
+  }
+ catch (  Exception e) {
+    throw new MuleRuntimeException(e);
+  }
+}

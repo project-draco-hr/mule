@@ -1,0 +1,23 @@
+{
+  Map<Integer,DbType> paramTypes=new HashMap<Integer,DbType>();
+  PreparedStatement statement=connection.prepareStatement(queryTemplate.getSqlText());
+  ParameterMetaData parameterMetaData=statement.getParameterMetaData();
+  for (  QueryParam queryParam : queryTemplate.getParams()) {
+    int parameterTypeId=parameterMetaData.getParameterType(queryParam.getIndex());
+    String parameterTypeName=parameterMetaData.getParameterTypeName(queryParam.getIndex());
+    DbType dbType;
+    if (parameterTypeName == null) {
+      dbType=UnknownDbType.getInstance();
+    }
+ else {
+      try {
+        dbType=dbTypeManager.lookup(connection,parameterTypeId,parameterTypeName);
+      }
+ catch (      UnknownDbTypeException e) {
+        dbType=new ResolvedDbType(parameterTypeId,parameterTypeName);
+      }
+    }
+    paramTypes.put(queryParam.getIndex(),dbType);
+  }
+  return paramTypes;
+}

@@ -1,0 +1,11 @@
+{
+  MetadataResult<OutputMetadataDescriptor> outputResult=getOutputMetadataDescriptor(context,key);
+  Optional<MetadataResult<TypeMetadataDescriptor>> contentDescriptor=getContentMetadataDescriptor(context,key);
+  ComponentMetadataDescriptorBuilder componentDescriptorBuilder=MetadataDescriptorBuilder.componentDescriptor(componentModel.getName()).withParametersDescriptor(getParametersMetadataDescriptors()).withOutputDescriptor(outputResult.get());
+  if (!contentDescriptor.isPresent()) {
+    return outputResult.isSuccess() ? success(componentDescriptorBuilder.build()) : failure(componentDescriptorBuilder.build(),outputResult);
+  }
+  MetadataResult<TypeMetadataDescriptor> contentResult=contentDescriptor.get();
+  componentDescriptorBuilder.withContentDescriptor(contentResult.get());
+  return mergeResults(componentDescriptorBuilder.build(),outputResult,contentResult);
+}

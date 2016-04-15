@@ -1,0 +1,14 @@
+{
+  target=TARGET_VAR;
+  messageProcessor=createOperationMessageProcessor();
+  Object value=new Object();
+  when(operationExecutor.execute(any(OperationContext.class))).thenReturn(value);
+  messageProcessor.process(event);
+  verify(event,never()).setMessage(any(org.mule.runtime.core.api.MuleMessage.class));
+  verify(event.getMessage(),never()).setPayload(any(Object.class));
+  ArgumentCaptor<DefaultMuleMessage> captor=ArgumentCaptor.forClass(DefaultMuleMessage.class);
+  verify(event).setFlowVariable(same(TARGET_VAR),captor.capture());
+  MuleMessage message=captor.getValue();
+  assertThat(message,is(notNullValue()));
+  assertThat(message.getPayload(),is(sameInstance(value)));
+}

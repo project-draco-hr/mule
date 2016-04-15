@@ -1,0 +1,10 @@
+{
+  ObjectName on=jmxSupport.getObjectName(String.format("%s:%s",jmxSupport.getDomainName(muleContext,!containerMode),MuleServiceMBean.DEFAULT_JMX_NAME));
+  if (muleContext.getConfiguration().isContainerMode() && mBeanServer.isRegistered(on)) {
+    return;
+  }
+  MuleService service=new MuleService(muleContext);
+  ClassloaderSwitchingMBeanWrapper serviceMBean=new ClassloaderSwitchingMBeanWrapper(service,MuleServiceMBean.class,muleContext.getExecutionClassLoader());
+  logger.debug("Registering mule with name: " + on);
+  mBeanServer.registerMBean(serviceMBean,on);
+}

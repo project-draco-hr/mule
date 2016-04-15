@@ -1,0 +1,15 @@
+{
+  final List<Interceptor> interceptors=collectInterceptors(context.getConfiguration(),executor);
+  final MutableConfigurationStats mutableStats=getMutableConfigurationStats(context);
+  if (mutableStats != null) {
+    mutableStats.addInflightOperation();
+  }
+  try {
+    return executeWithRetryPolicy(executor,context,interceptors);
+  }
+  finally {
+    if (mutableStats != null) {
+      mutableStats.discountInflightOperation();
+    }
+  }
+}

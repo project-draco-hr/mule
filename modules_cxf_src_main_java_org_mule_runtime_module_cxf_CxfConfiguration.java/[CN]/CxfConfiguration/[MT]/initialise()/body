@@ -1,0 +1,48 @@
+{
+  BusFactory.setDefaultBus(null);
+  ApplicationContext context=(ApplicationContext)muleContext.getRegistry().lookupObject(SpringRegistry.SPRING_APPLICATION_CONTEXT);
+  if (configurationLocation != null) {
+    bus=new SpringBusFactory(context).createBus(configurationLocation,true);
+  }
+ else {
+    bus=new SpringBusFactory().createBus((String)null,true);
+  }
+  if (!initializeStaticBusInstance) {
+    BusFactory.setDefaultBus(null);
+  }
+  MuleUniversalTransport transport=new MuleUniversalTransport(this);
+  DestinationFactoryManager dfm=bus.getExtension(DestinationFactoryManager.class);
+  dfm.registerDestinationFactory("http://schemas.xmlsoap.org/soap/http",transport);
+  dfm.registerDestinationFactory("http://schemas.xmlsoap.org/wsdl/soap/http",transport);
+  dfm.registerDestinationFactory("http://cxf.apache.org/transports/http/configuration",transport);
+  dfm.registerDestinationFactory("http://schemas.xmlsoap.org/wsdl/http/",transport);
+  dfm.registerDestinationFactory("http://www.w3.org/2003/05/soap/bindings/HTTP/",transport);
+  dfm.registerDestinationFactory("http://cxf.apache.org/transports/jms",transport);
+  dfm.registerDestinationFactory("http://cxf.apache.org/transports/http",transport);
+  dfm.registerDestinationFactory(MuleUniversalTransport.TRANSPORT_ID,transport);
+  ConduitInitiatorManager extension=bus.getExtension(ConduitInitiatorManager.class);
+  try {
+    extension.getConduitInitiator("http://schemas.xmlsoap.org/soap/http");
+  }
+ catch (  BusException e1) {
+  }
+  extension.registerConduitInitiator("http://cxf.apache.org/transports/http",transport);
+  extension.registerConduitInitiator("http://schemas.xmlsoap.org/wsdl/soap/",transport);
+  extension.registerConduitInitiator("http://schemas.xmlsoap.org/soap/http",transport);
+  extension.registerConduitInitiator("http://schemas.xmlsoap.org/soap/http/",transport);
+  extension.registerConduitInitiator("http://schemas.xmlsoap.org/wsdl/soap/http",transport);
+  extension.registerConduitInitiator("http://schemas.xmlsoap.org/wsdl/http/",transport);
+  extension.registerConduitInitiator("http://www.w3.org/2003/05/soap/bindings/HTTP/",transport);
+  extension.registerConduitInitiator("http://cxf.apache.org/transports/http/configuration",transport);
+  extension.registerConduitInitiator("http://cxf.apache.org/bindings/xformat",transport);
+  extension.registerConduitInitiator("http://cxf.apache.org/transports/jms",transport);
+  extension.registerConduitInitiator(MuleUniversalTransport.TRANSPORT_ID,transport);
+  bus.getOutInterceptors().add(new MuleProtocolHeadersOutInterceptor());
+  bus.getOutFaultInterceptors().add(new MuleProtocolHeadersOutInterceptor());
+  if (enableMuleSoapHeaders) {
+    bus.getInInterceptors().add(new MuleHeadersInInterceptor());
+    bus.getInFaultInterceptors().add(new MuleHeadersInInterceptor());
+    bus.getOutInterceptors().add(new MuleHeadersOutInterceptor());
+    bus.getOutFaultInterceptors().add(new MuleHeadersOutInterceptor());
+  }
+}

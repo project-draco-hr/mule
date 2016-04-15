@@ -1,0 +1,11 @@
+{
+  deploymentService.start();
+  addExplodedDomainFromBuilder(incompleteDomainFileBuilder);
+  assertDeploymentFailure(domainDeploymentListener,incompleteDomainFileBuilder.getId());
+  assertDomainDir(NONE,new String[]{DEFAULT_DOMAIN_NAME,incompleteDomainFileBuilder.getId()},true);
+  final Map<URL,Long> zombieMap=deploymentService.getZombieDomains();
+  assertEquals("Wrong number of zombie apps registered.",1,zombieMap.size());
+  final Map.Entry<URL,Long> zombie=zombieMap.entrySet().iterator().next();
+  assertEquals("Wrong URL tagged as zombie.",incompleteDomainFileBuilder.getId(),new File(zombie.getKey().getFile()).getParentFile().getName());
+  assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
+}
