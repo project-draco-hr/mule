@@ -1,5 +1,11 @@
 {
-  event=new DefaultMuleEvent(event,this,event.isAllowNonBlocking() ? replyToHandler : null,replyToDestination,event.isSynchronous() || isSynchronous());
+  if (replyToHandler != null && replyToHandler instanceof NonBlockingReplyToHandler) {
+    replyToHandler=createNonBlockingReplyToHandler(event,replyToHandler);
+  }
+ else {
+    replyToHandler=null;
+  }
+  event=new DefaultMuleEvent(event,this,replyToHandler,replyToDestination,event.isSynchronous() || isSynchronous());
   resetRequestContextEvent(event);
   return event;
 }
