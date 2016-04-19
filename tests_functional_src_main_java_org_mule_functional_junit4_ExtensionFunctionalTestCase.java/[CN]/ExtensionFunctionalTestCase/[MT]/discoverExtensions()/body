@@ -6,22 +6,18 @@
       describers=new Describer[annotatedClasses.length];
       int i=0;
       for (      Class<?> annotatedClass : annotatedClasses) {
-        describers[i++]=new AnnotationsBasedDescriber(annotatedClass);
+        describers[i++]=new AnnotationsBasedDescriber(annotatedClass,new StaticVersionResolver(getProductVersion()));
       }
     }
   }
   if (ArrayUtils.isEmpty(describers)) {
-    extensionManager.discoverExtensions(getClass().getClassLoader());
+    throw new IllegalStateException("No extension referenced from test");
   }
  else {
     loadExtensionsFromDescribers(extensionManager,describers);
   }
-  ResourcesGenerator generator=new ExtensionsTestInfrastructureResourcesGenerator(serviceRegistry,generatedResourcesDirectory);
-  List<GenerableResourceContributor> resourceContributors=getGenerableResourceContributors();
+  ResourcesGenerator generator=new ExtensionsTestInfrastructureResourcesGenerator(getResourceFactories(),generatedResourcesDirectory);
   for (  ExtensionModel extensionModel : extensionManager.getExtensions()) {
-    for (    GenerableResourceContributor contributor : resourceContributors) {
-      contributor.contribute(extensionModel,generator);
-    }
+    generateResourcesAndAddToClasspath(generator.generateFor(extensionModel));
   }
-  generateResourcesAndAddToClasspath(generator);
 }
