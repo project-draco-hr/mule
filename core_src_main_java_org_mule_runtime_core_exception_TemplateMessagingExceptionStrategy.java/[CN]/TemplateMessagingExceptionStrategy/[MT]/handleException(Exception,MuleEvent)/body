@@ -1,48 +1,8 @@
 {
   try {
-    boolean nonBlocking=event.isAllowNonBlocking() && event.getReplyToHandler() instanceof NonBlockingReplyToHandler;
-    muleContext.getNotificationManager().fireNotification(new ExceptionStrategyNotification(event,ExceptionStrategyNotification.PROCESS_START));
-    FlowConstruct flowConstruct=event.getFlowConstruct();
-    fireNotification(exception);
-    logException(exception,event);
-    processStatistics(event);
-    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(exception));
-    if (nonBlocking) {
-      event=new DefaultMuleEvent(event,event.getFlowConstruct(),null,null,true);
-    }
-    event=beforeRouting(exception,event);
-    event=route(event,exception);
-    processOutboundRouterStatistics(flowConstruct);
-    event=afterRouting(exception,event);
-    markExceptionAsHandledIfRequired(exception);
-    if (event != null && !VoidMuleEvent.getInstance().equals(event)) {
-      if (!nonBlocking) {
-        processReplyTo(event,exception);
-      }
-      closeStream(event.getMessage());
-      nullifyExceptionPayloadIfRequired(event);
-    }
-    return event;
+    return new ExceptionMessageProcessor(exception,muleContext,event.getFlowConstruct()).process(event);
   }
- catch (  Exception e) {
-    MessagingException messagingException;
-    if (e instanceof MessagingException) {
-      messagingException=(MessagingException)e;
-    }
- else {
-      messagingException=new MessagingException(event,e);
-    }
-    try {
-      logger.error("Exception during exception strategy execution");
-      doLogException(e);
-      TransactionCoordination.getInstance().rollbackCurrentTransaction();
-    }
- catch (    Exception ex) {
-    }
-    event.getMessage().setExceptionPayload(new DefaultExceptionPayload(messagingException));
-    return event;
-  }
- finally {
-    muleContext.getNotificationManager().fireNotification(new ExceptionStrategyNotification(event,ExceptionStrategyNotification.PROCESS_END));
+ catch (  MuleException e) {
+    throw new RuntimeException(e);
   }
 }

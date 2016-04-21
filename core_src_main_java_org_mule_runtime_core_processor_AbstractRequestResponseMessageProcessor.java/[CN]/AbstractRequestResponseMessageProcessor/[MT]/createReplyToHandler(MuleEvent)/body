@@ -2,15 +2,30 @@
   final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
   return new NonBlockingReplyToHandler(){
     @Override public void processReplyTo(    MuleEvent event,    MuleMessage returnMessage,    Object replyTo) throws MuleException {
-      MuleEvent response=processResponse(recreateEventWithOriginalReplyToHandler(event,originalReplyToHandler));
-      if (!NonBlockingVoidMuleEvent.getInstance().equals(response)) {
-        originalReplyToHandler.processReplyTo(response,null,null);
+      try {
+        MuleEvent response=processResponse(recreateEventWithOriginalReplyToHandler(event,originalReplyToHandler),event);
+        if (!NonBlockingVoidMuleEvent.getInstance().equals(response)) {
+          originalReplyToHandler.processReplyTo(response,null,null);
+        }
       }
-      processFinally(event,null);
+ catch (      Exception e) {
+        processExceptionReplyTo(new MessagingException(event,e),null);
+      }
+ finally {
+        processFinally(event,null);
+      }
     }
     @Override public void processExceptionReplyTo(    MessagingException exception,    Object replyTo){
-      originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
-      processFinally(exception.getEvent(),exception);
+      try {
+        MuleEvent handledEvent=processCatch(exception.getEvent(),exception);
+        originalReplyToHandler.processReplyTo(handledEvent,null,null);
+      }
+ catch (      Exception e) {
+        originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
+      }
+ finally {
+        processFinally(exception.getEvent(),exception);
+      }
     }
   }
 ;

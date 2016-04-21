@@ -1,19 +1,21 @@
 {
-  event=new DefaultMuleEvent(event,createReplyToHandler(event));
-  event=OptimizedRequestContext.unsafeSetEvent(event);
+  MessagingException exception=null;
+  MuleEvent eventToProcess=new DefaultMuleEvent(request,createReplyToHandler(request));
+  eventToProcess=OptimizedRequestContext.unsafeSetEvent(eventToProcess);
   try {
-    MuleEvent result=processNext(processRequest(event));
+    MuleEvent result=processNext(processRequest(eventToProcess));
     if (!(result instanceof NonBlockingVoidMuleEvent)) {
-      MuleEvent after=processResponse(result);
-      processFinally(after,null);
-      return after;
+      return processResponse(recreateEventWithOriginalReplyToHandler(result,request.getReplyToHandler()),request);
     }
  else {
       return result;
     }
   }
- catch (  MessagingException exception) {
-    processFinally(event,exception);
-    throw exception;
+ catch (  MessagingException e) {
+    exception=e;
+    return processCatch(request,e);
+  }
+ finally {
+    processFinally(request,exception);
   }
 }
