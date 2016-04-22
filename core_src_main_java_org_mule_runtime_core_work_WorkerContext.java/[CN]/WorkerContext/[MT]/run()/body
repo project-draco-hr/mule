@@ -1,29 +1,2 @@
 {
-  if (isTimedOut()) {
-    startLatch.countDown();
-    endLatch.countDown();
-    return;
-  }
-  workListener.workStarted(new WorkEvent(this,WorkEvent.WORK_STARTED,worker,null));
-  startLatch.countDown();
-  try {
-    final ClassLoader originalCl=Thread.currentThread().getContextClassLoader();
-    try {
-      Thread.currentThread().setContextClassLoader(executionClassLoader);
-      worker.run();
-    }
-  finally {
-      Thread.currentThread().setContextClassLoader(originalCl);
-    }
-    workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_COMPLETED,worker,null));
-  }
- catch (  Throwable e) {
-    workException=(WorkException)(e instanceof WorkCompletedException ? e : new WorkCompletedException("Unknown error",WorkCompletedException.UNDEFINED).initCause(e));
-    workListener.workCompleted(new WorkEvent(this,WorkEvent.WORK_REJECTED,worker,workException));
-  }
- finally {
-    RequestContext.clear();
-    TransactionCoordination.getInstance().clear();
-    endLatch.countDown();
-  }
 }
