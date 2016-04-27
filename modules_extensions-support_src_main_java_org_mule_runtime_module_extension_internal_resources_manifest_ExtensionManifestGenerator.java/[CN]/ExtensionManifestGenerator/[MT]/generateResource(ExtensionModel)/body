@@ -1,0 +1,11 @@
+{
+  Optional<ImplementingTypeModelProperty> typeProperty=extensionModel.getModelProperty(ImplementingTypeModelProperty.class);
+  if (!typeProperty.isPresent()) {
+    return Optional.empty();
+  }
+  ExportedArtifactsCollector exportCollector=new ExportedArtifactsCollector(extensionModel);
+  ExtensionManifestBuilder builder=new ExtensionManifestBuilder();
+  builder.setName(extensionModel.getName()).setDescription(extensionModel.getDescription()).setVersion(extensionModel.getVersion()).addExportedPackages(exportCollector.getExportedPackages()).addExportedResources(exportCollector.getExportedResources()).withDescriber().setId(DESCRIBER_ID).addProperty(TYPE_PROPERTY_NAME,typeProperty.get().getType().getName());
+  String manifestXml=new ExtensionManifestXmlSerializer().serialize(builder.build());
+  return Optional.of(new GeneratedResource(EXTENSION_MANIFEST_FILE_NAME,manifestXml.getBytes()));
+}
