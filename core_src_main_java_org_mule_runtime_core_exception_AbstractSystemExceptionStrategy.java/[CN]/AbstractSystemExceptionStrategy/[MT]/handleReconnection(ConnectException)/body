@@ -1,2 +1,40 @@
 {
+  final AbstractConnector connector=(AbstractConnector)ex.getFailed();
+  if (connector.isConnecting()) {
+    return;
+  }
+  logger.info("Exception caught is a ConnectException, attempting to reconnect...");
+  try {
+    logger.debug("Disconnecting " + connector.getName());
+    connector.stop();
+    connector.disconnect();
+  }
+ catch (  Exception e1) {
+    logger.error(e1.getMessage());
+  }
+  try {
+    connector.getMuleContext().getWorkManager().scheduleWork(new Work(){
+      @Override public void release(){
+      }
+      @Override public void run(){
+        try {
+          logger.debug("Reconnecting " + connector.getName());
+          connector.start();
+        }
+ catch (        Exception e) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Error reconnecting",e);
+          }
+          logger.error(e.getMessage());
+        }
+      }
+    }
+);
+  }
+ catch (  Exception e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Error executing reconnect work",e);
+    }
+    logger.error(e.getMessage());
+  }
 }

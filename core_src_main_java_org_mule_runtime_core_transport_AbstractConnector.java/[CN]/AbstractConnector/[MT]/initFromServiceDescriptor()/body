@@ -1,0 +1,32 @@
+{
+  try {
+    serviceDescriptor=(TransportServiceDescriptor)muleContext.getRegistry().lookupServiceDescriptor(ServiceType.TRANSPORT,getProtocol().toLowerCase(),serviceOverrides);
+    if (serviceDescriptor == null) {
+      throw new ServiceException(CoreMessages.noServiceTransportDescriptor(getProtocol()));
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Loading DispatcherFactory for connector: " + getName() + " ("+ getClass().getName()+ ")");
+    }
+    MessageDispatcherFactory df=serviceDescriptor.createDispatcherFactory();
+    if (df != null) {
+      this.setDispatcherFactory(df);
+    }
+ else     if (logger.isDebugEnabled()) {
+      logger.debug("Transport '" + getProtocol() + "' will not support outbound endpoints: ");
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Loading RequesterFactory for connector: " + getName() + " ("+ getClass().getName()+ ")");
+    }
+    MessageRequesterFactory rf=serviceDescriptor.createRequesterFactory();
+    if (rf != null) {
+      this.setRequesterFactory(rf);
+    }
+ else     if (logger.isDebugEnabled()) {
+      logger.debug("Transport '" + getProtocol() + "' will not support requests: ");
+    }
+    sessionHandler=serviceDescriptor.createSessionHandler();
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
+}

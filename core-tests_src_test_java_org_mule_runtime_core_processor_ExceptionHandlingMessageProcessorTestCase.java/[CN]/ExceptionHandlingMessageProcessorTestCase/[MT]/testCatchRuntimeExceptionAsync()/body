@@ -1,0 +1,12 @@
+{
+  OutboundEndpoint endpoint=createTestOutboundEndpoint(null,null,MessageExchangePattern.ONE_WAY,null);
+  InterceptingMessageProcessor mp=new ExceptionHandlingMessageProcessor();
+  mp.setListener(new ExceptionThrowingMessageProcessor());
+  MuleEvent event=createTestOutboundEvent(exceptionListener);
+  MuleEvent resultEvent=mp.process(event);
+  assertNotNull(resultEvent);
+  assertNotNull("exception expected",resultEvent.getMessage().getExceptionPayload());
+  assertTrue(resultEvent.getMessage().getExceptionPayload().getException() instanceof IllegalStateException);
+  assertEquals(NullPayload.getInstance(),resultEvent.getMessage().getPayload());
+  assertNotNull(exceptionListener.sensedException);
+}

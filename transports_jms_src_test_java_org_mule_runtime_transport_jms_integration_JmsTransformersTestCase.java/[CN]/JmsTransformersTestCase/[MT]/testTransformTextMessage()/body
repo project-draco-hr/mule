@@ -1,0 +1,14 @@
+{
+  RequestContext.setEvent(getTestEvent("test"));
+  String text="This is a test TextMessage";
+  TextMessage tMsg=session.createTextMessage();
+  tMsg.setText(text);
+  AbstractJmsTransformer trans=createObject(JMSMessageToObject.class);
+  Object result=trans.transform(tMsg);
+  assertTrue("Transformed object should be a string",text.equals(result.toString()));
+  AbstractJmsTransformer trans2=new SessionEnabledObjectToJMSMessage(session);
+  trans2.setReturnDataType(DataTypeFactory.create(TextMessage.class));
+  initialiseObject(trans2);
+  Object result2=trans2.transform(text);
+  assertTrue("Transformed object should be a TextMessage",result2 instanceof TextMessage);
+}

@@ -1,0 +1,28 @@
+{
+  Connector newConnector;
+  try {
+    if (connector != null) {
+      Class<Connector> connectorClass;
+      if (classLoader != null) {
+        connectorClass=ClassUtils.loadClass(connector,classLoader);
+      }
+ else {
+        connectorClass=ClassUtils.loadClass(connector,getClass());
+      }
+      newConnector=connectorClass.getConstructor(MuleContext.class).newInstance(muleContext);
+    }
+ else {
+      throw new TransportServiceException(CoreMessages.objectNotSetInService("Connector",getService()));
+    }
+  }
+ catch (  TransportServiceException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new TransportServiceException(CoreMessages.failedToCreateObjectWith("Connector",connector),e);
+  }
+  if (newConnector.getName() == null) {
+    newConnector.setName("_" + newConnector.getProtocol() + "Connector#"+ connector.hashCode());
+  }
+  return newConnector;
+}

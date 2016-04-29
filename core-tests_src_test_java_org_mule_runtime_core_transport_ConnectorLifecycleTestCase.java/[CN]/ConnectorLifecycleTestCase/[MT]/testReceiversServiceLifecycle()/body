@@ -1,0 +1,29 @@
+{
+  Flow flow=MuleTestUtils.getTestFlow(MuleTestUtils.APPLE_SERVICE,muleContext,false);
+  InboundEndpoint endpoint=getTestInboundEndpoint("in","test://in");
+  flow.setMessageSource(endpoint);
+  connector=(TestConnector)endpoint.getConnector();
+  assertEquals(0,connector.receivers.size());
+  connector.start();
+  assertEquals(0,connector.receivers.size());
+  flow.initialise();
+  flow.start();
+  assertEquals(1,connector.receivers.size());
+  assertTrue((connector.receivers.get("in")).isConnected());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  connector.stop();
+  assertEquals(1,connector.receivers.size());
+  assertTrue((connector.receivers.get("in")).isConnected());
+  assertFalse(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  connector.disconnect();
+  assertEquals(1,connector.receivers.size());
+  assertFalse((connector.receivers.get("in")).isConnected());
+  connector.start();
+  assertEquals(1,connector.receivers.size());
+  assertTrue((connector.receivers.get("in")).isConnected());
+  assertTrue(((AbstractMessageReceiver)connector.receivers.get("in")).isStarted());
+  flow.stop();
+  assertEquals(0,connector.receivers.size());
+  connector.stop();
+  assertEquals(0,connector.receivers.size());
+}

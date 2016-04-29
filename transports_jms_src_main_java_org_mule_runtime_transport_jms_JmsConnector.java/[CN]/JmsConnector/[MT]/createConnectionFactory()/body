@@ -1,0 +1,33 @@
+{
+  if (jndiInitialFactory != null || jndiNameResolver != null) {
+    if (jndiNameResolver == null) {
+      jndiNameResolver=createDefaultJndiResolver();
+    }
+    jndiNameResolver.initialise();
+    Object temp=jndiNameResolver.lookup(connectionFactoryJndiName);
+    if (temp instanceof ConnectionFactory) {
+      return (ConnectionFactory)temp;
+    }
+ else {
+      throw new DefaultMuleException(JmsMessages.invalidResourceType(ConnectionFactory.class,temp));
+    }
+  }
+ else {
+    jndiDestinations=false;
+    forceJndiDestinations=false;
+    if (connectionFactory != null) {
+      return connectionFactory;
+    }
+    ConnectionFactory factory;
+    try {
+      factory=getDefaultConnectionFactory();
+    }
+ catch (    Exception e) {
+      throw new DefaultMuleException(e);
+    }
+    if (factory == null) {
+      throw new DefaultMuleException(JmsMessages.noConnectionFactoryConfigured());
+    }
+    return factory;
+  }
+}

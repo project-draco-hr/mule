@@ -1,0 +1,24 @@
+{
+  try {
+    Connector connector;
+    String scheme=url.getFullScheme();
+    TransportServiceDescriptor sd=(TransportServiceDescriptor)muleContext.getRegistry().lookupServiceDescriptor(ServiceType.TRANSPORT,scheme,null);
+    if (sd == null) {
+      throw new ServiceException(CoreMessages.noServiceTransportDescriptor(scheme));
+    }
+    connector=sd.createConnector();
+    if (connector != null) {
+      if (connector instanceof AbstractConnector) {
+        ((AbstractConnector)connector).initialiseFromUrl(url);
+      }
+    }
+ else {
+      throw new TransportFactoryException(CoreMessages.objectNotSetInService("Connector",scheme));
+    }
+    connector.setName(new ObjectNameHelper(muleContext).getConnectorName(connector));
+    return connector;
+  }
+ catch (  Exception e) {
+    throw new TransportFactoryException(CoreMessages.failedToCreateObjectWith("Endpoint",url),e);
+  }
+}

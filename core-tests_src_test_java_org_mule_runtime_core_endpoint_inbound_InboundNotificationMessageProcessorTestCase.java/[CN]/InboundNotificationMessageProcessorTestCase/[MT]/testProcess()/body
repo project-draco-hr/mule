@@ -1,0 +1,13 @@
+{
+  TestEndpointMessageNotificationListener listener=new TestEndpointMessageNotificationListener();
+  muleContext.registerListener(listener);
+  InboundEndpoint endpoint=createTestInboundEndpoint(null,null);
+  MessageProcessor mp=new InboundNotificationMessageProcessor(endpoint);
+  MuleEvent event=createTestInboundEvent(endpoint);
+  mp.process(event);
+  assertTrue(listener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertEquals(EndpointMessageNotification.MESSAGE_RECEIVED,listener.messageNotification.getAction());
+  assertEquals(endpoint.getEndpointURI().getUri().toString(),listener.messageNotification.getEndpoint());
+  assertTrue(listener.messageNotification.getSource() instanceof MuleMessage);
+  assertEquals(event.getMessage().getPayload(),listener.messageNotification.getSource().getPayload());
+}

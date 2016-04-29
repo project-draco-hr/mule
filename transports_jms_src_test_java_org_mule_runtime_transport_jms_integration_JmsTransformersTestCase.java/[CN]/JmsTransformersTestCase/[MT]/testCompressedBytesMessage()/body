@@ -1,0 +1,31 @@
+{
+  RequestContext.setEvent(getTestEvent("test"));
+  CompressionStrategy compressor=new GZipCompression();
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  for (int i=0; i < 5000; i++) {
+    baos.write(i);
+  }
+  byte[] originalBytes=baos.toByteArray();
+  byte[] compressedBytes=compressor.compressByteArray(originalBytes);
+  assertTrue("Source compressedBytes should be compressed",compressor.isCompressed(compressedBytes));
+  AbstractJmsTransformer trans=new SessionEnabledObjectToJMSMessage(session);
+  trans.setReturnDataType(DataTypeFactory.create(BytesMessage.class));
+  initialiseObject(trans);
+  Object result2=trans.transform(compressedBytes);
+  assertTrue("Transformed object should be a Bytes message",result2 instanceof BytesMessage);
+  BytesMessage intermediate=(BytesMessage)result2;
+  intermediate.reset();
+  byte[] intermediateBytes=new byte[(int)(intermediate.getBodyLength())];
+  int intermediateSize=intermediate.readBytes(intermediateBytes);
+  assertTrue("Intermediate bytes must be compressed",compressor.isCompressed(intermediateBytes));
+  assertTrue("Intermediate bytes must be equal to compressed source",Arrays.equals(compressedBytes,intermediateBytes));
+  assertEquals("Intermediate bytes and compressed source must have same size",compressedBytes.length,intermediateSize);
+  AbstractJmsTransformer trans2=createObject(JMSMessageToObject.class);
+  trans2.setReturnDataType(DataTypeFactory.BYTE_ARRAY);
+  BytesMessage bMsg=session.createBytesMessage();
+  bMsg.writeBytes(compressedBytes);
+  Object result=trans2.transform(bMsg);
+  assertTrue("Transformed object should be a byte[]",result instanceof byte[]);
+  assertTrue("Result should be compressed",compressor.isCompressed((byte[])result));
+  assertTrue("Source and result should be equal",Arrays.equals(compressedBytes,(byte[])result));
+}

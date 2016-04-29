@@ -1,0 +1,67 @@
+{
+  if (message instanceof BytesMessage) {
+    BytesMessage bMsg=(BytesMessage)message;
+    bMsg.reset();
+    if (JmsConstants.JMS_SPECIFICATION_11.equals(jmsSpec)) {
+      long bmBodyLength=bMsg.getBodyLength();
+      if (bmBodyLength > Integer.MAX_VALUE) {
+        throw new JMSException("Size of BytesMessage exceeds Integer.MAX_VALUE; " + "please consider using JMS StreamMessage instead");
+      }
+      if (bmBodyLength > 0) {
+        byte[] bytes=new byte[(int)bmBodyLength];
+        bMsg.readBytes(bytes);
+        return bytes;
+      }
+ else {
+        return ArrayUtils.EMPTY_BYTE_ARRAY;
+      }
+    }
+ else {
+      ByteArrayOutputStream baos=new ByteArrayOutputStream(4096);
+      byte[] buffer=new byte[4096];
+      int len;
+      while ((len=bMsg.readBytes(buffer)) != -1) {
+        baos.write(buffer,0,len);
+      }
+      if (baos.size() > 0) {
+        return baos.toByteArray();
+      }
+ else {
+        return ArrayUtils.EMPTY_BYTE_ARRAY;
+      }
+    }
+  }
+ else   if (message instanceof StreamMessage) {
+    StreamMessage sMsg=(StreamMessage)message;
+    sMsg.reset();
+    ByteArrayOutputStream baos=new ByteArrayOutputStream(4096);
+    byte[] buffer=new byte[4096];
+    int len;
+    while ((len=sMsg.readBytes(buffer)) != -1) {
+      baos.write(buffer,0,len);
+    }
+    return baos.toByteArray();
+  }
+ else   if (message instanceof ObjectMessage) {
+    ObjectMessage oMsg=(ObjectMessage)message;
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    ObjectOutputStream os=new ObjectOutputStream(baos);
+    os.writeObject(oMsg.getObject());
+    os.flush();
+    os.close();
+    return baos.toByteArray();
+  }
+ else   if (message instanceof TextMessage) {
+    TextMessage tMsg=(TextMessage)message;
+    String tMsgText=tMsg.getText();
+    if (null == tMsgText) {
+      return ArrayUtils.EMPTY_BYTE_ARRAY;
+    }
+ else {
+      return tMsgText.getBytes(encoding);
+    }
+  }
+ else {
+    throw new JMSException("Cannot get bytes from Map Message");
+  }
+}

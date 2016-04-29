@@ -1,0 +1,18 @@
+{
+  ImmutableEndpoint endpoint=mock(ImmutableEndpoint.class);
+  MuleContext muleContext=mock(MuleContext.class);
+  when(endpoint.getEndpointURI()).thenReturn(new MuleEndpointURI("http://dummy.endpoint/",muleContext));
+  AbstractConnector connector=mock(AbstractConnector.class);
+  when(endpoint.getConnector()).thenReturn(connector);
+  RetryPolicyTemplate retryPolicyTemplate=mock(RetryPolicyTemplate.class);
+  when(endpoint.getRetryPolicyTemplate()).thenReturn(retryPolicyTemplate);
+  when(retryPolicyTemplate.execute(any(RetryCallback.class),any(WorkManager.class))).thenAnswer(new Answer<Object>(){
+    @Override public Object answer(    InvocationOnMock invocation) throws Throwable {
+      RetryCallback retryCallback=(RetryCallback)invocation.getArguments()[0];
+      retryCallback.doWork(null);
+      return null;
+    }
+  }
+);
+  return endpoint;
+}

@@ -1,0 +1,17 @@
+{
+  MuleClient muleClient=muleContext.getClient();
+  muleClient.dispatch("jms://in","success",null);
+  muleClient.dispatch("jms://in","failure",null);
+  if (!messageSuccessfulReceived.await(TIMEOUT,TimeUnit.MILLISECONDS)) {
+    fail("JMS messages didn't execute concurrently, might be using only one Session for more than one transaction");
+  }
+  if (!messageFailureReceived.await(TIMEOUT,TimeUnit.MILLISECONDS)) {
+    fail("JMS messages didn't execute concurrently, might be using only one Session for more than one transaction");
+  }
+  Flow flowWithTxConfigured=(Flow)getFlowConstruct("flowWithTxConfigured");
+  flowWithTxConfigured.stop();
+  MuleMessage muleMessage=muleClient.request("jms://in",TIMEOUT);
+  assertThat(muleMessage,IsNull.<Object>notNullValue());
+  muleMessage=muleClient.request("jms://in",TIMEOUT);
+  assertThat(muleMessage,IsNull.<Object>nullValue());
+}

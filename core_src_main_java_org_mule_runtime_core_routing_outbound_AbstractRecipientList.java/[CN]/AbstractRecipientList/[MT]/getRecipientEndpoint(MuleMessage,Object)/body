@@ -1,0 +1,20 @@
+{
+  OutboundEndpoint endpoint=null;
+  if (recipient instanceof OutboundEndpoint) {
+    endpoint=(OutboundEndpoint)recipient;
+  }
+ else   if (recipient instanceof EndpointURI) {
+    endpoint=getRecipientEndpointFromUri((EndpointURI)recipient);
+  }
+ else   if (recipient instanceof String) {
+    endpoint=getRecipientEndpointFromString(message,(String)recipient);
+  }
+  if (null == endpoint) {
+    throw new RegistrationException(MessageFactory.createStaticMessage("Failed to create endpoint for: " + recipient));
+  }
+  OutboundEndpoint existingEndpoint=recipientCache.putIfAbsent(recipient,endpoint);
+  if (existingEndpoint != null) {
+    endpoint=existingEndpoint;
+  }
+  return endpoint;
+}

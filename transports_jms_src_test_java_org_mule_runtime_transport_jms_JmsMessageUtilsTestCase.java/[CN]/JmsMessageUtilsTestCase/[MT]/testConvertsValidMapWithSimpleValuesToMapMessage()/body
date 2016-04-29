@@ -1,0 +1,20 @@
+{
+  Session session=mock(Session.class);
+  when(session.createMapMessage()).thenReturn(new ActiveMQMapMessage());
+  Map data=new HashMap();
+  data.put("value1",new Float(4));
+  data.put("value2",new byte[]{1,2,3});
+  data.put("value3","value3");
+  data.put("value4",new Double(67.9));
+  data.put("value5",true);
+  data.put("value6",null);
+  Message message=JmsMessageUtils.toMessage(data,session);
+  assertTrue(message instanceof MapMessage);
+  MapMessage mapMessage=(MapMessage)message;
+  assertEquals(new Float(4),mapMessage.getFloat("value1"),0);
+  assertTrue(Arrays.equals(new byte[]{1,2,3},mapMessage.getBytes("value2")));
+  assertEquals("value3",mapMessage.getString("value3"));
+  assertEquals(new Double(67.9),mapMessage.getDouble("value4"),0);
+  assertTrue(mapMessage.getBoolean("value5"));
+  assertNull(mapMessage.getObject("value6"));
+}

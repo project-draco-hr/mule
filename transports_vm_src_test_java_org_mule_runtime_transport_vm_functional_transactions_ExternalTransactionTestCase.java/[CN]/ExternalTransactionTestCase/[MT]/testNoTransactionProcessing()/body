@@ -1,0 +1,31 @@
+{
+  init();
+  ExecutionTemplate<String> executionTemplate=createExecutionTemplate(TransactionConfig.ACTION_NONE,true);
+  tm.begin();
+  final Transaction tx=tm.getTransaction();
+  final TestResource resource1=new TestResource(tm);
+  assertNotNull(tx);
+  tx.enlistResource(resource1);
+  resource1.setValue(14);
+  String result=executionTemplate.execute(new ExecutionCallback<String>(){
+    @Override public String process() throws Exception {
+      Transaction muleTx=tm.getTransaction();
+      assertNull(muleTx);
+      return "OK";
+    }
+  }
+);
+  assertEquals("OK",result);
+  assertEquals(14,resource1.getValue());
+  assertEquals(0,resource1.getPersistentValue());
+  tm.commit();
+  assertEquals(14,resource1.getPersistentValue());
+  result=executionTemplate.execute(new ExecutionCallback<String>(){
+    @Override public String process() throws Exception {
+      Transaction muleTx=tm.getTransaction();
+      assertNull(muleTx);
+      return "OK";
+    }
+  }
+);
+}

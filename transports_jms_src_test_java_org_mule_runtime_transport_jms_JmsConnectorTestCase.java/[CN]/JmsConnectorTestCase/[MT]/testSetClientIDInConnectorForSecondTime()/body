@@ -1,0 +1,15 @@
+{
+  final Connection connection=mock(Connection.class);
+  when(connection.getClientID()).thenReturn(CLIENT_ID1);
+  JmsSupport jmsSupport=mock(JmsSupport.class);
+  when(jmsSupport.createConnection(Matchers.<ConnectionFactory>any())).thenReturn(connection);
+  JmsConnector connector=new JmsConnector(muleContext);
+  ConnectionFactory mockConnectionFactory=mock(ConnectionFactory.class);
+  connector.setConnectionFactory(mockConnectionFactory);
+  connector.setClientId(CLIENT_ID2);
+  connector.setJmsSupport(jmsSupport);
+  Connection createdConnection=connector.createConnection();
+  assertEquals(connection,createdConnection);
+  verify(connection,times(1)).setClientID(Matchers.anyString());
+  verify(connection,times(1)).setClientID(CLIENT_ID2);
+}

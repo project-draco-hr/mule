@@ -1,0 +1,12 @@
+{
+  endpoint=createTestInboundEndpoint(null,null,new InboundAppendTransformer(),new ResponseAppendTransformer(),MessageExchangePattern.REQUEST_RESPONSE,null);
+  endpoint.setListener(inboundListener);
+  requestEvent=createTestRequestEvent(endpoint);
+  responseEvent=createTestResponseEvent(endpoint);
+  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(requestEvent.getFlowConstruct());
+  result=mpChain.process(requestEvent);
+  assertMessageSent(true);
+  assertEquals(TEST_MESSAGE + InboundAppendTransformer.APPEND_STRING,inboundListener.sensedEvent.getMessageAsString());
+  assertNotNull(result);
+  assertEquals(RESPONSE_MESSAGE + ResponseAppendTransformer.APPEND_STRING,getPayloadAsString(result.getMessage()));
+}

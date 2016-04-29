@@ -1,0 +1,18 @@
+{
+  final CountDownLatch exceptionLatch=new CountDownLatch(1);
+  send(scenarioCommit);
+  final ExceptionCallback exceptionCallback=new ExceptionCallback(){
+    @Override public void onException(    Throwable t){
+      assertTrue(ExceptionUtils.containsType(t,org.mule.runtime.core.transaction.IllegalTransactionStateException.class));
+      assertEquals(1,exceptionLatch.getCount());
+      exceptionLatch.countDown();
+    }
+  }
+;
+  TestExceptionStrategy exceptionStrategy=(TestExceptionStrategy)muleContext.getRegistry().lookupFlowConstruct(serviceName).getExceptionListener();
+  exceptionStrategy.setExceptionCallback(exceptionCallback);
+  TestExceptionStrategy globalExceptionStrategy=(TestExceptionStrategy)muleContext.getExceptionListener();
+  globalExceptionStrategy.setExceptionCallback(exceptionCallback);
+  assertTrue(exceptionLatch.await(10,TimeUnit.SECONDS));
+  receive(scenarioNotReceive);
+}

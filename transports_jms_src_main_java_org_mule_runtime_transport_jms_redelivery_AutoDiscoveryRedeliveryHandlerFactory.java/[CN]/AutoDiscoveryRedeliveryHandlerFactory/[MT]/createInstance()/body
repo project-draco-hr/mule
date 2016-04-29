@@ -1,0 +1,23 @@
+{
+  RedeliveryHandler newInstance;
+  try {
+    ConnectionMetaData metaData=connector.getConnection().getMetaData();
+    boolean supportsDeliveryCount=false;
+    final Enumeration propNames=metaData.getJMSXPropertyNames();
+    while (propNames.hasMoreElements()) {
+      String p=(String)propNames.nextElement();
+      if (JmsConstants.JMS_X_DELIVERY_COUNT.equals(p)) {
+        supportsDeliveryCount=true;
+        break;
+      }
+    }
+    newInstance=(supportsDeliveryCount) ? new JmsXRedeliveryHandler() : new CountingRedeliveryHandler();
+  }
+ catch (  JMSException e) {
+    newInstance=new CountingRedeliveryHandler();
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("Using " + newInstance.getClass().getName());
+  }
+  return newInstance;
+}

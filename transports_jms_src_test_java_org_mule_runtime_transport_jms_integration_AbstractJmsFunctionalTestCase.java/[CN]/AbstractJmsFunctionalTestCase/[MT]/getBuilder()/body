@@ -1,0 +1,16 @@
+{
+  if (multipleProviders) {
+    final String configFile=getConfigFile();
+    if (StringUtils.splitAndTrim(configFile,",; ").length > 1) {
+      throw new IllegalArgumentException("Parameterized tests don't support multiple " + "config files as input: " + configFile);
+    }
+    String resources=configFile.substring(configFile.lastIndexOf("/") + 1);
+    resources=String.format("integration/%s/connector-%s",getJmsConfig().getName(),resources);
+    String[] configFiles=new String[]{resources,configFile};
+    SpringXmlConfigurationBuilder builder=new SpringXmlConfigurationBuilder(configFiles);
+    return builder;
+  }
+ else {
+    return super.getBuilder();
+  }
+}

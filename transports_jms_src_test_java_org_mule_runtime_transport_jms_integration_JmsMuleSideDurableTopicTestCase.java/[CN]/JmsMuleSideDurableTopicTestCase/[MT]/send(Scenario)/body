@@ -1,0 +1,33 @@
+{
+  TopicConnection connection=null;
+  try {
+    connection=(TopicConnection)getConnection(true,false);
+    connection.start();
+    TopicSession session=null;
+    try {
+      session=connection.createTopicSession(scenario.isTransacted(),scenario.getAcknowledge());
+      Topic destination=session.createTopic(scenario.getInputDestinationName());
+      TopicPublisher publisher=null;
+      try {
+        publisher=session.createPublisher(destination);
+        publisher.setDeliveryMode(DeliveryMode.PERSISTENT);
+        scenario.send(session,publisher);
+      }
+  finally {
+        if (publisher != null) {
+          publisher.close();
+        }
+      }
+    }
+  finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+  }
+  finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+}

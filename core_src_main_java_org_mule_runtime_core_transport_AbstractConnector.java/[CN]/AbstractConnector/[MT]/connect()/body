@@ -1,0 +1,38 @@
+{
+  if (lifecycleManager.getState().isDisposed()) {
+    throw new LifecycleException(CoreMessages.lifecycleErrorCannotUseConnector(getName(),lifecycleManager.getCurrentPhase()),this);
+  }
+  if (isConnected()) {
+    return;
+  }
+  RetryCallback callback=new RetryCallback(){
+    @Override public void doWork(    RetryContext context) throws Exception {
+      connectionLock.lock();
+      try {
+        if (validateConnections && context.getLastFailure() instanceof ConnectException) {
+          Connectable failed=((ConnectException)context.getLastFailure()).getFailed();
+          if (!failed.validateConnection(context).isOk()) {
+            throw new ConnectException(MessageFactory.createStaticMessage("Still unable to connect to resource " + failed.getClass().getName()),context.getLastFailure(),failed);
+          }
+        }
+        connectConnectorAndReceivers();
+      }
+  finally {
+        connectionLock.unlock();
+      }
+    }
+    @Override public String getWorkDescription(){
+      return getConnectionDescription();
+    }
+    @Override public Connector getWorkOwner(){
+      return AbstractConnector.this;
+    }
+  }
+;
+  if (connecting.compareAndSet(false,true)) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Connecting: " + this);
+    }
+    retryPolicyTemplate.execute(callback,muleContext.getWorkManager());
+  }
+}

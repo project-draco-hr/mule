@@ -1,0 +1,16 @@
+{
+  Transformer reqTransformer=mock(Transformer.class);
+  Mockito.when(reqTransformer.process(Mockito.any(MuleEvent.class))).then(echoEventAnswer);
+  Transformer resTransformer=mock(Transformer.class);
+  Mockito.when(resTransformer.process(Mockito.any(MuleEvent.class))).then(echoEventAnswer);
+  endpoint=createTestInboundEndpoint(null,null,reqTransformer,resTransformer,MessageExchangePattern.REQUEST_RESPONSE,null);
+  endpoint.setListener(inboundListener);
+  requestEvent=createTestRequestEvent(endpoint);
+  responseEvent=createTestResponseEvent(endpoint);
+  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(requestEvent.getFlowConstruct());
+  result=mpChain.process(requestEvent);
+  Mockito.verify(reqTransformer,Mockito.times(1)).process(Mockito.any(MuleEvent.class));
+  Mockito.verify(resTransformer,Mockito.times(1)).process(Mockito.any(MuleEvent.class));
+  assertMessageSentSame(true);
+  assertEquals(responseEvent.getMessage(),result.getMessage());
+}

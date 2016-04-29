@@ -1,0 +1,13 @@
+{
+  super.doSetUp();
+  ((DefaultSystemExceptionStrategy)muleContext.getExceptionListener()).setRollbackTxFilter(new WildcardFilter("*"));
+  messageRedelivered=new Latch();
+  muleContext.registerListener(new ExceptionNotificationListener<ExceptionNotification>(){
+    @Override public void onNotification(    ExceptionNotification notification){
+      if (notification.getException() instanceof MessageRedeliveredException) {
+        messageRedelivered.countDown();
+      }
+    }
+  }
+);
+}

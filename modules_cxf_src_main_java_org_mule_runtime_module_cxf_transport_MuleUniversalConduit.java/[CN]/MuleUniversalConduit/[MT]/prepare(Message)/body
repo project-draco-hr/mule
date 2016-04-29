@@ -4,7 +4,7 @@
   message.setContent(OutputStream.class,delegating);
   message.setContent(DelegatingOutputStream.class,delegating);
   OutputHandler handler=new OutputHandler(){
-    public void write(    MuleEvent event,    OutputStream out) throws IOException {
+    @Override public void write(    MuleEvent event,    OutputStream out) throws IOException {
       out.write(cache.toByteArray());
       delegating.setOutputStream(out);
       message.getInterceptorChain().doIntercept(message);
@@ -13,12 +13,14 @@
 ;
   MuleEvent event=(MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT);
   boolean decoupled=event != null && message.getExchange().getInMessage() != null;
+  OutboundEndpoint ep=null;
   if (event == null || VoidMuleEvent.getInstance().equals(event) || decoupled) {
     MuleContext muleContext=configuration.getMuleContext();
     MuleMessage muleMsg=new DefaultMuleMessage(handler,muleContext);
     String url=setupURL(message);
     try {
-      event=new DefaultMuleEvent(muleMsg,(FlowConstruct)null);
+      ep=getEndpoint(muleContext,url);
+      event=new DefaultMuleEvent(muleMsg,ep.getExchangePattern(),(FlowConstruct)null);
     }
  catch (    Exception e) {
       throw new Fault(e);
@@ -32,10 +34,11 @@
   }
   message.put(CxfConstants.MULE_EVENT,event);
   final MuleEvent finalEvent=event;
+  final OutboundEndpoint finalEndpoint=ep;
   AbstractPhaseInterceptor<Message> i=new AbstractPhaseInterceptor<Message>(Phase.PRE_STREAM){
-    public void handleMessage(    Message m) throws Fault {
+    @Override public void handleMessage(    Message m) throws Fault {
       try {
-        dispatchMuleMessage(m,finalEvent);
+        dispatchMuleMessage(m,finalEvent,finalEndpoint);
       }
  catch (      MuleException e) {
         throw new Fault(e);

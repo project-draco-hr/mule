@@ -1,0 +1,35 @@
+{
+  init();
+  ExecutionTemplate<String> executionTemplate=createExecutionTemplate(TransactionConfig.ACTION_ALWAYS_JOIN,true);
+  tm.begin();
+  final Transaction tx=tm.getTransaction();
+  final TestResource resource1=new TestResource(tm);
+  tx.enlistResource(resource1);
+  assertNotNull(tx);
+  String result=executionTemplate.execute(new ExecutionCallback<String>(){
+    @Override public String process() throws Exception {
+      Transaction muleTx=tm.getTransaction();
+      assertSame(tx,muleTx);
+      resource1.setValue(14);
+      return "OK";
+    }
+  }
+);
+  assertEquals("OK",result);
+  assertEquals(14,resource1.getValue());
+  assertEquals(0,resource1.getPersistentValue());
+  tm.commit();
+  assertEquals(14,resource1.getPersistentValue());
+  try {
+    result=executionTemplate.execute(new ExecutionCallback<String>(){
+      @Override public String process() throws Exception {
+        return "OK";
+      }
+    }
+);
+    fail("No exception seen");
+  }
+ catch (  Exception e) {
+    logger.debug("saw exception " + e.getMessage());
+  }
+}

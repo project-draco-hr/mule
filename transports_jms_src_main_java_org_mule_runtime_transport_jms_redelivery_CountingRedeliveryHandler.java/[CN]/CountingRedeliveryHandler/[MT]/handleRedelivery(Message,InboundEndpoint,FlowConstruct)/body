@@ -1,0 +1,45 @@
+{
+  final int connectorRedelivery=connector.getMaxRedelivery();
+  if (connectorRedelivery == JmsConnector.REDELIVERY_IGNORE || connectorRedelivery < 0) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("We were asked to ignore the redelivery count, nothing to do here.");
+    }
+    return;
+  }
+  String id=message.getJMSMessageID();
+  if (id == null) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Message doesn't have a JMSMessageID set, Mule can't handle redelivery for it. " + message);
+    }
+    return;
+  }
+  Integer redeliveryCount=messages.remove(id);
+  if (redeliveryCount != null) {
+    redeliveryCount+=1;
+  }
+  if (redeliveryCount == null) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Message with id: " + id + " has been redelivered for the first time");
+    }
+    messages.put(id,1);
+  }
+ else   if (redeliveryCount == 1) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Message with id: " + id + " has been redelivered for the first time");
+    }
+    if (connectorRedelivery == JmsConnector.REDELIVERY_FAIL_ON_FIRST) {
+      MuleMessage msg=createMuleMessage(message,endpoint.getMuleContext());
+      throw new MessageRedeliveredException(id,redeliveryCount,connectorRedelivery,endpoint,flow,msg);
+    }
+  }
+ else   if (redeliveryCount > connectorRedelivery) {
+    MuleMessage msg=createMuleMessage(message,endpoint.getMuleContext());
+    throw new MessageRedeliveredException(id,redeliveryCount,connectorRedelivery,endpoint,flow,msg);
+  }
+ else {
+    messages.put(id,redeliveryCount);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Message with id: " + id + " has been redelivered "+ redeliveryCount+ " times");
+    }
+  }
+}

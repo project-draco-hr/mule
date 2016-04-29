@@ -1,0 +1,45 @@
+{
+  logger.debug("doConnect()");
+  if (reconnecting) {
+    return;
+  }
+  reconnecting=true;
+  reconnectWorkManager.startIfNotStarted();
+  retryTemplate.execute(new RetryCallback(){
+    @Override public void doWork(    RetryContext context) throws Exception {
+      try {
+        logger.debug("doConnect()");
+        if (!consumers.isEmpty()) {
+          if (consumers.get(0).connected) {
+            context.setOk();
+            reconnecting=false;
+            return;
+          }
+          throw new IllegalStateException("List should be empty, there may be a concurrency issue here (see EE-1275)");
+        }
+        SubReceiver sub;
+        for (int i=0; i < receiversCount; i++) {
+          sub=new SubReceiver();
+          sub.doConnect();
+          consumers.add(sub);
+        }
+        if (started) {
+          startSubReceivers();
+        }
+        context.setOk();
+        logger.info("Endpoint " + endpoint.getEndpointURI() + " has been successfully reconnected.");
+        reconnecting=false;
+      }
+ catch (      Exception e) {
+        throw new Exception("Fail to connect",e);
+      }
+    }
+    @Override public String getWorkDescription(){
+      return getConnectionDescription();
+    }
+    @Override public Connector getWorkOwner(){
+      return jmsConnector;
+    }
+  }
+,reconnectWorkManager);
+}

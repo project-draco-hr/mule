@@ -1,0 +1,22 @@
+{
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?exchangePattern=request-response");
+  assertNotNull(endpoint1);
+  OutboundEndpoint mockendpoint1=RouterTestUtils.createMockEndpoint(endpoint1);
+  OutboundEndpoint endpoint2=getTestOutboundEndpoint("Test2Provider","test://Test2Provider?exchangePattern=request-response");
+  assertNotNull(endpoint2);
+  OutboundEndpoint mockendpoint2=RouterTestUtils.createMockEndpoint(endpoint2);
+  MulticastingRouter router=createObject(MulticastingRouter.class);
+  List<MessageProcessor> endpoints=new ArrayList<MessageProcessor>();
+  endpoints.add(mockendpoint1);
+  endpoints.add(mockendpoint2);
+  router.setRoutes(endpoints);
+  MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,muleContext);
+  assertTrue(router.isMatch(message));
+  MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
+  when(mockendpoint1.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer(event));
+  when(mockendpoint2.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer());
+  MuleSession session=mock(MuleSession.class);
+  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,session,muleContext));
+  assertNotNull(result);
+  assertEquals(getPayload(message),getPayload(result.getMessage()));
+}

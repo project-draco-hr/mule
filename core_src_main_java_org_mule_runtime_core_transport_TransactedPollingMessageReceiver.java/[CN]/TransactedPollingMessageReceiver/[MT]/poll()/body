@@ -1,0 +1,53 @@
+{
+  try {
+    ExecutionTemplate<MuleEvent> pt=createExecutionTemplate();
+    if (this.isReceiveMessagesInTransaction()) {
+      if (hasNoMessages()) {
+        if (NO_MESSAGES_SLEEP_TIME > 0) {
+          Thread.sleep(NO_MESSAGES_SLEEP_TIME);
+        }
+        return;
+      }
+      ExecutionCallback<MuleEvent> cb=new ExecutionCallback<MuleEvent>(){
+        @Override public MuleEvent process() throws Exception {
+          List messages=getMessages();
+          LinkedList<MuleEvent> results=new LinkedList<MuleEvent>();
+          if (messages != null && messages.size() > 0) {
+            for (            Object message : messages) {
+              results.add(processMessage(message));
+            }
+          }
+ else {
+            Transaction currentTx=TransactionCoordination.getInstance().getTransaction();
+            currentTx.setRollbackOnly();
+            return null;
+          }
+          return defaultRouterResultsHandler.aggregateResults(results,results.getLast(),results.getLast().getMuleContext());
+        }
+      }
+;
+      pt.execute(cb);
+    }
+ else {
+      List messages=getMessages();
+      if (messages != null && messages.size() > 0) {
+        final CountDownLatch countdown=new CountDownLatch(messages.size());
+        for (        Object message : messages) {
+          try {
+            this.getWorkManager().scheduleWork(new MessageProcessorWorker(pt,countdown,endpoint.getMuleContext().getExceptionListener(),message));
+          }
+ catch (          Exception e) {
+            countdown.countDown();
+            throw e;
+          }
+        }
+        countdown.await();
+      }
+    }
+  }
+ catch (  MessagingException e) {
+  }
+catch (  Exception e) {
+    getEndpoint().getMuleContext().handleException(e);
+  }
+}

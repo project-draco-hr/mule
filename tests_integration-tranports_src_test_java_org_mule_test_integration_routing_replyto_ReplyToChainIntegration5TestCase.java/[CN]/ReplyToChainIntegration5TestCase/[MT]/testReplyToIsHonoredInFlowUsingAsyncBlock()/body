@@ -1,0 +1,18 @@
+{
+  org.mule.runtime.core.api.client.LocalMuleClient client=muleContext.getClient();
+  final org.mule.runtime.core.util.concurrent.Latch flowExecutedLatch=new org.mule.runtime.core.util.concurrent.Latch();
+  FunctionalTestComponent ftc=getFunctionalTestComponent("replierService");
+  ftc.setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    org.mule.runtime.core.api.MuleEventContext context,    Object component) throws Exception {
+      flowExecutedLatch.release();
+    }
+  }
+);
+  org.mule.runtime.core.api.MuleMessage muleMessage=new org.mule.runtime.core.DefaultMuleMessage(TEST_PAYLOAD,muleContext);
+  muleMessage.setOutboundProperty(org.mule.runtime.core.api.config.MuleProperties.MULE_REPLY_TO_PROPERTY,"jms://response");
+  client.dispatch("jms://jmsIn1",muleMessage);
+  flowExecutedLatch.await(TIMEOUT,TimeUnit.MILLISECONDS);
+  org.mule.runtime.core.api.MuleMessage response=client.request("jms://response",TIMEOUT);
+  assertThat(response,IsNull.<Object>notNullValue());
+  assertThat(getPayloadAsString(response),Is.is(EXPECTED_PAYLOAD));
+}

@@ -1,0 +1,42 @@
+{
+  SplitMessage splitMessage=new SplitMessage();
+  List payloads=splitMessage(message);
+  Map props=new HashMap();
+  for (  String propertyKey : message.getOutboundPropertyNames()) {
+    Object value=message.getOutboundProperty(propertyKey);
+    if (value != null) {
+      props.put(propertyKey,value);
+    }
+  }
+  Counter counter=new Counter();
+  for (Iterator iterator=payloads.iterator(); iterator.hasNext(); ) {
+    Object payload=iterator.next();
+    MuleMessage part=new DefaultMuleMessage(payload,props,muleContext);
+    boolean matchFound=false;
+    for (int j=0; j < endpoints.size(); j++) {
+      MessageProcessor target=endpoints.get(counter.next());
+      OutboundEndpoint endpoint=target instanceof OutboundEndpoint ? (OutboundEndpoint)target : null;
+      if (endpoint == null || endpoint.getFilter() == null || endpoint.getFilter().accept(part)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Endpoint filter matched. Routing message over: " + endpoint.getEndpointURI().toString());
+        }
+        iterator.remove();
+        splitMessage.addPart(part,endpoint);
+        matchFound=true;
+        break;
+      }
+    }
+    if (!matchFound) {
+      if (isFailIfNoMatch()) {
+        throw new IllegalStateException(CoreMessages.splitMessageNoEndpointMatch(endpoints,payload).getMessage());
+      }
+ else {
+        logger.info("No splitter match for message part. 'failIfNoMatch=false' ingoring message part.");
+      }
+    }
+    if (isDisableRoundRobin()) {
+      counter=new Counter();
+    }
+  }
+  return splitMessage;
+}

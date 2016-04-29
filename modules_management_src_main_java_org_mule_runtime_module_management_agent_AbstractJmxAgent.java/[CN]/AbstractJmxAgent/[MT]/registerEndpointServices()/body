@@ -1,0 +1,24 @@
+{
+  for (  Connector connector : muleContext.getRegistry().lookupObjects(Connector.class)) {
+    if (connector instanceof AbstractConnector) {
+      for (      MessageReceiver messageReceiver : ((AbstractConnector)connector).getReceivers().values()) {
+        if (muleContext.equals(messageReceiver.getFlowConstruct().getMuleContext())) {
+          EndpointServiceMBean service=new EndpointService(messageReceiver);
+          String fullName=buildFullyQualifiedEndpointName(service,connector);
+          if (logger.isInfoEnabled()) {
+            logger.info("Attempting to register service with name: " + fullName);
+          }
+          ObjectName on=jmxSupport.getObjectName(fullName);
+          ClassloaderSwitchingMBeanWrapper mBean=new ClassloaderSwitchingMBeanWrapper(service,EndpointServiceMBean.class,muleContext.getExecutionClassLoader());
+          mBeanServer.registerMBean(mBean,on);
+          if (logger.isInfoEnabled()) {
+            logger.info("Registered Endpoint Service with name: " + on);
+          }
+        }
+      }
+    }
+ else {
+      logger.warn("Connector: " + connector + " is not an istance of AbstractConnector, cannot obtain Endpoint MBeans from it");
+    }
+  }
+}

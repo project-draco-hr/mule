@@ -1,0 +1,30 @@
+{
+  Properties properties=PropertiesUtils.getPropertiesFromQueryString(uri.getRawQuery());
+  for (  String propertyName : properties.stringPropertyNames()) {
+    String propertyValue=decode((String)properties.get(propertyName),uri,muleContext);
+    properties.setProperty(propertyName,propertyValue);
+  }
+  String tempEndpointName=(String)properties.get(EndpointURI.PROPERTY_ENDPOINT_NAME);
+  if (tempEndpointName != null) {
+    this.endpointName=tempEndpointName;
+  }
+  String endpoint=(String)properties.get(EndpointURI.PROPERTY_ENDPOINT_URI);
+  if (endpoint != null) {
+    this.address=endpoint;
+    address=decode(address,uri,muleContext);
+  }
+  String cnnName=(String)properties.get(EndpointURI.PROPERTY_CONNECTOR_NAME);
+  if (cnnName != null) {
+    this.connectorName=cnnName;
+  }
+  transformers=(String)properties.get(EndpointURI.PROPERTY_TRANSFORMERS);
+  if (transformers != null) {
+    transformers=transformers.replaceAll(" ",",");
+  }
+  responseTransformers=(String)properties.get(EndpointURI.PROPERTY_RESPONSE_TRANSFORMERS);
+  if (responseTransformers != null) {
+    responseTransformers=responseTransformers.replaceAll(" ",",");
+  }
+  userInfo=uri.getUserInfo();
+  return properties;
+}

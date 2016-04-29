@@ -1,0 +1,11 @@
+{
+  MuleEvent event=getTestEventUsingFlow("");
+  when(event.getFlowConstruct()).thenReturn(mock(Flow.class));
+  MessageProcessor mp=mock(MessageProcessor.class,withSettings().extraInterfaces(OutboundEndpoint.class));
+  OutboundEndpoint outboundEndpoint=(OutboundEndpoint)mp;
+  when(outboundEndpoint.getExchangePattern()).thenReturn(MessageExchangePattern.ONE_WAY);
+  MessageProcessorChain chain=new DefaultMessageProcessorChainBuilder().chain(mp).build();
+  MuleEvent response=chain.process(event);
+  assertNull(response);
+  assertEquals(1,threads);
+}

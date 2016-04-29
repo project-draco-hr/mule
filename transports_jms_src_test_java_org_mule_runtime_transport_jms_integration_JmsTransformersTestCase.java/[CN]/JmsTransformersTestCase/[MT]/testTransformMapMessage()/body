@@ -1,0 +1,21 @@
+{
+  RequestContext.setEvent(getTestEvent("test"));
+  Map p=new HashMap();
+  p.put("Key1","Value1");
+  p.put("Key2",new byte[]{1,2,3});
+  p.put("Key3",new Double(99.999));
+  AbstractJmsTransformer trans=new SessionEnabledObjectToJMSMessage(session);
+  trans.setReturnDataType(DataTypeFactory.create(MapMessage.class));
+  initialiseObject(trans);
+  Object result2=trans.transform(p);
+  assertTrue("Transformed object should be a MapMessage",result2 instanceof MapMessage);
+  MapMessage mMsg=(MapMessage)result2;
+  AbstractJmsTransformer trans2=createObject(JMSMessageToObject.class);
+  trans2.setReturnDataType(DataTypeFactory.create(Map.class));
+  Object result=trans2.transform(mMsg);
+  assertTrue("Transformed object should be a Map",result instanceof Map);
+  Map m=(Map)result;
+  assertEquals("Value1",m.get("Key1"));
+  assertTrue(Arrays.equals(new byte[]{1,2,3},(byte[])m.get("Key2")));
+  assertEquals(new Double(99.999),m.get("Key3"));
+}

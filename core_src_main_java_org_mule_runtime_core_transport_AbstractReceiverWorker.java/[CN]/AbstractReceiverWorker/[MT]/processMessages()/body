@@ -1,0 +1,69 @@
+{
+  ExecutionTemplate<List<MuleEvent>> executionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(receiver.getEndpoint().getMuleContext(),endpoint.getTransactionConfig());
+  ExecutionCallback<List<MuleEvent>> processingCallback=new ExecutionCallback<List<MuleEvent>>(){
+    @Override public List<MuleEvent> process() throws Exception {
+      final Transaction tx=TransactionCoordination.getInstance().getTransaction();
+      if (tx != null) {
+        bindTransaction(tx);
+      }
+      List<MuleEvent> results=new ArrayList<MuleEvent>(messages.size());
+      for (      final Object payload : messages) {
+        ExecutionTemplate<MuleEvent> perMessageExecutionTemplate=TransactionalErrorHandlingExecutionTemplate.createMainExecutionTemplate(endpoint.getMuleContext(),receiver.flowConstruct.getExceptionListener());
+        MuleEvent resultEvent;
+        try {
+          resultEvent=perMessageExecutionTemplate.execute(new ExecutionCallback<MuleEvent>(){
+            @Override public MuleEvent process() throws Exception {
+              Object preProcessedPayload=preProcessMessage(payload);
+              if (preProcessedPayload != null) {
+                final MuleMessage muleMessage=receiver.createMuleMessage(preProcessedPayload,endpoint.getEncoding());
+                preRouteMuleMessage(muleMessage);
+                SessionHandler handler;
+                if (endpoint.getConnector() instanceof AbstractConnector) {
+                  handler=((AbstractConnector)endpoint.getConnector()).getSessionHandler();
+                }
+ else {
+                  handler=new MuleSessionHandler();
+                }
+                MuleSession session=handler.retrieveSessionInfoFromMessage(muleMessage);
+                MuleEvent resultEvent;
+                if (session != null) {
+                  resultEvent=receiver.routeMessage(muleMessage,session,tx,out);
+                }
+ else {
+                  resultEvent=receiver.routeMessage(muleMessage,tx,out);
+                }
+                return resultEvent;
+              }
+ else {
+                return null;
+              }
+            }
+          }
+);
+        }
+ catch (        MessagingException e) {
+          if (e.getEvent().getMessage().getExceptionPayload() != null) {
+            throw e;
+          }
+          resultEvent=e.getEvent();
+        }
+        if (resultEvent != null) {
+          results.add(resultEvent);
+        }
+      }
+      return results;
+    }
+  }
+;
+  ClassLoader originalCl=currentThread().getContextClassLoader();
+  try {
+    currentThread().setContextClassLoader(endpoint.getMuleContext().getExecutionClassLoader());
+    List<MuleEvent> results=executionTemplate.execute(processingCallback);
+    handleResults(handleEventResults(results));
+  }
+  finally {
+    messages.clear();
+    RequestContext.clear();
+    currentThread().setContextClassLoader(originalCl);
+  }
+}

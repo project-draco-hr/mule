@@ -1,0 +1,40 @@
+{
+  try {
+    connect();
+    String prop=event.getMessage().getOutboundProperty(MuleProperties.MULE_DISABLE_TRANSPORT_TRANSFORMER_PROPERTY);
+    boolean disableTransportTransformer=(prop != null && Boolean.parseBoolean(prop)) || endpoint.isDisableTransportTransformer();
+    if (!disableTransportTransformer) {
+      applyOutboundTransformers(event);
+    }
+    boolean hasResponse=endpoint.getExchangePattern().hasResponse();
+    connector.getSessionHandler().storeSessionInfoToMessage(event.getSession(),event.getMessage());
+    if (hasResponse) {
+      if (!event.getMuleContext().waitUntilStarted(event.getTimeout())) {
+        throw new MessagingException(MessageFactory.createStaticMessage("Timeout waiting for mule context to be completely started"),event,this);
+      }
+      MuleMessage resultMessage=doSend(event);
+      if (resultMessage != null) {
+        resultMessage.setMessageRootId(event.getMessage().getMessageRootId());
+        resultMessage.setEncoding(resultMessage.getEncoding());
+        MuleSession storedSession=connector.getSessionHandler().retrieveSessionInfoFromMessage(resultMessage);
+        event.getSession().merge(storedSession);
+        DefaultMuleEvent resultEvent=new DefaultMuleEvent(resultMessage,event);
+        OptimizedRequestContext.unsafeSetEvent(resultEvent);
+        return resultEvent;
+      }
+ else {
+        return null;
+      }
+    }
+ else {
+      doDispatch(event);
+      return VoidMuleEvent.getInstance();
+    }
+  }
+ catch (  MuleException muleException) {
+    throw muleException;
+  }
+catch (  Exception e) {
+    throw new DispatchException(event,getEndpoint(),e);
+  }
+}

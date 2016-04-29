@@ -1,0 +1,32 @@
+{
+  InboundEndpoint in=getTestInboundEndpoint("in","test://in",null,null,null,connector);
+  try {
+    in.request(1000L);
+    fail("cannot sent on a connector that is not started");
+  }
+ catch (  LifecycleException e) {
+  }
+  assertEquals(0,connector.requesters.getNumIdle());
+  assertRequesterStartedConnected(in,false,false);
+  connector.start();
+  assertRequesterStartedConnected(in,true,true);
+  assertEquals(1,connector.requesters.getNumIdle());
+  InboundEndpoint in2=getTestInboundEndpoint("in2","test://in2",null,null,null,connector);
+  in2.request(1000L);
+  assertEquals(2,connector.requesters.getNumIdle());
+  assertRequesterStartedConnected(in,true,true);
+  assertRequesterStartedConnected(in2,true,true);
+  connector.stop();
+  assertEquals(0,connector.requesters.getNumActive() + connector.requesters.getNumIdle());
+  assertRequesterStartedConnected(in,false,false);
+  assertRequesterStartedConnected(in2,false,false);
+  connector.start();
+  assertEquals(2,connector.requesters.getNumActive() + connector.requesters.getNumIdle());
+  assertRequesterStartedConnected(in,true,true);
+  assertRequesterStartedConnected(in2,true,true);
+  in.request(1000L);
+  assertEquals(2,connector.requesters.getNumIdle());
+  assertRequesterStartedConnected(in,true,true);
+  connector.dispose();
+  assertEquals(0,connector.requesters.getNumActive() + connector.requesters.getNumIdle());
+}

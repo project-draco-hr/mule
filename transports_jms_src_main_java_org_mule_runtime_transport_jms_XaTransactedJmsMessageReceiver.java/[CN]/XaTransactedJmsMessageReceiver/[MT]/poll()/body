@@ -1,0 +1,53 @@
+{
+  logger.debug("Polling...");
+  ExecutionTemplate<MuleEvent> processingCallback=createExecutionTemplate();
+  ExecutionCallback<MuleEvent> cb=new ExecutionCallback<MuleEvent>(){
+    @Override public MuleEvent process() throws Exception {
+      try {
+        return doProcess();
+      }
+ catch (      Exception e) {
+        JmsThreadContext ctx=context.getContext();
+        if (ctx.consumer != null) {
+          connector.closeQuietly(ctx.consumer);
+        }
+        ctx.consumer=null;
+        Transaction tx=TransactionCoordination.getInstance().getTransaction();
+        if (ctx.session != null && tx instanceof XaTransaction.MuleXaObject) {
+          if (ctx.session instanceof XaTransaction.MuleXaObject) {
+            ((XaTransaction.MuleXaObject)ctx.session).setReuseObject(false);
+          }
+ else {
+            logger.warn("Session should be XA, but is of type " + ctx.session.getClass().getName());
+          }
+        }
+        ctx.session=null;
+        throw e;
+      }
+    }
+    protected MuleEvent doProcess() throws Exception {
+      try {
+        List messages=getMessages();
+        if (messages != null && messages.size() > 0) {
+          for (          Object message : messages) {
+            processMessage(message);
+          }
+        }
+        return null;
+      }
+ catch (      JMSException e) {
+        throw new ConnectException(e,XaTransactedJmsMessageReceiver.this);
+      }
+catch (      Exception e) {
+        if (e.getCause() != null && e.getCause() instanceof JMSException) {
+          throw new ConnectException(e.getCause(),XaTransactedJmsMessageReceiver.this);
+        }
+ else {
+          throw e;
+        }
+      }
+    }
+  }
+;
+  processingCallback.execute(cb);
+}

@@ -1,0 +1,29 @@
+{
+  JmsConnector c=(JmsConnector)muleContext.getRegistry().lookupConnector("jmsConnector");
+  assertNotNull(c);
+  ConnectionFactory cf=c.getConnectionFactory();
+  assertTrue(cf instanceof ActiveMQXAConnectionFactory);
+  DefaultXAConnectionFactoryWrapper wrapper=new DefaultXAConnectionFactoryWrapper(cf);
+  Connection connection=wrapper.createConnection();
+  assertNotNull(connection);
+  assertTrue(Proxy.isProxyClass(connection.getClass()));
+  try {
+    final Class clazz=connection.getClass();
+    Method cleanupMethod;
+    if (Proxy.isProxyClass(clazz)) {
+      TargetInvocationHandler handler=(TargetInvocationHandler)Proxy.getInvocationHandler(connection);
+      connection=(Connection)handler.getTargetObject();
+      Class realConnectionClass=connection.getClass();
+      cleanupMethod=realConnectionClass.getMethod("cleanup",(Class[])null);
+    }
+ else {
+      cleanupMethod=clazz.getMethod("cleanup",(Class[])null);
+    }
+    if (cleanupMethod != null) {
+      cleanupMethod.invoke(connection,(Object[])null);
+    }
+  }
+  finally {
+    connection.close();
+  }
+}

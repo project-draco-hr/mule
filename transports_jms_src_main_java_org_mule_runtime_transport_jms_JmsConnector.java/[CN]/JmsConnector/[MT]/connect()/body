@@ -1,0 +1,23 @@
+{
+  if (muleContext.isPrimaryPollingInstance() || clientId == null) {
+    super.connect();
+  }
+ else {
+    muleContext.registerListener(new ClusterNodeNotificationListener<ClusterNodeNotification>(){
+      @Override public void onNotification(      ClusterNodeNotification notification){
+        ClassLoader notificationClassLoader=Thread.currentThread().getContextClassLoader();
+        try {
+          Thread.currentThread().setContextClassLoader(muleContext.getExecutionClassLoader());
+          JmsConnector.this.connect();
+        }
+ catch (        Exception e) {
+          throw new MuleRuntimeException(e);
+        }
+ finally {
+          Thread.currentThread().setContextClassLoader(notificationClassLoader);
+        }
+      }
+    }
+);
+  }
+}

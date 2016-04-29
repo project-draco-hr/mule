@@ -1,0 +1,10 @@
+{
+  MuleClient client=muleContext.getClient();
+  exceptionHolder.set(new IOException());
+  client.dispatch("jms://in",PAYLOAD,null);
+  if (!exceptionLatch.await(TIMEOUT,TimeUnit.MILLISECONDS)) {
+    fail("exception should be thrown");
+  }
+  MuleMessage muleMessage=client.request("jms://out",TIMEOUT);
+  assertThat(muleMessage,IsNull.notNullValue());
+}

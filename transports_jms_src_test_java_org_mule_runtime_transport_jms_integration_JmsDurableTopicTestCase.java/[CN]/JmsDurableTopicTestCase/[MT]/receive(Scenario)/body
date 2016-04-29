@@ -1,0 +1,33 @@
+{
+  Connection connection=null;
+  try {
+    connection=getConnection(true,false);
+    connection.setClientID(getClientId());
+    connection.start();
+    Session session=null;
+    try {
+      session=connection.createSession(scenario.isTransacted(),scenario.getAcknowledge());
+      Topic destination=session.createTopic(scenario.getOutputDestinationName());
+      MessageConsumer consumer=null;
+      try {
+        consumer=session.createDurableSubscriber(destination,getClientId());
+        return scenario.receive(session,consumer);
+      }
+  finally {
+        if (consumer != null) {
+          consumer.close();
+        }
+      }
+    }
+  finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+  }
+  finally {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+}

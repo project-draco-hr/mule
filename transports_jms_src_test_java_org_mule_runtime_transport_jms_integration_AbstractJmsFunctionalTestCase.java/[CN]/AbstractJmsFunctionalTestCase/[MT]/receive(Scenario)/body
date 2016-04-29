@@ -1,0 +1,38 @@
+{
+  assertNotNull("scenario is null!",scenario);
+  Connection connection=null;
+  try {
+    connection=getConnection(false,false);
+    connection.start();
+    Session session=null;
+    try {
+      session=connection.createSession(scenario.isTransacted(),scenario.getAcknowledge());
+      Destination destination=createOutputDestination(session,scenario);
+      MessageConsumer consumer=null;
+      try {
+        consumer=session.createConsumer(destination);
+        return scenario.receive(session,consumer);
+      }
+  finally {
+        if (consumer != null) {
+          consumer.close();
+        }
+      }
+    }
+  finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+  }
+  finally {
+    if (connection != null) {
+      try {
+        connection.close();
+      }
+ catch (      JMSException e) {
+        log.warn("Failed to close jms connection: " + e.getMessage());
+      }
+    }
+  }
+}

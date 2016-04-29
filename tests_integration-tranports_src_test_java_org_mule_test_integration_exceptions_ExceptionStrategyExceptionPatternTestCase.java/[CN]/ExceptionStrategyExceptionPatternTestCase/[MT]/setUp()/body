@@ -1,0 +1,26 @@
+{
+  muleContext.registerListener(new ExceptionNotificationListener<ExceptionNotification>(){
+    @Override public void onNotification(    ExceptionNotification notification){
+      exceptionLatch.release();
+    }
+  }
+);
+  FunctionalTestComponent failingFlow=getFunctionalTestComponent("failingFlow");
+  failingFlow.setEventCallback(new EventCallback(){
+    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
+      throw exceptionHolder.get();
+    }
+  }
+);
+  muleContext.registerListener(new TransactionNotificationListener<TransactionNotification>(){
+    @Override public void onNotification(    TransactionNotification notification){
+      if (notification.getAction() == TransactionNotification.TRANSACTION_COMMITTED) {
+        commitLatch.release();
+      }
+ else       if (notification.getAction() == TransactionNotification.TRANSACTION_ROLLEDBACK) {
+        rollbackLatch.release();
+      }
+    }
+  }
+);
+}

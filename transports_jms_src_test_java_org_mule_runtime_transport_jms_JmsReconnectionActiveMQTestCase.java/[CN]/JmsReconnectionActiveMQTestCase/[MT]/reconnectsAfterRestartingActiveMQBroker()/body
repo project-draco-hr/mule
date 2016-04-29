@@ -1,0 +1,21 @@
+{
+  jmsConnector=(JmsConnector)muleContext.getRegistry().lookupConnector("jmsConnector");
+  assertMessageRouted();
+  ConnectionListener connectionListener=new ConnectionListener(muleContext).setExpectedAction(ConnectionNotification.CONNECTION_FAILED).setNumberOfExecutionsRequired(3);
+  CustomConnectionFactory.returnInvalidConnections=true;
+  stopBroker();
+  connectionListener.waitUntilNotificationsAreReceived();
+  assertTrue(jmsConnector.isStopped());
+  CustomConnectionFactory.returnInvalidConnections=false;
+  startBroker();
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return jmsConnector.isStarted();
+    }
+    @Override public String describeFailure(){
+      return "JMS connector did not restart";
+    }
+  }
+);
+  assertMessageRouted();
+}

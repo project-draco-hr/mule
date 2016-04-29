@@ -1,0 +1,14 @@
+{
+  RequestContext.setEvent(getTestEvent("test"));
+  ObjectMessage oMsg=session.createObjectMessage();
+  File f=FileUtils.newFile("/some/random/path");
+  oMsg.setObject(f);
+  AbstractJmsTransformer trans=createObject(JMSMessageToObject.class);
+  Object result=trans.transform(oMsg);
+  assertTrue("Transformed object should be a File",result.getClass().equals(File.class));
+  AbstractJmsTransformer trans2=new SessionEnabledObjectToJMSMessage(session);
+  trans2.setReturnDataType(DataTypeFactory.create(ObjectMessage.class));
+  initialiseObject(trans2);
+  Object result2=trans2.transform(f);
+  assertTrue("Transformed object should be an object message",result2 instanceof ObjectMessage);
+}

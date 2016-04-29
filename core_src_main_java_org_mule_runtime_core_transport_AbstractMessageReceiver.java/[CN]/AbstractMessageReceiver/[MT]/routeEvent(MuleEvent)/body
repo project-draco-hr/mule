@@ -1,0 +1,19 @@
+{
+  MuleEvent resultEvent=listener.process(muleEvent);
+  if (resultEvent != null && !VoidMuleEvent.getInstance().equals(resultEvent) && resultEvent.getMessage() != null && resultEvent.getMessage().getExceptionPayload() != null && resultEvent.getMessage().getExceptionPayload().getException() instanceof FilterUnacceptedException) {
+    handleUnacceptedFilter(muleEvent.getMessage());
+    return muleEvent;
+  }
+  if (endpoint.getExchangePattern().hasResponse() && resultEvent != null && !VoidMuleEvent.getInstance().equals(resultEvent)) {
+    MuleSession resultSession=new DefaultMuleSession(resultEvent.getSession());
+    resultSession.setSecurityContext(null);
+    connector.getSessionHandler().storeSessionInfoToMessage(resultSession,resultEvent.getMessage());
+    if (resultEvent.getMessage() != null && !endpoint.isDisableTransportTransformer()) {
+      applyResponseTransformers(resultEvent);
+    }
+    if (connector.isEnableMessageEvents(muleEvent)) {
+      connector.fireNotification(new EndpointMessageNotification(resultEvent.getMessage(),endpoint,resultEvent.getFlowConstruct(),EndpointMessageNotification.MESSAGE_RESPONSE),muleEvent);
+    }
+  }
+  return resultEvent;
+}

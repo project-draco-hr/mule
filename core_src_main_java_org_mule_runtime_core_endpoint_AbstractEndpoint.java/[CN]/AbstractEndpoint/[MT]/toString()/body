@@ -1,0 +1,19 @@
+{
+  String sanitizedEndPointUri=null;
+  URI uri=null;
+  if (endpointUri != null) {
+    sanitizedEndPointUri=endpointUri.toString();
+    uri=endpointUri.getUri();
+  }
+  if (uri != null && (uri.getRawUserInfo() != null) && (uri.getScheme() != null) && (uri.getHost() != null) && (uri.getRawPath() != null)) {
+    Pattern sanitizerPattern=Pattern.compile("(.*):.*");
+    Matcher sanitizerMatcher=sanitizerPattern.matcher(uri.getRawUserInfo());
+    if (sanitizerMatcher.matches()) {
+      sanitizedEndPointUri=new StringBuilder(uri.getScheme()).append("://").append(sanitizerMatcher.group(1)).append(":<password>").append("@").append(uri.getHost()).append(uri.getRawPath()).toString();
+    }
+    if (uri.getRawQuery() != null) {
+      sanitizedEndPointUri=sanitizedEndPointUri + "?" + uri.getRawQuery();
+    }
+  }
+  return ClassUtils.getClassName(getClass()) + "{endpointUri=" + sanitizedEndPointUri+ ", connector="+ connector+ ",  name='"+ name+ "', mep="+ messageExchangePattern+ ", properties="+ properties+ ", transactionConfig="+ transactionConfig+ ", deleteUnacceptedMessages="+ deleteUnacceptedMessages+ ", initialState="+ initialState+ ", responseTimeout="+ responseTimeout+ ", endpointEncoding="+ endpointEncoding+ ", disableTransportTransformer="+ disableTransportTransformer+ "}";
+}

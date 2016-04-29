@@ -1,0 +1,19 @@
+{
+  QueueConnectionFactory connectionFactory=mock(QueueConnectionFactory.class);
+  QueueConnection queueConnection=mock(QueueConnection.class);
+  when(connectionFactory.createQueueConnection()).thenReturn(queueConnection);
+  when(queueConnection.createQueueSession(false,1)).then(new Answer<Object>(){
+    @Override public Object answer(    InvocationOnMock invocation) throws Throwable {
+      return createSessionMock();
+    }
+  }
+);
+  connector.setConnectionFactory(connectionFactory);
+  connector.setJmsSupport(new Jms102bSupport(connector));
+  connector.initialise();
+  connector.connect();
+  Session session1=connector.createSession(outboundEndpoint);
+  session1.close();
+  Session session2=connector.createSession(outboundEndpoint);
+  assertThat(session1,not(equalTo(session2)));
+}

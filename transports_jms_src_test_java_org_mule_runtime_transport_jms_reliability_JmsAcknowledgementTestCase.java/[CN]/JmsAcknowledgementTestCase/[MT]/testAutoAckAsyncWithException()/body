@@ -1,0 +1,19 @@
+{
+  acknowledgeMode=Session.AUTO_ACKNOWLEDGE;
+  listenOnQueue("sanity",new MessageListener(){
+    @Override public void onMessage(    Message message){
+      try {
+        session.recover();
+      }
+ catch (      JMSException e) {
+        fail(e.getMessage());
+      }
+    }
+  }
+);
+  putMessageOnQueue("sanity");
+  Thread.sleep(500);
+  closeConsumer();
+  Message msg=readMessageFromQueue("sanity");
+  assertNotNull(msg);
+}

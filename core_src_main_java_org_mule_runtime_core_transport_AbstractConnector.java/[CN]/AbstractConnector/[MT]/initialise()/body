@@ -1,0 +1,39 @@
+{
+  try {
+    lifecycleManager.fireInitialisePhase(new LifecycleCallback<Connector>(){
+      @Override public void onTransition(      String phaseName,      Connector object) throws MuleException {
+        if (retryPolicyTemplate == null) {
+          retryPolicyTemplate=muleContext.getRegistry().lookupObject(MuleProperties.OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE);
+        }
+        if (dispatcherPoolFactory == null) {
+          dispatcherPoolFactory=new DefaultConfigurableKeyedObjectPoolFactory();
+        }
+        dispatchers=dispatcherPoolFactory.createObjectPool();
+        if (dispatcherFactory != null) {
+          dispatchers.setFactory(getWrappedDispatcherFactory(dispatcherFactory));
+        }
+        initFromServiceDescriptor();
+        initSessionHandler();
+        configureDispatcherPool();
+        setMaxRequestersActive(getRequesterThreadingProfile().getMaxThreadsActive());
+        try {
+          initWorkManagers();
+        }
+ catch (        MuleException e) {
+          throw new LifecycleException(e,this);
+        }
+        doInitialise();
+      }
+    }
+);
+  }
+ catch (  InitialisationException e) {
+    throw e;
+  }
+catch (  LifecycleException e) {
+    throw new InitialisationException(e,this);
+  }
+catch (  MuleException e) {
+    e.printStackTrace();
+  }
+}

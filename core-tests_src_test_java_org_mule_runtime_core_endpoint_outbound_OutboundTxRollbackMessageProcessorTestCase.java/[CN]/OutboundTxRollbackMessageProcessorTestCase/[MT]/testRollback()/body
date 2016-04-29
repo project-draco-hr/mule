@@ -1,0 +1,17 @@
+{
+  InterceptingMessageProcessor mp=new OutboundTxRollbackMessageProcessor();
+  TestListener listener=new TestListener();
+  mp.setListener(listener);
+  Transaction tx=new TestTransaction(muleContext);
+  try {
+    TransactionCoordination.getInstance().bindTransaction(tx);
+    tx.setRollbackOnly();
+    MuleEvent event=createTestOutboundEvent();
+    MuleEvent result=mp.process(event);
+    assertNull(listener.sensedEvent);
+    assertSame(result,event);
+  }
+  finally {
+    TransactionCoordination.getInstance().unbindTransaction(tx);
+  }
+}

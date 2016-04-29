@@ -1,0 +1,21 @@
+{
+  MuleClient client=muleContext.getClient();
+  client.dispatch("vm://in","Test1",null);
+  Thread.sleep(SLEEP);
+  client.dispatch("vm://in","Test2",null);
+  Thread.sleep(SLEEP);
+  client.dispatch("vm://in","Test3",null);
+  Thread.sleep(SLEEP);
+  Thread.sleep(muleContext.getConfiguration().getDefaultQueueTimeout());
+  Set<String> results=new HashSet<String>();
+  pollOutQueue(client,results);
+  pollOutQueue(client,results);
+  assertTrue(results.contains("Test1"));
+  assertTrue(results.contains("Test2"));
+  Thread.sleep(SLEEP);
+  MuleMessage result=client.request("vm://out",RECEIVE_TIMEOUT);
+  if (result != null) {
+    System.out.println("result = " + getPayloadAsString(result));
+  }
+  assertNull(result);
+}

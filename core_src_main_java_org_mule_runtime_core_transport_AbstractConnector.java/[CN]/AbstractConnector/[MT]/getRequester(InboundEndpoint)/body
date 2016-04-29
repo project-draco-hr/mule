@@ -1,0 +1,35 @@
+{
+  if (!isStarted()) {
+    throw new LifecycleException(CoreMessages.lifecycleErrorCannotUseConnector(getName(),lifecycleManager.getCurrentPhase()),this);
+  }
+  if (endpoint == null) {
+    throw new IllegalArgumentException("Endpoint must not be null");
+  }
+  if (!supportsProtocol(endpoint.getConnector().getProtocol())) {
+    throw new IllegalArgumentException(CoreMessages.connectorSchemeIncompatibleWithEndpointScheme(this.getProtocol(),endpoint.getEndpointURI().toString()).getMessage());
+  }
+  MessageRequester requester=null;
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Borrowing a requester for endpoint: " + endpoint.getEndpointURI());
+    }
+    requester=(MessageRequester)requesters.borrowObject(endpoint);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Borrowed a requester for endpoint: " + endpoint.getEndpointURI() + " = "+ requester.toString());
+    }
+    return requester;
+  }
+ catch (  Exception ex) {
+    throw new ConnectorException(CoreMessages.connectorCausedError(),this,ex);
+  }
+ finally {
+    try {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Borrowed requester: " + ObjectUtils.toString(requester,"null"));
+      }
+    }
+ catch (    Exception ex) {
+      throw new ConnectorException(CoreMessages.connectorCausedError(),this,ex);
+    }
+  }
+}

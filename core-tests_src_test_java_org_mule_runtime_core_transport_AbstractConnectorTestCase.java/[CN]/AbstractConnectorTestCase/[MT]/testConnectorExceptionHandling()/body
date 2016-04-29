@@ -1,0 +1,17 @@
+{
+  Connector connector=getConnectorAndAssert();
+  SystemExceptionHandler ehandlerMock=mock(SystemExceptionHandler.class);
+  assertNotNull(muleContext.getExceptionListener());
+  muleContext.setExceptionListener(ehandlerMock);
+  muleContext.getExceptionListener().handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
+  if (connector instanceof AbstractConnector) {
+    muleContext.getExceptionListener().handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
+  }
+  muleContext.setExceptionListener(null);
+  try {
+    muleContext.getExceptionListener().handleException(new DefaultMuleException(MessageFactory.createStaticMessage("Dummy")));
+    fail("Should have thrown exception as no strategy is set");
+  }
+ catch (  RuntimeException e) {
+  }
+}

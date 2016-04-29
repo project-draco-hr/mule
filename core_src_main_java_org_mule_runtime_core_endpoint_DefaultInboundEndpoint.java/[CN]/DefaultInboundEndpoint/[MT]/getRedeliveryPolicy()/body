@@ -1,0 +1,28 @@
+{
+  AbstractRedeliveryPolicy redeliveryPolicy=super.getRedeliveryPolicy();
+  RollbackMessagingExceptionStrategy rollbackMessagingExceptionStrategy=null;
+  if (flowConstruct != null && flowConstruct.getExceptionListener() != null) {
+    MessagingExceptionHandler exceptionListener=flowConstruct.getExceptionListener();
+    if (exceptionListener instanceof RollbackMessagingExceptionStrategy) {
+      rollbackMessagingExceptionStrategy=(RollbackMessagingExceptionStrategy)exceptionListener;
+    }
+ else     if (exceptionListener instanceof ChoiceMessagingExceptionStrategy) {
+      ChoiceMessagingExceptionStrategy choiceMessagingExceptionStrategy=(ChoiceMessagingExceptionStrategy)exceptionListener;
+      for (      MessagingExceptionHandlerAcceptor messagingExceptionHandlerAcceptor : choiceMessagingExceptionStrategy.getExceptionListeners()) {
+        if (messagingExceptionHandlerAcceptor instanceof RollbackMessagingExceptionStrategy && ((RollbackMessagingExceptionStrategy)messagingExceptionHandlerAcceptor).hasMaxRedeliveryAttempts()) {
+          rollbackMessagingExceptionStrategy=(RollbackMessagingExceptionStrategy)messagingExceptionHandlerAcceptor;
+          break;
+        }
+      }
+    }
+  }
+  if (rollbackMessagingExceptionStrategy != null && rollbackMessagingExceptionStrategy.hasMaxRedeliveryAttempts()) {
+    if (redeliveryPolicy == null) {
+      redeliveryPolicy=createDefaultRedeliveryPolicy(rollbackMessagingExceptionStrategy.getMaxRedeliveryAttempts());
+    }
+ else {
+      redeliveryPolicy.setMaxRedeliveryCount(rollbackMessagingExceptionStrategy.getMaxRedeliveryAttempts());
+    }
+  }
+  return redeliveryPolicy;
+}

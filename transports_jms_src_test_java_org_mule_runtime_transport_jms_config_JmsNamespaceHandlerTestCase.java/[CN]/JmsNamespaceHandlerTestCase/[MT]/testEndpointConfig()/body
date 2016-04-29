@@ -1,0 +1,21 @@
+{
+  ImmutableEndpoint endpoint1=muleContext.getRegistry().lookupEndpointBuilder("endpoint1").buildInboundEndpoint();
+  assertNotNull(endpoint1);
+  Filter filter1=endpoint1.getFilter();
+  assertNotNull(filter1);
+  assertTrue(filter1 instanceof JmsSelectorFilter);
+  assertEquals(1,endpoint1.getProperties().size());
+  assertEquals("true",endpoint1.getProperty(JmsConstants.DISABLE_TEMP_DESTINATIONS_PROPERTY));
+  ImmutableEndpoint endpoint2=muleContext.getRegistry().lookupEndpointBuilder("endpoint2").buildOutboundEndpoint();
+  assertNotNull(endpoint2);
+  Filter filter2=endpoint2.getFilter();
+  assertNotNull(filter2);
+  assertTrue(filter2 instanceof NotFilter);
+  Filter filter3=((NotFilter)filter2).getFilter();
+  assertNotNull(filter3);
+  assertTrue(filter3 instanceof JmsPropertyFilter);
+  InboundEndpoint inboundEndpoint=(InboundEndpoint)((Flow)muleContext.getRegistry().lookupObject("testService")).getMessageSource();
+  assertNotNull(inboundEndpoint);
+  assertEquals(1,inboundEndpoint.getProperties().size());
+  assertEquals("testCustomDurableName",inboundEndpoint.getProperty(JmsConstants.DURABLE_NAME_PROPERTY));
+}

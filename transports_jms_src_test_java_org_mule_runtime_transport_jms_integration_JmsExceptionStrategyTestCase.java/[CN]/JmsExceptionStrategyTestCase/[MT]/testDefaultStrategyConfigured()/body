@@ -1,0 +1,11 @@
+{
+  muleClient=muleContext.getClient();
+  muleClient.dispatch("jms://in3",MESSAGE,null);
+  latch.await(LATCH_AWAIT_TIMEOUT,MILLISECONDS);
+  Flow flow=muleContext.getRegistry().get("flowWithDefaultStrategyConfigured");
+  flow.stop();
+  MuleMessage muleMessage=muleClient.request("jms://in3",TIMEOUT);
+  assertThat(muleMessage,IsNull.<Object>notNullValue());
+  MuleMessage outboundMessage=muleClient.request("jms://out3",SHORT_TIMEOUT);
+  assertThat(outboundMessage,IsNull.<Object>nullValue());
+}
