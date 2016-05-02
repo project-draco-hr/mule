@@ -1,0 +1,13 @@
+{
+  ConfigurationBuilder configBuilder=new SpringXmlConfigurationBuilder("org/mule/config/spring/parsers/specific/component-with-binding-ok-test-flow.xml");
+  muleContext=muleContextFactory.createMuleContext(configBuilder);
+  Flow flow=muleContext.getRegistry().lookupObject("service7");
+  validateCorrectServiceCreation(flow);
+  assertEquals(PooledJavaWithBindingsComponent.class,flow.getMessageProcessors().get(0).getClass());
+  assertEquals(SingletonObjectFactory.class,((AbstractJavaComponent)flow.getMessageProcessors().get(0)).getObjectFactory().getClass());
+  assertEquals(1,((JavaWithBindingsComponent)flow.getMessageProcessors().get(0)).getInterfaceBindings().size());
+  validatePoolingProfile(flow);
+  assertNotNull(((JavaComponent)flow.getMessageProcessors().get(0)).getEntryPointResolverSet());
+  assertEquals(1,(((DefaultEntryPointResolverSet)((JavaComponent)flow.getMessageProcessors().get(0)).getEntryPointResolverSet()).getEntryPointResolvers().size()));
+  assertTrue((((DefaultEntryPointResolverSet)((JavaComponent)flow.getMessageProcessors().get(0)).getEntryPointResolverSet()).getEntryPointResolvers().toArray()[0] instanceof ReflectionEntryPointResolver));
+}
