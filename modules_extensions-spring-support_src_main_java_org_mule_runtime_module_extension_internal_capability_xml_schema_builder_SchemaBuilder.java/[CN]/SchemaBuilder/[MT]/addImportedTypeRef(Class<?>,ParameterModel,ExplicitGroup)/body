@@ -1,9 +1,17 @@
 {
+  TopLevelElement objectElement=createTopLevelElement(hyphenize(parameterModel.getName()),ZERO,"1");
+  objectElement.setComplexType(new LocalComplexType());
+  objectElement.setAnnotation(createDocAnnotation(parameterModel.getDescription()));
+  ExplicitGroup sequence=new ExplicitGroup();
+  sequence.setMinOccurs(ONE);
+  sequence.setMaxOccurs("1");
   XmlModelProperty xml=createXmlModelProperty(getAnnotation(extensionType,Xml.class),getAnnotation(extensionType,Extension.class).name(),"");
   Import schemaImport=new Import();
   schemaImport.setNamespace(xml.getNamespaceUri());
   schemaImport.setSchemaLocation(xml.getSchemaLocation());
   schema.getIncludeOrImportOrRedefine().add(schemaImport);
   QName qName=new QName(xml.getNamespaceUri(),hyphenize(getAliasName(parameterModel.getType())),xml.getNamespace());
-  all.getParticle().add(objectFactory.createElement(createRefElement(qName,false)));
+  sequence.getParticle().add(objectFactory.createElement(createRefElement(qName,false)));
+  objectElement.getComplexType().setSequence(sequence);
+  all.getParticle().add(objectFactory.createElement(objectElement));
 }
