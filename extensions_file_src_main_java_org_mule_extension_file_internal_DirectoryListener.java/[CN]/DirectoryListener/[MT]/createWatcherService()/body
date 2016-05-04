@@ -1,0 +1,22 @@
+{
+  try {
+    watcher=FileSystems.getDefault().newWatchService();
+  }
+ catch (  Exception e) {
+    throw new MuleRuntimeException(createStaticMessage("Could not create watcher service"),e);
+  }
+  TreeNode directoryNode=fileSystem.list(directoryPath.toString(),false,new DefaultMuleMessage(""),new NullFilePayloadPredicate());
+  final Path rootPath=Paths.get(directoryNode.getAttributes().getPath());
+  registerPath(rootPath);
+  if (recursive) {
+    walkFileTree(rootPath,new SimpleFileVisitor<Path>(){
+      @Override public FileVisitResult preVisitDirectory(      Path dir,      BasicFileAttributes attrs) throws IOException {
+        if (!dir.equals(rootPath)) {
+          registerPath(dir);
+        }
+        return CONTINUE;
+      }
+    }
+);
+  }
+}
