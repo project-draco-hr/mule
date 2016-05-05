@@ -1,2 +1,11 @@
 {
+  SourceDeclarer source=declarer.withMessageSource(getSourceName(sourceType));
+  List<Type> sourceGenerics=getSuperClassGenerics(sourceType,Source.class);
+  if (sourceGenerics.size() != 2) {
+    throw new IllegalModelDefinitionException(format("Message source class '%s' was expected to have 2 generic types " + "(one for the Payload type and another for the Attributes type) but %d were found",sourceType.getName(),sourceGenerics.size()));
+  }
+  source.sourceCreatedBy(new DefaultSourceFactory(sourceType)).whichReturns(typeLoader.load(sourceGenerics.get(0))).withAttributesOfType(typeLoader.load(sourceGenerics.get(1))).withExceptionEnricherFactory(getExceptionEnricherFactory(sourceType)).withModelProperty(new ImplementingTypeModelProperty(sourceType)).withMetadataResolverFactory(getMetadataResolverFactoryFromClass(extensionType,sourceType));
+  declareMetadataKeyId(sourceType,source);
+  declareSingleParameters(getParameterFields(sourceType),source);
+  declareParameterGroups(sourceType,source);
 }
