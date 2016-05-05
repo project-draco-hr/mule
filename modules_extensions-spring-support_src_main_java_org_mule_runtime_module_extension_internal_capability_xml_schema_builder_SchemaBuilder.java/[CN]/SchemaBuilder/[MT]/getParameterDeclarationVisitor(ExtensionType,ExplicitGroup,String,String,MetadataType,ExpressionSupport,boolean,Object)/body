@@ -1,0 +1,75 @@
+{
+  return new MetadataTypeVisitor(){
+    private boolean forceOptional=false;
+    @Override public void visitArrayType(    ArrayType arrayType){
+      MetadataType genericType=arrayType.getType();
+      forceOptional=shouldForceOptional(getType(genericType));
+      defaultVisit(arrayType);
+      if (shouldGenerateDataTypeChildElements(genericType,expressionSupport)) {
+        generateCollectionElement(all,name,description,arrayType,isRequired(true,required));
+      }
+    }
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      MetadataType keyType=dictionaryType.getKeyType();
+      forceOptional=shouldForceOptional(getType(keyType));
+      defaultVisit(dictionaryType);
+      if (shouldGenerateDataTypeChildElements(keyType,expressionSupport)) {
+        generateMapElement(all,name,description,dictionaryType,isRequired(true,required));
+      }
+    }
+    @Override public void visitObject(    ObjectType objectType){
+      final Class<?> clazz=getType(objectType);
+      forceOptional=shouldForceOptional(clazz);
+      if (TlsContextFactory.class.isAssignableFrom(clazz)) {
+        addTlsSupport(extensionType,all);
+        return;
+      }
+      if (ThreadingProfile.class.isAssignableFrom(clazz)) {
+        addAttributeAndElement(extensionType,all,THREADING_PROFILE_ATTRIBUTE_NAME,MULE_ABSTRACT_THREADING_PROFILE);
+        return;
+      }
+      defaultVisit(objectType);
+      if (importedTypes.get(objectType) != null) {
+        addImportedTypeRef(getType(importedTypes.get(objectType)),name,description,objectType,all);
+        return;
+      }
+      if (ExpressionSupport.REQUIRED != expressionSupport) {
+        List<MetadataType> subTypes=subTypesMapping.getSubTypes(objectType);
+        if (!subTypes.isEmpty()) {
+          registerPojoSubtypes(name,description,objectType,clazz,subTypes,all);
+        }
+ else {
+          if (shouldGeneratePojoChildElements(clazz)) {
+            registerComplexTypeChildElement(all,name,description,objectType,false);
+          }
+        }
+      }
+ else {
+        registerPojoType(objectType,description);
+      }
+    }
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      extensionType.getAttributeOrAttributeGroup().add(createAttribute(name,description,metadataType,defaultValue,isRequired(forceOptional,required),expressionSupport));
+    }
+    private boolean shouldGenerateDataTypeChildElements(    MetadataType metadataType,    ExpressionSupport expressionSupport){
+      if (metadataType == null) {
+        return false;
+      }
+      boolean isExpressionRequired=ExpressionSupport.REQUIRED == expressionSupport;
+      boolean isPojo=metadataType instanceof ObjectType;
+      Class<?> clazz=getType(metadataType);
+      boolean isPrimitive=clazz.isPrimitive() || ClassUtils.isPrimitiveWrapper(clazz);
+      return !isExpressionRequired && (isPrimitive || (isPojo && shouldGeneratePojoChildElements(clazz)) || (!isPojo && isInstantiable(clazz)));
+    }
+    private boolean shouldGeneratePojoChildElements(    Class<?> type){
+      return isInstantiable(type) && !getExposedFields(type).isEmpty();
+    }
+    private boolean shouldForceOptional(    Class<?> type){
+      return !required || !subTypesMapping.getSubTypes(metadataType).isEmpty() || (isInstantiable(type) && ExpressionSupport.REQUIRED != expressionSupport);
+    }
+    private boolean isRequired(    boolean forceOptional,    boolean required){
+      return !forceOptional && required;
+    }
+  }
+;
+}
