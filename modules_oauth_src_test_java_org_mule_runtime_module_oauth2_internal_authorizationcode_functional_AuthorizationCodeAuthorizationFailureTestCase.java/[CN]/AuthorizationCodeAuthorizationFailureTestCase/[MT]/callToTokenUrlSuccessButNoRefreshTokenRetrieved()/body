@@ -1,10 +1,8 @@
 {
   configureWireMockToExpectTokenPathRequestForAuthorizationCodeGrantType(ACCESS_TOKEN,null);
-  testWithSystemProperty(EXPECTED_STATUS_CODE_SYSTEM_PROPERTY,valueOf(TOKEN_NOT_FOUND_STATUS),new MuleTestUtils.TestCallback(){
-    @Override public void run() throws Exception {
-      Get(getRedirectUrlWithOnCompleteUrlAndCodeQueryParams()).connectTimeout(REQUEST_TIMEOUT).socketTimeout(REQUEST_TIMEOUT).execute();
-      FlowAssert.verify();
-    }
-  }
-);
+  Get(getRedirectUrlWithOnCompleteUrlAndCodeQueryParams()).connectTimeout(REQUEST_TIMEOUT).socketTimeout(REQUEST_TIMEOUT).execute();
+  final TokenManagerConfig tokenManagerConfig=muleContext.getRegistry().lookupObject(TokenManagerConfig.class);
+  final ResourceOwnerOAuthContext oauthContext=tokenManagerConfig.getConfigOAuthContext().getContextForResourceOwner(ResourceOwnerOAuthContext.DEFAULT_RESOURCE_OWNER_ID);
+  assertThat(oauthContext.getAccessToken(),is(ACCESS_TOKEN));
+  assertThat(oauthContext.getRefreshToken(),is(nullValue()));
 }

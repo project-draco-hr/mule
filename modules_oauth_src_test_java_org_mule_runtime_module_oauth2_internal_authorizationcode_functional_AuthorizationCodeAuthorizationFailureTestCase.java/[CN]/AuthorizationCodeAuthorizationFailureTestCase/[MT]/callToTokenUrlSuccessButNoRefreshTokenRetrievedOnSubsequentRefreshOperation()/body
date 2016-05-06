@@ -1,0 +1,13 @@
+{
+  configureWireMockToExpectTokenPathRequestForAuthorizationCodeGrantType(ACCESS_TOKEN,REFRESH_TOKEN);
+  Get(getRedirectUrlWithOnCompleteUrlAndCodeQueryParams()).connectTimeout(REQUEST_TIMEOUT).socketTimeout(REQUEST_TIMEOUT).execute();
+  final TokenManagerConfig tokenManagerConfig=muleContext.getRegistry().lookupObject(TokenManagerConfig.class);
+  ResourceOwnerOAuthContext oauthContext=tokenManagerConfig.getConfigOAuthContext().getContextForResourceOwner(ResourceOwnerOAuthContext.DEFAULT_RESOURCE_OWNER_ID);
+  assertThat(oauthContext.getAccessToken(),is(ACCESS_TOKEN));
+  assertThat(oauthContext.getRefreshToken(),is(REFRESH_TOKEN));
+  configureWireMockToExpectTokenPathRequestForAuthorizationCodeGrantType(REFRESHED_ACCESS_TOKEN,null);
+  Get(getRedirectUrlWithOnCompleteUrlAndCodeQueryParams()).connectTimeout(REQUEST_TIMEOUT).socketTimeout(REQUEST_TIMEOUT).execute();
+  oauthContext=tokenManagerConfig.getConfigOAuthContext().getContextForResourceOwner(ResourceOwnerOAuthContext.DEFAULT_RESOURCE_OWNER_ID);
+  assertThat(oauthContext.getAccessToken(),is(REFRESHED_ACCESS_TOKEN));
+  assertThat(oauthContext.getRefreshToken(),is(nullValue()));
+}

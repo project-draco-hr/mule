@@ -4,13 +4,20 @@
     if (!(value instanceof Boolean)) {
       throw new MuleRuntimeException(createStaticMessage("Expression %s should return a boolean but return %s",getRefreshTokenWhen(),value));
     }
-    final Boolean shouldRetryRequest=(Boolean)value;
+    Boolean shouldRetryRequest=(Boolean)value;
     if (shouldRetryRequest) {
-      try {
-        refreshToken(firstAttemptResponseEvent,resourceOwnerIdEvaluator.resolveStringValue(firstAttemptResponseEvent));
+      final String resourceId=resourceOwnerIdEvaluator.resolveStringValue(firstAttemptResponseEvent);
+      final Boolean refreshTokenIssuedByServer=!StringUtils.isBlank(this.getConfigOAuthContext().getContextForResourceOwner(resourceId).getRefreshToken());
+      if (refreshTokenIssuedByServer) {
+        try {
+          refreshToken(firstAttemptResponseEvent,resourceId);
+        }
+ catch (        MuleException e) {
+          throw new MuleRuntimeException(e);
+        }
       }
- catch (      MuleException e) {
-        throw new MuleRuntimeException(e);
+ else {
+        throw new RequestAuthenticationException(createStaticMessage(String.format("Cannot do a refresh token to get a new access token for the %s user due to OAuth server did not issued a refresh_token. You would have to re-authenticate the user before trying to execute an operation to the API.",resourceId)));
       }
     }
     return shouldRetryRequest;
