@@ -1,9 +1,9 @@
 {
-  final MuleClassLoaderLookupPolicy containerLookupPolicy=new MuleClassLoaderLookupPolicy(Collections.emptyMap(),SYSTEM_PACKAGES);
-  ArtifactClassLoaderFactory<DomainDescriptor> domainClassLoaderFactory=new DomainClassLoaderFactory(containerLookupPolicy);
+  final FilteringArtifactClassLoader apiClassLoader=createContainerFilteringClassLoader();
+  ArtifactClassLoaderFactory<DomainDescriptor> domainClassLoaderFactory=new DomainClassLoaderFactory(apiClassLoader);
   ArtifactClassLoaderFactory applicationClassLoaderFactory=new MuleApplicationClassLoaderFactory(new DefaultNativeLibraryFinderFactory());
   applicationClassLoaderFactory=new CompositeApplicationClassLoaderFactory(applicationClassLoaderFactory,serverPluginClassLoaderManager);
-  DefaultDomainFactory domainFactory=new DefaultDomainFactory(domainClassLoaderFactory,domainManager);
+  DefaultDomainFactory domainFactory=new DefaultDomainFactory(domainClassLoaderFactory,domainManager,apiClassLoader);
   domainFactory.setDeploymentListener(domainDeploymentListener);
   final ApplicationDescriptorFactory applicationDescriptorFactory=new ApplicationDescriptorFactory(new ApplicationPluginDescriptorFactory(new ArtifactClassLoaderFilterFactory()));
   DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,applicationDescriptorFactory,domainManager);
