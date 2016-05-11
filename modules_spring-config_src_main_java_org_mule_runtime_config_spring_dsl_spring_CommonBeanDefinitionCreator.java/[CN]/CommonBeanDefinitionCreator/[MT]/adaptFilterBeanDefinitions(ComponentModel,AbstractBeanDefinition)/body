@@ -1,0 +1,35 @@
+{
+  if (originalBeanDefinition == null) {
+    return null;
+  }
+  if (!filterWrapperRequired(parentComponentModel)) {
+    return originalBeanDefinition;
+  }
+  Class beanClass;
+  if (originalBeanDefinition instanceof RootBeanDefinition) {
+    beanClass=((RootBeanDefinition)originalBeanDefinition).getBeanClass();
+  }
+ else {
+    if (originalBeanDefinition.getBeanClassName() == null) {
+      return originalBeanDefinition;
+    }
+    try {
+      beanClass=Class.forName(originalBeanDefinition.getBeanClassName());
+    }
+ catch (    ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  BeanDefinition newBeanDefinition;
+  if (areMatchingTypes(Filter.class,beanClass)) {
+    boolean failOnUnaccepted=false;
+    Object processorWhenUnaccepted=null;
+    newBeanDefinition=BeanDefinitionBuilder.rootBeanDefinition(MessageFilter.class).addConstructorArgValue(originalBeanDefinition).addConstructorArgValue(failOnUnaccepted).addConstructorArgValue(processorWhenUnaccepted).getBeanDefinition();
+    return (AbstractBeanDefinition)newBeanDefinition;
+  }
+ else   if (areMatchingTypes(SecurityFilter.class,beanClass)) {
+    newBeanDefinition=BeanDefinitionBuilder.rootBeanDefinition(SecurityFilterMessageProcessor.class).addPropertyValue("filter",originalBeanDefinition).getBeanDefinition();
+    return (AbstractBeanDefinition)newBeanDefinition;
+  }
+  return originalBeanDefinition;
+}

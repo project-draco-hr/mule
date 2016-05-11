@@ -1,0 +1,17 @@
+{
+  ComponentModel componentModel=createBeanDefinitionRequest.getComponentModel();
+  if (componentModel.getIdentifier().equals(FILTER_REFERENCE_IDENTIFIER)) {
+    if (from(componentModel).getNode().getParentNode().getNodeName().equals(MESSAGE_FILTER_ELEMENT)) {
+      componentModel.setType(Filter.class);
+      componentModel.setBeanReference(new RuntimeBeanReference(componentModel.getParameters().get(REFERENCE_ATTRIBUTE)));
+    }
+ else {
+      componentModel.setType(MessageProcessor.class);
+      BeanDefinitionBuilder beanDefinitionBuilder=org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition(MessageFilter.class);
+      beanDefinitionBuilder.addConstructorArgReference(componentModel.getParameters().get(REFERENCE_ATTRIBUTE));
+      componentModel.setBeanDefinition(beanDefinitionBuilder.getBeanDefinition());
+    }
+    return true;
+  }
+  return false;
+}

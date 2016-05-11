@@ -1,0 +1,19 @@
+{
+  if (element.getLocalName().equals(MULE_ROOT_ELEMENT) || element.getLocalName().equals(MULE_DOMAIN_ROOT_ELEMENT)) {
+    return false;
+  }
+  Node parentNode=element;
+  while ((parentNode=parentNode.getParentNode()) != null) {
+    String parentNodeNamespace=getNamespace(parentNode);
+    String parentNodeName=parentNode.getLocalName();
+    if (parentNode.getNodeName().equals(MULE_ROOT_ELEMENT)) {
+      break;
+    }
+    if (!beanDefinitionFactory.hasDefinition(new ComponentIdentifier.Builder().withNamespace(parentNodeNamespace).withName(parentNodeName).build())) {
+      return false;
+    }
+  }
+  String namespace=getNamespace(element);
+  String nodeName=element.getLocalName();
+  return beanDefinitionFactory.hasDefinition(new ComponentIdentifier.Builder().withNamespace(namespace).withName(nodeName).build());
+}

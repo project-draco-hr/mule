@@ -1,0 +1,31 @@
+{
+  if (componentModel != null) {
+    if (finalChild != null) {
+      try {
+        Class<?> type=Class.forName(finalChild.getBeanClassName());
+        if (FactoryBean.class.isAssignableFrom(type)) {
+          try {
+            type=(Class<?>)((ParameterizedType)Class.forName(finalChild.getBeanClassName()).getGenericInterfaces()[0]).getActualTypeArguments()[0];
+          }
+ catch (          Exception e2) {
+            try {
+              type=(Class<?>)((ParameterizedType)Class.forName(finalChild.getBeanClassName()).getGenericSuperclass()).getActualTypeArguments()[0];
+            }
+ catch (            Exception e3) {
+              try {
+                type=((FactoryBean)type.newInstance()).getObjectType();
+              }
+ catch (              InstantiationException e) {
+                type=Object.class;
+              }
+            }
+          }
+        }
+        componentModel.setType(type);
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+}
