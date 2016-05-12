@@ -1,0 +1,21 @@
+{
+  inboundEndpoint=getTestInboundEndpoint("Test","test://Test?exchangePattern=one-way");
+  flow=getTestFlow();
+  session=Mockito.mock(MuleSession.class);
+  CountDownLatch cdl=new CountDownLatch(2);
+  objectStore=new RaceConditionEnforcingObjectStore(cdl);
+  idempotentMessageFilter=new IdempotentMessageFilter();
+  idempotentMessageFilter.setIdExpression("#[message.inboundProperties.id]");
+  idempotentMessageFilter.setFlowConstruct(flow);
+  idempotentMessageFilter.setThrowOnUnaccepted(false);
+  idempotentMessageFilter.setStorePrefix("foo");
+  idempotentMessageFilter.setStore(objectStore);
+  Thread t1=new Thread(new TestForRaceConditionRunnable(),"thread1");
+  Thread t2=new Thread(new TestForRaceConditionRunnable(),"thread2");
+  t1.start();
+  t2.start();
+  t1.join(5000);
+  t2.join(5000);
+  assertFalse("Exception in child threads",errorHappenedInChildThreads);
+  assertEquals("None or more than one message was processed by IdempotentMessageFilter",new Integer(1),processedEvents);
+}

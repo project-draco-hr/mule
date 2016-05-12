@@ -1,0 +1,21 @@
+{
+  String connectorName=uri.getConnectorName();
+  if (null != connectorName) {
+    Connector connector=lookupConnector(muleContext.getRegistry(),connectorName);
+    if (connector != null) {
+      return connector;
+    }
+  }
+  Connector connector=getConnectorByProtocol(uri.getFullScheme());
+  if (connector == null) {
+    connector=createConnector(uri);
+    try {
+      BeanUtils.populate(connector,uri.getParams());
+      registerConnector(muleContext.getRegistry(),connector);
+    }
+ catch (    Exception e) {
+      throw new TransportFactoryException(e);
+    }
+  }
+  return connector;
+}

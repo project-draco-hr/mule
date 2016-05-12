@@ -1,0 +1,27 @@
+{
+  if (method.getName().equals("toString")) {
+    return toString();
+  }
+  MuleMessage message=createMuleMessage(args);
+  InterfaceBinding router=routers.get(method.getName());
+  if (router == null) {
+    router=routers.get(DEFAULT_METHOD_NAME_TOKEN);
+  }
+  if (router == null) {
+    throw new IllegalArgumentException(TransportCoreMessages.cannotFindBindingForMethod(method.getName()).toString());
+  }
+  MuleEvent currentEvent=RequestContext.getEvent();
+  MuleEvent replyEvent=router.process(new DefaultMuleEvent(message,currentEvent));
+  if (replyEvent != null && !VoidMuleEvent.getInstance().equals(replyEvent) && replyEvent.getMessage() != null) {
+    MuleMessage reply=replyEvent.getMessage();
+    if (reply.getExceptionPayload() != null) {
+      throw findDeclaredMethodException(method,reply.getExceptionPayload().getException());
+    }
+ else {
+      return determineReply(reply,method);
+    }
+  }
+ else {
+    return null;
+  }
+}

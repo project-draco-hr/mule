@@ -1,0 +1,17 @@
+{
+  String key=String.format("%1s:%2s:%3s",uri,exchangePattern,responseTimeout);
+  OutboundEndpoint endpoint=outboundEndpointCache.get(key);
+  if (endpoint == null) {
+    EndpointBuilder endpointBuilder=getEndpointFactory().getEndpointBuilder(uri);
+    endpointBuilder.setExchangePattern(exchangePattern);
+    if (responseTimeout != null && responseTimeout > 0) {
+      endpointBuilder.setResponseTimeout(responseTimeout.intValue());
+    }
+    endpoint=getEndpointFactory().getOutboundEndpoint(endpointBuilder);
+    OutboundEndpoint concurrentlyAddedEndpoint=outboundEndpointCache.putIfAbsent(key,endpoint);
+    if (concurrentlyAddedEndpoint != null) {
+      return concurrentlyAddedEndpoint;
+    }
+  }
+  return endpoint;
+}

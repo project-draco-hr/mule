@@ -1,0 +1,19 @@
+{
+  MuleMessage message1=new DefaultMuleMessage("test event A",muleContext);
+  DefaultMuleEvent event1=new DefaultMuleEvent(message1,flow);
+  DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(event1,endpoint);
+  event1.setFlowVariable("key1","value1");
+  MuleMessage message2=new DefaultMuleMessage("test event B",muleContext);
+  MuleMessage message3=new DefaultMuleMessage("test event C",muleContext);
+  List<MuleMessage> list=new ArrayList<>();
+  list.add(message2);
+  list.add(message3);
+  MuleMessage messageCollection=new DefaultMuleMessage(list,muleContext);
+  DefaultMuleEvent event2=new DefaultMuleEvent(messageCollection,flow);
+  DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(event2,endpoint);
+  event2.setFlowVariable("key2","value2");
+  MuleEvent result=resultsHandler.aggregateResults(Collections.<MuleEvent>singletonList(event2),event1,muleContext);
+  assertSame(event2,result);
+  assertNull(result.getFlowVariable("key1"));
+  assertEquals("value2",result.getFlowVariable("key2"));
+}

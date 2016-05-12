@@ -1,0 +1,16 @@
+{
+  MuleMessage message=createMuleMessage();
+  message.removeProperty("MuleMessage",OUTBOUND);
+  final DefaultMuleEvent event=new DefaultMuleEvent(message,getTestFlow());
+  DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(event,getTestInboundEndpoint(FOO_PROPERTY));
+  RequestContext.setEvent(event);
+  message.setOutboundProperty(FOO_PROPERTY,"fooOutbound");
+  message.setProperty(FOO_PROPERTY,"fooInbound",PropertyScope.INBOUND);
+  assertEquals(1,message.getOutboundPropertyNames().size());
+  assertEquals(1,message.getInboundPropertyNames().size());
+  String value=message.findPropertyInAnyScope(FOO_PROPERTY,null);
+  assertEquals("fooOutbound",value);
+  message.removeProperty(FOO_PROPERTY,OUTBOUND);
+  value=message.findPropertyInAnyScope(FOO_PROPERTY,null);
+  assertEquals("fooInbound",value);
+}

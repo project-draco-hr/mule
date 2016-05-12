@@ -1,7 +1,6 @@
 {
   Flow flow=getTestFlow();
   MuleSession session=mock(MuleSession.class);
-  InboundEndpoint endpoint1=getTestInboundEndpoint("Test1Provider","test://Test1Provider?exchangePattern=one-way");
   IdempotentMessageFilter ir=new IdempotentMessageFilter();
   ir.setIdExpression("#[message.inboundProperties.id]");
   ir.setFlowConstruct(flow);
@@ -10,14 +9,12 @@
   ir.setStore(new InMemoryObjectStore<String>());
   MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
   okMessage.setOutboundProperty("id","1");
-  DefaultMuleEvent event=new DefaultMuleEvent(okMessage,getTestFlow(),session);
-  event.populateFieldsFromInboundEndpoint(endpoint1);
+  MuleEvent event=new DefaultMuleEvent(okMessage,getTestFlow(),session);
   MuleEvent processedEvent=ir.process(event);
   assertNotNull(processedEvent);
   okMessage=new DefaultMuleMessage("OK",muleContext);
   okMessage.setOutboundProperty("id","1");
   event=new DefaultMuleEvent(okMessage,getTestFlow(),session);
-  event.populateFieldsFromInboundEndpoint(endpoint1);
   processedEvent=ir.process(event);
   assertNull(processedEvent);
 }

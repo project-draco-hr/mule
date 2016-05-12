@@ -1,5 +1,4 @@
 {
-  InboundEndpoint endpoint1=getTestInboundEndpoint("Test1Provider","test://Test1Provider?exchangePattern=one-way");
   Flow flow=getTestFlow();
   MuleSession session=mock(MuleSession.class);
   IdempotentSecureHashMessageFilter ir=new IdempotentSecureHashMessageFilter();
@@ -9,18 +8,15 @@
   ir.setStore(new InMemoryObjectStore<String>());
   ir.setMuleContext(muleContext);
   MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
-  DefaultMuleEvent event=new DefaultMuleEvent(okMessage,getTestFlow(),session);
-  event.populateFieldsFromInboundEndpoint(endpoint1);
+  MuleEvent event=new DefaultMuleEvent(okMessage,getTestFlow(),session);
   MuleEvent processedEvent=ir.process(event);
   assertNotNull(processedEvent);
   okMessage=new DefaultMuleMessage("OK",muleContext);
   event=new DefaultMuleEvent(okMessage,getTestFlow(),session);
-  event.populateFieldsFromInboundEndpoint(endpoint1);
   processedEvent=ir.process(event);
   assertNull(processedEvent);
   okMessage=new DefaultMuleMessage("Not OK",muleContext);
   event=new DefaultMuleEvent(okMessage,getTestFlow(),session);
-  event.populateFieldsFromInboundEndpoint(endpoint1);
   processedEvent=ir.process(event);
   assertNotNull(processedEvent);
 }

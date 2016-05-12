@@ -1,0 +1,37 @@
+{
+  int defaultMaxBufferSize=42;
+  int defaultMaxThreadsActive=16;
+  int defaultMaxThreadsIdle=3;
+  int defaultThreadPoolExhaustedAction=ThreadingProfile.WHEN_EXHAUSTED_WAIT;
+  int defaultThreadTTL=60001;
+  int connectorMaxBufferSize=2;
+  int componentMaxBufferSize=6;
+  int componentMaxThreadsActive=12;
+  int componentMaxThreadsIdle=6;
+  int componentThreadPoolExhaustedAction=ThreadingProfile.WHEN_EXHAUSTED_DISCARD;
+  ThreadingProfile tp=muleContext.getDefaultThreadingProfile();
+  assertEquals(defaultMaxBufferSize,tp.getMaxBufferSize());
+  assertEquals(defaultMaxThreadsActive,tp.getMaxThreadsActive());
+  assertEquals(defaultMaxThreadsIdle,tp.getMaxThreadsIdle());
+  assertEquals(defaultThreadPoolExhaustedAction,tp.getPoolExhaustedAction());
+  assertEquals(defaultThreadTTL,tp.getThreadTTL());
+  tp=muleContext.getDefaultServiceThreadingProfile();
+  assertEquals(defaultMaxBufferSize,tp.getMaxBufferSize());
+  assertEquals(defaultMaxThreadsActive,tp.getMaxThreadsActive());
+  assertEquals(defaultMaxThreadsIdle,tp.getMaxThreadsIdle());
+  assertEquals(defaultThreadPoolExhaustedAction,tp.getPoolExhaustedAction());
+  assertEquals(defaultThreadTTL,tp.getThreadTTL());
+  AbstractConnector c=(AbstractConnector)muleContext.getRegistry().lookupObject("dummyConnector");
+  tp=c.getDispatcherThreadingProfile();
+  assertEquals(connectorMaxBufferSize,tp.getMaxBufferSize());
+  assertEquals(defaultMaxThreadsActive,tp.getMaxThreadsActive());
+  assertEquals(defaultMaxThreadsIdle,tp.getMaxThreadsIdle());
+  assertEquals(defaultThreadPoolExhaustedAction,tp.getPoolExhaustedAction());
+  assertEquals(defaultThreadTTL,tp.getThreadTTL());
+  Flow flow=(Flow)muleContext.getRegistry().lookupFlowConstruct("appleComponent2");
+  AsynchronousProcessingStrategy processingStrategy=(AsynchronousProcessingStrategy)flow.getProcessingStrategy();
+  assertEquals(componentMaxBufferSize,processingStrategy.getMaxBufferSize().intValue());
+  assertEquals(componentMaxThreadsActive,processingStrategy.getMaxThreads().intValue());
+  assertEquals(componentThreadPoolExhaustedAction,processingStrategy.getPoolExhaustedAction().intValue());
+  assertEquals(defaultThreadTTL,tp.getThreadTTL());
+}

@@ -1,0 +1,26 @@
+{
+  String uri=uriBuilder.getConstructor();
+  if (muleContext.getExpressionManager().isExpression(uri)) {
+    throw new MalformedEndpointException(TransportCoreMessages.dynamicEndpointURIsCannotBeUsedOnInbound(),uri);
+  }
+  prepareToBuildEndpoint();
+  EndpointURI endpointURI=uriBuilder.getEndpoint();
+  endpointURI.initialise();
+  List<MessageProcessor> mergedProcessors=addTransformerProcessors(endpointURI);
+  List<MessageProcessor> mergedResponseProcessors=addResponseTransformerProcessors(endpointURI);
+  Connector connector=getConnector();
+  if (connector != null && !connector.supportsProtocol(endpointURI.getFullScheme())) {
+    throw new IllegalArgumentException(TransportCoreMessages.connectorSchemeIncompatibleWithEndpointScheme(connector.getProtocol(),endpointURI).getMessage());
+  }
+  checkInboundExchangePattern();
+  for (  MessageProcessor mp : messageProcessors) {
+    if (mp instanceof MessageFilter) {
+      ((MessageFilter)mp).setThrowOnUnaccepted(true);
+    }
+  }
+  InboundEndpoint inboundEndpoint=createInboundEndpoint(endpointURI,mergedProcessors,mergedResponseProcessors,connector);
+  if (inboundEndpoint instanceof DefaultInboundEndpoint) {
+    ((DefaultInboundEndpoint)inboundEndpoint).setAnnotations(getAnnotations());
+  }
+  return inboundEndpoint;
+}

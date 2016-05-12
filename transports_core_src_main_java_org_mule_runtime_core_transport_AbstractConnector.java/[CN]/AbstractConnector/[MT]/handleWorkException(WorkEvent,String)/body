@@ -1,0 +1,23 @@
+{
+  if (event == null) {
+    return;
+  }
+  Throwable e=event.getException();
+  if (e == null) {
+    return;
+  }
+  if (e.getCause() != null) {
+    e=e.getCause();
+  }
+  logger.error("Work caused exception on '" + type + "'. Work being executed was: "+ event.getWork().toString());
+  if (e instanceof MessagingException) {
+    MuleEvent failedEvent=((MessagingException)e).getEvent();
+    failedEvent.getFlowConstruct().getExceptionListener().handleException((MessagingException)e,failedEvent);
+  }
+ else   if (e instanceof Exception) {
+    muleContext.getExceptionListener().handleException((Exception)e);
+  }
+ else {
+    muleContext.getExceptionListener().handleException(new MuleRuntimeException(TransportCoreMessages.connectorCausedError(this.getName()),e));
+  }
+}

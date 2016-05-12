@@ -1,0 +1,21 @@
+{
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://Test1Provider?exchangePattern=request-response");
+  assertNotNull(endpoint1);
+  OutboundEndpoint mockEndpoint=RouterTestUtils.createMockEndpoint(endpoint1);
+  FilteringOutboundRouter router=new EndpointMulticastingRouter();
+  router.setMuleContext(muleContext);
+  PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
+  router.setFilter(filter);
+  List<OutboundEndpoint> endpoints=new ArrayList<OutboundEndpoint>();
+  endpoints.add(mockEndpoint);
+  router.setRoutes(new ArrayList<MessageProcessor>(endpoints));
+  assertTrue(router.isUseTemplates());
+  assertEquals(filter,router.getFilter());
+  MuleMessage message=new DefaultMuleMessage("test event",muleContext);
+  MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
+  when(mockEndpoint.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer(event));
+  MuleSession session=mock(MuleSession.class);
+  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,session,muleContext));
+  assertNotNull(result);
+  assertEquals(message,result.getMessage());
+}

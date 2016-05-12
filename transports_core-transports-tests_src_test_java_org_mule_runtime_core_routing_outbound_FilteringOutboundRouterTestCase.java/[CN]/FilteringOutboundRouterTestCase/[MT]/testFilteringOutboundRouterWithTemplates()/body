@@ -1,0 +1,21 @@
+{
+  OutboundEndpoint endpoint1=getTestOutboundEndpoint("Test1Provider","test://foo?[barValue]");
+  assertNotNull(endpoint1);
+  FilteringOutboundRouter router=new EndpointMulticastingRouter();
+  router.setMuleContext(muleContext);
+  PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
+  router.setFilter(filter);
+  List<OutboundEndpoint> endpoints=new ArrayList<OutboundEndpoint>();
+  endpoints.add(endpoint1);
+  router.setRoutes(new ArrayList<MessageProcessor>(endpoints));
+  assertTrue(router.isUseTemplates());
+  assertEquals(filter,router.getFilter());
+  Map<String,Object> m=new HashMap<String,Object>();
+  m.put("barValue","bar");
+  MuleMessage message=new DefaultMuleMessage("test event",m,muleContext);
+  MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
+  assertTrue(router.isMatch(message));
+  OutboundEndpoint ep=(OutboundEndpoint)router.getRoute(0,event);
+  assertNotSame(endpoint1,ep);
+  assertEquals("test://foo?bar",ep.getEndpointURI().toString());
+}

@@ -1,0 +1,23 @@
+{
+  if (!url.contains(":")) {
+    return true;
+  }
+  final String schema=url.substring(0,url.indexOf(':'));
+  if (supportedUrlSchemas.contains(schema)) {
+    return true;
+  }
+ else   if (unsupportedUrlSchemas.contains(schema)) {
+    return false;
+  }
+synchronized (this) {
+    try {
+      lookupServiceDescriptor(muleContext.getRegistry(),ServiceType.TRANSPORT,schema,null);
+    }
+ catch (    ServiceException e) {
+      unsupportedUrlSchemas.add(schema);
+      return false;
+    }
+    supportedUrlSchemas.add(schema);
+    return true;
+  }
+}

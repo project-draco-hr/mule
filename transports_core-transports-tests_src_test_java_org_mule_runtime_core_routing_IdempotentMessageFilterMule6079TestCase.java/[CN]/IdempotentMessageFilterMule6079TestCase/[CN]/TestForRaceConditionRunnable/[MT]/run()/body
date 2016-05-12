@@ -1,0 +1,21 @@
+{
+  MuleMessage okMessage=new DefaultMuleMessage("OK",muleContext);
+  okMessage.setOutboundProperty("id","1");
+  DefaultMuleEvent newEvent=new DefaultMuleEvent(okMessage,flow,session);
+  DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(newEvent,inboundEndpoint);
+  MuleEvent event=newEvent;
+  try {
+    event=idempotentMessageFilter.process(event);
+  }
+ catch (  Throwable e) {
+    e.printStackTrace();
+synchronized (errorHappenedInChildThreads) {
+      errorHappenedInChildThreads=true;
+    }
+  }
+  if (event != null) {
+synchronized (processedEvents) {
+      processedEvents++;
+    }
+  }
+}

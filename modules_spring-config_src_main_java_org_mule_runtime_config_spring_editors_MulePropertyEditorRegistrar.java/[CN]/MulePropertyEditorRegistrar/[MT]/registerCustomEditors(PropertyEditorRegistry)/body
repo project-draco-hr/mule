@@ -1,6 +1,4 @@
 {
-  registry.registerCustomEditor(Connector.class,new ConnectorPropertyEditor(muleContext));
-  registry.registerCustomEditor(URIBuilder.class,new URIBuilderPropertyEditor(muleContext));
   registry.registerCustomEditor(MessageExchangePattern.class,new MessageExchangePatternPropertyEditor());
   registry.registerCustomEditor(Date.class,new DatePropertyEditor(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss"),new SimpleDateFormat("yyyy-MM-dd"),true));
   registry.registerCustomEditor(ProcessingStrategy.class,new ProcessingStrategyEditor());
@@ -9,7 +7,11 @@
   }
   for (  Map.Entry<Class<?>,Class<PropertyEditor>> entry : customPropertyEditorsCache.entrySet()) {
     try {
-      registry.registerCustomEditor(entry.getKey(),ClassUtils.instanciateClass(entry.getValue()));
+      final PropertyEditor customEditor=ClassUtils.instanciateClass(entry.getValue());
+      if (customEditor instanceof MuleContextAware) {
+        ((MuleContextAware)customEditor).setMuleContext(muleContext);
+      }
+      registry.registerCustomEditor(entry.getKey(),customEditor);
     }
  catch (    Exception e) {
       throw new IllegalStateException("Error loading custom property editors",e);

@@ -1,10 +1,9 @@
 {
-  final MessageProcessor connectorMessageProcessor=getConnectorMessageProcessLocator().locateConnectorOperation(url,newOptions().build(),MessageExchangePattern.ONE_WAY);
+  final MessageProcessor connectorMessageProcessor=getConnectorMessageProcessLocator().locateConnectorOperation(url,newOptions().outbound().build(),MessageExchangePattern.ONE_WAY);
   if (connectorMessageProcessor != null) {
-    connectorMessageProcessor.process(createRequestResponseMuleEvent(message));
+    connectorMessageProcessor.process(createOneWayMuleEvent(message));
   }
  else {
-    OutboundEndpoint endpoint=endpointCache.getOutboundEndpoint(url,MessageExchangePattern.ONE_WAY,null);
-    endpoint.process(createMuleEvent(message,endpoint));
+    throw createUnsupportedUrlException(url);
   }
 }

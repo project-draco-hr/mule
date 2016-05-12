@@ -1,0 +1,29 @@
+{
+  String uri=uriBuilder.getConstructor();
+  if (muleContext.getExpressionManager().isExpression(uri)) {
+    if (muleContext.getExpressionManager().isValidExpression(uri)) {
+      String dynamicAddress=getDynamicUriFrom(uri);
+      URIBuilder originalBuilder=uriBuilder;
+      uriBuilder=new URIBuilder(dynamicAddress,muleContext);
+      return new DynamicOutboundEndpoint(this,new DynamicURIBuilder(originalBuilder));
+    }
+ else {
+      throw new MalformedEndpointException(uri);
+    }
+  }
+  prepareToBuildEndpoint();
+  EndpointURI endpointURI=uriBuilder.getEndpoint();
+  endpointURI.initialise();
+  List<MessageProcessor> mergedProcessors=addTransformerProcessors(endpointURI);
+  List<MessageProcessor> mergedResponseProcessors=addResponseTransformerProcessors(endpointURI);
+  Connector connector=getConnector();
+  if (connector != null && !connector.supportsProtocol(getScheme())) {
+    throw new IllegalArgumentException(TransportCoreMessages.connectorSchemeIncompatibleWithEndpointScheme(connector.getProtocol(),endpointURI).getMessage());
+  }
+  checkOutboundExchangePattern();
+  OutboundEndpoint outboundEndpoint=createOutboundEndpoint(endpointURI,mergedProcessors,mergedResponseProcessors,connector);
+  if (outboundEndpoint instanceof DefaultOutboundEndpoint) {
+    ((DefaultOutboundEndpoint)outboundEndpoint).setAnnotations(getAnnotations());
+  }
+  return outboundEndpoint;
+}
