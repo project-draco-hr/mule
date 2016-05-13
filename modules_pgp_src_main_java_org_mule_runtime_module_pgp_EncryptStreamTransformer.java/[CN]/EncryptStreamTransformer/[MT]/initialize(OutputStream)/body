@@ -1,7 +1,9 @@
 {
   armoredOut=new ArmoredOutputStream(out);
-  PGPEncryptedDataGenerator encrDataGen=new PGPEncryptedDataGenerator(PGPEncryptedData.CAST5,false,new SecureRandom(),provider);
-  encrDataGen.addMethod(this.publicKey);
+  BcPGPDataEncryptorBuilder encryptorBuilder=new BcPGPDataEncryptorBuilder(PGPEncryptedData.CAST5);
+  PGPEncryptedDataGenerator encrDataGen=new PGPEncryptedDataGenerator(encryptorBuilder,false);
+  BcPublicKeyKeyEncryptionMethodGenerator methodGenerator=new BcPublicKeyKeyEncryptionMethodGenerator(this.publicKey);
+  encrDataGen.addMethod(methodGenerator);
   encryptedOutputStream=encrDataGen.open(armoredOut,new byte[1 << 16]);
   PGPCompressedDataGenerator comprDataGen=new PGPCompressedDataGenerator(PGPCompressedData.ZIP);
   compressedEncryptedOutputStream=comprDataGen.open(encryptedOutputStream);

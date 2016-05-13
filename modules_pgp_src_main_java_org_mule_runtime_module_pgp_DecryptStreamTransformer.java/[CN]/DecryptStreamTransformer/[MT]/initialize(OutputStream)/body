@@ -1,6 +1,6 @@
 {
   InputStream decodedInputStream=PGPUtil.getDecoderStream(this.toBeDecrypted);
-  PGPObjectFactory pgpF=new PGPObjectFactory(decodedInputStream);
+  PGPObjectFactory pgpF=new PGPObjectFactory(decodedInputStream,KEY_FINGERPRINT_CALCULATOR);
   Object pgpObject=pgpF.nextObject();
   if (pgpObject == null) {
     throw new IllegalArgumentException("Invalid PGP message");
@@ -22,8 +22,8 @@
       throw new IllegalArgumentException("Failed to find private key with ID " + pbe.getKeyID());
     }
   }
-  clearStream=pbe.getDataStream(privateKey,provider);
-  PGPObjectFactory pgpObjectFactory=new PGPObjectFactory(clearStream);
+  clearStream=pbe.getDataStream(new BcPublicKeyDataDecryptorFactory(privateKey));
+  PGPObjectFactory pgpObjectFactory=new PGPObjectFactory(clearStream,KEY_FINGERPRINT_CALCULATOR);
   pgpObject=pgpObjectFactory.nextObject();
   while (!(pgpObject instanceof PGPLiteralData)) {
     if (pgpObject instanceof PGPOnePassSignatureList) {
@@ -32,7 +32,7 @@
  else     if (pgpObject instanceof PGPCompressedData) {
       PGPCompressedData cData=(PGPCompressedData)pgpObject;
       compressedStream=new BufferedInputStream(cData.getDataStream());
-      pgpObjectFactory=new PGPObjectFactory(compressedStream);
+      pgpObjectFactory=new PGPObjectFactory(compressedStream,KEY_FINGERPRINT_CALCULATOR);
       pgpObject=pgpObjectFactory.nextObject();
     }
  else {
