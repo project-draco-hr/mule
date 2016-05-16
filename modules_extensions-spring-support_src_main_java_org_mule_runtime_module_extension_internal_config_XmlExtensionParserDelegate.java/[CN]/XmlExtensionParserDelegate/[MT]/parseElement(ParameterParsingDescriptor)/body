@@ -1,0 +1,51 @@
+{
+  final ValueHolder<ValueResolver> resolverReference=new ValueHolder<>();
+  final ElementDescriptor element=parameterDescriptor.getElement();
+  final String elementName=parameterDescriptor.getChildElementName();
+  final String fieldName=parameterDescriptor.getFieldName();
+  final Object defaultValue=parameterDescriptor.getDefaultValue();
+  parameterDescriptor.getMetadataType().accept(new MetadataTypeVisitor(){
+    /** 
+ * An attribute of a generic type
+ */
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      resolverReference.set(getResolverFromValue(getAttributeValue(element,fieldName,defaultValue),metadataType));
+    }
+    /** 
+ * A collection type. Might be defined in an inner element or referenced
+ * from an attribute
+ */
+    @Override public void visitArrayType(    ArrayType arrayType){
+      resolverReference.set(parseCollection(element,fieldName,elementName,singularize(elementName),defaultValue,arrayType));
+    }
+    /** 
+ * A map type. Might be defined in an inner element or referenced
+ * from an attribute
+ */
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      final String pluralName=pluralize(elementName);
+      String parentName;
+      String childname;
+      if (StringUtils.equals(pluralName,elementName)) {
+        parentName=elementName;
+        childname=singularize(elementName);
+      }
+ else {
+        parentName=pluralName;
+        childname=elementName;
+      }
+      resolverReference.set(parseMap(element,fieldName,parentName,childname,defaultValue,dictionaryType));
+    }
+    @Override public void visitObject(    ObjectType objectType){
+      resolverReference.set(parsePojo(element,fieldName,elementName,objectType,defaultValue));
+    }
+    @Override public void visitDateTime(    DateTimeType dateTimeType){
+      resolverReference.set(parseCalendar(element,fieldName,dateTimeType,defaultValue));
+    }
+    @Override public void visitDate(    DateType dateType){
+      resolverReference.set(parseDate(element,fieldName,dateType,defaultValue));
+    }
+  }
+);
+  return resolverReference.get();
+}

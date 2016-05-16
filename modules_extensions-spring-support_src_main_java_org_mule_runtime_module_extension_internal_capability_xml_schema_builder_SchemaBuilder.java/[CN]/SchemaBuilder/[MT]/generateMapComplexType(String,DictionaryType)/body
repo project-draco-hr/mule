@@ -1,0 +1,43 @@
+{
+  final LocalComplexType mapComplexType=new LocalComplexType();
+  final ExplicitGroup mapEntrySequence=new ExplicitGroup();
+  mapComplexType.setSequence(mapEntrySequence);
+  final TopLevelElement mapEntryElement=new TopLevelElement();
+  mapEntryElement.setName(NameUtils.singularize(name));
+  mapEntryElement.setMinOccurs(ZERO);
+  mapEntryElement.setMaxOccurs(SchemaConstants.UNBOUNDED);
+  final MetadataType keyType=metadataType.getKeyType();
+  final MetadataType valueType=metadataType.getValueType();
+  final LocalComplexType entryComplexType=new LocalComplexType();
+  final Attribute keyAttribute=createAttribute(ATTRIBUTE_NAME_KEY,keyType,true,ExpressionSupport.REQUIRED);
+  entryComplexType.getAttributeOrAttributeGroup().add(keyAttribute);
+  valueType.accept(new MetadataTypeVisitor(){
+    @Override public void visitObject(    ObjectType objectType){
+      final boolean shouldGenerateChildElement=isInstantiableWithParameters(getType(objectType));
+      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,!shouldGenerateChildElement,SUPPORTED));
+      if (shouldGenerateChildElement) {
+        ExplicitGroup singleItemSequence=new ExplicitGroup();
+        singleItemSequence.setMaxOccurs("1");
+        singleItemSequence.getParticle().add(objectFactory.createElement(createRefToLocalElement(objectType)));
+        entryComplexType.setSequence(singleItemSequence);
+      }
+    }
+    @Override public void visitArrayType(    ArrayType arrayType){
+      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,false,SUPPORTED));
+      entryComplexType.setSequence(new ExplicitGroup());
+      LocalComplexType itemComplexType=new LocalComplexType();
+      MetadataType itemType=arrayType.getType();
+      itemComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,itemType,true,REQUIRED));
+      String itemName=hyphenize(NameUtils.singularize(name)).concat("-item");
+      TopLevelElement itemElement=createTopLevelElement(itemName,ZERO,SchemaConstants.UNBOUNDED,itemComplexType);
+      entryComplexType.getSequence().getParticle().add(objectFactory.createElement(itemElement));
+    }
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      entryComplexType.getAttributeOrAttributeGroup().add(createAttribute(ATTRIBUTE_NAME_VALUE,valueType,true,SUPPORTED));
+    }
+  }
+);
+  mapEntryElement.setComplexType(entryComplexType);
+  mapEntrySequence.getParticle().add(objectFactory.createElement(mapEntryElement));
+  return mapComplexType;
+}

@@ -29,19 +29,17 @@
         return;
       }
       defaultVisit(objectType);
-      if (importedTypes.get(objectType) != null) {
-        addImportedTypeRef(getType(importedTypes.get(objectType)),name,description,objectType,all);
-        return;
-      }
       if (ExpressionSupport.REQUIRED != expressionSupport) {
-        List<MetadataType> subTypes=subTypesMapping.getSubTypes(objectType);
-        if (!subTypes.isEmpty()) {
-          registerPojoSubtypes(name,description,objectType,clazz,subTypes,all);
+        if (importedTypes.get(objectType) != null) {
+          addImportedTypeRef(getType(importedTypes.get(objectType)),name,description,objectType,all);
         }
  else {
-          if (shouldGeneratePojoChildElements(clazz)) {
-            registerComplexTypeChildElement(all,name,description,objectType,false);
-          }
+          registerPojoType(objectType,description);
+          addAbstractTypeRef(name,description,objectType,all);
+        }
+        List<MetadataType> subTypes=subTypesMapping.getSubTypes(objectType);
+        if (!subTypes.isEmpty()) {
+          registerPojoSubtypes(objectType,subTypes);
         }
       }
  else {
@@ -59,10 +57,7 @@
       boolean isPojo=metadataType instanceof ObjectType;
       Class<?> clazz=getType(metadataType);
       boolean isPrimitive=clazz.isPrimitive() || ClassUtils.isPrimitiveWrapper(clazz);
-      return !isExpressionRequired && (isPrimitive || (isPojo && shouldGeneratePojoChildElements(clazz)) || (!isPojo && isInstantiable(clazz)));
-    }
-    private boolean shouldGeneratePojoChildElements(    Class<?> type){
-      return isInstantiable(type) && !getExposedFields(type).isEmpty();
+      return !isExpressionRequired && (isPrimitive || (isPojo && isInstantiableWithParameters(clazz)) || (!isPojo && isInstantiable(clazz)));
     }
     private boolean shouldForceOptional(    Class<?> type){
       return !required || !subTypesMapping.getSubTypes(metadataType).isEmpty() || (isInstantiable(type) && ExpressionSupport.REQUIRED != expressionSupport);
