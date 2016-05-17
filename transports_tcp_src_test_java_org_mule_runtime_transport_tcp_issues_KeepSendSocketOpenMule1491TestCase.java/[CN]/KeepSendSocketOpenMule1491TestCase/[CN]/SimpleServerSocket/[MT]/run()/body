@@ -1,0 +1,26 @@
+{
+  try {
+    LengthProtocol protocol=new LengthProtocol();
+    while (true) {
+      Socket socket=server.accept();
+      logger.debug("have connection " + count);
+      count.incrementAndGet();
+      InputStream stream=new BufferedInputStream(socket.getInputStream());
+      while (true) {
+        Object read=protocol.read(stream);
+        if (null == read) {
+          break;
+        }
+        String msg=new String((byte[])read);
+        logger.debug("read: " + msg);
+        logger.debug("writing reply");
+        protocol.write(socket.getOutputStream(),"ok");
+      }
+    }
+  }
+ catch (  Exception e) {
+    if (running.get()) {
+      throw new RuntimeException(e);
+    }
+  }
+}

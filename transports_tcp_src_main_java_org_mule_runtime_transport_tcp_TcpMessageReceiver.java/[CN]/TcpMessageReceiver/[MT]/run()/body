@@ -1,0 +1,35 @@
+{
+  while (!disposing.get()) {
+    if (connector.isStarted() && !disposing.get()) {
+      try {
+        retryTemplate.execute(new RetryCallback(){
+          @Override public void doWork(          RetryContext context) throws Exception {
+            Socket socket=null;
+            try {
+              socket=serverSocket.accept();
+            }
+ catch (            Exception e) {
+              if (!connector.isDisposed() && !disposing.get()) {
+                throw new EndpointConnectException(e,null);
+              }
+            }
+            if (socket != null) {
+              Work work=createWork(socket);
+              getWorkManager().scheduleWork(work,WorkManager.INDEFINITE,null,connector);
+            }
+          }
+          @Override public String getWorkDescription(){
+            return getConnectionDescription();
+          }
+          @Override public Connector getWorkOwner(){
+            return getEndpoint().getConnector();
+          }
+        }
+,getWorkManager());
+      }
+ catch (      Exception e) {
+        getEndpoint().getMuleContext().getExceptionListener().handleException(e);
+      }
+    }
+  }
+}

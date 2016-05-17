@@ -1,0 +1,23 @@
+{
+  try {
+    int limit=getLimit();
+    byte[] buffer=new byte[bufferSize];
+    int len;
+    int remain=remaining(limit,limit,0);
+    int total=0;
+    boolean repeat;
+    do {
+      len=copy(is,buffer,os,remain);
+      total+=len;
+      remain=remaining(limit,remain,len);
+      repeat=EOF != len && remain > 0 && isRepeat(len,is.available());
+      if (len > 0 && len < buffer.length) {
+        os.flush();
+      }
+    }
+ while (repeat);
+  }
+  finally {
+    is.close();
+  }
+}

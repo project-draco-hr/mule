@@ -1,0 +1,32 @@
+{
+  final TcpConnector connector=(TcpConnector)endpoint.getConnector();
+  DataInputStream underlyingIs=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+  TcpInputStream tis=new TcpInputStream(underlyingIs){
+    @Override public void close() throws IOException {
+      try {
+        connector.releaseSocket(socket,endpoint);
+      }
+ catch (      IOException e) {
+        throw e;
+      }
+catch (      Exception e) {
+        IOException e2=new IOException();
+        e2.initCause(e);
+        throw e2;
+      }
+    }
+  }
+;
+  int soTimeout=endpoint.getResponseTimeout() != 0 ? endpoint.getResponseTimeout() : timeout;
+  if (soTimeout >= 0) {
+    socket.setSoTimeout(soTimeout);
+  }
+  try {
+    return connector.getTcpProtocol().read(tis);
+  }
+  finally {
+    if (!tis.isStreaming()) {
+      tis.close();
+    }
+  }
+}

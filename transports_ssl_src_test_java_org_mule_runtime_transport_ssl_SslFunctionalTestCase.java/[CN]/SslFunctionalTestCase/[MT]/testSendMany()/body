@@ -1,0 +1,15 @@
+{
+  MuleClient client=muleContext.getClient();
+  for (int i=0; i < NUM_MESSAGES; ++i) {
+    MuleMessage result=client.send("sendManyEndpoint",TEST_MESSAGE,null);
+    assertEquals(TEST_MESSAGE + " Received",getPayloadAsString(result));
+  }
+  Flow c=(Flow)muleContext.getRegistry().lookupFlowConstruct("testComponent2");
+  Object ftc=getComponent(c);
+  assertNotNull("Functional Test Service not found in the model.",ftc);
+  assertTrue("Service should be a FunctionalTestComponent",ftc instanceof FunctionalTestComponent);
+  EventCallback cc=((FunctionalTestComponent)ftc).getEventCallback();
+  assertNotNull("EventCallback is null",cc);
+  assertTrue("EventCallback should be a CounterCallback",cc instanceof CounterCallback);
+  assertEquals(NUM_MESSAGES,((CounterCallback)cc).getCallbackCount());
+}
