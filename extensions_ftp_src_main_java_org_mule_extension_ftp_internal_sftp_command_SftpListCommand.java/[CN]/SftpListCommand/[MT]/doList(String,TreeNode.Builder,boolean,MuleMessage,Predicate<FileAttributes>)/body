@@ -1,0 +1,18 @@
+{
+  LOGGER.debug("Listing directory {}",path);
+  for (  SftpFileAttributes file : client.list(path)) {
+    if (isVirtualDirectory(file.getName()) || !matcher.test(file)) {
+      continue;
+    }
+    if (file.isDirectory()) {
+      TreeNode.Builder childNodeBuilder=forDirectory(file);
+      treeNodeBuilder.addChild(childNodeBuilder);
+      if (recursive) {
+        doList(file.getPath(),childNodeBuilder,recursive,message,matcher);
+      }
+    }
+ else {
+      treeNodeBuilder.addChild(forFile(fileSystem.read(message,file.getPath(),false)));
+    }
+  }
+}

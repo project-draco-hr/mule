@@ -1,0 +1,20 @@
+{
+  FileAttributes targetFile=command.getFile(target.toString());
+  if (targetFile != null) {
+    if (overwrite) {
+      fileSystem.delete(targetFile.getPath());
+    }
+ else {
+      throw command.exception(format("Cannot copy file '%s' to path '%s' because it already exists",source.getPath(),target));
+    }
+  }
+  try (InputStream inputStream=fileSystem.retrieveFileContent(source)){
+    if (inputStream == null) {
+      throw command.exception(format("Could not read file '%s' while trying to copy it to remote path '%s'",source.getPath(),target));
+    }
+    writeCopy(target.toString(),inputStream,overwrite,writerConnection,event);
+  }
+ catch (  Exception e) {
+    throw command.exception(format("Found exception while trying to copy file '%s' to remote path '%s'",source.getPath(),target),e);
+  }
+}

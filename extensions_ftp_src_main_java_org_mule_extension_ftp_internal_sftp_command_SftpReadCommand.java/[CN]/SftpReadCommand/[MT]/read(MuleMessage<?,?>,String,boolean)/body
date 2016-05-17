@@ -1,0 +1,21 @@
+{
+  FtpFileAttributes attributes=getExistingFile(filePath);
+  if (attributes.isDirectory()) {
+    throw cannotReadDirectoryException(Paths.get(attributes.getPath()));
+  }
+  Path path=Paths.get(attributes.getPath());
+  PathLock pathLock;
+  if (lock) {
+    pathLock=fileSystem.lock(path);
+  }
+ else {
+    fileSystem.verifyNotLocked(path);
+    pathLock=new NullPathLock();
+  }
+  try {
+    return new DefaultMuleMessage(SftpInputStream.newInstance(config,attributes,pathLock),fileSystem.getFileMessageDataType(message.getDataType(),attributes),attributes).asNewMessage();
+  }
+ catch (  ConnectionException e) {
+    throw exception("Could not obtain connection to fetch file " + path,e);
+  }
+}

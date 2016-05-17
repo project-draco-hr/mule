@@ -1,0 +1,24 @@
+{
+  String cwd=getCurrentWorkingDirectory();
+  Stack<Path> fragments=new Stack<>();
+  try {
+    for (int i=directoryPath.getNameCount(); i >= 0; i--) {
+      Path subPath=Paths.get("/").resolve(directoryPath.subpath(0,i));
+      if (tryChangeWorkingDirectory(subPath.toString())) {
+        break;
+      }
+      fragments.push(subPath);
+    }
+    while (!fragments.isEmpty()) {
+      Path fragment=fragments.pop();
+      makeDirectory(fragment.toString());
+      changeWorkingDirectory(fragment);
+    }
+  }
+ catch (  Exception e) {
+    throw exception("Found exception trying to recursively create directory " + directoryPath,e);
+  }
+ finally {
+    changeWorkingDirectory(cwd);
+  }
+}

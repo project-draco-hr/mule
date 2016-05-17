@@ -1,0 +1,22 @@
+{
+  LOGGER.debug("Preparing to delete directory '{}'",path);
+  for (  FileAttributes file : client.list(path)) {
+    final String filePath=file.getPath();
+    if (isVirtualDirectory(file.getName())) {
+      continue;
+    }
+    if (file.isDirectory()) {
+      deleteDirectory(filePath);
+    }
+ else {
+      deleteFile(filePath);
+    }
+  }
+  Path directoryPath=Paths.get(path);
+  Path directoryFragment=directoryPath.getName(directoryPath.getNameCount() - 1);
+  if (isVirtualDirectory(directoryFragment.getFileName().toString())) {
+    path=Paths.get("/").resolve(directoryPath.subpath(0,directoryPath.getNameCount() - 1)).toAbsolutePath().toString();
+  }
+  client.deleteDirectory(path);
+  logDelete(path);
+}

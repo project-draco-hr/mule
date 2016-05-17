@@ -1,0 +1,37 @@
+{
+  FileAttributes sourceFile=getExistingFile(sourcePath);
+  Path targetPath=resolvePath(target);
+  FileAttributes targetFile=getFile(targetPath.toString());
+  if (targetFile != null) {
+    if (targetFile.isDirectory()) {
+      if (sourceFile.isDirectory() && sourceFile.getName().equals(targetFile.getName()) && !overwrite) {
+        throw alreadyExistsException(targetPath);
+      }
+ else {
+        targetPath=targetPath.resolve(sourceFile.getName());
+      }
+    }
+ else     if (!overwrite) {
+      throw alreadyExistsException(targetPath);
+    }
+  }
+ else {
+    targetFile=getFile(targetPath.getParent().toString());
+    if (targetFile != null) {
+      targetPath=targetPath.getParent().resolve(targetPath.getFileName());
+    }
+ else {
+      if (createParentDirectory) {
+        mkdirs(targetPath);
+        targetPath=targetPath.resolve(sourceFile.getName());
+      }
+ else {
+        throw new IllegalArgumentException(String.format("Can't copy '%s' to '%s' because the destination path " + "doesn't exists",sourceFile.getPath(),targetPath.toAbsolutePath()));
+      }
+    }
+  }
+  final String cwd=getCurrentWorkingDirectory();
+  delegate.doCopy(sourceFile,targetPath,overwrite,event);
+  LOGGER.debug("Copied '{}' to '{}'",sourceFile,targetPath);
+  changeWorkingDirectory(cwd);
+}
