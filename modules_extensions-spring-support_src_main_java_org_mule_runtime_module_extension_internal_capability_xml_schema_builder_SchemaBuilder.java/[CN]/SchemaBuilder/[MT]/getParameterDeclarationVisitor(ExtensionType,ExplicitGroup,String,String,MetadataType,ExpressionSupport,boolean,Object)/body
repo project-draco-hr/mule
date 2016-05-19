@@ -3,7 +3,7 @@
     private boolean forceOptional=false;
     @Override public void visitArrayType(    ArrayType arrayType){
       MetadataType genericType=arrayType.getType();
-      forceOptional=shouldForceOptional(getType(genericType));
+      forceOptional=shouldForceOptional(genericType);
       defaultVisit(arrayType);
       if (shouldGenerateDataTypeChildElements(genericType,expressionSupport)) {
         generateCollectionElement(all,name,description,arrayType,isRequired(true,required));
@@ -11,7 +11,7 @@
     }
     @Override public void visitDictionary(    DictionaryType dictionaryType){
       MetadataType keyType=dictionaryType.getKeyType();
-      forceOptional=shouldForceOptional(getType(keyType));
+      forceOptional=shouldForceOptional(keyType);
       defaultVisit(dictionaryType);
       if (shouldGenerateDataTypeChildElements(keyType,expressionSupport)) {
         generateMapElement(all,name,description,dictionaryType,isRequired(true,required));
@@ -19,7 +19,7 @@
     }
     @Override public void visitObject(    ObjectType objectType){
       final Class<?> clazz=getType(objectType);
-      forceOptional=shouldForceOptional(clazz);
+      forceOptional=shouldForceOptional(objectType);
       if (TlsContextFactory.class.isAssignableFrom(clazz)) {
         addTlsSupport(extensionType,all);
         return;
@@ -49,18 +49,8 @@
     @Override protected void defaultVisit(    MetadataType metadataType){
       extensionType.getAttributeOrAttributeGroup().add(createAttribute(name,description,metadataType,defaultValue,isRequired(forceOptional,required),expressionSupport));
     }
-    private boolean shouldGenerateDataTypeChildElements(    MetadataType metadataType,    ExpressionSupport expressionSupport){
-      if (metadataType == null) {
-        return false;
-      }
-      boolean isExpressionRequired=ExpressionSupport.REQUIRED == expressionSupport;
-      boolean isPojo=metadataType instanceof ObjectType;
-      Class<?> clazz=getType(metadataType);
-      boolean isPrimitive=clazz.isPrimitive() || ClassUtils.isPrimitiveWrapper(clazz);
-      return !isExpressionRequired && (isPrimitive || (isPojo && isInstantiableWithParameters(clazz)) || (!isPojo && isInstantiable(clazz)));
-    }
-    private boolean shouldForceOptional(    Class<?> type){
-      return !required || !subTypesMapping.getSubTypes(metadataType).isEmpty() || (isInstantiable(type) && ExpressionSupport.REQUIRED != expressionSupport);
+    private boolean shouldForceOptional(    MetadataType type){
+      return !required || !subTypesMapping.getSubTypes(type).isEmpty() || (isInstantiable(getType(type)) && ExpressionSupport.REQUIRED != expressionSupport);
     }
     private boolean isRequired(    boolean forceOptional,    boolean required){
       return !forceOptional && required;
