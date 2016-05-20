@@ -1,0 +1,14 @@
+{
+  Object comparatorClassName=getEndpoint().getProperty(COMPARATOR_CLASS_NAME_PROPERTY);
+  if (comparatorClassName != null) {
+    Object reverseProperty=this.getEndpoint().getProperty(COMPARATOR_REVERSE_ORDER_PROPERTY);
+    boolean reverse=false;
+    if (reverseProperty != null) {
+      reverse=Boolean.valueOf((String)reverseProperty);
+    }
+    Class<?> clazz=endpoint.getMuleContext().getExecutionClassLoader().loadClass(comparatorClassName.toString());
+    Comparator<File> comparator=(Comparator<File>)clazz.newInstance();
+    return reverse ? new ReverseComparator(comparator) : comparator;
+  }
+  return null;
+}

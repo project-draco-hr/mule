@@ -1,0 +1,27 @@
+{
+  try {
+    executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
+      @Override public MuleEvent process() throws Exception {
+        moveAndDelete(sourceFile,destinationFile,originalSourceFileName,originalSourceDirectory,finalMessage);
+        return null;
+      }
+    }
+);
+    deleteFileIfRequired(sourceFile,destinationFile);
+  }
+ catch (  MessagingException e) {
+    if (e.causedRollback()) {
+      rollbackFileMoveIfRequired(originalSourceFile,sourceFile);
+    }
+ else {
+      deleteFileIfRequired(sourceFile,destinationFile);
+    }
+  }
+catch (  Exception e) {
+    rollbackFileMoveIfRequired(originalSourceFile,sourceFile);
+    getEndpoint().getMuleContext().getExceptionListener().handleException(e);
+  }
+ finally {
+    removeProcessingMark(originalSourceFile);
+  }
+}

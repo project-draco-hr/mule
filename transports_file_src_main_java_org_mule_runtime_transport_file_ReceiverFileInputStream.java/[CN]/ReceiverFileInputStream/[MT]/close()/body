@@ -1,0 +1,18 @@
+{
+  super.close();
+  if (!isStreamProcessingError() && !alreadyClosed.getAndSet(true)) {
+    if (moveToOnClose != null) {
+      if (!FileUtils.moveFileWithCopyFallback(currentFile,moveToOnClose)) {
+        logger.warn(String.format("Failed to move file from %s to %s\n",currentFile.getPath(),moveToOnClose.getPath()));
+      }
+    }
+ else     if (deleteOnClose) {
+      if (!currentFile.delete()) {
+        throw new IOException(new DefaultMuleException(FileMessages.failedToDeleteFile(currentFile)));
+      }
+    }
+  }
+  if (closeListener != null && !alreadyNotified.getAndSet(true)) {
+    closeListener.fileClose(currentFile);
+  }
+}

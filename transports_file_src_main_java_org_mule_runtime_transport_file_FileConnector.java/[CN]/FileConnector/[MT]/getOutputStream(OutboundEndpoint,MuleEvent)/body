@@ -1,0 +1,41 @@
+{
+  MuleMessage message=event.getMessage();
+  String address=endpoint.getEndpointURI().getAddress();
+  String writeToDirectory=message.getOutboundProperty(FileConnector.PROPERTY_WRITE_TO_DIRECTORY);
+  if (writeToDirectory == null) {
+    writeToDirectory=getWriteToDirectory();
+  }
+  if (writeToDirectory != null) {
+    address=getFilenameParser().getFilename(event,writeToDirectory);
+  }
+  String filename;
+  String outPattern=(String)endpoint.getProperty(FileConnector.PROPERTY_OUTPUT_PATTERN);
+  if (outPattern == null) {
+    outPattern=message.getOutboundProperty(FileConnector.PROPERTY_OUTPUT_PATTERN);
+  }
+  if (outPattern == null) {
+    outPattern=getOutputPattern();
+  }
+  try {
+    if (outPattern != null) {
+      filename=generateFilename(event,outPattern);
+    }
+ else {
+      filename=message.getOutboundProperty(FileConnector.PROPERTY_FILENAME);
+      if (filename == null) {
+        filename=generateFilename(event,null);
+      }
+    }
+    if (filename == null) {
+      throw new IOException("Filename is null");
+    }
+    File file=FileUtils.createFile(address + "/" + filename);
+    if (logger.isInfoEnabled()) {
+      logger.info("Writing file to: " + file.getAbsolutePath());
+    }
+    return new FileOutputStream(file,isOutputAppend());
+  }
+ catch (  IOException e) {
+    throw new DispatchException(CoreMessages.streamingFailedNoStream(),event,endpoint,e);
+  }
+}

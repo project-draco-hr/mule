@@ -1,0 +1,14 @@
+{
+  File target=initForRequest();
+  Object relay=muleContext.getRegistry().lookupObject("relay");
+  assertNotNull(relay);
+  String url=fileToUrl(target) + "?connector=receiveConnector";
+  logger.debug(url);
+  InboundEndpoint endpoint=getEndpointFactory().getInboundEndpoint(url);
+  ((CompositeMessageSource)((Flow)relay).getMessageSource()).addSource(endpoint);
+  ((Stoppable)relay).stop();
+  ((Startable)relay).start();
+  MuleClient client=muleContext.getClient();
+  MuleMessage message=client.request("receive",3000);
+  checkReceivedMessage(message);
+}

@@ -1,0 +1,17 @@
+{
+  inputDir=getFileInsideWorkingDirectory("temp/input-streaming-and-async-processing-strategy");
+  inputFile=createDataFile(inputDir,"test1.txt");
+  BeforeCloseStream.releaseLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
+  assertThat(inputFile.exists(),is(true));
+  BeforeCloseStream.awaitLatch.release();
+  AfterCloseStream.releaseLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
+  pollingProber.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      return !inputFile.exists();
+    }
+    @Override public String describeFailure(){
+      return "input file should be deleted";
+    }
+  }
+);
+}

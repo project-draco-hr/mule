@@ -1,0 +1,27 @@
+{
+  when(mockInboundEndpoint.getConnector()).thenReturn(mockFileConnector);
+  when(mockInboundEndpoint.getMuleContext()).thenReturn(mockMuleContext);
+  when(mockInboundEndpoint.getFilter()).thenReturn(null);
+  when(mockFileConnector.createMuleMessageFactory()).thenReturn(mockMessageFactory);
+  mockMessageFactory=new FileMuleMessageFactory();
+  when(mockMessage.getProperty(MuleProperties.MULE_FORCE_SYNC_PROPERTY,PropertyScope.INBOUND,Boolean.FALSE)).thenReturn(true);
+  when(mockMessage.getInboundProperty(MuleProperties.MULE_ROOT_MESSAGE_ID_PROPERTY)).thenReturn(UUID.getUUID());
+  when(mockHandledMessagingException.getEvent()).thenReturn(mockMuleEvent);
+  when(mockUnhandledMessagingException.getEvent()).thenReturn(mockMuleEvent);
+  when(mockMuleEvent.getFlowConstruct().getExceptionListener()).thenReturn(mockMessagingExceptionHandler);
+  when(mockHandledMessagingException.causedRollback()).thenReturn(false);
+  when(mockUnhandledMessagingException.causedRollback()).thenReturn(true);
+  when(mockMessagingExceptionHandler.handleException(any(Exception.class),any(MuleEvent.class))).thenAnswer(new Answer<Object>(){
+    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      if (invocationOnMock.getArguments()[0] == mockHandledMessagingException) {
+        return mockMuleEvent;
+      }
+ else {
+        throw (Throwable)invocationOnMock.getArguments()[0];
+      }
+    }
+  }
+);
+  when(mockInboundEndpoint.getMuleContext().getRegistry().get(MuleProperties.OBJECT_DEFAULT_MESSAGE_PROCESSING_MANAGER)).thenReturn(mockMessageManager);
+  when(mockInboundEndpoint.getMuleContext().getRegistry().get(MuleProperties.OBJECT_STORE_MANAGER)).thenReturn(mockObjectStoreManager);
+}

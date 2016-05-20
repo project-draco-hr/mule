@@ -1,0 +1,73 @@
+{
+  File file=FileUtils.newFile(endpoint.getEndpointURI().getAddress());
+  File result=null;
+  if (file.exists()) {
+    if (file.isFile()) {
+      result=file;
+    }
+ else     if (file.isDirectory()) {
+      if (fileFilter != null) {
+        result=FileMessageDispatcher.getNextFile(endpoint.getEndpointURI().getAddress(),fileFilter);
+      }
+ else {
+        result=FileMessageDispatcher.getNextFile(endpoint.getEndpointURI().getAddress(),filenameFilter);
+      }
+    }
+    if (result != null) {
+      boolean checkFileAge=fileConnector.getCheckFileAge();
+      if (checkFileAge) {
+        long fileAge=fileConnector.getFileAge();
+        long lastMod=result.lastModified();
+        long now=System.currentTimeMillis();
+        long thisFileAge=now - lastMod;
+        if (thisFileAge < fileAge) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("The file has not aged enough yet, will return nothing for: " + result.getCanonicalPath());
+          }
+          return null;
+        }
+      }
+      String originalSourceFileName=result.getName();
+      String originalSourceDirectory=result.getParent();
+      File workFile=null;
+      if (workDir != null) {
+        String workFileName=formatUsingFilenameParser(originalSourceFileName,originalSourceDirectory,workFileNamePattern);
+        workFile=FileUtils.newFile(workDir,workFileName);
+        fileConnector.move(result,workFile);
+        result=workFile;
+      }
+      File destinationFile=null;
+      String movDir=getMoveDirectory();
+      if (movDir != null) {
+        String destinationFileName=originalSourceFileName;
+        String moveToPattern=getMoveToPattern();
+        if (moveToPattern != null) {
+          destinationFileName=formatUsingFilenameParser(originalSourceFileName,originalSourceDirectory,moveToPattern);
+        }
+        destinationFile=FileUtils.newFile(movDir,destinationFileName);
+      }
+      MuleMessage returnMessage=null;
+      String encoding=endpoint.getEncoding();
+      try {
+        if (fileConnector.isStreaming()) {
+          ReceiverFileInputStream receiverStream=new ReceiverFileInputStream(result,fileConnector.isAutoDelete(),destinationFile);
+          returnMessage=createMuleMessage(receiverStream,encoding);
+        }
+ else {
+          returnMessage=createMuleMessage(result,encoding);
+        }
+      }
+ catch (      FileNotFoundException e) {
+        logger.error("File being read disappeared!",e);
+        return null;
+      }
+      returnMessage.setProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalSourceFileName,PropertyScope.INBOUND);
+      returnMessage.setProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalSourceDirectory,PropertyScope.INBOUND);
+      if (!fileConnector.isStreaming()) {
+        moveOrDelete(result,destinationFile);
+      }
+      return returnMessage;
+    }
+  }
+  return null;
+}

@@ -1,0 +1,35 @@
+{
+  File[] files;
+  File file=FileUtils.newFile(dir);
+  File result=null;
+  try {
+    if (file.exists()) {
+      if (file.isFile()) {
+        result=file;
+      }
+ else       if (file.isDirectory()) {
+        if (filter != null) {
+          if (filter instanceof FileFilter) {
+            files=file.listFiles((FileFilter)filter);
+          }
+ else           if (filter instanceof FilenameFilter) {
+            files=file.listFiles((FilenameFilter)filter);
+          }
+ else {
+            throw new DefaultMuleException(FileMessages.invalidFilter(filter));
+          }
+        }
+ else {
+          files=file.listFiles();
+        }
+        if (files.length > 0) {
+          result=getFirstFile(files);
+        }
+      }
+    }
+    return result;
+  }
+ catch (  Exception e) {
+    throw new DefaultMuleException(FileMessages.errorWhileListingFiles(),e);
+  }
+}
