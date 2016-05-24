@@ -6,7 +6,13 @@
   final String providerName=String.format("%s-%s",extensionModel.getName(),implicitConfigurationModel.getName());
   final ResolverSet resolverSet=buildImplicitResolverSet(implicitConfigurationModel,event.getMuleContext().getExpressionManager());
   try {
-    return new ConfigurationInstanceFactory<C>(implicitConfigurationModel,resolverSet).createConfiguration(providerName,event);
+    ConfigurationInstance<C> configurationInstance=new ConfigurationInstanceFactory<C>(implicitConfigurationModel,resolverSet).createConfiguration(providerName,event);
+    String configName=configurationInstance.getName();
+    RuntimeConfigurationModel configurationModel=configurationInstance.getModel();
+    if (resolverSet.isDynamic()) {
+      return new DynamicConfigurationProvider<>(configName,configurationModel,resolverSet,new ImplicitConnectionProviderValueResolver(configName,configurationModel),ImmutableExpirationPolicy.getDefault(new TimeSupplier()));
+    }
+    return new StaticConfigurationProvider<>(configName,configurationModel,configurationInstance);
   }
  catch (  MuleException e) {
     throw new MuleRuntimeException(e);
