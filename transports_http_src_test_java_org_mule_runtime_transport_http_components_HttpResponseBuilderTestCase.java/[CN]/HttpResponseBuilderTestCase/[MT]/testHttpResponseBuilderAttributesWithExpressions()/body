@@ -1,0 +1,14 @@
+{
+  HttpResponseBuilder httpResponseBuilder=createHttpResponseBuilder();
+  DefaultMuleMessage muleMessage=new DefaultMuleMessage(HTTP_BODY,muleContext);
+  when(mockEvent.getMessage()).thenReturn(muleMessage);
+  httpResponseBuilder.setStatus(HEADER_STATUS);
+  httpResponseBuilder.setContentType(HEADER_CONTENT_TYPE);
+  when(mockExpressionManager.parse(HEADER_STATUS,mockEvent)).thenReturn(String.valueOf(HttpConstants.SC_INTERNAL_SERVER_ERROR));
+  when(mockExpressionManager.parse(HEADER_CONTENT_TYPE,mockEvent)).thenReturn("text/html");
+  HttpResponse httpResponse=(HttpResponse)httpResponseBuilder.process(mockEvent).getMessage().getPayload();
+  assertEquals(HTTP_BODY,httpResponse.getBodyAsString());
+  assertEquals(HttpConstants.HTTP11,httpResponse.getHttpVersion().toString());
+  assertEquals(HttpConstants.SC_INTERNAL_SERVER_ERROR,httpResponse.getStatusCode());
+  validateHeader(httpResponse.getHeaders(),HttpConstants.HEADER_CONTENT_TYPE,"text/html");
+}

@@ -1,0 +1,18 @@
+{
+  super(endpoint);
+  this.httpConnector=(HttpConnector)endpoint.getConnector();
+  List<Transformer> ts=httpConnector.getDefaultOutboundTransformers(null);
+  if (ts.size() == 1) {
+    this.sendTransformer=ts.get(0);
+  }
+ else   if (ts.size() == 0) {
+    this.sendTransformer=new ObjectToHttpClientMethodRequest();
+    this.sendTransformer.setMuleContext(getEndpoint().getMuleContext());
+    if (this.sendTransformer instanceof EndpointAwareTransformer) {
+      ((EndpointAwareTransformer)this.sendTransformer).setEndpoint(endpoint);
+    }
+  }
+ else {
+    this.sendTransformer=new TransformerChain(ts);
+  }
+}

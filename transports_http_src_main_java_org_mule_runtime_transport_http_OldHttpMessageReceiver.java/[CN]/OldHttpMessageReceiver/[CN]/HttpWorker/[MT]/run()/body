@@ -1,0 +1,60 @@
+{
+  long keepAliveTimeout=((TcpConnector)connector).getKeepAliveTimeout();
+  try {
+    do {
+      conn.setKeepAlive(false);
+      if (keepAliveTimeout > 0) {
+        ((HttpConnector)connector).getKeepAliveMonitor().addExpirable(keepAliveTimeout,TimeUnit.MILLISECONDS,this);
+      }
+      final HttpRequest request=conn.readRequest();
+      if (request == null) {
+        break;
+      }
+      try {
+        HttpResponse httpResponse=processRequest(request);
+        conn.writeResponse(httpResponse);
+      }
+ catch (      Exception e) {
+        MuleEvent response=null;
+        if (e instanceof MessagingException) {
+          response=((MessagingException)e).getEvent();
+        }
+ else {
+          getEndpoint().getMuleContext().getExceptionListener().handleException(e);
+        }
+        if (response != null && response.getMessage().getExceptionPayload() != null && response.getMessage().getExceptionPayload().getException() instanceof MessagingException) {
+          e=(Exception)response.getMessage().getExceptionPayload().getException();
+        }
+        String temp=ExceptionHelper.getErrorMapping(connector.getProtocol(),e.getClass(),flowConstruct.getMuleContext());
+        int httpStatus=Integer.valueOf(temp);
+        if (e instanceof MessagingException) {
+          MuleEvent event=((MessagingException)e).getEvent();
+          httpStatus=event.getMessage().getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY) != null ? Integer.valueOf(event.getMessage().getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY).toString()) : httpStatus;
+          conn.writeResponse(buildFailureResponse(event,e.getMessage(),httpStatus));
+        }
+ else {
+          conn.writeResponse(buildFailureResponse(request.getRequestLine().getHttpVersion(),httpStatus,e.getMessage()));
+        }
+        break;
+      }
+ finally {
+        ((HttpConnector)connector).getKeepAliveMonitor().removeExpirable(this);
+        conn.reset();
+        if (request.getBody() != null) {
+          request.getBody().close();
+        }
+      }
+    }
+ while (conn.isKeepAlive());
+  }
+ catch (  Exception e) {
+    getEndpoint().getMuleContext().getExceptionListener().handleException(e);
+  }
+ finally {
+    logger.debug("Closing HTTP connection.");
+    if (conn.isOpen()) {
+      conn.close();
+      conn=null;
+    }
+  }
+}

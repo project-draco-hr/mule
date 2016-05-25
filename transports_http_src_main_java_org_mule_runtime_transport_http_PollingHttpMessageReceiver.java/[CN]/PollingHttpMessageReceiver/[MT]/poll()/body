@@ -1,0 +1,35 @@
+{
+  MuleContext muleContext=getEndpoint().getMuleContext();
+  if (outboundEndpoint == null) {
+    EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(endpoint);
+    endpointBuilder.setMessageProcessors(Collections.<MessageProcessor>emptyList());
+    endpointBuilder.setResponseMessageProcessors(Collections.<MessageProcessor>emptyList());
+    endpointBuilder.setMessageProcessors(Collections.<MessageProcessor>emptyList());
+    endpointBuilder.setResponseMessageProcessors(Collections.<MessageProcessor>emptyList());
+    endpointBuilder.setExchangePattern(MessageExchangePattern.REQUEST_RESPONSE);
+    outboundEndpoint=getEndpointFactory(muleContext).getOutboundEndpoint(endpointBuilder);
+  }
+  MuleMessage request=new DefaultMuleMessage(StringUtils.EMPTY,outboundEndpoint.getProperties(),muleContext);
+  if (etag != null && checkEtag) {
+    request.setOutboundProperty(HttpConstants.HEADER_IF_NONE_MATCH,etag);
+  }
+  request.setOutboundProperty(HttpConnector.HTTP_METHOD_PROPERTY,"GET");
+  MuleEvent event=new DefaultMuleEvent(request,outboundEndpoint.getExchangePattern(),flowConstruct);
+  MuleEvent result=outboundEndpoint.process(event);
+  MuleMessage message=null;
+  if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
+    message=result.getMessage();
+  }
+  final int contentLength=message.getOutboundProperty(HttpConstants.HEADER_CONTENT_LENGTH,-1);
+  if (contentLength == 0 && discardEmptyContent) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Received empty message and ignoring from: " + endpoint.getEndpointURI());
+    }
+    return;
+  }
+  int status=message.getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,0);
+  etag=message.getOutboundProperty(HttpConstants.HEADER_ETAG);
+  if ((status != HttpConstants.SC_NOT_MODIFIED || !checkEtag)) {
+    routeMessage(message);
+  }
+}

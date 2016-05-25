@@ -4,7 +4,11 @@
       return accept(value.resolveValue(event));
     }
  else {
-      return accept(muleContext.getTransformationService().transform(event.getMessage(),DataTypeFactory.STRING).getPayload());
+      final MuleMessage transformedMessage=muleContext.getTransformationService().transform(event.getMessage(),DataTypeFactory.STRING);
+      if (isConsumable(event.getMessage().getDataType().getType())) {
+        event.setMessage(transformedMessage);
+      }
+      return accept(transformedMessage.getPayload());
     }
   }
  catch (  Exception e) {

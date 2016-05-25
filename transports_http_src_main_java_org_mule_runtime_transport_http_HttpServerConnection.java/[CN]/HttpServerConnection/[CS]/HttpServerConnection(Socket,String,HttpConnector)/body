@@ -1,0 +1,21 @@
+{
+  super();
+  if (socket == null) {
+    throw new IllegalArgumentException("Socket may not be null");
+  }
+  this.socket=socket;
+  if (this.socket instanceof SSLSocket) {
+    ((SSLSocket)socket).addHandshakeCompletedListener(this);
+  }
+  setSocketTcpNoDelay(connector.isSendTcpNoDelay());
+  this.socket.setKeepAlive(connector.isKeepAlive());
+  if (connector.getReceiveBufferSize() != Connector.INT_VALUE_NOT_SET && socket.getReceiveBufferSize() != connector.getReceiveBufferSize()) {
+    socket.setReceiveBufferSize(connector.getReceiveBufferSize());
+  }
+  if (connector.getServerSoTimeout() != Connector.INT_VALUE_NOT_SET && socket.getSoTimeout() != connector.getServerSoTimeout()) {
+    socket.setSoTimeout(connector.getServerSoTimeout());
+  }
+  this.in=new BufferedInputStream(socket.getInputStream());
+  this.out=new DataOutputStream(socket.getOutputStream());
+  this.encoding=encoding;
+}

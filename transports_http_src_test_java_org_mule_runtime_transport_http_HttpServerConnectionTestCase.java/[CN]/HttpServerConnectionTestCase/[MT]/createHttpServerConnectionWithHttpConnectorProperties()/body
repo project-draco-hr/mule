@@ -1,0 +1,30 @@
+{
+  HttpConnector httpConnector=new HttpConnector(muleContext);
+  httpConnector.setSendTcpNoDelay(SEND_TCP_NO_DELAY);
+  httpConnector.setKeepAlive(KEEP_ALIVE);
+  httpConnector.setServerSoTimeout(SERVER_SO_TIMEOUT);
+  httpConnector.initialise();
+  ServerSocket serverSocket=null;
+  Socket clientServerSocket=null;
+  Socket serverClientSocket=null;
+  try {
+    serverSocket=httpConnector.getServerSocketFactory().createServerSocket(port1.getNumber(),TcpConnector.DEFAULT_BACKLOG,true);
+    clientServerSocket=new Socket("localhost",port1.getNumber());
+    serverClientSocket=serverSocket.accept();
+    HttpServerConnection conn=new HttpServerConnection(serverClientSocket,muleContext.getConfiguration().getDefaultEncoding(),httpConnector);
+    assertEquals(SEND_TCP_NO_DELAY,conn.isSocketTcpNoDelay());
+    assertEquals(KEEP_ALIVE,conn.isSocketKeepAlive());
+    assertEquals(SERVER_SO_TIMEOUT,conn.getSocketTimeout());
+  }
+  finally {
+    if (clientServerSocket != null) {
+      clientServerSocket.close();
+    }
+    if (serverClientSocket != null) {
+      serverClientSocket.close();
+    }
+    if (serverSocket != null) {
+      serverSocket.close();
+    }
+  }
+}

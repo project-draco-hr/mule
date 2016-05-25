@@ -1,0 +1,30 @@
+{
+  Map<String,Object> paramMap=new HashMap<String,Object>();
+  try {
+    String httpMethod=event.getMessage().getInboundProperty("http.method");
+    String contentType=event.getMessage().getInboundProperty(HEADER_CONTENT_TYPE);
+    boolean isGet=METHOD_GET.equalsIgnoreCase(httpMethod);
+    boolean isFormUrlEncoded=false;
+    if (contentType != null) {
+      isFormUrlEncoded=contentType.startsWith(FORM_URLENCODED_CONTENT_TYPE);
+    }
+    if (!(isGet || isFormUrlEncoded)) {
+      throw new Exception("The HTTP method or content type is unsupported!");
+    }
+    String queryString;
+    if (isGet) {
+      URI uri=new URI(event.getMessageAsString(outputEncoding));
+      queryString=uri.getRawQuery();
+    }
+ else {
+      queryString=new String(event.getMessageAsString());
+    }
+    if (StringUtils.isNotBlank(queryString)) {
+      addQueryStringToParameterMap(queryString,paramMap,outputEncoding);
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+  return paramMap;
+}

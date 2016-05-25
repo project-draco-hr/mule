@@ -1,0 +1,20 @@
+{
+  DefaultMuleEvent event=getTestHttpEvent("");
+  MuleMessage message=event.getMessage();
+  MuleHttpServletResponse response=new MuleHttpServletResponse(event);
+  response.setStatus(404);
+  assertThat(message.getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY),is(404));
+  response.setStatus(200,"status message");
+  assertThat(message.getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY),is(200));
+  response.setContentType("application/octet-stream");
+  assertEquals("application/octet-stream",message.getOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE));
+  assertEquals("application/octet-stream",response.getContentType());
+  response.setHeader("X-Test","value");
+  assertTrue(response.containsHeader("X-Test"));
+  assertEquals("value",message.getOutboundProperty("X-Test"));
+  response.setDateHeader("X-Date",0);
+  assertEquals("Wed, 31 Dec 1969 00:00:00 GMT",message.getOutboundProperty("X-Date"));
+  response.sendRedirect("http://anotherplace");
+  assertEquals("http://anotherplace",message.getOutboundProperty("Location"));
+  assertThat(message.getOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY),is(302));
+}

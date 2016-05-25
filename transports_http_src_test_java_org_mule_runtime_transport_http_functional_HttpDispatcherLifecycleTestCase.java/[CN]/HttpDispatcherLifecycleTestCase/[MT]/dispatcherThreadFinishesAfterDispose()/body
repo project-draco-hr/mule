@@ -1,0 +1,20 @@
+{
+  MuleClient client=muleContext.getClient();
+  MuleMessage response=client.send("http://localhost:" + port.getValue(),TEST_MESSAGE,null);
+  assertThat(getPayloadAsString(response),equalTo(TEST_MESSAGE));
+  muleContext.dispose();
+  prober.check(new Probe(){
+    @Override public boolean isSatisfied(){
+      for (      Thread thread : Thread.getAllStackTraces().keySet()) {
+        if (thread.getName().startsWith("http.request.dispatch")) {
+          return false;
+        }
+      }
+      return true;
+    }
+    @Override public String describeFailure(){
+      return "Dispatcher thread was not stopped";
+    }
+  }
+);
+}

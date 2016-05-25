@@ -1,0 +1,24 @@
+{
+  super();
+  if (statusline == null) {
+    throw new IllegalArgumentException("Status line may not be null");
+  }
+  setStatusLine(HttpVersion.parse(statusline.getHttpVersion()),statusline.getStatusCode(),statusline.getReasonPhrase());
+  setHeaders(headers);
+  if (content != null) {
+    InputStream in=content;
+    Header contentLength=this.headers.getFirstHeader(HttpConstants.HEADER_CONTENT_LENGTH);
+    Header transferEncoding=this.headers.getFirstHeader(HttpConstants.HEADER_TRANSFER_ENCODING);
+    if (transferEncoding != null) {
+      if (transferEncoding.getValue().indexOf(HttpConstants.TRANSFER_ENCODING_CHUNKED) != -1) {
+        in=new ChunkedInputStream(in);
+      }
+    }
+ else     if (contentLength != null) {
+      long len=getContentLength();
+      if (len >= 0) {
+        in=new ContentLengthInputStream(in,len);
+      }
+    }
+  }
+}

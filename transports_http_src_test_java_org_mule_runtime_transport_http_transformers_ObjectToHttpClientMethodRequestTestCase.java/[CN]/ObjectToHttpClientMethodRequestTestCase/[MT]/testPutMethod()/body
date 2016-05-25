@@ -1,0 +1,12 @@
+{
+  final MuleMessage message=setupRequestContext("http://localhost:8080/services",HttpConstants.METHOD_PUT);
+  final String contentType="text/plain";
+  message.setPayload("I'm a payload");
+  message.setOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE,contentType);
+  final ObjectToHttpClientMethodRequest transformer=createTransformer();
+  final Object response=transformer.transform(message);
+  assertTrue(response instanceof PutMethod);
+  final HttpMethod httpMethod=(HttpMethod)response;
+  assertEquals(null,httpMethod.getQueryString());
+  assertEquals(contentType,httpMethod.getRequestHeader(HttpConstants.HEADER_CONTENT_TYPE).getValue());
+}

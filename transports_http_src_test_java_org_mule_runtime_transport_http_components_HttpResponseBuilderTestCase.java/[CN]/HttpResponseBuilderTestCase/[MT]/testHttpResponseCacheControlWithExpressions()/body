@@ -1,0 +1,18 @@
+{
+  HttpResponseBuilder httpResponseBuilder=createHttpResponseBuilder();
+  CacheControlHeader cacheControl=new CacheControlHeader();
+  cacheControl.setDirective(HEADER_DIRECTIVE);
+  cacheControl.setMaxAge(HEADER_MAX_AGE);
+  cacheControl.setMustRevalidate(HEADER_MUST_REVALIDATE);
+  cacheControl.setNoCache(HEADER_NO_CACHE);
+  cacheControl.setNoStore(HEADER_NO_STORE);
+  httpResponseBuilder.setCacheControl(cacheControl);
+  when(mockExpressionManager.parse(HEADER_DIRECTIVE,mockEvent)).thenReturn("public");
+  when(mockExpressionManager.parse(HEADER_MAX_AGE,mockEvent)).thenReturn("3600");
+  when(mockExpressionManager.parse(HEADER_MUST_REVALIDATE,mockEvent)).thenReturn("true");
+  when(mockExpressionManager.parse(HEADER_NO_CACHE,mockEvent)).thenReturn("true");
+  when(mockExpressionManager.parse(HEADER_NO_STORE,mockEvent)).thenReturn("true");
+  HttpResponse response=new HttpResponse();
+  httpResponseBuilder.setCacheControl(response,mockEvent);
+  assertEquals("public,no-cache,no-store,must-revalidate,max-age=3600",response.getFirstHeader(HttpConstants.HEADER_CACHE_CONTROL).getValue());
+}

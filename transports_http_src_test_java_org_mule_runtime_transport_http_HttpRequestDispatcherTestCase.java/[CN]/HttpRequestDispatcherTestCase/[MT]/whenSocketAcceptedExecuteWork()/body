@@ -1,0 +1,31 @@
+{
+  final HttpRequestDispatcher httpRequestDispatcher=new HttpRequestDispatcher(mockHttpConnector,mockRetryTemplate,mockServerSocket,mockWorkManager);
+  httpRequestDispatcher.requestHandOffExecutor=mockExecutor;
+  final Latch acceptCalledLath=new Latch();
+  sustituteLifecycleManager();
+  when(mockConnectorLifecycleManager.getState().isStarted()).thenReturn(true);
+  when(mockRetryTemplate.execute(any(RetryCallback.class),any(WorkManager.class))).thenAnswer(new Answer<RetryContext>(){
+    @Override public RetryContext answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      ((RetryCallback)invocationOnMock.getArguments()[0]).doWork(mockRetryContext);
+      return null;
+    }
+  }
+);
+  Mockito.doAnswer(new Answer<Object>(){
+    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      acceptCalledLath.release();
+      return null;
+    }
+  }
+).when(mockExecutor).execute(any(HttpRequestDispatcherWork.class));
+  Thread dispatcherThread=createDispatcherThread(httpRequestDispatcher);
+  dispatcherThread.start();
+  try {
+    if (!acceptCalledLath.await(500,TimeUnit.MILLISECONDS)) {
+      fail("Work should have been scheduled");
+    }
+  }
+  finally {
+    httpRequestDispatcher.disconnect();
+  }
+}

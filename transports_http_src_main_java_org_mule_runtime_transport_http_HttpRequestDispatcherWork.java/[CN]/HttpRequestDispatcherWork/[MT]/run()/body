@@ -1,0 +1,46 @@
+{
+  try {
+    long keepAliveTimeout=httpConnector.getKeepAliveTimeout();
+    String encoding=httpConnector.getMuleContext().getConfiguration().getDefaultEncoding();
+    httpServerConnection=new HttpServerConnection(socket,encoding,httpConnector);
+    do {
+      try {
+        httpServerConnection.setKeepAlive(false);
+        if (keepAliveTimeout > 0) {
+          httpConnector.getKeepAliveMonitor().addExpirable(keepAliveTimeout,TimeUnit.MILLISECONDS,this);
+        }
+        RequestLine requestLine=httpServerConnection.getRequestLine();
+        if (requestLine != null) {
+          try {
+            HttpMessageReceiver httpMessageReceiver=httpConnector.lookupReceiver(socket,requestLine);
+            httpMessageReceiver.processRequest(httpServerConnection);
+          }
+ catch (          NoReceiverForEndpointException e) {
+            httpServerConnection.writeFailureResponse(HttpConstants.SC_NOT_FOUND,HttpMessages.cannotBindToAddress(httpServerConnection.getFullUri()).toString());
+          }
+        }
+      }
+  finally {
+        httpConnector.getKeepAliveMonitor().removeExpirable(this);
+        httpServerConnection.reset();
+      }
+    }
+ while (httpServerConnection.isKeepAlive());
+  }
+ catch (  HttpMessageReceiver.EmptyRequestException e) {
+    logger.debug("Discarding request since content was empty");
+  }
+catch (  HttpMessageReceiver.FailureProcessingRequestException e) {
+    logger.debug("Closing socket due to failure during request processing");
+  }
+catch (  Exception e) {
+    httpConnector.getMuleContext().getExceptionListener().handleException(e);
+  }
+ finally {
+    logger.debug("Closing HTTP connection.");
+    if (httpServerConnection != null && httpServerConnection.isOpen()) {
+      httpServerConnection.close();
+      httpServerConnection=null;
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  HttpResponseBuilder httpResponseBuilder=createHttpResponseBuilder();
+  Map<String,Object> outboundProperties=new HashMap<String,Object>();
+  outboundProperties.put(HttpConstants.HEADER_AGE,"12");
+  outboundProperties.put(HttpConstants.HEADER_CACHE_CONTROL,"max-age=3600");
+  outboundProperties.put(MuleProperties.MULE_ENCODING_PROPERTY,"UTF-8");
+  Cookie[] cookies=new Cookie[2];
+  cookies[0]=new Cookie(null,"clientId","2");
+  cookies[1]=new Cookie(null,"category","premium");
+  outboundProperties.put(HttpConstants.HEADER_COOKIE_SET,cookies);
+  Set<String> propertyNames=outboundProperties.keySet();
+  when(mockMuleMessage.getOutboundPropertyNames()).thenReturn(propertyNames);
+  for (  String propertyName : propertyNames) {
+    when(mockMuleMessage.getOutboundProperty(propertyName)).thenReturn(outboundProperties.get(propertyName));
+  }
+  HttpResponse response=new HttpResponse();
+  httpResponseBuilder.copyOutboundProperties(response,mockMuleMessage);
+  Header[] headers=response.getHeaders();
+  for (  Header header : headers) {
+    if (HttpConstants.HEADER_COOKIE_SET.equals(header.getName())) {
+      if (header.getValue().startsWith(cookies[0].getName())) {
+        assertEquals(cookies[0].toString(),header.getValue());
+      }
+ else {
+        assertEquals(cookies[1].toString(),header.getValue());
+      }
+    }
+ else     if (header.getName().startsWith(HttpConstants.CUSTOM_HEADER_PREFIX)) {
+      assertEquals(outboundProperties.get(header.getName().substring(HttpConstants.CUSTOM_HEADER_PREFIX.length())),header.getValue());
+    }
+ else {
+      assertEquals(outboundProperties.get(header.getName()),header.getValue());
+    }
+  }
+}

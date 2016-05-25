@@ -1,0 +1,22 @@
+{
+  HttpResponseBuilder httpResponseBuilder=createHttpResponseBuilder();
+  CacheControlHeader cacheControl=new CacheControlHeader();
+  cacheControl.setMaxAge("3600");
+  httpResponseBuilder.setCacheControl(cacheControl);
+  Map<String,String> headers=new HashMap<String,String>();
+  headers.put(HttpConstants.HEADER_CACHE_CONTROL,"public");
+  headers.put(HttpConstants.HEADER_AGE,"12");
+  httpResponseBuilder.setHeaders(headers);
+  Map<String,Object> outboundProperties=new HashMap<String,Object>();
+  outboundProperties.put(HttpConstants.HEADER_CACHE_CONTROL,"no-cache");
+  outboundProperties.put(HttpConstants.HEADER_AGE,"20");
+  outboundProperties.put(HttpConstants.HEADER_LOCATION,"http://localhost:9090");
+  mockParse();
+  DefaultMuleMessage message=new DefaultMuleMessage(HTTP_BODY,outboundProperties,muleContext);
+  when(mockEvent.getMessage()).thenReturn(message);
+  HttpResponse httpResponse=(HttpResponse)httpResponseBuilder.process(mockEvent).getMessage().getPayload();
+  Header[] resultHeaders=httpResponse.getHeaders();
+  validateHeader(resultHeaders,HttpConstants.HEADER_CACHE_CONTROL,"max-age=3600,public");
+  validateHeader(resultHeaders,HttpConstants.HEADER_AGE,"12");
+  validateHeader(resultHeaders,HttpConstants.HEADER_LOCATION,"http://localhost:9090");
+}

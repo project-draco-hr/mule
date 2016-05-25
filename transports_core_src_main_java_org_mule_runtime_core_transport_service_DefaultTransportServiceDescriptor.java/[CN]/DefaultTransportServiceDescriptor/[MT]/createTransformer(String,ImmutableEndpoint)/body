@@ -1,5 +1,12 @@
 {
-  EndpointAwareTransformer newTransformer=new DefaultEndpointAwareTransformer((Transformer)ClassUtils.instanciateClass(className,ClassUtils.NO_ARGS,classLoader),SystemUtils.getDefaultEncoding(muleContext));
+  final Transformer innerTransformer=(Transformer)ClassUtils.instanciateClass(className,ClassUtils.NO_ARGS,classLoader);
+  EndpointAwareTransformer newTransformer;
+  if (innerTransformer instanceof MessageTransformer) {
+    newTransformer=new DefaultEndpointAwareMessageTransformer((MessageTransformer)innerTransformer,SystemUtils.getDefaultEncoding(muleContext));
+  }
+ else {
+    newTransformer=new DefaultEndpointAwareTransformer(innerTransformer,SystemUtils.getDefaultEncoding(muleContext));
+  }
   newTransformer.setMuleContext(muleContext);
   newTransformer.setName(newTransformer.getName() + "#" + newTransformer.hashCode());
   newTransformer.setEndpoint(endpoint);

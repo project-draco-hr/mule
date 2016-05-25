@@ -1,0 +1,18 @@
+{
+  HttpResponseBuilder httpResponseBuilder=createHttpResponseBuilder();
+  Map<String,String> headers=new HashMap<String,String>();
+  headers.put("Cache-Control",HEADER_CACHE_CONTROL);
+  headers.put("Expires",HEADER_EXPIRES);
+  headers.put("Location",HEADER_LOCATION);
+  httpResponseBuilder.setHeaders(headers);
+  when(mockExpressionManager.parse("Cache-Control",mockEvent)).thenReturn("Cache-Control");
+  when(mockExpressionManager.parse("Expires",mockEvent)).thenReturn("Expires");
+  when(mockExpressionManager.parse("Location",mockEvent)).thenReturn("Location");
+  when(mockExpressionManager.parse(HEADER_CACHE_CONTROL,mockEvent)).thenReturn("max-age=3600");
+  when(mockExpressionManager.isExpression(HEADER_EXPIRES)).thenReturn(true);
+  when(mockExpressionManager.evaluate(HEADER_EXPIRES,mockEvent)).thenReturn("Thu, 01 Dec 1994 16:00:00 GMT");
+  when(mockExpressionManager.parse(HEADER_LOCATION,mockEvent)).thenReturn("http://localhost:8080");
+  HttpResponse response=new HttpResponse();
+  httpResponseBuilder.setHeaders(response,mockEvent);
+  validateHeaders(response.getHeaders());
+}

@@ -1,0 +1,36 @@
+{
+  HttpMethod httpMethod=getMethod(event);
+  httpConnector.setupClientAuthorization(event,httpMethod,client,endpoint);
+  httpMethod.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,new MuleHttpMethodRetryHandler());
+  boolean releaseConn=false;
+  try {
+    httpMethod=execute(event,httpMethod);
+    DefaultExceptionPayload ep=null;
+    if (returnException(event,httpMethod)) {
+      ep=new DefaultExceptionPayload(new DispatchException(event,getEndpoint(),new HttpResponseException(httpMethod.getStatusText(),httpMethod.getStatusCode())));
+    }
+ else     if (httpMethod.getStatusCode() >= REDIRECT_STATUS_CODE_RANGE_START) {
+      try {
+        return handleRedirect(httpMethod,event);
+      }
+ catch (      Exception e) {
+        ep=new DefaultExceptionPayload(new DispatchException(event,getEndpoint(),e));
+        return getResponseFromMethod(httpMethod,ep);
+      }
+    }
+    releaseConn=httpMethod.getResponseBodyAsStream() == null;
+    return getResponseFromMethod(httpMethod,ep);
+  }
+ catch (  Exception e) {
+    releaseConn=true;
+    if (e instanceof DispatchException) {
+      throw (DispatchException)e;
+    }
+    throw new DispatchException(event,getEndpoint(),e);
+  }
+ finally {
+    if (releaseConn) {
+      httpMethod.releaseConnection();
+    }
+  }
+}

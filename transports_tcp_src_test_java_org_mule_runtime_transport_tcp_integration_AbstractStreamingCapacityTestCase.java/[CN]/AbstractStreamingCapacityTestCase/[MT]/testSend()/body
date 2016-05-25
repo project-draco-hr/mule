@@ -30,17 +30,4 @@
   logger.info("Waiting for up to " + pause + " seconds");
   latch.await(pause,TimeUnit.SECONDS);
   assertEquals(stream.summary(),message.get());
-  runtime.gc();
-  long freeEnd=runtime.freeMemory();
-  long delta=freeStart - freeEnd;
-  long timeEnd=System.currentTimeMillis();
-  double speed=size / (double)(timeEnd - timeStart) * 1000 / ONE_MB;
-  logger.info("Transfer speed " + speed + " MB/s ("+ size+ " B in "+ (timeEnd - timeStart)+ " ms)");
-  double expectPercent=10.5;
-  double usePercent=100.0 * delta / size;
-  logger.info("Memory delta " + delta + " B = "+ usePercent+ "%");
-  String assertMessage=String.format("Expected memory usage to be lower than %f%% but was %f%%",Double.valueOf(expectPercent),Double.valueOf(usePercent));
-  assertTrue(assertMessage,usePercent < expectPercent);
-  long maxEnd=runtime.maxMemory();
-  assertEquals("Max memory shifted",0,maxEnd - maxStart);
 }

@@ -1,0 +1,18 @@
+{
+  if (serviceUrl == null) {
+    throw new InitialisationException(CoreMessages.objectIsNull("serviceUrl"),this);
+  }
+ else   if (!muleContext.getExpressionManager().isExpression(serviceUrl)) {
+    try {
+      new URL(serviceUrl);
+    }
+ catch (    MalformedURLException e) {
+      throw new InitialisationException(e,this);
+    }
+  }
+  if (errorFilter == null) {
+    errorFilter=new ExpressionFilter("#[message.inboundProperties['http.status']!=200]");
+    ((ExpressionFilter)errorFilter).setMuleContext(muleContext);
+    logger.info("Setting default error filter to ExpressionFilter('#[message.inboundProperties['http.status']!=200]')");
+  }
+}
