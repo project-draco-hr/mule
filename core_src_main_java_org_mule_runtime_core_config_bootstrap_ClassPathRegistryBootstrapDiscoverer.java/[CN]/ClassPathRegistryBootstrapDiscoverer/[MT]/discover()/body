@@ -1,21 +1,8 @@
 {
-  List<Properties> bootstrapsProperties=new LinkedList<Properties>();
-  Enumeration<URL> allPropertiesResources=ClassUtils.getResources(BOOTSTRAP_PROPERTIES,getClass());
-  while (allPropertiesResources.hasMoreElements()) {
-    URL propertiesResource=allPropertiesResources.nextElement();
-    if (logger.isDebugEnabled()) {
-      logger.debug("Reading bootstrap properties from: " + propertiesResource.toString());
-    }
-    Properties properties=new OrderedProperties();
-    try {
-      try (InputStream resourceStream=propertiesResource.openStream()){
-        properties.load(resourceStream);
-      }
-     }
- catch (    IOException e) {
-      throw new BootstrapException(MessageFactory.createStaticMessage("Could not load properties from: %s",propertiesResource.toString()),e);
-    }
-    bootstrapsProperties.add(properties);
+  try {
+    return discoverProperties(BOOTSTRAP_PROPERTIES);
   }
-  return bootstrapsProperties;
+ catch (  IOException e) {
+    throw new BootstrapException(createStaticMessage("Could not load properties file"),e);
+  }
 }

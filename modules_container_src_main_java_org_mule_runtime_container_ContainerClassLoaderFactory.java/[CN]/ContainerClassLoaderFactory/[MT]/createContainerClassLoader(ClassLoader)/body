@@ -1,0 +1,15 @@
+{
+  final Set<String> parentOnlyPackages=new HashSet<>(BOOT_PACKAGES);
+  parentOnlyPackages.addAll(SYSTEM_PACKAGES);
+  final MuleClassLoaderLookupPolicy containerLookupPolicy=new MuleClassLoaderLookupPolicy(Collections.emptyMap(),parentOnlyPackages);
+  final ArtifactClassLoader containerClassLoader=new MuleArtifactClassLoader("mule",new URL[0],parentClassLoader,containerLookupPolicy){
+    @Override public URL findResource(    String name){
+      return parentClassLoader.getResource(name);
+    }
+    @Override public Enumeration<URL> findResources(    String name) throws IOException {
+      return parentClassLoader.getResources(name);
+    }
+  }
+;
+  return createContainerFilteringClassLoader(containerClassLoader);
+}
