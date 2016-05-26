@@ -1,0 +1,13 @@
+{
+  Latch latch=new Latch();
+  LatchReplyToListener listener=new LatchReplyToListener(latch);
+  consumer.setMessageListener(listener);
+  connector.getJmsSupport().send(producer,jmsMessage,persistent,priority,ttl,topic,endpoint);
+  if (logger.isDebugEnabled()) {
+    logger.debug("Waiting for response event for: " + timeout + " ms on "+ replyTo);
+  }
+  latch.await(timeout,TimeUnit.MILLISECONDS);
+  consumer.setMessageListener(null);
+  listener.release();
+  return createResponseMuleMessage(listener.getMessage(),replyTo);
+}

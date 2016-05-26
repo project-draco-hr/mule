@@ -1,0 +1,16 @@
+{
+  OutboundEndpoint endpoint=createOutboundEndpoint("test://AlwaysFail",null,null,null,null,REQUEST_RESPONSE,null);
+  SensingNullReplyToHandler nullReplyToHandler=new SensingNullReplyToHandler();
+  MuleEvent event=getNonBlockingTestEventUsingFlow(TEST_MESSAGE,nullReplyToHandler);
+  MuleEvent response=endpoint.process(event);
+  assertThat(response,CoreMatchers.<MuleEvent>equalTo(NonBlockingVoidMuleEvent.getInstance()));
+  try {
+    getNonBlockingResponse(nullReplyToHandler,response);
+    fail("Exception Expected");
+  }
+ catch (  Exception e) {
+    assertThat(e,instanceOf(MessagingException.class));
+    assertThat(e.getCause(),instanceOf(RoutingException.class));
+  }
+  assertThat(nullReplyToHandler.event,is(nullValue()));
+}

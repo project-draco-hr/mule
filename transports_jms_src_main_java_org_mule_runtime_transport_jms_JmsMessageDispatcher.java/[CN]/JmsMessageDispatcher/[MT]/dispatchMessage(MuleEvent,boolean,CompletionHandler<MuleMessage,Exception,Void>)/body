@@ -1,0 +1,72 @@
+{
+  if (logger.isDebugEnabled()) {
+    logger.debug("dispatching on endpoint: " + endpoint.getEndpointURI() + ". MuleEvent id is: "+ event.getId()+ ". Outbound transformers are: "+ endpoint.getMessageProcessors());
+  }
+  final Message jmsMessage=getJmsMessagePayload(event);
+  final MuleMessage muleRequestMessage=event.getMessage();
+  boolean transacted=isTransacted();
+  final boolean useReplyToDestination=isUseReplyToDestination(event,doSend,transacted);
+  final boolean topic=connector.getTopicResolver().isTopic(endpoint,true);
+  final long ttl=muleRequestMessage.getOutboundProperty(JmsConstants.TIME_TO_LIVE_PROPERTY,Message.DEFAULT_TIME_TO_LIVE);
+  int priority=muleRequestMessage.getOutboundProperty(JmsConstants.PRIORITY_PROPERTY,Message.DEFAULT_PRIORITY);
+  boolean persistent=muleRequestMessage.getOutboundProperty(JmsConstants.PERSISTENT_DELIVERY_PROPERTY,connector.isPersistentDelivery());
+  if (connector.isHonorQosHeaders()) {
+    Object priorityProp=muleRequestMessage.getInboundProperty(JmsConstants.JMS_PRIORITY);
+    Object deliveryModeProp=muleRequestMessage.getInboundProperty(JmsConstants.JMS_DELIVERY_MODE);
+    if (priorityProp != null) {
+      priority=toInt(priorityProp);
+    }
+    if (deliveryModeProp != null) {
+      persistent=toInt(deliveryModeProp) == DeliveryMode.PERSISTENT;
+    }
+  }
+  Session session=null;
+  MessageProducer producer=null;
+  boolean delayedCleanup=false;
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Sending message of type " + ClassUtils.getSimpleName(jmsMessage.getClass()));
+      logger.debug("Sending JMS Message type " + jmsMessage.getJMSType() + "\n  JMSMessageID="+ jmsMessage.getJMSMessageID()+ "\n  JMSCorrelationID="+ jmsMessage.getJMSCorrelationID()+ "\n  JMSDeliveryMode="+ (persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT)+ "\n  JMSPriority="+ priority+ "\n  JMSReplyTo="+ jmsMessage.getJMSReplyTo());
+    }
+    session=connector.getTransactionalResource(endpoint);
+    producer=createProducer(session,topic);
+    final Destination replyTo=getReplyToDestination(jmsMessage,session,event,useReplyToDestination,topic);
+    if (replyTo != null) {
+      jmsMessage.setJMSReplyTo(replyTo);
+    }
+    jmsMessage.setStringProperty(MULE_CORRELATION_ID_PROPERTY,resolveMuleCorrelationId(event));
+    jmsMessage.setJMSCorrelationID(resolveJmsCorrelationId(event));
+    processMessage(jmsMessage,event);
+    if (useReplyToDestination && replyTo != null) {
+      final MessageConsumer consumer=createReplyToConsumer(jmsMessage,event,session,replyTo,topic);
+      final int timeout=endpoint.getResponseTimeout();
+      if (completionHandler != null) {
+        internalNonBlockingSendAndReceive(session,producer,consumer,replyTo,jmsMessage,topic,ttl,priority,persistent,transacted,timeout,completionHandler);
+        delayedCleanup=true;
+        return null;
+      }
+ else {
+        try {
+          if (topic) {
+            return internalBlockingSendAndAwait(consumer,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout);
+          }
+ else {
+            return internalBlockingSendAndReceive(producer,consumer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout);
+          }
+        }
+  finally {
+          closeConsumer(session,consumer,replyTo);
+        }
+      }
+    }
+ else {
+      return internalSend(producer,jmsMessage,topic,ttl,priority,persistent);
+    }
+  }
+  finally {
+    if (!delayedCleanup) {
+      connector.closeQuietly(producer);
+      closeSession(session);
+    }
+  }
+}

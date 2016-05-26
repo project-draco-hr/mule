@@ -1,12 +1,12 @@
 {
-  DefaultMessageProcessorChainBuilder requestChainBuilder=new EndpointMessageProcessorChainBuilder(endpoint);
+  DefaultMessageProcessorChainBuilder requestChainBuilder=new OutboundEndpointMessageProcessorChainBuilder(endpoint);
   requestChainBuilder.setName("OutboundEndpoint '" + endpoint.getEndpointURI().getUri() + "' request chain");
   requestChainBuilder.chain(createOutboundMessageProcessors(endpoint));
   requestChainBuilder.chain(endpoint.getMessageProcessors());
+  requestChainBuilder.chain(target);
   if (target == null) {
     throw new ConfigurationException(MessageFactory.createStaticMessage("No listener (target) has been set for this endpoint"));
   }
-  requestChainBuilder.chain(target);
   if (!endpoint.getExchangePattern().hasResponse()) {
     return requestChainBuilder.build();
   }
@@ -15,7 +15,7 @@
     responseChainBuilder.setName("OutboundEndpoint '" + endpoint.getEndpointURI().getUri() + "' response chain");
     responseChainBuilder.chain(createOutboundResponseMessageProcessors(endpoint));
     responseChainBuilder.chain(endpoint.getResponseMessageProcessors());
-    DefaultMessageProcessorChainBuilder compositeChainBuilder=new EndpointMessageProcessorChainBuilder(endpoint);
+    DefaultMessageProcessorChainBuilder compositeChainBuilder=new OutboundEndpointMessageProcessorChainBuilder(endpoint);
     compositeChainBuilder.setName("OutboundEndpoint '" + endpoint.getEndpointURI().getUri() + "' composite request/response chain");
     compositeChainBuilder.chain(requestChainBuilder.build(),responseChainBuilder.build());
     return compositeChainBuilder.build();
