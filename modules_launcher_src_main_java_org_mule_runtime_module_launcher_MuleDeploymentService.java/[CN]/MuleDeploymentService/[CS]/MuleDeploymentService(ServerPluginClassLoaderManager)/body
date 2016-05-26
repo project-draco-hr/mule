@@ -6,8 +6,11 @@
   applicationClassLoaderFactory=new CompositeApplicationClassLoaderFactory(applicationClassLoaderFactory,serverPluginClassLoaderManager);
   DefaultDomainFactory domainFactory=new DefaultDomainFactory(domainClassLoaderFactory,domainManager,containerClassLoader);
   domainFactory.setDeploymentListener(domainDeploymentListener);
-  final ApplicationDescriptorFactory applicationDescriptorFactory=new ApplicationDescriptorFactory(new ApplicationPluginDescriptorFactory(new ArtifactClassLoaderFilterFactory()));
-  DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,applicationDescriptorFactory,domainManager);
+  final ApplicationPluginFactory applicationPluginFactory=new DefaultApplicationPluginFactory(new ApplicationPluginClassLoaderFactory());
+  final ApplicationPluginDescriptorFactory applicationPluginDescriptorFactory=new ApplicationPluginDescriptorFactory(new ArtifactClassLoaderFilterFactory());
+  final ApplicationDescriptorFactory applicationDescriptorFactory=new ApplicationDescriptorFactory(applicationPluginDescriptorFactory);
+  applicationPluginRepository=new DefaultApplicationPluginRepository(applicationPluginDescriptorFactory);
+  DefaultApplicationFactory applicationFactory=new DefaultApplicationFactory(applicationClassLoaderFactory,applicationDescriptorFactory,applicationPluginFactory,domainManager,applicationPluginRepository);
   applicationFactory.setDeploymentListener(applicationDeploymentListener);
   ArtifactDeployer<Application> applicationMuleDeployer=new DefaultArtifactDeployer<>();
   ArtifactDeployer<Domain> domainMuleDeployer=new DefaultArtifactDeployer<>();

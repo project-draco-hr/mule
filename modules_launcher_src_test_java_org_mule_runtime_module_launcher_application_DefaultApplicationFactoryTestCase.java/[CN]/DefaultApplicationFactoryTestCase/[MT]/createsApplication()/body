@@ -5,6 +5,17 @@
   final File[] resourceFiles=new File[0];
   descriptor.setConfigResourcesFile(resourceFiles);
   when(applicationDescriptorFactory.create(any())).thenReturn(descriptor);
+  final ApplicationPluginDescriptor coreApplicationPluginDescriptor=mock(ApplicationPluginDescriptor.class);
+  List<ApplicationPluginDescriptor> containerApplicationPluginDescriptors=new LinkedList<>();
+  containerApplicationPluginDescriptors.add(coreApplicationPluginDescriptor);
+  when(applicationPluginRepository.getContainerApplicationPluginDescriptors()).thenReturn(containerApplicationPluginDescriptors);
+  final ApplicationPlugin appPlugin=mock(ApplicationPlugin.class);
+  final ArtifactClassLoader artifactClassLoader=mock(ArtifactClassLoader.class);
+  when(appPlugin.getArtifactClassLoader()).thenReturn(artifactClassLoader);
+  final ClassLoaderFilter classLoaderFilter=mock(ClassLoaderFilter.class);
+  when(coreApplicationPluginDescriptor.getClassLoaderFilter()).thenReturn(classLoaderFilter);
+  when(appPlugin.getDescriptor()).thenReturn(coreApplicationPluginDescriptor);
+  when(applicationPluginFactory.create(same(coreApplicationPluginDescriptor),any())).thenReturn(appPlugin);
   final Domain domain=createDomain(DOMAIN_NAME);
   final ClassLoaderLookupPolicy sharedLibLookupPolicy=mock(ClassLoaderLookupPolicy.class);
   when(domain.getArtifactClassLoader().getClassLoaderLookupPolicy().extend(anyMap())).thenReturn(sharedLibLookupPolicy);
@@ -16,4 +27,10 @@
   assertThat(application.getDescriptor(),is(descriptor));
   assertThat(application.getArtifactName(),is(APP_NAME));
   assertThat(application.getResourceFiles(),is(resourceFiles));
+  verify(applicationClassLoaderFactory).create(any(),argThat(equalTo(descriptor)));
+  verify(domainRepository,times(2)).getDomain(DOMAIN_NAME);
+  verify(applicationPluginRepository).getContainerApplicationPluginDescriptors();
+  verify(coreApplicationPluginDescriptor).getClassLoaderFilter();
+  verify(appPlugin).getArtifactClassLoader();
+  verify(appPlugin).getDescriptor();
 }
