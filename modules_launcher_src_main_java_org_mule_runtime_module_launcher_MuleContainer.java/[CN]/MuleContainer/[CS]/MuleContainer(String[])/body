@@ -1,5 +1,7 @@
 {
-  this.deploymentService=new MuleDeploymentService(serverPluginClassLoaderManager);
-  this.coreExtensionManager=new DefaultMuleCoreExtensionManagerServer();
+  final ContainerClassLoaderFactory containerClassLoaderFactory=new ContainerClassLoaderFactory();
+  final ArtifactClassLoader containerClassLoader=containerClassLoaderFactory.createContainerClassLoader(getClass().getClassLoader());
+  this.deploymentService=new MuleDeploymentService(containerClassLoader,serverPluginClassLoaderManager);
+  this.coreExtensionManager=new DefaultMuleCoreExtensionManagerServer(new ClasspathMuleCoreExtensionDiscoverer(containerClassLoader),new ReflectionMuleCoreExtensionDependencyResolver());
   init(args);
 }

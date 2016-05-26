@@ -1,5 +1,10 @@
 {
+  final ContainerClassLoaderFactory containerClassLoaderFactory=new ContainerClassLoaderFactory();
+  containerClassLoader=containerClassLoaderFactory.createContainerClassLoader(getClass().getClassLoader());
   this.coreExtensions=intialCoreExtensions;
+  for (  MuleCoreExtension extension : coreExtensions) {
+    extension.setContainerClassLoader(containerClassLoader);
+  }
   muleHome=new File(muleHomePath);
   muleHome.deleteOnExit();
   try {
@@ -14,7 +19,7 @@
  catch (  IOException e) {
     throw new RuntimeException(e);
   }
-  deploymentService=new MuleDeploymentService(new MuleServerPluginClassLoaderManager());
+  deploymentService=new MuleDeploymentService(containerClassLoader,new MuleServerPluginClassLoaderManager());
   deploymentListener=mock(DeploymentListener.class);
   deploymentService.addDeploymentListener(deploymentListener);
   coreExtensionManager=new DefaultMuleCoreExtensionManagerServer(new MuleCoreExtensionDiscoverer(){
