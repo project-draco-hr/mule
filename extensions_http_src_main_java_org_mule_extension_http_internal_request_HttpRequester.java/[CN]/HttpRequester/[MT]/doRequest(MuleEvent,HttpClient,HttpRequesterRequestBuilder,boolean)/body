@@ -1,0 +1,23 @@
+{
+  MuleEventToHttpRequest eventToHttpRequest=new MuleEventToHttpRequest(config,uri,method,requestStreamingMode,sendBodyMode,source);
+  HttpRequest httpRequest=createHttpRequest(muleEvent,eventToHttpRequest,requestBuilder,authentication);
+  HttpResponse response;
+  try {
+    notificationHelper.fireNotification(this,muleEvent,httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_BEGIN);
+    response=client.send(httpRequest,responseTimeout,followRedirects,resolveAuthentication(authentication));
+  }
+ catch (  Exception e) {
+    checkIfRemotelyClosed(e,client.getDefaultUriParameters());
+    throw new MessagingException(CoreMessages.createStaticMessage("Error sending HTTP request"),muleEvent,e);
+  }
+  HttpResponseToMuleMessage httpResponseToMuleMessage=new HttpResponseToMuleMessage(config,parseResponse);
+  MuleMessage<Object,HttpResponseAttributes> responseMessage=httpResponseToMuleMessage.convert(muleEvent,response,httpRequest.getUri());
+  MuleEvent responseEvent=new DefaultMuleEvent(new DefaultMuleMessage(responseMessage.getPayload(),null,responseMessage.getAttributes(),muleEvent.getMuleContext()),muleEvent,muleEvent.isSynchronous());
+  if (resendRequest(responseEvent,checkRetry,authentication)) {
+    consumePayload(responseEvent);
+    responseMessage=doRequest(responseEvent,client,requestBuilder,false);
+  }
+  notificationHelper.fireNotification(this,muleEvent,httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_END);
+  responseValidator.validate(responseMessage);
+  return responseMessage;
+}

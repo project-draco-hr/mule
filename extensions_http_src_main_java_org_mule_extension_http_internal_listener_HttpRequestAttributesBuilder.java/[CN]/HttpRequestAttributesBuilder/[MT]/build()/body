@@ -1,0 +1,28 @@
+{
+  String listenerPath=this.listenerPath.getResolvedPath();
+  HttpRequest request=requestContext.getRequest();
+  String version=request.getProtocol().asString();
+  String scheme=requestContext.getScheme();
+  String method=request.getMethod();
+  String uri=request.getUri();
+  String path=extractPath(uri);
+  String queryString=extractQueryParams(uri);
+  ParameterMap queryParams=decodeQueryString(queryString);
+  ParameterMap uriParams=decodeUriParams(listenerPath,path);
+  ClientConnection clientConnection=requestContext.getClientConnection();
+  String remoteHostAddress=clientConnection.getRemoteHostAddress().toString();
+  Certificate clientCertificate=clientConnection.getClientCertificate();
+  String relativePath=this.listenerPath.getRelativePath(path);
+  final Collection<String> headerNames=request.getHeaderNames();
+  Map<String,Object> headers=new HashMap<>();
+  for (  String headerName : headerNames) {
+    final Collection<String> values=request.getHeaderValues(headerName);
+    if (values.size() == 1) {
+      headers.put(headerName,values.iterator().next());
+    }
+ else {
+      headers.put(headerName,values);
+    }
+  }
+  return new HttpRequestAttributes(headers,parts,listenerPath,relativePath,version,scheme,method,path,uri,queryString,queryParams,uriParams,remoteHostAddress,clientCertificate);
+}

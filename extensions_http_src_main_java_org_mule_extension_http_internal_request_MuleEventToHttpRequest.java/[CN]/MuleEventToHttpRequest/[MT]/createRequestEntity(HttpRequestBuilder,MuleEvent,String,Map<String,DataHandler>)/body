@@ -1,0 +1,21 @@
+{
+  boolean customSource=false;
+  Object oldPayload=null;
+  HttpEntity entity;
+  if (!StringUtils.isEmpty(this.source) && !(DEFAULT_PAYLOAD_EXPRESSION.equals(this.source))) {
+    Object newPayload=this.source;
+    oldPayload=muleEvent.getMessage().getPayload();
+    muleEvent.getMessage().setPayload(newPayload);
+    customSource=true;
+  }
+  if (isEmptyBody(muleEvent,resolvedMethod)) {
+    entity=new EmptyHttpEntity();
+  }
+ else {
+    entity=createRequestEntityFromPayload(requestBuilder,muleEvent,parts);
+  }
+  if (customSource) {
+    muleEvent.getMessage().setPayload(oldPayload);
+  }
+  return entity;
+}

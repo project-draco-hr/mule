@@ -1,0 +1,22 @@
+{
+  if (tlsContextFactory != null) {
+    try {
+      sslContext=tlsContextFactory.createSslContext();
+    }
+ catch (    Exception e) {
+      throw new MuleRuntimeException(CoreMessages.createStaticMessage("Cannot initialize SSL context"),e);
+    }
+    builder.setSSLContext(sslContext);
+    if (tlsContextFactory.getEnabledCipherSuites() != null) {
+      builder.setEnabledCipherSuites(tlsContextFactory.getEnabledCipherSuites());
+    }
+    if (tlsContextFactory.getEnabledProtocols() != null) {
+      builder.setEnabledProtocols(tlsContextFactory.getEnabledProtocols());
+    }
+    TlsContextTrustStoreConfiguration trustStoreConfiguration=tlsContextFactory.getTrustStoreConfiguration();
+    if (trustStoreConfiguration != null && trustStoreConfiguration.isInsecure()) {
+      logger.warn(String.format("TLS configuration for requester %s has been set to use an insecure trust store. This means no certificate validations will be performed, rendering connections vulnerable to attacks. Use at own risk.",ownerName));
+      builder.setAcceptAnyCertificate(true);
+    }
+  }
+}

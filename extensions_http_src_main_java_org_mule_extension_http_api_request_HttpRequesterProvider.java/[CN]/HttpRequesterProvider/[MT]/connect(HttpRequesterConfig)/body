@@ -1,0 +1,13 @@
+{
+  String threadNamePrefix=String.format(THREAD_NAME_PREFIX_PATTERN,ThreadNameHelper.getPrefix(httpRequesterConfig.getMuleContext()),httpRequesterConfig.getName());
+  HttpClientConfiguration configuration=new HttpClientConfiguration.Builder().setUriParameters(new DefaultUriParameters(protocol,host,port)).setTlsContextFactory(tlsContextFactory).setProxyConfig(proxyConfig).setClientSocketProperties(clientSocketProperties).setMaxConnections(maxConnections).setUsePersistentConnections(usePersistentConnections).setConnectionIdleTimeout(connectionIdleTimeout).setThreadNamePrefix(threadNamePrefix).setOwnerName(httpRequesterConfig.getName()).build();
+  HttpClientFactory httpClientFactory=httpRequesterConfig.getMuleContext().getRegistry().get(OBJECT_HTTP_CLIENT_FACTORY);
+  HttpClient httpClient;
+  if (httpClientFactory == null) {
+    httpClient=new GrizzlyHttpClient(configuration);
+  }
+ else {
+    httpClient=httpClientFactory.create(configuration);
+  }
+  return httpClient;
+}

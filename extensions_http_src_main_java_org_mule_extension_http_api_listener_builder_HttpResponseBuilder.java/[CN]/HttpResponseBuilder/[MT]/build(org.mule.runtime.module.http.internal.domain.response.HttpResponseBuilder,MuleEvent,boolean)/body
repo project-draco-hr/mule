@@ -1,0 +1,85 @@
+{
+  final HttpResponseHeaderBuilder httpResponseHeaderBuilder=new HttpResponseHeaderBuilder();
+  if (httpResponseHeaderBuilder.getHeader(MuleProperties.CONTENT_TYPE_PROPERTY) != null) {
+    DataType<?> dataType=event.getMessage().getDataType();
+    if (!MimeTypes.ANY.equals(dataType.getMimeType())) {
+      httpResponseHeaderBuilder.addHeader(MuleProperties.CONTENT_TYPE_PROPERTY,DataTypeUtils.getContentType(dataType));
+    }
+  }
+  for (  String name : headers.keySet()) {
+    if (TRANSFER_ENCODING.equals(name) && !supportsTransferEncoding) {
+      logger.debug("Client HTTP version is lower than 1.1 so the unsupported 'Transfer-Encoding' header has been removed and 'Content-Length' will be sent instead.");
+    }
+ else {
+      httpResponseHeaderBuilder.addHeader(name,headers.get(name));
+    }
+  }
+  final String configuredContentType=httpResponseHeaderBuilder.getContentType();
+  final String existingTransferEncoding=httpResponseHeaderBuilder.getTransferEncoding();
+  final String existingContentLength=httpResponseHeaderBuilder.getContentLength();
+  HttpEntity httpEntity;
+  if (!parts.isEmpty()) {
+    if (configuredContentType == null) {
+      httpResponseHeaderBuilder.addContentType(createMultipartFormDataContentType());
+    }
+ else     if (!configuredContentType.startsWith(MULTIPART)) {
+      warnNoMultipartContentTypeButMultipartEntity(httpResponseHeaderBuilder.getContentType());
+    }
+    httpEntity=createMultipartEntity(event.getMessage(),httpResponseHeaderBuilder.getContentType());
+    resolveEncoding(httpResponseHeaderBuilder,existingTransferEncoding,existingContentLength,supportsTransferEncoding,(ByteArrayHttpEntity)httpEntity);
+  }
+ else {
+    final Object payload=event.getMessage().getPayload();
+    if (payload == NullPayload.getInstance()) {
+      setupContentLengthEncoding(httpResponseHeaderBuilder,0);
+      httpEntity=new EmptyHttpEntity();
+    }
+ else     if (payload instanceof Map) {
+      if (configuredContentType == null) {
+        httpResponseHeaderBuilder.addContentType(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED);
+      }
+ else       if (!configuredContentType.startsWith(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
+        warnMapPayloadButNoUrlEncodedContentType(httpResponseHeaderBuilder.getContentType());
+      }
+      httpEntity=createUrlEncodedEntity(event,(Map)payload);
+    }
+ else     if (payload instanceof InputStream) {
+      if (responseStreaming == ALWAYS || (responseStreaming == AUTO && existingContentLength == null)) {
+        if (supportsTransferEncoding) {
+          setupChunkedEncoding(httpResponseHeaderBuilder);
+        }
+        httpEntity=new InputStreamHttpEntity((InputStream)payload);
+      }
+ else {
+        ByteArrayHttpEntity byteArrayHttpEntity=new ByteArrayHttpEntity(IOUtils.toByteArray(((InputStream)payload)));
+        setupContentLengthEncoding(httpResponseHeaderBuilder,byteArrayHttpEntity.getContent().length);
+        httpEntity=byteArrayHttpEntity;
+      }
+    }
+ else {
+      try {
+        ByteArrayHttpEntity byteArrayHttpEntity=new ByteArrayHttpEntity(event.getMessageAsBytes());
+        resolveEncoding(httpResponseHeaderBuilder,existingTransferEncoding,existingContentLength,supportsTransferEncoding,byteArrayHttpEntity);
+        httpEntity=byteArrayHttpEntity;
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  Collection<String> headerNames=httpResponseHeaderBuilder.getHeaderNames();
+  for (  String headerName : headerNames) {
+    Collection<String> values=httpResponseHeaderBuilder.getHeader(headerName);
+    for (    String value : values) {
+      httpResponseBuilder.addHeader(headerName,value);
+    }
+  }
+  if (statusCode != null) {
+    httpResponseBuilder.setStatusCode(statusCode);
+  }
+  if (reasonPhrase != null) {
+    httpResponseBuilder.setReasonPhrase(reasonPhrase);
+  }
+  httpResponseBuilder.setEntity(httpEntity);
+  return httpResponseBuilder.build();
+}
