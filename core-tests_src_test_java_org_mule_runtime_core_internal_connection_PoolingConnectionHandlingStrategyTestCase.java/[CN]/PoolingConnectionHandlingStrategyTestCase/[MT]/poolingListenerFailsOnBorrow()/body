@@ -1,0 +1,13 @@
+{
+  initStrategy();
+  final RuntimeException exception=new RuntimeException();
+  doThrow(exception).when(poolingListener).onBorrow(any(),any(Lifecycle.class));
+  try {
+    strategy.getConnectionHandler();
+    fail("was expecting poolingListener to fail");
+  }
+ catch (  Exception e) {
+    assertThat(e.getCause(),is(sameInstance(exception)));
+    verify(connectionProvider).disconnect(any(Lifecycle.class));
+  }
+}
