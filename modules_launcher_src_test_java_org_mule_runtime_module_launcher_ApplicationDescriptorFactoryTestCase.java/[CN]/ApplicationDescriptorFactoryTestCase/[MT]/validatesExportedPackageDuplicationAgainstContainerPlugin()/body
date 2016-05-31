@@ -1,0 +1,14 @@
+{
+  File pluginDir=getAppPluginsFolder(APP_NAME);
+  pluginDir.mkdirs();
+  copyFile(createApplicationPluginFile(),new File(pluginDir,"plugin1.zip"));
+  final ApplicationPluginRepository applicationPluginRepository=mock(ApplicationPluginRepository.class);
+  final ApplicationPluginDescriptor plugin2Descriptor=new ApplicationPluginDescriptor();
+  plugin2Descriptor.setName("plugin2");
+  final Set<String> exportedPackages=new HashSet<>();
+  exportedPackages.add("org.foo");
+  exportedPackages.add("org.bar");
+  plugin2Descriptor.setClassLoaderFilter(new ArtifactClassLoaderFilter(exportedPackages,Collections.emptySet()));
+  when(applicationPluginRepository.getContainerApplicationPluginDescriptors()).thenReturn(Collections.singletonList(plugin2Descriptor));
+  doPackageValidationTest(applicationPluginRepository);
+}
