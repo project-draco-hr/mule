@@ -2,5 +2,9 @@
   HttpListener httpListener=(HttpListener)((Flow)getFlowConstruct("testPathFlow")).getMessageSource();
   httpListener.stop();
   final Response response=Request.Get(getLifecycleConfigUrl("/path/subpath")).execute();
-  assertThat(response.returnResponse().getStatusLine().getStatusCode(),is(503));
+  final HttpResponse returnResponse=response.returnResponse();
+  assertThat(returnResponse.getEntity(),notNullValue());
+  assertThat(returnResponse.getStatusLine().getStatusCode(),is(SERVICE_UNAVAILABLE.getStatusCode()));
+  assertThat(returnResponse.getStatusLine().getReasonPhrase(),is(SERVICE_UNAVAILABLE.getReasonPhrase()));
+  assertThat(getHttpEntityContent(returnResponse),startsWith("Service not available for request uri: "));
 }
