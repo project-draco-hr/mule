@@ -1,0 +1,23 @@
+{
+  ValueHolder<Class<?>> clazz=new ValueHolder<>(null);
+  parameter.getType().accept(new MetadataTypeVisitor(){
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      dictionaryType.getKeyType().accept(this);
+      dictionaryType.getValueType().accept(this);
+    }
+    @Override public void visitArrayType(    ArrayType arrayType){
+      arrayType.getType().accept(this);
+    }
+    @Override public void visitObject(    ObjectType objectType){
+      clazz.set(getType(objectType));
+    }
+    @Override public void visitString(    StringType stringType){
+      Optional<EnumAnnotation> enumAnnotation=getSingleAnnotation(stringType,EnumAnnotation.class);
+      if (enumAnnotation.isPresent()) {
+        clazz.set(getType(stringType));
+      }
+    }
+  }
+);
+  return Optional.ofNullable(clazz.get());
+}
