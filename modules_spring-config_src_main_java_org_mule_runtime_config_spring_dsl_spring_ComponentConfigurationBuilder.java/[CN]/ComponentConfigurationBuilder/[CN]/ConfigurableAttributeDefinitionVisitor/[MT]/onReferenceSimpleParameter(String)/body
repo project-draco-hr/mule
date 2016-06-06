@@ -1,17 +1,14 @@
 {
-  String reference=simpleParameters.get(configAttributeName);
-  if (configAttributeName.equals(PROCESSING_STRATEGY_ATTRIBUTE)) {
-    ProcessingStrategy processingStrategy=parseProcessingStrategy(reference);
-    if (processingStrategy != null) {
-      valuePopulator.accept(processingStrategy);
-      return;
-    }
+  ValueExtractorAttributeDefinitionVisitor valueExtractor=new ValueExtractorAttributeDefinitionVisitor();
+  valueExtractor.onReferenceSimpleParameter(configAttributeName);
+  Object value=valueExtractor.getValue();
+  if (value instanceof String) {
+    referenceConsumer.accept((String)value);
   }
-  simpleParameters.remove(configAttributeName);
-  if (reference != null) {
-    referencePopulator.accept(reference);
+ else   if (value != null) {
+    valueConsumer.accept(value);
   }
  else {
-    valuePopulator.accept(null);
+    valueConsumer.accept(null);
   }
 }

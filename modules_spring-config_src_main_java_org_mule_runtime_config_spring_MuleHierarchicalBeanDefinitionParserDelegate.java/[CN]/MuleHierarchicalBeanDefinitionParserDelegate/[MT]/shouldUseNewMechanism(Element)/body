@@ -4,16 +4,14 @@
   }
   Node parentNode=element;
   while ((parentNode=parentNode.getParentNode()) != null) {
-    String parentNodeNamespace=getNamespace(parentNode);
-    String parentNodeName=parentNode.getLocalName();
-    if (isMuleRootElement(parentNode)) {
+    ComponentIdentifier parentComponentIdentifier=getComponentIdentifier(parentNode);
+    if (isMuleRootElement(parentComponentIdentifier)) {
       break;
     }
-    if (!beanDefinitionFactory.hasDefinition(new ComponentIdentifier.Builder().withNamespace(parentNodeNamespace).withName(parentNodeName).build())) {
+    if (!beanDefinitionFactory.hasDefinition(parentComponentIdentifier,getParentComponentIdentifier(parentNode))) {
       return false;
     }
   }
-  String namespace=getNamespace(element);
-  String nodeName=element.getLocalName();
-  return beanDefinitionFactory.hasDefinition(new ComponentIdentifier.Builder().withNamespace(namespace).withName(nodeName).build());
+  ComponentIdentifier elementComponentIdentifier=getComponentIdentifier(element);
+  return beanDefinitionFactory.hasDefinition(elementComponentIdentifier,getParentComponentIdentifier(element));
 }
