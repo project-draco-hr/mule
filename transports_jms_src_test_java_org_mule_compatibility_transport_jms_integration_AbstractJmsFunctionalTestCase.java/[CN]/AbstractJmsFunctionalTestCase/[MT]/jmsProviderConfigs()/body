@@ -1,0 +1,25 @@
+{
+  JmsVendorConfiguration[][] configs;
+  URL url=ClassUtils.getResource("jms-vendor-configs.txt",AbstractJmsFunctionalTestCase.class);
+  if (url == null) {
+    fail("Please specify the org.mule.compatibility.transport.jms.integration.JmsVendorConfiguration " + "implementation to use in jms-vendor-configs.txt on classpaath.");
+    return CollectionUtils.EMPTY_COLLECTION;
+  }
+  if (log.isInfoEnabled()) {
+    log.info("Parameterized test using: " + url);
+  }
+  try {
+    List<?> classes=IOUtils.readLines(url.openStream());
+    configs=new JmsVendorConfiguration[1][classes.size()];
+    int i=0;
+    for (Iterator<?> iterator=classes.iterator(); iterator.hasNext(); i++) {
+      String cls=(String)iterator.next();
+      configs[0][i]=(JmsVendorConfiguration)ClassUtils.instanciateClass(cls,ClassUtils.NO_ARGS);
+    }
+    return Arrays.asList(configs);
+  }
+ catch (  Exception e) {
+    fail("Please specify the org.mule.compatibility.transport.jms.integration.JmsVendorConfiguration " + "implementation to use in jms-vendor-configs.txt on classpath: " + e.getMessage());
+    return CollectionUtils.EMPTY_COLLECTION;
+  }
+}
