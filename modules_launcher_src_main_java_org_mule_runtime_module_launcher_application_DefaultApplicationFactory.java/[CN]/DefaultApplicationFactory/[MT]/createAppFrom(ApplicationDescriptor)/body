@@ -1,5 +1,9 @@
 {
-  ArtifactClassLoader parent=domainRepository.getDomain(descriptor.getDomain()).getArtifactClassLoader();
+  Domain domain=domainRepository.getDomain(descriptor.getDomain());
+  if (domain == null) {
+    throw new DeploymentException(CoreMessages.createStaticMessage(format("Domain '%s' has to be deployed in order to deploy Application '%s'",descriptor.getDomain(),descriptor.getName())));
+  }
+  ArtifactClassLoader parent=domain.getArtifactClassLoader();
   parent=getSharedLibClassLoader(descriptor,parent);
   final List<ApplicationPlugin> applicationPlugins=createContainerApplicationPlugins(parent,descriptor);
   applicationPlugins.addAll(createApplicationPlugins(parent,descriptor.getPlugins()));
