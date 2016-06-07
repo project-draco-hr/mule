@@ -1,19 +1,20 @@
 {
-  ZipFile zip=new ZipFile(file);
-  Enumeration<? extends ZipEntry> zipFileEntries=zip.entries();
-  ZipEntry root=zipFileEntries.nextElement();
-  muleHome=new File(destDir,root.getName());
-  muleHome.mkdirs();
-  chmodRwx(muleHome);
-  while (zipFileEntries.hasMoreElements()) {
-    ZipEntry entry=zipFileEntries.nextElement();
-    File destFile=new File(entry.getName());
-    if (entry.isDirectory()) {
-      destFile.mkdir();
-    }
+  try (ZipFile zip=new ZipFile(file)){
+    Enumeration<? extends ZipEntry> zipFileEntries=zip.entries();
+    ZipEntry root=zipFileEntries.nextElement();
+    muleHome=new File(destDir,root.getName());
+    muleHome.mkdirs();
+    chmodRwx(muleHome);
+    while (zipFileEntries.hasMoreElements()) {
+      ZipEntry entry=zipFileEntries.nextElement();
+      File destFile=new File(entry.getName());
+      if (entry.isDirectory()) {
+        destFile.mkdir();
+      }
  else {
-      FileUtils.copyInputStreamToFile(zip.getInputStream(entry),destFile);
-      chmodRwx(destFile);
+        copyInputStreamToFile(zip.getInputStream(entry),destFile);
+        chmodRwx(destFile);
+      }
     }
   }
-}
+ }
