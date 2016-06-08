@@ -1,0 +1,23 @@
+{
+  final Map<String,Serializable> props=new HashMap<>();
+  props.put("name",name);
+  props.put("endpointURI",new MuleEndpointURI("test://test",context));
+  props.put("connector","testConnector");
+  if (connector == null) {
+    connector=(Connector)ClassUtils.loadClass("org.mule.tck.testmodels.mule.TestConnector",AbstractMuleTestCase.class).getConstructor(MuleContext.class).newInstance(context);
+  }
+  connector.setName("testConnector");
+  context.getRegistry().applyLifecycle(connector);
+  final String endpoingUri=uri == null ? "test://test" : uri;
+  final EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(endpoingUri,context);
+  endpointBuilder.setConnector(connector);
+  endpointBuilder.setName(name);
+  if (transformers != null) {
+    endpointBuilder.setTransformers(transformers);
+  }
+  if (properties != null) {
+    endpointBuilder.setProperties(properties);
+  }
+  endpointBuilder.addMessageProcessor(new MessageFilter(filter));
+  return source.getEndpoint(endpointBuilder);
+}

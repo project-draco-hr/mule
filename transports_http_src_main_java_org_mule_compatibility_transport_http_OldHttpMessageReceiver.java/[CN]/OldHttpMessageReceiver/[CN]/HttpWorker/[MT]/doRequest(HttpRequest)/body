@@ -1,22 +1,22 @@
 {
   sendExpect100(request);
   final MuleMessage message=createMuleMessage(request);
-  String path=message.getInboundProperty(HttpConnector.HTTP_REQUEST_PROPERTY);
+  String path=message.getInboundProperty(HTTP_REQUEST_PROPERTY);
   int i=path.indexOf('?');
   if (i > -1) {
     path=path.substring(0,i);
   }
-  message.setProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY,path,PropertyScope.INBOUND);
+  message.setInboundProperty(HTTP_REQUEST_PATH_PROPERTY,path);
   if (logger.isDebugEnabled()) {
-    logger.debug(message.getInboundProperty(HttpConnector.HTTP_REQUEST_PROPERTY));
+    logger.debug(message.getInboundProperty(HTTP_REQUEST_PROPERTY));
   }
   final MessageReceiver receiver=getTargetReceiver(message,endpoint);
   HttpResponse response;
   if (receiver != null) {
     String contextPath=HttpConnector.normalizeUrl(receiver.getEndpointURI().getPath());
-    message.setProperty(HttpConnector.HTTP_CONTEXT_PATH_PROPERTY,contextPath,PropertyScope.INBOUND);
-    message.setProperty(HttpConnector.HTTP_CONTEXT_URI_PROPERTY,receiver.getEndpointURI().getAddress(),PropertyScope.INBOUND);
-    message.setProperty(HttpConnector.HTTP_RELATIVE_PATH_PROPERTY,processRelativePath(contextPath,path),PropertyScope.INBOUND);
+    message.setInboundProperty(HTTP_CONTEXT_PATH_PROPERTY,contextPath);
+    message.setInboundProperty(HTTP_CONTEXT_URI_PROPERTY,receiver.getEndpointURI().getAddress());
+    message.setInboundProperty(HTTP_RELATIVE_PATH_PROPERTY,processRelativePath(contextPath,path));
     ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
     MuleEvent returnEvent;
     try {
@@ -60,8 +60,8 @@ catch (    Exception e) {
       boolean endpointOverride=getEndpointKeepAliveValue(endpoint);
       if ("keep-alive".equalsIgnoreCase(value) && endpointOverride) {
         response.setKeepAlive(true);
-        if (response.getHttpVersion().equals(HttpVersion.HTTP_1_0)) {
-          connectionHeader=new Header(HttpConstants.HEADER_CONNECTION,"Keep-Alive");
+        if (response.getHttpVersion().equals(HTTP_1_0)) {
+          connectionHeader=new Header(HEADER_CONNECTION,"Keep-Alive");
           response.setHeader(connectionHeader);
         }
       }
@@ -72,8 +72,8 @@ catch (    Exception e) {
   }
  else {
     EndpointURI uri=endpoint.getEndpointURI();
-    String failedPath=String.format("%s://%s:%d%s",uri.getScheme(),uri.getHost(),uri.getPort(),message.getInboundProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY));
-    response=buildFailureResponse(request.getRequestLine().getHttpVersion(),HttpConstants.SC_NOT_FOUND,HttpMessages.cannotBindToAddress(failedPath).toString());
+    String failedPath=String.format("%s://%s:%d%s",uri.getScheme(),uri.getHost(),uri.getPort(),message.getInboundProperty(HTTP_REQUEST_PATH_PROPERTY));
+    response=buildFailureResponse(request.getRequestLine().getHttpVersion(),SC_NOT_FOUND,HttpMessages.cannotBindToAddress(failedPath).toString());
   }
   return response;
 }

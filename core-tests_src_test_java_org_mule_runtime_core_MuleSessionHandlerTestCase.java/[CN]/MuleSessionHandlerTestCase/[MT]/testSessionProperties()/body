@@ -1,5 +1,6 @@
 {
-  MuleEvent event=new DefaultMuleEvent(new DefaultMuleMessage("Test Message",muleContext),MuleTestUtils.getTestFlow(muleContext));
+  DefaultMuleMessage message=new DefaultMuleMessage("Test Message",muleContext);
+  MuleEvent event=new DefaultMuleEvent(message,MuleTestUtils.getTestFlow(muleContext));
   SessionHandler handler=new SerializeAndEncodeSessionHandler();
   String string="bar";
   event.getSession().setProperty("fooString",string);
@@ -8,8 +9,8 @@
   List<String> list=createList();
   event.getSession().setProperty("fooList",list);
   handler.storeSessionInfoToMessage(event.getSession(),event.getMessage());
-  Object s=removeProperty(event);
-  event.getMessage().setProperty(MuleProperties.MULE_SESSION_PROPERTY,s,PropertyScope.INBOUND);
+  Serializable s=removeProperty(event);
+  message.setInboundProperty(MULE_SESSION_PROPERTY,s);
   MuleSession session=handler.retrieveSessionInfoFromMessage(event.getMessage());
   Object obj=session.getProperty("fooString");
   assertTrue(obj instanceof String);

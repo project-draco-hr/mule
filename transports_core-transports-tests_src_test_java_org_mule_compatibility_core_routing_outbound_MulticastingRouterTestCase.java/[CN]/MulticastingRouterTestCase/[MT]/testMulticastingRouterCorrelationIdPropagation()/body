@@ -14,7 +14,7 @@
   router.setRoutes(endpoints);
   router.setEnableCorrelation(CorrelationMode.NEVER);
   MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,muleContext);
-  message.setProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY,"MyCustomCorrelationId",PropertyScope.INBOUND);
+  message.setOutboundProperty(MULE_CORRELATION_ID_PROPERTY,"MyCustomCorrelationId");
   assertTrue(router.isMatch(message));
   Answer<MuleEvent> answer=new Answer<MuleEvent>(){
     @Override public MuleEvent answer(    InvocationOnMock invocation) throws Throwable {
@@ -22,7 +22,7 @@
       assertEquals(1,arguments.length);
       assertTrue(arguments[0] instanceof MuleEvent);
       MuleEvent event=(MuleEvent)arguments[0];
-      String correlationId=event.getMessage().getOutboundProperty(MuleProperties.MULE_CORRELATION_ID_PROPERTY);
+      String correlationId=event.getMessage().getOutboundProperty(MULE_CORRELATION_ID_PROPERTY);
       assertNotNull(correlationId);
       assertEquals("MyCustomCorrelationId",correlationId);
       return event;

@@ -3,16 +3,16 @@
     EndpointMessageNotification beginNotification=null;
     if (connector.isEnableMessageEvents()) {
       MuleMessage dummyMessage=new DefaultMuleMessage(NullPayload.getInstance(),endpoint.getMuleContext());
-      beginNotification=new EndpointMessageNotification(dummyMessage,endpoint,null,EndpointMessageNotification.MESSAGE_REQUEST_BEGIN);
+      beginNotification=new EndpointMessageNotification(dummyMessage,endpoint,null,MESSAGE_REQUEST_BEGIN);
     }
     connect();
     MuleMessage result=null;
     result=doRequest(timeout);
     if (result != null) {
-      String rootId=result.getInboundProperty(MuleProperties.MULE_ROOT_MESSAGE_ID_PROPERTY);
+      String rootId=result.getInboundProperty(MULE_ROOT_MESSAGE_ID_PROPERTY);
       if (rootId != null) {
         result.setMessageRootId(rootId);
-        result.removeProperty(MuleProperties.MULE_ROOT_MESSAGE_ID_PROPERTY,PropertyScope.INBOUND);
+        result.removeInboundProperty(MULE_ROOT_MESSAGE_ID_PROPERTY);
       }
       if (beginNotification != null) {
         result.propagateRootId(beginNotification.getSource());
@@ -22,7 +22,7 @@
       }
       if (beginNotification != null) {
         connector.fireNotification(beginNotification);
-        connector.fireNotification(new EndpointMessageNotification(result,endpoint,null,EndpointMessageNotification.MESSAGE_REQUEST_END));
+        connector.fireNotification(new EndpointMessageNotification(result,endpoint,null,MESSAGE_REQUEST_END));
       }
     }
     return result;
