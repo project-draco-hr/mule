@@ -1,0 +1,18 @@
+{
+  List<MuleModule> modules=new LinkedList<>();
+  Set<String> moduleNames=new HashSet<>();
+  try {
+    for (    Properties moduleProperties : discoverProperties(classLoader,MODULE_PROPERTIES)) {
+      final MuleModule module=createModule(moduleProperties);
+      if (moduleNames.contains(module.getName())) {
+        throw new IllegalStateException(String.format("Module '%s' was already defined",module.getName()));
+      }
+      moduleNames.add(module.getName());
+      modules.add(module);
+    }
+  }
+ catch (  IOException e) {
+    throw new RuntimeException("Cannot discover mule modules",e);
+  }
+  return modules;
+}

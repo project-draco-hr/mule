@@ -1,0 +1,15 @@
+{
+  final ContainerClassLoaderFactory factory=new ContainerClassLoaderFactory();
+  final ModuleDiscoverer moduleDiscoverer=mock(ModuleDiscoverer.class);
+  final List<MuleModule> modules=new ArrayList<>();
+  modules.add(new TestModuleBuilder("module1").exportingPackages("org.foo1","org.foo1.bar").build());
+  modules.add(new TestModuleBuilder("module2").exportingPackages("org.foo2").build());
+  when(moduleDiscoverer.discover()).thenReturn(modules);
+  factory.setModuleDiscoverer(moduleDiscoverer);
+  final ArtifactClassLoader containerClassLoader=factory.createContainerClassLoader(this.getClass().getClassLoader());
+  final ClassLoaderLookupPolicy classLoaderLookupPolicy=containerClassLoader.getClassLoaderLookupPolicy();
+  assertThat(classLoaderLookupPolicy.getLookupStrategy("org.foo1.Foo"),is(PARENT_ONLY));
+  assertThat(classLoaderLookupPolicy.getLookupStrategy("org.foo1.bar.Bar"),is(PARENT_ONLY));
+  assertThat(classLoaderLookupPolicy.getLookupStrategy("org.foo2.Fo"),is(PARENT_ONLY));
+  assertThat(classLoaderLookupPolicy.getLookupStrategy("org.foo2.bar.Bar"),is(CHILD_FIRST));
+}

@@ -1,0 +1,18 @@
+{
+  checkArgument(!StringUtils.isEmpty(resource),"Resource cannot be empty");
+  checkArgument(classLoader != null,"ClassLoader cannot be null");
+  List<Properties> result=new LinkedList<Properties>();
+  Enumeration<URL> allPropertiesResources=getResources(resource,classLoader);
+  while (allPropertiesResources.hasMoreElements()) {
+    URL propertiesResource=allPropertiesResources.nextElement();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Reading properties from: " + propertiesResource.toString());
+    }
+    Properties properties=new OrderedProperties();
+    try (InputStream resourceStream=propertiesResource.openStream()){
+      properties.load(resourceStream);
+    }
+     result.add(properties);
+  }
+  return result;
+}

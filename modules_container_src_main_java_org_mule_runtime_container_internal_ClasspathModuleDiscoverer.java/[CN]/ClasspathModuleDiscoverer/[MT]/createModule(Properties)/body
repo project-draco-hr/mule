@@ -1,0 +1,29 @@
+{
+  final String moduleName=(String)moduleProperties.get("module.name");
+  if (isEmpty(moduleName)) {
+    throw new IllegalStateException("Mule-module.properties must contain module.name property");
+  }
+  Set<String> modulePackages=new HashSet<>();
+  Set<String> modulePaths=new HashSet<>();
+  final String exportedPackagesProperty=(String)moduleProperties.get(EXPORTED_CLASS_PACKAGES_PROPERTY);
+  if (!isEmpty(exportedPackagesProperty)) {
+    for (    String packageName : exportedPackagesProperty.split(",")) {
+      packageName=packageName.trim();
+      if (!isEmpty(packageName)) {
+        modulePackages.add(packageName);
+      }
+    }
+  }
+  final String exportedResourcesProperty=(String)moduleProperties.get(EXPORTED_RESOURCE_PACKAGES_PROPERTY);
+  if (!isEmpty(exportedResourcesProperty)) {
+    for (    String path : exportedResourcesProperty.split(",")) {
+      if (!isEmpty(path.trim())) {
+        if (path.startsWith("/")) {
+          path=path.substring(1);
+        }
+        modulePaths.add(path);
+      }
+    }
+  }
+  return new MuleModule(moduleName,modulePackages,modulePaths);
+}
