@@ -3,13 +3,14 @@
   ComponentBuildingDefinition parentBuildingDefinition=componentBuildingDefinitionRegistry.getBuildingDefinition(componentModel.getParent().getIdentifier()).get();
   Map<String,WrapperComponentConfig> wrapperIdentifierAndTypeMap=getWrapperIdentifierAndTypeMap(parentBuildingDefinition);
   WrapperComponentConfig wrapperComponentConfig=wrapperIdentifierAndTypeMap.get(componentModel.getIdentifier().getName());
-  if (wrapperComponentConfig.getChildType().equals(COLLECTION)) {
+  if (wrapperComponentConfig.getWrapperType().equals(COLLECTION)) {
+    Class<? extends Collection> type=wrapperComponentConfig.getCollectionTypeOptional().orElse(ArrayList.class);
     ManagedList<Object> managedList=new ManagedList<>();
     for (    ComponentModel innerComponentModel : componentModel.getInnerComponents()) {
       Object value=innerComponentModel.getBeanDefinition() != null ? innerComponentModel.getBeanDefinition() : innerComponentModel.getBeanReference();
       managedList.add(value);
     }
-    componentModel.setBeanDefinition(genericBeanDefinition(wrapperComponentConfig.getCollectionTypeOptional().orElse(ArrayList.class)).addConstructorArgValue(managedList).getBeanDefinition());
+    componentModel.setBeanDefinition(genericBeanDefinition(type).addConstructorArgValue(managedList).getBeanDefinition());
   }
  else {
     componentModel.setBeanDefinition(componentModel.getInnerComponents().get(0).getBeanDefinition());
