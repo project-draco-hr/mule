@@ -1,18 +1,19 @@
 {
-  try {
+  if (muleMessage instanceof DefaultMuleMessage) {
+    properties=new MessagePropertiesContext(((DefaultMuleMessage)muleMessage).properties);
+  }
+ else {
     for (    String name : muleMessage.getInboundPropertyNames()) {
       Serializable value=muleMessage.getInboundProperty(name);
       if (value != null) {
-        setPropertyInternal(name,value,INBOUND,DataTypeFactory.createFromObject(value));
+        properties.setInboundProperty(name,value,muleMessage.getInboundPropertyDataType(name).cloneDataType());
       }
     }
     for (    String name : muleMessage.getOutboundPropertyNames()) {
       Serializable value=muleMessage.getOutboundProperty(name);
       if (value != null) {
-        setPropertyInternal(name,value,OUTBOUND,DataTypeFactory.createFromObject(value));
+        properties.setOutboundProperty(name,value,muleMessage.getOutboundPropertyDataType(name).cloneDataType());
       }
     }
-  }
- catch (  IllegalArgumentException iae) {
   }
 }
