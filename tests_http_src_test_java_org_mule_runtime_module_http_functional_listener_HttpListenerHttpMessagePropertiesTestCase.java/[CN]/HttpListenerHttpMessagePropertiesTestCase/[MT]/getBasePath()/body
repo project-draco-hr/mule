@@ -2,10 +2,11 @@
   final String url=String.format("http://localhost:%s%s",listenBasePort.getNumber(),API_CONTEXT_PATH);
   Request.Get(url).connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage message=muleContext.getClient().request("test://out",RECEIVE_TIMEOUT);
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_LISTENER_PATH),is("/api/*"));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REQUEST_PATH_PROPERTY),is(API_CONTEXT_PATH));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_RELATIVE_PATH),is(CONTEXT_PATH));
-  ParameterMap uriParams=message.getInboundProperty(HttpConstants.RequestProperties.HTTP_URI_PARAMS);
+  HttpRequestAttributes attributes=getAttributes(message);
+  assertThat(attributes.getListenerPath(),is("/api/*"));
+  assertThat(attributes.getRequestPath(),is(API_CONTEXT_PATH));
+  assertThat(attributes.getRelativePath(),is(CONTEXT_PATH));
+  ParameterMap uriParams=attributes.getUriParams();
   assertThat(uriParams,notNullValue());
   assertThat(uriParams.isEmpty(),is(true));
 }

@@ -1,7 +1,27 @@
 {
   final HttpRequest request=requestContext.getRequest();
+  final String contentTypeValue=request.getHeaderValueIgnoreCase(CONTENT_TYPE);
+  MediaType mediaType=null;
+  String encoding=null;
+  if (contentTypeValue != null) {
+    try {
+      mediaType=MediaType.parse(contentTypeValue);
+      encoding=mediaType.charset().isPresent() ? mediaType.charset().get().name() : Charset.defaultCharset().name();
+    }
+ catch (    IllegalArgumentException e) {
+      if (parseBoolean(System.getProperty(SYSTEM_PROPERTY_PREFIX + "strictContentType"))) {
+        throw e;
+      }
+ else {
+        encoding=Charset.defaultCharset().name();
+        logger.warn(String.format("%s when parsing Content-Type '%s': %s",e.getClass().getName(),contentTypeValue,e.getMessage()));
+        logger.warn(String.format("Using default encoding: %s",encoding));
+      }
+    }
+  }
   final Map<String,DataHandler> parts=new HashMap<>();
   Object payload=NullPayload.getInstance();
+  Class type=NullPayload.class;
   if (parseRequest) {
     final HttpEntity entity=request.getEntity();
     if (entity != null && !(entity instanceof EmptyHttpEntity)) {
@@ -9,13 +29,11 @@
         parts.putAll(createDataHandlerFrom(((MultipartHttpEntity)entity).getParts()));
       }
  else {
-        final String contentTypeValue=request.getHeaderValueIgnoreCase(CONTENT_TYPE);
         if (contentTypeValue != null) {
-          final MediaType mediaType=MediaType.parse(contentTypeValue);
-          String encoding=mediaType.charset().isPresent() ? mediaType.charset().get().name() : Charset.defaultCharset().name();
           if ((mediaType.type() + "/" + mediaType.subtype()).equals(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
             try {
               payload=decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),encoding);
+              type=ParameterMap.class;
             }
  catch (            IllegalArgumentException e) {
               throw new HttpRequestParsingException("Cannot decode x-www-form-urlencoded payload",e);
@@ -23,10 +41,12 @@
           }
  else           if (entity instanceof InputStreamHttpEntity) {
             payload=((InputStreamHttpEntity)entity).getInputStream();
+            type=InputStream.class;
           }
         }
  else         if (entity instanceof InputStreamHttpEntity) {
           payload=((InputStreamHttpEntity)entity).getInputStream();
+          type=InputStream.class;
         }
       }
     }
@@ -35,8 +55,11 @@
     final InputStreamHttpEntity inputStreamEntity=request.getInputStreamEntity();
     if (inputStreamEntity != null) {
       payload=inputStreamEntity.getInputStream();
+      type=InputStream.class;
     }
   }
   HttpRequestAttributes attributes=new HttpRequestAttributesBuilder().setRequestContext(requestContext).setListenerPath(listenerPath).setParts(parts).build();
-  return new DefaultMuleMessage(payload,null,attributes,muleContext);
+  String resolvedMimeType=mediaType != null ? mediaType.toString() : null;
+  DataType dataType=DataTypeFactory.create(type,resolvedMimeType,encoding);
+  return new DefaultMuleMessage(payload,dataType,attributes,muleContext);
 }

@@ -2,16 +2,17 @@
   final String url=String.format("http://localhost:%s",listenPort.getNumber());
   Request.Get(url).connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage message=muleContext.getClient().request("test://out",RECEIVE_TIMEOUT);
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REQUEST_URI),is(BASE_PATH));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REQUEST_PATH_PROPERTY),is(BASE_PATH));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_RELATIVE_PATH),is(BASE_PATH));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_QUERY_STRING),is(""));
-  assertThat(message.getInboundProperty(HttpConstants.RequestProperties.HTTP_URI_PARAMS),notNullValue());
-  assertThat(message.<ParameterMap>getInboundProperty(HttpConstants.RequestProperties.HTTP_URI_PARAMS).isEmpty(),is(true));
-  final Map queryParams=message.getInboundProperty(HttpConstants.RequestProperties.HTTP_QUERY_PARAMS);
-  assertThat(queryParams,IsNull.notNullValue());
+  HttpRequestAttributes attributes=getAttributes(message);
+  assertThat(attributes.getRequestUri(),is(BASE_PATH));
+  assertThat(attributes.getRequestPath(),is(BASE_PATH));
+  assertThat(attributes.getRelativePath(),is(BASE_PATH));
+  assertThat(attributes.getQueryString(),is(""));
+  assertThat(attributes.getUriParams(),notNullValue());
+  assertThat(attributes.getUriParams().isEmpty(),is(true));
+  final Map queryParams=attributes.getQueryParams();
+  assertThat(queryParams,notNullValue());
   assertThat(queryParams.size(),is(0));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_METHOD_PROPERTY),is("GET"));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_VERSION_PROPERTY),is(HttpProtocol.HTTP_1_1.asString()));
-  assertThat(message.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),is(CoreMatchers.notNullValue()));
+  assertThat(attributes.getMethod(),is("GET"));
+  assertThat(attributes.getVersion(),is(HTTP_1_1.asString()));
+  assertThat(attributes.getRemoteAddress(),is(notNullValue()));
 }

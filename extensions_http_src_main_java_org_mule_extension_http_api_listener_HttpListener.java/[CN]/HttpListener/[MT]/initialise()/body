@@ -11,4 +11,17 @@
     errorResponseBuilder=HttpResponseBuilder.emptyInstance();
   }
   initialiseIfNeeded(errorResponseBuilder);
+  path=HttpParser.sanitizePathWithStartSlash(path);
+  listenerPath=config.getFullListenerPath(path);
+  path=listenerPath.getResolvedPath();
+  responseBuilder.setResponseStreaming(responseStreamingMode);
+  errorResponseBuilder.setResponseStreaming(responseStreamingMode);
+  validatePath();
+  parseRequest=config.resolveParseRequest(parseRequest);
+  try {
+    requestHandlerManager=server.addRequestHandler(new ListenerRequestMatcher(methodRequestMatcher,path),getRequestHandler());
+  }
+ catch (  Exception e) {
+    throw new InitialisationException(e,this);
+  }
 }

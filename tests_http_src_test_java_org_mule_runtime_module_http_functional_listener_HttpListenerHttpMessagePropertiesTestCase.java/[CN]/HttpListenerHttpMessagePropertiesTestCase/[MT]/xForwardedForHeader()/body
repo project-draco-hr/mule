@@ -2,10 +2,12 @@
   final String url=String.format("http://localhost:%s/some-path",listenPort.getNumber());
   Post(url).connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage message=muleContext.getClient().request("test://out",RECEIVE_TIMEOUT);
-  assertThat(message.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),startsWith("/127.0.0.1:"));
-  assertThat(message.<String>getInboundProperty(HttpHeaders.Names.X_FORWARDED_FOR),nullValue());
-  Post(url).addHeader(HttpHeaders.Names.X_FORWARDED_FOR,"clientIp, proxy1Ip").connectTimeout(RECEIVE_TIMEOUT).execute();
+  HttpRequestAttributes attributes=getAttributes(message);
+  assertThat(attributes.getRemoteAddress(),startsWith("/127.0.0.1:"));
+  assertThat(attributes.getHeaders().get(X_FORWARDED_FOR),nullValue());
+  Post(url).addHeader(X_FORWARDED_FOR,"clientIp, proxy1Ip").connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage forwardedMessage=muleContext.getClient().request("test://out",RECEIVE_TIMEOUT);
-  assertThat(forwardedMessage.<String>getInboundProperty(HTTP_REMOTE_ADDRESS),startsWith("/127.0.0.1:"));
-  assertThat(forwardedMessage.<String>getInboundProperty(HttpHeaders.Names.X_FORWARDED_FOR),is("clientIp, proxy1Ip"));
+  HttpRequestAttributes forwardedAttributes=getAttributes(forwardedMessage);
+  assertThat(forwardedAttributes.getRemoteAddress(),startsWith("/127.0.0.1:"));
+  assertThat(forwardedAttributes.getHeaders().get(X_FORWARDED_FOR.toLowerCase()),is("clientIp, proxy1Ip"));
 }

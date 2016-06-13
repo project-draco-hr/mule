@@ -4,11 +4,12 @@
   final String url=String.format("http://localhost:%s" + uri,listenPort.getNumber());
   Request.Get(url).connectTimeout(RECEIVE_TIMEOUT).execute();
   final MuleMessage message=muleContext.getClient().request("test://out",RECEIVE_TIMEOUT);
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REQUEST_URI),is(uri));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_REQUEST_PATH_PROPERTY),is(BASE_PATH));
-  assertThat(message.<String>getInboundProperty(HttpConstants.RequestProperties.HTTP_RELATIVE_PATH),is(BASE_PATH));
-  Map<String,String> retrivedQueryParams=message.getInboundProperty(HttpConstants.RequestProperties.HTTP_QUERY_PARAMS);
-  assertThat(retrivedQueryParams,IsNull.notNullValue());
+  HttpRequestAttributes attributes=getAttributes(message);
+  assertThat(attributes.getRequestUri(),is(uri));
+  assertThat(attributes.getRequestPath(),is(BASE_PATH));
+  assertThat(attributes.getRelativePath(),is(BASE_PATH));
+  Map<String,String> retrivedQueryParams=attributes.getQueryParams();
+  assertThat(retrivedQueryParams,notNullValue());
   assertThat(retrivedQueryParams.size(),is(2));
   assertThat(retrivedQueryParams.get(QUERY_PARAM_NAME),is(QUERY_PARAM_VALUE));
   assertThat(retrivedQueryParams.get(SECOND_QUERY_PARAM_NAME),is(SECOND_QUERY_PARAM_VALUE));
