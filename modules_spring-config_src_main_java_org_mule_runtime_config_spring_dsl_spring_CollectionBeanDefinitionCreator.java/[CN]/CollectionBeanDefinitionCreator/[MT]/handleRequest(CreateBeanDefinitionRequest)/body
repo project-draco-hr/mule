@@ -1,0 +1,17 @@
+{
+  ComponentModel componentModel=createBeanDefinitionRequest.getComponentModel();
+  ComponentBuildingDefinition componentBuildingDefinition=createBeanDefinitionRequest.getComponentBuildingDefinition();
+  ObjectTypeVisitor objectTypeVisitor=new ObjectTypeVisitor(componentModel);
+  componentBuildingDefinition.getTypeDefinition().visit(objectTypeVisitor);
+  if (Collection.class.isAssignableFrom(objectTypeVisitor.getType())) {
+    componentModel.setType(objectTypeVisitor.getType());
+    ManagedList<Object> managedList=new ManagedList<>();
+    for (    ComponentModel innerComponent : componentModel.getInnerComponents()) {
+      Object bean=innerComponent.getBeanDefinition() == null ? innerComponent.getBeanReference() : innerComponent.getBeanDefinition();
+      managedList.add(bean);
+    }
+    componentModel.setBeanDefinition(BeanDefinitionBuilder.genericBeanDefinition(objectTypeVisitor.getType()).addConstructorArgValue(managedList).getBeanDefinition());
+    return true;
+  }
+  return false;
+}

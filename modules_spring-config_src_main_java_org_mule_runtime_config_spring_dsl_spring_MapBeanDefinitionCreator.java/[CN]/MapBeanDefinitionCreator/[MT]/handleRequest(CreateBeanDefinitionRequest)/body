@@ -1,0 +1,15 @@
+{
+  ComponentModel componentModel=createBeanDefinitionRequest.getComponentModel();
+  ObjectTypeVisitor objectTypeVisitor=new ObjectTypeVisitor(componentModel);
+  createBeanDefinitionRequest.getComponentBuildingDefinition().getTypeDefinition().visit(objectTypeVisitor);
+  Class<?> type=objectTypeVisitor.getType();
+  if (Map.class.isAssignableFrom(type)) {
+    ManagedList managedList=new ManagedList<>();
+    for (    ComponentModel innerComponent : componentModel.getInnerComponents()) {
+      managedList.add(innerComponent.getBeanDefinition());
+    }
+    componentModel.setBeanDefinition(BeanDefinitionBuilder.genericBeanDefinition(MapFactoryBean.class).addConstructorArgValue(managedList).addConstructorArgValue(type).getBeanDefinition());
+    return true;
+  }
+  return false;
+}

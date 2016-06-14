@@ -1,0 +1,39 @@
+{
+  ObjectTypeVisitor objectTypeVisitor=new ObjectTypeVisitor(createBeanDefinitionRequest.getComponentModel());
+  createBeanDefinitionRequest.getComponentBuildingDefinition().getTypeDefinition().visit(objectTypeVisitor);
+  Class<?> type=objectTypeVisitor.getType();
+  if (!(MapEntryType.class.isAssignableFrom(type))) {
+    return false;
+  }
+  ComponentModel componentModel=createBeanDefinitionRequest.getComponentModel();
+  ComponentBuildingDefinition componentBuildingDefinition=createBeanDefinitionRequest.getComponentBuildingDefinition();
+  componentModel.setType(type);
+  final Object key=componentModel.getParameters().get(ENTRY_TYPE_KEY_PARAMETER_NAME);
+  Object keyBeanDefinition=getParameterBeanDefinition(objectTypeVisitor.getMapEntryType().get().getKeyType(),componentBuildingDefinition.getKeyTypeConverter(),key);
+  Object value;
+  Class valueType=objectTypeVisitor.getMapEntryType().get().getValueType();
+  if (isSimpleType(valueType)) {
+    value=getParameterBeanDefinition(objectTypeVisitor.getMapEntryType().get().getValueType(),componentBuildingDefinition.getTypeConverter(),componentModel.getParameters().get(SIMPLE_TYPE_VALUE_PARAMETER_NAME));
+  }
+ else   if (List.class.isAssignableFrom(objectTypeVisitor.getMapEntryType().get().getValueType())) {
+    if (componentModel.getInnerComponents().isEmpty()) {
+      String valueParameter=componentModel.getParameters().get(SIMPLE_TYPE_VALUE_PARAMETER_NAME);
+      value=getParameterBeanDefinition(valueType,componentBuildingDefinition.getTypeConverter(),valueParameter);
+    }
+ else {
+      ManagedList<Object> managedList=new ManagedList<>();
+      for (      ComponentModel childComponent : componentModel.getInnerComponents()) {
+        managedList.add(childComponent.getBeanDefinition() != null ? childComponent.getBeanDefinition() : childComponent.getBeanReference());
+      }
+      value=genericBeanDefinition(ObjectTypeVisitor.DEFAULT_COLLECTION_TYPE).addConstructorArgValue(managedList).getBeanDefinition();
+    }
+  }
+ else {
+    ComponentModel childComponentModel=componentModel.getInnerComponents().get(0);
+    BeanDefinition beanDefinition=childComponentModel.getBeanDefinition();
+    value=beanDefinition != null ? beanDefinition : childComponentModel.getBeanReference();
+  }
+  AbstractBeanDefinition beanDefinition=genericBeanDefinition(MapEntry.class).addConstructorArgValue(keyBeanDefinition).addConstructorArgValue(value).getBeanDefinition();
+  componentModel.setBeanDefinition(beanDefinition);
+  return true;
+}
