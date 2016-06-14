@@ -1,31 +1,33 @@
 {
   final HttpResponseHeaderBuilder httpResponseHeaderBuilder=new HttpResponseHeaderBuilder();
-  if (!headers.containsKey(CONTENT_TYPE_PROPERTY)) {
+  Map<String,String> resolvedHeaders=headersRef != null ? headersRef.apply(event) : headers;
+  if (!resolvedHeaders.containsKey(CONTENT_TYPE_PROPERTY)) {
     DataType<?> dataType=event.getMessage().getDataType();
     if (!MimeTypes.ANY.equals(dataType.getMimeType())) {
       httpResponseHeaderBuilder.addHeader(CONTENT_TYPE_PROPERTY,DataTypeUtils.getContentType(dataType));
     }
   }
-  for (  String name : headers.keySet()) {
+  for (  String name : resolvedHeaders.keySet()) {
     if (TRANSFER_ENCODING.equals(name) && !supportsTransferEncoding) {
       logger.debug("Client HTTP version is lower than 1.1 so the unsupported 'Transfer-Encoding' header has been removed and 'Content-Length' will be sent instead.");
     }
  else {
-      httpResponseHeaderBuilder.addHeader(name,headers.get(name));
+      httpResponseHeaderBuilder.addHeader(name,resolvedHeaders.get(name));
     }
   }
   final String configuredContentType=httpResponseHeaderBuilder.getContentType();
   final String existingTransferEncoding=httpResponseHeaderBuilder.getTransferEncoding();
   final String existingContentLength=httpResponseHeaderBuilder.getContentLength();
   HttpEntity httpEntity;
-  if (!parts.isEmpty()) {
+  List<HttpPart> resolvedParts=partsRef != null ? partsRef.apply(event) : parts;
+  if (!resolvedParts.isEmpty()) {
     if (configuredContentType == null) {
       httpResponseHeaderBuilder.addContentType(createMultipartFormDataContentType());
     }
  else     if (!configuredContentType.startsWith(MULTIPART)) {
       warnNoMultipartContentTypeButMultipartEntity(httpResponseHeaderBuilder.getContentType());
     }
-    httpEntity=createMultipartEntity(event.getMessage(),httpResponseHeaderBuilder.getContentType());
+    httpEntity=createMultipartEntity(event.getMessage(),httpResponseHeaderBuilder.getContentType(),resolvedParts);
     resolveEncoding(httpResponseHeaderBuilder,existingTransferEncoding,existingContentLength,supportsTransferEncoding,(ByteArrayHttpEntity)httpEntity);
   }
  else {
