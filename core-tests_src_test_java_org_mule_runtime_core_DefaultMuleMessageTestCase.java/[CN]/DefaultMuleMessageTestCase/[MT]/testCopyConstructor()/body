@@ -1,17 +1,18 @@
 {
-  DefaultMuleMessage original=(DefaultMuleMessage)createMuleMessage();
+  DefaultMuleMessage original=createMuleMessage();
   Map<String,Serializable> properties=createMessageProperties();
   original.addInboundProperties(properties);
   assertInboundAndOutboundMessageProperties(original);
   DefaultMuleMessage copy=new DefaultMuleMessage(original);
   assertInboundAndOutboundMessageProperties(copy);
-  assertEquals(muleContext.getConfiguration().getDefaultEncoding(),copy.getEncoding());
+  assertThat(copy.getEncoding(),equalTo(muleContext.getConfiguration().getDefaultEncoding()));
+  assertThat(copy.getAttributes(),is(testAttributes));
   original.setOutboundProperty("FOO","OTHER");
-  assertNull(copy.getOutboundProperty("FOO"));
+  assertThat(copy.getOutboundProperty("FOO"),is(nullValue()));
   original.setInboundProperty("FOO","OTHER");
-  assertNull(copy.getInboundProperty("FOO"));
+  assertThat(copy.getInboundProperty("FOO"),is(nullValue()));
   copy.setOutboundProperty("ABC","OTHER");
-  assertNull(original.getOutboundProperty("ABC"));
+  assertThat(original.getOutboundProperty("ABC"),is(nullValue()));
   copy.setInboundProperty("ABC","OTHER");
-  assertNull(original.getInboundProperty("ABC"));
+  assertThat(original.getInboundProperty("ABC"),is(nullValue()));
 }
