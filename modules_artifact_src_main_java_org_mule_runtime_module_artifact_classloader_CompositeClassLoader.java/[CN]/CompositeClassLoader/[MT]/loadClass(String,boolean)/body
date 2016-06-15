@@ -1,6 +1,7 @@
 {
   final ClassLoaderLookupStrategy lookupStrategy=lookupPolicy.getLookupStrategy(name);
   Class<?> result;
+  final List<ClassNotFoundException> exceptions=new ArrayList<>(classLoaders.size() + 1);
   if (lookupStrategy == PARENT_ONLY) {
     result=getParent().loadClass(name);
   }
@@ -9,11 +10,12 @@
       result=getParent().loadClass(name);
     }
  catch (    ClassNotFoundException e) {
-      result=doLoadClass(name);
+      exceptions.add(e);
+      result=doLoadClass(name,exceptions);
     }
   }
  else {
-    result=doLoadClass(name);
+    result=doLoadClass(name,exceptions);
     if (result == null) {
       result=getParent().loadClass(name);
     }
@@ -24,5 +26,5 @@
     }
     return result;
   }
-  throw new ClassNotFoundException(String.format("Cannot load class '%s'",name));
+  throw new CompositeClassNotFoundException(name,lookupStrategy,exceptions);
 }

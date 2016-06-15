@@ -4,24 +4,32 @@
     return result;
   }
   final ClassLoaderLookupStrategy lookupStrategy=lookupPolicy.getLookupStrategy(name);
-  if (lookupStrategy == PARENT_ONLY) {
-    result=findParentClass(name);
-  }
- else   if (lookupStrategy == PARENT_FIRST) {
-    try {
+  ClassNotFoundException firstException=null;
+  try {
+    if (lookupStrategy == PARENT_ONLY) {
       result=findParentClass(name);
     }
- catch (    ClassNotFoundException e) {
-      result=findClass(name);
+ else     if (lookupStrategy == PARENT_FIRST) {
+      try {
+        result=findParentClass(name);
+      }
+ catch (      ClassNotFoundException e) {
+        firstException=e;
+        result=findClass(name);
+      }
     }
-  }
  else {
-    try {
-      result=findClass(name);
+      try {
+        result=findClass(name);
+      }
+ catch (      ClassNotFoundException e) {
+        firstException=e;
+        result=findParentClass(name);
+      }
     }
- catch (    ClassNotFoundException e) {
-      result=findParentClass(name);
-    }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new CompositeClassNotFoundException(name,lookupStrategy,firstException != null ? asList(firstException,e) : asList(e));
   }
   if (resolve) {
     resolveClass(result);
