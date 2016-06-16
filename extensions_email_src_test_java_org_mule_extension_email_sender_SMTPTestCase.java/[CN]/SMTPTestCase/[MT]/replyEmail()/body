@@ -1,0 +1,13 @@
+{
+  EmailAttributes attributes=getTestAttributes();
+  when(attributes.getReplyToAddresses()).thenReturn(singletonList(MG_EMAIL));
+  flowRunner(REPLY_EMAIL).withPayload(EMAIL_CONTENT).withAttributes(attributes).run();
+  Message repliedMessage=getReceivedMessagesAndAssertCount(1)[0];
+  String subject=repliedMessage.getSubject();
+  Address[] recipients=repliedMessage.getAllRecipients();
+  String inReplyHeaderValue=repliedMessage.getHeader(IN_REPLY_TO_HEADER)[0];
+  assertThat(subject,new StartsWith("Re"));
+  assertThat(recipients,arrayWithSize(1));
+  assertThat(recipients[0].toString(),is(MG_EMAIL));
+  assertThat(inReplyHeaderValue,is(Integer.toString(attributes.getId())));
+}

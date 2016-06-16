@@ -1,0 +1,25 @@
+{
+  Properties properties=new Properties();
+  properties.setProperty(protocol.getStartTlsProperty(),"true");
+  properties.setProperty(protocol.getSslEnableProperty(),"true");
+  properties.setProperty(protocol.getSocketFactoryFallbackProperty(),"false");
+  if (tlsContextFactory.getTrustStoreConfiguration().isInsecure()) {
+    properties.setProperty(protocol.getSslTrustProperty(),"*");
+  }
+  String[] cipherSuites=tlsContextFactory.getEnabledCipherSuites();
+  if (cipherSuites != null) {
+    properties.setProperty(protocol.getSslCiphersuitesProperty(),join(cipherSuites,WHITESPACE_SEPARATOR));
+  }
+  String[] sslProtocols=tlsContextFactory.getEnabledProtocols();
+  if (sslProtocols != null) {
+    properties.setProperty(protocol.getSslProtocolsProperty(),join(sslProtocols,WHITESPACE_SEPARATOR));
+  }
+  try {
+    SSLContext sslContext=tlsContextFactory.createSslContext();
+    properties.put(protocol.getSocketFactoryProperty(),sslContext.getSocketFactory());
+  }
+ catch (  KeyManagementException|NoSuchAlgorithmException e) {
+    throw new EmailConnectionException("Failed when creating SSL context.");
+  }
+  return properties;
+}

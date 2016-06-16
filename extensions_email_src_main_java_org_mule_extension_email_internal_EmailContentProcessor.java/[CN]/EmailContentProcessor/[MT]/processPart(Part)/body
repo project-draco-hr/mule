@@ -1,0 +1,26 @@
+{
+  try {
+    Object content=part.getContent();
+    if (isMultipart(content)) {
+      processMultipartPart(part);
+    }
+    if (isAttachment(part)) {
+      String contentType=part.getDataHandler().getContentType();
+      ByteArrayInputStream inputStream=new ByteArrayInputStream(toByteArray(part.getInputStream()));
+      DataHandler attachment=new DataHandler(inputStream,contentType);
+      attachments.put(part.getFileName(),attachment);
+    }
+ else {
+      if (isText(content)) {
+        body.add((String)content);
+      }
+      if (content instanceof InputStream && isInline(part) && part.isMimeType(TEXT)) {
+        String inline=IOUtils.toString((InputStream)content);
+        body.add(inline);
+      }
+    }
+  }
+ catch (  MessagingException|IOException e) {
+    throw new EmailException(ERROR_PROCESSING_MESSAGE,e);
+  }
+}

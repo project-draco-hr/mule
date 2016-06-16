@@ -1,0 +1,14 @@
+{
+  runFlow(SEND_EMAIL_WITH_ATTACHMENT);
+  Message[] messages=getReceivedMessagesAndAssertCount(4);
+  for (  Message message : messages) {
+    Multipart content=(Multipart)message.getContent();
+    assertThat(content.getCount(),is(3));
+    Object body=content.getBodyPart(0).getContent();
+    assertBodyContent((String)body);
+    String textAttachment=(String)content.getBodyPart(1).getContent();
+    assertThat(EMAIL_TEXT_PLAIN_ATTACHMENT_CONTENT,is(textAttachment));
+    DataHandler jsonAttachment=content.getBodyPart(2).getDataHandler();
+    assertThat(EMAIL_JSON_ATTACHMENT_CONTENT,is(IOUtils.toString((InputStream)jsonAttachment.getContent())));
+  }
+}

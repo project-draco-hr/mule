@@ -1,0 +1,29 @@
+{
+  if (attachments != null && !attachments.isEmpty()) {
+    MimeMultipart multipart=new MimeMultipart();
+    MimeBodyPart bodyPart=new MimeBodyPart();
+    bodyPart.setDisposition(INLINE);
+    bodyPart.setContent(content,contentType);
+    multipart.addBodyPart(bodyPart);
+    MimeBodyPart attachmentPart;
+    for (    String attachment : attachments.keySet()) {
+      try {
+        attachmentPart=new MimeBodyPart();
+        attachmentPart.setDisposition(ATTACHMENT);
+        attachmentPart.setFileName(attachment);
+        DataHandler attachmentDataHandler=attachments.get(attachment);
+        attachmentPart.setDataHandler(attachmentDataHandler);
+        multipart.addBodyPart(attachmentPart);
+      }
+ catch (      Exception e) {
+        throw new EmailException("Error while adding attachment: " + attachment,e);
+      }
+    }
+    this.message.setContent(multipart,MULTIPART);
+  }
+ else {
+    this.message.setDisposition(INLINE);
+    this.message.setContent(content,contentType);
+  }
+  return message;
+}

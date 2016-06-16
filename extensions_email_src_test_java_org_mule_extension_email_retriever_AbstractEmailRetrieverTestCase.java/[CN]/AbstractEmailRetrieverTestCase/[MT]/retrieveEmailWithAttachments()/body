@@ -1,0 +1,12 @@
+{
+  server.purgeEmailFromAllMailboxes();
+  user.deliver(getMultipartTestMessage());
+  List<MuleMessage> messages=runFlowAndGetMessages(RETRIEVE_WITH_ATTACHMENTS);
+  assertThat(messages,hasSize(1));
+  EmailAttributes attributes=(EmailAttributes)messages.get(0).getAttributes();
+  Map<String,DataHandler> emailAttachments=attributes.getAttachments();
+  assertThat(emailAttachments.entrySet(),hasSize(2));
+  assertThat(emailAttachments.keySet(),containsInAnyOrder(EMAIL_JSON_ATTACHMENT_NAME,EMAIL_TEXT_PLAIN_ATTACHMENT_NAME));
+  assertAttachmentContent(emailAttachments,EMAIL_JSON_ATTACHMENT_NAME,EMAIL_JSON_ATTACHMENT_CONTENT);
+  assertAttachmentContent(emailAttachments,EMAIL_TEXT_PLAIN_ATTACHMENT_NAME,EMAIL_TEXT_PLAIN_ATTACHMENT_CONTENT);
+}
