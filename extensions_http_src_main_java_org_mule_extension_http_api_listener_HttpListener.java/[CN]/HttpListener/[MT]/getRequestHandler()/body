@@ -6,7 +6,7 @@
         final boolean supportStreaming=supportsTransferEncoding(httpVersion);
         CompletionHandler<org.mule.runtime.api.message.MuleEvent,Exception,org.mule.runtime.api.message.MuleEvent> completionHandler=new CompletionHandler<org.mule.runtime.api.message.MuleEvent,Exception,org.mule.runtime.api.message.MuleEvent>(){
           @Override public void onCompletion(          org.mule.runtime.api.message.MuleEvent result,          ExceptionCallback<org.mule.runtime.api.message.MuleEvent,Exception> exceptionCallback){
-            final org.mule.runtime.module.http.internal.domain.response.HttpResponseBuilder responseBuilder=new org.mule.runtime.module.http.internal.domain.response.HttpResponseBuilder();
+            final HttpResponseBuilder responseBuilder=new HttpResponseBuilder();
             final HttpResponse httpResponse=buildResponse((MuleEvent)result,responseBuilder,supportStreaming,exceptionCallback);
             responseCallback.responseReady(httpResponse,getResponseFailureCallback(responseCallback));
           }
@@ -14,13 +14,13 @@
             MessagingException messagingException=(MessagingException)exception;
             String exceptionStatusCode=ExceptionHelper.getTransportErrorMapping(HTTP.getScheme(),messagingException.getClass(),muleContext);
             Integer statusCodeFromException=exceptionStatusCode != null ? Integer.valueOf(exceptionStatusCode) : 500;
-            final org.mule.runtime.module.http.internal.domain.response.HttpResponseBuilder failureResponseBuilder=new org.mule.runtime.module.http.internal.domain.response.HttpResponseBuilder().setStatusCode(statusCodeFromException).setReasonPhrase(messagingException.getMessage());
+            final HttpResponseBuilder failureResponseBuilder=new HttpResponseBuilder().setStatusCode(statusCodeFromException).setReasonPhrase(messagingException.getMessage());
             addThrottlingHeaders(failureResponseBuilder);
             MuleEvent event=messagingException.getEvent();
             event.getMessage().setPayload(messagingException.getMessage());
             HttpResponse response;
             try {
-              response=errorResponseBuilder.build(failureResponseBuilder,messagingException.getEvent(),supportStreaming);
+              response=muleEventToHttpResponse.create(messagingException.getEvent(),failureResponseBuilder,errorResponseBuilder,supportStreaming);
             }
  catch (            MessagingException e) {
               response=new DefaultHttpResponse(new ResponseStatus(500,"Server error"),new MultiValueMap(),new EmptyHttpEntity());
@@ -44,7 +44,7 @@ catch (      RuntimeException e) {
       }
     }
     private void sendErrorResponse(    final HttpConstants.HttpStatus status,    String message,    HttpResponseReadyCallback responseCallback){
-      responseCallback.responseReady(new org.mule.runtime.module.http.internal.domain.response.HttpResponseBuilder().setStatusCode(status.getStatusCode()).setReasonPhrase(status.getReasonPhrase()).setEntity(new ByteArrayHttpEntity(message.getBytes())).build(),new ResponseStatusCallback(){
+      responseCallback.responseReady(new HttpResponseBuilder().setStatusCode(status.getStatusCode()).setReasonPhrase(status.getReasonPhrase()).setEntity(new ByteArrayHttpEntity(message.getBytes())).build(),new ResponseStatusCallback(){
         @Override public void responseSendFailure(        Throwable exception){
           logger.warn("Error while sending {} response {}",status.getStatusCode(),exception.getMessage());
           if (logger.isDebugEnabled()) {
