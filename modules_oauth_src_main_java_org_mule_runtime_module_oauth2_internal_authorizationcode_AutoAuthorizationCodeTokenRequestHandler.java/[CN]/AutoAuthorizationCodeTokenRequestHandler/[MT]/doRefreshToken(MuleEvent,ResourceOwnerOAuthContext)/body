@@ -1,21 +1,2 @@
 {
-  try {
-    final MuleEvent muleEvent=DefaultMuleEvent.copy(currentEvent);
-    muleEvent.getMessage().clearOutboundProperties();
-    final String userRefreshToken=resourceOwnerOAuthContext.getRefreshToken();
-    if (userRefreshToken == null) {
-      throw new DefaultMuleException(CoreMessages.createStaticMessage("The user with user id %s has no refresh token in his OAuth state so we can't execute the refresh token call",resourceOwnerOAuthContext.getResourceOwnerId()));
-    }
-    setMapPayloadWithRefreshTokenRequestParameters(muleEvent,userRefreshToken);
-    final MuleEvent refreshTokenResponse=invokeTokenUrl(muleEvent);
-    logResourceOwnerOAuthContextBeforeUpdate(resourceOwnerOAuthContext);
-    TokenResponseProcessor tokenResponseProcessor=processTokenUrlResponse(refreshTokenResponse);
-    updateResourceOwnerState(resourceOwnerOAuthContext,null,tokenResponseProcessor);
-  }
- catch (  TokenNotFoundException e) {
-    throw new MuleRuntimeException(CoreMessages.createStaticMessage("Access token was not found from the refresh token oauth call"),e);
-  }
-catch (  Exception e) {
-    throw new MuleRuntimeException(e);
-  }
 }

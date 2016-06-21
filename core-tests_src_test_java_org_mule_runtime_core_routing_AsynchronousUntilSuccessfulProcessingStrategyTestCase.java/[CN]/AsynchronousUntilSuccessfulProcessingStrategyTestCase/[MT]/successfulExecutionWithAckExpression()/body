@@ -7,6 +7,12 @@
   waitUntilRouteIsExecuted();
   verify(mockRoute,times(1)).process(mockEvent);
   verify(mockUntilSuccessfulConfiguration.getMuleContext().getExpressionManager(),times(1)).evaluate(ackExpression,mockEvent);
-  verify(mockEvent.getMessage(),times(1)).setPayload(expressionEvalutaionResult);
+  verify(mockEvent,times(1)).setMessage(argThat(new ArgumentMatcher<MuleMessage>(){
+    @Override public boolean matches(    Object argument){
+      assertThat(((MuleMessage)argument).getPayload(),equalTo(expressionEvalutaionResult));
+      return true;
+    }
+  }
+));
   verify(mockEvent.getFlowConstruct().getExceptionListener(),never()).handleException(any(Exception.class),eq(mockEvent));
 }

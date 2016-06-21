@@ -4,6 +4,16 @@
   catchMessagingExceptionStrategy.setMessageProcessors(asList(createSetStringMessageProcessor("A"),createSetStringMessageProcessor("B")));
   catchMessagingExceptionStrategy.initialise();
   catchMessagingExceptionStrategy.handleException(mockException,mockMuleEvent);
-  verify(mockMuleEvent.getMessage(),times(1)).setPayload("A");
-  verify(mockMuleEvent.getMessage(),times(1)).setPayload("B");
+  verify(mockMuleEvent,times(1)).setMessage(argThat(new ArgumentMatcher<MuleMessage>(){
+    @Override public boolean matches(    Object argument){
+      return ((MuleMessage)argument).getPayload().equals("A");
+    }
+  }
+));
+  verify(mockMuleEvent,times(1)).setMessage(argThat(new ArgumentMatcher<MuleMessage>(){
+    @Override public boolean matches(    Object argument){
+      return ((MuleMessage)argument).getPayload().equals("B");
+    }
+  }
+));
 }

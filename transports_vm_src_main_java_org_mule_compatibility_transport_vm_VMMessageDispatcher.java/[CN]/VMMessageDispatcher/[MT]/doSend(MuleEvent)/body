@@ -1,24 +1,2 @@
 {
-  MuleMessage retMessage;
-  final VMMessageReceiver receiver=connector.getReceiver(endpoint.getEndpointURI());
-  if (receiver == null) {
-    throw new NoReceiverForEndpointException(VMMessages.noReceiverForEndpoint(connector.getName(),endpoint.getEndpointURI()));
-  }
-  MuleEvent eventToSend=DefaultMuleEvent.copy(event);
-  final MuleMessage message=eventToSend.getMessage().createInboundMessage();
-  ExecutionTemplate<MuleMessage> executionTemplate=TransactionalExecutionTemplate.createTransactionalExecutionTemplate(event.getMuleContext(),receiver.getEndpoint().getTransactionConfig());
-  ExecutionCallback<MuleMessage> processingCallback=new ExecutionCallback<MuleMessage>(){
-    @Override public MuleMessage process() throws Exception {
-      return receiver.onCall(message);
-    }
-  }
-;
-  retMessage=executionTemplate.execute(processingCallback);
-  if (logger.isDebugEnabled()) {
-    logger.debug("sent event on endpointUri: " + endpoint.getEndpointURI());
-  }
-  if (retMessage != null) {
-    retMessage=retMessage.createInboundMessage();
-  }
-  return retMessage;
 }

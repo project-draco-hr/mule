@@ -13,17 +13,17 @@
   assertTrue(router.isUseTemplates());
   assertEquals(filter,router.getFilter());
   MuleMessage message=new DefaultMuleMessage("test event",muleContext);
-  assertTrue(router.isMatch(message));
+  assertTrue(router.isMatch(getTestEvent(message)));
   when(mockEndpoint.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer());
   MuleSession session=mock(MuleSession.class);
   router.route(new OutboundRoutingTestEvent(message,session,muleContext));
   message=new DefaultMuleMessage(new Exception("test event"),muleContext);
-  assertTrue(!router.isMatch(message));
+  assertTrue(!router.isMatch(getTestEvent(message)));
   router.setTransformers(Arrays.<Transformer>asList(new AbstractTransformer(){
     @Override public Object doTransform(    Object src,    String outputEncoding) throws TransformerException {
       return ((Exception)src).getMessage();
     }
   }
 ));
-  assertTrue(router.isMatch(message));
+  assertTrue(router.isMatch(getTestEvent(message)));
 }

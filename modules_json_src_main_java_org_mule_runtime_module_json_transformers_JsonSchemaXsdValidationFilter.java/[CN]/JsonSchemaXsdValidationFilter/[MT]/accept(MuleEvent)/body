@@ -1,0 +1,32 @@
+{
+  String jsonString=null;
+  MuleMessage msg=event.getMessage();
+  try {
+    if (isReturnResult()) {
+      TransformerInputs transformerInputs=new TransformerInputs(null,msg.getPayload());
+      Writer jsonWriter=new StringWriter();
+      if (transformerInputs.getInputStream() != null) {
+        jsonWriter=new StringWriter();
+        IOUtils.copy(transformerInputs.getInputStream(),jsonWriter,msg.getEncoding());
+      }
+ else {
+        IOUtils.copy(transformerInputs.getReader(),jsonWriter);
+      }
+      jsonString=jsonWriter.toString();
+      msg=new DefaultMuleMessage(jsonString,msg,msg.getMuleContext());
+      event.setMessage(msg);
+    }
+    String xmlString=(String)jToX.transform(msg.getPayload(),msg.getEncoding());
+    MuleMessage xmlMessage=new DefaultMuleMessage(xmlString,msg,msg.getMuleContext());
+    boolean accepted=super.accept(new DefaultMuleEvent(xmlMessage,event.getFlowConstruct()));
+    if (jsonString != null) {
+      msg=new DefaultMuleMessage(jsonString,msg,event.getMuleContext());
+      event.setMessage(msg);
+    }
+    return accepted;
+  }
+ catch (  Exception ex) {
+    logger.warn("Exception validating json.",ex);
+    return false;
+  }
+}

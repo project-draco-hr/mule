@@ -1,14 +1,12 @@
 {
   CopyPropertiesTransformer copyPropertiesTransformer=createCopyPropertiesTransformer("MULE_*");
-  when(mockMuleMessage.getInboundPropertyNames()).thenReturn(new HashSet<>(Arrays.asList("MULE_ID","MULE_CORRELATION_ID","SomeVar","MULE_GROUP_ID")));
-  when(mockMuleMessage.getInboundProperty("MULE_ID")).thenReturn(PROPERTY_VALUE);
-  when(mockMuleMessage.getInboundProperty("MULE_CORRELATION_ID")).thenReturn(PROPERTY_VALUE);
-  when(mockMuleMessage.getInboundProperty("MULE_GROUP_ID")).thenReturn(PROPERTY_VALUE);
-  when(mockMuleMessage.getInboundProperty("SomeVar")).thenReturn(PROPERTY_VALUE);
-  when(mockMuleMessage.getInboundPropertyDataType(anyString())).thenReturn(PROPERTY_DATA_TYPE);
-  copyPropertiesTransformer.transform(mockMuleMessage,ENCODING);
-  verify(mockMuleMessage,times(0)).setOutboundProperty("SomeVar",PROPERTY_VALUE,PROPERTY_DATA_TYPE);
-  verify(mockMuleMessage).copyProperty("MULE_ID");
-  verify(mockMuleMessage).copyProperty("MULE_CORRELATION_ID");
-  verify(mockMuleMessage).copyProperty("MULE_GROUP_ID");
+  muleMessage.setInboundProperty("MULE_ID",PROPERTY_VALUE,PROPERTY_DATA_TYPE);
+  muleMessage.setInboundProperty("MULE_CORRELATION_ID",PROPERTY_VALUE,PROPERTY_DATA_TYPE);
+  muleMessage.setInboundProperty("MULE_GROUP_ID",PROPERTY_VALUE,PROPERTY_DATA_TYPE);
+  muleMessage.setInboundProperty("SomeVar",PROPERTY_VALUE,PROPERTY_DATA_TYPE);
+  final MuleMessage transformed=(MuleMessage)copyPropertiesTransformer.transform(muleMessage,ENCODING);
+  assertThat(transformed.getOutboundProperty("SomeVar"),is(nullValue()));
+  assertThat(transformed.getOutboundProperty("MULE_ID"),is(PROPERTY_VALUE));
+  assertThat(transformed.getOutboundProperty("MULE_CORRELATION_ID"),is(PROPERTY_VALUE));
+  assertThat(transformed.getOutboundProperty("MULE_GROUP_ID"),is(PROPERTY_VALUE));
 }

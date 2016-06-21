@@ -24,10 +24,11 @@
     file=new File(resourceBase + path + defaultFile);
   }
  else   if (file.isDirectory()) {
-    resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(NullPayload.getInstance(),event.getMuleContext()),event);
-    resultEvent.getMessage().setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_MOVED_TEMPORARILY));
-    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_CONTENT_LENGTH,0);
-    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_LOCATION,event.getMessage().getInboundProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY) + "/");
+    MutableMuleMessage message=new DefaultMuleMessage(NullPayload.getInstance(),event.getMuleContext());
+    message.setOutboundProperty(HTTP_STATUS_PROPERTY,valueOf(SC_MOVED_TEMPORARILY));
+    message.setOutboundProperty(HEADER_CONTENT_LENGTH,0);
+    message.setOutboundProperty(HEADER_LOCATION,event.getMessage().getInboundProperty(HTTP_REQUEST_PATH_PROPERTY) + "/");
+    resultEvent=new DefaultMuleEvent(message,event);
     return resultEvent;
   }
   InputStream in=null;
@@ -40,10 +41,11 @@
     if (mimetype == null) {
       mimetype=DEFAULT_MIME_TYPE;
     }
-    resultEvent=new DefaultMuleEvent(new DefaultMuleMessage(buffer,event.getMuleContext()),event);
-    resultEvent.getMessage().setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,String.valueOf(HttpConstants.SC_OK));
-    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_CONTENT_TYPE,mimetype);
-    resultEvent.getMessage().setOutboundProperty(HttpConstants.HEADER_CONTENT_LENGTH,buffer.length);
+    MutableMuleMessage message=new DefaultMuleMessage(buffer,event.getMuleContext());
+    message.setOutboundProperty(HTTP_STATUS_PROPERTY,valueOf(SC_OK));
+    message.setOutboundProperty(HEADER_CONTENT_TYPE,mimetype);
+    message.setOutboundProperty(HEADER_CONTENT_LENGTH,buffer.length);
+    resultEvent=new DefaultMuleEvent(message,event);
   }
  catch (  IOException e) {
     throw new ResourceNotFoundException(HttpMessages.fileNotFound(resourceBase + path),event,this);
