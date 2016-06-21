@@ -1,0 +1,44 @@
+{
+  checkArgument(event.getMessage().getAttributes() instanceof HttpRequestAttributes,"Message attributes must be HttpRequestAttributes.");
+  String header=((HttpRequestAttributes)event.getMessage().getAttributes()).getHeaders().get(AUTHORIZATION.toLowerCase());
+  if (logger.isDebugEnabled()) {
+    logger.debug("Authorization header: " + header);
+  }
+  if ((header != null) && header.startsWith("Basic ")) {
+    String base64Token=header.substring(6);
+    String token=new String(decodeBase64(base64Token.getBytes()));
+    String username="";
+    String password="";
+    int delim=token.indexOf(":");
+    if (delim != -1) {
+      username=token.substring(0,delim);
+      password=token.substring(delim + 1);
+    }
+    Authentication authResult;
+    Authentication authentication=createAuthentication(username,password,event);
+    try {
+      authResult=getSecurityManager().authenticate(authentication);
+    }
+ catch (    UnauthorisedException e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Authentication request for user: " + username + " failed: "+ e.toString());
+      }
+      setUnauthenticated(event);
+      throw new UnauthorisedException(CoreMessages.authFailedForUser(username),event,e);
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Authentication success: " + authResult.toString());
+    }
+    SecurityContext context=getSecurityManager().createSecurityContext(authResult);
+    context.setAuthentication(authResult);
+    event.getSession().setSecurityContext(context);
+  }
+ else   if (header == null) {
+    setUnauthenticated(event);
+    throw new UnauthorisedException(event,event.getSession().getSecurityContext(),this);
+  }
+ else {
+    setUnauthenticated(event);
+    throw new UnsupportedAuthenticationSchemeException(createStaticMessage("Http Basic filter doesn't know how to handle header " + header),event);
+  }
+}
