@@ -1,14 +1,11 @@
 {
-  Throwable root;
-  Optional<ConnectionException> connectionException=ExceptionUtils.extractRootConnectionException(e);
+  Throwable handled;
+  Optional<ConnectionException> connectionException=extractConnectionException(e);
   if (connectionException.isPresent()) {
-    root=connectionException.get();
+    handled=connectionException.get();
   }
  else {
-    root=ExceptionUtils.getRootCause(e);
-    if (root == null) {
-      root=e;
-    }
+    handled=extractCauseOfType(e,UndeclaredThrowableException.class).orElse(e);
   }
-  return wrapInException(root);
+  return wrapInException(handled);
 }
