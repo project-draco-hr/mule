@@ -1,9 +1,9 @@
 {
   configureMockEvent(event);
   when(operationModel.getName()).thenReturn(getClass().getName());
-  when(operationModel.getReturnType()).thenReturn(toMetadataType(String.class));
+  when(operationModel.getOutput()).thenReturn(new ImmutableOutputModel("MuleMessage.Payload",toMetadataType(String.class),false,emptySet()));
   when(operationModel.getExecutor()).thenReturn(operationExecutorFactory);
-  when(operationModel.getModelProperty(MetadataKeyIdModelProperty.class)).thenReturn(Optional.of(new MetadataKeyIdModelProperty(new JavaTypeLoader(getClass().getClassLoader()).load(String.class))));
+  when(operationModel.getModelProperty(MetadataKeyIdModelProperty.class)).thenReturn(Optional.of(new MetadataKeyIdModelProperty(ExtensionsTypeLoaderFactory.getDefault().createTypeLoader().load(String.class))));
   when(operationExecutorFactory.createExecutor()).thenReturn(operationExecutor);
   when(operationModel.getName()).thenReturn(OPERATION_NAME);
   when(operationModel.getExceptionEnricherFactory()).thenReturn(Optional.of(exceptionEnricherFactory));
@@ -12,6 +12,7 @@
   when(metadataResolverFactory.getKeyResolver()).thenReturn(new TestNoConfigMetadataResolver());
   when(metadataResolverFactory.getContentResolver()).thenReturn(new TestNoConfigMetadataResolver());
   when(metadataResolverFactory.getOutputResolver()).thenReturn(new TestNoConfigMetadataResolver());
+  when(metadataResolverFactory.getOutputAttributesResolver()).thenReturn(new TestNoConfigMetadataResolver());
   when(keyParamMock.getName()).thenReturn("type");
   when(keyParamMock.getType()).thenReturn(stringType);
   when(keyParamMock.getModelProperty(MetadataKeyPartModelProperty.class)).thenReturn(Optional.of(new MetadataKeyPartModelProperty(0)));
@@ -21,8 +22,10 @@
   when(contentMock.getModelProperty(MetadataContentModelProperty.class)).thenReturn(Optional.of(new MetadataContentModelProperty()));
   when(contentMock.getModelProperty(MetadataKeyPartModelProperty.class)).thenReturn(Optional.empty());
   when(operationModel.getParameterModels()).thenReturn(Arrays.asList(keyParamMock,contentMock));
-  when(operationModel.getReturnType()).thenReturn(returnTypeMock);
-  when(operationModel.getAttributesType()).thenReturn(returnTypeMock);
+  when(outputMock.getType()).thenReturn(stringType);
+  when(outputMock.hasDynamicType()).thenReturn(true);
+  when(operationModel.getOutput()).thenReturn(outputMock);
+  when(operationModel.getOutputAttributes()).thenReturn(outputMock);
   when(operationExecutorFactory.createExecutor()).thenReturn(operationExecutor);
   when(resolverSet.resolve(event)).thenReturn(parameters);
   when(configurationInstance.getName()).thenReturn(CONFIG_NAME);

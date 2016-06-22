@@ -1,0 +1,24 @@
+{
+  List<ParsedParameter> descriptors=parseParameters(method,typeLoader);
+  checkAnnotationsNotUsedMoreThanOnce(method,operation,UseConfig.class,Connection.class,MetadataKeyId.class,Content.class);
+  for (  ParsedParameter parsedParameter : descriptors) {
+    if (parsedParameter.isAdvertised()) {
+      ParameterDeclarer parameter=parsedParameter.isRequired() ? operation.withRequiredParameter(parsedParameter.getName()) : operation.withOptionalParameter(parsedParameter.getName()).defaultingTo(parsedParameter.getDefaultValue());
+      parameter=parsedParameter.isAnnotationPresent(Content.class) ? declareContentType(parameter,metadataScope,parsedParameter.getType()) : parameter.ofType(parsedParameter.getType());
+      parameter.withExpressionSupport(getExpressionSupport(parsedParameter.getAnnotation(Expression.class)));
+      parameter.describedAs(EMPTY);
+      addTypeRestrictions(parameter,parsedParameter);
+      DisplayModelProperty displayModelProperty=parseDisplayAnnotations(parsedParameter,parsedParameter.getName());
+      if (displayModelProperty != null) {
+        parameter.withModelProperty(displayModelProperty);
+      }
+      parseMetadataAnnotations(parsedParameter,parameter);
+    }
+    if (parsedParameter.isAnnotationPresent(Connection.class)) {
+      addConnectionTypeModelProperty(parsedParameter.getType(),operation);
+    }
+    if (parsedParameter.isAnnotationPresent(UseConfig.class)) {
+      addConfigTypeModelProperty(parsedParameter.getType(),operation);
+    }
+  }
+}
