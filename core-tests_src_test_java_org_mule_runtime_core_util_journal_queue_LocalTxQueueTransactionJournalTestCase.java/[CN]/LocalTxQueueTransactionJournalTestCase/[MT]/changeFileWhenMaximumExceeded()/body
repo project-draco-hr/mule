@@ -1,0 +1,15 @@
+{
+  LocalTxQueueTransactionJournal transactionJournal=new LocalTxQueueTransactionJournal(temporaryFolder.getRoot().getAbsolutePath(),muleContext,1);
+  for (int i=0; i < 7; i++) {
+    logAddWith100kbEntry(transactionJournal,i);
+  }
+  File logFile1=getFirstLogFile();
+  File logFile2=getSecondLogFile();
+  assertLogFileIsWithinBoundaries(logFile1);
+  assertThat(logFile2.length(),greaterThan(0l));
+  for (int i=0; i < 7; i++) {
+    transactionJournal.logCommit(i);
+  }
+  assertThat(logFile1.length(),is(0l));
+  assertThat(logFile2.length(),greaterThan(0l));
+}
