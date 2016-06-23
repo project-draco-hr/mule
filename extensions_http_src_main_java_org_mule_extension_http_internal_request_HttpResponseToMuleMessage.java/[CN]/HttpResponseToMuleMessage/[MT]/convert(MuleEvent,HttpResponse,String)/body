@@ -1,11 +1,11 @@
 {
   String responseContentType=response.getHeaderValueIgnoreCase(CONTENT_TYPE);
   DataType dataType=muleEvent.getMessage().getDataType();
-  if (StringUtils.isEmpty(responseContentType) && !MimeTypes.ANY.equals(dataType.getMimeType())) {
+  if (StringUtils.isEmpty(responseContentType) && !MimeType.ANY.equals(dataType.getMimeType())) {
     responseContentType=DataTypeUtils.getContentType(dataType);
   }
   InputStream responseInputStream=((InputStreamHttpEntity)response.getEntity()).getInputStream();
-  String encoding=getEncoding(responseContentType);
+  String encoding=buildContentTypeDataType(responseContentType).getEncoding();
   Object payload=responseInputStream;
   Map<String,DataHandler> parts=new HashMap<>();
   if (responseContentType != null && parseResponse) {
@@ -26,9 +26,7 @@
     processCookies(response,uri);
   }
   HttpResponseAttributes responseAttributes=createAttributes(response,parts);
-  if (encoding != null) {
-    dataType=createFromDataType(dataType,encoding);
-  }
+  dataType=DataType.builder(dataType).encoding(encoding).build();
   MuleMessage responseMessage=new DefaultMuleMessage(payload,dataType,responseAttributes);
   String requestMessageId=muleEvent.getMessage().getUniqueId();
   String requestMessageRootId=muleEvent.getMessage().getMessageRootId();

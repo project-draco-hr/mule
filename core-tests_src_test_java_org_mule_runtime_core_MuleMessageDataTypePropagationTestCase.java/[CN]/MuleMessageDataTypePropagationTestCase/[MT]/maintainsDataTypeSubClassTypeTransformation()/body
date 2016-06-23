@@ -1,11 +1,11 @@
 {
   DefaultMuleMessage muleMessage=new DefaultMuleMessage(new ClassCastException(TEST),muleContext);
-  DataType originalDataType=DataTypeFactory.create(RuntimeException.class,ANY);
+  DataType originalDataType=DataType.builder().type(RuntimeException.class).mimeType(ANY).build();
   muleMessage.setDataType(originalDataType);
   Transformer transformer=mock(Transformer.class);
-  DataType outputDataType=DataTypeFactory.create(Object.class,ANY);
+  DataType outputDataType=DataType.builder().type(Object.class).mimeType(ANY).build();
   when(transformer.getReturnDataType()).thenReturn(outputDataType);
-  when(transformer.isSourceDataTypeSupported(DataTypeFactory.create(muleMessage.getPayload().getClass()))).thenReturn(true);
+  when(transformer.isSourceDataTypeSupported(DataType.builder().type(muleMessage.getPayload().getClass()).build())).thenReturn(true);
   when(transformer.transform(anyObject())).thenReturn(new ArithmeticException(TEST));
   MuleEvent muleEvent=mock(MuleEvent.class);
   MuleMessage result=transformationService.applyTransformers(muleMessage,muleEvent,Collections.singletonList(transformer));
