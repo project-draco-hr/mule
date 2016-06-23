@@ -1,0 +1,15 @@
+{
+  DataInputStream dis=new DataInputStream(inputStream);
+  dis.mark(SIZE_INT);
+  if (null == super.consume(dis,SIZE_INT)) {
+    throw new IOException("Length Protocol could not read ");
+  }
+  dis.reset();
+  int length=dis.readInt();
+  if (length < 0 || (maxMessageLength > 0 && length > maxMessageLength)) {
+    throw new LengthExceededException(format(LENGTH_EXCEEDED,length,maxMessageLength));
+  }
+  byte[] buffer=new byte[length];
+  dis.readFully(buffer);
+  return buffer;
+}

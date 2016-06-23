@@ -1,0 +1,22 @@
+{
+  try {
+    serverSocket=serverSocketFactory.createServerSocket();
+    if (socketProperties.getReceiveBufferSize() != null) {
+      serverSocket.setReceiveBufferSize(socketProperties.getReceiveBufferSize());
+    }
+    if (socketProperties.getServerTimeout() != null) {
+      serverSocket.setSoTimeout(socketProperties.getServerTimeout());
+    }
+    serverSocket.setReuseAddress(socketProperties.getReuseAddress());
+  }
+ catch (  Exception e) {
+    throw new ConnectionException("Could not create TCP listener socket",e);
+  }
+  InetSocketAddress address=getSocketAddress(connectionSettings,socketProperties.getFailOnUnresolvedHost());
+  try {
+    serverSocket.bind(address,socketProperties.getReceiveBacklog());
+  }
+ catch (  IOException e) {
+    throw new ConnectionException(format("Could not bind socket to host '%s' and port '%d'",connectionSettings.getHost(),connectionSettings.getPort()),e);
+  }
+}

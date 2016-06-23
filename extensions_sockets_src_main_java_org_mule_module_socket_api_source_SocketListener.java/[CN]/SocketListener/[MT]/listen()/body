@@ -1,0 +1,25 @@
+{
+  SocketWorkListener socketWorkListener=new SocketWorkListener();
+  for (; ; ) {
+    if (isRequestedToStop()) {
+      return;
+    }
+    try {
+      SocketWorker worker=connection.listen(muleContext,sourceContext.getMessageHandler());
+      workManager.scheduleWork(worker,WorkManager.INDEFINITE,null,socketWorkListener);
+    }
+ catch (    ConnectionException e) {
+      if (!isRequestedToStop()) {
+        sourceContext.getExceptionCallback().onException(e);
+      }
+    }
+catch (    Exception e) {
+      if (isRequestedToStop()) {
+        return;
+      }
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An exception occurred while listening for new connections",e);
+      }
+    }
+  }
+}
