@@ -1,0 +1,19 @@
+{
+  if (!Function.class.isAssignableFrom(getType(metadataType))) {
+    return false;
+  }
+  GenericTypesAnnotation generics=getSingleAnnotation(metadataType,GenericTypesAnnotation.class).orElse(null);
+  if (generics == null) {
+    return false;
+  }
+  if (generics.getGenericTypes().size() != 2) {
+    return false;
+  }
+  final String genericClassName=generics.getGenericTypes().get(0);
+  try {
+    return MuleEvent.class.isAssignableFrom(ClassUtils.getClass(genericClassName));
+  }
+ catch (  ClassNotFoundException e) {
+    throw new MuleRuntimeException(createStaticMessage("Could not load class " + genericClassName),e);
+  }
+}

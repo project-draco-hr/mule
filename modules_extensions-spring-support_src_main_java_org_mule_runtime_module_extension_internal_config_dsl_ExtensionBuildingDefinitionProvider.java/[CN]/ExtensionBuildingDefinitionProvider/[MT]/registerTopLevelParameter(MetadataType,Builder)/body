@@ -1,0 +1,18 @@
+{
+  parameterType.accept(new MetadataTypeVisitor(){
+    @Override public void visitObject(    ObjectType objectType){
+      if (isInstantiable(getType(objectType))) {
+        parseWith(new TopLevelParameterParser(definitionBuilder,objectType));
+      }
+    }
+    @Override public void visitArrayType(    ArrayType arrayType){
+      registerTopLevelParameter(arrayType.getType(),definitionBuilder.copy());
+    }
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      MetadataType keyType=dictionaryType.getKeyType();
+      keyType.accept(this);
+      registerTopLevelParameter(keyType,definitionBuilder.copy());
+    }
+  }
+);
+}

@@ -1,0 +1,24 @@
+{
+  definitionBuilder.withIdentifier(hyphenize(getTopLevelTypeName(type))).withTypeDefinition(fromType(ValueResolver.class)).withObjectFactoryType(TopLevelParameterObjectFactory.class).withConstructorParameterDefinition(fromFixedValue(type).build());
+  for (  ObjectFieldType objectField : type.getFields()) {
+    final MetadataType fieldType=objectField.getValue();
+    final String parameterName=objectField.getKey().getName().getLocalPart();
+    final Object defaultValue=getDefaultValue(fieldType).orElse(null);
+    final ExpressionSupport expressionSupport=getExpressionSupport(fieldType);
+    fieldType.accept(new MetadataTypeVisitor(){
+      @Override protected void defaultVisit(      MetadataType metadataType){
+        parseAttributeParameter(parameterName,parameterName,metadataType,defaultValue,expressionSupport,false);
+      }
+      @Override public void visitObject(      ObjectType objectType){
+        parseObjectParameter(parameterName,parameterName,objectType,defaultValue,expressionSupport,false);
+      }
+      @Override public void visitArrayType(      ArrayType arrayType){
+        parseCollectionParameter(parameterName,parameterName,arrayType,defaultValue,expressionSupport,false);
+      }
+      @Override public void visitDictionary(      DictionaryType dictionaryType){
+        parseMapParameters(parameterName,parameterName,dictionaryType,defaultValue,expressionSupport,false);
+      }
+    }
+);
+  }
+}

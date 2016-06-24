@@ -1,0 +1,52 @@
+{
+  if (value instanceof ValueResolver) {
+    return (ValueResolver<?>)value;
+  }
+  ValueResolver resolver=null;
+  if (expressionSupport == LITERAL) {
+    return new StaticValueResolver<>(value);
+  }
+  if (isExpressionFunction(expectedType) && value != null) {
+    resolver=new ExpressionFunctionValueResolver<>((String)value,getGenericTypeAt((ObjectType)expectedType,1,typeLoader).get());
+  }
+  final Class<Object> expectedClass=getType(expectedType);
+  if (resolver == null) {
+    if (isExpression(value,parser)) {
+      resolver=new TypeSafeExpressionValueResolver((String)value,expectedClass);
+    }
+  }
+  if (resolver == null && value != null) {
+    final ValueHolder<ValueResolver> resolverValueHolder=new ValueHolder<>();
+    expectedType.accept(new BasicTypeMetadataVisitor(){
+      @Override protected void visitBasicType(      MetadataType metadataType){
+        if (conversionService.canConvert(value.getClass(),expectedClass)) {
+          resolverValueHolder.set(new StaticValueResolver(conversionService.convert(value,expectedClass)));
+        }
+ else {
+          defaultVisit(metadataType);
+        }
+      }
+      @Override public void visitDateTime(      DateTimeType dateTimeType){
+        resolverValueHolder.set(parseCalendar(value,dateTimeType,defaultValue));
+      }
+      @Override public void visitDate(      DateType dateType){
+        resolverValueHolder.set(parseDate(value,dateType,defaultValue));
+      }
+      @Override protected void defaultVisit(      MetadataType metadataType){
+        resolverValueHolder.set(new RegistryLookupValueResolver(value.toString()));
+      }
+    }
+);
+    resolver=resolverValueHolder.get();
+  }
+  if (resolver == null) {
+    resolver=new StaticValueResolver<>(defaultValue);
+  }
+  if (resolver.isDynamic() && expressionSupport == NOT_SUPPORTED) {
+    throw new IllegalArgumentException(format("An expression value was given for parameter '%s' but it doesn't support expressions",parameterName));
+  }
+  if (!resolver.isDynamic() && expressionSupport == REQUIRED && required) {
+    throw new IllegalArgumentException(format("A fixed value was given for parameter '%s' but it only supports expressions",parameterName));
+  }
+  return resolver;
+}

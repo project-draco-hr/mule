@@ -1,2 +1,14 @@
 {
+  ObjectTypeVisitor objectTypeVisitor=new ObjectTypeVisitor(createBeanDefinitionRequest.getComponentModel());
+  createBeanDefinitionRequest.getComponentBuildingDefinition().getTypeDefinition().visit(objectTypeVisitor);
+  Class<?> type=objectTypeVisitor.getType();
+  if (isSimpleType(type)) {
+    ComponentModel componentModel=createBeanDefinitionRequest.getComponentModel();
+    componentModel.setType(type);
+    final String value=componentModel.getParameters().get(SIMPLE_TYPE_VALUE_PARAMETER_NAME);
+    Optional<TypeConverter> typeConverterOptional=createBeanDefinitionRequest.getComponentBuildingDefinition().getTypeConverter();
+    componentModel.setBeanDefinition(getConvertibleBeanDefinition(type,value,typeConverterOptional));
+    return true;
+  }
+  return false;
 }

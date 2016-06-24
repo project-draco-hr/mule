@@ -1,6 +1,18 @@
 {
-  List<ComponentModel> components=new LinkedList<>();
-  components.addAll(getConnectedOperations(configurationModel));
-  components.addAll(getConnectedSources(configurationModel));
-  return components;
+  List<ComponentModel> connectedModels=new LinkedList<>();
+  new IdempotentExtensionWalker(){
+    @Override public void onOperation(    OperationModel model){
+      collect(model);
+    }
+    @Override public void onSource(    SourceModel model){
+      collect(model);
+    }
+    private void collect(    EnrichableModel model){
+      if (MuleExtensionUtils.isConnected(model)) {
+        connectedModels.add((ComponentModel)model);
+      }
+    }
+  }
+.walk(configurationModel.getExtensionModel());
+  return connectedModels;
 }
