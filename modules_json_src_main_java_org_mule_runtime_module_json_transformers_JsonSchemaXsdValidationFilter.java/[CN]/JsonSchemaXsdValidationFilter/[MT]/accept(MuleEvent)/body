@@ -7,7 +7,7 @@
       Writer jsonWriter=new StringWriter();
       if (transformerInputs.getInputStream() != null) {
         jsonWriter=new StringWriter();
-        IOUtils.copy(transformerInputs.getInputStream(),jsonWriter,msg.getEncoding());
+        IOUtils.copy(transformerInputs.getInputStream(),jsonWriter,msg.getDataType().getMediaType().getCharset().orElse(getDefaultEncoding(muleContext)));
       }
  else {
         IOUtils.copy(transformerInputs.getReader(),jsonWriter);
@@ -16,7 +16,7 @@
       msg=new DefaultMuleMessage(jsonString,msg,msg.getMuleContext());
       event.setMessage(msg);
     }
-    String xmlString=(String)jToX.transform(msg.getPayload(),msg.getEncoding());
+    String xmlString=(String)jToX.transform(msg.getPayload(),msg.getDataType().getMediaType().getCharset().orElse(getDefaultEncoding(muleContext)));
     MuleMessage xmlMessage=new DefaultMuleMessage(xmlString,msg,msg.getMuleContext());
     boolean accepted=super.accept(new DefaultMuleEvent(xmlMessage,event.getFlowConstruct()));
     if (jsonString != null) {

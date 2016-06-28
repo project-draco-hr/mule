@@ -1,0 +1,25 @@
+{
+  DataTypeBuilder dataTypeBuilder=DataType.builder();
+  if (contentTypeValue != null) {
+    try {
+      dataTypeBuilder.mediaType(contentTypeValue);
+    }
+ catch (    IllegalArgumentException e) {
+      if (parseBoolean(System.getProperty(SYSTEM_PROPERTY_PREFIX + "strictContentType"))) {
+        throw e;
+      }
+ else {
+        logger.warn(format("%s when parsing Content-Type '%s': %s",e.getClass().getName(),contentTypeValue,e.getMessage()));
+        logger.warn(format("Using default encoding: %s",defaultCharset().name()));
+        dataTypeBuilder.charset(defaultCharset());
+      }
+    }
+  }
+  final DataType dataType=dataTypeBuilder.build();
+  if (!dataType.getMediaType().getCharset().isPresent()) {
+    return DataType.builder(dataType).charset(defaultCharset).build();
+  }
+ else {
+    return dataType;
+  }
+}

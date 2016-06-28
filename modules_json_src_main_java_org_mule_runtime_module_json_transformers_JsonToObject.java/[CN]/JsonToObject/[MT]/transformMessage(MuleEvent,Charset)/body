@@ -1,0 +1,53 @@
+{
+  Object src=event.getMessage().getPayload();
+  Object returnValue;
+  InputStream is=null;
+  Reader reader=null;
+  try {
+    if (src instanceof InputStream) {
+      is=(InputStream)src;
+    }
+ else     if (src instanceof File) {
+      is=new FileInputStream((File)src);
+    }
+ else     if (src instanceof URL) {
+      is=((URL)src).openStream();
+    }
+ else     if (src instanceof byte[]) {
+      is=new ByteArrayInputStream((byte[])src);
+    }
+    if (src instanceof Reader) {
+      if (JSON_TYPE.isCompatibleWith(getReturnDataType())) {
+        returnValue=new JsonData((Reader)src);
+      }
+ else {
+        returnValue=getMapper().readValue((Reader)src,getReturnDataType().getType());
+      }
+    }
+ else     if (src instanceof String) {
+      if (JSON_TYPE.isCompatibleWith(getReturnDataType())) {
+        returnValue=new JsonData((String)src);
+      }
+ else {
+        returnValue=getMapper().readValue((String)src,getReturnDataType().getType());
+      }
+    }
+ else {
+      reader=new InputStreamReader(is,outputEncoding);
+      if (JSON_TYPE.isCompatibleWith(getReturnDataType())) {
+        returnValue=new JsonData(reader);
+      }
+ else {
+        returnValue=getMapper().readValue(reader,getReturnDataType().getType());
+      }
+    }
+    return returnValue;
+  }
+ catch (  Exception e) {
+    throw new TransformerException(CoreMessages.transformFailed("json",getReturnDataType().getType().getName()),this,e);
+  }
+ finally {
+    IOUtils.closeQuietly(reader);
+    IOUtils.closeQuietly(is);
+  }
+}

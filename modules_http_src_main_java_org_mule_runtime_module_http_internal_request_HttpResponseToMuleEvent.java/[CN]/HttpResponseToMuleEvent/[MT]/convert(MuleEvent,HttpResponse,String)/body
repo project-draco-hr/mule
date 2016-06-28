@@ -1,11 +1,11 @@
 {
   String responseContentType=response.getHeaderValueIgnoreCase(CONTENT_TYPE);
   DataType<?> dataType=muleEvent.getMessage().getDataType();
-  if (StringUtils.isEmpty(responseContentType) && !MimeType.ANY.equals(dataType.getMimeType())) {
-    responseContentType=DataTypeUtils.getContentType(dataType);
+  if (StringUtils.isEmpty(responseContentType) && !MediaType.ANY.matches(dataType.getMediaType())) {
+    responseContentType=dataType.getMediaType().toString();
   }
   InputStream responseInputStream=((InputStreamHttpEntity)response.getEntity()).getInputStream();
-  String encoding=buildContentTypeDataType(responseContentType).getEncoding();
+  Charset encoding=buildContentTypeDataType(responseContentType,getDefaultEncoding(muleContext)).getMediaType().getCharset().get();
   Map<String,Serializable> inboundProperties=getInboundProperties(response);
   Map<String,DataHandler> inboundAttachments=null;
   Object payload=responseInputStream;
@@ -19,16 +19,13 @@
         throw new MessagingException(muleEvent,e);
       }
     }
- else     if (responseContentType.startsWith(APPLICATION_X_WWW_FORM_URLENCODED.toLowerCase())) {
+ else     if (responseContentType.startsWith(APPLICATION_X_WWW_FORM_URLENCODED.toString())) {
       payload=HttpParser.decodeString(IOUtils.toString(responseInputStream),encoding);
     }
   }
   String requestMessageId=muleEvent.getMessage().getUniqueId();
   String requestMessageRootId=muleEvent.getMessage().getMessageRootId();
   DefaultMuleMessage message=new DefaultMuleMessage(muleEvent.getMessage().getPayload(),inboundProperties,null,inboundAttachments,muleContext,muleEvent.getMessage().getDataType());
-  if (encoding != null) {
-    message.setEncoding(encoding);
-  }
   message.setUniqueId(requestMessageId);
   message.setMessageRootId(requestMessageRootId);
   muleEvent.setMessage(message);

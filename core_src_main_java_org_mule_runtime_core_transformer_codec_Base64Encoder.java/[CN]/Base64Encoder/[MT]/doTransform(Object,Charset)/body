@@ -1,0 +1,30 @@
+{
+  try {
+    byte[] buf;
+    if (src instanceof String) {
+      buf=((String)src).getBytes(encoding);
+    }
+ else     if (src instanceof InputStream) {
+      InputStreamReader input=new InputStreamReader((InputStream)src);
+      try {
+        buf=IOUtils.toByteArray(input,encoding);
+      }
+  finally {
+        input.close();
+      }
+    }
+ else {
+      buf=(byte[])src;
+    }
+    String result=Base64.encodeBytes(buf,Base64.DONT_BREAK_LINES);
+    if (byte[].class.isAssignableFrom(getReturnDataType().getType())) {
+      return result.getBytes(encoding);
+    }
+ else {
+      return result;
+    }
+  }
+ catch (  Exception ex) {
+    throw new TransformerException(CoreMessages.transformFailed(src.getClass().getName(),"base64"),this,ex);
+  }
+}

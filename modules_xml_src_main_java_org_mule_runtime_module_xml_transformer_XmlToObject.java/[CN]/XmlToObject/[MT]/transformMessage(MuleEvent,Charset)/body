@@ -1,0 +1,39 @@
+{
+  Object src=event.getMessage().getPayload();
+  Object result;
+  if (src instanceof byte[]) {
+    Reader xml=new InputStreamReader(new ByteArrayInputStream((byte[])src),outputEncoding);
+    result=getXStream().fromXML(xml);
+  }
+ else   if (src instanceof InputStream) {
+    InputStream input=(InputStream)src;
+    try {
+      Reader xml=new InputStreamReader(input,outputEncoding);
+      result=getXStream().fromXML(xml);
+    }
+ catch (    Exception e) {
+      throw new TransformerException(this,e);
+    }
+ finally {
+      try {
+        input.close();
+      }
+ catch (      IOException e) {
+        logger.warn("Exception closing stream: ",e);
+      }
+    }
+  }
+ else   if (src instanceof String) {
+    result=getXStream().fromXML(src.toString());
+  }
+ else {
+    result=getXStream().fromXML((String)domTransformer.transform(src));
+  }
+  try {
+    postDeserialisationInit(result);
+    return result;
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

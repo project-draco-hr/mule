@@ -1,7 +1,7 @@
 {
   DataType<?> original=message.getDataType();
-  String mimeType=transformed.getMimeType() == null || MimeType.ANY.equals(transformed.getMimeType()) ? original.getMimeType() : transformed.getMimeType();
-  String encoding=transformed.getEncoding() == null ? message.getEncoding() : transformed.getEncoding();
-  Class<?> type=payloadTransformedClass != null && transformed.getType() == Object.class && original.isCompatibleWith(DataType.builder().type(payloadTransformedClass).mimeType(mimeType).build()) ? original.getType() : transformed.getType();
-  return DataType.builder().type(type).mimeType(mimeType).encoding(encoding).build();
+  MediaType mimeType=transformed.getMediaType() == null || MediaType.ANY.matches(transformed.getMediaType()) ? original.getMediaType() : transformed.getMediaType();
+  Charset encoding=transformed.getMediaType().getCharset().orElse(message.getDataType().getMediaType().getCharset().orElse(getDefaultEncoding(muleContext)));
+  Class<?> type=payloadTransformedClass != null && transformed.getType() == Object.class && original.isCompatibleWith(DataType.builder().type(payloadTransformedClass).mediaType(mimeType).build()) ? original.getType() : transformed.getType();
+  return DataType.builder().type(type).mediaType(mimeType).charset(encoding).build();
 }

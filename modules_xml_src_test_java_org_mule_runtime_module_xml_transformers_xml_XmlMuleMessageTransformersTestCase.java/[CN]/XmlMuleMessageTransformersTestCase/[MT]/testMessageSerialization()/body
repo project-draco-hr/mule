@@ -1,8 +1,7 @@
 {
   ObjectToXml t1=createObject(ObjectToXml.class);
   t1.setAcceptMuleMessage(true);
-  MutableMuleMessage msg=new DefaultMuleMessage("test",muleContext);
-  msg.setEncoding("UTF-8");
+  MutableMuleMessage msg=new DefaultMuleMessage("test",(DataType)DataType.builder().charset(UTF_8).build(),muleContext);
   msg.setCorrelationId("1234");
   msg.setOutboundProperty("object",new Apple());
   msg.setOutboundProperty("string","hello");
@@ -22,8 +21,8 @@
   assertNull(msg.getInboundProperty("string"));
   assertNull(msg.getInboundProperty("number"));
   assertNull(msg.getOutboundProperty("number"));
-  assertEquals("1234",msg.getCorrelationId());
-  assertEquals("UTF-8",msg.getEncoding());
+  assertThat(msg.getCorrelationId(),is("1234"));
+  assertThat(msg.getDataType().getMediaType().getCharset().get(),is(UTF_8));
   Set<String> outboundProps=msg.getOutboundPropertyNames();
   assertEquals(3,outboundProps.size());
   outboundProps.remove(MuleProperties.MULE_CORRELATION_ID_PROPERTY);

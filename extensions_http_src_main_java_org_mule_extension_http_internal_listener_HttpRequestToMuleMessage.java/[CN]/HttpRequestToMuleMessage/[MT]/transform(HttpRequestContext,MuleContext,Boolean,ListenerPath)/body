@@ -1,6 +1,6 @@
 {
   final HttpRequest request=requestContext.getRequest();
-  final DataType dataType=buildContentTypeDataType(request.getHeaderValueIgnoreCase(CONTENT_TYPE));
+  final DataType dataType=buildContentTypeDataType(request.getHeaderValueIgnoreCase(CONTENT_TYPE),getDefaultEncoding(muleContext));
   final Map<String,DataHandler> parts=new HashMap<>();
   Object payload=NullPayload.getInstance();
   DataTypeBuilder dataTypeBuilder=DataType.builder(dataType);
@@ -11,10 +11,10 @@
         parts.putAll(createDataHandlerFrom(((MultipartHttpEntity)entity).getParts()));
       }
  else {
-        if (dataType.getMimeType() != null) {
-          if (dataType.getMimeType().equals(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
+        if (dataType.getMediaType() != null) {
+          if (dataType.getMediaType().matches(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
             try {
-              payload=decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),dataType.getEncoding());
+              payload=decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),dataType.getMediaType().getCharset().get());
               dataTypeBuilder.type(ParameterMap.class);
             }
  catch (            IllegalArgumentException e) {

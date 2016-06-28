@@ -1,0 +1,30 @@
+{
+  DefaultErrorListener errorListener=new DefaultErrorListener(this);
+  javax.xml.transform.Transformer transformer=null;
+  try {
+    transformer=(javax.xml.transform.Transformer)transformerPool.borrowObject();
+    transformer.setErrorListener(errorListener);
+    transformer.setOutputProperty(OutputKeys.ENCODING,outputEncoding.name());
+    if (contextProperties != null) {
+      for (      Entry<String,Object> parameter : contextProperties.entrySet()) {
+        String key=parameter.getKey();
+        Object value=evaluateTransformParameter(key,parameter.getValue(),event);
+        if (value != null) {
+          transformer.setParameter(key,value);
+        }
+ else {
+          throw new DefaultMuleException(XmlMessages.contextPropertyValueIsNull(key));
+        }
+      }
+    }
+    transformer.transform(sourceDoc,result);
+    if (errorListener.isError()) {
+      throw errorListener.getException();
+    }
+  }
+  finally {
+    if (transformer != null) {
+      transformerPool.returnObject(transformer);
+    }
+  }
+}

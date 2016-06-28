@@ -1,0 +1,23 @@
+{
+  XMLInputFactory inputFactory=new JsonXMLInputFactory();
+  inputFactory.setProperty(JsonXMLInputFactory.PROP_MULTIPLE_PI,false);
+  TransformerInputs inputs=new TransformerInputs(this,src);
+  Source source;
+  try {
+    if (inputs.getInputStream() != null) {
+      source=new StAXSource(inputFactory.createXMLStreamReader(inputs.getInputStream(),enc == null ? UTF_8.name() : enc.name()));
+    }
+ else {
+      source=new StAXSource(inputFactory.createXMLStreamReader(inputs.getReader()));
+    }
+    XMLOutputFactory outputFactory=XMLOutputFactory.newInstance();
+    return convert(source,outputFactory);
+  }
+ catch (  Exception ex) {
+    throw new TransformerException(this,ex);
+  }
+ finally {
+    IOUtils.closeQuietly(inputs.getInputStream());
+    IOUtils.closeQuietly(inputs.getReader());
+  }
+}

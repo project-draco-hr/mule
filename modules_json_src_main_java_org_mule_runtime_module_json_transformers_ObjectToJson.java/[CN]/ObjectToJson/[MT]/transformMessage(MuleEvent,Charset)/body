@@ -1,0 +1,25 @@
+{
+  Object src=event.getMessage().getPayload();
+  if (src instanceof String && isJsonFilter.accept(src)) {
+    return src;
+  }
+  if (event.getMessage().getExceptionPayload() != null && this.isHandleException()) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Found exception with null payload");
+    }
+    src=this.getException(event.getMessage().getExceptionPayload().getException());
+  }
+  StringWriter writer=new StringWriter();
+  try {
+    getMapper().writeValue(writer,src);
+  }
+ catch (  IOException e) {
+    throw new TransformerException(this,e);
+  }
+  if (byte[].class.equals(getReturnDataType().getType())) {
+    return writer.toString().getBytes(outputEncoding);
+  }
+ else {
+    return writer.toString();
+  }
+}

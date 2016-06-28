@@ -1,0 +1,38 @@
+{
+  if (source instanceof ObjectMessage) {
+    return ((ObjectMessage)source).getObject();
+  }
+ else   if (source instanceof MapMessage) {
+    Map<String,Object> map=new HashMap<>();
+    MapMessage m=(MapMessage)source;
+    for (Enumeration<?> e=m.getMapNames(); e.hasMoreElements(); ) {
+      String name=(String)e.nextElement();
+      Object obj=m.getObject(name);
+      map.put(name,obj);
+    }
+    return map;
+  }
+ else   if (source instanceof TextMessage) {
+    return ((TextMessage)source).getText();
+  }
+ else   if (source instanceof BytesMessage) {
+    return toByteArray(source,jmsSpec,encoding);
+  }
+ else   if (source instanceof StreamMessage) {
+    List<Object> result=new ArrayList<>();
+    try {
+      StreamMessage sMsg=(StreamMessage)source;
+      Object obj;
+      while ((obj=sMsg.readObject()) != null) {
+        result.add(obj);
+      }
+    }
+ catch (    MessageEOFException eof) {
+    }
+catch (    Exception e) {
+      throw new JMSException("Failed to extract information from JMS Stream Message: " + e);
+    }
+    return result;
+  }
+  return source;
+}

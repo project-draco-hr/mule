@@ -1,11 +1,11 @@
 {
-  final DataTypeBuilder builder=DataType.builder(getDataType());
   if (MULE_ENCODING_PROPERTY.equals(key)) {
-    builder.encoding((String)value);
+    setDataType(DataType.builder().type(getDataType().getType()).charset((String)value).build());
   }
  else   if (CONTENT_TYPE_PROPERTY.equalsIgnoreCase(key)) {
+    final DataTypeBuilder builder=DataType.builder();
     try {
-      builder.mimeType((String)value);
+      builder.mediaType((String)value);
     }
  catch (    IllegalArgumentException e) {
       if (Boolean.parseBoolean(System.getProperty(SYSTEM_PROPERTY_PREFIX + "strictContentType"))) {
@@ -15,9 +15,9 @@
         String encoding=defaultCharset().name();
         logger.warn(format("%s when parsing Content-Type '%s': %s",e.getClass().getName(),value,e.getMessage()));
         logger.warn(format("Using defualt encoding: %s",encoding));
-        builder.encoding(encoding);
+        builder.charset(encoding);
       }
     }
+    setDataType(builder.type(getDataType().getType()).build());
   }
-  setDataType(builder.build());
 }
