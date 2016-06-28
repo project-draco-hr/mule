@@ -1,22 +1,2 @@
 {
-  flow.initialise();
-  flow.start();
-  MessageProcessor processorInSubflow=new MessageProcessor(){
-    @Override public MuleEvent process(    MuleEvent event) throws MuleException {
-      return event;
-    }
-  }
-;
-  assertThat(flow.getProcessorPath(sensingMessageProcessor),is("/test-flow/processors/8"));
-  assertThat(flow.getProcessorPath(dynamicProcessorContainer),is("/test-flow/processors/6"));
-  assertThat(flow.getProcessorPath(processorInSubflow),is(nullValue()));
-  reset(dynamicProcessorContainer);
-  FlowMap dynamicContainerFlowMap=mock(FlowMap.class);
-  when(dynamicContainerFlowMap.resolvePath(processorInSubflow)).thenReturn("/sub_dyn/subprocessors/0");
-  when(dynamicContainerFlowMap.getFlowMap()).thenReturn(Collections.singletonMap(processorInSubflow,"/sub_dyn/subprocessors/0"));
-  when(dynamicProcessorContainer.buildInnerPaths()).thenReturn(dynamicContainerFlowMap);
-  assertThat(flow.getProcessorPath(processorInSubflow),is("/sub_dyn/subprocessors/0"));
-  verify(dynamicProcessorContainer,times(1)).buildInnerPaths();
-  flow.getProcessorPath(processorInSubflow);
-  verify(dynamicProcessorContainer,times(1)).buildInnerPaths();
 }

@@ -1,13 +1,15 @@
 {
   muleContext.getRegistry().registerObject("dummy",bean);
   assertTrue(initLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
-  assertFalse(startLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
-  assertFalse(stopLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
-  assertFalse(disposeLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
+  Thread.sleep(TIMEOUT);
+  assertThat(startLatch.getCount(),is(1L));
+  assertThat(stopLatch.getCount(),is(1L));
+  assertThat(disposeLatch.getCount(),is(1L));
   muleContext.start();
   assertTrue(startLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
-  assertFalse(stopLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
-  assertFalse(disposeLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
+  Thread.sleep(TIMEOUT);
+  assertThat(stopLatch.getCount(),is(1L));
+  assertThat(disposeLatch.getCount(),is(1L));
   muleContext.getRegistry().unregisterObject("dummy");
   assertTrue(stopLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
   assertTrue(disposeLatch.await(TIMEOUT,TimeUnit.MILLISECONDS));
