@@ -1,0 +1,25 @@
+{
+  ConnectionHandler<FtpFileSystem> writerConnectionHandler;
+  final FtpFileSystem writerConnection;
+  try {
+    writerConnectionHandler=getWriterConnection(config);
+    writerConnection=writerConnectionHandler.getConnection();
+  }
+ catch (  ConnectionException e) {
+    throw command.exception(format("FTP Copy operations require the use of two FTP connections. An exception was found trying to obtain second connection to" + "copy the path '%s' to '%s'",source.getPath(),targetPath),e);
+  }
+  try {
+    if (source.isDirectory()) {
+      copyDirectory(config,Paths.get(source.getPath()),targetPath,overwrite,writerConnection,event);
+    }
+ else {
+      copyFile(config,source,targetPath,overwrite,writerConnection,event);
+    }
+  }
+ catch (  Exception e) {
+    throw command.exception(format("Found exception copying file '%s' to '%s'",source,targetPath),e);
+  }
+ finally {
+    writerConnectionHandler.release();
+  }
+}

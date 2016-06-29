@@ -4,8 +4,10 @@
     throw new IllegalStateException(String.format("Configuration '%s' of extension '%s' does not define a connection provider and none can be created automatically. Please define one.",configName,configurationModel.getName()));
   }
   final ResolverSet resolverSet=buildImplicitResolverSet(implicitModel,event.getMuleContext().getExpressionManager());
+  ConnectionProviderObjectBuilder builder=new ConnectionProviderObjectBuilder(implicitModel,resolverSet,event.getMuleContext().getRegistry().get(OBJECT_CONNECTION_MANAGER));
+  builder.setOwnerConfigName(configName);
   try {
-    return new ConnectionProviderObjectBuilder(implicitModel,resolverSet,event.getMuleContext().getRegistry().get(OBJECT_CONNECTION_MANAGER)).build(event);
+    return builder.build(event);
   }
  catch (  MuleException e) {
     throw new MuleRuntimeException(e);
