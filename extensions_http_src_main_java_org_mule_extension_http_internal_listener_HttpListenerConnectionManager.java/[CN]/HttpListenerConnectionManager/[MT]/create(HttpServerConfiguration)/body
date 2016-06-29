@@ -7,19 +7,11 @@
  catch (  UnknownHostException e) {
     throw new ConnectionException(String.format("Cannot resolve host %s",host),e);
   }
-  WorkManager workManager=createWorkManager(serverConfiguration.getOwnerName());
-  try {
-    workManager.start();
-    workManagers.add(workManager);
-  }
- catch (  MuleException e) {
-    throw new ConnectionException("Could not create work manager",e);
-  }
   TlsContextFactory tlsContextFactory=serverConfiguration.getTlsContextFactory();
   if (tlsContextFactory == null) {
-    return createServer(serverAddress,createWorkManagerSource(workManager),serverConfiguration.isUsePersistentConnections(),serverConfiguration.getConnectionIdleTimeout());
+    return createServer(serverAddress,serverConfiguration.getWorkManagerSource(),serverConfiguration.isUsePersistentConnections(),serverConfiguration.getConnectionIdleTimeout());
   }
  else {
-    return createSslServer(serverAddress,createWorkManagerSource(workManager),tlsContextFactory,serverConfiguration.isUsePersistentConnections(),serverConfiguration.getConnectionIdleTimeout());
+    return createSslServer(serverAddress,serverConfiguration.getWorkManagerSource(),tlsContextFactory,serverConfiguration.isUsePersistentConnections(),serverConfiguration.getConnectionIdleTimeout());
   }
 }

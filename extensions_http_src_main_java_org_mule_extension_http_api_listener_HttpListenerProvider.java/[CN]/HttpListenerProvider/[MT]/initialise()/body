@@ -4,16 +4,25 @@
     port=protocol.getDefaultPort();
   }
   if (protocol.equals(HTTP) && tlsContext != null) {
-    throw new InitialisationException(CoreMessages.createStaticMessage("TlsContext cannot be configured with protocol HTTP. " + "If you defined a tls:context element in your listener-config then you must set protocol=\"HTTPS\""),this);
+    throw new InitialisationException(createStaticMessage("TlsContext cannot be configured with protocol HTTP. " + "If you defined a tls:context element in your listener-config then you must set protocol=\"HTTPS\""),this);
   }
   if (protocol.equals(HTTPS) && tlsContext == null) {
-    throw new InitialisationException(CoreMessages.createStaticMessage("Configured protocol is HTTPS but there's no TlsContext configured"),this);
+    throw new InitialisationException(createStaticMessage("Configured protocol is HTTPS but there's no TlsContext configured"),this);
   }
   if (tlsContext != null && !tlsContext.isKeyStoreConfigured()) {
-    throw new InitialisationException(CoreMessages.createStaticMessage("KeyStore must be configured for server side SSL"),this);
+    throw new InitialisationException(createStaticMessage("KeyStore must be configured for server side SSL"),this);
   }
   if (tlsContext != null) {
     initialiseIfNeeded(tlsContext);
   }
   verifyConnectionsParameters();
+  workerThreadingProfile=new MutableThreadingProfile(DEFAULT_THREADING_PROFILE);
+  workerThreadingProfile.setMaxThreadsActive(DEFAULT_MAX_THREADS);
+  HttpServerConfiguration serverConfiguration=new HttpServerConfiguration.Builder().setHost(host).setPort(port).setTlsContextFactory(tlsContext).setUsePersistentConnections(usePersistentConnections).setConnectionIdleTimeout(connectionIdleTimeout).setWorkManagerSource(createWorkManagerSource(workManager)).build();
+  try {
+    server=connectionManager.create(serverConfiguration);
+  }
+ catch (  ConnectionException e) {
+    throw new InitialisationException(createStaticMessage("Could not create HTTP server"),this);
+  }
 }
