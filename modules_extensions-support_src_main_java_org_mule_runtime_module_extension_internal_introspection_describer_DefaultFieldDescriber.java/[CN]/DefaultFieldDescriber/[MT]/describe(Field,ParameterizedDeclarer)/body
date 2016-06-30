@@ -1,9 +1,12 @@
 {
-  String parameterName=MuleExtensionAnnotationParser.getAliasName(field);
+  String parameterName=getAliasName(field);
   ParameterDeclarer parameterDeclarer;
   MetadataType fieldType=getFieldMetadataType(field,typeLoader);
   Optional optional=field.getAnnotation(Optional.class);
   parameterDeclarer=optional == null ? declarer.withRequiredParameter(parameterName) : declarer.withOptionalParameter(parameterName).defaultingTo(getDefaultValue(optional));
+  if (field.getAnnotation(NoRef.class) != null) {
+    parameterDeclarer.withModelProperty(new NoReferencesModelProperty());
+  }
   parameterDeclarer.ofType(fieldType).withExpressionSupport(getExpressionSupport(field)).withModelProperty(new DeclaringMemberModelProperty(field));
   DisplayModelProperty displayModelProperty=parseDisplayAnnotations(field,field.getName());
   if (displayModelProperty != null) {

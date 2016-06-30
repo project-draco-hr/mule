@@ -3,6 +3,7 @@
   for (  ObjectFieldType objectField : type.getFields()) {
     final MetadataType fieldType=objectField.getValue();
     final String parameterName=objectField.getKey().getName().getLocalPart();
+    final boolean acceptsReferences=acceptsReferences(objectField);
     final Object defaultValue=getDefaultValue(fieldType).orElse(null);
     final ExpressionSupport expressionSupport=getExpressionSupport(fieldType);
     fieldType.accept(new MetadataTypeVisitor(){
@@ -10,7 +11,7 @@
         parseAttributeParameter(parameterName,parameterName,metadataType,defaultValue,expressionSupport,false);
       }
       @Override public void visitObject(      ObjectType objectType){
-        parseObjectParameter(parameterName,parameterName,objectType,defaultValue,expressionSupport,false);
+        parseObjectParameter(parameterName,parameterName,objectType,defaultValue,expressionSupport,false,acceptsReferences);
       }
       @Override public void visitArrayType(      ArrayType arrayType){
         parseCollectionParameter(parameterName,parameterName,arrayType,defaultValue,expressionSupport,false);
