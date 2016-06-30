@@ -1,9 +1,7 @@
 {
   ClassLoader originalClassLoader=Thread.currentThread().getContextClassLoader();
-  MuleContext originaMuleContext=message.getMuleContext();
   try {
     Thread.currentThread().setContextClassLoader(endpoint.getMuleContext().getExecutionClassLoader());
-    ((DefaultMuleMessage)message).setMuleContext(originaMuleContext);
     ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
     MuleEvent resultEvent=executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
       @Override public MuleEvent process() throws Exception {
@@ -21,7 +19,6 @@
 );
     if (resultEvent != null) {
       DefaultMuleMessage resultMessage=(DefaultMuleMessage)resultEvent.getMessage();
-      resultMessage.setMuleContext(originaMuleContext);
       return resultMessage;
     }
  else {
@@ -40,7 +37,6 @@ catch (  Exception e) {
     throw new DefaultMuleException(e);
   }
  finally {
-    ((DefaultMuleMessage)message).setMuleContext(originaMuleContext);
     message.release();
     Thread.currentThread().setContextClassLoader(originalClassLoader);
   }

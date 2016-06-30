@@ -3,12 +3,13 @@
   String attachmentData="this is the attachment";
   DataHandler dh=new DataHandler(attachmentData,"text/plain");
   attachments.put("attachment",dh);
-  MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,null,attachments,muleContext);
+  MuleMessage message=new DefaultMuleMessage(TEST_MESSAGE,null,attachments);
   assertTrue(message.getInboundAttachmentNames().contains("attachment"));
   assertEquals(dh,message.getInboundAttachment("attachment"));
   assertEquals(0,message.getOutboundAttachmentNames().size());
   ByteArrayOutputStream baos=new ByteArrayOutputStream();
   ObjectOutputStream oos=new ObjectOutputStream(baos);
+  RequestContext.setEvent(new DefaultMuleEvent(message,getTestFlow()));
   oos.writeObject(message);
   oos.flush();
   ObjectInputStream ois=new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));

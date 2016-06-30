@@ -1,0 +1,20 @@
+{
+  if (transportMessage == null) {
+    return new DefaultMuleMessage(NullPayload.getInstance());
+  }
+  if (!isTransportMessageTypeSupported(transportMessage)) {
+    throw new MessageTypeNotSupportedException(transportMessage,getClass());
+  }
+  Object payload=extractPayload(transportMessage,encoding);
+  final DataType dataType=DataType.builder().type((Class)(payload == null ? Object.class : payload.getClass())).mediaType(getMimeType(transportMessage)).charset(encoding).build();
+  MutableMuleMessage message;
+  if (previousMessage != null) {
+    message=new DefaultMuleMessage(payload,previousMessage,dataType);
+  }
+ else {
+    message=new DefaultMuleMessage(payload,dataType);
+  }
+  message=addProperties(message,transportMessage);
+  message=addAttachments(message,transportMessage);
+  return message;
+}

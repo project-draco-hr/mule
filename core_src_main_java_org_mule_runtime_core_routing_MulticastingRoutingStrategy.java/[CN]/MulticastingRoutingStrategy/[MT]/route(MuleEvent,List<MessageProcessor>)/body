@@ -3,12 +3,12 @@
   if (messageProcessors == null || messageProcessors.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),event,null);
   }
-  List<MuleEvent> results=new ArrayList<MuleEvent>(messageProcessors.size());
+  List<MuleEvent> results=new ArrayList<>(messageProcessors.size());
   validateMessageIsNotConsumable(event,message);
   try {
     for (int i=0; i < messageProcessors.size(); i++) {
       MessageProcessor mp=messageProcessors.get(i);
-      MuleMessage clonedMessage=cloneMessage(message,getMuleContext());
+      MuleMessage clonedMessage=cloneMessage(message);
       clonedMessage=AbstractRoutingStrategy.propagateMagicProperties(clonedMessage);
       MuleEvent result=sendRequest(event,clonedMessage,mp,true);
       if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
@@ -19,5 +19,5 @@
  catch (  MuleException e) {
     throw new CouldNotRouteOutboundMessageException(event,messageProcessors.get(0),e);
   }
-  return resultsHandler.aggregateResults(results,event,getMuleContext());
+  return resultsHandler.aggregateResults(results,event);
 }

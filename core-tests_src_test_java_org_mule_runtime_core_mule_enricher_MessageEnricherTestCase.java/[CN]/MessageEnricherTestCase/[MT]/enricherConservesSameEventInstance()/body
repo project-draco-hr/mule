@@ -4,7 +4,9 @@
   enricher.addEnrichExpressionPair(new EnrichExpressionPair("#[sessionVars['foo']]"));
   SensingNullMessageProcessor sensingNullMessageProcessor=new SensingNullMessageProcessor();
   enricher.setEnrichmentMessageProcessor(sensingNullMessageProcessor);
-  MuleEvent in=new DefaultMuleEvent(new DefaultMuleMessage(TEST_MESSAGE,muleContext),MessageExchangePattern.REQUEST_RESPONSE,mock(Flow.class));
+  Flow flow=mock(Flow.class);
+  when(flow.getMuleContext()).thenReturn(muleContext);
+  MuleEvent in=new DefaultMuleEvent(new DefaultMuleMessage(TEST_MESSAGE),MessageExchangePattern.REQUEST_RESPONSE,flow);
   MuleEvent out=enricher.process(in);
   assertThat(out,is(sameInstance(in)));
   assertThat(sensingNullMessageProcessor.event,not(sameInstance(in)));

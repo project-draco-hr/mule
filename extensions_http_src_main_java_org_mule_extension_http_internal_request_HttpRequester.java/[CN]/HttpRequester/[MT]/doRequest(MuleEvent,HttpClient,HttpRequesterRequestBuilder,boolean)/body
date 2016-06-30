@@ -11,12 +11,12 @@
   }
   HttpResponseToMuleMessage httpResponseToMuleMessage=new HttpResponseToMuleMessage(config,parseResponse);
   MuleMessage<Object,HttpResponseAttributes> responseMessage=httpResponseToMuleMessage.convert(muleEvent,response,httpRequest.getUri());
-  MuleEvent responseEvent=new DefaultMuleEvent(new DefaultMuleMessage(responseMessage.getPayload(),(DataType)responseMessage.getDataType(),responseMessage.getAttributes(),muleEvent.getMuleContext()),muleEvent,muleEvent.isSynchronous());
+  MuleEvent responseEvent=new DefaultMuleEvent(new DefaultMuleMessage(responseMessage.getPayload(),(DataType)responseMessage.getDataType(),responseMessage.getAttributes()),muleEvent,muleEvent.isSynchronous());
   if (resendRequest(responseEvent,checkRetry,authentication)) {
     consumePayload(responseEvent);
     responseMessage=doRequest(responseEvent,client,requestBuilder,false);
   }
   notificationHelper.fireNotification(this,muleEvent,httpRequest.getUri(),muleEvent.getFlowConstruct(),MESSAGE_REQUEST_END);
-  responseValidator.validate(responseMessage);
+  responseValidator.validate(responseMessage,muleEvent.getMuleContext());
   return responseMessage;
 }
