@@ -1,0 +1,21 @@
+{
+  try {
+    if (remoteRepositories.isEmpty()) {
+      throw new RepositoryServiceDisabledException("Repository service has not been configured so it's disabled. " + "To enable it you must configure the set of repositories to use using the system property: " + MULE_REMOTE_REPOSITORIES_PROPERTY);
+    }
+    DefaultArtifact artifact=toArtifact(bundleDescriptor);
+    ArtifactRequest getArtifactRequest=new ArtifactRequest();
+    getArtifactRequest.setRepositories(remoteRepositories);
+    getArtifactRequest.setArtifact(artifact);
+    ArtifactResult artifactResult=repositorySystem.resolveArtifact(repositorySystemSession,getArtifactRequest);
+    return artifactResult.getArtifact().getFile();
+  }
+ catch (  ArtifactResolutionException e) {
+    if (e.getCause() instanceof ArtifactNotFoundException) {
+      throw new BundleNotFoundException("Couldn't find bundle " + bundleDescriptor.toString(),e);
+    }
+ else {
+      throw new RepositoryConnectionException("There was a problem connecting to one of the repositories",e);
+    }
+  }
+}
