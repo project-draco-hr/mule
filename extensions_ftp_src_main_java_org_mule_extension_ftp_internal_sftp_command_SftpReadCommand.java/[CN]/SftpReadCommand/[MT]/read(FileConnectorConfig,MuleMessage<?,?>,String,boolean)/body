@@ -13,7 +13,9 @@
     pathLock=new NullPathLock();
   }
   try {
-    return new DefaultMuleMessage(SftpInputStream.newInstance((FtpConnector)config,attributes,pathLock),fileSystem.getFileMessageDataType(message.getDataType(),attributes),attributes).asNewMessage();
+    InputStream payload=SftpInputStream.newInstance((FtpConnector)config,attributes,pathLock);
+    MediaType mediaType=fileSystem.getFileMessageMediaType(message.getDataType().getMediaType(),attributes);
+    return MuleMessage.builder().payload(payload).mediaType(mediaType).attributes((FileAttributes)attributes).build();
   }
  catch (  ConnectionException e) {
     throw exception("Could not obtain connection to fetch file " + path,e);

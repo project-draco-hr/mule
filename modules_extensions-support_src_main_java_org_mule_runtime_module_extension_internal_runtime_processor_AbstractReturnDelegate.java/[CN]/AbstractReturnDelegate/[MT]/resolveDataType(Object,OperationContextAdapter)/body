@@ -2,20 +2,28 @@
   if (value == null || value instanceof NullPayload) {
     return null;
   }
-  DataTypeParamsBuilder dataTypeBuilder=null;
+  Charset existingEncoding=getDefaultEncoding(muleContext);
+  DataTypeParamsBuilder dataTypeBuilder;
   if (value instanceof MuleMessage) {
-    dataTypeBuilder=DataType.builder(((MuleMessage)value).getDataType());
+    DataType dataType=((MuleMessage)value).getDataType();
+    if (dataType.getMediaType().getCharset().isPresent()) {
+      existingEncoding=dataType.getMediaType().getCharset().get();
+    }
+    dataTypeBuilder=DataType.builder(dataType);
   }
  else {
     dataTypeBuilder=DataType.builder().type((Class)(value != null ? value.getClass() : Object.class));
   }
   String mimeType=operationContext.getTypeSafeParameter(MIME_TYPE_PARAMETER_NAME,String.class);
   String encoding=operationContext.getTypeSafeParameter(ENCODING_PARAMETER_NAME,String.class);
-  final DataType dataType=dataTypeBuilder.mediaType(mimeType).charset(encoding).build();
-  if (dataType.getMediaType().getCharset().isPresent()) {
-    return dataType;
+  if (isNotEmpty(mimeType)) {
+    dataTypeBuilder=dataTypeBuilder.mediaType(mimeType);
+  }
+  if (isNotEmpty(encoding)) {
+    dataTypeBuilder=dataTypeBuilder.charset(encoding);
   }
  else {
-    return DataType.builder(dataType).charset(getDefaultEncoding(muleContext)).build();
+    dataTypeBuilder=dataTypeBuilder.charset(existingEncoding);
   }
+  return dataTypeBuilder.build();
 }

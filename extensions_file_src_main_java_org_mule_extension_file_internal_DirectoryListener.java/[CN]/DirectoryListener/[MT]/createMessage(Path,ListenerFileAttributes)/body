@@ -1,14 +1,14 @@
 {
   Object payload=NullPayload.getInstance();
-  DataType dataType=DataType.fromType(NullPayload.class);
+  MediaType mediaType=MediaType.ANY;
   MuleMessage<InputStream,ListenerFileAttributes> message;
   if (attributes.getEventType().equals(DELETE.name())) {
     attributes=new DeletedFileAttributes(path);
   }
  else   if (!attributes.isDirectory()) {
-    dataType=fileSystem.getFileMessageDataType(INPUT_STREAM,attributes);
+    mediaType=fileSystem.getFileMessageMediaType(mediaType,attributes);
     payload=new FileInputStream(path,new NullPathLock());
   }
-  message=new DefaultMuleMessage(payload,dataType,attributes);
+  message=(MuleMessage)new DefaultMuleMessage(payload,DataType.builder().fromObject(payload).mediaType(mediaType).build(),attributes);
   return message;
 }

@@ -11,6 +11,8 @@
     fileSystem.verifyNotLocked(path);
     pathLock=new NullPathLock();
   }
+  InputStream payload=new FileInputStream(path,pathLock);
   FileAttributes fileAttributes=new LocalFileAttributes(path);
-  return new DefaultMuleMessage(new FileInputStream(path,pathLock),fileSystem.getFileMessageDataType(message.getDataType(),fileAttributes),fileAttributes).asNewMessage();
+  MediaType fileMediaType=fileSystem.getFileMessageMediaType(message.getDataType().getMediaType(),fileAttributes);
+  return MuleMessage.builder().payload(payload).mediaType(fileMediaType).attributes(fileAttributes).build();
 }

@@ -1,11 +1,10 @@
 {
-  DefaultMuleMessage muleMessage=new DefaultMuleMessage(TEST,buildDefaultEncodingDataType());
-  muleMessage.setDataType(DataType.builder().mediaType(ANY).charset(CUSTOM_ENCODING).build());
+  MuleMessage message=MuleMessage.builder().payload(TEST).mediaType(ANY.withCharset(CUSTOM_ENCODING)).build();
   Transformer transformer=mock(Transformer.class);
   when(transformer.isSourceDataTypeSupported(org.mockito.Matchers.<DataType<?>>any())).thenReturn(true);
   DataType outputDataType=DataType.builder().type(Integer.class).mediaType(APPLICATION_XML).build();
   when(transformer.getReturnDataType()).thenReturn(outputDataType);
   MuleEvent muleEvent=mock(MuleEvent.class);
-  MuleMessage result=transformationService.applyTransformers(muleMessage,muleEvent,singletonList(transformer));
+  MuleMessage result=transformationService.applyTransformers(message,muleEvent,singletonList(transformer));
   assertDataType(result,Integer.class,APPLICATION_XML,CUSTOM_ENCODING);
 }

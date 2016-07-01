@@ -6,7 +6,12 @@
     throw new MessageTypeNotSupportedException(transportMessage,getClass());
   }
   Object payload=extractPayload(transportMessage,encoding);
-  final DataType dataType=DataType.builder().type((Class)(payload == null ? Object.class : payload.getClass())).mediaType(getMimeType(transportMessage)).charset(encoding).build();
+  DataTypeParamsBuilder dataTypeBuilder=DataType.builder().type((Class)(payload == null ? Object.class : payload.getClass())).charset(encoding);
+  String mimeType=getMimeType(transportMessage);
+  if (StringUtils.isNotEmpty(mimeType)) {
+    dataTypeBuilder=dataTypeBuilder.mediaType(mimeType);
+  }
+  final DataType dataType=dataTypeBuilder.build();
   MutableMuleMessage message;
   if (previousMessage != null) {
     message=new DefaultMuleMessage(payload,previousMessage,dataType);

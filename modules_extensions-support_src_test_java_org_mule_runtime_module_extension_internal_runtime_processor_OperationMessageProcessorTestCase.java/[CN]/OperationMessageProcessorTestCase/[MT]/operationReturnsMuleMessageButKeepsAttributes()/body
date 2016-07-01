@@ -1,9 +1,9 @@
 {
   Object payload=new Object();
-  DataType dataType=DataType.builder(DataType.OBJECT).charset(getDefaultEncoding(context)).build();
+  MediaType mediaType=ANY.withCharset(getDefaultEncoding(context));
   Serializable oldAttributes=mock(Serializable.class);
-  when(operationExecutor.execute(any(OperationContext.class))).thenReturn(new DefaultMuleMessage(payload,dataType));
-  when(event.getMessage()).thenReturn(new DefaultMuleMessage("",DataType.OBJECT,oldAttributes));
+  when(operationExecutor.execute(any(OperationContext.class))).thenReturn(MuleMessage.builder().payload(payload).mediaType(mediaType).build());
+  when(event.getMessage()).thenReturn(org.mule.runtime.core.api.MuleMessage.builder().payload("").attributes(oldAttributes).build());
   ArgumentCaptor<DefaultMuleMessage> captor=ArgumentCaptor.forClass(DefaultMuleMessage.class);
   messageProcessor.process(event);
   verify(event).setMessage(captor.capture());
@@ -11,5 +11,5 @@
   assertThat(message,is(notNullValue()));
   assertThat(message.getPayload(),is(sameInstance(payload)));
   assertThat(message.getAttributes(),is(sameInstance(oldAttributes)));
-  assertThat(message.getDataType(),is(sameInstance(dataType)));
+  assertThat(message.getDataType().getMediaType(),equalTo(mediaType));
 }
