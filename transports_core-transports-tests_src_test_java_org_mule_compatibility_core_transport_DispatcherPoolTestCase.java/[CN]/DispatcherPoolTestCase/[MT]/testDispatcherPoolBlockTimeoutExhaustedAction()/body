@@ -1,29 +1,2 @@
 {
-  final TestConnector connector=createConnectorWithSingleObjectDispatcherPool(ThreadingProfile.WHEN_EXHAUSTED_WAIT);
-  connector.setDispatcherPoolMaxWait(10);
-  assertEquals(1,connector.dispatchers.getMaxActive());
-  assertEquals(10,connector.dispatchers.getMaxWait());
-  final OutboundEndpoint endpoint=getTestOutboundEndpoint("test","test://test");
-  new Thread(new Runnable(){
-    @Override public void run(){
-      try {
-        MessageDispatcher messageDispatcher=(MessageDispatcher)connector.dispatchers.borrowObject(endpoint);
-        Thread.sleep(200);
-        connector.dispatchers.returnObject(endpoint,messageDispatcher);
-      }
- catch (      Exception e) {
-        e.printStackTrace();
-      }
-    }
-  }
-).start();
-  Thread.sleep(10);
-  assertEquals(1,connector.dispatchers.getNumActive());
-  try {
-    connector.dispatchers.borrowObject(endpoint);
-    fail("Exception expected");
-  }
- catch (  Exception e) {
-    assertEquals(1,connector.dispatchers.getNumActive());
-  }
 }
