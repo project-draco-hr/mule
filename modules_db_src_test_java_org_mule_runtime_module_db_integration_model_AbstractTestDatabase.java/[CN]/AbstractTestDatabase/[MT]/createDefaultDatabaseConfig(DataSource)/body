@@ -6,9 +6,22 @@
     if (supportsXmlType()) {
       createAlienTestTable(connection);
     }
+    if (supportsSimpleUdt()) {
+      createContactDetailsType(connection);
+      createRegionManagersTestTable(connection);
+      if (supportsArraysUdt()) {
+        createContactsTestTable(connection);
+        createRegionsTestTable(connection);
+      }
+    }
     connection.commit();
   }
-  finally {
+ catch (  SQLException e) {
+    logger.info("Error creating test database",e);
+    connection.rollback();
+    throw e;
+  }
+ finally {
     if (connection != null) {
       connection.close();
     }

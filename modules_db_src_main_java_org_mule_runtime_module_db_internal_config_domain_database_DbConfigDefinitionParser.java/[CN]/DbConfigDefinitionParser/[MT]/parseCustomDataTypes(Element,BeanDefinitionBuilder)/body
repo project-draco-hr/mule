@@ -1,12 +1,33 @@
 {
-  List<DbType> vendorDbTypes=new ArrayList<DbType>();
-  Element vendorTypes=DomUtils.getChildElementByTagName(element,DATA_TYPES_ELEMENT);
+  List<DbType> customDbTypes=new ArrayList<DbType>();
+  Element vendorTypes=getChildElementByTagName(element,DATA_TYPES_ELEMENT);
   if (vendorTypes != null) {
     for (    Element dataType : DomUtils.getChildElementsByTagName(vendorTypes,DATA_TYPE_ELEMENT)) {
       String name=dataType.getAttribute(TYPE_NAME_ATTIRBUTE);
       int id=Integer.valueOf(dataType.getAttribute(TYPE_ID_ATTRIBUTE));
-      vendorDbTypes.add(new ResolvedDbType(id,name));
+      if (id == Types.ARRAY) {
+        customDbTypes.add(new ArrayResolvedDbType(id,name));
+      }
+ else       if (id == Types.STRUCT) {
+        final String className=dataType.getAttribute("className");
+        if (!StringUtils.isEmpty(className)) {
+          Class<?> mappedClass;
+          try {
+            mappedClass=Class.forName(className);
+          }
+ catch (          ClassNotFoundException e) {
+            throw new IllegalArgumentException("Cannot find mapped class: " + className);
+          }
+          customDbTypes.add(new MappedStructResolvedDbType(id,name,mappedClass));
+        }
+ else {
+          customDbTypes.add(new ResolvedDbType(id,name));
+        }
+      }
+ else {
+        customDbTypes.add(new ResolvedDbType(id,name));
+      }
     }
   }
-  builder.addPropertyValue("customDataTypes",vendorDbTypes);
+  builder.addPropertyValue("customDataTypes",customDbTypes);
 }
