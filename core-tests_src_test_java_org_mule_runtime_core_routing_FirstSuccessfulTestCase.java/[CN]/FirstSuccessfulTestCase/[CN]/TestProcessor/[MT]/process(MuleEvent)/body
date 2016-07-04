@@ -1,16 +1,15 @@
 {
   try {
-    DefaultMuleMessage msg;
+    MuleMessage msg;
     String payload=event.getMessageAsString();
     if (payload.indexOf(rejectIfMatches) >= 0) {
       throw new DefaultMuleException("Saw " + rejectIfMatches);
     }
  else     if (payload.toLowerCase().indexOf(rejectIfMatches) >= 0) {
-      msg=new DefaultMuleMessage(null);
-      msg.setExceptionPayload(new DefaultExceptionPayload(new Exception()));
+      msg=MuleMessage.builder().payload(NullPayload.getInstance()).exceptionPayload(new DefaultExceptionPayload(new Exception())).build();
     }
  else {
-      msg=new DefaultMuleMessage("No " + rejectIfMatches);
+      msg=MuleMessage.builder().payload("No " + rejectIfMatches).build();
     }
     return new DefaultMuleEvent(msg,MessageExchangePattern.ONE_WAY,event.getFlowConstruct(),event.getSession());
   }

@@ -1,19 +1,14 @@
 {
-  MuleMessage message=spy(new DefaultMuleMessage(""));
-  when(mockMuleEvent.getMessage()).thenReturn(message);
+  mockMuleEvent=spy(mockMuleEvent);
   catchMessagingExceptionStrategy.setMessageProcessors(asList(createSetStringMessageProcessor("A"),createSetStringMessageProcessor("B")));
   catchMessagingExceptionStrategy.initialise();
-  catchMessagingExceptionStrategy.handleException(mockException,mockMuleEvent);
+  final MuleEvent result=catchMessagingExceptionStrategy.handleException(mockException,mockMuleEvent);
   verify(mockMuleEvent,times(1)).setMessage(argThat(new ArgumentMatcher<MuleMessage>(){
     @Override public boolean matches(    Object argument){
       return ((MuleMessage)argument).getPayload().equals("A");
     }
   }
 ));
-  verify(mockMuleEvent,times(1)).setMessage(argThat(new ArgumentMatcher<MuleMessage>(){
-    @Override public boolean matches(    Object argument){
-      return ((MuleMessage)argument).getPayload().equals("B");
-    }
-  }
-));
+  assertThat(result.getMessage().getPayload(),is("B"));
+  assertThat(result.getMessage().getExceptionPayload(),is(nullValue()));
 }

@@ -8,12 +8,11 @@
  else   if (result != null) {
     final TransformerTemplate template=new TransformerTemplate(new TransformerTemplate.OverwitePayloadCallback(result));
     template.setReturnDataType(DataType.builder(DataType.OBJECT).charset(getDefaultEncoding(muleContext)).build());
-    event.setMessage(muleContext.getTransformationService().applyTransformers(event.getMessage(),event,Collections.<Transformer>singletonList(template)));
+    event.setMessage(muleContext.getTransformationService().applyTransformers(event.getMessage(),event,singletonList(template)));
     return event;
   }
  else {
-    MutableMuleMessage emptyMessage=new DefaultMuleMessage(NullPayload.getInstance());
-    emptyMessage.propagateRootId(event.getMessage());
+    final MuleMessage emptyMessage=MuleMessage.builder().payload(NullPayload.getInstance()).rootId(event.getMessage().getMessageRootId()).build();
     return new DefaultMuleEvent(emptyMessage,event);
   }
 }

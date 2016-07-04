@@ -1,2 +1,17 @@
 {
+  try {
+    muleContext.getNotificationManager().fireNotification(new ExceptionStrategyNotification(event,ExceptionStrategyNotification.PROCESS_START));
+    fireNotification(ex);
+    logException(ex,event);
+    doHandleException(ex,event);
+    ExceptionPayload exceptionPayload=new DefaultExceptionPayload(ex);
+    if (RequestContext.getEvent() != null) {
+      RequestContext.setExceptionPayload(exceptionPayload);
+    }
+    event.setMessage(MuleMessage.builder(event.getMessage()).payload(NullPayload.getInstance()).exceptionPayload(exceptionPayload).build());
+    return event;
+  }
+  finally {
+    muleContext.getNotificationManager().fireNotification(new ExceptionStrategyNotification(event,ExceptionStrategyNotification.PROCESS_END));
+  }
 }

@@ -1,7 +1,9 @@
 {
   MuleMessage msg=event.getMessage();
   List<Object> payload=new ArrayList<>();
+  Class<?> itemType=Object.class;
   if (msg.getDataType().isCompatibleWith(MULE_MESSAGE_COLLECTION)) {
+    itemType=((CollectionDataType)MULE_MESSAGE_COLLECTION).getItemDataType().getType();
     for (    MuleMessage child : (Collection<MuleMessage>)msg.getPayload()) {
       Object childPayload=child.getPayload();
       if (childPayload instanceof Collection) {
@@ -16,8 +18,9 @@
     add(payload,(Collection)msg.getPayload());
   }
  else {
+    itemType=msg.getPayload().getClass();
     payload.add(msg.getPayload());
   }
-  MuleMessage listMessage=new DefaultMuleMessage(payload,msg);
+  MuleMessage listMessage=MuleMessage.builder(msg).collectionPayload(payload,itemType).build();
   return new DefaultMuleEvent(listMessage,event);
 }

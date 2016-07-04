@@ -1,2 +1,15 @@
 {
+  final MuleMessage message=context.getEvent().getMessage();
+  final Builder builder=MuleMessage.builder(message);
+  for (  String attachmentName : message.getInboundAttachmentNames()) {
+    DataHandler inboundAttachment=message.getInboundAttachment(attachmentName);
+    builder.addOutboundAttachment(attachmentName,inboundAttachment);
+  }
+  String attachmentName=context.getFlowConstruct().getName();
+  DataHandler dataHandler=new DataHandler(new StringDataSource(ATTACHMENT_CONTENT,"doesNotMatter",MediaType.TEXT));
+  builder.addOutboundAttachment(attachmentName,dataHandler);
+  final MuleMessage built=builder.build();
+  FunctionalTestComponent fc=(FunctionalTestComponent)component;
+  fc.setReturnData(built.getOutboundAttachmentNames());
+  context.getEvent().setMessage(built);
 }

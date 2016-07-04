@@ -1,22 +1,2 @@
 {
-  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_NONE);
-  config.setInteractWithExternal(true);
-  mockExternalTransactionFactory=mock(ExternalTransactionAwareTransactionFactory.class);
-  config.setFactory(mockExternalTransactionFactory);
-  when(mockExternalTransactionFactory.joinExternalTransaction(mockMuleContext)).thenAnswer(new Answer<Object>(){
-    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
-      TransactionCoordination.getInstance().bindTransaction(mockTransaction);
-      return mockTransaction;
-    }
-  }
-);
-  mockTransaction.setXA(true);
-  ExecutionTemplate executionTemplate=createExecutionTemplate(config);
-  Object result=executionTemplate.execute(getEmptyTransactionCallback());
-  assertThat((MuleEvent)result,is(RETURN_VALUE));
-  verify(mockTransaction).suspend();
-  verify(mockTransaction).resume();
-  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
-  verify(mockTransaction,VerificationModeFactory.times(0)).rollback();
-  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
 }

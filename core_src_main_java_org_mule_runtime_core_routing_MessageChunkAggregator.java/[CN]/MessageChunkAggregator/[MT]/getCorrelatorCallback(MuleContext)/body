@@ -25,17 +25,16 @@
         for (        MuleEvent event : collectedEvents) {
           baos.write(event.getMessageAsBytes());
         }
-        MutableMuleMessage message;
+        final Builder builder=MuleMessage.builder(firstEvent.getMessage());
         try {
-          final Object deserialized=muleContext.getObjectSerializer().deserialize(baos.toByteArray());
-          message=new DefaultMuleMessage(deserialized,firstEvent.getMessage());
+          builder.payload(muleContext.getObjectSerializer().deserialize(baos.toByteArray()));
         }
  catch (        SerializationException e) {
-          message=new DefaultMuleMessage(baos.toByteArray(),firstEvent.getMessage());
+          builder.payload(baos.toByteArray());
         }
-        message.setCorrelationGroupSize(-1);
-        message.setCorrelationSequence(-1);
-        return new DefaultMuleEvent(message,firstEvent,getMergedSession(events.toArray()));
+        builder.correlationGroupSize(null);
+        builder.correlationSequence(null);
+        return new DefaultMuleEvent(builder.build(),firstEvent,getMergedSession(events.toArray()));
       }
  catch (      Exception e) {
         throw new AggregationException(events,MessageChunkAggregator.this,e);

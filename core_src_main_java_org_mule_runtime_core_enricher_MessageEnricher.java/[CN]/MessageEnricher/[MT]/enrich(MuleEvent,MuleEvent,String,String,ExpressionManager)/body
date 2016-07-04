@@ -1,2 +1,16 @@
 {
+  if (StringUtils.isEmpty(sourceExpressionArg)) {
+    sourceExpressionArg="#[payload:]";
+  }
+  TypedValue typedValue=expressionManager.evaluateTyped(sourceExpressionArg,enrichmentEvent);
+  if (typedValue.getValue() instanceof MuleMessage) {
+    MuleMessage muleMessage=(MuleMessage)typedValue.getValue();
+    typedValue=new TypedValue(muleMessage.getPayload(),muleMessage.getDataType());
+  }
+  if (!StringUtils.isEmpty(targetExpressionArg)) {
+    expressionManager.enrichTyped(targetExpressionArg,currentEvent,typedValue);
+  }
+ else {
+    currentEvent.setMessage(MuleMessage.builder(currentEvent.getMessage()).payload(typedValue.getValue()).mediaType(typedValue.getDataType().getMediaType()).build());
+  }
 }

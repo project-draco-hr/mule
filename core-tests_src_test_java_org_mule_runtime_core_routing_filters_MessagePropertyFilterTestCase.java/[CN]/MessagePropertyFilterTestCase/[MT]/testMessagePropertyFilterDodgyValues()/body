@@ -2,16 +2,16 @@
   MessagePropertyFilter filter=new MessagePropertyFilter();
   assertFalse(filter.accept((MuleMessage)null));
   filter=new MessagePropertyFilter("foo = bar");
-  MutableMuleMessage message=new DefaultMuleMessage("blah");
-  message.setOutboundProperty("foo","bar");
+  MuleMessage message=MuleMessage.builder().payload("blah").build();
+  message=MuleMessage.builder(message).addOutboundProperty("foo","bar").build();
   assertTrue("Filter didn't accept the message",filter.accept(message));
   filter.setCaseSensitive(false);
   filter=new MessagePropertyFilter("foo2 =null");
-  removeProperty(message,"foo2");
+  message=removeProperty(message,"foo2");
   assertTrue("Filter didn't accept the message",filter.accept(message));
   filter=new MessagePropertyFilter("foo2 =");
-  message.setOutboundProperty("foo2","");
+  message=MuleMessage.builder(message).addOutboundProperty("foo2","").build();
   assertTrue("Filter didn't accept the message",filter.accept(message));
-  removeProperty(message,"foo2");
+  message=removeProperty(message,"foo2");
   assertFalse(filter.accept(message));
 }

@@ -1,25 +1,2 @@
 {
-  MuleTransactionConfig config=new MuleTransactionConfig(TransactionConfig.ACTION_ALWAYS_JOIN);
-  config.setInteractWithExternal(true);
-  mockExternalTransactionFactory=mock(ExternalTransactionAwareTransactionFactory.class);
-  config.setFactory(mockExternalTransactionFactory);
-  when(mockExternalTransactionFactory.joinExternalTransaction(mockMuleContext)).thenAnswer(new Answer<Transaction>(){
-    @Override public Transaction answer(    InvocationOnMock invocationOnMock) throws Throwable {
-      TransactionCoordination.getInstance().bindTransaction(mockTransaction);
-      return mockTransaction;
-    }
-  }
-);
-  ExecutionTemplate transactionTemplate=createExecutionTemplate(config);
-  MuleEvent exceptionListenerResult=configureExceptionListenerCall();
-  try {
-    transactionTemplate.execute(getFailureTransactionCallback());
-  }
- catch (  MessagingException e) {
-    assertThat(e,Is.is(mockMessagingException));
-    org.junit.Assert.assertThat(e.getEvent(),Is.is(exceptionListenerResult));
-  }
-  verify(mockTransaction,VerificationModeFactory.times(0)).commit();
-  verify(mockTransaction,VerificationModeFactory.times(1)).rollback();
-  assertThat(TransactionCoordination.getInstance().getTransaction(),IsNull.<Object>nullValue());
 }

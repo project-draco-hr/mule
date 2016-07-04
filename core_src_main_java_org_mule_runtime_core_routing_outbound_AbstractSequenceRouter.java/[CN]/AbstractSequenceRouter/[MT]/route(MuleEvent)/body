@@ -1,2 +1,36 @@
 {
+  MuleMessage message=event.getMessage();
+  if (routes == null || routes.size() == 0) {
+    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),event,null);
+  }
+  if (enableCorrelation != CorrelationMode.NEVER) {
+    boolean correlationSet=message.getCorrelationId() != null;
+    if (correlationSet && (enableCorrelation == CorrelationMode.IF_NOT_SET)) {
+      logger.debug("CorrelationId is already set, not setting Correlation group size");
+    }
+ else {
+      event.setMessage(MuleMessage.builder(message).correlationGroupSize(routes.size()).build());
+    }
+  }
+  List<MuleEvent> results=new ArrayList<>(routes.size());
+  try {
+    for (int i=0; i < routes.size(); i++) {
+      MessageProcessor mp=getRoute(i,event);
+      if (!(mp instanceof LegacyOutboundEndpoint) || ((LegacyOutboundEndpoint)mp).filterAccepts(message)) {
+        AbstractRoutingStrategy.validateMessageIsNotConsumable(event,message);
+        MuleMessage clonedMessage=cloneMessage(event,message);
+        MuleEvent result=sendRequest(event,createEventToRoute(event,clonedMessage),mp,true);
+        if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
+          results.add(result);
+        }
+        if (!continueRoutingMessageAfter(result)) {
+          break;
+        }
+      }
+    }
+  }
+ catch (  MuleException e) {
+    throw new CouldNotRouteOutboundMessageException(event,routes.get(0),e);
+  }
+  return resultsHandler.aggregateResults(results,event);
 }

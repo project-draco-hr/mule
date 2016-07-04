@@ -7,13 +7,9 @@
     result=transformer.transform(message);
   }
   if (result instanceof MuleMessage) {
-    if (!result.equals(message)) {
-      MuleMessage transformResult=(MuleMessage)result;
-      return new DefaultMuleMessage(result,transformResult,transformResult.getDataType());
-    }
     return (MuleMessage)result;
   }
  else {
-    return new DefaultMuleMessage(result,message,mergeDataType(message,transformer.getReturnDataType(),result != null ? result.getClass() : null));
+    return MuleMessage.builder(message).payload(result != null ? result : NullPayload.getInstance()).mediaType(mergeMediaType(message,transformer.getReturnDataType())).build();
   }
 }
