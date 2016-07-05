@@ -1,6 +1,6 @@
 {
   if (transportMessage == null) {
-    return new DefaultMuleMessage(NullPayload.getInstance());
+    return MuleMessage.builder().payload(NullPayload.getInstance()).build();
   }
   if (!isTransportMessageTypeSupported(transportMessage)) {
     throw new MessageTypeNotSupportedException(transportMessage,getClass());
@@ -12,14 +12,21 @@
     dataTypeBuilder=dataTypeBuilder.mediaType(mimeType);
   }
   final DataType dataType=dataTypeBuilder.build();
-  MutableMuleMessage message;
+  MuleMessage.Builder messageBuilder;
   if (previousMessage != null) {
-    message=new DefaultMuleMessage(payload,previousMessage,dataType);
+    messageBuilder=MuleMessage.builder(previousMessage).payload(payload);
+  }
+ else   if (payload instanceof MuleMessage) {
+    messageBuilder=MuleMessage.builder((MuleMessage)payload);
+  }
+ else   if (payload == null) {
+    messageBuilder=MuleMessage.builder().payload(NullPayload.getInstance());
   }
  else {
-    message=new DefaultMuleMessage(payload,dataType);
+    messageBuilder=MuleMessage.builder().payload(payload);
   }
-  message=addProperties(message,transportMessage);
-  message=addAttachments(message,transportMessage);
-  return message;
+  messageBuilder.mediaType(dataType.getMediaType());
+  addProperties(messageBuilder,transportMessage);
+  addAttachments(messageBuilder,transportMessage);
+  return messageBuilder.build();
 }

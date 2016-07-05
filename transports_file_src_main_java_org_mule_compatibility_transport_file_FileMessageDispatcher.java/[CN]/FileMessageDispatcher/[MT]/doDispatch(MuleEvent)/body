@@ -1,2 +1,29 @@
 {
+  Object data=event.getMessage().getPayload();
+  MuleMessage.Builder messageBuilder=MuleMessage.builder(event.getMessage()).payload(data);
+  FileOutputStream fos=(FileOutputStream)connector.getOutputStream(getEndpoint(),event);
+  try {
+    if (event.getMessage().getOutboundProperty(PROPERTY_FILENAME) == null) {
+      messageBuilder.addOutboundProperty(PROPERTY_FILENAME,event.getMessage().getOutboundProperty(PROPERTY_FILENAME,EMPTY));
+    }
+    event.setMessage(messageBuilder.build());
+    if (data instanceof byte[]) {
+      fos.write((byte[])data);
+    }
+ else     if (data instanceof String) {
+      fos.write(data.toString().getBytes(resolveEncoding(event)));
+    }
+ else     if (data instanceof OutputHandler) {
+      ((OutputHandler)data).write(event,fos);
+    }
+ else {
+      InputStream is=event.transformMessage(DataType.fromType(InputStream.class));
+      IOUtils.copyLarge(is,fos);
+      is.close();
+    }
+  }
+  finally {
+    logger.debug("Closing file");
+    fos.close();
+  }
 }

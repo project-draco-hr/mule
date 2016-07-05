@@ -1,18 +1,19 @@
 {
-  MutableMuleMessage muleMessage=super.createMessageFromSource(message);
+  MuleMessage muleMessage=super.createMessageFromSource(message);
+  MuleMessage.Builder messageBuilder=MuleMessage.builder(muleMessage);
   String path=muleMessage.getInboundProperty(HTTP_REQUEST_PROPERTY);
   int i=path.indexOf('?');
   if (i > -1) {
     path=path.substring(0,i);
   }
-  muleMessage.setInboundProperty(HttpConnector.HTTP_REQUEST_PATH_PROPERTY,path);
+  messageBuilder.addInboundProperty(HTTP_REQUEST_PATH_PROPERTY,path);
   if (logger.isDebugEnabled()) {
     logger.debug(muleMessage.getInboundProperty(HTTP_REQUEST_PROPERTY));
   }
   String contextPath=HttpConnector.normalizeUrl(getInboundEndpoint().getEndpointURI().getPath());
-  muleMessage.setInboundProperty(HTTP_CONTEXT_PATH_PROPERTY,contextPath);
-  muleMessage.setInboundProperty(HTTP_CONTEXT_URI_PROPERTY,getInboundEndpoint().getEndpointURI().getAddress());
-  muleMessage.setInboundProperty(HTTP_RELATIVE_PATH_PROPERTY,processRelativePath(contextPath,path));
-  processRemoteAddresses(muleMessage);
-  return muleMessage;
+  messageBuilder.addInboundProperty(HTTP_CONTEXT_PATH_PROPERTY,contextPath);
+  messageBuilder.addInboundProperty(HTTP_CONTEXT_URI_PROPERTY,getInboundEndpoint().getEndpointURI().getAddress());
+  messageBuilder.addInboundProperty(HTTP_RELATIVE_PATH_PROPERTY,processRelativePath(contextPath,path));
+  processRemoteAddresses(messageBuilder,muleMessage);
+  return messageBuilder.build();
 }

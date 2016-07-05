@@ -1,9 +1,8 @@
 {
   MuleEvent response=exception.getEvent();
-  MutableMuleMessage message=(MutableMuleMessage)response.getMessage();
-  message.setPayload(exception.getMessage());
+  MuleMessage message=response.getMessage();
   httpStatus=message.getOutboundProperty(HTTP_STATUS_PROPERTY) != null ? Integer.valueOf(response.getMessage().getOutboundProperty(HTTP_STATUS_PROPERTY).toString()) : httpStatus;
-  message.setOutboundProperty(HTTP_STATUS_PROPERTY,httpStatus);
+  response.setMessage(MuleMessage.builder(response.getMessage()).payload(exception.getMessage()).addOutboundProperty(HTTP_STATUS_PROPERTY,httpStatus).build());
   HttpResponse httpResponse=transformResponse(response.getMessage());
   httpServerConnection.writeResponse(httpResponse,getThrottlingHeaders());
 }

@@ -2,20 +2,28 @@
   try {
     EndpointMessageNotification beginNotification=null;
     if (connector.isEnableMessageEvents()) {
-      MuleMessage dummyMessage=new DefaultMuleMessage(NullPayload.getInstance());
+      MuleMessage dummyMessage=MuleMessage.builder().payload(NullPayload.getInstance()).build();
       beginNotification=new EndpointMessageNotification(dummyMessage,endpoint,null,MESSAGE_REQUEST_BEGIN);
     }
     connect();
-    MutableMuleMessage result=doRequest(timeout);
+    MuleMessage result=doRequest(timeout);
+    MuleMessage.Builder builder;
+    if (result != null) {
+      builder=MuleMessage.builder(result);
+    }
+ else {
+      builder=MuleMessage.builder().payload(NullPayload.getInstance());
+    }
     if (result != null) {
       String rootId=result.getInboundProperty(MULE_ROOT_MESSAGE_ID_PROPERTY);
       if (rootId != null) {
-        result.setMessageRootId(rootId);
-        result.removeInboundProperty(MULE_ROOT_MESSAGE_ID_PROPERTY);
+        builder.rootId(rootId);
+        builder.removeInboundProperty(MULE_ROOT_MESSAGE_ID_PROPERTY);
       }
       if (beginNotification != null) {
-        result.propagateRootId(beginNotification.getSource());
+        builder.rootId(beginNotification.getSource().getMessageRootId());
       }
+      result=builder.build();
       if (!endpoint.isDisableTransportTransformer()) {
         result=applyInboundTransformers(result);
       }

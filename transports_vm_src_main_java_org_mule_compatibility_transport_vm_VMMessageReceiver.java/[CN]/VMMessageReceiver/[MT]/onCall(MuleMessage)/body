@@ -1,0 +1,42 @@
+{
+  ClassLoader originalClassLoader=Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(endpoint.getMuleContext().getExecutionClassLoader());
+    ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
+    MuleEvent resultEvent=executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
+      @Override public MuleEvent process() throws Exception {
+        MuleEvent event=routeMessage(message);
+        if (event != null && !VoidMuleEvent.getInstance().equals(event) && getEndpoint().getExchangePattern().hasResponse()) {
+          MuleMessage returnedMessage=event.getMessage();
+          if (returnedMessage != null) {
+            ((DefaultMuleMessage)returnedMessage).release();
+          }
+          return event;
+        }
+        return null;
+      }
+    }
+);
+    if (resultEvent != null) {
+      return resultEvent.getMessage();
+    }
+ else {
+      return null;
+    }
+  }
+ catch (  MessagingException e) {
+    return e.getMuleMessage();
+  }
+catch (  MuleException e) {
+    endpoint.getMuleContext().getExceptionListener().handleException(e);
+    throw e;
+  }
+catch (  Exception e) {
+    endpoint.getMuleContext().getExceptionListener().handleException(e);
+    throw new DefaultMuleException(e);
+  }
+ finally {
+    ((DefaultMuleMessage)message).release();
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
+  }
+}

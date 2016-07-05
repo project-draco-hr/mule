@@ -3,7 +3,10 @@
     messageProperties=new HashMap<>();
   }
   messageProperties.put(MULE_REMOTE_SYNC_PROPERTY,"false");
-  MuleMessage message=new DefaultMuleMessage(payload,messageProperties);
+  if (messageProperties == null) {
+    messageProperties=EMPTY_MAP;
+  }
+  MuleMessage message=MuleMessage.builder().payload(payload).outboundProperties(messageProperties).build();
   OutboundEndpoint endpoint=getOutboundEndpoint(url,REQUEST_RESPONSE,null);
   MuleEvent event=getEvent(message,REQUEST_RESPONSE);
   endpoint.process(event);

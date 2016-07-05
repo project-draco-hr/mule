@@ -1,2 +1,23 @@
 {
+  super.processReplyTo(event,returnMessage,replyTo);
+  String replyToEndpoint=replyTo.toString();
+  returnMessage=MuleMessage.builder(returnMessage).payload(returnMessage.getPayload()).build();
+  MuleEvent replyToEvent=new DefaultMuleEvent(returnMessage,event);
+  OutboundEndpoint endpoint=getEndpoint(event,replyToEndpoint);
+  List<String> responseProperties=endpoint.getResponseProperties();
+  for (  String propertyName : responseProperties) {
+    Serializable propertyValue=event.getMessage().getInboundProperty(propertyName);
+    if (propertyValue != null) {
+      event.setMessage(MuleMessage.builder(event.getMessage()).addOutboundProperty(propertyName,propertyValue).build());
+    }
+  }
+  try {
+    endpoint.process(replyToEvent);
+    if (logger.isInfoEnabled()) {
+      logger.info("reply to sent: " + endpoint);
+    }
+  }
+ catch (  Exception e) {
+    throw new DispatchException(TransportCoreMessages.failedToDispatchToReplyto(endpoint),replyToEvent,endpoint,e);
+  }
 }

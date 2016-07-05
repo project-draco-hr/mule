@@ -1,2 +1,32 @@
 {
+  MuleMessage message=event.getMessage();
+  List<Object> recipients=getRecipients(event);
+  List<MuleEvent> results=new ArrayList<>();
+  if (enableCorrelation != CorrelationMode.NEVER) {
+    boolean correlationSet=message.getCorrelationGroupSize() != null;
+    if (correlationSet && (enableCorrelation == CorrelationMode.IF_NOT_SET)) {
+      logger.debug("CorrelationId is already set, not setting Correlation group size");
+    }
+ else {
+      event.setMessage(MuleMessage.builder(event.getMessage()).correlationGroupSize(recipients.size()).build());
+    }
+  }
+  OutboundEndpoint endpoint=null;
+  for (  Object recipient : recipients) {
+    MuleMessage request=MuleMessage.builder(message).payload(message.getPayload()).build();
+    try {
+      endpoint=getRecipientEndpoint(request,recipient);
+      boolean sync=(this.synchronous == null ? endpoint.getExchangePattern().hasResponse() : this.synchronous.booleanValue());
+      if (sync) {
+        results.add(sendRequest(event,createEventToRoute(event,request),endpoint,true));
+      }
+ else {
+        sendRequest(event,createEventToRoute(event,request),endpoint,false);
+      }
+    }
+ catch (    MuleException e) {
+      throw new CouldNotRouteOutboundMessageException(event,endpoint,e);
+    }
+  }
+  return resultsHandler.aggregateResults(results,event);
 }

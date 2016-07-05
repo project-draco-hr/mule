@@ -1,10 +1,11 @@
 {
-  MutableMuleMessage message=(MutableMuleMessage)eventContext.getMessage();
+  MuleMessage message=eventContext.getMessage();
+  MuleMessage.Builder messageBuilder=MuleMessage.builder(message);
   String etag=message.getOutboundProperty(HttpConstants.HEADER_IF_NONE_MATCH);
   if ((etag != null) && etag.equals(ETAG_VALUE)) {
-    message=new DefaultMuleMessage(StringUtils.EMPTY);
-    message.setOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_NOT_MODIFIED);
+    messageBuilder.payload(StringUtils.EMPTY);
+    messageBuilder.addOutboundProperty(HttpConnector.HTTP_STATUS_PROPERTY,HttpConstants.SC_NOT_MODIFIED);
   }
-  message.setOutboundProperty(HttpConstants.HEADER_ETAG,ETAG_VALUE);
-  return message;
+  messageBuilder.addOutboundProperty(HttpConstants.HEADER_ETAG,ETAG_VALUE);
+  return messageBuilder.build();
 }

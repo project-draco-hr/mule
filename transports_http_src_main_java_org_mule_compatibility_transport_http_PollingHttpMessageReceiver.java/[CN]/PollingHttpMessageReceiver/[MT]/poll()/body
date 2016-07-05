@@ -9,16 +9,16 @@
     endpointBuilder.setExchangePattern(REQUEST_RESPONSE);
     outboundEndpoint=getEndpointFactory(muleContext).getOutboundEndpoint(endpointBuilder);
   }
-  MutableMuleMessage request=new DefaultMuleMessage(StringUtils.EMPTY,outboundEndpoint.getProperties());
+  MuleMessage.Builder requestBuider=MuleMessage.builder().payload(StringUtils.EMPTY).inboundProperties(outboundEndpoint.getProperties());
   if (etag != null && checkEtag) {
-    request.setOutboundProperty(HEADER_IF_NONE_MATCH,etag);
+    requestBuider.addOutboundProperty(HEADER_IF_NONE_MATCH,etag);
   }
-  request.setOutboundProperty(HTTP_METHOD_PROPERTY,"GET");
-  MuleEvent event=new DefaultMuleEvent(request,outboundEndpoint.getExchangePattern(),flowConstruct);
+  requestBuider.addOutboundProperty(HTTP_METHOD_PROPERTY,"GET");
+  MuleEvent event=new DefaultMuleEvent(requestBuider.build(),outboundEndpoint.getExchangePattern(),flowConstruct);
   MuleEvent result=outboundEndpoint.process(event);
-  MutableMuleMessage message=null;
+  MuleMessage message=null;
   if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
-    message=(MutableMuleMessage)result.getMessage();
+    message=result.getMessage();
   }
   final int contentLength=message.getOutboundProperty(HEADER_CONTENT_LENGTH,-1);
   if (contentLength == 0 && discardEmptyContent) {

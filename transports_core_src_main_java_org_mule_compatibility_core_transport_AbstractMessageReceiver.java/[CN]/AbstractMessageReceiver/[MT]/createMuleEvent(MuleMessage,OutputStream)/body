@@ -1,2 +1,33 @@
 {
+  MuleEvent event;
+  ResponseOutputStream ros=null;
+  if (outputStream != null) {
+    if (outputStream instanceof ResponseOutputStream) {
+      ros=(ResponseOutputStream)outputStream;
+    }
+ else {
+      ros=new ResponseOutputStream(outputStream);
+    }
+  }
+  MuleSession session=connector.getSessionHandler().retrieveSessionInfoFromMessage(message,flowConstruct.getMuleContext());
+  if (session == null) {
+    session=new DefaultMuleSession();
+  }
+  final Object replyToFromMessage=message.getReplyTo();
+  if (replyToFromMessage != null) {
+    message=MuleMessage.builder(message).replyTo(null).build();
+    DefaultMuleEvent newEvent=new DefaultMuleEvent(message,flowConstruct,session,replyToHandler,replyToFromMessage,ros);
+    DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(newEvent,getEndpoint());
+    event=newEvent;
+  }
+ else {
+    DefaultMuleEvent newEvent=new DefaultMuleEvent(message,flowConstruct,session,null,null,ros);
+    DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(newEvent,getEndpoint());
+    event=newEvent;
+  }
+  event=OptimizedRequestContext.unsafeSetEvent(event);
+  if (session.getSecurityContext() != null && session.getSecurityContext().getAuthentication() != null) {
+    session.getSecurityContext().getAuthentication().setEvent(event);
+  }
+  return event;
 }

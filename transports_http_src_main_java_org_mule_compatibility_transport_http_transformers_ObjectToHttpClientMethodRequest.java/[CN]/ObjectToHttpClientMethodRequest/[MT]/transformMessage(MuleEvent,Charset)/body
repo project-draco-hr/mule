@@ -1,2 +1,53 @@
 {
+  final MuleMessage msg=event.getMessage();
+  String method=detectHttpMethod(msg);
+  try {
+    HttpMethod httpMethod;
+    if (HttpConstants.METHOD_GET.equals(method)) {
+      httpMethod=createGetMethod(msg,outputEncoding);
+    }
+ else     if (HttpConstants.METHOD_POST.equalsIgnoreCase(method)) {
+      httpMethod=createPostMethod(event,outputEncoding);
+    }
+ else     if (HttpConstants.METHOD_PUT.equalsIgnoreCase(method)) {
+      httpMethod=createPutMethod(event,outputEncoding);
+    }
+ else     if (HttpConstants.METHOD_DELETE.equalsIgnoreCase(method)) {
+      httpMethod=createDeleteMethod(msg);
+    }
+ else     if (HttpConstants.METHOD_HEAD.equalsIgnoreCase(method)) {
+      httpMethod=createHeadMethod(msg);
+    }
+ else     if (HttpConstants.METHOD_OPTIONS.equalsIgnoreCase(method)) {
+      httpMethod=createOptionsMethod(msg);
+    }
+ else     if (HttpConstants.METHOD_TRACE.equalsIgnoreCase(method)) {
+      httpMethod=createTraceMethod(msg);
+    }
+ else     if (HttpConstants.METHOD_PATCH.equalsIgnoreCase(method)) {
+      httpMethod=createPatchMethod(event,outputEncoding);
+    }
+ else {
+      throw new TransformerException(HttpMessages.unsupportedMethod(method));
+    }
+    final HttpMethodParams params=msg.getOutboundProperty(HTTP_PARAMS_PROPERTY);
+    event.setMessage(MuleMessage.builder(event.getMessage()).removeOutboundProperty(HTTP_PARAMS_PROPERTY).build());
+    if (params != null) {
+      httpMethod.setParams(params);
+    }
+ else {
+      final String httpVersion=msg.getOutboundProperty(HttpConnector.HTTP_VERSION_PROPERTY,HttpConstants.HTTP11);
+      if (HttpConstants.HTTP10.equals(httpVersion)) {
+        httpMethod.getParams().setVersion(HttpVersion.HTTP_1_0);
+      }
+ else {
+        httpMethod.getParams().setVersion(HttpVersion.HTTP_1_1);
+      }
+    }
+    setHeaders(httpMethod,msg);
+    return httpMethod;
+  }
+ catch (  final Exception e) {
+    throw new TransformerException(this,e);
+  }
 }
