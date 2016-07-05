@@ -13,14 +13,14 @@
         IOUtils.copy(transformerInputs.getReader(),jsonWriter);
       }
       jsonString=jsonWriter.toString();
-      msg=new DefaultMuleMessage(jsonString,msg);
+      msg=MuleMessage.builder(msg).payload(jsonString).build();
       event.setMessage(msg);
     }
     String xmlString=(String)jToX.transform(msg.getPayload(),msg.getDataType().getMediaType().getCharset().orElse(getDefaultEncoding(muleContext)));
-    MuleMessage xmlMessage=new DefaultMuleMessage(xmlString,msg);
+    MuleMessage xmlMessage=MuleMessage.builder().payload(xmlString).build();
     boolean accepted=super.accept(new DefaultMuleEvent(xmlMessage,event.getFlowConstruct()));
     if (jsonString != null) {
-      msg=new DefaultMuleMessage(jsonString,msg);
+      msg=MuleMessage.builder(msg).payload(jsonString).build();
       event.setMessage(msg);
     }
     return accepted;

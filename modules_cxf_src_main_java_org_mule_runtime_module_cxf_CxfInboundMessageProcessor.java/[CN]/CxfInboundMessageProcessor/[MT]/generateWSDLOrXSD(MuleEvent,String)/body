@@ -1,2 +1,31 @@
 {
+  String ctxUri=requestPropertyManager.getBasePath(event.getMessage());
+  String wsdlUri=getUri(event);
+  String serviceUri=wsdlUri.substring(0,wsdlUri.indexOf('?'));
+  EndpointInfo ei=getServer().getEndpoint().getEndpointInfo();
+  if (serviceUri != null) {
+    ei.setAddress(serviceUri);
+    if (ei.getExtensor(AddressType.class) != null) {
+      ei.getExtensor(AddressType.class).setLocation(serviceUri);
+    }
+  }
+  ByteArrayOutputStream out=new ByteArrayOutputStream();
+  String ct=null;
+  if (wsdlQueryHandler.isRecognizedQuery(wsdlUri,ctxUri,ei)) {
+    ct=wsdlQueryHandler.getResponseContentType(wsdlUri,ctxUri);
+    wsdlQueryHandler.writeResponse(wsdlUri,ctxUri,ei,out);
+    out.flush();
+  }
+  String message;
+  if (ct == null) {
+    ct="text/plain";
+    message="No query handler found for URL.";
+  }
+ else {
+    message=out.toString();
+  }
+  final String finalCt=ct;
+  MuleMessage resultMessage=MuleMessage.builder(event.getMessage()).payload(message).mediaType(XML).addOutboundProperty(CONTENT_TYPE,finalCt).build();
+  event.setMessage(resultMessage);
+  return event;
 }

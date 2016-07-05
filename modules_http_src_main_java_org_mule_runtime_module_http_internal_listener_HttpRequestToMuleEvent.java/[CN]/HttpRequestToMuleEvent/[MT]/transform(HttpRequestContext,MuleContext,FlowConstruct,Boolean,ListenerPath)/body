@@ -15,8 +15,7 @@
   new HttpMessagePropertiesResolver().setMethod(request.getMethod()).setProtocol(request.getProtocol().asString()).setUri(request.getUri()).setListenerPath(listenerPath).setRemoteHostAddress(resolveRemoteHostAddress(requestContext)).setScheme(requestContext.getScheme()).setClientCertificate(requestContext.getClientConnection().getClientCertificate()).addPropertiesTo(inboundProperties);
   final Map<String,DataHandler> inboundAttachments=new HashMap<>();
   Object payload=NullPayload.getInstance();
-  final DataType dataType=buildContentTypeDataType(request.getHeaderValueIgnoreCase(CONTENT_TYPE),getDefaultEncoding(muleContext));
-  DataTypeBuilder dataTypeBuilder=DataType.builder(dataType);
+  final MediaType mediaType=getMediaType(request.getHeaderValueIgnoreCase(CONTENT_TYPE),getDefaultEncoding(muleContext));
   if (parseRequest) {
     final HttpEntity entity=request.getEntity();
     if (entity != null && !(entity instanceof EmptyHttpEntity)) {
@@ -24,11 +23,10 @@
         inboundAttachments.putAll(createDataHandlerFrom(((MultipartHttpEntity)entity).getParts()));
       }
  else {
-        if (dataType.getMediaType() != null) {
-          if (dataType.getMediaType().matches(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
+        if (mediaType != null) {
+          if (mediaType.matches(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
             try {
-              payload=decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),dataType.getMediaType().getCharset().get());
-              dataTypeBuilder.type(ParameterMap.class);
+              payload=decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),mediaType.getCharset().get());
             }
  catch (            IllegalArgumentException e) {
               throw new HttpRequestParsingException("Cannot decode x-www-form-urlencoded payload",e);
@@ -36,12 +34,10 @@
           }
  else           if (entity instanceof InputStreamHttpEntity) {
             payload=((InputStreamHttpEntity)entity).getInputStream();
-            dataTypeBuilder.type(InputStream.class);
           }
         }
  else         if (entity instanceof InputStreamHttpEntity) {
           payload=((InputStreamHttpEntity)entity).getInputStream();
-          dataTypeBuilder.type(InputStream.class);
         }
       }
     }
@@ -50,9 +46,8 @@
     final InputStreamHttpEntity inputStreamEntity=request.getInputStreamEntity();
     if (inputStreamEntity != null) {
       payload=inputStreamEntity.getInputStream();
-      dataTypeBuilder.type(InputStream.class);
     }
   }
-  final DefaultMuleMessage defaultMuleMessage=new DefaultMuleMessage(payload,inboundProperties,outboundProperties,inboundAttachments,dataTypeBuilder.build());
-  return new DefaultMuleEvent(defaultMuleMessage,resolveUri(requestContext),REQUEST_RESPONSE,flowConstruct,new DefaultMuleSession());
+  final MuleMessage message=MuleMessage.builder().payload(payload).mediaType(mediaType).inboundProperties(inboundProperties).outboundProperties(outboundProperties).inboundAttachments(inboundAttachments).build();
+  return new DefaultMuleEvent(message,resolveUri(requestContext),REQUEST_RESPONSE,flowConstruct,new DefaultMuleSession());
 }

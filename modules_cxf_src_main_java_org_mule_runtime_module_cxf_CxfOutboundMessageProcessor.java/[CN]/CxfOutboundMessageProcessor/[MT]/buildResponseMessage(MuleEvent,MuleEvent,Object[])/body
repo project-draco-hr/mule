@@ -1,2 +1,27 @@
 {
+  if (transportResponse == null) {
+    return null;
+  }
+  if (VoidMuleEvent.getInstance().equals(transportResponse)) {
+    return transportResponse;
+  }
+  Object payload;
+  if (response == null || response.length == 0) {
+    payload=null;
+  }
+ else   if (response.length == 1) {
+    payload=response[0];
+  }
+ else {
+    payload=response;
+  }
+  MuleMessage.Builder builder=MuleMessage.builder(transportResponse.getMessage());
+  Serializable httpStatusCode=transportResponse.getMessage().getInboundProperty(HTTP_STATUS_PROPERTY);
+  if (isProxy() && httpStatusCode != null) {
+    builder.addOutboundProperty(HTTP_STATUS_PROPERTY,httpStatusCode);
+  }
+  Class payloadClass=payload != null ? payload.getClass() : Object.class;
+  builder.payload(payload != null ? payload : NullPayload.getInstance()).mediaType(getMimeType());
+  transportResponse.setMessage(builder.build());
+  return transportResponse;
 }

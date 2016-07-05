@@ -1,9 +1,8 @@
 {
   final HttpRequest request=requestContext.getRequest();
-  final DataType dataType=buildContentTypeDataType(request.getHeaderValueIgnoreCase(CONTENT_TYPE),getDefaultEncoding(muleContext));
+  final MediaType mediaType=getMediaType(request.getHeaderValueIgnoreCase(CONTENT_TYPE),getDefaultEncoding(muleContext));
   final Map<String,DataHandler> parts=new HashMap<>();
   Object payload=NullPayload.getInstance();
-  DataTypeBuilder dataTypeBuilder=DataType.builder(dataType);
   if (parseRequest) {
     final HttpEntity entity=request.getEntity();
     if (entity != null && !(entity instanceof EmptyHttpEntity)) {
@@ -11,11 +10,10 @@
         parts.putAll(createDataHandlerFrom(((MultipartHttpEntity)entity).getParts()));
       }
  else {
-        if (dataType.getMediaType() != null) {
-          if (dataType.getMediaType().matches(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
+        if (mediaType != null) {
+          if (mediaType.matches(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
             try {
-              payload=decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),dataType.getMediaType().getCharset().get());
-              dataTypeBuilder.type(ParameterMap.class);
+              payload=decodeUrlEncodedBody(IOUtils.toString(((InputStreamHttpEntity)entity).getInputStream()),mediaType.getCharset().get());
             }
  catch (            IllegalArgumentException e) {
               throw new HttpRequestParsingException("Cannot decode x-www-form-urlencoded payload",e);
@@ -23,12 +21,10 @@
           }
  else           if (entity instanceof InputStreamHttpEntity) {
             payload=((InputStreamHttpEntity)entity).getInputStream();
-            dataTypeBuilder.type(InputStream.class);
           }
         }
  else         if (entity instanceof InputStreamHttpEntity) {
           payload=((InputStreamHttpEntity)entity).getInputStream();
-          dataTypeBuilder.type(InputStream.class);
         }
       }
     }
@@ -37,9 +33,8 @@
     final InputStreamHttpEntity inputStreamEntity=request.getInputStreamEntity();
     if (inputStreamEntity != null) {
       payload=inputStreamEntity.getInputStream();
-      dataTypeBuilder.type(InputStream.class);
     }
   }
   HttpRequestAttributes attributes=new HttpRequestAttributesBuilder().setRequestContext(requestContext).setListenerPath(listenerPath).setParts(parts).build();
-  return new DefaultMuleMessage(payload,dataTypeBuilder.build(),attributes);
+  return MuleMessage.builder().payload(payload).mediaType(mediaType).attributes(attributes).build();
 }

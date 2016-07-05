@@ -1,2 +1,12 @@
 {
+  MuleMessage message=event.getMessage();
+  if (!message.getOutboundAttachmentNames().isEmpty()) {
+    Collection<Attachment> attachments=new HashSet<Attachment>(message.getOutboundAttachmentNames().size());
+    for (    String outboundAttachmentName : message.getOutboundAttachmentNames()) {
+      Attachment attachment=new AttachmentImpl(outboundAttachmentName,message.getOutboundAttachment(outboundAttachmentName));
+      attachments.add(attachment);
+    }
+    event.setFlowVariable(CxfConstants.ATTACHMENTS,attachments);
+    event.setMessage(MuleMessage.builder(event.getMessage()).clearOutboundAttachments().build());
+  }
 }

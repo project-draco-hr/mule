@@ -5,7 +5,7 @@
     responseContentType=((DataType<?>)dataType).getMediaType().toString();
   }
   InputStream responseInputStream=((InputStreamHttpEntity)response.getEntity()).getInputStream();
-  Charset encoding=buildContentTypeDataType(responseContentType,getDefaultEncoding(muleEvent.getMuleContext())).getMediaType().getCharset().get();
+  Charset encoding=getMediaType(responseContentType,getDefaultEncoding(muleEvent.getMuleContext())).getCharset().get();
   Object payload=responseInputStream;
   Map<String,DataHandler> parts=new HashMap<>();
   if (responseContentType != null && parseResponse) {
@@ -27,10 +27,5 @@
   }
   HttpResponseAttributes responseAttributes=createAttributes(response,parts);
   dataType=DataType.builder(dataType).charset(encoding).build();
-  MuleMessage responseMessage=MuleMessage.builder().payload(payload).mediaType(dataType.getMediaType()).attributes(responseAttributes).build();
-  String requestMessageId=muleEvent.getMessage().getUniqueId();
-  String requestMessageRootId=muleEvent.getMessage().getMessageRootId();
-  ((DefaultMuleMessage)responseMessage).setUniqueId(requestMessageId);
-  ((DefaultMuleMessage)responseMessage).setMessageRootId(requestMessageRootId);
-  return responseMessage;
+  return MuleMessage.builder(muleEvent.getMessage()).payload(payload).mediaType(dataType.getMediaType()).attributes(responseAttributes).build();
 }

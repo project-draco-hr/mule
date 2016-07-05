@@ -2,13 +2,15 @@
   MuleMessage message=event.getMessage();
   if (event.getFlowVariable(CxfConstants.ATTACHMENTS) != null) {
     Collection<Attachment> attachments=event.getFlowVariable(CxfConstants.ATTACHMENTS);
+    MuleMessage.Builder builder=MuleMessage.builder(message);
     for (    Attachment attachment : attachments) {
       try {
-        ((DefaultMuleMessage)message).addInboundAttachment(attachment.getId(),attachment.getDataHandler());
+        builder.addInboundAttachment(attachment.getId(),attachment.getDataHandler());
       }
  catch (      Exception e) {
         throw new MessagingException(CoreMessages.createStaticMessage("Could not set inbound attachment %s",attachment.getId()),event,e,this);
       }
     }
+    event.setMessage(builder.build());
   }
 }

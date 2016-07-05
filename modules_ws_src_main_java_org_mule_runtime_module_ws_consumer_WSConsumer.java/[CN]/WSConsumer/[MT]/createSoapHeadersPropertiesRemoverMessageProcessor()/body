@@ -1,2 +1,23 @@
 {
+  return new AbstractRequestResponseMessageProcessor(){
+    @Override protected MuleEvent processRequest(    MuleEvent event) throws MuleException {
+      List<String> outboundProperties=new ArrayList<>(event.getMessage().getOutboundPropertyNames());
+      MuleMessage.Builder builder=MuleMessage.builder(event.getMessage());
+      for (      String outboundProperty : outboundProperties) {
+        if (outboundProperty.startsWith(SOAP_HEADERS_PROPERTY_PREFIX)) {
+          builder.removeOutboundProperty(outboundProperty);
+        }
+      }
+      event.setMessage(builder.build());
+      return super.processRequest(event);
+    }
+    @Override protected MuleEvent processResponse(    MuleEvent response,    final MuleEvent request) throws MuleException {
+      Object statusCode=response.getMessage().getInboundProperty(HTTP_STATUS_PROPERTY,null);
+      if (statusCode != null && !(statusCode instanceof String)) {
+        response.setMessage(MuleMessage.builder(response.getMessage()).addInboundProperty(HTTP_STATUS_PROPERTY,statusCode.toString()).build());
+      }
+      return super.processResponse(response,request);
+    }
+  }
+;
 }
