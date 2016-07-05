@@ -1,2 +1,16 @@
 {
+  endpoint=createTestInboundEndpoint(null,new TestSecurityFilter(false),null,new ResponseAppendTransformer(),MessageExchangePattern.REQUEST_RESPONSE,null);
+  endpoint.setListener(inboundListener);
+  requestEvent=createTestRequestEvent(endpoint);
+  responseEvent=createTestResponseEvent(endpoint);
+  responseEvent.setMessage(MuleMessage.builder(responseEvent.getMessage()).exceptionPayload(new DefaultExceptionPayload(new RuntimeException())).build());
+  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(requestEvent.getFlowConstruct());
+  RequestContext.setEvent(requestEvent);
+  try {
+    result=mpChain.process(requestEvent);
+    fail("Exception expected");
+  }
+ catch (  TestSecurityFilter.StaticMessageUnauthorisedException e) {
+  }
+  assertMessageNotSent();
 }

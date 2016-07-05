@@ -2,10 +2,8 @@
   final ArrayList<String> names=new ArrayList<>();
   names.add("residente");
   names.add("visitante");
-  Map<String,Serializable> props=new HashMap<>();
-  props.put("names",names);
-  MuleMessage message=new DefaultMuleMessage("message payload",props);
-  MuleMessage result=flowRunner("minimal-config-expression").withPayload("message payload").withInboundProperties(props).run().getMessage();
+  MuleMessage message=MuleMessage.builder().payload("message payload").addOutboundProperty("names",names).build();
+  MuleMessage result=flowRunner("minimal-config-expression").withPayload("message payload").withInboundProperty("names",names).run().getMessage();
   assertThat(result.getPayload(),instanceOf(String.class));
   assertThat(((Collection<?>)message.getOutboundProperty("names")),hasSize(names.size()));
   MuleMessage out=client.request("test://out",getTestTimeoutSecs());

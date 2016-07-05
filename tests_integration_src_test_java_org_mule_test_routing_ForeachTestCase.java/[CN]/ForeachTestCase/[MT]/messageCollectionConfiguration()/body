@@ -1,12 +1,10 @@
 {
   List<MuleMessage> list=new ArrayList<>();
   for (int i=0; i < 10; i++) {
-    MutableMuleMessage msg=new DefaultMuleMessage("message-" + i);
-    msg.setOutboundProperty("out","out" + (i + 1));
-    list.add(msg);
+    list.add(MuleMessage.builder().payload("message-" + i).addOutboundProperty("out","out" + (i + 1)).build());
   }
-  MuleMessage msgCollection=new DefaultMuleMessage(list);
-  MuleMessage result=flowRunner("message-collection-config").withPayload(msgCollection).run().getMessage();
+  MuleMessage msgCollection=MuleMessage.builder().payload(list).build();
+  MuleMessage result=flowRunner("message-collection-config").withPayload(list).run().getMessage();
   assertThat(result.getOutboundProperty("totalMessages"),is(10));
   assertThat(result.getPayload(),is(msgCollection.getPayload()));
   FlowAssert.verify("message-collection-config");

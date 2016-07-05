@@ -5,14 +5,14 @@
   router.setMuleContext(muleContext);
   PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
   router.setFilter(filter);
-  List<OutboundEndpoint> endpoints=new ArrayList<OutboundEndpoint>();
+  List<OutboundEndpoint> endpoints=new ArrayList<>();
   endpoints.add(endpoint1);
   router.setRoutes(new ArrayList<MessageProcessor>(endpoints));
   assertTrue(router.isUseTemplates());
   assertEquals(filter,router.getFilter());
   Map<String,Serializable> m=new HashMap<>();
   m.put("barValue","bar");
-  MuleMessage message=new DefaultMuleMessage("test event",m);
+  MuleMessage message=MuleMessage.builder().payload("test event").outboundProperties(m).build();
   MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
   assertTrue(router.isMatch(getTestEvent(message)));
   OutboundEndpoint ep=(OutboundEndpoint)router.getRoute(0,event);

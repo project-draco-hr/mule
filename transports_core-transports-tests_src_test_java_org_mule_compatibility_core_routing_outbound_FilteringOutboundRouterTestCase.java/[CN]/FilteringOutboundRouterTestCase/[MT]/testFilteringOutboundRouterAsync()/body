@@ -7,17 +7,17 @@
   PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
   router.setMuleContext(muleContext);
   router.setFilter(filter);
-  List<MessageProcessor> endpoints=new ArrayList<MessageProcessor>();
+  List<MessageProcessor> endpoints=new ArrayList<>();
   endpoints.add(mockEndpoint);
   router.setRoutes(endpoints);
   assertTrue(router.isUseTemplates());
   assertEquals(filter,router.getFilter());
-  MuleMessage message=new DefaultMuleMessage("test event");
+  MuleMessage message=MuleMessage.builder().payload("test event").build();
   assertTrue(router.isMatch(getTestEvent(message)));
   when(mockEndpoint.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer());
   MuleSession session=mock(MuleSession.class);
   router.route(new OutboundRoutingTestEvent(message,session,muleContext));
-  message=new DefaultMuleMessage(new Exception("test event"));
+  message=MuleMessage.builder().payload(new Exception("test event")).build();
   assertTrue(!router.isMatch(getTestEvent(message)));
   router.setTransformers(Arrays.<Transformer>asList(new AbstractTransformer(){
     @Override public Object doTransform(    Object src,    Charset outputEncoding) throws TransformerException {

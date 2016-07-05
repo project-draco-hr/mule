@@ -1,19 +1,2 @@
 {
-  MuleEvent event=getTestEventUsingFlow("");
-  MessageProcessor mp=mock(MessageProcessor.class,withSettings().extraInterfaces(OutboundEndpoint.class));
-  OutboundEndpoint outboundEndpoint=(OutboundEndpoint)mp;
-  when(outboundEndpoint.getExchangePattern()).thenReturn(MessageExchangePattern.ONE_WAY);
-  when(outboundEndpoint.mayReturnVoidEvent()).thenAnswer(new Answer<Boolean>(){
-    @Override public Boolean answer(    InvocationOnMock invocation) throws Throwable {
-      MessageExchangePattern exchangePattern=((OutboundEndpoint)invocation.getMock()).getExchangePattern();
-      return exchangePattern == null ? true : !exchangePattern.hasResponse();
-    }
-  }
-);
-  when(mp.process(any(MuleEvent.class))).thenReturn(VoidMuleEvent.getInstance());
-  MessageProcessorChain chain=new DefaultMessageProcessorChainBuilder().chain(mp).build();
-  MuleEvent response=chain.process(event);
-  assertThat(event.getId(),is(response.getId()));
-  assertThat(event.getMessage(),is(response.getMessage()));
-  assertEquals(1,threads);
 }

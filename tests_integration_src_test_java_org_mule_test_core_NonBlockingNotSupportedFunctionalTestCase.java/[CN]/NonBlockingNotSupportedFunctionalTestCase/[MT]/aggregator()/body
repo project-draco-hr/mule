@@ -2,23 +2,12 @@
   String correlationId="id";
   int correlationGroupSize=3;
   FlowRunner runner=flowRunner("aggregator").withPayload(TEST_MESSAGE).nonBlocking();
-  MutableMuleMessage message1=(MutableMuleMessage)runner.buildEvent().getMessage();
-  message1.setCorrelationId(correlationId);
-  message1.setCorrelationGroupSize(correlationGroupSize);
-  message1.setCorrelationSequence(1);
+  MuleMessage message1=MuleMessage.builder(runner.buildEvent().getMessage()).correlationId(correlationId).correlationGroupSize(correlationGroupSize).correlationSequence(1).build();
   runner.runNoVerify();
   runner.reset();
-  MutableMuleMessage message2=(MutableMuleMessage)runner.buildEvent().getMessage();
-  message2.setCorrelationId(correlationId);
-  message2.setCorrelationGroupSize(correlationGroupSize);
-  message2.setCorrelationSequence(2);
-  message2.setMessageRootId(message1.getMessageRootId());
+  MuleMessage message2=MuleMessage.builder(runner.buildEvent().getMessage()).correlationId(correlationId).correlationGroupSize(correlationGroupSize).correlationSequence(2).rootId(message1.getMessageRootId()).build();
   runner.runNoVerify();
   runner.reset();
-  MutableMuleMessage message3=(MutableMuleMessage)runner.buildEvent().getMessage();
-  message3.setCorrelationId(correlationId);
-  message3.setCorrelationGroupSize(correlationGroupSize);
-  message3.setCorrelationSequence(3);
-  message3.setMessageRootId(message1.getMessageRootId());
+  MuleMessage message3=MuleMessage.builder(runner.buildEvent().getMessage()).correlationId(correlationId).correlationGroupSize(correlationGroupSize).correlationSequence(3).rootId(message1.getMessageRootId()).build();
   runner.run();
 }
