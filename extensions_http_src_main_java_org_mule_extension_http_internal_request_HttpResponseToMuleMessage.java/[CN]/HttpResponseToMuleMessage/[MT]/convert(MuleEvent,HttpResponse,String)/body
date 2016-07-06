@@ -2,7 +2,7 @@
   String responseContentType=response.getHeaderValueIgnoreCase(CONTENT_TYPE);
   DataType dataType=muleEvent.getMessage().getDataType();
   if (StringUtils.isEmpty(responseContentType) && !MediaType.ANY.matches(dataType.getMediaType())) {
-    responseContentType=((DataType<?>)dataType).getMediaType().toString();
+    responseContentType=dataType.getMediaType().toRfcString();
   }
   InputStream responseInputStream=((InputStreamHttpEntity)response.getEntity()).getInputStream();
   Charset encoding=getMediaType(responseContentType,getDefaultEncoding(muleEvent.getMuleContext())).getCharset().get();
@@ -18,7 +18,7 @@
         throw new MessagingException(muleEvent,e);
       }
     }
- else     if (responseContentType.startsWith(APPLICATION_X_WWW_FORM_URLENCODED.toString())) {
+ else     if (responseContentType.startsWith(APPLICATION_X_WWW_FORM_URLENCODED.toRfcString())) {
       payload=HttpParser.decodeString(IOUtils.toString(responseInputStream),encoding);
     }
   }
