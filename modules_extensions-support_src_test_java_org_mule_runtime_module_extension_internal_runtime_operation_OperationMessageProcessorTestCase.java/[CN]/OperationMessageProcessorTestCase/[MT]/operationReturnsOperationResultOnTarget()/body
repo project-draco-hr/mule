@@ -1,0 +1,17 @@
+{
+  target=TARGET_VAR;
+  messageProcessor=createOperationMessageProcessor();
+  Object payload=new Object();
+  MediaType mediaType=ANY.withCharset(getDefaultEncoding(context));
+  Serializable attributes=mock(Serializable.class);
+  when(operationExecutor.execute(any(OperationContext.class))).thenReturn(OperationResult.builder().output(payload).mediaType(mediaType).attributes(attributes).build());
+  messageProcessor.process(event);
+  verify(event,never()).setMessage(any(org.mule.runtime.core.api.MuleMessage.class));
+  ArgumentCaptor<MuleMessage> captor=ArgumentCaptor.forClass(MuleMessage.class);
+  verify(event).setFlowVariable(same(TARGET_VAR),captor.capture());
+  MuleMessage message=captor.getValue();
+  assertThat(message,is(notNullValue()));
+  assertThat(message.getPayload(),is(sameInstance(payload)));
+  assertThat(message.getAttributes(),is(sameInstance(attributes)));
+  assertThat(message.getDataType().getMediaType(),equalTo(mediaType));
+}

@@ -1,0 +1,26 @@
+{
+  Charset existingEncoding=getDefaultEncoding(muleContext);
+  MediaType mediaType=null;
+  if (value instanceof OperationResult) {
+    final Optional<MediaType> optionalMediaType=((OperationResult)value).getMediaType();
+    if (optionalMediaType.isPresent()) {
+      mediaType=optionalMediaType.get();
+      if (mediaType.getCharset().isPresent()) {
+        existingEncoding=mediaType.getCharset().get();
+      }
+    }
+  }
+  if (mediaType == null) {
+    mediaType=MediaType.ANY;
+  }
+  if (operationContext.hasParameter(MIME_TYPE_PARAMETER_NAME)) {
+    mediaType=MediaType.parse(operationContext.getTypeSafeParameter(MIME_TYPE_PARAMETER_NAME,String.class));
+  }
+  if (operationContext.hasParameter(ENCODING_PARAMETER_NAME)) {
+    mediaType=mediaType.withCharset(Charset.forName(operationContext.getTypeSafeParameter(ENCODING_PARAMETER_NAME,String.class)));
+  }
+ else {
+    mediaType=mediaType.withCharset(existingEncoding);
+  }
+  return mediaType;
+}
