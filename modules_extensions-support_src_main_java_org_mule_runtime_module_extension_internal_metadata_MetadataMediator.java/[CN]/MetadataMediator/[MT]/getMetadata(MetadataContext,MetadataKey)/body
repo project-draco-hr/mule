@@ -1,11 +1,15 @@
 {
   MetadataResult<OutputMetadataDescriptor> outputResult=getOutputMetadataDescriptor(context,key);
-  Optional<MetadataResult<TypeMetadataDescriptor>> contentDescriptor=getContentMetadataDescriptor(context,key);
-  ComponentMetadataDescriptorBuilder componentDescriptorBuilder=MetadataDescriptorBuilder.componentDescriptor(componentModel.getName()).withParametersDescriptor(getParametersMetadataDescriptors()).withOutputDescriptor(outputResult.get());
+  Optional<MetadataResult<ParameterMetadataDescriptor>> contentDescriptor=getContentMetadataDescriptor(context,key);
+  ComponentMetadataDescriptorBuilder componentDescriptorBuilder=componentDescriptor(componentModel.getName()).withParametersDescriptor(getParametersMetadataDescriptors()).withOutputDescriptor(outputResult);
   if (!contentDescriptor.isPresent()) {
     return outputResult.isSuccess() ? success(componentDescriptorBuilder.build()) : failure(componentDescriptorBuilder.build(),outputResult);
   }
-  MetadataResult<TypeMetadataDescriptor> contentResult=contentDescriptor.get();
-  componentDescriptorBuilder.withContentDescriptor(contentResult.get());
-  return mergeResults(componentDescriptorBuilder.build(),outputResult,contentResult);
+  MetadataResult<ParameterMetadataDescriptor> contentResult=contentDescriptor.get();
+  componentDescriptorBuilder.withContentDescriptor(contentResult);
+  ComponentMetadataDescriptor componentMetadataDescriptor=componentDescriptorBuilder.build();
+  if (!outputResult.isSuccess() || !contentResult.isSuccess()) {
+    return mergeFailures(componentMetadataDescriptor,outputResult,contentResult);
+  }
+  return success(componentMetadataDescriptor);
 }
