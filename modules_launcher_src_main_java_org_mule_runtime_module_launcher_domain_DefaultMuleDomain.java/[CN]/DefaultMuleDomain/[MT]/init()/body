@@ -5,17 +5,11 @@
   try {
     if (this.configResourceFile != null) {
       validateConfigurationFileDoNotUsesCoreNamespace();
-      ConfigurationBuilder cfgBuilder=createConfigurationBuilder();
-      if (!cfgBuilder.isConfigured()) {
-        List<ConfigurationBuilder> builders=new ArrayList<>(3);
-        builders.add(cfgBuilder);
-        DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-        if (deploymentListener != null) {
-          muleContextFactory.addListener(new MuleContextDeploymentListener(getArtifactName(),deploymentListener));
-        }
-        DomainMuleContextBuilder domainMuleContextBuilder=new DomainMuleContextBuilder(descriptor.getName());
-        muleContext=muleContextFactory.createMuleContext(builders,domainMuleContextBuilder);
+      ArtifactMuleContextBuilder artifactBuilder=new ArtifactMuleContextBuilder().setArtifactName(getArtifactName()).setExecutionClassloader(deploymentClassLoader.getClassLoader()).setArtifactInstallationDirectory(new File(MuleContainerBootstrapUtils.getMuleDomainsDir(),getArtifactName())).setConfigurationFiles(new String[]{this.configResourceFile.getAbsolutePath()}).setArtifactType(DOMAIN);
+      if (deploymentListener != null) {
+        artifactBuilder.setMuleContextListener(new MuleContextDeploymentListener(getArtifactName(),deploymentListener));
       }
+      muleContext=artifactBuilder.build();
     }
   }
  catch (  Exception e) {

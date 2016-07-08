@@ -3,20 +3,15 @@
     logger.info(miniSplash(format("Initializing app '%s'",descriptor.getName())));
   }
   try {
-    ConfigurationBuilder cfgBuilder=domainRepository.getDomain(descriptor.getDomain()).createApplicationConfigurationBuilder(this);
-    if (!cfgBuilder.isConfigured()) {
-      List<ConfigurationBuilder> builders=new LinkedList<>();
-      builders.add(new ApplicationExtensionsManagerConfigurationBuilder(applicationPlugins));
-      builders.add(createConfigurationBuilderFromApplicationProperties());
-      builders.add(cfgBuilder);
-      DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
-      if (deploymentListener != null) {
-        muleContextFactory.addListener(new MuleContextDeploymentListener(getArtifactName(),deploymentListener));
-      }
-      ApplicationMuleContextBuilder applicationContextBuilder=new ApplicationMuleContextBuilder(descriptor);
-      applicationContextBuilder.setExecutionClassLoader(deploymentClassLoader.getClassLoader());
-      setMuleContext(muleContextFactory.createMuleContext(builders,applicationContextBuilder));
+    ArtifactMuleContextBuilder artifactBuilder=new ArtifactMuleContextBuilder().setArtifactProperties(descriptor.getAppProperties()).setArtifactType(APP).setArtifactInstallationDirectory(new File(MuleContainerBootstrapUtils.getMuleAppsDir(),getArtifactName())).setConfigurationFiles(descriptor.getAbsoluteResourcePaths()).setDefaultEncoding(descriptor.getEncoding()).setApplicationPlugins(applicationPlugins).setExecutionClassloader(deploymentClassLoader.getClassLoader());
+    Domain domain=domainRepository.getDomain(descriptor.getDomain());
+    if (domain.getMuleContext() != null) {
+      artifactBuilder.setParentContext(domain.getMuleContext());
     }
+    if (deploymentListener != null) {
+      artifactBuilder.setMuleContextListener(new MuleContextDeploymentListener(getArtifactName(),deploymentListener));
+    }
+    setMuleContext(artifactBuilder.build());
   }
  catch (  Exception e) {
     setStatusToFailed();

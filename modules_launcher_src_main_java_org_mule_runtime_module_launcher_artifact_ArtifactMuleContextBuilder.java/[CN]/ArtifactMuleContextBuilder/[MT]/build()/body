@@ -1,0 +1,29 @@
+{
+  checkState(executionClassLoader != null,EXECUTION_CLASSLOADER_WAS_NOT_SET);
+  checkState(APP.equals(artifactType) || parentContext == null,ONLY_APPLICATIONS_ARE_ALLOWED_TO_HAVE_A_PARENT_CONTEXT);
+  List<ConfigurationBuilder> builders=new LinkedList<>();
+  builders.add(new ApplicationExtensionsManagerConfigurationBuilder(applicationPlugins));
+  builders.add(createConfigurationBuilderFromApplicationProperties());
+  SpringXmlConfigurationBuilder mainBuilder=new SpringXmlConfigurationBuilder(configurationFiles,artifactProperties,artifactType);
+  if (parentContext != null) {
+    mainBuilder.setParentContext(parentContext);
+  }
+  builders.add(mainBuilder);
+  DefaultMuleContextFactory muleContextFactory=new DefaultMuleContextFactory();
+  if (muleContextListener != null) {
+    muleContextFactory.addListener(muleContextListener);
+  }
+  if (APP.equals(artifactType)) {
+    muleContextBuilder=new ApplicationMuleContextBuilder(artifactName,artifactProperties,defaultEncoding);
+  }
+ else {
+    muleContextBuilder=new DomainMuleContextBuilder(artifactName);
+  }
+  muleContextBuilder.setExecutionClassLoader(this.executionClassLoader);
+  try {
+    return muleContextFactory.createMuleContext(builders,muleContextBuilder);
+  }
+ catch (  InitialisationException e) {
+    throw new ConfigurationException(e);
+  }
+}
