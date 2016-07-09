@@ -1,0 +1,22 @@
+{
+  DslElementDeclaration elementDsl=dslElementResolver.resolve(parameterType);
+  if (parsingContext.isRegistered(elementDsl.getElementName(),elementDsl.getElementNamespace())) {
+    return;
+  }
+  parameterType.accept(new MetadataTypeVisitor(){
+    @Override public void visitObject(    ObjectType objectType){
+      if (isInstantiable(objectType)) {
+        parseWith(new ObjectTypeParameterParser(definitionBuilder,objectType,extensionClassLoader,dslElementResolver,parsingContext));
+      }
+    }
+    @Override public void visitArrayType(    ArrayType arrayType){
+      registerTopLevelParameter(arrayType.getType(),definitionBuilder.copy(),extensionClassLoader,dslElementResolver,parsingContext);
+    }
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      MetadataType keyType=dictionaryType.getKeyType();
+      keyType.accept(this);
+      registerTopLevelParameter(keyType,definitionBuilder.copy(),extensionClassLoader,dslElementResolver,parsingContext);
+    }
+  }
+);
+}

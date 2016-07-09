@@ -1,0 +1,68 @@
+{
+  return new MetadataTypeVisitor(){
+    private boolean forceOptional=false;
+    @Override public void visitArrayType(    ArrayType arrayType){
+      MetadataType genericType=arrayType.getType();
+      final boolean supportsChildElement=shouldGenerateChildElement(genericType,expressionSupport);
+      forceOptional=!genericType.equals(typeLoader.load(Object.class)) && (supportsChildElement || shouldForceOptional(genericType));
+      defaultVisit(arrayType);
+      if (supportsChildElement) {
+        generateCollectionElement(all,name,description,arrayType,isRequired(true,required));
+      }
+    }
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      MetadataType keyType=dictionaryType.getKeyType();
+      forceOptional=shouldForceOptional(keyType);
+      defaultVisit(dictionaryType);
+      if (shouldGenerateChildElement(keyType,expressionSupport)) {
+        generateMapElement(all,name,description,dictionaryType,isRequired(true,required));
+      }
+    }
+    @Override public void visitObject(    ObjectType objectType){
+      final Class<?> clazz=getType(objectType);
+      forceOptional=shouldForceOptional(objectType);
+      if (TlsContextFactory.class.isAssignableFrom(clazz)) {
+        addTlsSupport(extensionType,all);
+        return;
+      }
+      if (ThreadingProfile.class.isAssignableFrom(clazz)) {
+        addAttributeAndElement(extensionType,all,THREADING_PROFILE_ATTRIBUTE_NAME,MULE_ABSTRACT_THREADING_PROFILE);
+        return;
+      }
+      defaultVisit(objectType);
+      if (!shouldGenerateChildElementForType(objectType)) {
+        return;
+      }
+      if (ExpressionSupport.REQUIRED != expressionSupport) {
+        if (importedTypes.get(objectType) != null) {
+          addImportedTypeElement(getType(importedTypes.get(objectType)),name,description,objectType,all);
+        }
+ else {
+          List<MetadataType> subTypes=subTypesMapping.getSubTypes(objectType);
+          if (!subTypes.isEmpty() || getType(objectType).isAnnotationPresent(Extensible.class)) {
+            registerPojoSubtypes(objectType,subTypes);
+            addAbstractTypeRef(name,description,objectType,all);
+          }
+ else {
+            String typeName=registerPojoType(objectType,description);
+            QName localQName=new QName(xmlProperties.getNamespaceUri(),typeName,xmlProperties.getNamespace());
+            addChildElementTypeExtension(localQName,description,name,all);
+          }
+        }
+      }
+ else {
+        registerPojoType(objectType,description);
+      }
+    }
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      extensionType.getAttributeOrAttributeGroup().add(createAttribute(name,description,metadataType,defaultValue,isRequired(forceOptional,required),expressionSupport));
+    }
+    private boolean shouldForceOptional(    MetadataType type){
+      return !required || shouldGenerateChildElement(type,expressionSupport);
+    }
+    private boolean isRequired(    boolean forceOptional,    boolean required){
+      return !forceOptional && required;
+    }
+  }
+;
+}
