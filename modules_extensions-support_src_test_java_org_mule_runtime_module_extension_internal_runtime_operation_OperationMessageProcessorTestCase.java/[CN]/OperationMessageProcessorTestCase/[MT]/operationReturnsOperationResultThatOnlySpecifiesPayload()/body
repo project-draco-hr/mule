@@ -1,14 +1,13 @@
 {
   Object payload="hello world!";
-  Attributes oldAttributes=mock(Attributes.class);
   when(operationExecutor.execute(any(OperationContext.class))).thenReturn(OperationResult.builder().output(payload).build());
-  when(event.getMessage()).thenReturn(org.mule.runtime.core.api.MuleMessage.builder().payload("").attributes(oldAttributes).build());
+  when(event.getMessage()).thenReturn(MuleMessage.builder().payload("").attributes(mock(Attributes.class)).build());
   ArgumentCaptor<MuleMessage> captor=ArgumentCaptor.forClass(MuleMessage.class);
   messageProcessor.process(event);
   verify(event).setMessage(captor.capture());
   MuleMessage message=captor.getValue();
   assertThat(message,is(notNullValue()));
   assertThat(message.getPayload(),is(sameInstance(payload)));
-  assertThat(message.getAttributes(),is(sameInstance(oldAttributes)));
+  assertThat(message.getAttributes(),is(NULL_ATTRIBUTES));
   assertThat(message.getDataType().getType().equals(String.class),is(true));
 }
