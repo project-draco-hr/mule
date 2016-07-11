@@ -1,16 +1,21 @@
 {
-  if (applicationContext.containsBean(key)) {
-    if (logger.isWarnEnabled()) {
-      logger.warn(String.format("Spring registry already contains an object named '%s'. The previous object will be overwritten.",key));
+  if (springContextInitialised.get()) {
+    if (applicationContext.containsBean(key)) {
+      if (logger.isWarnEnabled()) {
+        logger.warn(String.format("Spring registry already contains an object named '%s'. The previous object will be overwritten.",key));
+      }
+      SpringRegistry.this.unregisterObject(key);
     }
-    SpringRegistry.this.unregisterObject(key);
+    try {
+      value=initialiseObject(applicationContext,key,value);
+      applyLifecycle(value);
+      applicationContext.getBeanFactory().registerSingleton(key,value);
+    }
+ catch (    Exception e) {
+      throw new RegistrationException(createStaticMessage("Could not register object for key " + key),e);
+    }
   }
-  try {
-    value=initialiseObject(applicationContext,key,value);
-    applyLifecycle(value);
-    applicationContext.getBeanFactory().registerSingleton(key,value);
-  }
- catch (  Exception e) {
-    throw new RegistrationException(createStaticMessage("Could not register object for key " + key),e);
+ else {
+    registeredBeanDefinitionsBeforeInitialization.put(key,genericBeanDefinition(ConstantFactoryBean.class).addConstructorArgValue(value).getBeanDefinition());
   }
 }
