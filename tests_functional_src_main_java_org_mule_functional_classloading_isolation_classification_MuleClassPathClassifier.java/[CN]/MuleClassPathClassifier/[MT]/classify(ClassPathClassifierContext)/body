@@ -1,0 +1,10 @@
+{
+  final File targetTestClassesFolder=new File(context.getTestClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+  logger.debug("Classification based on '{}'",context.getDependencyGraph().getRootArtifact());
+  MavenArtifactToClassPathUrlsResolver artifactToClassPathUrlResolver=new MavenArtifactToClassPathUrlsResolver(context.getMavenMultiModuleArtifactMapping());
+  ExtendedClassPathClassifierContext extendedClassPathClassifierContext=new ExtendedClassPathClassifierContext(context,artifactToClassPathUrlResolver,targetTestClassesFolder);
+  List<URL> appUrls=buildAppUrls(extendedClassPathClassifierContext);
+  List<PluginUrlClassification> pluginUrlClassifications=buildPluginsUrlClassification(extendedClassPathClassifierContext);
+  List<URL> containerUrls=buildContainerUrls(extendedClassPathClassifierContext,appUrls,pluginUrlClassifications);
+  return new ArtifactUrlClassification(containerUrls,pluginUrlClassifications,appUrls);
+}

@@ -1,0 +1,13 @@
+{
+  if (classLoaderTestRunner == null) {
+    classLoaderTestRunner=createClassLoaderTestRunner(clazz);
+  }
+  final Class<?> isolatedTestClass=getTestClass(clazz);
+  final Class<? extends Annotation> runnerDelegateToClass=(Class<? extends Annotation>)classLoaderTestRunner.loadClassWithApplicationClassLoader(RunnerDelegateTo.class.getName());
+  final AnnotatedBuilder annotatedBuilder=new AnnotatedBuilder(builder);
+  delegate=annotatedBuilder.buildRunner(getAnnotationAttributeFrom(isolatedTestClass,runnerDelegateToClass,"value"),isolatedTestClass);
+  if (!pluginClassLoadersInjected) {
+    injectPluginsClassLoaders(classLoaderTestRunner,isolatedTestClass);
+    pluginClassLoadersInjected=true;
+  }
+}

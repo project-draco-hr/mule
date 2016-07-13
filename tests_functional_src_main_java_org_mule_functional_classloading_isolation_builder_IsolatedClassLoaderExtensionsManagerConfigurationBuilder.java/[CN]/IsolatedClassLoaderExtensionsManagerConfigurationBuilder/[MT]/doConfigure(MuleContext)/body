@@ -1,0 +1,18 @@
+{
+  final ExtensionManagerAdapter extensionManager=createExtensionManager(muleContext);
+  for (  Object pluginClassLoader : pluginsClassLoaders) {
+    String artifactName=(String)pluginClassLoader.getClass().getMethod("getArtifactName").invoke(pluginClassLoader);
+    ClassLoader classLoader=(ClassLoader)pluginClassLoader.getClass().getMethod("getClassLoader").invoke(pluginClassLoader);
+    URL manifestUrl=getExtensionManifest(classLoader);
+    if (manifestUrl != null) {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Discovered extension: {}",artifactName);
+      }
+      ExtensionManifest extensionManifest=extensionManager.parseExtensionManifestXml(manifestUrl);
+      extensionManager.registerExtension(extensionManifest,classLoader);
+    }
+ else {
+      LOGGER.debug("Discarding plugin artifact class loader with artifactName '{}' due to it doesn't have an extension descriptor",artifactName);
+    }
+  }
+}
