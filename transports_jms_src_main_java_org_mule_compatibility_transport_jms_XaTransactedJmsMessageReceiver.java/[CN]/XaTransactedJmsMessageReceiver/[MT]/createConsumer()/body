@@ -3,9 +3,7 @@
   try {
     JmsSupport jmsSupport=this.connector.getJmsSupport();
     JmsThreadContext ctx=context.getContext();
-    if (ctx == null) {
-      ctx=new JmsThreadContext();
-    }
+    allContexts.add(context.getContext());
     Session session;
     Transaction tx=TransactionCoordination.getInstance().getTransaction();
     if (this.reuseSession && ctx.session != null) {
@@ -23,9 +21,7 @@
         }
       }
     }
-    if (reuseSession) {
-      ctx.session=session;
-    }
+    ctx.session=session;
     if (this.reuseConsumer && ctx.consumer != null) {
       return ctx.consumer;
     }
@@ -50,9 +46,7 @@
       logger.debug("Jms Connector for this receiver is durable but no durable name has been specified. Defaulting to: " + durableName);
     }
     MessageConsumer consumer=jmsSupport.createConsumer(session,dest,selector,connector.isNoLocal(),durableName,topic,endpoint);
-    if (reuseConsumer) {
-      ctx.consumer=consumer;
-    }
+    ctx.consumer=consumer;
     return consumer;
   }
  catch (  JMSException e) {

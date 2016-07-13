@@ -1,0 +1,22 @@
+{
+  final CountDownLatch receivingLatch=new CountDownLatch(3);
+  final Latch disconnectedLatch=new Latch();
+  final MessageConsumer consumer1=mock(MessageConsumer.class,"consumer1");
+  final MessageConsumer consumer2=mock(MessageConsumer.class,"consumer2");
+  final MessageConsumer consumer3=mock(MessageConsumer.class,"consumer3");
+  when(consumer1.receive(anyLong())).then(buildLatchedReceiveAnswer(receivingLatch,disconnectedLatch));
+  when(consumer2.receive(anyLong())).then(buildLatchedReceiveAnswer(receivingLatch,disconnectedLatch));
+  when(consumer3.receive(anyLong())).then(buildLatchedReceiveAnswer(receivingLatch,disconnectedLatch));
+  when(jmsSupport.createConsumer(any(Session.class),any(Destination.class),anyString(),anyBoolean(),anyString(),anyBoolean(),eq(mockInboundEndpoint))).thenReturn(consumer1,consumer2,consumer3);
+  final XaTransactedJmsMessageReceiver messageReceiver=new XaTransactedJmsMessageReceiver(mockJmsConnector,mockFlowConstruct,mockInboundEndpoint);
+  executor=newFixedThreadPool(3);
+  executor.execute(buildReceiverPoller(messageReceiver));
+  executor.execute(buildReceiverPoller(messageReceiver));
+  executor.execute(buildReceiverPoller(messageReceiver));
+  receivingLatch.await(10,TimeUnit.SECONDS);
+  messageReceiver.disconnect();
+  verify(mockJmsConnector).closeQuietly(eq(consumer1));
+  verify(mockJmsConnector).closeQuietly(eq(consumer2));
+  verify(mockJmsConnector).closeQuietly(eq(consumer3));
+  disconnectedLatch.countDown();
+}

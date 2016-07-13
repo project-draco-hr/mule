@@ -1,14 +1,11 @@
 {
   JmsThreadContext ctx=context.getContext();
-  if (ctx == null) {
-    return;
+  if (ctx.consumer == null && ctx.session == null) {
+    for (    JmsThreadContext threadContext : allContexts) {
+      doCloseResource(force,threadContext);
+    }
   }
-  if (force || !reuseSession || !reuseConsumer) {
-    connector.closeQuietly(ctx.consumer);
-    ctx.consumer=null;
-  }
-  if (force || !reuseSession) {
-    connector.closeQuietly(ctx.session);
-    ctx.session=null;
+ else {
+    doCloseResource(force,ctx);
   }
 }
