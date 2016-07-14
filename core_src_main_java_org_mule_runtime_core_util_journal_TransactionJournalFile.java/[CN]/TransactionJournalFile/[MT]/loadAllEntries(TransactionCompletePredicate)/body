@@ -11,6 +11,11 @@
         K journalEntry=journalEntrySerializer.deserialize(dataInputStream);
         if (journalEntry != null) {
           this.entries.put(journalEntry.getTxId(),journalEntry);
+          journalOperations++;
+          if (transactionCompletePredicate.isTransactionComplete(journalEntry)) {
+            journalOperations-=this.entries.get(journalEntry.getTxId()).size();
+            doClearEntriesForTransaction(journalEntry.getTxId());
+          }
         }
  else {
           logEntryCreationFailed=true;
@@ -28,6 +33,7 @@ catch (      Exception e) {
         logEntryCreationFailed=true;
       }
     }
+    clearFileIfNeeded();
   }
  catch (  FileNotFoundException e) {
     throw new RuntimeException(e);
