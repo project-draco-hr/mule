@@ -5,13 +5,11 @@
     return Collections.emptySet();
   }
   Arrays.sort(pluginZips);
-  Set<ApplicationPluginDescriptor> pds=new HashSet<>(pluginZips.length);
+  Set<ArtifactPluginDescriptor> pds=new HashSet<>(pluginZips.length);
   for (  String pluginZip : pluginZips) {
-    final String pluginName=StringUtils.removeEnd(pluginZip,".zip");
-    final File tmpDir=new File(MuleContainerBootstrapUtils.getMuleTmpDir(),appDescriptor.getName() + separator + PLUGINS_FOLDER+ separator+ pluginName);
-    FileUtils.unzip(new File(pluginsDir,pluginZip),tmpDir);
-    final ApplicationPluginDescriptor pd=pluginDescriptorFactory.create(tmpDir);
-    pds.add(pd);
+    String unpackDestinationFolder=appDescriptor.getName() + separator + PLUGINS_FOLDER+ separator;
+    File pluginZipFile=new File(pluginsDir,pluginZip);
+    pds.add(artifactPluginDescriptorLoader.load(pluginZipFile,new File(MuleContainerBootstrapUtils.getMuleTmpDir(),unpackDestinationFolder)));
   }
   return pds;
 }
