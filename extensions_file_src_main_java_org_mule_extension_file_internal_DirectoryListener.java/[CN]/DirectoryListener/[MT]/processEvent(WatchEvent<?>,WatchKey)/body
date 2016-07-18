@@ -1,5 +1,13 @@
 {
-  final Path path=directoryPath.resolve(((WatchEvent<Path>)event).context()).toAbsolutePath();
+  WatchEvent<Path> event=(WatchEvent<Path>)watchEvent;
+  Path watchPath=keyPaths.get(key);
+  if (watchPath == null) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(String.format("Got an unregistered path for key %s. Event context was: ",key,event.context()));
+    }
+    return;
+  }
+  final Path path=watchPath.resolve(event.context()).toAbsolutePath();
   final Kind<?> kind=event.kind();
   if (kind == OVERFLOW) {
     if (LOGGER.isWarnEnabled()) {
