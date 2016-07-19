@@ -1,18 +1,14 @@
 {
-  org.mule.runtime.api.metadata.MediaType endpointMimeType=endpoint.getMimeType();
+  MediaType endpointMimeType=endpoint.getMimeType();
   if (endpointMimeType != null) {
     MuleMessage message=event.getMessage();
-    String contentType=message.getInboundProperty(CONTENT_TYPE_PROPERTY);
-    if (contentType == null) {
-      contentType=message.getOutboundProperty(CONTENT_TYPE_PROPERTY);
-    }
-    if (contentType == null) {
-      event.setMessage(MuleMessage.builder(event.getMessage()).addInboundProperty(CONTENT_TYPE_PROPERTY,endpointMimeType.toRfcString()).build());
+    final DataType dataType=message.getDataType();
+    if (DataType.OBJECT.getMediaType().matches(dataType.getMediaType())) {
+      event.setMessage(MuleMessage.builder(event.getMessage()).mediaType(endpointMimeType).build());
     }
  else {
-      String messageMimeType=DataType.builder().mediaType(contentType).build().getMediaType().toRfcString();
-      if (!messageMimeType.equals(endpointMimeType.toRfcString())) {
-        throw new MessagingException(CoreMessages.unexpectedMIMEType(messageMimeType,endpointMimeType.toRfcString()),event,this);
+      if (!dataType.getMediaType().matches(endpointMimeType)) {
+        throw new MessagingException(CoreMessages.unexpectedMIMEType(dataType.getMediaType().toRfcString(),endpointMimeType.toRfcString()),event,this);
       }
     }
   }

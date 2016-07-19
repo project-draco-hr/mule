@@ -4,12 +4,14 @@
   Map<String,Serializable> inboundProperties=new HashMap<>();
   Map<String,Serializable> outboundProperties=new HashMap<>();
   for (  String headerName : headerNames) {
-    final Collection<String> values=request.getHeaderValues(headerName);
-    if (values.size() == 1) {
-      inboundProperties.put(headerName,values.iterator().next());
-    }
+    if (!CONTENT_TYPE.equalsIgnoreCase(headerName)) {
+      final Collection<String> values=request.getHeaderValues(headerName);
+      if (values.size() == 1) {
+        inboundProperties.put(headerName,values.iterator().next());
+      }
  else {
-      inboundProperties.put(headerName,new ArrayList<>(values));
+        inboundProperties.put(headerName,new ArrayList<>(values));
+      }
     }
   }
   new HttpMessagePropertiesResolver().setMethod(request.getMethod()).setProtocol(request.getProtocol().asString()).setUri(request.getUri()).setListenerPath(listenerPath).setRemoteHostAddress(resolveRemoteHostAddress(requestContext)).setScheme(requestContext.getScheme()).setClientCertificate(requestContext.getClientConnection().getClientCertificate()).addPropertiesTo(inboundProperties);

@@ -10,22 +10,21 @@
     }
   }
   ByteArrayOutputStream out=new ByteArrayOutputStream();
-  String ct=null;
+  MediaType ct=null;
   if (wsdlQueryHandler.isRecognizedQuery(wsdlUri,ctxUri,ei)) {
-    ct=wsdlQueryHandler.getResponseContentType(wsdlUri,ctxUri);
+    ct=parse(wsdlQueryHandler.getResponseContentType(wsdlUri,ctxUri));
     wsdlQueryHandler.writeResponse(wsdlUri,ctxUri,ei,out);
     out.flush();
   }
   String message;
   if (ct == null) {
-    ct="text/plain";
+    ct=TEXT;
     message="No query handler found for URL.";
   }
  else {
     message=out.toString();
   }
-  final String finalCt=ct;
-  MuleMessage resultMessage=MuleMessage.builder(event.getMessage()).payload(message).mediaType(XML).addOutboundProperty(CONTENT_TYPE,finalCt).build();
+  MuleMessage resultMessage=MuleMessage.builder(event.getMessage()).payload(message).mediaType(ct).build();
   event.setMessage(resultMessage);
   return event;
 }

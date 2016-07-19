@@ -4,29 +4,10 @@
     event.setMessage(MuleMessage.builder(message).replyTo(replyTo).addOutboundProperty(MULE_REPLY_TO_REQUESTOR_PROPERTY,service.getName()).build());
   }
   if (enableCorrelation != CorrelationMode.NEVER) {
-    boolean correlationSet=message.getCorrelationId() != null;
-    if (correlationSet && (enableCorrelation == CorrelationMode.IF_NOT_SET)) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("CorrelationId is already set to '" + message.getCorrelationId() + "' , not setting it again");
-      }
-      return;
-    }
- else     if (correlationSet) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("CorrelationId is already set to '" + message.getCorrelationId() + "', but router is configured to overwrite it");
-      }
-    }
- else {
-      if (logger.isDebugEnabled()) {
-        logger.debug("No CorrelationId is set on the message, will set a new Id");
-      }
-    }
-    String correlation;
-    correlation=service.getMessageInfoMapping().getCorrelationId(event);
+    String correlation=service.getMessageInfoMapping().getCorrelationId(event);
     if (logger.isDebugEnabled()) {
+      logger.debug("Correlation is " + message.getCorrelation().toString());
       logger.debug("Extracted correlation Id as: " + correlation);
-    }
-    if (logger.isDebugEnabled()) {
       StringBuilder buf=new StringBuilder();
       buf.append("Setting Correlation info on Outbound router");
       buf.append(SystemUtils.LINE_SEPARATOR).append("Id=").append(correlation);

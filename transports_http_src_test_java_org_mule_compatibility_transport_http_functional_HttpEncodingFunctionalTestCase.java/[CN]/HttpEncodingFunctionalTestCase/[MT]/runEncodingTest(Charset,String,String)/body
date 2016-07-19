@@ -1,12 +1,11 @@
 {
-  Map<String,Serializable> messageProperties=createMessageProperties(encoding,httpMethod);
   MuleClient client=muleContext.getClient();
   String endpointUri="clientEndpoint." + encoding.name();
-  MuleMessage reply=client.send(endpointUri,payload,messageProperties);
+  MuleMessage reply=client.send(endpointUri,MuleMessage.builder().payload(payload).mediaType(MediaType.parse("text/plain; charset=" + encoding.name())).outboundProperties(createMessageProperties(httpMethod)).build());
   assertNotNull(reply);
   assertEquals("200",reply.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY));
-  Object contentTypeHeader=reply.getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE);
-  assertEquals("text/plain;charset=" + encoding.name(),contentTypeHeader);
+  Object contentTypeHeader=reply.getDataType().getMediaType().toRfcString();
+  assertEquals("text/plain; charset=" + encoding.name(),contentTypeHeader);
   assertThat(reply.getDataType().getMediaType().getCharset().get(),is(encoding));
   return reply;
 }

@@ -1,11 +1,9 @@
 {
   MuleClient client=muleContext.getClient();
-  Map<String,Serializable> messageProperties=new HashMap<>();
-  messageProperties.put(HttpConstants.HEADER_CONTENT_TYPE,getSendEncoding());
-  MuleMessage reply=client.send("clientEndpoint",TEST_MESSAGE,messageProperties);
+  MuleMessage reply=client.send("clientEndpoint",MuleMessage.builder().payload(TEST_MESSAGE).mediaType(MediaType.parse(getSendEncoding())).build());
   assertNotNull(reply);
   assertEquals("200",reply.getInboundProperty(HttpConnector.HTTP_STATUS_PROPERTY));
-  assertEquals("text/baz;charset=UTF-16BE",reply.<String>getInboundProperty(HttpConstants.HEADER_CONTENT_TYPE));
+  assertEquals("text/baz; charset=UTF-16BE",reply.getDataType().getMediaType().toRfcString());
   assertThat(reply.getDataType().getMediaType().getCharset().get(),is(UTF_16BE));
   assertEquals(TEST_MESSAGE + " Received",getPayloadAsString(reply));
 }

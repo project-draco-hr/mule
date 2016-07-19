@@ -2,12 +2,9 @@
   Map<String,Object> paramMap=new HashMap<>();
   try {
     String httpMethod=event.getMessage().getInboundProperty("http.method");
-    String contentType=event.getMessage().getInboundProperty(HEADER_CONTENT_TYPE);
+    MediaType contentType=event.getMessage().getDataType().getMediaType();
     boolean isGet=METHOD_GET.equalsIgnoreCase(httpMethod);
-    boolean isFormUrlEncoded=false;
-    if (contentType != null) {
-      isFormUrlEncoded=contentType.startsWith(FORM_URLENCODED_CONTENT_TYPE);
-    }
+    boolean isFormUrlEncoded=MediaType.parse(FORM_URLENCODED_CONTENT_TYPE).matches(contentType);
     if (!(isGet || isFormUrlEncoded)) {
       throw new Exception("The HTTP method or content type is unsupported!");
     }

@@ -1,11 +1,15 @@
 {
   MuleMessage.Builder messageBuilder=MuleMessage.builder(event.getMessage()).addOutboundProperty(MULE_ENDPOINT_PROPERTY,endpoint.getEndpointURI().toString());
   if (endpoint.getProperties() != null) {
-    for (Iterator<?> iterator=endpoint.getProperties().keySet().iterator(); iterator.hasNext(); ) {
-      String prop=(String)iterator.next();
+    for (    String prop : endpoint.getProperties().keySet()) {
       Serializable value=endpoint.getProperties().get(prop);
-      if (!ignoreProperty(event.getMessage(),prop)) {
-        messageBuilder.addOutboundProperty(prop,value);
+      if ("Content-Type".equalsIgnoreCase(prop)) {
+        messageBuilder.mediaType(MediaType.parse(value.toString()));
+      }
+ else {
+        if (!ignoreProperty(event.getMessage(),prop)) {
+          messageBuilder.addOutboundProperty(prop,value);
+        }
       }
     }
   }

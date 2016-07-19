@@ -19,13 +19,20 @@
         throw new MessagingException(muleEvent,e);
       }
     }
- else     if (responseContentType.startsWith(APPLICATION_X_WWW_FORM_URLENCODED.toString())) {
+ else     if (responseContentType.startsWith(APPLICATION_X_WWW_FORM_URLENCODED.toRfcString())) {
       payload=HttpParser.decodeString(IOUtils.toString(responseInputStream),encoding);
     }
   }
   String requestMessageId=muleEvent.getMessage().getUniqueId();
   String requestMessageRootId=muleEvent.getMessage().getMessageRootId();
-  MuleMessage message=MuleMessage.builder().payload(muleEvent.getMessage().getPayload()).id(requestMessageId).rootId(requestMessageRootId).inboundProperties(inboundProperties).inboundAttachments(inboundAttachments).mediaType(muleEvent.getMessage().getDataType().getMediaType()).build();
+  final Builder builder=MuleMessage.builder().payload(muleEvent.getMessage().getPayload()).id(requestMessageId).rootId(requestMessageRootId).inboundProperties(inboundProperties).inboundAttachments(inboundAttachments);
+  if (StringUtils.isEmpty(responseContentType)) {
+    builder.mediaType(muleEvent.getMessage().getDataType().getMediaType());
+  }
+ else {
+    builder.mediaType(MediaType.parse(responseContentType));
+  }
+  MuleMessage message=builder.build();
   muleEvent.setMessage(message);
   setResponsePayload(payload,muleEvent);
   if (requester.getConfig().isEnableCookies()) {

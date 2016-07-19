@@ -1,13 +1,16 @@
 {
-  Integer val1=event1.getMessage().getCorrelationSequence();
-  Integer val2=event2.getMessage().getCorrelationSequence();
+  Optional<Integer> val1=event1.getMessage().getCorrelation().getSequence();
+  Optional<Integer> val2=event2.getMessage().getCorrelation().getSequence();
   if (val1 == val2) {
     return 0;
   }
- else   if (val2 == null || val1 > val2) {
+ else   if (val1.isPresent() && !val2.isPresent()) {
     return 1;
   }
- else {
+ else   if (!val1.isPresent() && val2.isPresent()) {
     return -1;
+  }
+ else {
+    return val1.get().compareTo(val2.get());
   }
 }

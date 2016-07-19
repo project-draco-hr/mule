@@ -1,0 +1,13 @@
+{
+  FunctionalTestComponent testComponent=(FunctionalTestComponent)getComponent("soap11Flow");
+  testComponent.setEventCallback(testCxfEventCallback);
+  String msgEchoOperation1="<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:new=\"http://new.webservice.namespace\">" + "<soapenv:Header/>" + "  <soapenv:Body>"+ "    <new:parameter1>hello world</new:parameter1>"+ "  </soapenv:Body>"+ "</soapenv:Envelope>";
+  String soapOperation="EchoOperation1";
+  MuleMessage response=executeSoap11Call(msgEchoOperation1,soapOperation);
+  assertTrue(latch.await(1000L,TimeUnit.MILLISECONDS));
+  String cxfOperationName=testCxfEventCallback.getCxfOperationName();
+  assertEquals(soapOperation,cxfOperationName);
+  String payload=getPayloadAsString(response);
+  assertTrue(payload.contains("<new:parameter1"));
+  assertTrue(payload.contains("hello world"));
+}
