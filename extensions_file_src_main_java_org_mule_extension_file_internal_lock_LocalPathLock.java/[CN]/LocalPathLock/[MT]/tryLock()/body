@@ -7,10 +7,14 @@
     lock=channel.tryLock();
     return isLocked();
   }
- catch (  Exception e) {
+ catch (  AccessDeniedException e) {
+    release();
+    throw new IllegalArgumentException(format("Could not obtain lock on path ''%s'' because access was denied by the operating system",path));
+  }
+catch (  Exception e) {
     release();
     if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(String.format("Could not obtain lock on path ''%s'' due to the following exception",path),e);
+      LOGGER.info(format("Could not obtain lock on path ''%s'' due to the following exception",path),e);
     }
     return false;
   }
