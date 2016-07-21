@@ -1,0 +1,16 @@
+{
+  checkState(artifactDescriptor != null,"artifact descriptor cannot be null");
+  parentClassLoader=getParentClassLoader();
+  checkState(parentClassLoader != null,"parent class loader cannot be null");
+  parentClassLoader=getSharedLibClassLoader(parentClassLoader);
+  for (  File applicationPluginDependency : applicationPluginDependencies) {
+    ArtifactPluginDescriptor artifactPluginDescriptor=artifactPluginDescriptorLoader.load(applicationPluginDependency,new File(getMuleTmpDir(),UUID.getUUID()));
+    artifactPluginDescriptors.add(artifactPluginDescriptor);
+  }
+  List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors=createContainerApplicationPlugins();
+  effectiveArtifactPluginDescriptors.addAll(artifactPluginDescriptors);
+  if (!effectiveArtifactPluginDescriptors.isEmpty()) {
+    parentClassLoader=createCompositePluginClassLoader(parentClassLoader,effectiveArtifactPluginDescriptors);
+  }
+  return artifactClassLoaderFactory.create(parentClassLoader,artifactDescriptor,artifactPluginClassLoaders);
+}

@@ -1,17 +1,12 @@
 {
   Domain domain=domainRepository.getDomain(descriptor.getDomain());
   if (domain == null) {
-    throw new DeploymentException(CoreMessages.createStaticMessage(format("Domain '%s' has to be deployed in order to deploy Application '%s'",descriptor.getDomain(),descriptor.getName())));
+    throw new DeploymentException(createStaticMessage(format("Domain '%s' has to be deployed in order to deploy Application '%s'",descriptor.getDomain(),descriptor.getName())));
   }
-  ArtifactClassLoader parent=domain.getArtifactClassLoader();
-  parent=getSharedLibClassLoader(descriptor,parent);
-  final List<ApplicationPlugin> applicationPlugins=createContainerApplicationPlugins(parent,descriptor);
-  applicationPlugins.addAll(createApplicationPlugins(parent,descriptor.getPlugins()));
-  if (!applicationPlugins.isEmpty()) {
-    parent=createCompositePluginClassLoader(parent,applicationPlugins);
-  }
-  final ArtifactClassLoader deploymentClassLoader=applicationClassLoaderFactory.create(parent,descriptor);
-  DefaultMuleApplication delegate=new DefaultMuleApplication(descriptor,deploymentClassLoader,applicationPlugins,domainRepository);
+  MuleApplicationClassLoader applicationClassLoader=applicationClassLoaderBuilderFactory.createArtifactClassLoaderBuilder().setDomain(domain).setPluginsSharedLibFolder(descriptor.getSharedPluginFolder()).addArtifactPluginDescriptors(descriptor.getPlugins().toArray(new ArtifactPluginDescriptor[0])).setArtifactId(descriptor.getName()).setArtifactDescriptor(descriptor).build();
+  List<ArtifactPluginDescriptor> applicationPluginDescriptors=concat(artifactPluginRepository.getContainerArtifactPluginDescriptors().stream(),descriptor.getPlugins().stream()).collect(toList());
+  List<ArtifactPlugin> artifactPlugins=createArtifactPluginList(applicationClassLoader,applicationPluginDescriptors);
+  DefaultMuleApplication delegate=new DefaultMuleApplication(descriptor,applicationClassLoader,artifactPlugins,domainRepository);
   if (deploymentListener != null) {
     delegate.setDeploymentListener(deploymentListener);
   }

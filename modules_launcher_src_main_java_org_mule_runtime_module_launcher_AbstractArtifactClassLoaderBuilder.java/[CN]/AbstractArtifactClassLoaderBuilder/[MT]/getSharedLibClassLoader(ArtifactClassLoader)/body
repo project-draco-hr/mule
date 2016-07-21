@@ -1,0 +1,16 @@
+{
+  Set<URL> urls=new HashSet<>();
+  if (pluginsSharedLibFolder.exists()) {
+    Collection<File> jars=FileUtils.listFiles(pluginsSharedLibFolder,new String[]{"jar"},false);
+    for (    File jar : jars) {
+      urls.add(jar.toURI().toURL());
+    }
+  }
+  URL[] pluginLibs=urls.toArray(new URL[0]);
+  Map<String,ClassLoaderLookupStrategy> lookupStrategies=emptyMap();
+  if (pluginLibs != null && pluginLibs.length != 0) {
+    lookupStrategies=getLookStrategiesFrom(pluginLibs);
+  }
+  ClassLoaderLookupPolicy lookupPolicy=parent.getClassLoaderLookupPolicy().extend(lookupStrategies);
+  return new MuleArtifactClassLoader(SHARED_LIB_ARTIFACT_NAME,pluginLibs,parent.getClassLoader(),lookupPolicy);
+}
