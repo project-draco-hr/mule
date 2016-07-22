@@ -1,9 +1,17 @@
 {
   ServerSocket serverSocket=null;
   try {
-    serverSocket=new ServerSocket(Integer.parseInt(proxyPort.getValue()));
+    ServerSocketChannel ssc=ServerSocketChannel.open();
+    serverSocket=ssc.socket();
+    serverSocket.bind(new InetSocketAddress(Integer.parseInt(proxyPort.getValue())));
+    ssc.configureBlocking(false);
     proxyReadyLatch.countDown();
-    serverSocket.accept().close();
+    SocketChannel sc=null;
+    while (sc == null) {
+      sc=ssc.accept();
+      Thread.yield();
+    }
+    sc.close();
     latch.release();
   }
  catch (  IOException e) {
