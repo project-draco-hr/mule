@@ -13,18 +13,16 @@
   if (session == null) {
     session=new DefaultMuleSession();
   }
-  final Object replyToFromMessage=message.getReplyTo();
+  final Object replyToFromMessage=getReplyToDestination(message);
+  DefaultMuleEvent newEvent=null;
   if (replyToFromMessage != null) {
-    message=MuleMessage.builder(message).replyTo(null).build();
-    DefaultMuleEvent newEvent=new DefaultMuleEvent(message,flowConstruct,session,replyToHandler,replyToFromMessage,ros);
-    DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(newEvent,getEndpoint());
-    event=newEvent;
+    newEvent=new DefaultMuleEvent(message,flowConstruct,session,replyToHandler,replyToFromMessage,ros);
   }
  else {
-    DefaultMuleEvent newEvent=new DefaultMuleEvent(message,flowConstruct,session,null,null,ros);
-    DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(newEvent,getEndpoint());
-    event=newEvent;
+    newEvent=new DefaultMuleEvent(message,flowConstruct,session,null,null,ros);
   }
+  DefaultMuleEventEndpointUtils.populateFieldsFromInboundEndpoint(newEvent,getEndpoint());
+  event=newEvent;
   event=OptimizedRequestContext.unsafeSetEvent(event);
   if (session.getSecurityContext() != null && session.getSecurityContext().getAuthentication() != null) {
     session.getSecurityContext().getAuthentication().setEvent(event);
