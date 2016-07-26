@@ -1,0 +1,31 @@
+{
+  if (value instanceof String) {
+    Object constructedValue=null;
+    DateTime dateTime=getParsedDateTime((String)value);
+    if (type.equals(LocalDate.class)) {
+      constructedValue=LocalDate.of(dateTime.getYear(),dateTime.getMonthOfYear(),dateTime.getDayOfMonth());
+    }
+ else     if (type.equals(Date.class)) {
+      constructedValue=dateTime.toDate();
+    }
+ else     if (type.equals(LocalDateTime.class)) {
+      Instant instant=Instant.ofEpochMilli(dateTime.getMillis());
+      constructedValue=LocalDateTime.ofInstant(instant,ZoneId.of(dateTime.getZone().getID()));
+    }
+ else     if (type.equals(Calendar.class)) {
+      Calendar calendar=Calendar.getInstance();
+      calendar.setTime(dateTime.toDate());
+      constructedValue=calendar;
+    }
+    if (constructedValue == null) {
+      throw new IllegalArgumentException(format("Could not construct value of type '%s' from String '%s'",type.getName(),value));
+    }
+ else {
+      value=constructedValue;
+    }
+  }
+  if (value instanceof Date || value instanceof LocalDate || value instanceof LocalDateTime|| value instanceof Calendar) {
+    return new StaticValueResolver(value);
+  }
+  throw new IllegalArgumentException(format("Could not transform value of type '%s' to a valid date type",value != null ? value.getClass().getName() : "null"));
+}
