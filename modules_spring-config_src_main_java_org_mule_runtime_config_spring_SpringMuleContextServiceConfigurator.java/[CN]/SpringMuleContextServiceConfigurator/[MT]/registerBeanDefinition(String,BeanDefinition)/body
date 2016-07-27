@@ -1,15 +1,8 @@
 {
   BeanDefinition beanDefinition=defaultBeanDefinition;
-  Optional<CustomService> customServiceOptional=customizationService.getCustomizedService(serviceId);
+  Optional<CustomService> customServiceOptional=customizationService.getOverriddenService(serviceId);
   if (customServiceOptional.isPresent()) {
-    Optional<Class> customServiceClass=customServiceOptional.get().getServiceClass();
-    Optional<Object> customServiceImpl=customServiceOptional.get().getServiceImpl();
-    if (customServiceClass.isPresent()) {
-      beanDefinition=getBeanDefinitionBuilder(customServiceClass.get()).getBeanDefinition();
-    }
- else     if (customServiceImpl.isPresent()) {
-      beanDefinition=getConstantObjectBeanDefinition(customServiceImpl.get());
-    }
+    beanDefinition=getCustomServiceBeanDefinition(customServiceOptional.get());
   }
   beanDefinitionRegistry.registerBeanDefinition(serviceId,beanDefinition);
 }

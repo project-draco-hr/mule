@@ -1,7 +1,8 @@
 {
   final ContainerClassLoaderFactory containerClassLoaderFactory=new ContainerClassLoaderFactory();
   final ArtifactClassLoader containerClassLoader=containerClassLoaderFactory.createContainerClassLoader(getClass().getClassLoader());
-  this.deploymentService=new MuleDeploymentService(containerClassLoader);
+  this.serviceManager=new MuleServiceManager(new DefaultServiceDiscoverer(new FileSystemServiceProviderDiscoverer(containerClassLoader,new ServiceClassLoaderFactory()),new ReflectionServiceResolver(new ReflectionServiceProviderResolutionHelper())));
+  this.deploymentService=new MuleDeploymentService(containerClassLoader,serviceManager);
   this.repositoryService=new RepositoryServiceFactory().createRepositoryService();
   this.coreExtensionManager=new DefaultMuleCoreExtensionManagerServer(new ClasspathMuleCoreExtensionDiscoverer(containerClassLoader),new ReflectionMuleCoreExtensionDependencyResolver());
   init(args);

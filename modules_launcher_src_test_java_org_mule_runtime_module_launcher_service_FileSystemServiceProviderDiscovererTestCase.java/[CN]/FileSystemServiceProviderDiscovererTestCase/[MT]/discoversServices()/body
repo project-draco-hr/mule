@@ -1,0 +1,11 @@
+{
+  installService("fooService",FooServiceProvider.class);
+  installService("barService",BarServiceProvider.class);
+  ArtifactClassLoader serviceClassLoader=mock(ArtifactClassLoader.class);
+  when(serviceClassLoaderFactory.create(argThat(any(ArtifactClassLoader.class)),argThat(any(ServiceDescriptor.class)))).thenReturn(serviceClassLoader);
+  final FileSystemServiceProviderDiscoverer serviceProviderDiscoverer=new FileSystemServiceProviderDiscoverer(containerClassLoader,serviceClassLoaderFactory);
+  final List<ServiceProvider> serviceProviders=serviceProviderDiscoverer.discover();
+  assertThat(serviceProviders.size(),equalTo(2));
+  assertThat(serviceProviders,hasItem(instanceOf(FooServiceProvider.class)));
+  assertThat(serviceProviders,hasItem(instanceOf(BarServiceProvider.class)));
+}

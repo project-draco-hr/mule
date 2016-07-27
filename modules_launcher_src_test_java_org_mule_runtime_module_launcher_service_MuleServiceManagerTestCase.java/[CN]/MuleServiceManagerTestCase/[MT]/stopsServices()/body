@@ -1,0 +1,15 @@
+{
+  final ServiceDiscoverer serviceDiscoverer=mock(ServiceDiscoverer.class);
+  final List<Service> services=new ArrayList<>();
+  StoppableService service1=mock(StoppableService.class);
+  StoppableService service2=mock(StoppableService.class);
+  services.add(service1);
+  services.add(service2);
+  when(serviceDiscoverer.discoverServices()).thenReturn(services);
+  final MuleServiceManager muleServiceManager=new MuleServiceManager(serviceDiscoverer);
+  muleServiceManager.start();
+  muleServiceManager.stop();
+  InOrder inOrder=inOrder(service1,service2);
+  inOrder.verify(service2).stop();
+  inOrder.verify(service1).stop();
+}

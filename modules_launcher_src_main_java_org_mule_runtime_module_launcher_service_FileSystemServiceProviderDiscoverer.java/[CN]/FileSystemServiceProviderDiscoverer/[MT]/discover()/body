@@ -1,0 +1,16 @@
+{
+  final ServiceDescriptorFactory serviceDescriptorFactory=new ServiceDescriptorFactory();
+  final List<ServiceDescriptor> serviceDescriptors=new LinkedList<>();
+  for (  String serviceFile : getServicesFolder().list(new SuffixFileFilter(".zip"))) {
+    final File tempFolder=new File(getServicesTempFolder(),getBaseName(serviceFile));
+    try {
+      unzip(new File(getServicesFolder(),serviceFile),tempFolder);
+    }
+ catch (    IOException e) {
+      throw new ServiceResolutionError("Error processing service ZIP file",e);
+    }
+    final ServiceDescriptor serviceDescriptor=serviceDescriptorFactory.create(tempFolder);
+    serviceDescriptors.add(serviceDescriptor);
+  }
+  return createServiceProviders(serviceDescriptors,serviceClassLoaderFactory);
+}
