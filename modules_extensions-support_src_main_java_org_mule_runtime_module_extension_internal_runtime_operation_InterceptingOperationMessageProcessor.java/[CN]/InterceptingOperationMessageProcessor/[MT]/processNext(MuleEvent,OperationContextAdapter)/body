@@ -1,0 +1,24 @@
+{
+  if (next == null) {
+    return interceptedEvent;
+  }
+ else   if (interceptedEvent == null) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("MuleEvent is null. Next MessageProcessor '{}' will not be invoked.",next.getClass().getName());
+    }
+    return null;
+  }
+ else   if (VoidMuleEvent.getInstance().equals(interceptedEvent)) {
+    return interceptedEvent;
+  }
+ else {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Invoking next MessageProcessor: '{}'",next.getClass().getName());
+    }
+    MuleEvent resultEvent=next.process(interceptedEvent);
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Intercepting operation '%s' executed intercepted chain and got the following event back: ",operationContext.getOperationModel().getName(),resultEvent));
+    }
+    return resultEvent;
+  }
+}
