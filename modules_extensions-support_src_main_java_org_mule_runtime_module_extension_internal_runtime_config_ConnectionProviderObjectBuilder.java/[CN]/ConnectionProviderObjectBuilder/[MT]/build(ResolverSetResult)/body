@@ -1,14 +1,15 @@
 {
   ConnectionProvider provider=super.build(result);
   injectConfigName(providerModel,provider,ownerConfigName);
-  ConnectionHandlingTypeModelProperty connectionHandlingType=providerModel.getModelProperty(ConnectionHandlingTypeModelProperty.class).orElse(null);
-  if (connectionHandlingType != null) {
-    if (connectionHandlingType.isPooled()) {
-      provider=new PoolingConnectionProviderWrapper(provider,poolingProfile,disableValidation,retryPolicyTemplate);
-    }
-    if (connectionHandlingType.isCached()) {
-      provider=new CachedConnectionProviderWrapper(provider,disableValidation,retryPolicyTemplate);
-    }
+  final ConnectionManagementType connectionManagementType=providerModel.getConnectionManagementType();
+  if (connectionManagementType == POOLING) {
+    provider=new PoolingConnectionProviderWrapper(provider,poolingProfile,disableValidation,retryPolicyTemplate);
+  }
+ else   if (connectionManagementType == CACHED) {
+    provider=new CachedConnectionProviderWrapper(provider,disableValidation,retryPolicyTemplate);
+  }
+ else   if (connectionManagementType != NONE) {
+    throw new IllegalArgumentException("Unknown connection management type: " + connectionManagementType);
   }
   return provider;
 }

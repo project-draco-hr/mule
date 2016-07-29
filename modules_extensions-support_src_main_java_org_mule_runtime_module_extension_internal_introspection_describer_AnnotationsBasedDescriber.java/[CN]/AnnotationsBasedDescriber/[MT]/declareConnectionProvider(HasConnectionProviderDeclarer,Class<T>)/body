@@ -16,6 +16,14 @@
     throw new IllegalConnectionProviderModelDefinitionException(format("Connection provider class '%s' was expected to have 1 generic type " + "(for the connection type) but %d were found",providerClass.getName(),providerGenerics.size()));
   }
   providerDeclarer=declarer.withConnectionProvider(name).describedAs(description).createdWith(new DefaultConnectionProviderFactory<>(providerClass,extensionType.getClassLoader())).whichGivesConnectionsOfType(providerGenerics.get(0)).withModelProperty(new ImplementingTypeModelProperty(providerClass));
+  ConnectionManagementType managementType=NONE;
+  if (PoolingConnectionProvider.class.isAssignableFrom(providerClass)) {
+    managementType=POOLING;
+  }
+ else   if (CachedConnectionProvider.class.isAssignableFrom(providerClass)) {
+    managementType=CACHED;
+  }
+  providerDeclarer.withConnectionManagementType(managementType);
   connectionProviderDeclarers.put(providerClass,providerDeclarer);
   declareAnnotatedParameters(providerClass,providerDeclarer);
 }
