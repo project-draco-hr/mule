@@ -1,7 +1,9 @@
 {
   ByteArrayOutputStream output=new ByteArrayOutputStream();
-  IOUtils.copy(inputSource.getByteStream(),output);
-  InputSource defaultInputSource=new InputSource(new ByteArrayInputStream(output.toByteArray()));
+  try (InputStream inputStream=inputSource.getByteStream()){
+    IOUtils.copy(inputStream,output);
+  }
+   InputSource defaultInputSource=new InputSource(new ByteArrayInputStream(output.toByteArray()));
   InputSource enrichInputSource=new InputSource(new ByteArrayInputStream(output.toByteArray()));
   Document doc=defaultLoader.loadDocument(defaultInputSource,entityResolver,errorHandler,validationMode,namespaceAware);
   createSaxAnnotator(doc).parse(enrichInputSource);
