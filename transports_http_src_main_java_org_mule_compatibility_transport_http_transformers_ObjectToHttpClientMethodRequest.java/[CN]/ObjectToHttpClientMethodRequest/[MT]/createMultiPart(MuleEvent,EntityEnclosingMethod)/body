@@ -15,7 +15,10 @@
     String fileName=dh.getName();
     if (dh.getDataSource() instanceof StringDataSource) {
       final StringDataSource ds=(StringDataSource)dh.getDataSource();
-      parts[i]=new StringPart(ds.getName(),IOUtils.toString(ds.getInputStream()));
+      final MediaType mediaType=MediaType.parse(ds.getContentType());
+      final String charset=mediaType.getCharset().isPresent() ? mediaType.getCharset().get().name() : null;
+      final String contentType=mediaType.getPrimaryType() + "/" + mediaType.getSubType();
+      parts[i]=new CustomStringPart(ds.getName(),IOUtils.toString(ds.getInputStream()),charset,contentType);
     }
  else {
       if (dh.getDataSource() instanceof FileDataSource) {
