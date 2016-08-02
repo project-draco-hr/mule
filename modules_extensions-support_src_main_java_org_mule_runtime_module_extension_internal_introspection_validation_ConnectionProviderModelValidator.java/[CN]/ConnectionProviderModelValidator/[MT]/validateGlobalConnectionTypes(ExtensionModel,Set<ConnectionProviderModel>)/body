@@ -1,0 +1,18 @@
+{
+  if (isEmpty(globalConnectionProviders)) {
+    return;
+  }
+  for (  ConnectionProviderModel model : globalConnectionProviders) {
+    RuntimeConnectionProviderModel connectionProviderModel=(RuntimeConnectionProviderModel)model;
+    final Class<?> connectionType=connectionProviderModel.getConnectionType();
+    new IdempotentExtensionWalker(){
+      @Override protected void onOperation(      OperationModel operationModel){
+        validateConnectionTypes(extensionModel,connectionProviderModel,operationModel,connectionType);
+      }
+      @Override protected void onSource(      SourceModel sourceModel){
+        validateConnectionTypes(extensionModel,connectionProviderModel,sourceModel,connectionType);
+      }
+    }
+.walk(extensionModel);
+  }
+}
