@@ -1,25 +1,31 @@
 {
   doConnect();
-  if (receivers != null) {
-    for (    MessageReceiver receiver : receivers.values()) {
-      final List<MuleException> errors=new ArrayList<>();
-      try {
-        if (logger.isDebugEnabled()) {
-          logger.debug("Connecting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+  try {
+    if (receivers != null) {
+      for (      MessageReceiver receiver : receivers.values()) {
+        final List<MuleException> errors=new ArrayList<>();
+        try {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Connecting receiver on endpoint: " + receiver.getEndpoint().getEndpointURI());
+          }
+          receiver.connect();
+          if (isStarted()) {
+            receiver.start();
+          }
         }
-        receiver.connect();
-        if (isStarted()) {
-          receiver.start();
+ catch (        MuleException e) {
+          logger.error(e.toString());
+          errors.add(e);
         }
-      }
- catch (      MuleException e) {
-        logger.error(e.toString());
-        errors.add(e);
-      }
-      if (!errors.isEmpty()) {
-        throw errors.get(0);
+        if (!errors.isEmpty()) {
+          throw errors.get(0);
+        }
       }
     }
+  }
+ catch (  Exception e) {
+    doDisconnect();
+    throw e;
   }
   setConnected(true);
   setConnecting(false);

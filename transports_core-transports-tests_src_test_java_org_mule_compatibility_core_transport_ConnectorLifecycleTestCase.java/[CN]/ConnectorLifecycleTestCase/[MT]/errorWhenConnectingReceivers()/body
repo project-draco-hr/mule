@@ -1,0 +1,37 @@
+{
+  final AtomicBoolean actuallyConnected=new AtomicBoolean(false);
+  connector=new TestConnector(muleContext){
+    @Override protected void doConnect(){
+      super.doConnect();
+      actuallyConnected.set(true);
+    }
+    @Override protected void doDisconnect(){
+      super.doDisconnect();
+      actuallyConnected.set(false);
+    }
+    @Override public MessageReceiver createReceiver(    FlowConstruct flowConstuct,    InboundEndpoint endpoint) throws Exception {
+      MessageReceiver receiver=new AbstractMessageReceiver(this,flowConstuct,endpoint){
+        @Override protected void doConnect() throws Exception {
+          throw new MuleRuntimeException(createStaticMessage("Simulate receiver connection exception."));
+        }
+      }
+;
+      return receiver;
+    }
+  }
+;
+  InboundEndpoint in=getTestInboundEndpoint("out","test://out",null,null,null,connector);
+  connector.registerListener(in,getSensingNullMessageProcessor(),getTestFlow());
+  assertThat(connector.isConnected(),is(false));
+  assertThat(actuallyConnected.get(),is(false));
+  try {
+    connector.connect();
+    fail("Expected MuleRuntimeException: 'Simulate receiver connection exception.'");
+  }
+ catch (  RetryPolicyExhaustedException e) {
+    assertThat(e.getCause(),instanceOf(MuleRuntimeException.class));
+    assertThat(e.getCause().getMessage(),is("Simulate receiver connection exception."));
+  }
+  assertThat(connector.isConnected(),is(false));
+  assertThat(actuallyConnected.get(),is(false));
+}
