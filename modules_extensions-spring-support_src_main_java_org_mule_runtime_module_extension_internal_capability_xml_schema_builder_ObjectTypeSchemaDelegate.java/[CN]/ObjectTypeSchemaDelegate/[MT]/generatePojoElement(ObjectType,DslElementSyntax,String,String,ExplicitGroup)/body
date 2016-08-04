@@ -1,0 +1,22 @@
+{
+  if (!paramDsl.supportsChildDeclaration()) {
+    DslElementSyntax typeDsl=builder.getDslResolver().resolve(objectType);
+    if (typeDsl.supportsChildDeclaration()) {
+      registerPojoType(objectType,description);
+    }
+  }
+ else   if (builder.getImportedTypes().get(objectType) != null) {
+    addImportedTypeElement(paramDsl,name,description,objectType,all);
+  }
+ else {
+    if (paramDsl.isWrapped()) {
+      registerPojoSubtypes(objectType,builder.getSubTypesMapping().getSubTypes(objectType));
+      addAbstractTypeRef(paramDsl,description,objectType,all);
+    }
+ else {
+      String typeName=registerPojoType(objectType,description);
+      QName localQName=new QName(paramDsl.getNamespaceUri(),typeName,paramDsl.getNamespace());
+      addChildElementTypeExtension(localQName,description,name,all);
+    }
+  }
+}

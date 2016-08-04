@@ -1,0 +1,19 @@
+{
+  final TopLevelComplexType complexType=new TopLevelComplexType();
+  registeredComplexTypesHolders.put(metadataType,new ComplexTypeHolder(complexType,metadataType));
+  complexType.setName(sanitizeName(getId(metadataType)));
+  complexType.setAnnotation(builder.createDocAnnotation(description));
+  ComplexContent complexContent=new ComplexContent();
+  complexType.setComplexContent(complexContent);
+  final ExtensionType extension=new ExtensionType();
+  extension.setBase(base);
+  complexContent.setExtension(extension);
+  for (  ObjectFieldType field : fields) {
+    final ExplicitGroup all=getOrCreateSequenceGroup(extension);
+    field.getValue().accept(builder.getParameterDeclarationVisitor(extension,all,asParameter(field)));
+    if (all.getParticle().isEmpty()) {
+      extension.setSequence(null);
+    }
+  }
+  return complexType;
+}

@@ -1,0 +1,26 @@
+{
+  String abstractElementName=builder.getTopLevelAbstractName(typeDsl);
+  TopLevelElement abstractElement=new TopLevelElement();
+  abstractElement.setName(abstractElementName);
+  QName substitutionGroup=MULE_ABSTRACT_EXTENSION;
+  if (baseType != null) {
+    DslElementSyntax baseDsl=builder.getDslResolver().resolve(baseType);
+    substitutionGroup=new QName(baseDsl.getNamespaceUri(),builder.getTopLevelAbstractName(baseDsl),baseDsl.getNamespace());
+  }
+  abstractElement.setSubstitutionGroup(substitutionGroup);
+  abstractElement.setAbstract(true);
+  builder.getSchema().getSimpleTypeOrComplexTypeOrGroup().add(abstractElement);
+  QName typeQName=new QName(builder.getSchema().getTargetNamespace(),registerPojoType(metadataType,description),typeDsl.getNamespace());
+  if (!typeDsl.supportsTopLevelDeclaration()) {
+    abstractElement.setType(typeQName);
+  }
+ else {
+    TopLevelElement objectElement=new TopLevelElement();
+    objectElement.setName(getTopLevelTypeName(metadataType));
+    objectElement.setSubstitutionGroup(new QName(typeDsl.getNamespaceUri(),abstractElementName,typeDsl.getNamespace()));
+    objectElement.setAnnotation(builder.createDocAnnotation(description));
+    objectElement.setComplexType(createTypeExtension(typeQName));
+    objectElement.getComplexType().getComplexContent().getExtension().getAttributeOrAttributeGroup().add(builder.createNameAttribute(false));
+    builder.getSchema().getSimpleTypeOrComplexTypeOrGroup().add(objectElement);
+  }
+}
