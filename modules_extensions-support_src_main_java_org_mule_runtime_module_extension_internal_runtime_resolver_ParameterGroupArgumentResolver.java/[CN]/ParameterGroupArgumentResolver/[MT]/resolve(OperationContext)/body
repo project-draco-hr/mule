@@ -1,15 +1,16 @@
 {
   try {
-    T group=type.newInstance();
-    for (    Field parameterField : parameterFields) {
-      if (operationContext.hasParameter(getAlias(parameterField))) {
-        parameterField.set(group,operationContext.getParameter(getAlias(parameterField)));
+    T parameterGroup=(T)group.getType().newInstance();
+    for (    Field parameterField : group.getParameters()) {
+      String fieldAlias=getAlias(parameterField);
+      if (operationContext.hasParameter(fieldAlias)) {
+        parameterField.set(parameterGroup,operationContext.getParameter(fieldAlias));
       }
     }
-    for (    Map.Entry<Field,ParameterGroupArgumentResolver<?>> childGroup : childGroups.entrySet()) {
-      childGroup.getKey().set(group,childGroup.getValue().resolve(operationContext));
+    for (    ParameterGroupArgumentResolver<?> childResolver : childResolvers) {
+      childResolver.resolve(operationContext);
     }
-    return group;
+    return parameterGroup;
   }
  catch (  Exception e) {
     throw new MuleRuntimeException(createStaticMessage("Could not create parameter group"),e);
