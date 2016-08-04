@@ -7,13 +7,11 @@
   InputStream responseInputStream=((InputStreamHttpEntity)response.getEntity()).getInputStream();
   Charset encoding=getMediaType(responseContentType,getDefaultEncoding(muleContext)).getCharset().get();
   Map<String,Serializable> inboundProperties=getInboundProperties(response);
-  Map<String,DataHandler> inboundAttachments=EMPTY_MAP;
   Object payload=responseInputStream;
   if (responseContentType != null && parseResponse.resolveBooleanValue(muleEvent)) {
     if (responseContentType.startsWith(MULTI_PART_PREFIX)) {
       try {
-        inboundAttachments=getInboundAttachments(responseInputStream,responseContentType);
-        payload=null;
+        payload=multiPartPayloadForAttachments(responseContentType,responseInputStream);
       }
  catch (      IOException e) {
         throw new MessagingException(muleEvent,e);
@@ -25,7 +23,7 @@
   }
   String requestMessageId=muleEvent.getMessage().getUniqueId();
   String requestMessageRootId=muleEvent.getMessage().getMessageRootId();
-  final Builder builder=MuleMessage.builder().payload(muleEvent.getMessage().getPayload()).id(requestMessageId).rootId(requestMessageRootId).inboundProperties(inboundProperties).inboundAttachments(inboundAttachments);
+  final Builder builder=MuleMessage.builder().payload(muleEvent.getMessage().getPayload()).id(requestMessageId).rootId(requestMessageRootId).inboundProperties(inboundProperties);
   if (StringUtils.isEmpty(responseContentType)) {
     builder.mediaType(muleEvent.getMessage().getDataType().getMediaType());
   }

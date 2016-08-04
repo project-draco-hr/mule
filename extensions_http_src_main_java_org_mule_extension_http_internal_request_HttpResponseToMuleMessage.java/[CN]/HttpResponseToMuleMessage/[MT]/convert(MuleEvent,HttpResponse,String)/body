@@ -7,12 +7,10 @@
   InputStream responseInputStream=((InputStreamHttpEntity)response.getEntity()).getInputStream();
   Charset encoding=getMediaType(responseContentType,getDefaultEncoding(muleEvent.getMuleContext())).getCharset().get();
   Object payload=responseInputStream;
-  Map<String,DataHandler> parts=new HashMap<>();
   if (responseContentType != null && parseResponse) {
     if (responseContentType.startsWith(MULTI_PART_PREFIX)) {
       try {
-        parts=processParts(responseInputStream,responseContentType);
-        payload=null;
+        payload=multiPartPayloadForAttachments(responseContentType,responseInputStream);
       }
  catch (      IOException e) {
         throw new MessagingException(muleEvent,e);
@@ -25,7 +23,14 @@
   if (config.isEnableCookies()) {
     processCookies(response,uri);
   }
-  HttpResponseAttributes responseAttributes=createAttributes(response,parts);
+  HttpResponseAttributes responseAttributes=createAttributes(response);
   dataType=DataType.builder(dataType).charset(encoding).build();
-  return MuleMessage.builder(muleEvent.getMessage()).payload(payload).mediaType(dataType.getMediaType()).attributes(responseAttributes).build();
+  final Builder builder=MuleMessage.builder(muleEvent.getMessage()).payload(payload);
+  if (StringUtils.isEmpty(responseContentType)) {
+    builder.mediaType(dataType.getMediaType());
+  }
+ else {
+    builder.mediaType(MediaType.parse(responseContentType));
+  }
+  return builder.attributes(responseAttributes).build();
 }

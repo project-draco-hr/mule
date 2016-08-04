@@ -1,0 +1,16 @@
+{
+  List<org.mule.runtime.api.message.MuleMessage> parts=new ArrayList<>();
+  int partNumber=1;
+  for (  HttpPart httpPart : httpParts) {
+    Map<String,LinkedList<String>> headers=new HashMap<>();
+    for (    String headerName : httpPart.getHeaderNames()) {
+      if (!headers.containsKey(headerName)) {
+        headers.put(headerName,new LinkedList<>());
+      }
+      headers.get(headerName).addAll(httpPart.getHeaders(headerName));
+    }
+    parts.add(MuleMessage.builder().payload(httpPart.getInputStream()).mediaType(MediaType.parse(httpPart.getContentType())).attributes(new PartAttributes(httpPart.getName() != null ? httpPart.getName() : "part_" + partNumber,httpPart.getFileName(),httpPart.getSize(),headers)).build());
+    partNumber++;
+  }
+  return new DefaultMultiPartPayload(parts);
+}

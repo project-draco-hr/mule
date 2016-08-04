@@ -1,13 +1,17 @@
 {
   final HttpRequest request=requestContext.getRequest();
   final MediaType mediaType=getMediaType(request.getHeaderValueIgnoreCase(CONTENT_TYPE),getDefaultEncoding(muleContext));
-  final Map<String,DataHandler> parts=new HashMap<>();
   Object payload=null;
   if (parseRequest) {
     final HttpEntity entity=request.getEntity();
     if (entity != null && !(entity instanceof EmptyHttpEntity)) {
       if (entity instanceof MultipartHttpEntity) {
-        parts.putAll(createDataHandlerFrom(((MultipartHttpEntity)entity).getParts()));
+        try {
+          payload=multiPartPayloadForAttachments((MultipartHttpEntity)entity);
+        }
+ catch (        IOException e) {
+          throw new HttpRequestParsingException(e.getMessage(),e);
+        }
       }
  else {
         if (mediaType != null) {
@@ -35,6 +39,6 @@
       payload=inputStreamEntity.getInputStream();
     }
   }
-  HttpRequestAttributes attributes=new HttpRequestAttributesBuilder().setRequestContext(requestContext).setListenerPath(listenerPath).setParts(parts).build();
+  HttpRequestAttributes attributes=new HttpRequestAttributesBuilder().setRequestContext(requestContext).setListenerPath(listenerPath).build();
   return MuleMessage.builder().payload(payload).mediaType(mediaType).attributes(attributes).build();
 }

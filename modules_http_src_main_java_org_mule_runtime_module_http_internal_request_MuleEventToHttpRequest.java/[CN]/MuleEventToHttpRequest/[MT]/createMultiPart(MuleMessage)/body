@@ -3,5 +3,11 @@
   for (  String outboundAttachmentName : msg.getOutboundAttachmentNames()) {
     attachments.put(outboundAttachmentName,msg.getOutboundAttachment(outboundAttachmentName));
   }
+  if (msg.getPayload() instanceof MultiPartPayload) {
+    for (    org.mule.runtime.api.message.MuleMessage part : ((MultiPartPayload)msg.getPayload()).getParts()) {
+      final String partName=((PartAttributes)part.getAttributes()).getName();
+      attachments.put(partName,toDataHandler(partName,part.getPayload(),part.getDataType().getMediaType()));
+    }
+  }
   return new MultipartHttpEntity(HttpPartDataSource.createFrom(attachments));
 }

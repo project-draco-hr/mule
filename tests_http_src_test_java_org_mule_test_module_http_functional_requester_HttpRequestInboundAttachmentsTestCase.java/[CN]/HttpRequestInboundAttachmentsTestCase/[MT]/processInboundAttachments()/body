@@ -1,8 +1,8 @@
 {
   MuleEvent event=flowRunner("requestFlow").withPayload(TEST_MESSAGE).run();
-  assertThat(event.getMessage().getPayload(),is(nullValue()));
-  Map<String,DataHandler> parts=((HttpResponseAttributes)event.getMessage().getAttributes()).getParts();
-  assertThat(parts.size(),is(2));
-  assertAttachment(parts,"partName1","Test part 1","text/plain");
-  assertAttachment(parts,"partName2","Test part 2","text/html");
+  assertThat(event.getMessage().getPayload(),instanceOf(MultiPartPayload.class));
+  MultiPartPayload payload=event.getMessage().getPayload();
+  assertThat(payload.getParts(),hasSize(2));
+  assertAttachment(payload,"partName1","Test part 1",MediaType.TEXT);
+  assertAttachment(payload,"partName2","Test part 2",MediaType.HTML);
 }

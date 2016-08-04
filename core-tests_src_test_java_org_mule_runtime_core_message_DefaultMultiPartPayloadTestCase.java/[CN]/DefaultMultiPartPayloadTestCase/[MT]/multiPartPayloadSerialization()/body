@@ -1,0 +1,14 @@
+{
+  final MuleMessage attachmentPart=MuleMessage.builder().payload("this is the attachment").mediaType(MediaType.TEXT).attributes(new PartAttributes("attachment")).build();
+  MuleMessage message=MuleMessage.builder().payload(new DefaultMultiPartPayload(MuleMessage.builder().payload(TEST_PAYLOAD).attributes(BODY_ATTRIBUTES).build(),attachmentPart)).build();
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  ObjectOutputStream oos=new ObjectOutputStream(baos);
+  RequestContext.setEvent(new DefaultMuleEvent(message,getTestFlow()));
+  oos.writeObject(message);
+  oos.flush();
+  ObjectInputStream ois=new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+  message=(MuleMessage)ois.readObject();
+  assertThat(((MultiPartPayload)message.getPayload()).getPartNames(),hasItem("attachment"));
+  assertThat(((MultiPartPayload)message.getPayload()).getPart("attachment").getPayload(),is("this is the attachment"));
+  assertThat(((MultiPartPayload)message.getPayload()).getPart("attachment"),equalTo(attachmentPart));
+}

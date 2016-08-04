@@ -3,13 +3,23 @@
   if (event.getFlowVariable(CxfConstants.ATTACHMENTS) != null) {
     Collection<Attachment> attachments=event.getFlowVariable(CxfConstants.ATTACHMENTS);
     MuleMessage.Builder builder=MuleMessage.builder(message);
-    for (    Attachment attachment : attachments) {
-      try {
-        builder.addInboundAttachment(attachment.getId(),attachment.getDataHandler());
+    if (!attachments.isEmpty()) {
+      List<org.mule.runtime.api.message.MuleMessage> parts=new ArrayList<>();
+      parts.add(MuleMessage.builder().payload(message.getPayload()).mediaType(message.getDataType().getMediaType()).attributes(BODY_ATTRIBUTES).build());
+      for (      Attachment attachment : attachments) {
+        Map<String,LinkedList<String>> headers=new HashMap<>();
+        for (Iterator<String> iterator=attachment.getHeaderNames(); iterator.hasNext(); ) {
+          String headerName=iterator.next();
+          headers.put(headerName,new LinkedList<>(singletonList(attachment.getHeader(headerName))));
+        }
+        try {
+          parts.add(MuleMessage.builder().payload(attachment.getDataHandler().getInputStream()).mediaType(MediaType.parse(attachment.getDataHandler().getContentType())).attributes(new PartAttributes(attachment.getId())).build());
+        }
+ catch (        Exception e) {
+          throw new MessagingException(CoreMessages.createStaticMessage("Could not set inbound attachment %s",attachment.getId()),event,e,this);
+        }
       }
- catch (      Exception e) {
-        throw new MessagingException(CoreMessages.createStaticMessage("Could not set inbound attachment %s",attachment.getId()),event,e,this);
-      }
+      builder.payload(new DefaultMultiPartPayload(parts));
     }
     event.setMessage(builder.build());
   }

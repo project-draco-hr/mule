@@ -1,18 +1,25 @@
 {
-  Object payload;
-  payload=event.getMessage().getPayload();
+  Object payload=event.getMessage().getPayload();
   if (proxy) {
     return new Object[]{event.getMessage()};
   }
   Object[] args=payloadToArguments.payloadToArrayOfArguments(payload);
-  MuleMessage message=event.getMessage();
-  Set<?> attachmentNames=message.getInboundAttachmentNames();
-  if (attachmentNames != null && !attachmentNames.isEmpty()) {
-    List<DataHandler> attachments=new ArrayList<DataHandler>();
-    for (    Object attachmentName : attachmentNames) {
-      attachments.add(message.getInboundAttachment((String)attachmentName));
+  List<DataHandler> attachments=new ArrayList<>();
+  for (  String inboundAttachmentName : event.getMessage().getInboundAttachmentNames()) {
+    attachments.add(event.getMessage().getInboundAttachment(inboundAttachmentName));
+  }
+  try {
+    if (event.getMessage().getPayload() instanceof MultiPartPayload) {
+      for (      org.mule.runtime.api.message.MuleMessage part : ((MultiPartPayload)event.getMessage().getPayload()).getParts()) {
+        attachments.add(toDataHandler(((PartAttributes)part.getAttributes()).getName(),part.getPayload(),part.getDataType().getMediaType()));
+      }
     }
-    List<Object> temp=new ArrayList<Object>(Arrays.asList(args));
+  }
+ catch (  IOException e) {
+    throw new TransformerException(MessageFactory.createStaticMessage("Exception processing attachments."),e);
+  }
+  if (!attachments.isEmpty()) {
+    List<Object> temp=new ArrayList<>(asList(args));
     temp.add(attachments.toArray(new DataHandler[attachments.size()]));
     args=temp.toArray();
   }

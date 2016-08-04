@@ -2,5 +2,23 @@
   final Response response=Request.Get(url).connectTimeout(DEFAULT_TIMEOUT).execute();
   final HttpResponse httpResponse=response.returnResponse();
   assertThat(httpResponse.getFirstHeader(HttpHeaders.Names.USER_AGENT).getValue(),is("Mule 3.6.0"));
-  assertThat(isDateValid(httpResponse.getFirstHeader(HttpHeaders.Names.DATE).getValue()),is(true));
+  assertThat(httpResponse.getFirstHeader(HttpHeaders.Names.DATE).getValue(),new TypeSafeMatcher<String>(){
+    private ParseException parseException;
+    @Override public void describeTo(    Description description){
+      description.appendText(parseException.getMessage());
+    }
+    @Override protected boolean matchesSafely(    String dateToValidate){
+      SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+      try {
+        sdf.parse(dateToValidate);
+      }
+ catch (      ParseException e) {
+        this.parseException=e;
+        e.printStackTrace();
+        return false;
+      }
+      return true;
+    }
+  }
+);
 }

@@ -1,0 +1,10 @@
+{
+  final MuleMessage attachmentPart1=MuleMessage.builder().payload("this is the attachment1").mediaType(MediaType.TEXT).attributes(new PartAttributes("attachment1")).build();
+  final MuleMessage attachmentPart2=MuleMessage.builder().payload("this is the attachment2").mediaType(MediaType.TEXT).attributes(new PartAttributes("attachment2")).build();
+  MuleMessage messageInner=MuleMessage.builder().payload(new DefaultMultiPartPayload(MuleMessage.builder().payload(TEST_PAYLOAD).attributes(BODY_ATTRIBUTES).build(),attachmentPart1)).attributes(BODY_ATTRIBUTES).build();
+  MuleMessage message=MuleMessage.builder().payload(new DefaultMultiPartPayload(attachmentPart2,messageInner)).build();
+  assertThat(((MultiPartPayload)message.getPayload()).getParts(),hasSize(3));
+  assertThat(((MultiPartPayload)message.getPayload()).getPart("attachment1"),not(nullValue()));
+  assertThat(((MultiPartPayload)message.getPayload()).getPart("attachment2"),not(nullValue()));
+  assertThat(((DefaultMultiPartPayload)message.getPayload()).getBodyPart(),not(nullValue()));
+}

@@ -5,10 +5,13 @@
       processMultipartPart(part);
     }
     if (isAttachment(part)) {
-      String contentType=part.getDataHandler().getContentType();
-      ByteArrayInputStream inputStream=new ByteArrayInputStream(toByteArray(part.getInputStream()));
-      DataHandler attachment=new DataHandler(inputStream,contentType);
-      attachments.put(part.getFileName(),attachment);
+      Map<String,LinkedList<String>> headers=new HashMap<>();
+      final Enumeration allHeaders=part.getAllHeaders();
+      while (allHeaders.hasMoreElements()) {
+        Header h=(Header)allHeaders.nextElement();
+        headers.put(h.getName(),new LinkedList<>(singletonList(h.getValue())));
+      }
+      attachmentParts.add(MuleMessage.builder().payload(part.getInputStream()).mediaType(MediaType.parse(part.getContentType())).attributes(new PartAttributes(part.getFileName(),part.getFileName(),part.getSize(),headers)).build());
     }
  else {
       if (isText(content)) {

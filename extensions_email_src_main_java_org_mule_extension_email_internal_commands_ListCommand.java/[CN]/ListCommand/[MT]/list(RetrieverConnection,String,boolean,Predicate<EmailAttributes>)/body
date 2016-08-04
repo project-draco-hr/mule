@@ -3,13 +3,20 @@
     Folder folder=connection.getFolder(folderName,READ_ONLY);
     List<MuleMessage> list=new LinkedList<>();
     for (    Message m : folder.getMessages()) {
-      String body="";
-      EmailAttributes attributes=fromMessage(m,false);
+      Object body="";
+      EmailAttributes attributes=fromMessage(m);
       if (matcher.test(attributes)) {
         if (readContent) {
           body=EmailContentProcessor.process(m).getBody();
-          attributes=fromMessage(m);
+          final List<MuleMessage> attachmentParts=process(m).getAttachments();
+          if (!attachmentParts.isEmpty()) {
+            final List<MuleMessage> parts=new ArrayList<>();
+            parts.add(MuleMessage.builder().payload(body).attributes(BODY_ATTRIBUTES).build());
+            parts.addAll(attachmentParts);
+            body=new DefaultMultiPartPayload(parts);
+          }
         }
+        attributes=fromMessage(m);
         list.add(MuleMessage.builder().payload(body).attributes(attributes).build());
       }
     }

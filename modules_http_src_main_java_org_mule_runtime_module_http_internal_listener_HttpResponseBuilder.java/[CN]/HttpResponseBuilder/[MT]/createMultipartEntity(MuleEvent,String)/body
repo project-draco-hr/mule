@@ -6,9 +6,14 @@
   for (  String outboundAttachmentName : event.getMessage().getOutboundAttachmentNames()) {
     parts.put(outboundAttachmentName,event.getMessage().getOutboundAttachment(outboundAttachmentName));
   }
-  final MultipartHttpEntity multipartEntity;
   try {
-    multipartEntity=new MultipartHttpEntity(HttpPartDataSource.createFrom(parts));
+    if (event.getMessage().getPayload() instanceof MultiPartPayload) {
+      for (      org.mule.runtime.api.message.MuleMessage part : ((MultiPartPayload)event.getMessage().getPayload()).getParts()) {
+        final String partName=((PartAttributes)part.getAttributes()).getName();
+        parts.put(partName,toDataHandler(partName,part.getPayload(),part.getDataType().getMediaType()));
+      }
+    }
+    final MultipartHttpEntity multipartEntity=new MultipartHttpEntity(HttpPartDataSource.createFrom(parts));
     return new ByteArrayHttpEntity(HttpMultipartEncoder.createMultipartContent(multipartEntity,contentType));
   }
  catch (  Exception e) {

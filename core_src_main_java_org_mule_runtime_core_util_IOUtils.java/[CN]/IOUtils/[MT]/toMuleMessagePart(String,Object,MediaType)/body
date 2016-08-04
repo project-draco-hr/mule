@@ -1,0 +1,26 @@
+{
+  final Builder builder;
+  if (object instanceof File) {
+    builder=MuleMessage.builder().payload(new FileInputStream((File)object));
+  }
+ else   if (object instanceof URL) {
+    builder=MuleMessage.builder().payload(((URL)object).openStream());
+  }
+ else   if (object instanceof String) {
+    builder=MuleMessage.builder().payload(object);
+    if (contentType == null || MediaType.ANY.matches(contentType)) {
+      builder.mediaType(MediaType.TEXT);
+    }
+  }
+ else {
+    builder=MuleMessage.builder().payload(object);
+  }
+  if (contentType != null && !MediaType.ANY.matches(contentType)) {
+    builder.mediaType(contentType);
+  }
+ else {
+    final DataHandler dataHandler=toDataHandler(name,object,contentType);
+    builder.mediaType(MediaType.parse(dataHandler.getContentType()));
+  }
+  return builder.attributes(new PartAttributes(name)).build();
+}

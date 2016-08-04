@@ -7,13 +7,11 @@
     final CloseableHttpResponse response=httpClient.execute(httpPost);
     try {
       final MuleMessage receivedMessage=muleContext.getClient().request("test://out",1000);
-      assertThat(receivedMessage.getPayload(),instanceOf(HttpRequestAttributes.class));
-      Map<String,DataHandler> receivedParts=((HttpRequestAttributes)receivedMessage.getPayload()).getParts();
-      assertThat(receivedParts.size(),is(2));
-      assertThat(receivedParts.keySet(),hasItem(TEXT_BODY_FIELD_NAME));
-      assertThat(new String(((HttpPartDataSource)receivedParts.get(TEXT_BODY_FIELD_NAME).getDataSource()).getContent()),is(TEXT_BODY_FIELD_VALUE));
-      assertThat(receivedParts.keySet(),hasItem(FILE_BODY_FIELD_NAME));
-      assertThat(new String(((HttpPartDataSource)receivedParts.get(FILE_BODY_FIELD_NAME).getDataSource()).getContent()),Is.<Object>is(FILE_BODY_FIELD_VALUE));
+      assertThat(receivedMessage.getPayload(),instanceOf(MultiPartPayload.class));
+      MultiPartPayload receivedParts=((MultiPartPayload)receivedMessage.getPayload());
+      assertThat(receivedParts.getParts().size(),is(2));
+      assertThat(receivedParts.getPartNames(),hasItem(TEXT_BODY_FIELD_NAME));
+      assertThat(receivedParts.getPartNames(),hasItem(FILE_BODY_FIELD_NAME));
       final String contentType=response.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE).getValue();
       assertThat(contentType,containsString(expectedResponseContentType));
       final Collection<HttpPart> parts=HttpParser.parseMultipartContent(response.getEntity().getContent(),contentType);

@@ -1,13 +1,14 @@
 {
   MuleMessage response=muleContext.getClient().send(getUrl(filePath.getValue()),getTestMuleMessage());
-  assertThat(response.getInboundAttachmentNames().size(),is(2));
-  DataHandler attachment1=response.getInboundAttachment(FILE_BODY_FIELD_NAME);
-  HttpPart part=((HttpPartDataSource)attachment1.getDataSource()).getPart();
-  assertThat(part.getName(),is(FILE_BODY_FIELD_NAME));
-  assertThat(part.getFileName(),is(FILE_BODY_FIELD_FILENAME));
-  assertThat(part.getContentType(),is("application/octet-stream"));
-  assertThat(IOUtils.toString(part.getInputStream()),is(FILE_BODY_FIELD_VALUE));
-  DataHandler attachment2=response.getInboundAttachment(TEXT_BODY_FIELD_NAME);
-  assertThat((String)attachment2.getContent(),is(TEXT_BODY_FIELD_VALUE));
-  assertThat(attachment2.getContentType(),is(TEXT_PLAIN.toString()));
+  assertThat(response.getPayload(),instanceOf(MultiPartPayload.class));
+  assertThat(((MultiPartPayload)response.getPayload()).getParts(),hasSize(2));
+  org.mule.runtime.api.message.MuleMessage attachment1=((MultiPartPayload)response.getPayload()).getPart(FILE_BODY_FIELD_NAME);
+  assertThat(attachment1.getAttributes(),instanceOf(PartAttributes.class));
+  assertThat(((PartAttributes)attachment1.getAttributes()).getName(),is(FILE_BODY_FIELD_NAME));
+  assertThat(((PartAttributes)attachment1.getAttributes()).getFileName(),is(FILE_BODY_FIELD_FILENAME));
+  assertThat(attachment1.getDataType().getMediaType(),is(MediaType.BINARY));
+  assertThat(IOUtils.toString((InputStream)attachment1.getPayload()),is(FILE_BODY_FIELD_VALUE));
+  org.mule.runtime.api.message.MuleMessage attachment2=((MultiPartPayload)response.getPayload()).getPart(TEXT_BODY_FIELD_NAME);
+  assertThat(IOUtils.toString((InputStream)attachment2.getPayload()),is(TEXT_BODY_FIELD_VALUE));
+  assertThat(attachment2.getDataType().getMediaType().toRfcString(),is(TEXT_PLAIN.toString()));
 }

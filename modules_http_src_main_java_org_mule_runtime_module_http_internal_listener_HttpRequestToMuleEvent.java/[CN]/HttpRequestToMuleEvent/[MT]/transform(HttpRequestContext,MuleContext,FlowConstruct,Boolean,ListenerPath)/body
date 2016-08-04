@@ -15,14 +15,18 @@
     }
   }
   new HttpMessagePropertiesResolver().setMethod(request.getMethod()).setProtocol(request.getProtocol().asString()).setUri(request.getUri()).setListenerPath(listenerPath).setRemoteHostAddress(resolveRemoteHostAddress(requestContext)).setScheme(requestContext.getScheme()).setClientCertificate(requestContext.getClientConnection().getClientCertificate()).addPropertiesTo(inboundProperties);
-  final Map<String,DataHandler> inboundAttachments=new HashMap<>();
   Object payload=null;
   final MediaType mediaType=getMediaType(request.getHeaderValueIgnoreCase(CONTENT_TYPE),getDefaultEncoding(muleContext));
   if (parseRequest) {
     final HttpEntity entity=request.getEntity();
     if (entity != null && !(entity instanceof EmptyHttpEntity)) {
       if (entity instanceof MultipartHttpEntity) {
-        inboundAttachments.putAll(createDataHandlerFrom(((MultipartHttpEntity)entity).getParts()));
+        try {
+          payload=multiPartPayloadForAttachments((MultipartHttpEntity)entity);
+        }
+ catch (        IOException e) {
+          throw new HttpRequestParsingException(e.getMessage(),e);
+        }
       }
  else {
         if (mediaType != null) {
@@ -50,6 +54,6 @@
       payload=inputStreamEntity.getInputStream();
     }
   }
-  final MuleMessage message=MuleMessage.builder().payload(payload).mediaType(mediaType).inboundProperties(inboundProperties).outboundProperties(outboundProperties).inboundAttachments(inboundAttachments).build();
+  final MuleMessage message=MuleMessage.builder().payload(payload).mediaType(mediaType).inboundProperties(inboundProperties).outboundProperties(outboundProperties).build();
   return new DefaultMuleEvent(message,resolveUri(requestContext),REQUEST_RESPONSE,flowConstruct,new DefaultMuleSession());
 }
