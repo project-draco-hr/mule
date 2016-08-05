@@ -1,0 +1,20 @@
+{
+  List<ConnectionProviderModel> mockModels=mockConnectionProviders(DEFAULT_CONNECTION_PROVIDER_NAME,DEFAULT_CONNECTION_PROVIDER_NAME,CUSTOM_NAME,CUSTOM_NAME,"bleh");
+  when(extensionModel.getConnectionProviders()).thenReturn(mockModels);
+  expectedException.expect(new BaseMatcher<Exception>(){
+    @Override public boolean matches(    Object item){
+      assertThat(item,instanceOf(IllegalModelDefinitionException.class));
+      Exception e=(Exception)item;
+      assertThat(e.getMessage(),containsString(EXTENSION_NAME));
+      assertThat(e.getMessage(),containsString(DEFAULT_CONNECTION_PROVIDER_NAME));
+      assertThat(e.getMessage(),containsString(CUSTOM_NAME));
+      assertThat(e.getMessage(),containsString("4"));
+      return true;
+    }
+    @Override public void describeTo(    Description description){
+      description.appendText("conditions not met");
+    }
+  }
+);
+  validator.validate(extensionModel);
+}
