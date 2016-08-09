@@ -1,0 +1,28 @@
+{
+  final Class<?> providerClass=providerType.getDeclaredClass();
+  ConnectionProviderDeclarer providerDeclarer=connectionProviderDeclarers.get(providerClass);
+  if (providerDeclarer != null) {
+    declarer.withConnectionProvider(providerDeclarer);
+    return;
+  }
+  String name=providerType.getAlias() + CUSTOM_CONNECTION_PROVIDER_SUFFIX;
+  String description=providerType.getDescription();
+  if (providerType.getName().equals(providerType.getAlias())) {
+    name=DEFAULT_CONNECTION_PROVIDER_NAME;
+  }
+  List<Class<?>> providerGenerics=providerType.getInterfaceGenerics(ConnectionProvider.class);
+  if (providerGenerics.size() != 1) {
+    throw new IllegalConnectionProviderModelDefinitionException(format("Connection provider class '%s' was expected to have 1 generic type " + "(for the connection type) but %d were found",providerType.getName(),providerGenerics.size()));
+  }
+  providerDeclarer=declarer.withConnectionProvider(name).describedAs(description).createdWith(new DefaultConnectionProviderFactory<>(providerClass,extensionType.getClassLoader())).whichGivesConnectionsOfType(providerGenerics.get(0)).withModelProperty(new ImplementingTypeModelProperty(providerClass));
+  ConnectionManagementType managementType=NONE;
+  if (PoolingConnectionProvider.class.isAssignableFrom(providerClass)) {
+    managementType=POOLING;
+  }
+ else   if (CachedConnectionProvider.class.isAssignableFrom(providerClass)) {
+    managementType=CACHED;
+  }
+  providerDeclarer.withConnectionManagementType(managementType);
+  connectionProviderDeclarers.put(providerClass,providerDeclarer);
+  declareFieldBasedParameters(providerDeclarer,providerType.getParameters());
+}
