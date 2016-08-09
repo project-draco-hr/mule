@@ -3,11 +3,13 @@
     return evaluate(expression,vars);
   }
   MVELExpressionLanguageContext context=createExpressionLanguageContext();
+  final DelegateVariableResolverFactory innerDelegate=new DelegateVariableResolverFactory(globalContext,createVariableVariableResolverFactory(event));
+  final DelegateVariableResolverFactory delegate=new DelegateVariableResolverFactory(staticContext,new EventVariableResolverFactory(parserConfiguration,muleContext,event,innerDelegate));
   if (vars != null) {
-    context.setNextFactory(new CachedMapVariableResolverFactory(vars,new DelegateVariableResolverFactory(staticContext,new EventVariableResolverFactory(parserConfiguration,muleContext,event,new DelegateVariableResolverFactory(globalContext,createVariableVariableResolverFactory(event))))));
+    context.setNextFactory(new CachedMapVariableResolverFactory(vars,delegate));
   }
  else {
-    context.setNextFactory(new DelegateVariableResolverFactory(staticContext,new EventVariableResolverFactory(parserConfiguration,muleContext,event,new DelegateVariableResolverFactory(globalContext,createVariableVariableResolverFactory(event)))));
+    context.setNextFactory(delegate);
   }
   return evaluateInternal(expression,context);
 }
