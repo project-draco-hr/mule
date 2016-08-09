@@ -1,0 +1,23 @@
+{
+  TestClass testClass=new TestClass(isolatedTestClass);
+  Class<? extends Annotation> artifactContextAwareAnn=(Class<? extends Annotation>)artifactClassLoaderHolder.loadClassWithApplicationClassLoader(PluginClassLoadersAware.class.getName());
+  List<FrameworkMethod> contextAwareMethods=testClass.getAnnotatedMethods(artifactContextAwareAnn);
+  if (contextAwareMethods.size() != 1) {
+    throw new IllegalStateException("Isolation tests need to have one method marked with annotation " + PluginClassLoadersAware.class.getName());
+  }
+  for (  FrameworkMethod method : contextAwareMethods) {
+    if (!method.isStatic() || method.isPublic()) {
+      throw new IllegalStateException("Method marked with annotation " + PluginClassLoadersAware.class.getName() + " should be private static and it should receive a parameter of type List<"+ ArtifactClassLoader.class+ ">");
+    }
+    method.getMethod().setAccessible(true);
+    try {
+      method.invokeExplosively(null,artifactClassLoaderHolder.getPluginsClassLoaders());
+    }
+ catch (    IllegalArgumentException e) {
+      throw new IllegalStateException("Method marked with annotation " + PluginClassLoadersAware.class.getName() + " should receive a parameter of type List<"+ ArtifactClassLoader.class+ ">");
+    }
+ finally {
+      method.getMethod().setAccessible(false);
+    }
+  }
+}

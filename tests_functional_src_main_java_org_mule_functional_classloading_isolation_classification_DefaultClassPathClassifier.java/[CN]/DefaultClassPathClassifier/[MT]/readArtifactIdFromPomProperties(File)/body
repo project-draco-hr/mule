@@ -1,0 +1,16 @@
+{
+  checkArgument(getExtension(jarFile.getPath()).equals(JAR),"It should be a JAR file in order to read '" + POM_PROPERTIES_FILE_NAME + "' file from: "+ jarFile);
+  try (ZipFile zipFile=new ZipFile(jarFile)){
+    Enumeration<? extends ZipEntry> entries=zipFile.entries();
+    while (entries.hasMoreElements()) {
+      ZipEntry entry=entries.nextElement();
+      if (entry.getName().endsWith(File.separator + POM_PROPERTIES_FILE_NAME)) {
+        return loadProperties(zipFile.getInputStream(entry)).getProperty(ARTIFACT_ID);
+      }
+    }
+    throw new IllegalStateException("Couldn't get artifactId property from '" + POM_PROPERTIES_FILE_NAME + "' file from jar file: "+ jarFile);
+  }
+ catch (  IOException e) {
+    throw new RuntimeException("Error while reading '" + POM_PROPERTIES_FILE_NAME + "' from jar file: "+ jarFile);
+  }
+}
