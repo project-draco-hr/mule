@@ -5,8 +5,10 @@
     logException(ex,event);
     doHandleException(ex,event);
     ExceptionPayload exceptionPayload=new DefaultExceptionPayload(ex);
-    if (RequestContext.getEvent() != null) {
-      RequestContext.setExceptionPayload(exceptionPayload);
+    if (getCurrentEvent() != null) {
+      MuleEvent currentEvent=getCurrentEvent();
+      currentEvent.setMessage(MuleMessage.builder(currentEvent.getMessage()).exceptionPayload(exceptionPayload).build());
+      setCurrentEvent(currentEvent);
     }
     event.setMessage(MuleMessage.builder(event.getMessage()).nullPayload().exceptionPayload(exceptionPayload).build());
     return event;

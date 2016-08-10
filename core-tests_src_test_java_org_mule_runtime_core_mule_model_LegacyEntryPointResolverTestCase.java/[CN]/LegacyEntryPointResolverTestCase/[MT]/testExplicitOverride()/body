@@ -1,15 +1,15 @@
 {
   EntryPointResolverSet resolverSet=new LegacyEntryPointResolverSet();
   Object payload=Arrays.asList(new Fruit[]{new Apple(),new Banana()});
-  RequestContext.setEvent(getTestEvent(payload));
+  MuleEvent event=getTestEvent(payload);
+  setCurrentEvent(event);
   final String methodName="setFruit";
   final String propertyName=MuleProperties.MULE_METHOD_PROPERTY;
-  MuleEvent event=RequestContext.getEventContext().getEvent();
   event.setMessage(MuleMessage.builder(event.getMessage()).addOutboundProperty(propertyName,methodName).build());
   FruitBowl bowl=new FruitBowl();
   assertFalse(bowl.hasApple());
   assertFalse(bowl.hasBanana());
-  resolverSet.invoke(bowl,RequestContext.getEventContext());
+  resolverSet.invoke(bowl,new DefaultMuleEventContext(event));
   assertTrue(bowl.hasApple());
   assertTrue(bowl.hasBanana());
 }
