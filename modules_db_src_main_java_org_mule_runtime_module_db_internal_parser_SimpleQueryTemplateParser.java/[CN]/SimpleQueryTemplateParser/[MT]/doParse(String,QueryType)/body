@@ -52,17 +52,23 @@
       tokenStart=tokenEnd;
     }
  else     if (currentChar == ':') {
-      String parameter;
-      while (tokenEnd < sqlTextChars.length && !isParameterSeparator(sqlTextChars[tokenEnd])) {
-        tokenEnd++;
+      if (tokenEnd < sqlTextChars.length && '=' == sqlTextChars[tokenEnd]) {
+        sqlToUse=sqlToUse + currentChar;
+        tokenStart++;
       }
-      if (tokenEnd - tokenStart > 1) {
-        sqlToUse=sqlToUse + "?";
-        parameter=sqlText.substring(tokenStart + 1,tokenEnd);
-        QueryParam inputParam=new DefaultInputQueryParam(paramIndex++,UnknownDbType.getInstance(),null,parameter);
-        parameterList.add(inputParam);
+ else {
+        String parameter;
+        while (tokenEnd < sqlTextChars.length && !isParameterSeparator(sqlTextChars[tokenEnd])) {
+          tokenEnd++;
+        }
+        if (tokenEnd - tokenStart > 1) {
+          sqlToUse=sqlToUse + "?";
+          parameter=sqlText.substring(tokenStart + 1,tokenEnd);
+          QueryParam inputParam=new DefaultInputQueryParam(paramIndex++,UnknownDbType.getInstance(),null,parameter);
+          parameterList.add(inputParam);
+        }
+        tokenStart=tokenEnd;
       }
-      tokenStart=tokenEnd;
     }
  else     if (isParamChar(currentChar)) {
       QueryParam inputParam=new DefaultInputQueryParam(paramIndex++,UnknownDbType.getInstance(),null);
