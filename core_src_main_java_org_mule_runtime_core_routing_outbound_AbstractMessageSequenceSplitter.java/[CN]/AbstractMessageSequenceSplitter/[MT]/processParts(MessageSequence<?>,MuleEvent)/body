@@ -1,5 +1,5 @@
 {
-  String correlationId=originalEvent.getMessage().getCorrelation().getId().orElse(originalEvent.getMessage().getUniqueId());
+  String correlationId=originalEvent.getCorrelationId();
   List<MuleEvent> resultEvents=new ArrayList<>();
   int correlationSequence=0;
   MessageSequence<?> messageSequence=seq;
@@ -8,21 +8,14 @@
   }
   Integer count=messageSequence.size();
   for (; messageSequence.hasNext(); ) {
-    MuleEvent event=createEvent(messageSequence.next(),originalEvent);
     correlationSequence++;
+    DefaultMuleEvent event=createEvent(messageSequence.next(),originalEvent);
+    event.setParent(originalEvent);
+    event.setCorrelation(new Correlation(correlationId,count,correlationSequence));
     if (counterVariableName != null) {
       originalEvent.setFlowVariable(counterVariableName,correlationSequence);
     }
-    final Builder builder=MuleMessage.builder(event.getMessage());
-    if (enableCorrelation.doCorrelation(event.getMessage().getCorrelation())) {
-      builder.correlationId(correlationId);
-    }
-    if (enableCorrelation != NEVER) {
-      builder.correlationGroupSize(count);
-      builder.correlationSequence(correlationSequence);
-    }
-    builder.rootId(originalEvent.getMessage().getMessageRootId());
-    event.setMessage(builder.build());
+    event.setMessage(MuleMessage.builder(event.getMessage()).rootId(originalEvent.getMessage().getMessageRootId()).build());
     setCurrentEvent(event);
     MuleEvent resultEvent=processNext(event);
     if (resultEvent != null && !VoidMuleEvent.getInstance().equals(resultEvent)) {

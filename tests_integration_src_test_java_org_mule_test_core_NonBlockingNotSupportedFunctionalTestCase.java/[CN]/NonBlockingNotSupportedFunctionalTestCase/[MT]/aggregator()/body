@@ -1,13 +1,7 @@
 {
   String correlationId="id";
   int correlationGroupSize=3;
-  FlowRunner runner=flowRunner("aggregator").withPayload(TEST_MESSAGE).nonBlocking();
-  MuleMessage message1=MuleMessage.builder(runner.buildEvent().getMessage()).correlationId(correlationId).correlationGroupSize(correlationGroupSize).correlationSequence(1).build();
-  runner.runNoVerify();
-  runner.reset();
-  MuleMessage message2=MuleMessage.builder(runner.buildEvent().getMessage()).correlationId(correlationId).correlationGroupSize(correlationGroupSize).correlationSequence(2).rootId(message1.getMessageRootId()).build();
-  runner.runNoVerify();
-  runner.reset();
-  MuleMessage message3=MuleMessage.builder(runner.buildEvent().getMessage()).correlationId(correlationId).correlationGroupSize(correlationGroupSize).correlationSequence(3).rootId(message1.getMessageRootId()).build();
-  runner.run();
+  flowRunner("aggregator").withPayload(TEST_MESSAGE).withSourceCorrelationId(correlationId).withCorrelation(new Correlation(correlationId,correlationGroupSize,1)).nonBlocking().runNoVerify();
+  flowRunner("aggregator").withPayload(TEST_MESSAGE).withSourceCorrelationId(correlationId).withCorrelation(new Correlation(correlationId,correlationGroupSize,2)).nonBlocking().runNoVerify();
+  flowRunner("aggregator").withPayload(TEST_MESSAGE).withSourceCorrelationId(correlationId).withCorrelation(new Correlation(correlationId,correlationGroupSize,3)).nonBlocking().run();
 }

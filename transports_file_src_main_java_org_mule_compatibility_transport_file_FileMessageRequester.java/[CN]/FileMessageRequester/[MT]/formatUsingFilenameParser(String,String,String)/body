@@ -1,5 +1,23 @@
 {
   MuleMessage fileParserMessasge=MuleMessage.builder().nullPayload().addInboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME,originalFileName).addInboundProperty(FileConnector.PROPERTY_ORIGINAL_DIRECTORY,originalDirectory).build();
-  final DefaultMuleEvent event=new DefaultMuleEvent(fileParserMessasge,(FlowConstruct)null);
+  FlowConstruct flowConstruct=new FlowConstruct(){
+    @Override public MuleContext getMuleContext(){
+      return endpoint.getMuleContext();
+    }
+    @Override public String getName(){
+      return "FileMessageRequester";
+    }
+    @Override public LifecycleState getLifecycleState(){
+      return null;
+    }
+    @Override public MessagingExceptionHandler getExceptionListener(){
+      return null;
+    }
+    @Override public FlowConstructStatistics getStatistics(){
+      return null;
+    }
+  }
+;
+  final DefaultMuleEvent event=new DefaultMuleEvent(create(flowConstruct),fileParserMessasge,flowConstruct);
   return fileConnector.getFilenameParser().getFilename(event,pattern);
 }

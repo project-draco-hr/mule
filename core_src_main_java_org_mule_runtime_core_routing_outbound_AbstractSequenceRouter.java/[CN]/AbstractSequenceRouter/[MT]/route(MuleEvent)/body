@@ -3,12 +3,7 @@
   if (routes == null || routes.size() == 0) {
     throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),event,null);
   }
-  if (enableCorrelation.doCorrelation(message.getCorrelation())) {
-    event.setMessage(MuleMessage.builder(message).correlationGroupSize(routes.size()).build());
-  }
- else {
-    logger.debug("Correlation is " + message.getCorrelation().toString());
-  }
+  ((DefaultMuleEvent)event).setCorrelation(new Correlation(event.getExecutionContext().getCorrelationId(),routes.size(),null));
   List<MuleEvent> results=new ArrayList<>(routes.size());
   try {
     for (int i=0; i < routes.size(); i++) {

@@ -1,2 +1,15 @@
 {
+  if (isEventValid(response)) {
+    final MuleMessage message=response.getMessage();
+    final Builder builder=MuleMessage.builder(message);
+    for (    String propertyName : endpoint.getResponseProperties()) {
+      Serializable propertyValue=request.getMessage().getOutboundProperty(propertyName);
+      if (propertyValue != null) {
+        builder.addOutboundProperty(propertyName,propertyValue);
+      }
+    }
+    ((DefaultMuleEvent)response).setCorrelation(request.getCorrelation());
+    response.setMessage(builder.build());
+  }
+  return response;
 }

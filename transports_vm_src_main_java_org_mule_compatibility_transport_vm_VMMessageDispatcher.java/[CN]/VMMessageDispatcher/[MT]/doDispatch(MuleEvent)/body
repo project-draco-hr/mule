@@ -4,11 +4,16 @@
     throw new DispatchException(CoreMessages.objectIsNull("Endpoint"),event,getEndpoint());
   }
   MuleEvent eventToDispatch=DefaultMuleEvent.copy(event);
+  final MuleCompatibilityMessageBuilder builder=new MuleCompatibilityMessageBuilder(createInboundMessage(eventToDispatch.getMessage()));
+  builder.correlationId(eventToDispatch.getCorrelation().getId().orElse(null));
+  builder.correlationSequence(eventToDispatch.getCorrelation().getSequence().orElse(null));
+  builder.correlationGroupSize(eventToDispatch.getCorrelation().getGroupSize().orElse(null));
+  final MuleCompatibilityMessage message=builder.build();
   eventToDispatch.clearFlowVariables();
   eventToDispatch.setMessage(createInboundMessage(eventToDispatch.getMessage()));
   QueueSession session=getQueueSession();
   Queue queue=session.getQueue(endpointUri.getAddress());
-  if (!queue.offer(eventToDispatch.getMessage(),connector.getQueueTimeout())) {
+  if (!queue.offer(message,connector.getQueueTimeout())) {
     throw new DispatchException(VMMessages.queueIsFull(queue.getName(),queue.size()),eventToDispatch,getEndpoint());
   }
   if (logger.isDebugEnabled()) {

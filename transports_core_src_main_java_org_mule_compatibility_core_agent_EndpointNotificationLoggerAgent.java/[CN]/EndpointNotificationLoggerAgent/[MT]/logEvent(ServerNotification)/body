@@ -15,7 +15,25 @@
         }
         return;
       }
-      MuleEvent event=new DefaultMuleEvent(msg,endpoint.getExchangePattern(),(FlowConstruct)null);
+      FlowConstruct flowConstruct=new FlowConstruct(){
+        @Override public MuleContext getMuleContext(){
+          return muleContext;
+        }
+        @Override public String getName(){
+          return "EndpointNotificationLoggerAgent";
+        }
+        @Override public LifecycleState getLifecycleState(){
+          return null;
+        }
+        @Override public MessagingExceptionHandler getExceptionListener(){
+          return null;
+        }
+        @Override public FlowConstructStatistics getStatistics(){
+          return null;
+        }
+      }
+;
+      MuleEvent event=new DefaultMuleEvent(create(flowConstruct),msg,endpoint.getExchangePattern(),flowConstruct);
       event.setEnableNotifications(false);
       endpoint.process(event);
     }

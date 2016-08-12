@@ -1,7 +1,8 @@
 {
   muleContext.getRegistry().registerTransformer(new NonSerializableToByteArray());
   final MuleMessage message=MuleMessage.builder().payload(new NonSerializable()).addOutboundProperty("foo","bar").build();
-  setCurrentEvent(new DefaultMuleEvent(message,getTestFlow()));
+  Flow flow=getTestFlow();
+  setCurrentEvent(new DefaultMuleEvent(create(flow),message,flow));
   MuleMessage deserializedMessage=serializationRoundtrip(message);
   assertTrue(deserializedMessage.getPayload() instanceof byte[]);
   assertEquals(INNER_TEST_MESSAGE,getPayloadAsString(deserializedMessage));

@@ -1,8 +1,9 @@
 {
   mockMuleEvent.setMessage(spy(muleMessage));
   mockMuleEvent=spy(mockMuleEvent);
-  MuleEvent lastEventCreated=new DefaultMuleEvent(muleMessage,getTestFlow());
-  catchMessagingExceptionStrategy.setMessageProcessors(asList(createFailingEventMessageProcessor(new DefaultMuleEvent(muleMessage,getTestFlow())),createFailingEventMessageProcessor(lastEventCreated)));
+  Flow flow=getTestFlow();
+  MuleEvent lastEventCreated=new DefaultMuleEvent(create(flow),muleMessage,flow);
+  catchMessagingExceptionStrategy.setMessageProcessors(asList(createFailingEventMessageProcessor(new DefaultMuleEvent(create(flow),muleMessage,flow)),createFailingEventMessageProcessor(lastEventCreated)));
   catchMessagingExceptionStrategy.initialise();
   when(mockMuleEvent.getMessage().toString()).thenThrow(new RuntimeException("MuleMessage.toString() should not be called"));
   MuleEvent exceptionHandlingResult=exceptionHandlingResult=catchMessagingExceptionStrategy.handleException(mockException,mockMuleEvent);

@@ -16,7 +16,8 @@
   assertTrue(router.isMatch(getTestEvent(message)));
   when(mockEndpoint.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer());
   MuleSession session=mock(MuleSession.class);
-  router.route(new OutboundRoutingTestEvent(message,session,muleContext));
+  Flow flow=getTestFlow();
+  router.route(new DefaultMuleEvent(create(flow),message,flow,session));
   message=MuleMessage.builder().payload(new Exception("test event")).build();
   assertTrue(!router.isMatch(getTestEvent(message)));
   router.setTransformers(Arrays.<Transformer>asList(new AbstractTransformer(){

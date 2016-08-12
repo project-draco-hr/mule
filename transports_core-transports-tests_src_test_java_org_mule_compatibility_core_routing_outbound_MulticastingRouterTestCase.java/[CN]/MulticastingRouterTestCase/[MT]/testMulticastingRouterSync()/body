@@ -16,11 +16,12 @@
   assertEquals(filter,router.getFilter());
   MuleMessage message=MuleMessage.builder().payload(TEST_MESSAGE).build();
   assertTrue(router.isMatch(getTestEvent(message)));
-  MuleEvent event=new OutboundRoutingTestEvent(message,null,muleContext);
+  Flow flow=getTestFlow();
+  MuleEvent event=new DefaultMuleEvent(create(flow,message.getUniqueId()),message,flow);
   when(mockendpoint1.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer(event));
   when(mockendpoint2.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer(event));
   MuleSession session=mock(MuleSession.class);
-  MuleEvent result=router.route(new OutboundRoutingTestEvent(message,session,muleContext));
+  MuleEvent result=router.route(new DefaultMuleEvent(create(flow,message.getUniqueId()),message,flow,session));
   assertNotNull(result);
   MuleMessage resultMessage=result.getMessage();
   assertNotNull(resultMessage);

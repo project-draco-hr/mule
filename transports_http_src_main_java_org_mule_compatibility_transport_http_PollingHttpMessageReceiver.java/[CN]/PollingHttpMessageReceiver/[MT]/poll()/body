@@ -14,11 +14,11 @@
     requestBuider.addOutboundProperty(HEADER_IF_NONE_MATCH,etag);
   }
   requestBuider.addOutboundProperty(HTTP_METHOD_PROPERTY,"GET");
-  MuleEvent event=new DefaultMuleEvent(requestBuider.build(),outboundEndpoint.getExchangePattern(),flowConstruct);
+  MuleEvent event=new DefaultMuleEvent(create(flowConstruct),requestBuider.build(),outboundEndpoint.getExchangePattern(),flowConstruct);
   MuleEvent result=outboundEndpoint.process(event);
-  MuleMessage message=null;
+  MuleCompatibilityMessage message=null;
   if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
-    message=result.getMessage();
+    message=new MuleCompatibilityMessageBuilder(result.getMessage()).build();
   }
   final int contentLength=message.getOutboundProperty(HEADER_CONTENT_LENGTH,-1);
   if (contentLength == 0 && discardEmptyContent) {

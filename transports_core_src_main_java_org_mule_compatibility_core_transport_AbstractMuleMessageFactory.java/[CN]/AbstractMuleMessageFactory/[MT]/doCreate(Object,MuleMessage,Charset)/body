@@ -1,29 +1,29 @@
 {
   if (transportMessage == null) {
-    return MuleMessage.builder().nullPayload().build();
+    return (MuleCompatibilityMessage)new MuleCompatibilityMessageBuilder().nullPayload().build();
   }
   if (!isTransportMessageTypeSupported(transportMessage)) {
     throw new MessageTypeNotSupportedException(transportMessage,getClass());
   }
   Object payload=extractPayload(transportMessage,encoding);
-  DataTypeParamsBuilder dataTypeBuilder=DataType.builder().type((Class)(payload == null ? Object.class : payload.getClass())).charset(encoding);
+  DataTypeParamsBuilder dataTypeBuilder=DataType.builder().type(payload == null ? Object.class : payload.getClass()).charset(encoding);
   String mimeType=getMimeType(transportMessage);
   if (StringUtils.isNotEmpty(mimeType)) {
     dataTypeBuilder=dataTypeBuilder.mediaType(mimeType);
   }
   final DataType dataType=dataTypeBuilder.build();
-  MuleMessage.Builder messageBuilder;
+  MuleCompatibilityMessageBuilder messageBuilder;
   if (previousMessage != null) {
-    messageBuilder=MuleMessage.builder(previousMessage).payload(payload);
+    messageBuilder=(MuleCompatibilityMessageBuilder)new MuleCompatibilityMessageBuilder(previousMessage).payload(payload);
   }
  else   if (payload instanceof MuleMessage) {
-    messageBuilder=MuleMessage.builder((MuleMessage)payload);
+    messageBuilder=new MuleCompatibilityMessageBuilder((MuleMessage)payload);
   }
  else   if (payload == null) {
-    messageBuilder=MuleMessage.builder().nullPayload();
+    messageBuilder=(MuleCompatibilityMessageBuilder)new MuleCompatibilityMessageBuilder().nullPayload();
   }
  else {
-    messageBuilder=MuleMessage.builder().payload(payload);
+    messageBuilder=(MuleCompatibilityMessageBuilder)new MuleCompatibilityMessageBuilder().payload(payload);
   }
   messageBuilder.mediaType(dataType.getMediaType());
   addProperties(messageBuilder,transportMessage);

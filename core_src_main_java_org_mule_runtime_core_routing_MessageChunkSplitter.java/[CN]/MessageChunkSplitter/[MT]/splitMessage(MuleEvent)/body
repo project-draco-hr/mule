@@ -23,7 +23,10 @@
     buffer=new byte[len];
     System.arraycopy(data,pos,buffer,0,buffer.length);
     pos+=len;
-    messageParts.add(new DefaultMuleEvent(MuleMessage.builder(message).payload(buffer).correlationId(message.getUniqueId()).correlationGroupSize(parts).correlationSequence(parts).build(),event));
+    final DefaultMuleEvent childEvent=new DefaultMuleEvent(MuleMessage.builder(message).payload(buffer).build(),event);
+    childEvent.setParent(event);
+    childEvent.setCorrelation(new Correlation(event.getExecutionContext().getCorrelationId(),parts,count));
+    messageParts.add(childEvent);
   }
   return messageParts;
 }

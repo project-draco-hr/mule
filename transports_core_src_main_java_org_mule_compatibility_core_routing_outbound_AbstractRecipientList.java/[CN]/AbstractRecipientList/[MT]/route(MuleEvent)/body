@@ -2,13 +2,7 @@
   MuleMessage message=event.getMessage();
   List<Object> recipients=getRecipients(event);
   List<MuleEvent> results=new ArrayList<>();
-  if (enableCorrelation.doCorrelation(message.getCorrelation())) {
-    event.setMessage(MuleMessage.builder(event.getMessage()).correlationGroupSize(recipients.size()).build());
-  }
- else {
-    logger.debug("Correlation is " + message.getCorrelation().toString());
-    logger.debug("CorrelationId is already set, not setting Correlation group size");
-  }
+  ((DefaultMuleEvent)event).setCorrelation(new Correlation(event.getExecutionContext().getCorrelationId(),recipients.size(),null));
   OutboundEndpoint endpoint=null;
   for (  Object recipient : recipients) {
     MuleMessage request=MuleMessage.builder(message).payload(message.getPayload()).build();
