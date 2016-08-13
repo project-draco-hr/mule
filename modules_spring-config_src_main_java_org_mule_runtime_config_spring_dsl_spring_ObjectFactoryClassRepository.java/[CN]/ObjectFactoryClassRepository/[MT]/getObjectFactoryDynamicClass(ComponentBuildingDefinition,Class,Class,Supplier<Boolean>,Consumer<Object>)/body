@@ -1,0 +1,33 @@
+{
+  Enhancer enhancer=new Enhancer();
+  enhancer.setInterfaces(new Class[]{SmartFactoryBean.class});
+  enhancer.setSuperclass(objectFactoryType);
+  enhancer.setCallbackType(MethodInterceptor.class);
+  enhancer.setUseCache(false);
+  Class factoryBeanClass=enhancer.createClass();
+  createdClasses.add(factoryBeanClass);
+  registerStaticCallbacks(factoryBeanClass,new Callback[]{new MethodInterceptor(){
+    @Override public Object intercept(    Object obj,    Method method,    Object[] args,    MethodProxy proxy) throws Throwable {
+      if (method.getName().equals("isSingleton")) {
+        return !componentBuildingDefinition.isPrototype();
+      }
+      if (method.getName().equals("getObjectType")) {
+        return createdObjectType;
+      }
+      if (method.getName().equals("getObject")) {
+        Object createdInstance=proxy.invokeSuper(obj,args);
+        instancePostCreationFunction.accept(createdInstance);
+        return createdInstance;
+      }
+      if (method.getName().equals("isPrototype")) {
+        return componentBuildingDefinition.isPrototype();
+      }
+      if (method.getName().equals("isEagerInit")) {
+        return !isLazyInitFunction.get();
+      }
+      return proxy.invokeSuper(obj,args);
+    }
+  }
+});
+  return factoryBeanClass;
+}
