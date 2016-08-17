@@ -1,0 +1,32 @@
+{
+  if (clazz != null && objectFactory != null) {
+    throw new MuleRuntimeException(createStaticMessage("Only one of class attribute or object factory is allowed in a component"));
+  }
+  Map<Object,Object> properties=new HashMap<>();
+  if (staticData != null) {
+    properties.put("data",staticData);
+  }
+  if (clazz != null && usePrototypeObjectFactory) {
+    objectFactory=new PrototypeObjectFactory(clazz,properties);
+  }
+ else   if (clazz != null) {
+    objectFactory=new SingletonObjectFactory(clazz,properties);
+  }
+  if (entryPointResolver != null) {
+    entryPointResolverSet=new DefaultEntryPointResolverSet();
+    entryPointResolverSet.addEntryPointResolver(entryPointResolver);
+  }
+  DefaultJavaComponent component;
+  if (objectFactory != null) {
+    component=new DefaultJavaComponent(objectFactory,entryPointResolverSet);
+  }
+ else {
+    component=new DefaultJavaComponent();
+  }
+  if (lifecycleAdapterFactory != null) {
+    component.setLifecycleAdapterFactory(lifecycleAdapterFactory);
+  }
+  component.setInterceptors(interceptors);
+  component.setAnnotations(this.getAnnotations());
+  return component;
+}
