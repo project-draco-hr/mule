@@ -1,22 +1,2 @@
 {
-  muleContext.getNotificationManager().addListener(new TransactionNotificationListener<TransactionNotification>(){
-    @Override public void onNotification(    TransactionNotification notification){
-      notifications.add(notification);
-    }
-  }
-);
-  final Latch endDlqFlowLatch=new Latch();
-  FunctionalTestComponent functionalTestComponent=getFunctionalTestComponent("dlq-out");
-  functionalTestComponent.setEventCallback(new EventCallback(){
-    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
-      endDlqFlowLatch.release();
-    }
-  }
-);
-  flowRunner("in-flow").withPayload("message").run();
-  if (!endDlqFlowLatch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS)) {
-    fail("message wasn't received by dlq flow");
-  }
-  assertNotificationsArrived();
-  assertApplicationName();
 }

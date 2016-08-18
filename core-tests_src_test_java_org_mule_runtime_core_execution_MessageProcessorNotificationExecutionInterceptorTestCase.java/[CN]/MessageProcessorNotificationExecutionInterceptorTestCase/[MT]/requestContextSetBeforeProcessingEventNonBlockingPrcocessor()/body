@@ -1,26 +1,2 @@
 {
-  final List<ServerNotification> serverNotifications=new ArrayList<ServerNotification>();
-  mockMessageProcessor=Mockito.mock(MessageProcessor.class,Mockito.withSettings().extraInterfaces(NonBlockingMessageProcessor.class));
-  Mockito.when(mockMessageProcessor.process(mockMuleEvent)).thenReturn(mockResultMuleEvent);
-  Mockito.when(mockMuleEvent.getMuleContext().getNotificationManager()).thenReturn(mockNotificationManager);
-  Mockito.when(mockNextInterceptor.execute(Mockito.eq(mockMessageProcessor),Mockito.any(MuleEvent.class))).thenReturn(mockResultMuleEvent);
-  String muleEventIdToProcess=UUID.getUUID();
-  Mockito.when(mockMuleEvent.isAllowNonBlocking()).thenReturn(true);
-  Mockito.when(mockMuleEvent.getReplyToHandler()).thenReturn(mockReplyToHandler);
-  Mockito.when(mockMuleEvent.getId()).thenReturn(muleEventIdToProcess);
-  Mockito.when(mockNotificationManager.isNotificationEnabled(MessageProcessorNotification.class)).thenReturn(true);
-  Mockito.doAnswer(new Answer<Object>(){
-    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
-      serverNotifications.add((ServerNotification)invocationOnMock.getArguments()[0]);
-      return null;
-    }
-  }
-).when(mockNotificationManager).fireNotification(Mockito.any(ServerNotification.class));
-  setCurrentEvent(mockMuleEventPreviousExecution);
-  MuleEvent result=messageProcessorNotificationExecutionInterceptor.execute(mockMessageProcessor,mockMuleEvent);
-  assertThat(result,is(mockResultMuleEvent));
-  assertThat(serverNotifications.size(),Is.is(0));
-  assertThat(getCurrentEvent().getId(),equalTo(muleEventIdToProcess));
-  assertThat(getCurrentEvent(),not(mockMuleEvent));
-  assertThat(getCurrentEvent(),not(mockMuleEventPreviousExecution));
 }

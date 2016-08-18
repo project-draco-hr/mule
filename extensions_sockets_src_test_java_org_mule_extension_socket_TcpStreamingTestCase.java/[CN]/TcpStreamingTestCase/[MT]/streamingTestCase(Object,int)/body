@@ -1,29 +1,2 @@
 {
-  final CountDownLatch latch=new CountDownLatch(1);
-  final AtomicReference<String> message=new AtomicReference<String>();
-  final AtomicInteger loopCount=new AtomicInteger(0);
-  EventCallback callback=new EventCallback(){
-    @Override public synchronized void eventReceived(    MuleEventContext context,    Object component){
-      try {
-        LOGGER.info(format("called %d times",loopCount.incrementAndGet()));
-        FunctionalStreamingTestComponent ftc=(FunctionalStreamingTestComponent)component;
-        if (1 == latch.getCount()) {
-          message.set(ftc.getSummary());
-          assertThat(format(RESULT,TEST_MESSAGE.length()),is(message.get()));
-          latch.countDown();
-        }
-      }
- catch (      Exception e) {
-        logger.error(e.getMessage(),e);
-      }
-    }
-  }
-;
-  Object functionalTestComponent=getComponent("tcp-listen");
-  assertThat(functionalTestComponent,is(instanceOf(FunctionalStreamingTestComponent.class)));
-  assertThat(functionalTestComponent,is(notNullValue()));
-  ((FunctionalStreamingTestComponent)functionalTestComponent).setEventCallback(callback,TEST_MESSAGE.length());
-  flowRunner("tcp-send").withPayload(payload).run().getMessage().getPayload();
-  latch.await(10,TimeUnit.SECONDS);
-  assertThat(format(RESULT,iterations * TEST_MESSAGE.length()),is(message.get()));
 }

@@ -1,6 +1,10 @@
 {
-  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
-  builder.chain(new ResponseMessageProcessorAdapter(DefaultMessageProcessorChain.from(getAppendingMP("1"))));
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder(muleContext);
+  final DefaultMessageProcessorChain chain=DefaultMessageProcessorChain.from(muleContext,getAppendingMP("1"));
+  chain.setTemplateMuleContext(muleContext);
+  final ResponseMessageProcessorAdapter responseMessageProcessorAdapter=new ResponseMessageProcessorAdapter(chain);
+  responseMessageProcessorAdapter.setMuleContext(muleContext);
+  builder.chain(responseMessageProcessorAdapter);
   process(builder.build(),getTestEventUsingFlow("0"));
   assertThat(process(builder.build(),getTestEventUsingFlow("0")).getMessage().getPayload(),equalTo("01"));
   assertEquals(isMultipleThreadsUsed() ? 3 : 1,threads);

@@ -1,5 +1,7 @@
 {
-  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
-  builder.chain(createStringAppendTransformer("1"),new ResponseMessageProcessorAdapter(new DefaultMessageProcessorChainBuilder().chain(createStringAppendTransformer("a"),createStringAppendTransformer("b"),new ReturnNullMP()).build()),createStringAppendTransformer("2"));
-  assertEquals("012",builder.build().process(getTestEvent("0")).getMessageAsString());
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder(muleContext);
+  final ResponseMessageProcessorAdapter responseMessageProcessorAdapter=new ResponseMessageProcessorAdapter(new DefaultMessageProcessorChainBuilder(muleContext).chain(createStringAppendTransformer("a"),createStringAppendTransformer("b"),new ReturnNullMP()).build());
+  responseMessageProcessorAdapter.setMuleContext(muleContext);
+  builder.chain(createStringAppendTransformer("1"),responseMessageProcessorAdapter,createStringAppendTransformer("2"));
+  assertEquals("012",builder.build().process(getTestEvent("0")).getMessageAsString(muleContext));
 }

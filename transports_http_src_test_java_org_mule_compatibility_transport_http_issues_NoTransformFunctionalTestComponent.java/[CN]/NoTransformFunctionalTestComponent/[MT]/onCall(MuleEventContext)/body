@@ -1,9 +1,9 @@
 {
-  String contents=context.getMessageAsString();
+  String contents=context.getMessageAsString(muleContext);
   String msg=StringMessageUtils.getBoilerPlate("Message Received in service: " + context.getFlowConstruct().getName() + ". Content is: "+ StringMessageUtils.truncate(contents,100,true),'*',80);
   logger.info(msg);
   if (eventCallback != null) {
-    eventCallback.eventReceived(context,this);
+    eventCallback.eventReceived(context,this,muleContext);
   }
   Object replyMessage;
   if (returnMessage != null) {
@@ -12,7 +12,7 @@
  else {
     replyMessage=received(contents) + (appendComponentName ? " " + context.getFlowConstruct().getName() : "");
   }
-  context.getMuleContext().fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
+  muleContext.fireNotification(new FunctionalTestNotification(context,replyMessage,FunctionalTestNotification.EVENT_RECEIVED));
   if (throwException) {
     throw new DefaultMuleException(MessageFactory.createStaticMessage("Functional Test Service Exception"));
   }

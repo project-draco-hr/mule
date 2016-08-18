@@ -1,7 +1,10 @@
 {
-  ExecutionTemplate<MuleEvent> executionTemplate=TransactionalErrorHandlingExecutionTemplate.createMainExecutionTemplate(muleContext,flowConstruct.getExceptionListener());
+  ExecutionTemplate<MuleEvent> executionTemplate=createMainExecutionTemplate(muleContext,flowConstruct.getExceptionListener());
   try {
     final MessageProcessorPollingInterceptor interceptor=override.interceptor();
+    if (interceptor instanceof MuleContextAware) {
+      ((MuleContextAware)interceptor).setMuleContext(muleContext);
+    }
     MuleEvent muleEvent=executionTemplate.execute(new ExecutionCallback<MuleEvent>(){
       @Override public MuleEvent process() throws Exception {
         MuleEvent event=new DefaultMuleEvent(create(flowConstruct),request,ONE_WAY,flowConstruct);

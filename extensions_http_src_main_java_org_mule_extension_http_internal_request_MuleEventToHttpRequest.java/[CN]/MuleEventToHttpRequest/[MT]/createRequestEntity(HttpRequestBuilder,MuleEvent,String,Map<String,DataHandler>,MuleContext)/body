@@ -1,0 +1,22 @@
+{
+  boolean customSource=false;
+  Object oldPayload=null;
+  HttpEntity entity;
+  if (!StringUtils.isEmpty(this.source) && !(DEFAULT_PAYLOAD_EXPRESSION.equals(this.source))) {
+    Object newPayload=this.source;
+    oldPayload=muleEvent.getMessage().getPayload();
+    muleEvent.setMessage(MuleMessage.builder(muleEvent.getMessage()).payload(newPayload).build());
+    customSource=true;
+  }
+  if (isEmptyBody(muleEvent,resolvedMethod,parts)) {
+    entity=new EmptyHttpEntity();
+  }
+ else {
+    entity=createRequestEntityFromPayload(requestBuilder,muleEvent,parts,muleContext);
+  }
+  if (customSource) {
+    final Object finalOldPayload=oldPayload;
+    muleEvent.setMessage(MuleMessage.builder(muleEvent.getMessage()).payload(finalOldPayload).build());
+  }
+  return entity;
+}

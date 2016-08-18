@@ -1,25 +1,2 @@
 {
-  final CountDownLatch countDownLatch=new CountDownLatch(3);
-  FunctionalTestComponent ftc=getFunctionalTestComponent("consumeFileWithStreamingAndRollbackWithRedelivery");
-  ftc.setEventCallback(new EventCallback(){
-    @Override public void eventReceived(    MuleEventContext context,    Object component) throws Exception {
-      countDownLatch.countDown();
-      throw new RuntimeException();
-    }
-  }
-);
-  inputDir=getFileInsideWorkingDirectory("temp/input-streaming-rollback-with-redelivery");
-  inputFile=createDataFile(inputDir,"test1.txt");
-  if (!countDownLatch.await(100000,TimeUnit.MILLISECONDS)) {
-    fail("file should not be consumed at this point");
-  }
-  pollingProber.check(new Probe(){
-    @Override public boolean isSatisfied(){
-      return !inputFile.exists();
-    }
-    @Override public String describeFailure(){
-      return "input file should be deleted";
-    }
-  }
-);
 }

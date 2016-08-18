@@ -1,28 +1,2 @@
 {
-  final List<ServerNotification> serverNotifications=new ArrayList<ServerNotification>();
-  Mockito.when(mockMessageProcessor.process(mockMuleEvent)).thenReturn(mockResultMuleEvent);
-  Mockito.when(mockPipeline.getProcessorPath(mockMessageProcessor)).thenReturn("hi");
-  Mockito.when(mockMuleEvent.getMuleContext().getNotificationManager()).thenReturn(mockNotificationManager);
-  Mockito.when(mockMuleEvent.getFlowConstruct()).thenReturn(mockPipeline);
-  Mockito.when(mockMuleEvent.isNotificationsEnabled()).thenReturn(true);
-  Mockito.when(mockNextInterceptor.execute(mockMessageProcessor,mockMuleEvent)).thenReturn(mockResultMuleEvent);
-  Mockito.when(mockNotificationManager.isNotificationEnabled(MessageProcessorNotification.class)).thenReturn(true);
-  Mockito.doAnswer(new Answer<Object>(){
-    @Override public Object answer(    InvocationOnMock invocationOnMock) throws Throwable {
-      serverNotifications.add((ServerNotification)invocationOnMock.getArguments()[0]);
-      return null;
-    }
-  }
-).when(mockNotificationManager).fireNotification(Mockito.any(ServerNotification.class));
-  MuleEvent result=messageProcessorNotificationExecutionInterceptor.execute(mockMessageProcessor,mockMuleEvent);
-  assertThat(result,is(mockResultMuleEvent));
-  assertThat(serverNotifications.size(),Is.is(2));
-  MessageProcessorNotification beforeMessageProcessorNotification=(MessageProcessorNotification)serverNotifications.get(0);
-  MessageProcessorNotification afterMessageProcessorNotification=(MessageProcessorNotification)serverNotifications.get(1);
-  assertThat(beforeMessageProcessorNotification.getAction(),is(MessageProcessorNotification.MESSAGE_PROCESSOR_PRE_INVOKE));
-  assertThat(beforeMessageProcessorNotification.getProcessor(),is(mockMessageProcessor));
-  assertThat(beforeMessageProcessorNotification.getExceptionThrown(),IsNull.nullValue());
-  assertThat(afterMessageProcessorNotification.getAction(),is(MessageProcessorNotification.MESSAGE_PROCESSOR_POST_INVOKE));
-  assertThat(afterMessageProcessorNotification.getProcessor(),is(mockMessageProcessor));
-  assertThat(afterMessageProcessorNotification.getExceptionThrown(),IsNull.nullValue());
 }
