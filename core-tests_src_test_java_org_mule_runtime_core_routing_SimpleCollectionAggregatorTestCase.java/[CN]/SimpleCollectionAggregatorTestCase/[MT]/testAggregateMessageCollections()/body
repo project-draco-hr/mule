@@ -5,6 +5,7 @@
   router.setMuleContext(muleContext);
   router.setFlowConstruct(flow);
   router.initialise();
+  MessageExecutionContext executionContext=DefaultMessageExecutionContext.create(flow,"foo");
   MuleMessage message1=MuleMessage.builder().payload("test event A").build();
   MuleMessage message2=MuleMessage.builder().payload("test event B").build();
   MuleMessage message3=MuleMessage.builder().payload("test event C").build();
@@ -17,10 +18,10 @@
   list2.add(message4);
   MuleMessage messageCollection1=MuleMessage.builder().payload(list).build();
   MuleMessage messageCollection2=MuleMessage.builder().payload(list2).build();
-  DefaultMuleEvent event1=new DefaultMuleEvent(create(flow,messageCollection1.getUniqueId()),messageCollection1,flow);
-  event1.setCorrelation(new Correlation(messageCollection1.getUniqueId(),2,null));
-  DefaultMuleEvent event2=new DefaultMuleEvent(create(flow,messageCollection1.getUniqueId()),messageCollection2,flow);
-  event2.setCorrelation(new Correlation(messageCollection1.getUniqueId(),2,null));
+  DefaultMuleEvent event1=new DefaultMuleEvent(executionContext,messageCollection1,flow);
+  event1.setCorrelation(new Correlation(2,null));
+  DefaultMuleEvent event2=new DefaultMuleEvent(executionContext,messageCollection2,flow);
+  event2.setCorrelation(new Correlation(2,null));
   assertNull(router.process(event1));
   MuleEvent resultEvent=router.process(event2);
   assertNotNull(resultEvent);

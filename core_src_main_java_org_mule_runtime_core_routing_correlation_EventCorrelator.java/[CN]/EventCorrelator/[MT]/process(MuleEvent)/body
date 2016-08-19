@@ -1,5 +1,5 @@
 {
-  final String groupId=event.getCorrelationId();
+  final String groupId=event.getExecutionContext().getCorrelationId();
   if (logger.isTraceEnabled()) {
     try {
       logger.trace(String.format("Received async reply message for correlationID: %s%n%s%n%s",groupId,StringMessageUtils.truncate(StringMessageUtils.toString(event.getMessage().getPayload()),200,false),StringMessageUtils.headersToString(event.getMessage())));
@@ -53,10 +53,6 @@ synchronized (groupsLock) {
       if (callback.shouldAggregateEvents(group)) {
         MuleEvent returnEvent=callback.aggregateEvents(group);
         final Builder builder=MuleMessage.builder(returnEvent.getMessage());
-        String rootId=group.getCommonRootId();
-        if (rootId != null) {
-          builder.rootId(rootId);
-        }
         returnEvent.setMessage(builder.build());
         try {
           this.removeEventGroup(group);
