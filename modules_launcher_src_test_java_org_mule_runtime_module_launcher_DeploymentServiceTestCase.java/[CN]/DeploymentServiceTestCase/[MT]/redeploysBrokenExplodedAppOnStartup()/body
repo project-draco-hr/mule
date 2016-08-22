@@ -9,8 +9,15 @@
   assertEquals("Wrong URL tagged as zombie.",incompleteAppFileBuilder.getId(),new File(zombie.getKey().getFile()).getParentFile().getName());
   assertTrue("Invalid lastModified value for file URL.",zombie.getValue() != -1);
   reset(applicationDeploymentListener);
-  File configFile=new File(appsDir + "/" + incompleteAppFileBuilder.getDeployedPath(),MULE_CONFIG_XML_FILE);
-  assertThat(configFile.exists(),is(true));
-  configFile.setLastModified(configFile.lastModified() + FILE_TIMESTAMP_PRECISION_MILLIS);
+  final ReentrantLock lock=deploymentService.getLock();
+  lock.lock();
+  try {
+    File configFile=new File(appsDir + "/" + incompleteAppFileBuilder.getDeployedPath(),MULE_CONFIG_XML_FILE);
+    assertThat(configFile.exists(),is(true));
+    configFile.setLastModified(configFile.lastModified() + FILE_TIMESTAMP_PRECISION_MILLIS);
+  }
+  finally {
+    lock.unlock();
+  }
   assertDeploymentFailure(applicationDeploymentListener,incompleteAppFileBuilder.getId());
 }

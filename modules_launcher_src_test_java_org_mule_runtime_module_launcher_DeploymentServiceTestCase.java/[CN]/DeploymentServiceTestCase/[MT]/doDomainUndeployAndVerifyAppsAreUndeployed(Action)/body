@@ -6,8 +6,14 @@
   assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyDomainApp1FileBuilder.getId());
   addPackedAppFromBuilder(dummyDomainApp2FileBuilder);
   assertApplicationDeploymentSuccess(applicationDeploymentListener,dummyDomainApp2FileBuilder.getId());
-  undeployAction.perform();
-  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp1FileBuilder.getId());
-  assertDeploymentSuccess(applicationDeploymentListener,dummyDomainApp2FileBuilder.getId());
+  deploymentService.getLock().lock();
+  try {
+    undeployAction.perform();
+  }
+  finally {
+    deploymentService.getLock().unlock();
+  }
+  assertUndeploymentSuccess(applicationDeploymentListener,dummyDomainApp1FileBuilder.getId());
+  assertUndeploymentSuccess(applicationDeploymentListener,dummyDomainApp2FileBuilder.getId());
   assertUndeploymentSuccess(domainDeploymentListener,dummyDomainFileBuilder.getId());
 }

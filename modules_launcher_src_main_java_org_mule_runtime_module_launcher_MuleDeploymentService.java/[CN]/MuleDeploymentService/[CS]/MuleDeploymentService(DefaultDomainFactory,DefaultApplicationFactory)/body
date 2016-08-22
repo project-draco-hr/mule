@@ -3,9 +3,18 @@
   applicationFactory.setDeploymentListener(applicationDeploymentListener);
   ArtifactDeployer<Application> applicationMuleDeployer=new DefaultArtifactDeployer<>();
   ArtifactDeployer<Domain> domainMuleDeployer=new DefaultArtifactDeployer<>();
-  this.applicationDeployer=new DefaultArchiveDeployer<>(applicationMuleDeployer,applicationFactory,applications,deploymentLock,NOP_ARTIFACT_DEPLOYMENT_TEMPLATE);
+  this.applicationDeployer=new DefaultArchiveDeployer<>(applicationMuleDeployer,applicationFactory,applications,NOP_ARTIFACT_DEPLOYMENT_TEMPLATE);
   this.applicationDeployer.setDeploymentListener(applicationDeploymentListener);
-  this.domainDeployer=new DomainArchiveDeployer(new DefaultArchiveDeployer<>(domainMuleDeployer,domainFactory,domains,deploymentLock,new DomainDeploymentTemplate(applicationDeployer,this)),applicationDeployer,this);
+  this.domainDeployer=new DomainArchiveDeployer(new DefaultArchiveDeployer<>(domainMuleDeployer,domainFactory,domains,new DomainDeploymentTemplate(applicationDeployer,this)),applicationDeployer,this);
   this.domainDeployer.setDeploymentListener(domainDeploymentListener);
-  this.deploymentDirectoryWatcher=new DeploymentDirectoryWatcher(domainDeployer,applicationDeployer,domains,applications,deploymentLock);
+  if (useParallelDeployment()) {
+    if (isDeployingSelectedAppsInOrder()) {
+      throw new IllegalArgumentException("Deployment parameters 'app' and '" + PARALLEL_DEPLOYMENT_PROPERTY + "' cannot be used together");
+    }
+    logger.info("Using parallel deployment");
+    this.deploymentDirectoryWatcher=new ParallelDeploymentDirectoryWatcher(domainDeployer,applicationDeployer,domains,applications,deploymentLock);
+  }
+ else {
+    this.deploymentDirectoryWatcher=new DeploymentDirectoryWatcher(domainDeployer,applicationDeployer,domains,applications,deploymentLock);
+  }
 }
