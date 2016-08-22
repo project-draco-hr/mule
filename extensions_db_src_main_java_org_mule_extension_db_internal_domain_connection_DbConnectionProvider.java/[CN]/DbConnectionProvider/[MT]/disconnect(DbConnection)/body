@@ -1,0 +1,36 @@
+{
+  Connection jdbcConnection=connection.getJdbcConnection();
+  try {
+    if (jdbcConnection.isClosed()) {
+      return;
+    }
+  }
+ catch (  SQLException e) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Error checking for closed connection while trying to disconnect",e);
+    }
+    return;
+  }
+  RuntimeException exception=null;
+  try {
+    if (!jdbcConnection.getAutoCommit()) {
+      jdbcConnection.commit();
+    }
+  }
+ catch (  SQLException e) {
+    exception=new ConnectionCommitException(e);
+  }
+ finally {
+    try {
+      connection.release();
+    }
+ catch (    Exception e) {
+      if (exception == null) {
+        exception=new ConnectionClosingException(e);
+      }
+    }
+  }
+  if (exception != null) {
+    throw exception;
+  }
+}

@@ -1,0 +1,21 @@
+{
+  List<QueryParam> newParams=new ArrayList<>();
+  for (  QueryParam originalParam : queryTemplate.getParams()) {
+    DbType type=paramTypes.get(originalParam.getIndex());
+    QueryParam newParam;
+    if (originalParam instanceof InOutQueryParam) {
+      newParam=new DefaultInOutQueryParam(originalParam.getIndex(),type,originalParam.getName(),((InOutQueryParam)originalParam).getValue());
+    }
+ else     if (originalParam instanceof InputQueryParam) {
+      newParam=new DefaultInputQueryParam(originalParam.getIndex(),type,((InputQueryParam)originalParam).getValue(),originalParam.getName());
+    }
+ else     if (originalParam instanceof OutputQueryParam) {
+      newParam=new DefaultOutputQueryParam(originalParam.getIndex(),type,originalParam.getName());
+    }
+ else {
+      throw new IllegalArgumentException("Unknown parameter type: " + originalParam.getClass().getName());
+    }
+    newParams.add(newParam);
+  }
+  return new QueryTemplate(queryTemplate.getSqlText(),queryTemplate.getType(),newParams);
+}

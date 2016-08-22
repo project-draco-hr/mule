@@ -1,0 +1,8 @@
+{
+  final Query resolvedQuery=resolveQuery(query,connector,connection,SELECT,STORE_PROCEDURE_CALL);
+  QueryStatementFactory statementFactory=getStatementFactory(statementAttributes,streaming,query.getSettings());
+  InsensitiveMapRowHandler recordHandler=new InsensitiveMapRowHandler();
+  ResultSetHandler resultSetHandler=streaming ? new IteratorResultSetHandler(recordHandler,resultSetCloser) : new ListResultSetHandler(recordHandler);
+  Object result=new SelectExecutor(statementFactory,resultSetHandler).execute(connection,resolvedQuery);
+  return interceptingCallback(result,connection);
+}

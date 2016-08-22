@@ -1,0 +1,21 @@
+{
+  Statement statement=statementFactory.create(connection,query.getQueryTemplate());
+  if (!(statement instanceof PreparedStatement)) {
+    throw new IllegalArgumentException("Bulk update must be executed on a prepared statement");
+  }
+  PreparedStatement preparedStatement=(PreparedStatement)statement;
+  PreparedBulkQueryLogger queryLogger=queryLoggerFactory.createBulkQueryLogger(LOGGER,query.getQueryTemplate(),paramValues.size());
+  try {
+    for (    List<QueryParamValue> params : paramValues) {
+      doProcessParameters(preparedStatement,query.getQueryTemplate(),params,queryLogger);
+      preparedStatement.addBatch();
+      queryLogger.addParameterSet();
+    }
+    queryLogger.logQuery();
+    return preparedStatement.executeBatch();
+  }
+  finally {
+    preparedStatement.clearParameters();
+    statement.close();
+  }
+}
