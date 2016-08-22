@@ -1,0 +1,14 @@
+{
+  ErrorHandler errorHandler=new ErrorHandler();
+  errorHandler.setMuleContext(mockMuleContext);
+  errorHandler.setExceptionListeners(new ArrayList<>(Arrays.<MessagingExceptionHandlerAcceptor>asList(mockTestExceptionStrategy1,mockTestExceptionStrategy2)));
+  when(mockMuleContext.getDefaultExceptionStrategy()).thenReturn(mockDefaultTestExceptionStrategy2);
+  errorHandler.initialise();
+  when(mockTestExceptionStrategy1.accept(mockMuleEvent)).thenReturn(false);
+  when(mockTestExceptionStrategy2.accept(mockMuleEvent)).thenReturn(true);
+  when(mockDefaultTestExceptionStrategy2.accept(mockMuleEvent)).thenReturn(true);
+  errorHandler.handleException(mockException,mockMuleEvent);
+  verify(mockTestExceptionStrategy1,VerificationModeFactory.times(0)).handleException(any(Exception.class),any(MuleEvent.class));
+  verify(mockDefaultTestExceptionStrategy2,VerificationModeFactory.times(0)).handleException(any(Exception.class),any(MuleEvent.class));
+  verify(mockTestExceptionStrategy2,VerificationModeFactory.times(1)).handleException(mockException,mockMuleEvent);
+}

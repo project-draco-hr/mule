@@ -1,0 +1,9 @@
+{
+  Flow flow=getTestFlow();
+  MuleEvent lastEventCreated=new DefaultMuleEvent(create(flow),muleMessage,flow);
+  onErrorContinueHandler.setMessageProcessors(asList(createChagingEventMessageProcessor(new DefaultMuleEvent(create(flow),muleMessage,flow)),createChagingEventMessageProcessor(lastEventCreated)));
+  onErrorContinueHandler.initialise();
+  MuleEvent exceptionHandlingResult=onErrorContinueHandler.handleException(mockException,mockMuleEvent);
+  assertThat(exceptionHandlingResult.getId(),is(lastEventCreated.getId()));
+  assertThat(exceptionHandlingResult.getCorrelationId(),is(lastEventCreated.getCorrelationId()));
+}
