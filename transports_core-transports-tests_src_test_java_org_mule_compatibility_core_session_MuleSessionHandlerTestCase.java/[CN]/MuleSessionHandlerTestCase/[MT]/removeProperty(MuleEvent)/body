@@ -2,7 +2,12 @@
   final AtomicReference<Serializable> outbound=new AtomicReference<>();
   outbound.set(event.getMessage().getOutboundProperty(MULE_SESSION_PROPERTY));
   event.setMessage(MuleMessage.builder(event.getMessage()).removeOutboundProperty(MULE_SESSION_PROPERTY).build());
-  final Object invocation=event.getFlowVariable(MULE_SESSION_PROPERTY);
+  Object invocation=null;
+  try {
+    invocation=event.getFlowVariable(MULE_SESSION_PROPERTY);
+  }
+ catch (  NoSuchElementException nsse) {
+  }
   event.removeFlowVariable(MULE_SESSION_PROPERTY);
   return outbound.get() != null ? outbound.get() : (Serializable)invocation;
 }
