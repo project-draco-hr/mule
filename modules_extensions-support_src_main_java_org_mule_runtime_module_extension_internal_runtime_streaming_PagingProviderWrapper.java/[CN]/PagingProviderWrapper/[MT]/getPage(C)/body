@@ -1,0 +1,21 @@
+{
+  if (this.closed) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("paging delegate is closed. Returning null");
+    }
+    return null;
+  }
+  List<T> page=this.wrapped.getPage(connection);
+  if (isEmpty(page)) {
+    try {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Empty page was obtained. Closing delegate since this means that the data source has been consumed");
+      }
+      this.close();
+    }
+ catch (    Exception e) {
+      this.handleCloseException(e);
+    }
+  }
+  return page;
+}
