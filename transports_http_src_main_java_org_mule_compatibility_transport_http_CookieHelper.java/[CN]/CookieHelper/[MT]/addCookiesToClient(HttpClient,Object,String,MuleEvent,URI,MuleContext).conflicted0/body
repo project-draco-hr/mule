@@ -1,20 +1,11 @@
 {
-  Map<String,String> cookieMap=(Map<String,String>)cookiesObject;
-  client.getParams().setCookiePolicy(CookieHelper.getCookiePolicy(policy));
-  String host=destinationUri.getHost();
-  String path=destinationUri.getRawPath();
-  Iterator<String> keyIter=cookieMap.keySet().iterator();
-  while (keyIter.hasNext()) {
-    String key=keyIter.next();
-    String cookieValue=cookieMap.get(key);
-    final String value;
-    if (event != null) {
-      value=muleContext.getExpressionManager().parse(cookieValue,event);
+  Cookie[] cookies=(Cookie[])cookiesObject;
+  if (cookies != null && cookies.length > 0) {
+    String host=destinationUri.getHost();
+    String path=destinationUri.getRawPath();
+    for (    Cookie cookie : cookies) {
+      client.getState().addCookie(new Cookie(host,cookie.getName(),cookie.getValue(),path,cookie.getExpiryDate(),cookie.getSecure()));
     }
- else {
-      value=cookieValue;
-    }
-    Cookie cookie=new Cookie(host,key,value,path,null,false);
-    client.getState().addCookie(cookie);
+    client.getParams().setCookiePolicy(CookieHelper.getCookiePolicy(policy));
   }
 }

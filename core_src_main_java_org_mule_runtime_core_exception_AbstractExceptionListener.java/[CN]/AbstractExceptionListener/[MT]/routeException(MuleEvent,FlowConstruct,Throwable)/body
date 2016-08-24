@@ -1,0 +1,20 @@
+{
+  if (!messageProcessors.isEmpty()) {
+    try {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Message being processed is: " + (muleContext.getTransformationService().getPayloadForLogging(event.getMessage())));
+      }
+      URI endpointUri=event.getMessageSourceURI();
+      ExceptionMessage msg=new ExceptionMessage(event,t,flowConstruct.getName(),endpointUri);
+      MuleMessage exceptionMessage=MuleMessage.builder(event.getMessage()).payload(msg).build();
+      MulticastingRouter router=buildRouter();
+      router.setRoutes(getMessageProcessors());
+      router.setMuleContext(muleContext);
+      router.route(new DefaultMuleEvent(exceptionMessage,event));
+    }
+ catch (    Exception e) {
+      logFatal(event,e);
+    }
+  }
+  processOutboundRouterStatistics();
+}

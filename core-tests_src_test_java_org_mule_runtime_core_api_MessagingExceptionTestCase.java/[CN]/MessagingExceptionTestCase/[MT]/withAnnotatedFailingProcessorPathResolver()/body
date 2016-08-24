@@ -5,8 +5,7 @@
   when(((AnnotatedObject)mockProcessor).getAnnotation(eq(sourceFileLineAttrName))).thenReturn(10);
   MessageProcessorPathResolver pathResolver=mock(MessageProcessorPathResolver.class,withSettings().extraInterfaces(FlowConstruct.class));
   when(pathResolver.getProcessorPath(eq(mockProcessor))).thenReturn("/flow/processor");
-  when(mockEvent.getFlowConstruct()).thenReturn((FlowConstruct)pathResolver);
   MessagingException exception=new MessagingException(CoreMessages.createStaticMessage(""),mockEvent,mockProcessor);
-  exception.getInfo().putAll(locationProvider.getContextInfo(mockEvent,mockProcessor));
-  assertThat(exception.getInfo().get(LocatedMuleException.INFO_LOCATION_KEY).toString(),is("/flow/processor @ MessagingExceptionTestCase:muleApp.xml:10 (Mock Component)"));
+  exception.getInfo().putAll(locationProvider.getContextInfo(mockEvent,mockProcessor,(FlowConstruct)pathResolver));
+  assertThat(exception.getInfo().get(INFO_LOCATION_KEY).toString(),is("/flow/processor @ MessagingExceptionTestCase:muleApp.xml:10 (Mock Component)"));
 }

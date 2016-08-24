@@ -2,11 +2,11 @@
   String ackExpression="some-expression";
   String expressionEvalutaionResult="new payload";
   when(mockUntilSuccessfulConfiguration.getAckExpression()).thenReturn(ackExpression);
-  when(mockUntilSuccessfulConfiguration.getMuleContext().getExpressionManager().evaluate(ackExpression,mockEvent)).thenReturn(expressionEvalutaionResult);
+  when(mockUntilSuccessfulConfiguration.getMuleContext().getExpressionManager().evaluate(ackExpression,mockEvent,null)).thenReturn(expressionEvalutaionResult);
   executeUntilSuccessful();
   waitUntilRouteIsExecuted();
   verify(mockRoute,times(1)).process(mockEvent);
-  verify(mockUntilSuccessfulConfiguration.getMuleContext().getExpressionManager(),times(1)).evaluate(ackExpression,mockEvent);
+  verify(mockUntilSuccessfulConfiguration.getMuleContext().getExpressionManager(),times(1)).evaluate(ackExpression,mockEvent,null);
   verify(mockEvent,times(1)).setMessage(argThat(new ArgumentMatcher<MuleMessage>(){
     @Override public boolean matches(    Object argument){
       assertThat(((MuleMessage)argument).getPayload(),equalTo(expressionEvalutaionResult));
@@ -14,5 +14,5 @@
     }
   }
 ));
-  verify(mockEvent.getFlowConstruct().getExceptionListener(),never()).handleException(any(Exception.class),eq(mockEvent));
+  verify(mockFlow.getExceptionListener(),never()).handleException(any(Exception.class),eq(mockEvent));
 }

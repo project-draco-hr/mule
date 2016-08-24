@@ -1,10 +1,11 @@
 {
-  endpoint=createTestInboundEndpoint(null,new TestSecurityFilter(false),null,new ResponseAppendTransformer(),MessageExchangePattern.REQUEST_RESPONSE,null);
+  endpoint=createTestInboundEndpoint(null,new TestSecurityFilter(false),null,new ResponseAppendTransformer(),REQUEST_RESPONSE,null);
   endpoint.setListener(inboundListener);
+  endpoint.setFlowConstruct(getTestFlow());
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
   responseEvent.setMessage(MuleMessage.builder(responseEvent.getMessage()).exceptionPayload(new DefaultExceptionPayload(new RuntimeException())).build());
-  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(requestEvent.getFlowConstruct());
+  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
   setCurrentEvent(requestEvent);
   try {
     result=mpChain.process(requestEvent);

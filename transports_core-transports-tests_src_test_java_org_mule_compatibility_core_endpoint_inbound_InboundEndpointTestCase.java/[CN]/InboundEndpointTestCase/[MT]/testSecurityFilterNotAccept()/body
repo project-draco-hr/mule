@@ -1,20 +1,21 @@
 {
   TestSecurityNotificationListener securityNotificationListener=new TestSecurityNotificationListener();
   muleContext.registerListener(securityNotificationListener);
-  endpoint=createTestInboundEndpoint(null,new TestSecurityFilter(false),null,null,MessageExchangePattern.REQUEST_RESPONSE,null);
+  endpoint=createTestInboundEndpoint(null,new TestSecurityFilter(false),null,null,REQUEST_RESPONSE,null);
   endpoint.setListener(inboundListener);
+  endpoint.setFlowConstruct(getTestFlow());
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
-  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(requestEvent.getFlowConstruct());
+  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
   setCurrentEvent(requestEvent);
   try {
     result=mpChain.process(requestEvent);
     fail("Exception expected");
   }
  catch (  TestSecurityFilter.StaticMessageUnauthorisedException e) {
-    requestEvent.getFlowConstruct().getExceptionListener().handleException(e,requestEvent);
+    endpoint.getFlowConstruct().getExceptionListener().handleException(e,requestEvent);
   }
-  assertTrue(securityNotificationListener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
+  assertTrue(securityNotificationListener.latch.await(RECEIVE_TIMEOUT,MILLISECONDS));
   assertEquals(SecurityNotification.SECURITY_AUTHENTICATION_FAILED,securityNotificationListener.securityNotification.getAction());
   assertEquals(securityNotificationListener.securityNotification.getResourceIdentifier(),TestSecurityFilter.StaticMessageUnauthorisedException.class.getName());
 }

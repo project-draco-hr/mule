@@ -3,11 +3,15 @@
   when(reqTransformer.process(any(MuleEvent.class))).then(echoEventAnswer);
   Transformer resTransformer=mock(Transformer.class);
   when(resTransformer.process(any(MuleEvent.class))).then(echoEventAnswer);
+  final Flow flow=new Flow("",muleContext);
+  flow.setProcessingStrategy(new NonBlockingProcessingStrategy());
+  muleContext.getRegistry().registerFlowConstruct(flow);
   OutboundEndpoint endpoint=createOutboundEndpoint(null,null,reqTransformer,resTransformer,REQUEST_RESPONSE,null);
+  endpoint.setFlowConstruct(flow);
   SensingNullReplyToHandler nullReplyToHandler=new SensingNullReplyToHandler();
-  MuleEvent event=getNonBlockingTestEventUsingFlow(TEST_MESSAGE,nullReplyToHandler);
+  MuleEvent event=getNonBlockingTestEventUsingFlow(TEST_MESSAGE,nullReplyToHandler,flow);
   MuleEvent response=endpoint.process(event);
-  assertThat(response,CoreMatchers.<MuleEvent>equalTo(NonBlockingVoidMuleEvent.getInstance()));
+  assertThat(response,equalTo(NonBlockingVoidMuleEvent.getInstance()));
   assertThat(getNonBlockingResponse(nullReplyToHandler,response),equalTo(event));
   verify(reqTransformer,times(1)).process(event);
   verify(resTransformer,times(1)).process(event);

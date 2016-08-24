@@ -1,7 +1,6 @@
 {
   FlowConstruct flowConstruct=mock(FlowConstruct.class);
   MuleEvent event=mock(MuleEvent.class);
-  when(event.getFlowConstruct()).thenReturn(flowConstruct);
   MessageProcessor targetSubFlowConstructAware=(MessageProcessor)mock(FlowConstructAware.class,INITIALIZABLE_MESSAGE_PROCESSOR);
   when(targetSubFlowConstructAware.process(event)).thenReturn(result);
   MessageProcessor targetMuleContextAwareAware=(MessageProcessor)mock(MuleContextAware.class,INITIALIZABLE_MESSAGE_PROCESSOR);
@@ -9,7 +8,9 @@
   MessageProcessorChain targetSubFlowChain=mock(MessageProcessorChain.class,INITIALIZABLE_MESSAGE_PROCESSOR);
   when(targetSubFlowChain.getMessageProcessors()).thenReturn(Arrays.asList(targetSubFlowConstructAware,targetMuleContextAwareAware));
   FlowRefFactoryBean flowRefFactoryBean=createDynamicFlowRefFactoryBean(targetSubFlowChain);
-  flowRefFactoryBean.getObject().process(event);
+  final MessageProcessor flowRefProcessor=flowRefFactoryBean.getObject();
+  ((FlowConstructAware)flowRefProcessor).setFlowConstruct(flowConstruct);
+  flowRefProcessor.process(event);
   verify((FlowConstructAware)targetSubFlowConstructAware).setFlowConstruct(flowConstruct);
   verify((MuleContextAware)targetMuleContextAwareAware).setMuleContext(muleContext);
 }

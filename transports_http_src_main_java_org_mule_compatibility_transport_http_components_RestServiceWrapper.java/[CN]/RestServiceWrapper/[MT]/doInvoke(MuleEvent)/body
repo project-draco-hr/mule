@@ -4,7 +4,7 @@
   String tempUrl=serviceUrl;
   if (muleContext.getExpressionManager().isExpression(serviceUrl)) {
     muleContext.getExpressionManager().validateExpression(serviceUrl);
-    tempUrl=muleContext.getExpressionManager().parse(serviceUrl,event,true);
+    tempUrl=muleContext.getExpressionManager().parse(serviceUrl,event,flowConstruct,true);
   }
   StringBuilder urlBuffer=new StringBuilder(tempUrl);
   if (GET.equalsIgnoreCase(this.httpMethod) || DELETE.equalsIgnoreCase(this.httpMethod)) {
@@ -27,7 +27,7 @@
   EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(tempUrl,muleContext);
   endpointBuilder.setExchangePattern(REQUEST_RESPONSE);
   OutboundEndpoint outboundEndpoint=endpointBuilder.buildOutboundEndpoint();
-  MuleEventContext eventContext=new DefaultMuleEventContext(event);
+  MuleEventContext eventContext=new DefaultMuleEventContext(flowConstruct,event);
   MuleEvent result=new DefaultMuleEvent(event.getContext(),muleContext.getClient().send(outboundEndpoint.getEndpointURI().toString(),MuleMessage.builder(event.getMessage()).payload(requestBody).build()),flowConstruct);
   if (isErrorPayload(result)) {
     handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),event,this),result.getMessage());

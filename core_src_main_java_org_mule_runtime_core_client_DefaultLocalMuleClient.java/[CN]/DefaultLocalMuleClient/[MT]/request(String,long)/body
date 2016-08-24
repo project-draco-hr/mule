@@ -2,6 +2,9 @@
   final OperationOptions operationOptions=newOptions().responseTimeout(timeout).build();
   final MessageProcessor connectorMessageProcessor=getConnectorMessageProcessLocator().locateConnectorOperation(url,operationOptions,ONE_WAY);
   if (connectorMessageProcessor != null) {
+    if (connectorMessageProcessor instanceof FlowConstructAware) {
+      ((FlowConstructAware)connectorMessageProcessor).setFlowConstruct(flowConstruct);
+    }
     final MuleEvent event=connectorMessageProcessor.process(createOneWayMuleEvent(MuleMessage.builder().nullPayload().build()));
     return event == null || event instanceof VoidMuleEvent ? null : event.getMessage();
   }

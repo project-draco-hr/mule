@@ -1,16 +1,16 @@
 {
   ServerNotification notification=(ServerNotification)argument;
+  MessagingException exception=null;
+  if (notification instanceof PipelineMessageNotification) {
+    exception=((PipelineMessageNotification)notification).getException();
+  }
+ else   if (notification instanceof AsyncMessageNotification) {
+    exception=((AsyncMessageNotification)notification).getException();
+  }
   if (exceptionExpected) {
-    MessagingException exception=null;
-    if (notification instanceof PipelineMessageNotification) {
-      exception=((PipelineMessageNotification)notification).getException();
-    }
- else     if (notification instanceof AsyncMessageNotification) {
-      exception=((AsyncMessageNotification)notification).getException();
-    }
     return expectedAction == notification.getAction() && exception != null && notification.getSource() != null && (this.event == null || this.event == notification.getSource());
   }
  else {
-    return expectedAction == notification.getAction() && notification.getSource() != null && (this.event == null || this.event == notification.getSource());
+    return expectedAction == notification.getAction() && exception == null && notification.getSource() != null && (this.event == null || this.event == notification.getSource());
   }
 }
