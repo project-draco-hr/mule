@@ -4,11 +4,9 @@
   latch.await(LATCH_AWAIT_TIMEOUT,MILLISECONDS);
   Flow flow=muleContext.getRegistry().get("flowConfiguredForDeadLetterQueueTx");
   flow.stop();
-  MuleMessage muleMessage=muleClient.request("jms://in6",TIMEOUT);
-  assertThat(muleMessage,IsNull.<Object>nullValue());
-  MuleMessage deadLetter=muleClient.request("jms://DLQ6",TIMEOUT);
+  assertThat(muleClient.request("jms://in6",TIMEOUT).getRight().isPresent(),is(false));
+  MuleMessage deadLetter=muleClient.request("jms://DLQ6",TIMEOUT).getRight().get();
   assertThat(deadLetter,IsNull.<Object>notNullValue());
   assertThat(deadLetter.getPayload(),IsNull.<Object>notNullValue());
-  MuleMessage outboundMessage=muleClient.request("jms://out6",SHORT_TIMEOUT);
-  assertThat(outboundMessage,IsNull.<Object>nullValue());
+  assertThat(muleClient.request("jms://out6",SHORT_TIMEOUT).getRight().isPresent(),is(false));
 }

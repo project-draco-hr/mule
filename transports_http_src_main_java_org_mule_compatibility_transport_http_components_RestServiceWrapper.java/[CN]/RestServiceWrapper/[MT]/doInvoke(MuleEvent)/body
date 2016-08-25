@@ -27,10 +27,13 @@
   EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(tempUrl,muleContext);
   endpointBuilder.setExchangePattern(REQUEST_RESPONSE);
   OutboundEndpoint outboundEndpoint=endpointBuilder.buildOutboundEndpoint();
-  MuleEventContext eventContext=new DefaultMuleEventContext(flowConstruct,event);
-  MuleEvent result=new DefaultMuleEvent(event.getContext(),muleContext.getClient().send(outboundEndpoint.getEndpointURI().toString(),MuleMessage.builder(event.getMessage()).payload(requestBody).build()),flowConstruct);
+  Either<Error,MuleMessage> clientResponse=muleContext.getClient().send(outboundEndpoint.getEndpointURI().toString(),MuleMessage.builder(event.getMessage()).payload(requestBody).build());
+  if (clientResponse.isLeft()) {
+    handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),event,this));
+  }
+  MuleEvent result=new DefaultMuleEvent(event.getContext(),clientResponse.getRight(),flowConstruct);
   if (isErrorPayload(result)) {
-    handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),event,this),result.getMessage());
+    handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),event,this));
   }
   return result.getMessage();
 }

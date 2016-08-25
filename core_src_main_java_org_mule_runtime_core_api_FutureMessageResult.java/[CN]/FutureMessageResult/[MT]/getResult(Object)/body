@@ -1,0 +1,22 @@
+{
+  Either<Error,MuleMessage> result=null;
+  if (obj != null) {
+    if (obj instanceof Error) {
+      result=left((Error)obj);
+    }
+ else {
+      if (obj instanceof MuleMessage) {
+        result=right((MuleMessage)obj);
+      }
+ else {
+        result=right(MuleMessage.builder().payload(obj).build());
+      }
+synchronized (this) {
+        if (transformers != null) {
+          result=right(muleContext.getTransformationService().applyTransformers(result.getRight(),null,transformers));
+        }
+      }
+    }
+  }
+  return result;
+}

@@ -1,9 +1,8 @@
 {
   MuleClient client=muleContext.getClient();
   client.dispatch("vm://in","Marco",null);
-  MuleMessage response=client.request("vm://out",RECEIVE_TIMEOUT);
+  MuleMessage response=client.request("vm://out",RECEIVE_TIMEOUT).getRight().get();
   assertNotNull("Response is null",response);
   assertEquals("Polo",response.getPayload());
-  MuleMessage secondMessage=client.request("vm://out",RECEIVE_TIMEOUT);
-  assertNull(secondMessage);
+  assertThat(client.request("vm://out",RECEIVE_TIMEOUT).getRight().isPresent(),is(false));
 }

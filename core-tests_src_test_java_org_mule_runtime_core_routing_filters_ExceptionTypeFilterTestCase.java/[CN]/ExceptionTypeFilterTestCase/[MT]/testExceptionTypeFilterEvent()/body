@@ -1,0 +1,18 @@
+{
+  MuleEvent event=mock(MuleEvent.class);
+  ExceptionTypeFilter filter=new ExceptionTypeFilter();
+  assertThat(filter.getExpectedType(),nullValue());
+  MuleMessage m=MuleMessage.builder().payload("test").build();
+  assertThat(filter.accept(m),is(false));
+  Exception exception=new IllegalArgumentException("test");
+  when(event.getError()).thenReturn(builder(exception).build());
+  m=MuleMessage.builder(m).build();
+  assertThat(filter.accept(event),is(true));
+  when(event.getMessage()).thenReturn(m);
+  when(event.getError()).thenReturn(null);
+  filter=new ExceptionTypeFilter(IOException.class);
+  assertThat(filter.accept(event),is(false));
+  exception=new IOException("test");
+  when(event.getError()).thenReturn(builder(exception).build());
+  assertThat(filter.accept(event),is(true));
+}

@@ -1,17 +1,22 @@
 {
   try {
     MuleMessage msg;
+    Error error=null;
     String payload=event.getMessageAsString(muleContext);
     if (payload.indexOf(rejectIfMatches) >= 0) {
       throw new DefaultMuleException("Saw " + rejectIfMatches);
     }
  else     if (payload.toLowerCase().indexOf(rejectIfMatches) >= 0) {
-      msg=MuleMessage.builder().nullPayload().exceptionPayload(new DefaultExceptionPayload(new Exception())).build();
+      Exception exception=new Exception();
+      error=builder(exception).build();
+      msg=MuleMessage.builder().nullPayload().exceptionPayload(new DefaultExceptionPayload(exception)).build();
     }
  else {
       msg=MuleMessage.builder().payload("No " + rejectIfMatches).build();
     }
-    return new DefaultMuleEvent(create(getTestFlow()),msg,ONE_WAY,getTestFlow(),event.getSession());
+    DefaultMuleEvent muleEvent=new DefaultMuleEvent(create(getTestFlow()),msg,ONE_WAY,getTestFlow(),event.getSession());
+    muleEvent.setError(error);
+    return muleEvent;
   }
  catch (  Exception e) {
     throw new DefaultMuleException(e);

@@ -1,11 +1,11 @@
 {
   MuleClient client=muleContext.getClient();
   flowRunner("AsyncRequest").withPayload(TEST_MESSAGE).withInboundProperty("pass","true").asynchronously().run();
-  MuleMessage reply=client.request("test://asyncResponse",RECEIVE_TIMEOUT);
+  MuleMessage reply=client.request("test://asyncResponse",RECEIVE_TIMEOUT).getRight().get();
   int times=FilterCounter.counter.get();
   assertThat("did not filter one time as expected",times,is(1));
   assertNotNull(reply);
   assertThat("wrong message received",getPayloadAsString(reply),is(TEST_MESSAGE));
   assertThat("'pass' property value not correct",reply.getInboundProperty("pass"),is("true"));
-  assertNull(client.request("test://asyncResponse",RECEIVE_TIMEOUT));
+  assertThat(client.request("test://asyncResponse",RECEIVE_TIMEOUT).getRight().isPresent(),is(false));
 }

@@ -1,7 +1,6 @@
 {
   MuleClient client=muleContext.getClient();
   flowRunner("AsyncRequest").withPayload(TEST_MESSAGE).withInboundProperty("fail","true").asynchronously().run();
-  MuleMessage reply=client.request("test://asyncResponse",RECEIVE_TIMEOUT);
-  assertNull(reply);
+  assertThat(client.request("test://asyncResponse",RECEIVE_TIMEOUT).getRight().isPresent(),is(false));
   assertThat("should not have filtered",FilterCounter.counter.get(),is(0));
 }

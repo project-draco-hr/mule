@@ -1,18 +1,18 @@
 {
-  MuleMessage response=null;
-  response=flowRunner("refServiceOne").withPayload("a request").withInboundProperty("method","retrieveReferenceData").run().getMessage();
+  MuleEvent responseEvent=flowRunner("refServiceOne").withPayload("a request").withInboundProperty("method","retrieveReferenceData").run();
+  MuleMessage response=responseEvent.getMessage();
   Object payload=response.getPayload();
   assertThat(payload,instanceOf(String.class));
   assertThat(payload,is("ServiceOne"));
   response=flowRunner("refServiceTwo").withPayload("another request").withInboundProperty("method","retrieveReferenceData").run().getMessage();
   payload=response.getPayload();
-  if ((payload == null) || (response.getExceptionPayload() != null)) {
-    DefaultExceptionPayload exPld=(DefaultExceptionPayload)response.getExceptionPayload();
-    if (exPld.getException() != null) {
-      fail(exPld.getException().getMessage());
+  if ((payload == null) || (responseEvent.getError() != null)) {
+    Throwable exception=responseEvent.getError().getException();
+    if (exception != null) {
+      fail(exception.getMessage());
     }
  else {
-      fail(exPld.toString());
+      fail(responseEvent.getError().toString());
     }
   }
   assertThat(payload,instanceOf(String.class));

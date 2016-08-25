@@ -1,16 +1,13 @@
 {
   MuleClient client=muleContext.getClient();
-  MuleMessage response=client.send("vm://order.validation","OK",null);
-  assertNull(response);
+  assertThat(client.send("vm://order.validation","OK",null).getLeft().getDescription(),Is.is(MESSAGE_FILTERED_ERROR_MESSAGE));
   assertEquals("OK(rejected!-1)",rejectMesage);
-  response=client.send("vm://order.validation","OK-ABC",null);
-  assertNull(response);
+  assertThat(client.send("vm://order.validation","OK-ABC",null).getLeft().getDescription(),Is.is(MESSAGE_FILTERED_ERROR_MESSAGE));
   assertEquals("OK-ABC(rejected!-2)",rejectMesage);
-  response=client.send("vm://order.validation","OK-DEF",null);
-  assertNull(response);
+  assertThat(client.send("vm://order.validation","OK-DEF",null).getLeft().getDescription(),Is.is(MESSAGE_FILTERED_ERROR_MESSAGE));
   assertEquals("OK-DEF(rejected!-1)",rejectMesage);
   rejectMesage=null;
-  response=client.send("vm://order.validation","OK-ABC-DEF",null);
+  MuleMessage response=client.send("vm://order.validation","OK-ABC-DEF",null).getRight();
   assertEquals("OK-ABC-DEF(success)",getPayloadAsString(response));
   assertNull(rejectMesage);
 }

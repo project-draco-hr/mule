@@ -1,10 +1,10 @@
 {
   MuleClient client=muleContext.getClient();
   client.dispatch("jms://request.queue","testing 1 2 3",null);
-  MuleMessage message=client.request("jms://out.queue",3000);
-  assertNull(message);
+  assertThat(client.request("jms://out.queue",3000).getRight().isPresent(),is(false));
+  MuleMessage message=null;
   try {
-    message=client.request("jms://DLQ",20000);
+    message=client.request("jms://DLQ",20000).getRight().get();
   }
  catch (  MuleException e) {
     e.printStackTrace(System.err);

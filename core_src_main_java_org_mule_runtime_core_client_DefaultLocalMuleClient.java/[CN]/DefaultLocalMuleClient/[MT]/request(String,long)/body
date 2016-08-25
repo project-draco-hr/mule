@@ -6,9 +6,15 @@
       ((FlowConstructAware)connectorMessageProcessor).setFlowConstruct(flowConstruct);
     }
     final MuleEvent event=connectorMessageProcessor.process(createOneWayMuleEvent(MuleMessage.builder().nullPayload().build()));
-    return event == null || event instanceof VoidMuleEvent ? null : event.getMessage();
+    if (event == null || event instanceof VoidMuleEvent) {
+      return right(empty());
+    }
+    if (event.getError() != null) {
+      return left(event.getError());
+    }
+    return right(ofNullable(event.getMessage()));
   }
  else {
-    return null;
+    return right(empty());
   }
 }
