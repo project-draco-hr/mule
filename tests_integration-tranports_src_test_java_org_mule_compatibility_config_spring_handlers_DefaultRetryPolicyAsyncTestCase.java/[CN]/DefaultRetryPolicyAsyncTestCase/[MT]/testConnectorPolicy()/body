@@ -5,6 +5,12 @@
   assertThat(rpf,not(nullValue()));
   assertThat(rpf,instanceOf(AsynchronousRetryTemplate.class));
   assertThat(((SimpleRetryPolicyTemplate)((AsynchronousRetryTemplate)rpf).getDelegate()).getCount(),is(3));
-  assertThat(c.isConnected(),is(true));
-  assertThat(c.isStarted(),is(true));
+  new PollingProber(500,10).check(new JUnitProbe(){
+    @Override protected boolean test() throws Exception {
+      assertThat(c.isConnected(),is(true));
+      assertThat(c.isStarted(),is(true));
+      return true;
+    }
+  }
+);
 }
