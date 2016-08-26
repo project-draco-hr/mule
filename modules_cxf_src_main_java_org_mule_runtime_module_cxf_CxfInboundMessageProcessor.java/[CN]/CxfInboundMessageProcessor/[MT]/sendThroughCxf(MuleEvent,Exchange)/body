@@ -43,8 +43,7 @@
       soapActions.add(soapAction);
       protocolHeaders.put(SoapBindingConstants.SOAP_ACTION,soapActions);
     }
-    String eventRequestUri=event.getMessageSourceURI().toString();
-    if (eventRequestUri.startsWith(JMS_TRANSPORT) || SoapJMSConstants.SOAP_JMS_NAMESPACE.equals(((MuleUniversalDestination)d).getEndpointInfo().getTransportId())) {
+    if (SoapJMSConstants.SOAP_JMS_NAMESPACE.equals(((MuleUniversalDestination)d).getEndpointInfo().getTransportId())) {
       String contentType=muleReqMsg.getInboundProperty(SoapJMSConstants.CONTENTTYPE_FIELD);
       if (contentType == null) {
         contentType="text/xml";
@@ -52,7 +51,13 @@
       protocolHeaders.put(SoapJMSConstants.CONTENTTYPE_FIELD,Collections.singletonList(contentType));
       String requestUri=muleReqMsg.getInboundProperty(SoapJMSConstants.REQUESTURI_FIELD);
       if (requestUri == null) {
-        requestUri=eventRequestUri;
+        if (muleReqMsg.getAttributes() instanceof HttpRequestAttributes) {
+          final HttpRequestAttributes httpRequestAttributes=(HttpRequestAttributes)muleReqMsg.getAttributes();
+          requestUri=httpRequestAttributes.getScheme() + "://" + httpRequestAttributes.getHeaders().get("host")+ httpRequestAttributes.getRequestUri();
+        }
+ else {
+          requestUri=muleReqMsg.getInboundProperty("http.scheme") + "://" + muleReqMsg.getInboundProperty("host")+ muleReqMsg.getInboundProperty("http.request.uri");
+        }
       }
       protocolHeaders.put(SoapJMSConstants.REQUESTURI_FIELD,Collections.singletonList(requestUri));
     }

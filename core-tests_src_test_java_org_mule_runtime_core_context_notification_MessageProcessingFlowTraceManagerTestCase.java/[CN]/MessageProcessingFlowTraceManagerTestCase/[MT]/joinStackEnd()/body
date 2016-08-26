@@ -4,8 +4,8 @@
   manager.onPipelineNotificationStart(pipelineNotification);
   manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(event,mock(MessageProcessor.class),"/scatter-gather"));
   FlowCallStack flowCallStack=event.getFlowCallStack();
-  MuleEvent eventCopy0=buildEvent("joinStack_0",flowCallStack.clone(),event.getProcessorsTrace());
-  MuleEvent eventCopy1=buildEvent("joinStack_1",flowCallStack.clone(),event.getProcessorsTrace());
+  MuleEvent eventCopy0=buildEvent("joinStack_0",flowCallStack.clone());
+  MuleEvent eventCopy1=buildEvent("joinStack_1",flowCallStack.clone());
   manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy0,mock(MessageProcessor.class),"/route_0"));
   manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy1,mock(MessageProcessor.class),NESTED_FLOW_NAME + "_ref"));
   PipelineMessageNotification pipelineNotificationNested=buildPipelineNotification(eventCopy1,NESTED_FLOW_NAME);
@@ -13,5 +13,5 @@
   manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy1,mock(MessageProcessor.class),"/route_1"));
   manager.onPipelineNotificationComplete(pipelineNotificationNested);
   manager.onPipelineNotificationComplete(pipelineNotification);
-  assertThat(event.getProcessorsTrace(),hasExecutedProcessors("/scatter-gather @ " + APP_ID,"/route_0 @ " + APP_ID,NESTED_FLOW_NAME + "_ref @ " + APP_ID,"/route_1 @ " + APP_ID));
+  assertThat(((CoreMessageContext)event.getContext()).getProcessorsTrace(),hasExecutedProcessors("/scatter-gather @ " + APP_ID,"/route_0 @ " + APP_ID,NESTED_FLOW_NAME + "_ref @ " + APP_ID,"/route_1 @ " + APP_ID));
 }
