@@ -13,6 +13,11 @@
  catch (  RuntimeException e) {
     assertThat(e,sameInstance(expected));
   }
-  verify(responseCompletionCallback,never()).responseSentWithFailure(expected,testEvent);
+  verify(responseCompletionCallback,never()).responseSentWithFailure(argThat(new ArgumentMatcher<MessagingException>(){
+    @Override public boolean matches(    Object o){
+      return o instanceof MessagingException && ((MessagingException)o).getCauseException().equals(expected);
+    }
+  }
+),eq(testEvent));
   assertThat(httpResponseCaptor.getValue().getStatusCode(),is(INTERNAL_SERVER_ERROR.getStatusCode()));
 }
