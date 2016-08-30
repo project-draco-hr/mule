@@ -4,13 +4,21 @@
   }
  catch (  MessagingException e) {
     MuleEvent result;
-    if (messagingExceptionHandler != null) {
-      result=messagingExceptionHandler.handleException(e,e.getEvent());
-    }
+    try {
+      if (messagingExceptionHandler != null) {
+        result=messagingExceptionHandler.handleException(e,e.getEvent());
+      }
  else {
-      result=flow.getExceptionListener().handleException(e,e.getEvent());
+        result=flow.getExceptionListener().handleException(e,e.getEvent());
+      }
+      e.setProcessedEvent(result);
     }
-    e.setProcessedEvent(result);
+ catch (    Exception messagingExceptionHandlerException) {
+      if (messagingExceptionHandlerException.getCause() instanceof MessagingException) {
+        throw (MessagingException)messagingExceptionHandlerException.getCause();
+      }
+      throw messagingExceptionHandlerException;
+    }
     throw e;
   }
 catch (  Exception e) {

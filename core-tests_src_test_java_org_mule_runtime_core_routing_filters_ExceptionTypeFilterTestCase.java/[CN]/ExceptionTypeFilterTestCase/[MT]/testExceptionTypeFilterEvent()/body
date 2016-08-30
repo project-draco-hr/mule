@@ -5,7 +5,8 @@
   MuleMessage m=MuleMessage.builder().payload("test").build();
   assertThat(filter.accept(m),is(false));
   Exception exception=new IllegalArgumentException("test");
-  when(event.getError()).thenReturn(builder(exception).build());
+  Error mockError=createErrorMock(exception);
+  when(event.getError()).thenReturn(mockError);
   m=MuleMessage.builder(m).build();
   assertThat(filter.accept(event),is(true));
   when(event.getMessage()).thenReturn(m);
@@ -13,6 +14,7 @@
   filter=new ExceptionTypeFilter(IOException.class);
   assertThat(filter.accept(event),is(false));
   exception=new IOException("test");
-  when(event.getError()).thenReturn(builder(exception).build());
+  mockError=createErrorMock(exception);
+  when(event.getError()).thenReturn(mockError);
   assertThat(filter.accept(event),is(true));
 }

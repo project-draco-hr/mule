@@ -1,9 +1,11 @@
 {
   mockMuleEvent.setMessage(spy(muleMessage));
   mockMuleEvent=spy(mockMuleEvent);
+  when(mockException.getStackTrace()).thenReturn(new StackTraceElement[0]);
   MuleEvent lastEventCreated=new DefaultMuleEvent(context,muleMessage,flow);
   onErrorContinueHandler.setMessageProcessors(asList(createFailingEventMessageProcessor(new DefaultMuleEvent(context,muleMessage,flow)),createFailingEventMessageProcessor(lastEventCreated)));
   onErrorContinueHandler.initialise();
   when(mockMuleEvent.getMessage().toString()).thenThrow(new RuntimeException("MuleMessage.toString() should not be called"));
-  MuleEvent exceptionHandlingResult=exceptionHandlingResult=onErrorContinueHandler.handleException(mockException,mockMuleEvent);
+  expectedException.expect(Exception.class);
+  onErrorContinueHandler.handleException(mockException,mockMuleEvent);
 }

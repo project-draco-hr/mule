@@ -2,12 +2,15 @@
   MuleEvent resultEvent=event;
   if (isRedeliveryExhausted(t)) {
     if (redeliveryExceeded != null) {
+      markExceptionAsHandled(t);
       try {
-        markExceptionAsHandled(t);
         resultEvent=redeliveryExceeded.process(event);
       }
  catch (      MuleException e) {
-        logFatal(event,t);
+        if (e instanceof MessagingException) {
+          throw (MessagingException)e;
+        }
+        throw new MessagingException(event,e);
       }
     }
  else {
