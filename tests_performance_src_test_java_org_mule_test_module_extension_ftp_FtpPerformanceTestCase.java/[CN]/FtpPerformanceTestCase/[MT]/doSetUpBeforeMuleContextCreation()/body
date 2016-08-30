@@ -1,0 +1,13 @@
+{
+  super.doSetUpBeforeMuleContextCreation();
+  ftpServer.start();
+  ftpClient=new FTPTestClient(DEFAULT_FTP_HOST,ftpServer.getPort(),FTP_USER,FTP_PASSWORD);
+  if (!ftpClient.testConnection()) {
+    throw new IOException("could not connect to ftp server");
+  }
+  ftpClient.changeWorkingDirectory(WORKING_DIR);
+  ftpClient.putFile("copyMe.txt","simpleContent");
+  ftpClient.putFile("writeMe.txt","simpleContent");
+  assertThat(ftpClient.fileExists("copyMe.txt"),is(true));
+  assertThat(ftpClient.fileExists("writeMe.txt"),is(true));
+}
