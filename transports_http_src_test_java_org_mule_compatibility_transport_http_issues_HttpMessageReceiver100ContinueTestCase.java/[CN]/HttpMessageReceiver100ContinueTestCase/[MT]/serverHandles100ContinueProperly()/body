@@ -1,0 +1,10 @@
+{
+  AsyncHttpClientConfig asyncHttpClientConfig=new AsyncHttpClientConfig.Builder().build();
+  GrizzlyAsyncHttpProvider grizzlyAsyncHttpProvider=new GrizzlyAsyncHttpProvider(asyncHttpClientConfig);
+  try (AsyncHttpClient asyncHttpClient=new AsyncHttpClient(grizzlyAsyncHttpProvider,asyncHttpClientConfig)){
+    ListenableFuture<com.ning.http.client.Response> responseFuture=asyncHttpClient.preparePost(getListenerUrl()).setBody("a=1&b=2").setHeader("Expect","100-continue").addHeader(CONTENT_TYPE,APPLICATION_X_WWW_FORM_URLENCODED.toRfcString()).execute();
+    com.ning.http.client.Response response=responseFuture.get();
+    assertThat(response.getStatusCode(),is(200));
+    assertThat(response.getResponseBody(),equalTo("hello"));
+  }
+ }
