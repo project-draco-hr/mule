@@ -1,0 +1,25 @@
+{
+  for (  MethodElement operationMethod : operations) {
+    final Class<?> declaringClass=operationMethod.getDeclaringClass();
+    checkOperationIsNotAnExtension(declaringClass);
+    final Method method=operationMethod.getMethod();
+    final Optional<ExtensionParameter> configParameter=getConfigParameter(operationMethod);
+    final Optional<ExtensionParameter> connectionParameter=getConnectionParameter(operationMethod);
+    if (isInvalidConfigSupport(supportsConfig,configParameter,connectionParameter)) {
+      throw new IllegalOperationModelDefinitionException(format("Operation '%s' is defined at the extension level but it requires a config. " + "Remove such parameter or move the operation to the proper config",method.getName()));
+    }
+    HasOperationDeclarer actualDeclarer=(HasOperationDeclarer)selectDeclarerBasedOnConfig(extensionDeclarer,(Declarer)declarer,configParameter,connectionParameter);
+    if (operationDeclarers.containsKey(operationMethod)) {
+      actualDeclarer.withOperation(operationDeclarers.get(operationMethod));
+      continue;
+    }
+    final OperationDeclarer operation=actualDeclarer.withOperation(operationMethod.getAlias()).withModelProperty(new ImplementingMethodModelProperty(method)).executorsCreatedBy(new ReflectiveOperationExecutorFactory<>(declaringClass,method)).withExceptionEnricherFactory(getExceptionEnricherFactory(operationMethod));
+    operation.withOutput().ofType(getMethodReturnType(method,typeLoader));
+    operation.withOutputAttributes().ofType(getMethodReturnAttributesType(method,typeLoader));
+    addInterceptingCallbackModelProperty(operationMethod,operation);
+    addPagedOperationModelProperty(operationMethod,operation,supportsConfig);
+    declareMethodBasedParameters(operation,operationMethod.getParameters());
+    calculateExtendedTypes(declaringClass,method,operation);
+    operationDeclarers.put(operationMethod,operation);
+  }
+}

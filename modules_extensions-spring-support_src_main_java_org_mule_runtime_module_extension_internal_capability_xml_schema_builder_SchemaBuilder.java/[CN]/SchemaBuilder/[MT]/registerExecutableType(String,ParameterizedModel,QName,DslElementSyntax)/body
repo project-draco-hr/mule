@@ -1,0 +1,30 @@
+{
+  TopLevelComplexType complexType=new TopLevelComplexType();
+  complexType.setName(name);
+  ComplexContent complexContent=new ComplexContent();
+  complexType.setComplexContent(complexContent);
+  final ExtensionType complexContentExtension=new ExtensionType();
+  complexContentExtension.setBase(base);
+  complexContent.setExtension(complexContentExtension);
+  if (dslSyntax.requiresConfig()) {
+    Attribute configAttr=createAttribute(CONFIG_ATTRIBUTE,CONFIG_ATTRIBUTE_DESCRIPTION,true,SUBSTITUTABLE_NAME);
+    complexContentExtension.getAttributeOrAttributeGroup().add(configAttr);
+  }
+  final ExplicitGroup all=new ExplicitGroup();
+  complexContentExtension.setSequence(all);
+  for (  final ParameterModel parameterModel : parameterizedModel.getParameterModels()) {
+    MetadataType parameterType=parameterModel.getType();
+    if (isOperation(parameterType)) {
+      String maxOccurs=parameterType instanceof ArrayType ? UNBOUNDED : "1";
+      generateNestedProcessorElement(all,parameterModel,maxOccurs);
+    }
+ else {
+      parameterType.accept(getParameterDeclarationVisitor(complexContentExtension,all,parameterModel));
+    }
+  }
+  if (all.getParticle().isEmpty()) {
+    complexContentExtension.setSequence(null);
+  }
+  schema.getSimpleTypeOrComplexTypeOrGroup().add(complexType);
+  return complexContentExtension;
+}

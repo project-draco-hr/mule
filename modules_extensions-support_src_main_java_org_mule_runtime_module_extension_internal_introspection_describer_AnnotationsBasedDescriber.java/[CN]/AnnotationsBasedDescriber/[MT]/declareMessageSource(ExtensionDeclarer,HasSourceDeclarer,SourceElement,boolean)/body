@@ -1,0 +1,23 @@
+{
+  final Optional<ExtensionParameter> configParameter=getConfigParameter(sourceType);
+  final Optional<ExtensionParameter> connectionParameter=getConnectionParameter(sourceType);
+  if (isInvalidConfigSupport(supportsConfig,configParameter,connectionParameter)) {
+    throw new IllegalSourceModelDefinitionException(format("Source '%s' is defined at the extension level but it requires a config parameter. " + "Remove such parameter or move the source to the proper config",sourceType.getName()));
+  }
+  HasSourceDeclarer actualDeclarer=(HasSourceDeclarer)selectDeclarerBasedOnConfig(extensionDeclarer,(Declarer)declarer,configParameter,connectionParameter);
+  SourceDeclarer source=sourceDeclarers.get(sourceType.getDeclaringClass());
+  if (source != null) {
+    actualDeclarer.withMessageSource(source);
+    return;
+  }
+  source=actualDeclarer.withMessageSource(sourceType.getAlias());
+  List<java.lang.reflect.Type> sourceGenerics=sourceType.getSuperClassGenerics();
+  if (sourceGenerics.size() != 2) {
+    throw new IllegalModelDefinitionException(format("Message source class '%s' was expected to have 2 generic types " + "(one for the Payload type and another for the Attributes type) but %d were found",sourceType.getName(),sourceGenerics.size()));
+  }
+  source.sourceCreatedBy(new DefaultSourceFactory(sourceType.getDeclaringClass())).withExceptionEnricherFactory(getExceptionEnricherFactory(sourceType)).withModelProperty(new ImplementingTypeModelProperty(sourceType.getDeclaringClass()));
+  source.withOutput().ofType(typeLoader.load(sourceGenerics.get(0)));
+  source.withOutputAttributes().ofType(typeLoader.load(sourceGenerics.get(1)));
+  declareFieldBasedParameters(source,sourceType.getParameters());
+  sourceDeclarers.put(sourceType.getDeclaringClass(),source);
+}

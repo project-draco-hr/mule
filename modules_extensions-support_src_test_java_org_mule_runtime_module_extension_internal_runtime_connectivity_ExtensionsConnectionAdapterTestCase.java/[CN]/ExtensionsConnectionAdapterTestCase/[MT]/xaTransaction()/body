@@ -5,12 +5,14 @@
   Object config=new Object();
   OperationContextAdapter operationContext=mock(OperationContextAdapter.class,RETURNS_DEEP_STUBS);
   ConnectionProvider connectionProvider=mock(ConnectionProvider.class);
-  when(operationContext.getConfiguration().getConnectionProvider()).thenReturn(Optional.of(connectionProvider));
-  when(operationContext.getConfiguration().getValue()).thenReturn(config);
+  ConfigurationInstance configurationInstance=mock(ConfigurationInstance.class);
+  when(configurationInstance.getConnectionProvider()).thenReturn(of(connectionProvider));
+  when(operationContext.getConfiguration()).thenReturn(of(configurationInstance));
+  when(configurationInstance.getValue()).thenReturn(config);
   when(connectionProvider.connect()).thenReturn(connection);
   TransactionConfig transactionConfig=mock(TransactionConfig.class);
   when(transactionConfig.getAction()).thenReturn(ACTION_ALWAYS_JOIN);
-  when(operationContext.getTransactionConfig()).thenReturn(Optional.of(transactionConfig));
+  when(operationContext.getTransactionConfig()).thenReturn(of(transactionConfig));
   muleContext.getRegistry().lookupObject(ConnectionManager.class).bind(config,connectionProvider);
   TransactionCoordination.getInstance().bindTransaction(transaction);
   adapter.getConnection(operationContext);

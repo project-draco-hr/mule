@@ -3,11 +3,11 @@
   when(operationModel.getName()).thenReturn(getClass().getName());
   when(operationModel.getOutput()).thenReturn(new ImmutableOutputModel("MuleMessage.Payload",toMetadataType(String.class),false,emptySet()));
   when(operationModel.getExecutor()).thenReturn(operationExecutorFactory);
-  when(operationModel.getModelProperty(MetadataKeyIdModelProperty.class)).thenReturn(Optional.of(new MetadataKeyIdModelProperty(ExtensionsTypeLoaderFactory.getDefault().createTypeLoader().load(String.class))));
-  when(operationModel.getModelProperty(ConnectivityModelProperty.class)).thenReturn(empty());
+  when(operationModel.getModelProperty(MetadataKeyIdModelProperty.class)).thenReturn(of(new MetadataKeyIdModelProperty(ExtensionsTypeLoaderFactory.getDefault().createTypeLoader().load(String.class))));
+  setRequires(operationModel,true,true);
   when(operationExecutorFactory.createExecutor(operationModel)).thenReturn(operationExecutor);
   when(operationModel.getName()).thenReturn(OPERATION_NAME);
-  when(operationModel.getExceptionEnricherFactory()).thenReturn(Optional.of(exceptionEnricherFactory));
+  when(operationModel.getExceptionEnricherFactory()).thenReturn(of(exceptionEnricherFactory));
   when(exceptionEnricherFactory.createEnricher()).thenReturn(new NullExceptionEnricher());
   when(operationModel.getMetadataResolverFactory()).thenReturn(metadataResolverFactory);
   when(metadataResolverFactory.getKeyResolver()).thenReturn(new TestNoConfigMetadataResolver());
@@ -16,11 +16,11 @@
   when(metadataResolverFactory.getOutputAttributesResolver()).thenReturn(new TestNoConfigMetadataResolver());
   when(keyParamMock.getName()).thenReturn("type");
   when(keyParamMock.getType()).thenReturn(stringType);
-  when(keyParamMock.getModelProperty(MetadataKeyPartModelProperty.class)).thenReturn(Optional.of(new MetadataKeyPartModelProperty(0)));
+  when(keyParamMock.getModelProperty(MetadataKeyPartModelProperty.class)).thenReturn(of(new MetadataKeyPartModelProperty(0)));
   when(keyParamMock.getModelProperty(MetadataContentModelProperty.class)).thenReturn(empty());
   when(contentMock.getName()).thenReturn("content");
   when(contentMock.getType()).thenReturn(stringType);
-  when(contentMock.getModelProperty(MetadataContentModelProperty.class)).thenReturn(Optional.of(new MetadataContentModelProperty()));
+  when(contentMock.getModelProperty(MetadataContentModelProperty.class)).thenReturn(of(new MetadataContentModelProperty()));
   when(contentMock.getModelProperty(MetadataKeyPartModelProperty.class)).thenReturn(empty());
   when(operationModel.getParameterModels()).thenReturn(Arrays.asList(keyParamMock,contentMock));
   when(outputMock.getType()).thenReturn(stringType);
@@ -32,10 +32,10 @@
   when(configurationInstance.getName()).thenReturn(CONFIG_NAME);
   when(configurationInstance.getModel()).thenReturn(configurationModel);
   when(configurationInstance.getValue()).thenReturn(configuration);
-  when(configurationInstance.getConnectionProvider()).thenReturn(Optional.of(connectionProviderWrapper));
+  when(configurationInstance.getConnectionProvider()).thenReturn(of(connectionProviderWrapper));
   when(configurationProvider.get(event)).thenReturn(configurationInstance);
   when(configurationProvider.getModel()).thenReturn(configurationModel);
-  when(configurationModel.getOperationModel(OPERATION_NAME)).thenReturn(Optional.of(operationModel));
+  when(configurationModel.getOperationModel(OPERATION_NAME)).thenReturn(of(operationModel));
   connectionManager=new DefaultConnectionManager(context);
   connectionManager.initialise();
   when(connectionProviderWrapper.getRetryPolicyTemplate()).thenReturn(connectionManager.getDefaultRetryPolicyTemplate());
@@ -44,7 +44,7 @@
   when(extensionManager.getConfiguration(anyString(),anyObject())).thenReturn(configurationInstance);
   when(extensionManager.getConfiguration(extensionModel,event)).thenReturn(configurationInstance);
   when(configurationProvider.get(anyObject())).thenReturn(configurationInstance);
-  when(extensionManager.getConfigurationProvider(extensionModel)).thenReturn(Optional.of(configurationProvider));
-  when(extensionManager.getConfigurationProvider(CONFIG_NAME)).thenReturn(Optional.of(configurationProvider));
+  when(extensionManager.getConfigurationProvider(extensionModel)).thenReturn(of(configurationProvider));
+  when(extensionManager.getConfigurationProvider(CONFIG_NAME)).thenReturn(of(configurationProvider));
   messageProcessor=setUpOperationMessageProcessor();
 }
