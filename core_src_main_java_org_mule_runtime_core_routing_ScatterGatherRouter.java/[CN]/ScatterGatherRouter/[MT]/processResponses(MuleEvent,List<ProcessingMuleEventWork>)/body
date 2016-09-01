@@ -28,14 +28,14 @@ catch (    Exception e) {
         logger.debug(String.format("route %d generated exception for MuleEvent %s",routeIndex,event.getId()),exception);
       }
       if (exception instanceof MessagingException) {
-        response=DefaultMuleEvent.copy(((MessagingException)exception).getEvent());
+        MuleEvent event1=((MessagingException)exception).getEvent();
+        response=MuleEvent.builder(event1).session(new DefaultMuleSession(event1.getSession())).build();
       }
  else {
-        response=DefaultMuleEvent.copy(event);
+        response=MuleEvent.builder(event).session(new DefaultMuleSession(event.getSession())).build();
       }
       if (response.getError() == null) {
-        event.setMessage(MuleMessage.builder(event.getMessage()).build());
-        ((DefaultMuleEvent)event).setError(response.getError());
+        event=MuleEvent.builder(event).error(response.getError()).build();
       }
     }
  else {

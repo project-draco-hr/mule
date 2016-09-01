@@ -1,4 +1,5 @@
 {
+  MuleEvent result=event;
   if (!messageProcessors.isEmpty()) {
     try {
       if (logger.isDebugEnabled()) {
@@ -9,11 +10,12 @@
       MulticastingRouter router=buildRouter();
       router.setRoutes(getMessageProcessors());
       router.setMuleContext(muleContext);
-      router.route(new DefaultMuleEvent(exceptionMessage,event));
+      result=router.route(MuleEvent.builder(event).message(exceptionMessage).build());
     }
  catch (    Exception e) {
       logFatal(event,e);
     }
   }
   processOutboundRouterStatistics();
+  return result;
 }

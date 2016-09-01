@@ -1,6 +1,6 @@
 {
   MuleMessage message=MuleMessage.builder().payload("data").build();
-  MuleEvent event=new DefaultMuleEvent(context,message,REQUEST_RESPONSE,flow);
+  MuleEvent event=MuleEvent.builder(context).message(message).exchangePattern(REQUEST_RESPONSE).flow(flow).build();
   SensingNullMessageProcessor flowListener=new SensingNullMessageProcessor();
   Flow flow=new Flow("flow",muleContext);
   flow.setMessageProcessors(Collections.<MessageProcessor>singletonList(flowListener));
@@ -13,7 +13,7 @@
   flowListener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
   MuleEvent processedEvent=flowListener.event;
   assertNotSame(processedEvent,event);
-  assertEquals(processedEvent,event);
+  assertEquals(processedEvent.getMessage(),event.getMessage());
   assertSame(processedEvent.getSession(),event.getSession());
   assertEquals(2,processedEvent.getSession().getPropertyNamesAsSet().size());
   assertEquals("value",processedEvent.getSession().getProperty("key"));

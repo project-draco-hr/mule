@@ -1,17 +1,2 @@
 {
-  final CountDownLatch latch=new CountDownLatch(EXPECTED_DELIVERED_TIMES);
-  MuleClient client=muleContext.getClient();
-  muleContext.registerListener(new ExceptionNotificationListener<ExceptionNotification>(){
-    @Override public void onNotification(    ExceptionNotification notification){
-      latch.countDown();
-    }
-  }
-);
-  client.dispatch("vm://in5","some message",null);
-  if (!latch.await(TIMEOUT,TimeUnit.MILLISECONDS)) {
-    fail("message should have been delivered at least 5 times");
-  }
-  MuleMessage result=client.send("vm://in5",MESSAGE,null,TIMEOUT).getRight();
-  assertThat(result,IsNull.<Object>notNullValue());
-  assertThat(getPayloadAsString(result),is(MESSAGE + " Rolled Back"));
 }

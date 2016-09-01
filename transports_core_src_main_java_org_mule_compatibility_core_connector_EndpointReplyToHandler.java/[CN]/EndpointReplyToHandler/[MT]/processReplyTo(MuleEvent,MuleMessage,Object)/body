@@ -1,8 +1,8 @@
 {
-  super.processReplyTo(event,returnMessage,replyTo);
+  event=super.processReplyTo(event,returnMessage,replyTo);
   String replyToEndpoint=replyTo.toString();
   returnMessage=MuleMessage.builder(returnMessage).payload(returnMessage.getPayload()).build();
-  MuleEvent replyToEvent=new DefaultMuleEvent(returnMessage,event);
+  MuleEvent replyToEvent=MuleEvent.builder(event).message(returnMessage).build();
   OutboundEndpoint endpoint=getEndpoint(event,replyToEndpoint);
   final MuleMessage message=event.getMessage();
   final Builder builder=MuleMessage.builder(message);
@@ -14,10 +14,10 @@
   }
   event.setMessage(builder.build());
   try {
-    endpoint.process(replyToEvent);
     if (logger.isInfoEnabled()) {
       logger.info("reply to sent: " + endpoint);
     }
+    return endpoint.process(replyToEvent);
   }
  catch (  Exception e) {
     throw new DispatchException(TransportCoreMessages.failedToDispatchToReplyto(endpoint),replyToEvent,endpoint,e);

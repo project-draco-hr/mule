@@ -4,18 +4,20 @@
     statistics.incExecutionError();
   }
   defaultHandler(ex);
+  MuleEvent result;
   if (isRollback(ex)) {
     logger.debug("Rolling back transaction");
     rollback(ex);
     logger.debug("Routing exception message");
-    routeException(event,flowConstruct,ex);
+    result=routeException(event,flowConstruct,ex);
   }
  else {
     logger.debug("Routing exception message");
-    routeException(event,flowConstruct,ex);
+    result=routeException(event,flowConstruct,ex);
   }
   closeStream(event.getMessage());
   if (stopMessageProcessing) {
     stopFlow();
   }
+  return result;
 }

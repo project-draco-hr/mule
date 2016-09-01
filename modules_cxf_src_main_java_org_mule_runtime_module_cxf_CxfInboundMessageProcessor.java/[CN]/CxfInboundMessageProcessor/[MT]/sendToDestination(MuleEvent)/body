@@ -4,8 +4,8 @@
     final MuleEvent originalEvent=event;
     if (event.isAllowNonBlocking()) {
       final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
-      event=new DefaultMuleEvent(event,new NonBlockingReplyToHandler(){
-        @Override public void processReplyTo(        MuleEvent responseEvent,        MuleMessage returnMessage,        Object replyTo) throws MuleException {
+      event=MuleEvent.builder(event).replyToHandler(new NonBlockingReplyToHandler(){
+        @Override public MuleEvent processReplyTo(        MuleEvent responseEvent,        MuleMessage returnMessage,        Object replyTo) throws MuleException {
           try {
             exchange.put(CxfConstants.MULE_EVENT,responseEvent);
             exchange.put(CxfConstants.NON_BLOCKING_RESPONSE,true);
@@ -19,12 +19,13 @@
             responseEvent.setMessage(MuleMessage.builder(responseEvent.getMessage()).exceptionPayload(exceptionPayload).addOutboundProperty(HTTP_STATUS_PROPERTY,500).build());
             processExceptionReplyTo(new MessagingException(responseEvent,e,CxfInboundMessageProcessor.this),replyTo);
           }
+          return responseEvent;
         }
         @Override public void processExceptionReplyTo(        MessagingException exception,        Object replyTo){
           originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
         }
       }
-);
+).build();
       setCurrentEvent(event);
     }
     MuleEvent responseEvent=sendThroughCxf(event,exchange);

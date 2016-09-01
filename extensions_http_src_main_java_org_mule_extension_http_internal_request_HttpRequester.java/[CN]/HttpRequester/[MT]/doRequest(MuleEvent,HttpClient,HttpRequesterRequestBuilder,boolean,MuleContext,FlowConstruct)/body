@@ -11,7 +11,7 @@
   }
   HttpResponseToMuleMessage httpResponseToMuleMessage=new HttpResponseToMuleMessage(config,parseResponse,muleContext);
   MuleMessage responseMessage=httpResponseToMuleMessage.convert(muleEvent,response,httpRequest.getUri());
-  MuleEvent responseEvent=new DefaultMuleEvent(org.mule.runtime.core.api.MuleMessage.builder(responseMessage).build(),muleEvent,muleEvent.isSynchronous());
+  MuleEvent responseEvent=MuleEvent.builder(muleEvent).message(org.mule.runtime.core.api.MuleMessage.builder(responseMessage).build()).synchronous(muleEvent.isSynchronous()).build();
   if (resendRequest(responseEvent,checkRetry,authentication)) {
     consumePayload(responseEvent,muleContext);
     responseMessage=doRequest(responseEvent,client,requestBuilder,false,muleContext,flowConstruct);

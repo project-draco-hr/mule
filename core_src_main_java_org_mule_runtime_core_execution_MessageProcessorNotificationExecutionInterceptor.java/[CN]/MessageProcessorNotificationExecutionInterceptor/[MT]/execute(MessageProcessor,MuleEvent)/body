@@ -11,12 +11,12 @@
   boolean responseProcessing=messageProcessor instanceof InterceptingMessageProcessor || messageProcessor instanceof NonBlockingMessageProcessor;
   if (nonBlocking && responseProcessing) {
     final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
-    eventToProcess=new DefaultMuleEvent(event,new NonBlockingReplyToHandler(){
-      @Override public void processReplyTo(      MuleEvent result,      MuleMessage returnMessage,      Object replyTo) throws MuleException {
+    eventToProcess=MuleEvent.builder(event).replyToHandler(new NonBlockingReplyToHandler(){
+      @Override public MuleEvent processReplyTo(      MuleEvent result,      MuleMessage returnMessage,      Object replyTo) throws MuleException {
         if (fireNotification) {
           fireNotification(notificationManager,flowConstruct,result != null ? result : event,messageProcessor,null,MESSAGE_PROCESSOR_POST_INVOKE);
         }
-        originalReplyToHandler.processReplyTo(result,returnMessage,replyTo);
+        return originalReplyToHandler.processReplyTo(result,returnMessage,replyTo);
       }
       @Override public void processExceptionReplyTo(      MessagingException exception,      Object replyTo){
         if (fireNotification) {
@@ -26,7 +26,7 @@
         originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
       }
     }
-);
+).build();
   }
   setCurrentEvent(eventToProcess);
   try {

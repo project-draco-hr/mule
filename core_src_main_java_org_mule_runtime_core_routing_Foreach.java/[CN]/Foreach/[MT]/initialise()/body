@@ -1,2 +1,35 @@
 {
+  if (collectionExpression != null) {
+    expressionConfig.setExpression(collectionExpression);
+    splitter=new ExpressionSplitter(expressionConfig){
+      @Override protected void propagateFlowVars(      MuleEvent previousResult,      final Builder builder){
+        for (        String flowVarName : resolvePropagatedFlowVars(previousResult)) {
+          builder.addFlowVariable(flowVarName,previousResult.getFlowVariable(flowVarName),previousResult.getFlowVariableDataType(flowVarName));
+        }
+      }
+      @Override protected Set<String> resolvePropagatedFlowVars(      MuleEvent previousResult){
+        return previousResult != null ? previousResult.getFlowVariableNames() : emptySet();
+      }
+    }
+;
+    if (isXPathExpression(expressionConfig.getExpression())) {
+      xpathCollection=true;
+    }
+  }
+ else {
+    splitter=new CollectionMapSplitter();
+  }
+  splitter.setBatchSize(batchSize);
+  splitter.setCounterVariableName(counterVariableName);
+  splitter.setMuleContext(muleContext);
+  try {
+    List<MessageProcessor> chainProcessors=new ArrayList<>();
+    chainProcessors.add(splitter);
+    chainProcessors.add(DefaultMessageProcessorChain.from(muleContext,messageProcessors));
+    ownedMessageProcessor=new DefaultMessageProcessorChainBuilder(muleContext).chain(chainProcessors).build();
+  }
+ catch (  MuleException e) {
+    throw new InitialisationException(e,this);
+  }
+  super.initialise();
 }

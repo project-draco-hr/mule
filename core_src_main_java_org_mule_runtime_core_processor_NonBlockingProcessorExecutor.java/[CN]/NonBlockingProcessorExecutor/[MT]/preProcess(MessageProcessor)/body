@@ -2,12 +2,12 @@
   if (event.isAllowNonBlocking()) {
     if (!processorSupportsNonBlocking(processor)) {
       fallbackWarning.warn(processor.getClass());
-      event=new DefaultMuleEvent(event,flowConstruct,event.getReplyToHandler(),event.getReplyToDestination(),true);
+      event=MuleEvent.builder(event).flow(flowConstruct).synchronous(true).build();
       setCurrentEvent(event);
     }
     if (processor instanceof NonBlockingMessageProcessor) {
       if (!(messageExchangePattern.hasResponse() && replyToHandler == null)) {
-        event=new DefaultMuleEvent(event,new NonBlockingProcessorExecutorReplyToHandler());
+        event=MuleEvent.builder(event).replyToHandler(new NonBlockingProcessorExecutorReplyToHandler()).build();
         setCurrentEvent(event);
       }
     }

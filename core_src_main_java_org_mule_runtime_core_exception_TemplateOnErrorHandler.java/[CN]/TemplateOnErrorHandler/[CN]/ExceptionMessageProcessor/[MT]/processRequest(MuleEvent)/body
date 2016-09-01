@@ -1,13 +1,11 @@
 {
   if (!handleException && request.getReplyToHandler() instanceof NonBlockingReplyToHandler) {
-    request=new DefaultMuleEvent(request,flowConstruct,null,null,true);
+    request=MuleEvent.builder(request).flow(flowConstruct).replyToHandler(null).replyToDestination(null).synchronous(true).build();
   }
   muleContext.getNotificationManager().fireNotification(new ExceptionStrategyNotification(request,flowConstruct,PROCESS_START));
   fireNotification(exception);
   logException(exception,request);
   processStatistics();
-  request.setMessage(MuleMessage.builder(request.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build());
-  request.setMessage(MuleMessage.builder(request.getMessage()).build());
   markExceptionAsHandledIfRequired(exception);
   return beforeRouting(exception,request);
 }

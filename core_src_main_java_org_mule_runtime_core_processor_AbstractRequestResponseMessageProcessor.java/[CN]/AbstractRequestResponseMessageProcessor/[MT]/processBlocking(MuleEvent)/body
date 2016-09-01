@@ -1,13 +1,20 @@
 {
   MessagingException exception=null;
+  MuleEvent response=null;
   try {
-    return processResponse(processNext(processRequest(event)),event);
+    response=processResponse(processNext(processRequest(event)),event);
+    return response;
   }
  catch (  MessagingException e) {
     exception=e;
     return processCatch(event,e);
   }
  finally {
-    processFinally(event,exception);
+    if (response == null) {
+      processFinally(event,exception);
+    }
+ else {
+      processFinally(response,exception);
+    }
   }
 }

@@ -1,3 +1,22 @@
 {
-  this(message,rewriteEvent,flowConstruct,session,synchronous,rewriteEvent.getReplyToHandler(),rewriteEvent.getReplyToDestination(),true,rewriteEvent.getExchangePattern());
+  this.context=rewriteEvent.getContext();
+  this.correlation=rewriteEvent.getCorrelation();
+  this.parent=rewriteEvent.getParent();
+  this.id=rewriteEvent.getId();
+  this.flowConstruct=flowConstruct;
+  this.session=session;
+  this.exchangePattern=rewriteEvent.getExchangePattern();
+  if (rewriteEvent instanceof DefaultMuleEvent) {
+    this.flowVariables=((DefaultMuleEvent)rewriteEvent).flowVariables;
+    this.legacyCorrelationId=((DefaultMuleEvent)rewriteEvent).getLegacyCorrelationId();
+  }
+  setMessage(message);
+  this.replyToHandler=rewriteEvent.getReplyToHandler();
+  this.replyToDestination=rewriteEvent.getReplyToDestination();
+  this.transacted=rewriteEvent.isTransacted();
+  this.notificationsEnabled=rewriteEvent.isNotificationsEnabled();
+  this.synchronous=synchronous;
+  this.nonBlocking=rewriteEvent.isAllowNonBlocking() || isFlowConstructNonBlockingProcessingStrategy();
+  this.flowCallStack=rewriteEvent.getFlowCallStack() == null ? new DefaultFlowCallStack() : rewriteEvent.getFlowCallStack().clone();
+  this.error=rewriteEvent.getError();
 }

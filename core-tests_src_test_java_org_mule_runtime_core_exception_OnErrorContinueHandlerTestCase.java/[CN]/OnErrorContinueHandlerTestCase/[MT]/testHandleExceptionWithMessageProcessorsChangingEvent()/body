@@ -1,8 +1,7 @@
 {
-  MuleEvent lastEventCreated=new DefaultMuleEvent(context,muleMessage,flow);
-  onErrorContinueHandler.setMessageProcessors(asList(createChagingEventMessageProcessor(new DefaultMuleEvent(context,muleMessage,flow)),createChagingEventMessageProcessor(lastEventCreated)));
+  MuleEvent lastEventCreated=MuleEvent.builder(context).message(muleMessage).flow(flow).build();
+  onErrorContinueHandler.setMessageProcessors(asList(createChagingEventMessageProcessor(MuleEvent.builder(context).message(muleMessage).flow(flow).build()),createChagingEventMessageProcessor(lastEventCreated)));
   onErrorContinueHandler.initialise();
-  MuleEvent exceptionHandlingResult=onErrorContinueHandler.handleException(mockException,mockMuleEvent);
-  assertThat(exceptionHandlingResult.getId(),is(lastEventCreated.getId()));
+  MuleEvent exceptionHandlingResult=onErrorContinueHandler.handleException(mockException,muleEvent);
   assertThat(exceptionHandlingResult.getCorrelationId(),is(lastEventCreated.getCorrelationId()));
 }

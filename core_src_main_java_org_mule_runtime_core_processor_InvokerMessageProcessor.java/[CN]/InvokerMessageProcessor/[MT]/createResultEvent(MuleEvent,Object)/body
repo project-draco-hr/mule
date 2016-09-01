@@ -1,14 +1,15 @@
 {
+  Builder eventBuilder=MuleEvent.builder(event);
   if (result instanceof MuleMessage) {
-    return new DefaultMuleEvent((MuleMessage)result,event);
+    eventBuilder.message((MuleMessage)result);
   }
  else   if (result != null) {
     final TransformerTemplate template=new TransformerTemplate(new TransformerTemplate.OverwitePayloadCallback(result));
     template.setReturnDataType(DataType.builder(DataType.OBJECT).charset(getDefaultEncoding(muleContext)).build());
-    event.setMessage(muleContext.getTransformationService().applyTransformers(event.getMessage(),event,Collections.<Transformer>singletonList(template)));
-    return event;
+    eventBuilder.message(muleContext.getTransformationService().applyTransformers(event.getMessage(),event,singletonList(template)));
   }
  else {
-    return new DefaultMuleEvent(MuleMessage.builder().nullPayload().build(),event);
+    eventBuilder.message(MuleMessage.builder().nullPayload().build());
   }
+  return eventBuilder.build();
 }

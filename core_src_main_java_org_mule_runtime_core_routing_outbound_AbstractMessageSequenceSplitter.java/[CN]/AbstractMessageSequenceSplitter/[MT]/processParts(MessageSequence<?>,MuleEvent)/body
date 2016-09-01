@@ -1,5 +1,4 @@
 {
-  String correlationId=originalEvent.getCorrelationId();
   List<MuleEvent> resultEvents=new ArrayList<>();
   int correlationSequence=0;
   MessageSequence<?> messageSequence=seq;
@@ -7,17 +6,22 @@
     messageSequence=new PartitionedMessageSequence(seq,batchSize);
   }
   Integer count=messageSequence.size();
+  MuleEvent lastResult=null;
   for (; messageSequence.hasNext(); ) {
     correlationSequence++;
-    DefaultMuleEvent event=createEvent(messageSequence.next(),originalEvent);
-    event.setParent(originalEvent);
-    event.setCorrelation(new Correlation(count,correlationSequence));
+    final Builder builder=MuleEvent.builder(originalEvent);
+    propagateFlowVars(lastResult,builder);
     if (counterVariableName != null) {
-      originalEvent.setFlowVariable(counterVariableName,correlationSequence);
+      builder.addFlowVariable(counterVariableName,correlationSequence);
     }
+    builder.correlation(new Correlation(count,correlationSequence));
+    initEventBuilder(messageSequence.next(),originalEvent,builder,resolvePropagatedFlowVars(lastResult));
+    final MuleEvent event=builder.build();
+    ((DefaultMuleEvent)event).setParent(originalEvent);
     MuleEvent resultEvent=processNext(event);
     if (resultEvent != null && !VoidMuleEvent.getInstance().equals(resultEvent)) {
       resultEvents.add(resultEvent);
+      lastResult=resultEvent;
     }
   }
   if (correlationSequence == 1) {

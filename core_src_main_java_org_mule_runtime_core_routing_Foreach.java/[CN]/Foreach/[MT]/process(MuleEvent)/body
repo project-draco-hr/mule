@@ -9,31 +9,35 @@
     previousRootMessageVar=event.getFlowVariable(parentMessageProp);
   }
   MuleMessage message=event.getMessage();
+  final Builder requestBuilder=MuleEvent.builder(event);
   boolean transformed=false;
   if (xpathCollection) {
     MuleMessage transformedMessage=transformPayloadIfNeeded(message);
     if (transformedMessage != message) {
       transformed=true;
       message=transformedMessage;
-      event.setMessage(transformedMessage);
+      requestBuilder.message(transformedMessage);
     }
   }
-  event.setFlowVariable(parentMessageProp,message);
-  doProcess(event);
+  requestBuilder.addFlowVariable(parentMessageProp,message);
+  final Builder responseBuilder=MuleEvent.builder(doProcess(requestBuilder.build()));
   if (transformed) {
-    event.setMessage(transformBack(message));
+    responseBuilder.message(transformBack(message));
+  }
+ else {
+    responseBuilder.message(message);
   }
   if (previousCounterVar != null) {
-    event.setFlowVariable(counterVariableName,previousCounterVar);
+    responseBuilder.addFlowVariable(counterVariableName,previousCounterVar);
   }
  else {
-    event.removeFlowVariable(counterVariableName);
+    responseBuilder.removeFlowVariable(counterVariableName);
   }
   if (previousRootMessageVar != null) {
-    event.setFlowVariable(parentMessageProp,previousRootMessageVar);
+    responseBuilder.addFlowVariable(parentMessageProp,previousRootMessageVar);
   }
  else {
-    event.removeFlowVariable(parentMessageProp);
+    responseBuilder.removeFlowVariable(parentMessageProp);
   }
-  return event;
+  return responseBuilder.build();
 }

@@ -1,11 +1,11 @@
 {
-  mockMuleEvent.setMessage(spy(muleMessage));
-  mockMuleEvent=spy(mockMuleEvent);
+  muleEvent.setMessage(spy(muleMessage));
+  muleEvent=spy(muleEvent);
   when(mockException.getStackTrace()).thenReturn(new StackTraceElement[0]);
-  MuleEvent lastEventCreated=new DefaultMuleEvent(context,muleMessage,flow);
-  onErrorContinueHandler.setMessageProcessors(asList(createFailingEventMessageProcessor(new DefaultMuleEvent(context,muleMessage,flow)),createFailingEventMessageProcessor(lastEventCreated)));
+  MuleEvent lastEventCreated=MuleEvent.builder(context).message(muleMessage).flow(flow).build();
+  onErrorContinueHandler.setMessageProcessors(asList(createFailingEventMessageProcessor(MuleEvent.builder(context).message(muleMessage).flow(flow).build()),createFailingEventMessageProcessor(lastEventCreated)));
   onErrorContinueHandler.initialise();
-  when(mockMuleEvent.getMessage().toString()).thenThrow(new RuntimeException("MuleMessage.toString() should not be called"));
+  when(muleEvent.getMessage().toString()).thenThrow(new RuntimeException("MuleMessage.toString() should not be called"));
   expectedException.expect(Exception.class);
-  onErrorContinueHandler.handleException(mockException,mockMuleEvent);
+  MuleEvent exceptionHandlingResult=exceptionHandlingResult=onErrorContinueHandler.handleException(mockException,muleEvent);
 }

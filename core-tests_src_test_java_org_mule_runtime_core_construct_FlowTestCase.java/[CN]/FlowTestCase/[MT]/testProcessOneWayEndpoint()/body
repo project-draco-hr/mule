@@ -1,10 +1,15 @@
 {
   flow.initialise();
   flow.start();
-  MuleEvent event=MuleTestUtils.getTestEvent("hello",MessageExchangePattern.ONE_WAY,muleContext);
+  MuleEvent event=MuleTestUtils.getTestEvent("hello",ONE_WAY,muleContext);
   MuleEvent response=directInboundMessageSource.process(event);
-  Thread.sleep(50);
-  assertEquals(event,response);
-  assertEquals("helloabc",sensingMessageProcessor.event.getMessageAsString(muleContext));
-  assertNotSame(Thread.currentThread(),sensingMessageProcessor.event.getFlowVariable("thread"));
+  new PollingProber(50,5).check(new JUnitProbe(){
+    @Override protected boolean test() throws Exception {
+      assertEquals(event.getMessage(),response.getMessage());
+      assertEquals("helloabc",sensingMessageProcessor.event.getMessageAsString(muleContext));
+      assertNotSame(Thread.currentThread(),sensingMessageProcessor.event.getFlowVariable("thread"));
+      return true;
+    }
+  }
+);
 }

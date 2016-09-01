@@ -4,13 +4,12 @@
     messagingExceptionHandler.handleException(new MessagingException(mutableEvent,buildRetryPolicyExhaustedException(lastException)),mutableEvent);
     return;
   }
-  MuleEvent eventCopy=threadSafeCopy(event);
+  MuleEvent eventCopy=event;
   logger.info("Retry attempts exhausted, routing message to DLQ: " + getUntilSuccessfulConfiguration().getDlqMP());
   try {
     RetryPolicyExhaustedException exception=buildRetryPolicyExhaustedException(lastException);
-    mutableEvent.setMessage(MuleMessage.builder(mutableEvent.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build());
-    mutableEvent.setError(ErrorBuilder.builder(exception).errorType(muleContext.getErrorTypeLocator().lookupErrorType(exception)).build());
-    getUntilSuccessfulConfiguration().getDlqMP().process(mutableEvent);
+    MuleEvent mutatedEvent=MuleEvent.builder(mutableEvent).message(MuleMessage.builder(mutableEvent.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build()).error(ErrorBuilder.builder(exception).errorType(muleContext.getErrorTypeLocator().lookupErrorType(exception)).build()).build();
+    getUntilSuccessfulConfiguration().getDlqMP().process(mutatedEvent);
   }
  catch (  MessagingException e) {
     messagingExceptionHandler.handleException(e,eventCopy);
