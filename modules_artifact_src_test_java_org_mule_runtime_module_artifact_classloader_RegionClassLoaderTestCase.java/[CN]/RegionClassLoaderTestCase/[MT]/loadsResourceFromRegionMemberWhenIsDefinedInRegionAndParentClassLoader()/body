@@ -1,0 +1,11 @@
+{
+  final ClassLoader parentClassLoader=mock(ClassLoader.class);
+  when(parentClassLoader.getResource(RESOURCE_NAME)).thenReturn(PARENT_LOADED_RESOURCE);
+  RegionClassLoader regionClassLoader=new RegionClassLoader(APP_NAME,parentClassLoader,lookupPolicy);
+  appClassLoader.addResource(RESOURCE_NAME,APP_LOADED_RESOURCE);
+  regionClassLoader.addClassLoader(appClassLoader,new DefaultArtifactClassLoaderFilter(emptySet(),emptySet()));
+  pluginClassLoader.addResource(RESOURCE_NAME,PLUGIN_LOADED_RESOURCE);
+  regionClassLoader.addClassLoader(pluginClassLoader,new DefaultArtifactClassLoaderFilter(emptySet(),singleton(RESOURCE_NAME)));
+  URL resource=regionClassLoader.getResource(RESOURCE_NAME);
+  Assert.assertThat(resource,CoreMatchers.equalTo(PLUGIN_LOADED_RESOURCE));
+}

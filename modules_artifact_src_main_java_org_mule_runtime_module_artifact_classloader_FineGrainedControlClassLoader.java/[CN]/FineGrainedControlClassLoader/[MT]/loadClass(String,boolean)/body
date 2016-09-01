@@ -4,6 +4,9 @@
     return result;
   }
   final ClassLoaderLookupStrategy lookupStrategy=lookupPolicy.getLookupStrategy(name);
+  if (lookupStrategy == null) {
+    throw new NullPointerException(format("Unable to find a lookup strategy for '%s' from %s",name,this));
+  }
   ClassNotFoundException firstException=null;
   try {
     if (lookupStrategy == PARENT_ONLY) {
@@ -15,17 +18,20 @@
       }
  catch (      ClassNotFoundException e) {
         firstException=e;
-        result=findClass(name);
+        result=findLocalClass(name);
       }
     }
- else {
+ else     if (lookupStrategy == CHILD_FIRST) {
       try {
-        result=findClass(name);
+        result=findLocalClass(name);
       }
  catch (      ClassNotFoundException e) {
         firstException=e;
         result=findParentClass(name);
       }
+    }
+ else {
+      result=findLocalClass(name);
     }
   }
  catch (  ClassNotFoundException e) {

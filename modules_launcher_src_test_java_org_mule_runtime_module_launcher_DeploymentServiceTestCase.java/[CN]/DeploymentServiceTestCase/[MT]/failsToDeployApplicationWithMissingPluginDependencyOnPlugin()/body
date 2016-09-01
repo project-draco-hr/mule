@@ -1,0 +1,15 @@
+{
+  ArtifactPluginFileBuilder dependantPlugin=new ArtifactPluginFileBuilder("dependantPlugin").configuredWith(EXPORTED_CLASS_PACKAGES_PROPERTY,"org.foo.echo").containingClass("org/foo/echo/Plugin3Echo.clazz");
+  final TestArtifactDescriptor artifactFileBuilder=new ApplicationFileBuilder("plugin-depending-on-plugin-app").definedBy("plugin-depending-on-plugin-app-config.xml").containingPlugin(echoPlugin).containingPlugin(dependantPlugin);
+  addPackedAppFromBuilder(artifactFileBuilder);
+  startDeployment();
+  assertDeploymentSuccess(applicationDeploymentListener,artifactFileBuilder.getId());
+  try {
+    executeApplicationFlow("main");
+    fail("Expected to fail as there should be a missing class");
+  }
+ catch (  ComponentException e) {
+    assertThat(e.getCause(),instanceOf(NoClassDefFoundError.class));
+    assertThat(e.getCause().getMessage(),containsString("org/foo/EchoTest"));
+  }
+}

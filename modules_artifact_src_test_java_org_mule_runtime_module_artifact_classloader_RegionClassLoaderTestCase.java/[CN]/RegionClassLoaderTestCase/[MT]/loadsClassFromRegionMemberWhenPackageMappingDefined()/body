@@ -1,0 +1,11 @@
+{
+  final ClassLoader parentClassLoader=mock(ClassLoader.class);
+  when(parentClassLoader.loadClass(CLASS_NAME)).thenReturn(PARENT_LOADED_CLASS);
+  RegionClassLoader regionClassLoader=new RegionClassLoader(APP_NAME,parentClassLoader,lookupPolicy);
+  regionClassLoader.addClassLoader(appClassLoader,NULL_CLASSLOADER_FILTER);
+  regionClassLoader.addClassLoader(pluginClassLoader,new DefaultArtifactClassLoaderFilter(singleton(PACKAGE_NAME),emptySet()));
+  pluginClassLoader.addClass(CLASS_NAME,PLUGIN_LOADED_CLASS);
+  when(lookupPolicy.getLookupStrategy(Object.class.getName())).thenReturn(CHILD_FIRST);
+  final Class loadedClass=regionClassLoader.loadClass(CLASS_NAME);
+  assertThat(loadedClass,equalTo(PLUGIN_LOADED_CLASS));
+}

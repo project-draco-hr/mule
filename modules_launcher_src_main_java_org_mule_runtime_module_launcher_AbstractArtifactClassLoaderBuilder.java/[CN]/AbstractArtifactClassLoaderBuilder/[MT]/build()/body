@@ -2,11 +2,16 @@
   checkState(artifactDescriptor != null,"artifact descriptor cannot be null");
   parentClassLoader=getParentClassLoader();
   checkState(parentClassLoader != null,"parent class loader cannot be null");
-  parentClassLoader=getSharedLibClassLoader(parentClassLoader);
+  RegionClassLoader regionClassLoader=new RegionClassLoader("Region" + artifactId,parentClassLoader.getClassLoader(),parentClassLoader.getClassLoaderLookupPolicy());
   List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors=createContainerApplicationPlugins();
   effectiveArtifactPluginDescriptors.addAll(artifactPluginDescriptors);
-  if (!effectiveArtifactPluginDescriptors.isEmpty()) {
-    parentClassLoader=createCompositePluginClassLoader(parentClassLoader,effectiveArtifactPluginDescriptors);
+  effectiveArtifactPluginDescriptors=new NamePluginDependenciesResolver().resolve(effectiveArtifactPluginDescriptors);
+  final List<ArtifactClassLoader> pluginClassLoaders=createPluginClassLoaders(regionClassLoader,effectiveArtifactPluginDescriptors);
+  final ArtifactClassLoader artifactClassLoader=artifactClassLoaderFactory.create(regionClassLoader,artifactDescriptor,artifactPluginClassLoaders);
+  regionClassLoader.addClassLoader(artifactClassLoader,artifactDescriptor.getClassLoaderFilter());
+  for (int i=0; i < effectiveArtifactPluginDescriptors.size(); i++) {
+    final ArtifactClassLoaderFilter classLoaderFilter=effectiveArtifactPluginDescriptors.get(i).getClassLoaderFilter();
+    regionClassLoader.addClassLoader(pluginClassLoaders.get(i),classLoaderFilter);
   }
-  return artifactClassLoaderFactory.create(parentClassLoader,artifactDescriptor,artifactPluginClassLoaders);
+  return artifactClassLoader;
 }
