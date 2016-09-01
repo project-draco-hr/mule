@@ -1,0 +1,13 @@
+{
+  String proposedId="ID";
+  Flow flow=getFlow("dynamicFlow");
+  try {
+    MessageProcessor invalidProcessor=new ParseTemplateTransformer();
+    flow.dynamicPipeline(proposedId).injectBefore(invalidProcessor).resetAndUpdate();
+  }
+ catch (  MuleException e) {
+  }
+  flow.dynamicPipeline(proposedId).injectBefore(new StringAppendTransformer("(pre)")).injectAfter(new StringAppendTransformer("(post)")).resetAndUpdate();
+  MuleMessage result=flowRunner("dynamicFlow").withPayload("source->").run().getMessage();
+  assertEquals("source->(pre)(static)(post)",getPayloadAsString(result));
+}
