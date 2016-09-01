@@ -1,16 +1,6 @@
 {
-  boolean isRedeliveredPolicyConfigured=false;
-  if (this.exceptionListener instanceof OnErrorPropagateHandler && ((OnErrorPropagateHandler)exceptionListener).hasMaxRedeliveryAttempts()) {
-    isRedeliveredPolicyConfigured=true;
+  if (getMessageProcessors().isEmpty()) {
+    return false;
   }
- else   if (this.exceptionListener instanceof ErrorHandler) {
-    ErrorHandler errorHandler=(ErrorHandler)this.exceptionListener;
-    for (    MessagingExceptionHandlerAcceptor messagingExceptionHandlerAcceptor : errorHandler.getExceptionListeners()) {
-      if (messagingExceptionHandlerAcceptor instanceof OnErrorPropagateHandler) {
-        isRedeliveredPolicyConfigured=true;
-        break;
-      }
-    }
-  }
-  return isRedeliveredPolicyConfigured;
+  return getMessageProcessors().get(0) instanceof IdempotentRedeliveryPolicy;
 }
