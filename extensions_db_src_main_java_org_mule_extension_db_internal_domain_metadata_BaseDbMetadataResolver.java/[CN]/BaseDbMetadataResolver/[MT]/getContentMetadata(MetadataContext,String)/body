@@ -1,0 +1,23 @@
+{
+  this.typeLoader=context.getTypeLoader();
+  QueryTemplate queryTemplate=parseQuery(query);
+  List<InputQueryParam> inputParams=queryTemplate.getInputParams();
+  if (inputParams.size() == 0) {
+    return typeBuilder.nullType().build();
+  }
+  PreparedStatement statement=getStatement(context,queryTemplate);
+  List<String> fieldNames=new ArrayList<>();
+  for (  InputQueryParam inputParam : inputParams) {
+    String name=inputParam.getName();
+    if (name == null) {
+      return typeBuilder.anyType().build();
+    }
+    fieldNames.add(name);
+  }
+  try {
+    return getInputMetadataUsingStatementMetadata(statement,fieldNames);
+  }
+ catch (  SQLException e) {
+    return getStaticInputMetadata(fieldNames);
+  }
+}
