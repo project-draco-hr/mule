@@ -9,11 +9,10 @@
     if (replyToDestination == null) {
       return super.processReplyTo(event,returnMessage,replyTo);
     }
-    Class srcType=returnMessage.getDataType().getType();
     EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(String.format("%s://temporary",connector.getProtocol()),muleContext);
     endpointBuilder.setConnector(jmsConnector);
     OutboundEndpoint tempEndpoint=getEndpointFactory().getOutboundEndpoint(endpointBuilder);
-    List<Transformer> defaultTransportTransformers=((org.mule.compatibility.core.transport.AbstractConnector)jmsConnector).getDefaultOutboundTransformers(tempEndpoint);
+    List<Transformer> defaultTransportTransformers=((AbstractConnector)jmsConnector).getDefaultOutboundTransformers(tempEndpoint);
     returnMessage=muleContext.getTransformationService().applyTransformers(returnMessage,null,defaultTransportTransformers);
     Object payload=returnMessage.getPayload();
     if (replyToDestination instanceof Topic && replyToDestination instanceof Queue && jmsConnector.getJmsSupport() instanceof Jms102bSupport) {
