@@ -4,7 +4,7 @@
   }
  catch (  Exception exception) {
     MessagingException messagingException;
-    if (!(exception instanceof MessagingException) || ((MessagingException)exception).getEvent().getError() == null) {
+    if (!(exception instanceof MessagingException) || !((MessagingException)exception).getEvent().getError().isPresent()) {
       ErrorType errorType;
       errorType=getErrorTypeFromFailingProcessor(messageProcessor,exception);
       if (exception instanceof MessagingException) {
@@ -17,7 +17,7 @@
     }
  else {
       messagingException=(MessagingException)exception;
-      if (event.getError() == null || !(event.getError().getException().equals(exception) || messagingException.causedExactlyBy(event.getError().getException().getClass()))) {
+      if (!event.getError().isPresent() || !(event.getError().get().equals(exception) || messagingException.causedExactlyBy(event.getError().get().getException().getClass()))) {
         ErrorType errorType=getErrorTypeFromFailingProcessor(messageProcessor,exception);
         event.setError(ErrorBuilder.builder(exception).errorType(errorType).build());
       }
