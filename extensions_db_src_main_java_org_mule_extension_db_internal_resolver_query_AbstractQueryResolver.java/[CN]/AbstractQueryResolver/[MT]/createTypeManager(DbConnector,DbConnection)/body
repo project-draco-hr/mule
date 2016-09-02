@@ -1,8 +1,7 @@
 {
-  final DbTypeManager baseTypeManager=connector.getTypeManager();
-  List<DbType> vendorDataTypes=connection.getVendorDataTypes();
-  if (vendorDataTypes.size() > 0) {
-    return new CompositeDbTypeManager(asList(baseTypeManager,new StaticDbTypeManager(connection.getVendorDataTypes())));
-  }
-  return baseTypeManager;
+  List<DbTypeManager> typeManagers=new LinkedList<>();
+  typeManagers.add(connector.getTypeManager());
+  collectTypeManager(typeManagers,connection.getVendorDataTypes());
+  collectTypeManager(typeManagers,connection.getCustomDataTypes());
+  return new CompositeDbTypeManager(typeManagers);
 }
