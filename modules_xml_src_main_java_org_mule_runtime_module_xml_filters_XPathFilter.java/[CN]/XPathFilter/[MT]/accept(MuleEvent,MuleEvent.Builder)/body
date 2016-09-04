@@ -1,0 +1,39 @@
+{
+  Object payload=event.getMessage().getPayload();
+  if (payload == null) {
+    if (logger.isWarnEnabled()) {
+      logger.warn("Applying {} to null object.",ClassUtils.getSimpleName(getClass()));
+    }
+    return false;
+  }
+  if (pattern == null) {
+    if (logger.isWarnEnabled()) {
+      logger.warn("Expression for " + ClassUtils.getSimpleName(getClass()) + " is not set.");
+    }
+    return false;
+  }
+  if (expectedValue == null) {
+    if (pattern.endsWith("= null") || pattern.endsWith("=null")) {
+      expectedValue="null";
+      pattern=pattern.substring(0,pattern.lastIndexOf("="));
+    }
+ else {
+      if (logger.isInfoEnabled()) {
+        logger.info("''expectedValue'' attribute for {} is not set, using 'true' by default",ClassUtils.getSimpleName(getClass()));
+      }
+      expectedValue=Boolean.TRUE.toString();
+    }
+  }
+  Node node;
+  try {
+    node=toDOMNode(payload);
+  }
+ catch (  Exception e) {
+    if (logger.isWarnEnabled()) {
+      logger.warn(ClassUtils.getSimpleName(getClass()) + " filter rejected message because of an error while parsing XML: " + e.getMessage(),e);
+    }
+    return false;
+  }
+  builder.message(MuleMessage.builder(event.getMessage()).payload(node).build());
+  return accept(node);
+}

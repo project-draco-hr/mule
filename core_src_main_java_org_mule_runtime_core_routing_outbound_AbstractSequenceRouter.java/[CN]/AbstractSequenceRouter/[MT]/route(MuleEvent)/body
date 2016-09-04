@@ -8,7 +8,10 @@
   try {
     for (int i=0; i < routes.size(); i++) {
       MessageProcessor mp=getRoute(i,event);
-      if (!(mp instanceof LegacyOutboundEndpoint) || ((LegacyOutboundEndpoint)mp).filterAccepts(message)) {
+      Builder builder=MuleEvent.builder(event);
+      boolean filterAccepted=!(mp instanceof LegacyOutboundEndpoint) || ((LegacyOutboundEndpoint)mp).filterAccepts(message,builder);
+      event=builder.build();
+      if (filterAccepted) {
         AbstractRoutingStrategy.validateMessageIsNotConsumable(event,message);
         MuleMessage clonedMessage=cloneMessage(event,message);
         MuleEvent result=sendRequest(event,createEventToRoute(event,clonedMessage),mp,true);

@@ -13,9 +13,10 @@
   if (msg == null) {
     throw new MuleRuntimeException(MessageFactory.createStaticMessage("No message found in response to processing, which is therefore considered failed for event: " + event));
   }
-  final boolean errorDetected=untilSuccessfulConfiguration.getFailureExpressionFilter().accept(returnEvent);
+  Builder builder=MuleEvent.builder(returnEvent);
+  final boolean errorDetected=untilSuccessfulConfiguration.getFailureExpressionFilter().accept(returnEvent,builder);
   if (errorDetected) {
     throw new MuleRuntimeException(MessageFactory.createStaticMessage("Failure expression positive when processing event: " + event));
   }
-  return returnEvent;
+  return builder.build();
 }

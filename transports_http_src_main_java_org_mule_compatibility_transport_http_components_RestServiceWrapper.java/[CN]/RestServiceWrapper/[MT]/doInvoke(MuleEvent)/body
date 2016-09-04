@@ -1,6 +1,7 @@
 {
   Object requestBody;
-  Object request=event.getMessage().getPayload();
+  MuleMessage message=event.getMessage();
+  Object request=message.getPayload();
   String tempUrl=serviceUrl;
   if (muleContext.getExpressionManager().isExpression(serviceUrl)) {
     muleContext.getExpressionManager().validateExpression(serviceUrl);
@@ -13,8 +14,8 @@
     setRESTParams(urlBuffer,event,request,optionalParams,true,null);
   }
  else {
-    if (MediaType.ANY.matches(event.getMessage().getDataType().getMediaType())) {
-      event.setMessage(MuleMessage.builder(event.getMessage()).mediaType(MediaType.parse(CONTENT_TYPE_VALUE)).build());
+    if (MediaType.ANY.matches(message.getDataType().getMediaType())) {
+      message=MuleMessage.builder(message).mediaType(MediaType.parse(CONTENT_TYPE_VALUE)).build();
     }
     StringBuilder requestBodyBuffer=new StringBuilder();
     setRESTParams(urlBuffer,event,request,requiredParams,false,requestBodyBuffer);
@@ -23,17 +24,18 @@
   }
   tempUrl=urlBuffer.toString();
   logger.info("Invoking REST service: " + tempUrl);
-  event.setMessage(MuleMessage.builder(event.getMessage()).addOutboundProperty(HTTP_METHOD_PROPERTY,httpMethod).build());
+  message=MuleMessage.builder(message).addOutboundProperty(HTTP_METHOD_PROPERTY,httpMethod).build();
   EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(tempUrl,muleContext);
   endpointBuilder.setExchangePattern(REQUEST_RESPONSE);
   OutboundEndpoint outboundEndpoint=endpointBuilder.buildOutboundEndpoint();
-  Either<Error,MuleMessage> clientResponse=muleContext.getClient().send(outboundEndpoint.getEndpointURI().toString(),MuleMessage.builder(event.getMessage()).payload(requestBody).build());
+  Either<Error,MuleMessage> clientResponse=muleContext.getClient().send(outboundEndpoint.getEndpointURI().toString(),MuleMessage.builder(message).payload(requestBody).build());
   if (clientResponse.isLeft()) {
     handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl),event,this));
   }
   MuleEvent result=MuleEvent.builder(event.getContext()).message(clientResponse.getRight()).flow(flowConstruct).build();
-  if (isErrorPayload(result)) {
+  Builder builder=MuleEvent.builder(result);
+  if (isErrorPayload(result,builder)) {
     handleException(new RestServiceException(failedToInvokeRestService(tempUrl),event,this));
   }
-  return result.getMessage();
+  return builder.build().getMessage();
 }

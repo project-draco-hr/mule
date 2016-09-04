@@ -1,0 +1,52 @@
+{
+  Source source;
+  try {
+    source=loadSource(event.getMessage());
+  }
+ catch (  Exception e) {
+    if (e instanceof RuntimeException) {
+      throw (RuntimeException)e;
+    }
+    if (logger.isInfoEnabled()) {
+      logger.info("SchemaValidationFilter rejected a message because there was a problem interpreting the payload as XML.",e);
+    }
+    return false;
+  }
+  if (source == null) {
+    if (logger.isInfoEnabled()) {
+      logger.info("SchemaValidationFilter rejected a message because the XML source was null.");
+    }
+    return false;
+  }
+  DOMResult result=null;
+  try {
+    if (returnResult) {
+      result=new DOMResult();
+      createValidator().validate(source,result);
+    }
+ else {
+      createValidator().validate(source);
+    }
+  }
+ catch (  SAXException e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("SchemaValidationFilter rejected a message because it apparently failed to validate against the schema.",e);
+    }
+    return false;
+  }
+catch (  IOException e) {
+    if (logger.isInfoEnabled()) {
+      logger.info("SchemaValidationFilter rejected a message because there was a problem reading the XML.",e);
+    }
+    return false;
+  }
+ finally {
+    if (result != null && result.getNode() != null) {
+      builder.message(MuleMessage.builder(event.getMessage()).payload(result.getNode()).build());
+    }
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("SchemaValidationFilter accepted the message.");
+  }
+  return true;
+}

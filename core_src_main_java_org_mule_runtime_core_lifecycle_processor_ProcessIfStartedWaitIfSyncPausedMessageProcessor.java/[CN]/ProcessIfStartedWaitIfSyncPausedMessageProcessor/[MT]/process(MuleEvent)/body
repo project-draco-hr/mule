@@ -1,21 +1,22 @@
 {
-  if (accept(event)) {
+  Builder builder=MuleEvent.builder(event);
+  if (accept(event,builder)) {
     if (isPaused() && event.getExchangePattern().hasResponse()) {
       try {
         if (logger.isDebugEnabled()) {
-          logger.debug(startable.getClass().getName() + " " + getStartableName(startable)+ " is paused. Blocking call until resumd");
+          logger.debug(startable.getClass().getName() + " " + getStartableName(startable)+ " is paused. Blocking call until resumed");
         }
         while (isPaused()) {
           Thread.sleep(500);
         }
       }
  catch (      InterruptedException e) {
-        throw new MessagingException(CoreMessages.interruptedWaitingForPaused(getStartableName(startable)),event,e,this);
+        throw new MessagingException(interruptedWaitingForPaused(getStartableName(startable)),event,e,this);
       }
     }
-    return processNext(event);
+    return processNext(builder.build());
   }
  else {
-    return handleUnaccepted(event);
+    return handleUnaccepted(builder.build());
   }
 }

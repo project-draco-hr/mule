@@ -1,11 +1,11 @@
 {
   try {
     final MuleEvent event=getUntilSuccessfulConfiguration().getObjectStore().remove(eventStoreKey);
-    final MuleEvent mutableEvent=event;
+    MuleEvent mutableEvent=event;
     final Integer configuredAttempts=getFlowVariableOrNull(PROCESS_ATTEMPT_COUNT_PROPERTY_NAME,mutableEvent);
     final Integer deliveryAttemptCount=configuredAttempts != null ? configuredAttempts : DEFAULT_PROCESS_ATTEMPT_COUNT_PROPERTY_VALUE;
     if (deliveryAttemptCount <= getUntilSuccessfulConfiguration().getMaxRetries()) {
-      mutableEvent.setFlowVariable(PROCESS_ATTEMPT_COUNT_PROPERTY_NAME,deliveryAttemptCount + 1);
+      mutableEvent=MuleEvent.builder(mutableEvent).addFlowVariable(PROCESS_ATTEMPT_COUNT_PROPERTY_NAME,deliveryAttemptCount + 1).build();
       getUntilSuccessfulConfiguration().getObjectStore().store(eventStoreKey,mutableEvent);
       this.scheduleForProcessing(eventStoreKey,false);
     }
