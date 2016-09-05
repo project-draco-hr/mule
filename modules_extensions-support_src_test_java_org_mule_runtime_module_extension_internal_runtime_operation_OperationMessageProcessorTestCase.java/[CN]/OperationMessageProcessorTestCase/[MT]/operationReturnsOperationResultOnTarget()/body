@@ -5,11 +5,7 @@
   MediaType mediaType=ANY.withCharset(getDefaultEncoding(context));
   Attributes attributes=mock(Attributes.class);
   when(operationExecutor.execute(any(OperationContext.class))).thenReturn(OperationResult.builder().output(payload).mediaType(mediaType).attributes(attributes).build());
-  messageProcessor.process(event);
-  verify(event,never()).setMessage(any(MuleMessage.class));
-  ArgumentCaptor<MuleMessage> captor=ArgumentCaptor.forClass(MuleMessage.class);
-  verify(event).setFlowVariable(same(TARGET_VAR),captor.capture());
-  MuleMessage message=captor.getValue();
+  MuleMessage message=messageProcessor.process(event).getFlowVariable(TARGET_VAR);
   assertThat(message,is(notNullValue()));
   assertThat(message.getPayload(),is(sameInstance(payload)));
   assertThat(message.getAttributes(),is(sameInstance(attributes)));
