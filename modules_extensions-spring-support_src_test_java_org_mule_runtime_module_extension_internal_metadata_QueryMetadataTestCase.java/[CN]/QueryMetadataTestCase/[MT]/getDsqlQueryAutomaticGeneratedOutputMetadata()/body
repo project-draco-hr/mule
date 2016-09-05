@@ -1,0 +1,13 @@
+{
+  MetadataKey dsqlKey=newKey(DSQL_QUERY).build();
+  MetadataResult<ComponentMetadataDescriptor> entityMetadata=metadataManager.getMetadata(QUERY_ID,dsqlKey);
+  assertThat(entityMetadata.isSuccess(),is(true));
+  TypeMetadataDescriptor descriptor=entityMetadata.get().getOutputMetadata().get().getPayloadMetadata().get();
+  MetadataType generatedType=descriptor.getType();
+  assertThat(generatedType,is(instanceOf(ArrayType.class)));
+  ObjectType fields=(ObjectType)((ArrayType)generatedType).getType();
+  assertThat(fields.getFields(),hasSize(1));
+  ObjectFieldType field=fields.getFields().iterator().next();
+  assertThat(field.getKey().getName().getLocalPart(),is("id"));
+  assertThat(field.getValue(),is(instanceOf(NumberType.class)));
+}

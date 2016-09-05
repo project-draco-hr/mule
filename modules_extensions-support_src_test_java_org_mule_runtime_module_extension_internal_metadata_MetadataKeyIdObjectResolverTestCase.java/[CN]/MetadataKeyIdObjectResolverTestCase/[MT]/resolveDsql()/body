@@ -1,0 +1,13 @@
+{
+  ParameterModel queryParam=mock(ParameterModel.class);
+  when(queryParam.getModelProperty(QueryParameterModelProperty.class)).thenReturn(Optional.of(new QueryParameterModelProperty(DsqlQueryTranslator.class)));
+  mockMetadataKeyModelProp(queryParam,1);
+  setParameters(queryParam);
+  setMetadataKeyIdModelProperty(String.class);
+  MetadataKey dsqlKey=newKey("dsql:SELECT id FROM Circle WHERE (diameter < 18)").build();
+  final Object resolvedKey=keyIdObjectResolver.resolve(componentModel,dsqlKey);
+  assertThat(resolvedKey,is(instanceOf(DsqlQuery.class)));
+  DsqlQuery query=(DsqlQuery)resolvedKey;
+  assertThat(query.getFields(),hasSize(1));
+  assertThat(query.getType().getName(),is("Circle"));
+}
