@@ -1,0 +1,19 @@
+{
+  String abstractName=builder.getTopLevelAbstractName(typeDsl);
+  TopLevelElement element=registeredGlobalElementTypes.get(typeDsl.getNamespace() + abstractName);
+  if (element != null) {
+    return element;
+  }
+  TopLevelElement abstractElement=new TopLevelElement();
+  abstractElement.setName(abstractName);
+  QName substitutionGroup=MULE_ABSTRACT_EXTENSION;
+  if (baseType != null) {
+    DslElementSyntax baseDsl=builder.getDslResolver().resolve(baseType);
+    substitutionGroup=new QName(baseDsl.getNamespaceUri(),builder.getTopLevelAbstractName(baseDsl),baseDsl.getNamespace());
+  }
+  abstractElement.setSubstitutionGroup(substitutionGroup);
+  abstractElement.setAbstract(true);
+  builder.getSchema().getSimpleTypeOrComplexTypeOrGroup().add(abstractElement);
+  registeredGlobalElementTypes.put(typeDsl.getNamespace() + abstractName,abstractElement);
+  return abstractElement;
+}
