@@ -1,0 +1,24 @@
+{
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder(muleContext);
+  builder.setName("'transaction' child processor chain");
+  TransactionalInterceptingMessageProcessor txProcessor=new TransactionalInterceptingMessageProcessor();
+  txProcessor.setAnnotations(getAnnotations());
+  txProcessor.setExceptionListener(this.exceptionListener);
+  txProcessor.setTransactionConfig(createTransactionConfig(this.transactionalAction,this.transactionType));
+  builder.chain(txProcessor);
+  for (  Object processor : messageProcessors) {
+    if (processor instanceof MessageProcessor) {
+      builder.chain((MessageProcessor)processor);
+    }
+ else     if (processor instanceof MessageProcessorBuilder) {
+      builder.chain((MessageProcessorBuilder)processor);
+    }
+ else {
+      throw new IllegalArgumentException("MessageProcessorBuilder should only have MessageProcessor's or MessageProcessorBuilder's configured");
+    }
+    if (processor instanceof MessagingExceptionHandlerAware) {
+      ((MessagingExceptionHandlerAware)processor).setMessagingExceptionHandler(exceptionListener);
+    }
+  }
+  return builder.build();
+}
