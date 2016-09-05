@@ -3,25 +3,6 @@
   if (client == null) {
     client=muleContext.getClient();
   }
-  latch=new Latch();
-  systemExceptionCounter.set(0);
-  serviceExceptionCounter.set(0);
-  TestExceptionStrategy systemExceptionListener=new TestExceptionStrategy();
-  systemExceptionListener.setExceptionCallback(new ExceptionCallback(){
-    @Override public void onException(    Throwable t){
-      systemExceptionCounter.incrementAndGet();
-      latch.countDown();
-    }
-  }
-);
-  muleContext.setExceptionListener(systemExceptionListener);
-  for (  FlowConstruct flow : muleContext.getRegistry().lookupFlowConstructs()) {
-    ((TestExceptionStrategy)flow.getExceptionListener()).setExceptionCallback(new ExceptionCallback(){
-      @Override public void onException(      Throwable t){
-        serviceExceptionCounter.incrementAndGet();
-        latch.countDown();
-      }
-    }
-);
-  }
+  exceptionListener=new ExceptionListener(muleContext);
+  systemExceptionListener=new SystemExceptionListener(muleContext);
 }
