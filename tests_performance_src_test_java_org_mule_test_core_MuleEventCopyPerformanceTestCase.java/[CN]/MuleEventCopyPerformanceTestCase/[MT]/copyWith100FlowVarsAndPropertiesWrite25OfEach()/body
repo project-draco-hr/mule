@@ -1,12 +1,13 @@
 {
   MuleEvent original=muleEventWith100Properties;
   for (int i=0; i < repetitions; i++) {
-    events[i]=(DefaultMuleEvent)MuleEvent.builder(original).session(new DefaultMuleSession(original.getSession())).build();
+    final Builder eventBuilder=MuleEvent.builder(original);
+    eventBuilder.session(new DefaultMuleSession(original.getSession())).build();
     MuleMessage.Builder builder=MuleMessage.builder(events[i].getMessage());
     for (int j=1; j <= 25; j++) {
-      events[i].setFlowVariable("newKey" + j,"val");
+      eventBuilder.addFlowVariable("newKey" + j,"val");
       builder.addInboundProperty("newKey","val").addOutboundProperty("newKey","val").build();
     }
-    events[i].setMessage(builder.build());
+    events[i]=eventBuilder.message(builder.build()).build();
   }
 }

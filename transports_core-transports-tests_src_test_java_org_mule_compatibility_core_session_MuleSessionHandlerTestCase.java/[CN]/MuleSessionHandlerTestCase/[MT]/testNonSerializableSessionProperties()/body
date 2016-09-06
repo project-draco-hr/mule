@@ -6,8 +6,10 @@
   NotSerializableClass clazz=new NotSerializableClass();
   event.getSession().setProperty("foo",clazz);
   message=handler.storeSessionInfoToMessage(event.getSession(),event.getMessage(),muleContext);
-  event.setMessage(message);
-  Serializable s=removeProperty(event);
+  event=MuleEvent.builder(event).message(message).build();
+  final Builder builder=MuleEvent.builder(event);
+  Serializable s=removeProperty(event,builder);
+  event=builder.build();
   message=MuleMessage.builder(event.getMessage()).addInboundProperty(MULE_SESSION_PROPERTY,s).build();
   MuleSession session=handler.retrieveSessionInfoFromMessage(message,muleContext);
   assertNull(session.getProperty("foo"));

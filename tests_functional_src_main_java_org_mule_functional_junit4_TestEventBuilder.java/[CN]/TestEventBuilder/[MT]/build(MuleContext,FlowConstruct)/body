@@ -11,15 +11,12 @@
     messageBuilder.attributes(attributes);
   }
   final MuleMessage muleMessage=messageBuilder.build();
-  MuleEvent event=MuleEvent.builder(DefaultMessageContext.create(flow,TEST_CONNECTOR,sourceCorrelationId)).message((MuleMessage)spyTransformer.transform(muleMessage)).exchangePattern(exchangePattern).flow(flow).replyToHandler(replyToHandler).transacted(transacted).build();
+  MuleEvent event=MuleEvent.builder(DefaultMessageContext.create(flow,TEST_CONNECTOR,sourceCorrelationId)).message((MuleMessage)spyTransformer.transform(muleMessage)).flowVariables(flowVariables).exchangePattern(exchangePattern).flow(flow).replyToHandler(replyToHandler).transacted(transacted).build();
   for (  Entry<String,Attachment> outboundAttachmentEntry : outboundAttachments.entrySet()) {
-    outboundAttachmentEntry.getValue().addOutboundTo(event,outboundAttachmentEntry.getKey());
+    event=outboundAttachmentEntry.getValue().addOutboundTo(event,outboundAttachmentEntry.getKey());
   }
   for (  Entry<String,Object> sessionPropertyEntry : sessionProperties.entrySet()) {
     event.getSession().setProperty(sessionPropertyEntry.getKey(),sessionPropertyEntry.getValue());
-  }
-  for (  Entry<String,Object> flowVarEntry : flowVariables.entrySet()) {
-    event.setFlowVariable(flowVarEntry.getKey(),flowVarEntry.getValue());
   }
   return (MuleEvent)spyTransformer.transform(event);
 }
