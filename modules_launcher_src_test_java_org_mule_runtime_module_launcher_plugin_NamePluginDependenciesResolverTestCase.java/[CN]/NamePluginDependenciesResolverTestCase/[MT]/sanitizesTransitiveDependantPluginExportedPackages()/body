@@ -1,0 +1,13 @@
+{
+  fooPlugin.setClassLoaderFilter(new DefaultArtifactClassLoaderFilter(getFooExportedPackages(),emptySet()));
+  bazPlugin.setClassLoaderFilter(new DefaultArtifactClassLoaderFilter(getBazExportedPackages(),emptySet()));
+  bazPlugin.setPluginDependencies(singleton("foo"));
+  barPlugin.setClassLoaderFilter(new DefaultArtifactClassLoaderFilter(getBarExportedPackages(),emptySet()));
+  barPlugin.setPluginDependencies(singleton("baz"));
+  final List<ArtifactPluginDescriptor> pluginDescriptors=createPluginDescriptors(fooPlugin,barPlugin,bazPlugin);
+  final List<ArtifactPluginDescriptor> resolvedPluginDescriptors=dependenciesResolver.resolve(pluginDescriptors);
+  assertResolvedPlugins(resolvedPluginDescriptors,fooPlugin,bazPlugin,barPlugin);
+  assertPluginExportedPackages(fooPlugin,"org.foo","org.foo.mule");
+  assertPluginExportedPackages(bazPlugin,"org.baz");
+  assertPluginExportedPackages(barPlugin,"org.bar","org.bar.mule");
+}
