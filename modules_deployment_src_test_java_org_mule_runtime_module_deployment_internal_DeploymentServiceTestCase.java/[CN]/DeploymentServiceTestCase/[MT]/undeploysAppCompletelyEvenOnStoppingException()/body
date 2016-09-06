@@ -1,0 +1,15 @@
+{
+  addPackedAppFromBuilder(emptyAppFileBuilder);
+  final DefaultDomainManager domainManager=new DefaultDomainManager();
+  domainManager.addDomain(createDefaultDomain());
+  TestApplicationFactory appFactory=createTestApplicationFactory(new MuleApplicationClassLoaderFactory(new DefaultNativeLibraryFinderFactory()),domainManager,mock(ServiceRepository.class,RETURNS_DEEP_STUBS));
+  appFactory.setFailOnStopApplication(true);
+  deploymentService.setAppFactory(appFactory);
+  startDeployment();
+  assertApplicationDeploymentSuccess(applicationDeploymentListener,emptyAppFileBuilder.getId());
+  Application app=findApp(emptyAppFileBuilder.getId(),1);
+  assertTrue("Unable to remove anchor file",removeAppAnchorFile(emptyAppFileBuilder.getId()));
+  assertUndeploymentSuccess(applicationDeploymentListener,emptyAppFileBuilder.getId());
+  assertAppFolderIsDeleted(emptyAppFileBuilder.getId());
+  assertStatus(app,DESTROYED);
+}
