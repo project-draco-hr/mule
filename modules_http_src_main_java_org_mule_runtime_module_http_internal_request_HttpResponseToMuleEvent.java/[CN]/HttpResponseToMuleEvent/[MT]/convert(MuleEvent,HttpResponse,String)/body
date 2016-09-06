@@ -1,4 +1,5 @@
 {
+  MuleEvent.Builder eventBuilder=MuleEvent.builder(muleEvent);
   String responseContentType=response.getHeaderValueIgnoreCase(CONTENT_TYPE);
   DataType dataType=muleEvent.getMessage().getDataType();
   if (StringUtils.isEmpty(responseContentType) && !MediaType.ANY.matches(dataType.getMediaType())) {
@@ -28,10 +29,10 @@
  else {
     builder.mediaType(MediaType.parse(responseContentType));
   }
-  MuleMessage message=builder.build();
-  muleEvent.setMessage(message);
-  setResponsePayload(payload,muleEvent);
+  eventBuilder.message(builder.build());
+  setResponsePayload(payload,eventBuilder.build(),eventBuilder);
   if (requester.getConfig().isEnableCookies()) {
     processCookies(response,uri);
   }
+  return eventBuilder.build();
 }

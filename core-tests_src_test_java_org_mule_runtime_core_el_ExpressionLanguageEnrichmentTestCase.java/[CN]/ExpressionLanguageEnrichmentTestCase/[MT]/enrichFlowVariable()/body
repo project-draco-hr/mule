@@ -1,7 +1,8 @@
 {
   Flow flow=new Flow("flow",muleContext);
   MuleEvent event=MuleEvent.builder(DefaultMessageContext.create(flow,TEST_CONNECTOR)).message(MuleMessage.builder().payload("").build()).exchangePattern(ONE_WAY).flow(flow).build();
-  expressionManager.enrich("flowVars['foo']",event,flowConstruct,"bar");
-  assertThat(event.getFlowVariable("foo"),is("bar"));
-  assertThat(event.getSession().getProperty("foo"),nullValue());
+  MuleEvent.Builder eventBuilder=MuleEvent.builder(event);
+  expressionLanguage.enrich("flowVars['foo']",event,eventBuilder,flowConstruct,"bar");
+  assertThat(eventBuilder.build().getFlowVariable("foo"),is("bar"));
+  assertThat(eventBuilder.build().getSession().getProperty("foo"),nullValue());
 }

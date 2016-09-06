@@ -1,11 +1,11 @@
 {
   try {
-    final MuleEvent muleEvent=MuleEvent.builder(currentEvent).message(MuleMessage.builder(currentEvent.getMessage()).outboundProperties(emptyMap()).build()).session(new DefaultMuleSession(currentEvent.getSession())).build();
+    MuleEvent muleEvent=MuleEvent.builder(currentEvent).message(MuleMessage.builder(currentEvent.getMessage()).outboundProperties(emptyMap()).build()).session(new DefaultMuleSession(currentEvent.getSession())).build();
     final String userRefreshToken=resourceOwnerOAuthContext.getRefreshToken();
     if (userRefreshToken == null) {
       throw new DefaultMuleException(CoreMessages.createStaticMessage("The user with user id %s has no refresh token in his OAuth state so we can't execute the refresh token call",resourceOwnerOAuthContext.getResourceOwnerId()));
     }
-    setMapPayloadWithRefreshTokenRequestParameters(muleEvent,userRefreshToken);
+    muleEvent=setMapPayloadWithRefreshTokenRequestParameters(muleEvent,userRefreshToken);
     final MuleEvent refreshTokenResponse=invokeTokenUrl(muleEvent);
     logResourceOwnerOAuthContextBeforeUpdate(resourceOwnerOAuthContext);
     TokenResponseProcessor tokenResponseProcessor=processTokenUrlResponse(refreshTokenResponse);

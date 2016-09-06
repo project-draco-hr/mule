@@ -5,14 +5,13 @@
   HttpBasicAuthenticationFilter filter=new HttpBasicAuthenticationFilter();
   SecurityManager manager=mock(SecurityManager.class);
   filter.setSecurityManager(manager);
-  doThrow(new UnauthorisedException(null,(MuleEvent)event)).when(manager).authenticate(anyObject());
+  doThrow(new UnauthorisedException(null,event)).when(manager).authenticate(anyObject());
   try {
     filter.authenticate(event);
     fail("An UnauthorisedException should be thrown");
   }
  catch (  UnauthorisedException e) {
-    assertNotNull(event.getMessage().getOutboundProperty("WWW-Authenticate"));
-    assertEquals("Basic realm=",event.getMessage().getOutboundProperty("WWW-Authenticate"));
+    assertThat(e.getEvent().getMessage().getOutboundProperty(WWW_AUTHENTICATE),is("Basic realm="));
     verify(manager);
   }
   setCurrentEvent(oldEvent);

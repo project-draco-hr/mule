@@ -1,12 +1,14 @@
 {
   ReflectionEntryPointResolver resolver=new ReflectionEntryPointResolver();
-  InvocationResult result=resolver.invoke(new FruitBowl(),MuleTestUtils.getTestEventContext(new Object[]{new Apple(),new Banana()},REQUEST_RESPONSE,muleContext));
+  MuleEventContext eventContext=getTestEventContext(new Object[]{new Apple(),new Banana()},REQUEST_RESPONSE,muleContext);
+  InvocationResult result=resolver.invoke(new FruitBowl(),eventContext,MuleEvent.builder(eventContext.getEvent()));
   assertEquals(result.getState(),InvocationResult.State.SUCCESSFUL);
   assertTrue(result.getResult() instanceof Fruit[]);
   assertTrue(((Fruit[])result.getResult())[0] instanceof Apple);
   assertTrue(((Fruit[])result.getResult())[1] instanceof Banana);
   assertEquals("addAppleAndBanana",result.getMethodCalled());
-  result=resolver.invoke(new FruitBowl(),MuleTestUtils.getTestEventContext(new Object[]{new Banana(),new Apple()},REQUEST_RESPONSE,muleContext));
+  eventContext=getTestEventContext(new Object[]{new Banana(),new Apple()},REQUEST_RESPONSE,muleContext);
+  result=resolver.invoke(new FruitBowl(),eventContext,MuleEvent.builder(eventContext.getEvent()));
   assertEquals(result.getState(),InvocationResult.State.SUCCESSFUL);
   assertTrue(result.getResult() instanceof Fruit[]);
   assertTrue(((Fruit[])result.getResult())[0] instanceof Banana);

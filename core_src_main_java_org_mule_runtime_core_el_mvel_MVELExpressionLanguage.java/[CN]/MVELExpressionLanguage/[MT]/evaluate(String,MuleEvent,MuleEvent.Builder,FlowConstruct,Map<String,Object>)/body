@@ -1,0 +1,15 @@
+{
+  if (event == null) {
+    return evaluate(expression,vars);
+  }
+  MVELExpressionLanguageContext context=createExpressionLanguageContext();
+  final DelegateVariableResolverFactory innerDelegate=new DelegateVariableResolverFactory(globalContext,createVariableVariableResolverFactory(event,eventBuilder));
+  final DelegateVariableResolverFactory delegate=new DelegateVariableResolverFactory(staticContext,new EventVariableResolverFactory(parserConfiguration,muleContext,event,eventBuilder,flowConstruct,innerDelegate));
+  if (vars != null) {
+    context.setNextFactory(new CachedMapVariableResolverFactory(vars,delegate));
+  }
+ else {
+    context.setNextFactory(delegate);
+  }
+  return evaluateInternal(expression,context);
+}

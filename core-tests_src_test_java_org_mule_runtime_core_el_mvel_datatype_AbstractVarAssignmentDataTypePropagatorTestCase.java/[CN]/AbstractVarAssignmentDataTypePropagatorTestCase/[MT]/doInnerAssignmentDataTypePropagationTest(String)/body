@@ -4,7 +4,10 @@
   final Map<String,String> propertyValue=new HashMap<>();
   propertyValue.put(INNER_PROPERTY_NAME,TEST_MESSAGE);
   testEvent=setVariable(testEvent,propertyValue,expectedDataType);
-  CompiledExpression compiledExpression=compileMelExpression(expression,testEvent);
-  dataTypePropagator.propagate(testEvent,new TypedValue(propertyValue,DataType.STRING),compiledExpression);
+  final Builder builder=MuleEvent.builder(testEvent);
+  CompiledExpression compiledExpression=compileMelExpression(expression,testEvent,builder);
+  testEvent=builder.build();
+  dataTypePropagator.propagate(testEvent,builder,new TypedValue(propertyValue,DataType.STRING),compiledExpression);
+  testEvent=builder.build();
   assertThat(getVariableDataType(testEvent),like(Map.class,UNKNOWN,CUSTOM_ENCODING));
 }

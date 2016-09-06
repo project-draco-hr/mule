@@ -1,0 +1,44 @@
+{
+  boolean ignoreMethod=BooleanUtils.toBoolean(context.getMessage().<Boolean>getInboundProperty(MuleProperties.MULE_IGNORE_METHOD_PROPERTY));
+  if (ignoreMethod) {
+    InvocationResult result=new InvocationResult(this,InvocationResult.State.NOT_SUPPORTED);
+    result.setErrorMessage("Property: " + MuleProperties.MULE_IGNORE_METHOD_PROPERTY + " was set so skipping this resolver");
+    return result;
+  }
+  Object[] payload=getPayloadFromMessage(context);
+  Object methodProp=getFlowVariableOrNull(getMethodProperty(),context.getEvent());
+  eventBuilder.removeFlowVariable(getMethodProperty());
+  if (methodProp == null) {
+    methodProp=context.getMessage().getInboundProperty(getMethodProperty());
+  }
+  if (methodProp == null) {
+    InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
+    result.setErrorMessage(CoreMessages.propertyIsNotSetOnEvent(getMethodProperty()).toString());
+    return result;
+  }
+  Method method;
+  String methodName;
+  if (methodProp instanceof Method) {
+    method=(Method)methodProp;
+    methodName=method.getName();
+  }
+ else {
+    methodName=methodProp.toString();
+    method=getMethodByName(component,methodName,context);
+  }
+  if (method != null && method.getParameterTypes().length == 0) {
+    return invokeMethod(component,method,ClassUtils.NO_ARGS_TYPE);
+  }
+  if (method == null) {
+    Class<?>[] classTypes=ClassUtils.getClassTypes(payload);
+    method=ClassUtils.getMethod(component.getClass(),methodName,classTypes);
+    if (method == null) {
+      InvocationResult result=new InvocationResult(this,InvocationResult.State.FAILED);
+      result.setErrorNoMatchingMethods(component,classTypes);
+      return result;
+    }
+  }
+  validateMethod(component,method);
+  addMethodByName(component,method,context);
+  return invokeMethod(component,method,payload);
+}
