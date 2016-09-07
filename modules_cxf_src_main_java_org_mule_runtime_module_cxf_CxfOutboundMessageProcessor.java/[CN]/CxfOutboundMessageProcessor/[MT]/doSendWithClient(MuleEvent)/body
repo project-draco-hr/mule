@@ -1,5 +1,11 @@
 {
-  BindingOperationInfo bop=getOperation(event);
+  BindingOperationInfo bop;
+  try {
+    bop=getOperation(event);
+  }
+ catch (  Exception e) {
+    throw wrapException(event,e,false);
+  }
   Map<String,Object> props=getInovcationProperties(event);
   final Holder<MuleEvent> responseHolder=new Holder<>();
   props.put("holder",responseHolder);
@@ -16,25 +22,30 @@
   }
   ExchangeImpl exchange=new ExchangeImpl();
   exchange.put(StaxInEndingInterceptor.STAX_IN_NOCLOSE,Boolean.TRUE);
-  if (event.isAllowNonBlocking() && event.getReplyToHandler() != null) {
-    client.invoke(new ClientCallback(){
-      @Override public void handleResponse(      Map<String,Object> ctx,      Object[] res){
-        try {
-          event.getReplyToHandler().processReplyTo(buildResponseMessage(event,responseHolder.value,res),null,null);
+  try {
+    if (event.isAllowNonBlocking() && event.getReplyToHandler() != null) {
+      client.invoke(new ClientCallback(){
+        @Override public void handleResponse(        Map<String,Object> ctx,        Object[] res){
+          try {
+            event.getReplyToHandler().processReplyTo(buildResponseMessage(event,responseHolder.value,res),null,null);
+          }
+ catch (          MuleException ex) {
+            handleException(ctx,ex);
+          }
         }
- catch (        MuleException ex) {
-          handleException(ctx,ex);
+        @Override public void handleException(        Map<String,Object> ctx,        Throwable ex){
+          event.getReplyToHandler().processExceptionReplyTo(wrapException(responseHolder.value,ex),null);
         }
       }
-      @Override public void handleException(      Map<String,Object> ctx,      Throwable ex){
-        event.getReplyToHandler().processExceptionReplyTo(wrapException(responseHolder.value,ex),null);
-      }
-    }
 ,bop,getArgs(event),ctx,exchange);
-    return NonBlockingVoidMuleEvent.getInstance();
-  }
+      return NonBlockingVoidMuleEvent.getInstance();
+    }
  else {
-    Object[] response=client.invoke(bop,getArgs(event),ctx,exchange);
-    return buildResponseMessage(event,responseHolder.value,response);
+      Object[] response=client.invoke(bop,getArgs(event),ctx,exchange);
+      return buildResponseMessage(event,(MuleEvent)exchange.get(CxfConstants.MULE_EVENT),response);
+    }
+  }
+ catch (  Exception e) {
+    throw wrapException((MuleEvent)exchange.get(CxfConstants.MULE_EVENT),e,false);
   }
 }

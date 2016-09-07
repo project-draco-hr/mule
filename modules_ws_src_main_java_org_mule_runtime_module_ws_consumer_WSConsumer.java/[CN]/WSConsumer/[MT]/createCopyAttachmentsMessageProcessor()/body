@@ -1,11 +1,14 @@
 {
   return new AbstractRequestResponseMessageProcessor(){
     @Override protected MuleEvent processRequest(    MuleEvent event) throws MuleException {
+      MuleMessage message=event.getMessage();
+      final MuleEvent.Builder builder=MuleEvent.builder(event);
       if (requestBody != null) {
-        event.setMessage(MuleMessage.builder(event.getMessage()).payload(requestBody).build());
+        message=MuleMessage.builder(event.getMessage()).payload(requestBody).build();
+        builder.message(message);
       }
-      copyAttachmentsRequest(event);
-      return super.processRequest(event);
+      copyAttachmentsRequest(builder,message);
+      return super.processRequest(builder.build());
     }
     @Override protected MuleEvent processNext(    MuleEvent event) throws MuleException {
       try {
@@ -14,7 +17,7 @@
  catch (      DispatchException e) {
         if (e.getCause() instanceof SoapFault) {
           SoapFault soapFault=(SoapFault)e.getCause();
-          event.setMessage(MuleMessage.builder(event.getMessage()).payload(soapFault.getDetail() != null ? soapFault.getDetail() : null).build());
+          event=MuleEvent.builder(e.getEvent()).message(MuleMessage.builder(e.getEvent().getMessage()).payload(soapFault.getDetail() != null ? soapFault.getDetail() : null).build()).build();
           throw new SoapFaultException(event,soapFault.getFaultCode(),soapFault.getSubCode(),soapFault.getMessage(),soapFault.getDetail(),this);
         }
  else {
@@ -23,8 +26,7 @@
       }
     }
     @Override protected MuleEvent processResponse(    MuleEvent response,    final MuleEvent request) throws MuleException {
-      copyAttachmentsResponse(response);
-      return super.processResponse(response,request);
+      return super.processResponse(copyAttachmentsResponse(response),request);
     }
   }
 ;

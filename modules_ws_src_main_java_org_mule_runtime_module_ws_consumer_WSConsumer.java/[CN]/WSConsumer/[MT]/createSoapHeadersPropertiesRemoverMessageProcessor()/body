@@ -8,13 +8,12 @@
           builder.removeOutboundProperty(outboundProperty);
         }
       }
-      event.setMessage(builder.build());
-      return super.processRequest(event);
+      return super.processRequest(MuleEvent.builder(event).message(builder.build()).build());
     }
     @Override protected MuleEvent processResponse(    MuleEvent response,    final MuleEvent request) throws MuleException {
       Object statusCode=response.getMessage().getInboundProperty(HTTP_STATUS_PROPERTY,null);
       if (statusCode != null && !(statusCode instanceof String)) {
-        response.setMessage(MuleMessage.builder(response.getMessage()).addInboundProperty(HTTP_STATUS_PROPERTY,statusCode.toString()).build());
+        response=MuleEvent.builder(request).message(MuleMessage.builder(response.getMessage()).addInboundProperty(HTTP_STATUS_PROPERTY,statusCode.toString()).build()).build();
       }
       return super.processResponse(response,request);
     }

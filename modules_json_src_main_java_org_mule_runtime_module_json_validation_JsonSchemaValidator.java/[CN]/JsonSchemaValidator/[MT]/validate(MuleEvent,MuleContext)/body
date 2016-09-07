@@ -1,11 +1,12 @@
 {
+  final org.mule.runtime.core.api.MuleEvent.Builder builder=MuleEvent.builder(event);
   Object input=event.getMessage().getPayload();
   ProcessingReport report;
   JsonNode jsonNode=null;
   try {
     jsonNode=new DefaultJsonParser(muleContext).asJsonNode(input);
     if ((input instanceof Reader) || (input instanceof InputStream)) {
-      event.setMessage(MuleMessage.builder().payload(jsonNode.toString()).build());
+      builder.message(MuleMessage.builder().payload(jsonNode.toString()).build());
     }
     report=schema.validate(jsonNode);
   }
@@ -15,4 +16,5 @@
   if (!report.isSuccess()) {
     throw new JsonSchemaValidationException("Json content is not compliant with schema\n" + report.toString(),jsonNode.toString());
   }
+  return builder.build();
 }

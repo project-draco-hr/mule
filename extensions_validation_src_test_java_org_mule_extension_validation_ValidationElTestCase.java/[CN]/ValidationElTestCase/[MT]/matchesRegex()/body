@@ -1,14 +1,12 @@
 {
   final String regex="[tT]rue";
   final String expression="#[validator.matchesRegex(payload, regexp, caseSensitive)]";
-  MuleEvent event=getTestEvent("true");
-  event.setFlowVariable("regexp",regex);
-  event.setFlowVariable("caseSensitive",false);
+  MuleEvent event=MuleEvent.builder(getTestEvent("true")).addFlowVariable("regexp",regex).addFlowVariable("caseSensitive",false).build();
   assertValid(expression,event);
-  event.setMessage(MuleMessage.builder(event.getMessage()).payload("TRUE").build());
+  event=MuleEvent.builder(event).message(MuleMessage.builder(event.getMessage()).payload("TRUE").build()).build();
   assertValid(expression,event);
-  event.setFlowVariable("caseSensitive",true);
+  event=MuleEvent.builder(event).addFlowVariable("caseSensitive",true).build();
   assertInvalid(expression,event);
-  event.setMessage(MuleMessage.builder(event.getMessage()).payload("tTrue").build());
+  event=MuleEvent.builder(event).message(MuleMessage.builder(event.getMessage()).payload("tTrue").build()).build();
   assertInvalid(expression,event);
 }
