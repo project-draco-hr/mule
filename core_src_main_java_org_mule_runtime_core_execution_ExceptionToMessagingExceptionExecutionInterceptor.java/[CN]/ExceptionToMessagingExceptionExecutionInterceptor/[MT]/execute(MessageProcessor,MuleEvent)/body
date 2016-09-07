@@ -13,13 +13,17 @@
  else {
         messagingException=new MessagingException(event,exception,messageProcessor);
       }
-      event.setError(ErrorBuilder.builder(exception).errorType(errorType).build());
+      MuleEvent exceptionEvent=messagingException.getEvent();
+      event=MuleEvent.builder(exceptionEvent).error(ErrorBuilder.builder(exception).errorType(errorType).build()).build();
+      messagingException.setProcessedEvent(event);
     }
  else {
       messagingException=(MessagingException)exception;
-      if (!event.getError().isPresent() || !(event.getError().get().equals(exception) || messagingException.causedExactlyBy(event.getError().get().getException().getClass()))) {
+      MuleEvent exceptionEvent=messagingException.getEvent();
+      if (!exceptionEvent.getError().isPresent() || !(exceptionEvent.getError().get().equals(exception) || messagingException.causedExactlyBy(exceptionEvent.getError().get().getException().getClass()))) {
         ErrorType errorType=getErrorTypeFromFailingProcessor(messageProcessor,exception);
-        event.setError(ErrorBuilder.builder(exception).errorType(errorType).build());
+        event=MuleEvent.builder(exceptionEvent).error(ErrorBuilder.builder(exception).errorType(errorType).build()).build();
+        messagingException.setProcessedEvent(event);
       }
     }
     if (messagingException.getFailingMessageProcessor() == null) {
