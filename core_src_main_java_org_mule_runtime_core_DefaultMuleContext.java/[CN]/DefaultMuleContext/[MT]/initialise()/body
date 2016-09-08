@@ -1,16 +1,16 @@
 {
   lifecycleManager.checkPhase(Initialisable.PHASE_NAME);
   if (getNotificationManager() == null) {
-    throw new MuleRuntimeException(CoreMessages.objectIsNull(MuleProperties.OBJECT_NOTIFICATION_MANAGER));
+    throw new MuleRuntimeException(objectIsNull(OBJECT_NOTIFICATION_MANAGER));
   }
   if (workManager == null) {
-    throw new MuleRuntimeException(CoreMessages.objectIsNull("workManager"));
+    throw new MuleRuntimeException(objectIsNull("workManager"));
   }
   try {
     JdkVersionUtils.validateJdk();
   }
  catch (  RuntimeException e) {
-    throw new InitialisationException(CoreMessages.invalidJdk(SystemUtils.JAVA_VERSION,JdkVersionUtils.getSupportedJdks()),this);
+    throw new InitialisationException(invalidJdk(JAVA_VERSION,getSupportedJdks()),this);
   }
   try {
     muleRegistryHelper.initialise();
@@ -20,14 +20,16 @@
     }
     workManager.start();
     getNotificationManager().start(workManager,workListener);
-    fireNotification(new MuleContextNotification(this,MuleContextNotification.CONTEXT_INITIALISING));
+    fireNotification(new MuleContextNotification(this,CONTEXT_INITIALISING));
     getLifecycleManager().fireLifecycle(Initialisable.PHASE_NAME);
-    fireNotification(new MuleContextNotification(this,MuleContextNotification.CONTEXT_INITIALISED));
+    fireNotification(new MuleContextNotification(this,CONTEXT_INITIALISED));
   }
  catch (  InitialisationException e) {
+    disposeManagers();
     throw e;
   }
 catch (  Exception e) {
+    disposeManagers();
     throw new InitialisationException(e,this);
   }
 }
