@@ -1,13 +1,17 @@
 {
-  store=mock(Store.class);
-  doNothing().when(store).connect(anyString(),anyString());
-  TestFolder inbox=new TestFolder(store,INBOX_FOLDER);
-  when(store.getFolder(INBOX_FOLDER)).thenReturn(inbox);
-  TestFolder recent=new TestFolder(store,RECENT_FOLDER);
-  when(store.getFolder(RECENT_FOLDER)).thenReturn(recent);
-  PowerMockito.mockStatic(Session.class);
+  Properties props=mock(Properties.class);
+  doReturn("").when(props).getProperty("mail.event.scope","folder");
+  doReturn(mock(Executor.class)).when(props).get("mail.event.executor");
+  mockStatic(Session.class);
   Session session=mock(Session.class);
-  when(session.getStore(anyString())).thenReturn(store);
+  doReturn(props).when(session).getProperties();
   when(Session.getInstance(anyObject(),anyObject())).thenReturn(session);
+  store=mock(Store.class);
+  doReturn(session).when(store,"getSession");
+  doReturn(store).when(session).getStore(anyString());
+  TestFolder inbox=new TestFolder(store,INBOX_FOLDER);
+  doReturn(inbox).when(store).getFolder(INBOX_FOLDER);
+  TestFolder recent=new TestFolder(store,RECENT_FOLDER);
+  doReturn(recent).when(store).getFolder(RECENT_FOLDER);
   connection=new RetrieverConnection(IMAP,JUANI_EMAIL,"password","127.0.0.1","123",1000,1000,1000,null);
 }
