@@ -1,0 +1,10 @@
+{
+  EmailAttributes attributes=getTestAttributes();
+  when(attributes.getReplyToAddresses()).thenReturn(singletonList(MG_EMAIL));
+  MuleMessage contentPart=builder().payload(EMAIL_CONTENT).attributes(BODY_ATTRIBUTES).build();
+  MuleMessage attachmentPart=builder().payload(EMAIL_JSON_ATTACHMENT_CONTENT).attributes(new PartAttributes("json","attachment.json",123,emptyMap())).build();
+  flowRunner(REPLY_EMAIL_WITH_ATTACHMENTS).withPayload(new DefaultMultiPartPayload(contentPart,attachmentPart)).withAttributes(attributes).run();
+  Message repliedMessage=getReceivedMessagesAndAssertCount(1)[0];
+  Multipart content=(Multipart)repliedMessage.getContent();
+  assertJsonAttachment(content.getBodyPart(1).getDataHandler());
+}
