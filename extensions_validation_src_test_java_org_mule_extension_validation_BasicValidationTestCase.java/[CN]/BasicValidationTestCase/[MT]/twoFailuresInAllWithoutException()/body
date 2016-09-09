@@ -2,8 +2,9 @@
   FlowRunner runner=flowRunner("all");
   cofigureGetAllRunner(runner,INVALID_EMAIL,INVALID_URL);
   Exception e=runner.runExpectingException();
-  assertThat(e,is(instanceOf(MultipleValidationException.class)));
-  MultipleValidationResult result=((MultipleValidationException)e).getMultipleValidationResult();
+  assertThat(e,is(instanceOf(MessagingException.class)));
+  assertThat(e.getCause(),is(instanceOf(MultipleValidationException.class)));
+  MultipleValidationResult result=((MultipleValidationException)e.getCause()).getMultipleValidationResult();
   assertThat(result.getFailedValidationResults(),hasSize(2));
   assertThat(result.isError(),is(true));
   String expectedMessage=Joiner.on('\n').join(messages.invalidUrl(INVALID_URL),messages.invalidEmail(INVALID_EMAIL));

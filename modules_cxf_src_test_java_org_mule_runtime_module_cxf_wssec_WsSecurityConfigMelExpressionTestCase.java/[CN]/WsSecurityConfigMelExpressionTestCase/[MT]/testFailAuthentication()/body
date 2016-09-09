@@ -1,6 +1,7 @@
 {
   ClientPasswordCallback.setPassword("secret");
-  expectedException.expectCause(instanceOf(SOAPFaultException.class));
-  expectedException.expectMessage("Security exception occurred invoking web service");
-  flowRunner("cxfClient").withPayload("UnknownPasswordEncoding").run().getMessage();
+  Exception e=flowRunner("cxfClient").withPayload("UnknownPasswordEncoding").runExpectingException();
+  assertThat(e,is(instanceOf(MessagingException.class)));
+  assertThat(e.getCause(),is(instanceOf(SOAPFaultException.class)));
+  assertThat(e.getMessage(),containsString("Security exception occurred invoking web service"));
 }

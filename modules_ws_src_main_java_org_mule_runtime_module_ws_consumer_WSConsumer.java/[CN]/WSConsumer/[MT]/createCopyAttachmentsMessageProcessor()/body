@@ -14,9 +14,9 @@
       try {
         return super.processNext(event);
       }
- catch (      DispatchException e) {
-        if (e.getCause() instanceof SoapFault) {
-          SoapFault soapFault=(SoapFault)e.getCause();
+ catch (      MessagingException e) {
+        if (e.getCause() instanceof DispatchException && e.getCause().getCause() instanceof SoapFault) {
+          SoapFault soapFault=(SoapFault)e.getCause().getCause();
           event=MuleEvent.builder(e.getEvent()).message(MuleMessage.builder(e.getEvent().getMessage()).payload(soapFault.getDetail() != null ? soapFault.getDetail() : null).build()).build();
           throw new SoapFaultException(event,soapFault,this);
         }

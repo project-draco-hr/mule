@@ -12,11 +12,13 @@
           }
           @Override public void onFailure(          Exception exception){
             MessagingException messagingException=(MessagingException)exception;
-            String exceptionStatusCode=ExceptionHelper.getTransportErrorMapping(HTTP.getScheme(),messagingException.getClass(),muleContext);
+            Throwable actualException=messagingException instanceof SecurityException ? messagingException : messagingException.getCause();
+            String exceptionStatusCode=ExceptionHelper.getTransportErrorMapping(HTTP.getScheme(),actualException.getClass(),muleContext);
             Integer statusCodeFromException=exceptionStatusCode != null ? Integer.valueOf(exceptionStatusCode) : 500;
-            final HttpResponseBuilder failureResponseBuilder=new HttpResponseBuilder().setStatusCode(statusCodeFromException).setReasonPhrase(messagingException.getMessage());
+            final HttpResponseBuilder failureResponseBuilder=new HttpResponseBuilder().setStatusCode(statusCodeFromException).setReasonPhrase(actualException.getMessage());
             addThrottlingHeaders(failureResponseBuilder);
-            MuleEvent exceptionEvent=MuleEvent.builder(messagingException.getEvent()).message(org.mule.runtime.core.api.MuleMessage.builder(messagingException.getEvent().getMessage()).payload(messagingException.getMessage()).build()).build();
+            MuleEvent event=messagingException.getEvent();
+            MuleEvent exceptionEvent=MuleEvent.builder(event).message(org.mule.runtime.core.api.MuleMessage.builder(event.getMessage()).payload(actualException.getMessage()).build()).build();
             HttpResponse response;
             try {
               response=muleEventToHttpResponse.create(exceptionEvent,failureResponseBuilder,errorResponseBuilder,supportStreaming);
