@@ -1,0 +1,14 @@
+{
+  logger.debug("Building class loaders for rootArtifact: {}",context.getRootArtifact());
+  List<Dependency> directDependencies;
+  try {
+    directDependencies=dependencyResolver.getDirectDependencies(context.getRootArtifact());
+  }
+ catch (  Exception e) {
+    throw new IllegalStateException("Couldn't get direct dependencies for rootArtifact: '" + context.getRootArtifact() + "'",e);
+  }
+  List<PluginUrlClassification> pluginUrlClassifications=buildPluginUrlClassifications(context,directDependencies);
+  List<URL> containerUrls=buildContainerUrlClassification(context,directDependencies,pluginUrlClassifications);
+  List<URL> applicationUrls=buildApplicationUrlClassification(context,directDependencies,pluginUrlClassifications);
+  return new ArtifactUrlClassification(containerUrls,pluginUrlClassifications,applicationUrls);
+}

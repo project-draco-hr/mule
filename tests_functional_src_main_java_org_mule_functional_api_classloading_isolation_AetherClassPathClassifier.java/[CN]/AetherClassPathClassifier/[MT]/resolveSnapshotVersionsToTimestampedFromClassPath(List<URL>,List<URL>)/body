@@ -1,0 +1,25 @@
+{
+  logger.debug("Checking if resolved SNAPSHOT URLs had a timestamped version already included in class path URLs");
+  Map<File,List<URL>> classpathFolders=groupArtifactUrlsByFolder(classpathURLs);
+  FileFilter snapshotFileFilter=new WildcardFileFilter(SNAPSHOT_WILCARD_FILE_FILTER);
+  ListIterator<URL> listIterator=resolvedURLs.listIterator();
+  while (listIterator.hasNext()) {
+    final URL urlResolved=listIterator.next();
+    File artifactResolvedFile=new File(urlResolved.getFile());
+    if (snapshotFileFilter.accept(artifactResolvedFile)) {
+      File artifactResolvedFileParentFile=artifactResolvedFile.getParentFile();
+      logger.debug("Checking if resolved SNAPSHOT artifact: '{}' has a timestamped version already in class path",artifactResolvedFile);
+      URL urlFromClassPath=null;
+      if (classpathFolders.containsKey(artifactResolvedFileParentFile)) {
+        urlFromClassPath=findArtifactUrlFromClassPath(classpathFolders,artifactResolvedFile);
+      }
+      if (urlFromClassPath != null) {
+        logger.debug("Replacing resolved URL '{}' from class path URL '{}'",urlResolved,urlFromClassPath);
+        listIterator.set(urlFromClassPath);
+      }
+ else {
+        throw new IllegalSourceException(artifactResolvedFile + " resolved SNAPSHOT version couldn't be matched to a class path URL");
+      }
+    }
+  }
+}

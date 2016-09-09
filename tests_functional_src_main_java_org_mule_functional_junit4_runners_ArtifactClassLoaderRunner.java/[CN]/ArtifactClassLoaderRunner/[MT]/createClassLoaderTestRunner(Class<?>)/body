@@ -1,2 +1,30 @@
 {
+  final File targetTestClassesFolder=new File(klass.getProtectionDomain().getCodeSource().getLocation().getPath());
+  ArtifactIsolatedClassLoaderBuilder builder=new ArtifactIsolatedClassLoaderBuilder();
+  final File rootArtifactClassesFolder=new File(targetTestClassesFolder.getParentFile(),"classes");
+  builder.setRootArtifactClassesFolder(rootArtifactClassesFolder);
+  builder.setPluginResourcesFolder(targetTestClassesFolder);
+  builder.setProvidedExclusions(readAttribute("providedExclusions",klass));
+  builder.setProvidedInclusions(readAttribute("providedInclusions",klass));
+  builder.setTestExclusions(readAttribute("testExclusions",klass));
+  builder.setTestInclusions(readAttribute("testInclusions",klass));
+  builder.setExportPluginClasses(readAttribute("exportPluginClasses",klass));
+  builder.setPluginCoordinates(readAttribute("plugins",klass));
+  builder.setExtensionMetadataGeneration(true);
+  Properties excludedProperties;
+  try {
+    excludedProperties=getExcludedProperties();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException("Error while reading excluded properties",e);
+  }
+  List<String> excludedArtifactsList=getExcludedArtifacts(excludedProperties);
+  builder.setExcludedArtifacts(excludedArtifactsList);
+  builder.setExtraBootPackages(getExtraBootPackages(excludedProperties));
+  final ClassPathUrlProvider classPathUrlProvider=new ClassPathUrlProvider();
+  List<URL> classPath=classPathUrlProvider.getURLs();
+  builder.setClassPathUrlProvider(classPathUrlProvider);
+  WorkspaceLocationResolver workspaceLocationResolver=new AutoDiscoverWorkspaceLocationResolver(classPath,rootArtifactClassesFolder);
+  builder.setClassPathClassifier(new AetherClassPathClassifier(RepositorySystemFactory.newLocalDependencyResolver(classPath,workspaceLocationResolver,getMavenLocalRepository())));
+  return builder.build();
 }

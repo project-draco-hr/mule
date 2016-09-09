@@ -1,0 +1,23 @@
+{
+  checkNotNull(classPath,"classPath cannot be null");
+  checkNotNull(rootArtifactClassesFolder,"rootArtifactClassesFolder cannot be null");
+  File rootArtifactFolder=rootArtifactClassesFolder.getParentFile().getParentFile();
+  logger.debug("Discovering workspace artifacts locations from '{}'",rootArtifactFolder);
+  if (!containsMavenProject(rootArtifactFolder)) {
+    logger.warn("Couldn't find any workspace reference for artifacts due to '{}' is not a Maven project",rootArtifactFolder);
+  }
+  String rootProjectDirectoryProperty=getProperty(MAVEN_MULTI_MODULE_PROJECT_DIRECTORY);
+  if (isNotBlank(rootProjectDirectoryProperty)) {
+    logger.debug("Using Maven System.property['{}']='{}' to find out project root directory for discovering poms",MAVEN_MULTI_MODULE_PROJECT_DIRECTORY,rootProjectDirectoryProperty);
+    discoverMavenReactorProjects(rootProjectDirectoryProperty,classPath,rootArtifactClassesFolder.getParentFile().getParentFile());
+  }
+ else {
+    logger.debug("Filtering class path entries to find out Maven projects");
+    discoverMavenProjectsFromClassPath(classPath);
+  }
+  logger.debug("Workspace location discover process completed");
+  List<String> messages=newArrayList("Workspace:");
+  messages.add(" ");
+  messages.addAll(filePathByArtifactId.keySet());
+  logger.debug(getBoilerPlate(newArrayList(messages),'*',DEFAULT_MESSAGE_WIDTH));
+}

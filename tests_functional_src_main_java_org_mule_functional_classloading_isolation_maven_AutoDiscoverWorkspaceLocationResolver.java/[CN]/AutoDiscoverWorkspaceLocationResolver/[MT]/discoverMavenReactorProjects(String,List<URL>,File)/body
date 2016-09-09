@@ -1,0 +1,17 @@
+{
+  Path rootProjectDirectory=get(rootProjectDirectoryProperty);
+  logger.debug("Defined rootProjectDirectory='{}'",rootProjectDirectory);
+  File currentDir=rootArtifactClassesFolder;
+  File lastMavenProjectDir=currentDir;
+  while (containsMavenProject(currentDir) && !currentDir.toPath().equals(rootProjectDirectory.getParent())) {
+    lastMavenProjectDir=currentDir;
+    currentDir=currentDir.getParentFile();
+  }
+  logger.debug("Top folder found, parent pom found at: '{}'",lastMavenProjectDir);
+  try {
+    walkFileTree(lastMavenProjectDir.toPath(),new MavenDiscovererFileVisitor(classPath));
+  }
+ catch (  IOException e) {
+    throw new RuntimeException("Error while discovering Maven projects from path: " + currentDir.toPath());
+  }
+}

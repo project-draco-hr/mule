@@ -1,0 +1,26 @@
+{
+  CollectRequest collectRequest=new CollectRequest();
+  collectRequest.setRoot(root);
+  collectRequest.setDependencies(directDependencies);
+  collectRequest.setManagedDependencies(managedDependencies);
+  collectRequest.setRepositories(Collections.<RemoteRepository>emptyList());
+  DependencyNode node;
+  try {
+    node=system.collectDependencies(session,collectRequest).getRoot();
+    DependencyRequest dependencyRequest=new DependencyRequest();
+    dependencyRequest.setRoot(node);
+    dependencyRequest.setCollectRequest(collectRequest);
+    if (dependencyFilter != null) {
+      dependencyRequest.setFilter(dependencyFilter);
+    }
+    node=system.resolveDependencies(session,dependencyRequest).getRoot();
+  }
+ catch (  DependencyResolutionException e) {
+    logger.warn("Dependencies couldn't be resolved for request '{}', {}",collectRequest,e.getMessage());
+    node=e.getResult().getRoot();
+    logUnresolvedArtifacts(node,e);
+    throw e;
+  }
+  List<File> files=getFiles(node);
+  return files;
+}
