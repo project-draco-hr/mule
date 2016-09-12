@@ -3,12 +3,12 @@
   SensingNullMessageProcessor asyncListener=new SensingNullMessageProcessor();
   async.setListener(asyncListener);
   async.start();
-  MuleMessage message=MuleMessage.builder().payload("data").build();
-  MuleEvent event=MuleEvent.builder(context).message(message).exchangePattern(ONE_WAY).flow(flow).build();
+  InternalMessage message=InternalMessage.builder().payload("data").build();
+  Event event=Event.builder(context).message(message).exchangePattern(ONE_WAY).flow(flow).build();
   event.getSession().setProperty("key","value");
   async.process(event);
   asyncListener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
-  MuleEvent asyncEvent=asyncListener.event;
+  Event asyncEvent=asyncListener.event;
   assertNotSame(asyncEvent,event);
   assertNotSame(asyncEvent,event);
   assertNotSame(asyncEvent.getSession(),event.getSession());

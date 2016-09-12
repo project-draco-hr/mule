@@ -1,14 +1,14 @@
 {
   OutboundEndpoint endpoint=createEndpoint("test://#[message.outboundProperties.host]:#[message.outboundProperties.port]",ONE_WAY);
   assertTrue(endpoint instanceof DynamicOutboundEndpoint);
-  MuleEvent event=getTestEvent("test",getTestInboundEndpoint("test1"));
-  event=MuleEvent.builder(event).message(MuleMessage.builder(event.getMessage()).addOutboundProperty("port",12345).addOutboundProperty("host","localhost").build()).build();
-  MuleEvent response=endpoint.process(event);
+  Event event=getTestEvent("test",getTestInboundEndpoint("test1"));
+  event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).addOutboundProperty("port",12345).addOutboundProperty("host","localhost").build()).build();
+  Event response=endpoint.process(event);
   assertSame(VoidMuleEvent.getInstance(),response);
   endpoint=createRequestResponseEndpoint("test://#[message.outboundProperties.host]:#[message.outboundProperties.port]?exchangePattern=REQUEST_RESPONSE");
   assertTrue(endpoint instanceof DynamicOutboundEndpoint);
   event=getTestEvent("test",getTestInboundEndpoint("test1"));
-  event=MuleEvent.builder(event).message(MuleMessage.builder(event.getMessage()).addOutboundProperty("port",12345).addOutboundProperty("host","localhost").build()).build();
+  event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).addOutboundProperty("port",12345).addOutboundProperty("host","localhost").build()).build();
   response=endpoint.process(event);
   assertNotNull(response);
   assertEquals(REQUEST_RESPONSE,endpoint.getExchangePattern());

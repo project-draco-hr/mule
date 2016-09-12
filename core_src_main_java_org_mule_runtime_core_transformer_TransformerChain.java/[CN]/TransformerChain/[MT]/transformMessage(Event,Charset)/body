@@ -1,0 +1,22 @@
+{
+  InternalMessage result=event.getMessage();
+  Object temp=event.getMessage();
+  Transformer lastTransformer=null;
+  for (  Object element : transformers) {
+    lastTransformer=(Transformer)element;
+    temp=lastTransformer.transform(temp);
+    if (temp instanceof InternalMessage) {
+      result=(InternalMessage)temp;
+    }
+ else {
+      result=InternalMessage.builder(event.getMessage()).payload(temp).build();
+      event=Event.builder(event).message(result).build();
+    }
+  }
+  if (lastTransformer != null && InternalMessage.class.isAssignableFrom(lastTransformer.getReturnDataType().getType())) {
+    return result;
+  }
+ else {
+    return result.getPayload().getValue();
+  }
+}

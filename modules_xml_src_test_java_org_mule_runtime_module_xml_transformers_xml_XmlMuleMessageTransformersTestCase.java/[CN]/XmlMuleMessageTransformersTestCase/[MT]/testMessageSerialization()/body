@@ -1,14 +1,14 @@
 {
   ObjectToXml t1=createObject(ObjectToXml.class);
   t1.setAcceptMuleMessage(true);
-  MuleMessage msg=MuleMessage.builder().payload("test").mediaType(MediaType.ANY.withCharset(UTF_8)).addOutboundProperty("object",new Apple()).addOutboundProperty("string","hello").build();
+  InternalMessage msg=InternalMessage.builder().payload("test").mediaType(MediaType.ANY.withCharset(UTF_8)).addOutboundProperty("object",new Apple()).addOutboundProperty("string","hello").build();
   String xml=(String)t1.transform(msg);
   assertNotNull(xml);
   XmlToObject t2=createObject(XmlToObject.class);
   Object result=t2.transform(xml);
   assertNotNull(result);
-  assertThat(result,instanceOf(MuleMessage.class));
-  msg=(MuleMessage)result;
+  assertThat(result,instanceOf(InternalMessage.class));
+  msg=(InternalMessage)result;
   assertEquals("test",getPayloadAsString(msg));
   assertEquals(new Apple(),msg.getOutboundProperty("object"));
   assertEquals(new Apple(),msg.getOutboundProperty("oBjeCt"));
@@ -18,7 +18,7 @@
   assertNull(msg.getInboundProperty("string"));
   assertNull(msg.getInboundProperty("number"));
   assertNull(msg.getOutboundProperty("number"));
-  assertThat(msg.getDataType().getMediaType().getCharset().get(),is(UTF_8));
+  assertThat(msg.getPayload().getDataType().getMediaType().getCharset().get(),is(UTF_8));
   Set<String> outboundProps=msg.getOutboundPropertyNames();
   assertThat(outboundProps,hasSize(2));
   for (  String key : outboundProps) {

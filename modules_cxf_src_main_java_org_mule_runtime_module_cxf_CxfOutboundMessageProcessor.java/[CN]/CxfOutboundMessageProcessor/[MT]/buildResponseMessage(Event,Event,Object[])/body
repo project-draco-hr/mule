@@ -1,0 +1,25 @@
+{
+  if (transportResponse == null) {
+    return null;
+  }
+  if (VoidMuleEvent.getInstance().equals(transportResponse)) {
+    return transportResponse;
+  }
+  Object payload;
+  if (response == null || response.length == 0) {
+    payload=null;
+  }
+ else   if (response.length == 1) {
+    payload=response[0];
+  }
+ else {
+    payload=response;
+  }
+  InternalMessage.Builder builder=InternalMessage.builder(transportResponse.getMessage());
+  Serializable httpStatusCode=transportResponse.getMessage().getInboundProperty(HTTP_STATUS_PROPERTY);
+  if (isProxy() && httpStatusCode != null) {
+    builder.addOutboundProperty(HTTP_STATUS_PROPERTY,httpStatusCode);
+  }
+  builder.payload(payload).mediaType(getMimeType());
+  return Event.builder(transportResponse).message(builder.build()).build();
+}

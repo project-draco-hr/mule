@@ -9,14 +9,14 @@
     endpointBuilder.setExchangePattern(REQUEST_RESPONSE);
     outboundEndpoint=getEndpointFactory(muleContext).getOutboundEndpoint(endpointBuilder);
   }
-  MuleMessage.Builder requestBuider=MuleMessage.builder().payload(StringUtils.EMPTY).inboundProperties(outboundEndpoint.getProperties());
+  InternalMessage.Builder requestBuider=InternalMessage.builder().payload(StringUtils.EMPTY).inboundProperties(outboundEndpoint.getProperties());
   if (etag != null && checkEtag) {
     requestBuider.addOutboundProperty(HEADER_IF_NONE_MATCH,etag);
   }
   requestBuider.addOutboundProperty(HTTP_METHOD_PROPERTY,"GET");
-  MuleEvent event=MuleEvent.builder(DefaultMessageContext.create(flowConstruct,getEndpoint().getAddress())).message(requestBuider.build()).exchangePattern(outboundEndpoint.getExchangePattern()).flow(flowConstruct).build();
-  MuleEvent result=outboundEndpoint.process(event);
-  MuleCompatibilityMessage message=null;
+  Event event=Event.builder(DefaultEventContext.create(flowConstruct,getEndpoint().getAddress())).message(requestBuider.build()).exchangePattern(outboundEndpoint.getExchangePattern()).flow(flowConstruct).build();
+  Event result=outboundEndpoint.process(event);
+  CompatibilityMessage message=null;
   if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
     message=new MuleCompatibilityMessageBuilder(result.getMessage()).build();
   }

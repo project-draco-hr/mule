@@ -3,13 +3,13 @@
   final MessageContext ctx=context.getVariable("message");
   final String xpathExpression=getXpathExpression(params);
   final XPathReturnType returnType=getReturnType(params);
-  final MuleEvent event=getMuleEvent(context);
+  final Event event=getMuleEvent(context);
   final Object input=getInput(params,event);
   try {
     Node node=toDOMNode(input,event);
     Object result=xpathEvaluatorSupplier.get().evaluate(xpathExpression,node,returnType,event);
-    MuleMessage message=event.getMessage();
-    if (input == message.getPayload() && message.getDataType().isStreamType()) {
+    InternalMessage message=event.getMessage();
+    if (input == message.getPayload().getValue() && message.getPayload().getDataType().isStreamType()) {
       ctx.setPayload(node);
     }
     return result;

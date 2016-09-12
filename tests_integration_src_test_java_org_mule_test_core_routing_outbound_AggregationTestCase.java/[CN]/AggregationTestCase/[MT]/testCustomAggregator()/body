@@ -1,16 +1,16 @@
 {
   MuleClient client=muleContext.getClient();
   flowRunner("SplitterFlow2").withPayload(PAYLOAD).asynchronously().run();
-  MuleMessage msg=client.request("test://collectionCreated2",RECEIVE_TIMEOUT).getRight().get();
+  InternalMessage msg=client.request("test://collectionCreated2",RECEIVE_TIMEOUT).getRight().get();
   assertNotNull(msg);
-  assertNotNull(msg.getPayload());
-  assertTrue(msg.getPayload() instanceof List);
+  assertNotNull(msg.getPayload().getValue());
+  assertTrue(msg.getPayload().getValue() instanceof List);
   ByteArrayOutputStream baos=new ByteArrayOutputStream();
-  for (  Object obj : (List<?>)msg.getPayload()) {
-    assertTrue(obj instanceof MuleEvent);
-    MuleEvent event=(MuleEvent)obj;
-    assertTrue(event.getMessage().getPayload() instanceof byte[]);
-    baos.write((byte[])event.getMessage().getPayload());
+  for (  Object obj : (List<?>)msg.getPayload().getValue()) {
+    assertTrue(obj instanceof Event);
+    Event event=(Event)obj;
+    assertTrue(event.getMessage().getPayload().getValue() instanceof byte[]);
+    baos.write((byte[])event.getMessage().getPayload().getValue());
   }
   String aggregated=baos.toString();
   assertEquals(PAYLOAD,aggregated);

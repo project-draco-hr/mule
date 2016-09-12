@@ -1,0 +1,18 @@
+{
+  final InternalMessage message=event.getMessage();
+  try {
+    final Builder builder=InternalMessage.builder(message);
+    List<org.mule.runtime.api.message.Message> parts=new ArrayList<>();
+    if (message.getPayload().getValue() != null) {
+      parts.add(InternalMessage.builder().payload(message.getPayload().getValue()).attributes(BODY_ATTRIBUTES).build());
+    }
+    for (    String attachmentName : message.getInboundAttachmentNames()) {
+      DataHandler attachment=message.getInboundAttachment(attachmentName);
+      parts.add(InternalMessage.builder().payload(attachment.getInputStream()).mediaType(MediaType.parse(attachment.getContentType())).attributes(new PartAttributes(attachmentName)).build());
+    }
+    return builder.payload(new DefaultMultiPartContent(parts)).build();
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

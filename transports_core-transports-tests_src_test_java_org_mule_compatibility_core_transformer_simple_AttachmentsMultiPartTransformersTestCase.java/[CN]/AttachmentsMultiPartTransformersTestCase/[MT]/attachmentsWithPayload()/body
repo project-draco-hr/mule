@@ -1,10 +1,10 @@
 {
   final DataHandler attDH=mock(DataHandler.class);
   when(attDH.getContentType()).thenReturn(MediaType.TEXT.toRfcString());
-  final MuleMessage message=MuleMessage.builder().payload(TEST_PAYLOAD).addInboundAttachment("attachment",attDH).build();
-  final MuleMessage response=(MuleMessage)a2mp.transform(message,MuleEvent.builder(context).message(message).flow(flow).build());
-  assertThat(response.getPayload(),instanceOf(MultiPartPayload.class));
-  assertThat(((MultiPartPayload)response.getPayload()).getParts(),hasSize(2));
-  assertThat(((DefaultMultiPartPayload)response.getPayload()).hasBodyPart(),is(true));
-  assertThat(((MultiPartPayload)response.getPayload()).getPartNames(),hasItem("attachment"));
+  final InternalMessage message=InternalMessage.builder().payload(TEST_PAYLOAD).addInboundAttachment("attachment",attDH).build();
+  final InternalMessage response=(InternalMessage)a2mp.transform(message,Event.builder(context).message(message).flow(flow).build());
+  assertThat(response.getPayload().getValue(),instanceOf(MultiPartContent.class));
+  assertThat(((MultiPartContent)response.getPayload().getValue()).getParts(),hasSize(2));
+  assertThat(((DefaultMultiPartContent)response.getPayload().getValue()).hasBodyPart(),is(true));
+  assertThat(((MultiPartContent)response.getPayload().getValue()).getPartNames(),hasItem("attachment"));
 }

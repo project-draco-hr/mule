@@ -6,19 +6,19 @@
   assertNotNull(endpoint2);
   OutboundEndpoint mockendpoint2=RouterTestUtils.createMockEndpoint(endpoint2);
   EndpointMulticastingRouter router=createObject(EndpointMulticastingRouter.class);
-  List<MessageProcessor> endpoints=new ArrayList<>();
+  List<Processor> endpoints=new ArrayList<>();
   endpoints.add(mockendpoint1);
   endpoints.add(mockendpoint2);
   router.setRoutes(endpoints);
-  MuleMessage message=MuleMessage.builder().payload(TEST_MESSAGE).build();
-  assertTrue(router.isMatch(getTestEvent(message),mock(MuleEvent.Builder.class)));
+  InternalMessage message=InternalMessage.builder().payload(TEST_MESSAGE).build();
+  assertTrue(router.isMatch(getTestEvent(message),mock(Event.Builder.class)));
   Flow flow=getTestFlow();
-  final MessageContext context=DefaultMessageContext.create(flow,TEST_CONNECTOR);
-  MuleEvent event=MuleEvent.builder(context).message(message).flow(flow).build();
-  when(mockendpoint1.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer(event));
-  when(mockendpoint2.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer());
+  final EventContext context=DefaultEventContext.create(flow,TEST_CONNECTOR);
+  Event event=Event.builder(context).message(message).flow(flow).build();
+  when(mockendpoint1.process(any(Event.class))).thenAnswer(new MuleEventCheckAnswer(event));
+  when(mockendpoint2.process(any(Event.class))).thenAnswer(new MuleEventCheckAnswer());
   MuleSession session=mock(MuleSession.class);
-  MuleEvent result=router.route(MuleEvent.builder(context).message(message).flow(flow).session(session).build());
+  Event result=router.route(Event.builder(context).message(message).flow(flow).session(session).build());
   assertNotNull(result);
   assertEquals(getPayload(message),getPayload(result.getMessage()));
 }

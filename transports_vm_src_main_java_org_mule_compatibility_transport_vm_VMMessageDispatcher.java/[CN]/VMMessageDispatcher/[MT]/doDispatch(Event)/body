@@ -1,0 +1,20 @@
+{
+  EndpointURI endpointUri=endpoint.getEndpointURI();
+  if (endpointUri == null) {
+    throw new DispatchException(CoreMessages.objectIsNull("Endpoint"),getEndpoint());
+  }
+  Event eventToDispatch=Event.builder(event).session(new DefaultMuleSession(event.getSession())).variables(emptyMap()).build();
+  final MuleCompatibilityMessageBuilder builder=new MuleCompatibilityMessageBuilder(createInboundMessage(eventToDispatch.getMessage()));
+  builder.correlationId(eventToDispatch.getCorrelationId());
+  builder.correlationSequence(eventToDispatch.getGroupCorrelation().getSequence().orElse(null));
+  builder.correlationGroupSize(eventToDispatch.getGroupCorrelation().getGroupSize().orElse(null));
+  final CompatibilityMessage message=builder.build();
+  QueueSession session=getQueueSession();
+  Queue queue=session.getQueue(endpointUri.getAddress());
+  if (!queue.offer(message,connector.getQueueTimeout())) {
+    throw new DispatchException(VMMessages.queueIsFull(queue.getName(),queue.size()),getEndpoint());
+  }
+  if (logger.isDebugEnabled()) {
+    logger.debug("dispatched MuleEvent on endpointUri: " + endpointUri);
+  }
+}

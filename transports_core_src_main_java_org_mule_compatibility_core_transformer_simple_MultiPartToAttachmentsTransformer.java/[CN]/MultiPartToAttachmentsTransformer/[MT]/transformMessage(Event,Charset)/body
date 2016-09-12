@@ -1,0 +1,21 @@
+{
+  final InternalMessage message=event.getMessage();
+  try {
+    final Builder builder=InternalMessage.builder(message);
+    final DefaultMultiPartContent multiPartPayload=(DefaultMultiPartContent)message.getPayload().getValue();
+    if (multiPartPayload.hasBodyPart()) {
+      builder.payload(multiPartPayload.getBodyPart().getPayload().getValue());
+    }
+ else {
+      builder.nullPayload();
+    }
+    for (    org.mule.runtime.api.message.Message muleMessage : multiPartPayload.getNonBodyParts()) {
+      final PartAttributes attributes=(PartAttributes)muleMessage.getAttributes();
+      builder.addOutboundAttachment(attributes.getName(),toDataHandler(attributes.getName(),muleMessage.getPayload().getValue(),muleMessage.getPayload().getDataType().getMediaType()));
+    }
+    return builder.build();
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

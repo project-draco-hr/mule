@@ -1,0 +1,41 @@
+{
+  Object requestBody;
+  InternalMessage message=event.getMessage();
+  Object request=message.getPayload().getValue();
+  String tempUrl=serviceUrl;
+  if (muleContext.getExpressionLanguage().isExpression(serviceUrl)) {
+    muleContext.getExpressionLanguage().validate(serviceUrl);
+    tempUrl=muleContext.getExpressionLanguage().parse(serviceUrl,event,flowConstruct);
+  }
+  StringBuilder urlBuffer=new StringBuilder(tempUrl);
+  if (GET.equalsIgnoreCase(this.httpMethod) || DELETE.equalsIgnoreCase(this.httpMethod)) {
+    requestBody=null;
+    setRESTParams(urlBuffer,event,request,requiredParams,false,null);
+    setRESTParams(urlBuffer,event,request,optionalParams,true,null);
+  }
+ else {
+    if (MediaType.ANY.matches(message.getPayload().getDataType().getMediaType())) {
+      message=InternalMessage.builder(message).mediaType(MediaType.parse(CONTENT_TYPE_VALUE)).build();
+    }
+    StringBuilder requestBodyBuffer=new StringBuilder();
+    setRESTParams(urlBuffer,event,request,requiredParams,false,requestBodyBuffer);
+    setRESTParams(urlBuffer,event,request,optionalParams,true,requestBodyBuffer);
+    requestBody=requestBodyBuffer.toString();
+  }
+  tempUrl=urlBuffer.toString();
+  logger.info("Invoking REST service: " + tempUrl);
+  message=InternalMessage.builder(message).addOutboundProperty(HTTP_METHOD_PROPERTY,httpMethod).build();
+  EndpointBuilder endpointBuilder=new EndpointURIEndpointBuilder(tempUrl,muleContext);
+  endpointBuilder.setExchangePattern(REQUEST_RESPONSE);
+  OutboundEndpoint outboundEndpoint=endpointBuilder.buildOutboundEndpoint();
+  Either<Error,InternalMessage> clientResponse=muleContext.getClient().send(outboundEndpoint.getEndpointURI().toString(),InternalMessage.builder(message).payload(requestBody).build());
+  if (clientResponse.isLeft()) {
+    handleException(new RestServiceException(CoreMessages.failedToInvokeRestService(tempUrl)));
+  }
+  Event result=Event.builder(event.getContext()).message(clientResponse.getRight()).flow(flowConstruct).build();
+  Builder builder=Event.builder(result);
+  if (isErrorPayload(result,builder)) {
+    handleException(new RestServiceException(failedToInvokeRestService(tempUrl)));
+  }
+  return builder.build().getMessage();
+}

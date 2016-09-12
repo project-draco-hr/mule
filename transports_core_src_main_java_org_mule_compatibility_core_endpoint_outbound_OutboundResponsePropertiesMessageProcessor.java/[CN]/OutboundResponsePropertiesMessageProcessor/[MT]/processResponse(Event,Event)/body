@@ -1,0 +1,14 @@
+{
+  if (isEventValid(response)) {
+    final InternalMessage message=response.getMessage();
+    final Builder builder=InternalMessage.builder(message);
+    for (    String propertyName : endpoint.getResponseProperties()) {
+      Serializable propertyValue=request.getMessage().getOutboundProperty(propertyName);
+      if (propertyValue != null) {
+        builder.addOutboundProperty(propertyName,propertyValue);
+      }
+    }
+    response=Event.builder(response).groupCorrelation(request.getGroupCorrelation()).message(builder.build()).build();
+  }
+  return response;
+}

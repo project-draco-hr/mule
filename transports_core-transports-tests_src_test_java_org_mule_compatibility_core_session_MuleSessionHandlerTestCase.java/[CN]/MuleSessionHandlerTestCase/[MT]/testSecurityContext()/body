@@ -1,17 +1,17 @@
 {
-  MuleMessage message=MuleMessage.builder().payload("Test Message").build();
+  InternalMessage message=InternalMessage.builder().payload("Test Message").build();
   Flow flow=MuleTestUtils.getTestFlow(muleContext);
-  MuleEvent event=MuleEvent.builder(DefaultMessageContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).build();
+  Event event=Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).build();
   SessionHandler handler=new SerializeAndEncodeSessionHandler();
   Credentials credentials=new MuleCredentials("joe","secret".toCharArray());
   SecurityContext sc=new DefaultSecurityContextFactory().create(new DefaultMuleAuthentication(credentials));
   event.getSession().setSecurityContext(sc);
   message=handler.storeSessionInfoToMessage(event.getSession(),event.getMessage(),muleContext);
-  event=MuleEvent.builder(event).message(message).build();
-  final Builder builder=MuleEvent.builder(event);
+  event=Event.builder(event).message(message).build();
+  final Builder builder=Event.builder(event);
   Serializable s=removeProperty(event,builder);
   event=builder.build();
-  message=MuleMessage.builder(event.getMessage()).addInboundProperty(MULE_SESSION_PROPERTY,s).build();
+  message=InternalMessage.builder(event.getMessage()).addInboundProperty(MULE_SESSION_PROPERTY,s).build();
   MuleSession session=handler.retrieveSessionInfoFromMessage(message,muleContext);
   sc=session.getSecurityContext();
   assertEquals("joe",sc.getAuthentication().getPrincipal());

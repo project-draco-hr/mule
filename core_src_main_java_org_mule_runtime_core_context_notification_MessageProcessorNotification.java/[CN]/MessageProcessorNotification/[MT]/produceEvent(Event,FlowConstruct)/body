@@ -1,0 +1,14 @@
+{
+  String rootId=lastRootMessageId.get();
+  if (sourceEvent != null && !VoidMuleEvent.getInstance().equals(sourceEvent)) {
+    lastRootMessageId.set(sourceEvent.getCorrelationId());
+    return sourceEvent;
+  }
+ else   if (rootId != null && flowConstruct != null) {
+    final InternalMessage msg=InternalMessage.builder().nullPayload().build();
+    return Event.builder(create(flowConstruct,"MessageProcessorNotification",lastRootMessageId.get())).message(msg).flow(flowConstruct).exchangePattern(REQUEST_RESPONSE).build();
+  }
+ else {
+    return null;
+  }
+}

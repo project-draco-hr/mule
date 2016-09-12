@@ -1,0 +1,22 @@
+{
+  try {
+    long timeout=((HttpsConnector)getConnector()).getSslHandshakeTimeout();
+    boolean handshakeComplete=getHttpServerConnection().getSslSocketHandshakeCompleteLatch().await(timeout,MILLISECONDS);
+    if (!handshakeComplete) {
+      throw new MessagingException(HttpMessages.sslHandshakeDidNotComplete(),muleEvent);
+    }
+  }
+ catch (  InterruptedException e) {
+    throw new MessagingException(HttpMessages.sslHandshakeDidNotComplete(),muleEvent,e);
+  }
+  InternalMessage.Builder messageBuilder=InternalMessage.builder(muleEvent.getMessage());
+  if (getHttpServerConnection().getPeerCertificateChain() != null) {
+    messageBuilder.addOutboundProperty(PEER_CERTIFICATES,getHttpServerConnection().getPeerCertificateChain());
+  }
+  if (getHttpServerConnection().getLocalCertificateChain() != null) {
+    messageBuilder.addOutboundProperty(LOCAL_CERTIFICATES,getHttpServerConnection().getLocalCertificateChain());
+  }
+  muleEvent=Event.builder(muleEvent).message(messageBuilder.build()).build();
+  super.beforeRouteEvent(muleEvent);
+  return muleEvent;
+}

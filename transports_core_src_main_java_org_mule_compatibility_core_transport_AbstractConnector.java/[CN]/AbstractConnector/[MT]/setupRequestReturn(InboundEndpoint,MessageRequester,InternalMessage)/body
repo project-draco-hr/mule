@@ -1,0 +1,20 @@
+{
+  if (result != null && result.getPayload().getValue() instanceof InputStream) {
+    DelegatingInputStream is=new DelegatingInputStream((InputStream)result.getPayload().getValue()){
+      @Override public void close() throws IOException {
+        try {
+          super.close();
+        }
+  finally {
+          returnRequester(endpoint,requester);
+        }
+      }
+    }
+;
+    return InternalMessage.builder(result).payload(is).mediaType(result.getPayload().getDataType().getMediaType()).build();
+  }
+ else {
+    returnRequester(endpoint,requester);
+    return result;
+  }
+}

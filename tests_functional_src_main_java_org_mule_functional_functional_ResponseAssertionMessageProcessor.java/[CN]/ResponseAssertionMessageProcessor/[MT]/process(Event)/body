@@ -1,0 +1,24 @@
+{
+  if (event == null) {
+    return null;
+  }
+  if (event.isAllowNonBlocking() && event.getReplyToHandler() != null) {
+    final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
+    event=Event.builder(event).replyToHandler(new NonBlockingReplyToHandler(){
+      @Override public Event processReplyTo(      Event event,      InternalMessage returnMessage,      Object replyTo) throws MuleException {
+        return originalReplyToHandler.processReplyTo(processResponse(event),null,null);
+      }
+      @Override public void processExceptionReplyTo(      MessagingException exception,      Object replyTo){
+        originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
+      }
+    }
+).build();
+  }
+  Event result=processNext(processRequest(event));
+  if (!(result instanceof NonBlockingVoidMuleEvent)) {
+    return processResponse(result);
+  }
+ else {
+    return result;
+  }
+}

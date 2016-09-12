@@ -1,0 +1,18 @@
+{
+  if (resultType == null) {
+    throw new IllegalArgumentException(CoreMessages.objectIsNull("resultType").getMessage());
+  }
+  DataType dataType=DataType.builder(resultType).type(message.getPayload().getDataType().getType()).build();
+  if (resultType.isCompatibleWith(dataType)) {
+    return (T)message.getPayload().getValue();
+  }
+  Transformer transformer=muleContext.getRegistry().lookupTransformer(dataType,resultType);
+  if (transformer == null) {
+    throw new TransformerException(CoreMessages.noTransformerFoundForMessage(dataType,resultType));
+  }
+  Object result=transformer.transform(message,encoding);
+  if (!resultType.getType().isAssignableFrom(result.getClass())) {
+    throw new TransformerException(CoreMessages.transformOnObjectNotOfSpecifiedType(resultType,result));
+  }
+  return (T)result;
+}

@@ -1,0 +1,20 @@
+{
+  Thread.sleep(2000);
+  assertNotNull(message);
+  assertEquals(inFile.getName(),message.getInboundProperty(FileConnector.PROPERTY_ORIGINAL_FILENAME));
+  assertNotNull(message.getPayload().getValue());
+  if (streaming) {
+    assertTrue(message.getPayload().getValue() instanceof DelegatingInputStream);
+    InputStream fis=(InputStream)message.getPayload().getValue();
+    ByteArrayOutputStream byteOut=new ByteArrayOutputStream();
+    IOUtils.copy(fis,byteOut);
+    assertFilesUntouched(inFile);
+    fis.close();
+    String result=new String(byteOut.toByteArray());
+    assertEquals(TEST_MESSAGE,result);
+  }
+ else {
+    assertTrue(message.getPayload().getValue() instanceof byte[]);
+    assertEquals(TEST_MESSAGE,new String((byte[])message.getPayload().getValue()));
+  }
+}

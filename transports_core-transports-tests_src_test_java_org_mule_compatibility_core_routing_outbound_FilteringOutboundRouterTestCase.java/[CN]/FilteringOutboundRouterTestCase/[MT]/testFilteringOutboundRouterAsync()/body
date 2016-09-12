@@ -7,24 +7,24 @@
   PayloadTypeFilter filter=new PayloadTypeFilter(String.class);
   router.setMuleContext(muleContext);
   router.setFilter(filter);
-  List<MessageProcessor> endpoints=new ArrayList<>();
+  List<Processor> endpoints=new ArrayList<>();
   endpoints.add(mockEndpoint);
   router.setRoutes(endpoints);
   assertTrue(router.isUseTemplates());
   assertEquals(filter,router.getFilter());
-  MuleMessage message=MuleMessage.builder().payload("test event").build();
-  assertTrue(router.isMatch(getTestEvent(message),mock(MuleEvent.Builder.class)));
-  when(mockEndpoint.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer());
+  InternalMessage message=InternalMessage.builder().payload("test event").build();
+  assertTrue(router.isMatch(getTestEvent(message),mock(Event.Builder.class)));
+  when(mockEndpoint.process(any(Event.class))).thenAnswer(new MuleEventCheckAnswer());
   MuleSession session=mock(MuleSession.class);
   Flow flow=getTestFlow();
-  router.route(MuleEvent.builder(DefaultMessageContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).session(session).build());
-  message=MuleMessage.builder().payload(new Exception("test event")).build();
-  assertTrue(!router.isMatch(getTestEvent(message),mock(MuleEvent.Builder.class)));
+  router.route(Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).session(session).build());
+  message=InternalMessage.builder().payload(new Exception("test event")).build();
+  assertTrue(!router.isMatch(getTestEvent(message),mock(Event.Builder.class)));
   router.setTransformers(Arrays.<Transformer>asList(new AbstractTransformer(){
     @Override public Object doTransform(    Object src,    Charset outputEncoding) throws TransformerException {
       return ((Exception)src).getMessage();
     }
   }
 ));
-  assertTrue(router.isMatch(getTestEvent(message),mock(MuleEvent.Builder.class)));
+  assertTrue(router.isMatch(getTestEvent(message),mock(Event.Builder.class)));
 }

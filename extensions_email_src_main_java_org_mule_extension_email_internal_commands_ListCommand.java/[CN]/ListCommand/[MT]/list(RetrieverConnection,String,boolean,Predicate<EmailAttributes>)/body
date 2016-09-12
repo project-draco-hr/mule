@@ -1,23 +1,23 @@
 {
   try {
     Folder folder=connection.getFolder(folderName,READ_ONLY);
-    List<MuleMessage> list=new LinkedList<>();
-    for (    Message m : folder.getMessages()) {
+    List<Message> list=new LinkedList<>();
+    for (    javax.mail.Message m : folder.getMessages()) {
       Object body="";
       EmailAttributes attributes=fromMessage(m);
       if (matcher.test(attributes)) {
         if (readContent) {
           body=EmailContentProcessor.process(m).getBody();
-          final List<MuleMessage> attachmentParts=process(m).getAttachments();
+          final List<Message> attachmentParts=process(m).getAttachments();
           if (!attachmentParts.isEmpty()) {
-            final List<MuleMessage> parts=new ArrayList<>();
-            parts.add(MuleMessage.builder().payload(body).attributes(BODY_ATTRIBUTES).build());
+            final List<Message> parts=new ArrayList<>();
+            parts.add(Message.builder().payload(body).attributes(BODY_ATTRIBUTES).build());
             parts.addAll(attachmentParts);
-            body=new DefaultMultiPartPayload(parts);
+            body=new DefaultMultiPartContent(parts);
           }
         }
         attributes=fromMessage(m);
-        list.add(MuleMessage.builder().payload(body).attributes(attributes).build());
+        list.add(Message.builder().payload(body).attributes(attributes).build());
       }
     }
     return list;

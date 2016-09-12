@@ -1,19 +1,19 @@
 {
   Object payload=src;
-  if (src instanceof MuleMessage) {
-    MuleMessage message=(MuleMessage)src;
+  if (src instanceof InternalMessage) {
+    InternalMessage message=(InternalMessage)src;
     if ((!isSourceDataTypeSupported(DataType.MULE_MESSAGE,true) && !(this instanceof AbstractMessageTransformer))) {
-      src=((MuleMessage)src).getPayload();
-      payload=message.getPayload();
+      src=((InternalMessage)src).getPayload().getValue();
+      payload=message.getPayload().getValue();
     }
   }
   DataType sourceType=DataType.fromObject(payload);
-  if (MultiPartPayload.class.isAssignableFrom(sourceType.getType())) {
-    Message msg=createStaticMessage("\"%s\" cannot be transformed to %s.",MultiPartPayload.class.getSimpleName(),getReturnDataType().getType().getName());
+  if (MultiPartContent.class.isAssignableFrom(sourceType.getType())) {
+    I18nMessage msg=createStaticMessage("\"%s\" cannot be transformed to %s.",MultiPartContent.class.getSimpleName(),getReturnDataType().getType().getName());
     throw new TransformerException(msg,this);
   }
   if (!isSourceDataTypeSupported(sourceType)) {
-    Message msg=CoreMessages.transformOnObjectUnsupportedTypeOfEndpoint(getName(),payload.getClass());
+    I18nMessage msg=CoreMessages.transformOnObjectUnsupportedTypeOfEndpoint(getName(),payload.getClass());
     throw new TransformerException(msg,this);
   }
   if (logger.isDebugEnabled()) {

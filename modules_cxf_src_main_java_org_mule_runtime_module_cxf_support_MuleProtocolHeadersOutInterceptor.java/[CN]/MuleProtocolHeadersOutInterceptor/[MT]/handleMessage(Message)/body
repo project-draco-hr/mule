@@ -1,12 +1,12 @@
 {
-  MuleEvent event=(MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT);
+  Event event=(Event)message.getExchange().get(CxfConstants.MULE_EVENT);
   if (event == null || event instanceof NonBlockingVoidMuleEvent) {
     return;
   }
   if (event.getMessage() == null) {
     return;
   }
-  MuleMessage.Builder messageBuilder=MuleMessage.builder(event.getMessage());
+  InternalMessage.Builder messageBuilder=InternalMessage.builder(event.getMessage());
   extractAndSetContentType(message,messageBuilder);
   extractAndSet(message,messageBuilder,Message.RESPONSE_CODE,HTTP_STATUS_PROPERTY);
   String method=(String)message.get(Message.HTTP_REQUEST_METHOD);
@@ -20,7 +20,7 @@
       messageBuilder.addOutboundProperty(key,val);
     }
   }
-  event=MuleEvent.builder(event).message(messageBuilder.build()).build();
+  event=Event.builder(event).message(messageBuilder.build()).build();
   message.getExchange().put(CxfConstants.MULE_EVENT,event);
   if (!Boolean.TRUE.equals(message.containsKey(Message.REQUESTOR_ROLE))) {
     message.getInterceptorChain().pause();

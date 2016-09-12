@@ -1,9 +1,9 @@
 {
   MuleClient client=muleContext.getClient();
   InputStream xml=getClass().getResourceAsStream("/direct/direct-request.xml");
-  MuleMessage result=client.send("http://localhost:" + dynamicPort.getNumber() + "/services/Echo",MuleMessage.builder().payload(xml).mediaType(APP_SOAP_XML).build(),HTTP_REQUEST_OPTIONS).getRight();
+  InternalMessage result=client.send("http://localhost:" + dynamicPort.getNumber() + "/services/Echo",InternalMessage.builder().payload(xml).mediaType(APP_SOAP_XML).build(),HTTP_REQUEST_OPTIONS).getRight();
   assertTrue(getPayloadAsString(result).contains("Hello!"));
-  String ct=result.getDataType().getMediaType().toRfcString();
+  String ct=result.getPayload().getDataType().getMediaType().toRfcString();
   assertEquals("text/xml; charset=UTF-8",ct);
   muleContext.getRegistry().lookupObject(SensingNullRequestResponseMessageProcessor.class).assertRequestResponseThreadsSame();
 }

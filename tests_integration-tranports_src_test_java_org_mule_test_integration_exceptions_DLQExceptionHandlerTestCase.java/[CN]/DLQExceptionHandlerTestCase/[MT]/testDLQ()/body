@@ -2,7 +2,7 @@
   MuleClient client=muleContext.getClient();
   client.dispatch("jms://request.queue","testing 1 2 3",null);
   assertThat(client.request("jms://out.queue",3000).getRight().isPresent(),is(false));
-  MuleMessage message=null;
+  InternalMessage message=null;
   try {
     message=client.request("jms://DLQ",20000).getRight().get();
   }
@@ -10,6 +10,6 @@
     e.printStackTrace(System.err);
   }
   assertNotNull(message);
-  ExceptionMessage em=(ExceptionMessage)message.getPayload();
+  ExceptionMessage em=(ExceptionMessage)message.getPayload().getValue();
   assertEquals("testing 1 2 3",em.getPayload());
 }

@@ -1,0 +1,42 @@
+{
+  Session session=null;
+  try {
+    Message result;
+    Object src=message.getPayload().getValue();
+    if (src instanceof Message) {
+      result=(Message)src;
+      result.clearProperties();
+    }
+ else {
+      session=this.getSession();
+      result=JmsMessageUtils.toMessage(src,session);
+    }
+    this.setJmsProperties(message,result);
+    return result;
+  }
+ catch (  Exception e) {
+    if (e instanceof EOFException) {
+      e=new EndpointConnectException(e,getEndpoint().getConnector());
+    }
+    throw new TransformerException(this,e);
+  }
+ finally {
+    if (session != null && endpoint != null) {
+      Transaction muleTx=TransactionCoordination.getInstance().getTransaction();
+      final JmsConnector connector=(JmsConnector)endpoint.getConnector();
+      if (muleTx == null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Closing non-transacted jms session: " + session);
+        }
+        connector.closeQuietly(session);
+      }
+ else       if (!muleTx.hasResource(connector.getConnection())) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Closing an orphaned, but transacted jms session: " + session + ", transaction: "+ muleTx);
+        }
+        connector.closeQuietly(session);
+      }
+    }
+    session=null;
+  }
+}

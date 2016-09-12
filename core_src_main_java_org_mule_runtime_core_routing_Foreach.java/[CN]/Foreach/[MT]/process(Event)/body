@@ -1,0 +1,43 @@
+{
+  String parentMessageProp=rootMessageVariableName != null ? rootMessageVariableName : ROOT_MESSAGE_PROPERTY;
+  Object previousCounterVar=null;
+  Object previousRootMessageVar=null;
+  if (event.getVariableNames().contains(counterVariableName)) {
+    previousCounterVar=event.getVariable(counterVariableName);
+  }
+  if (event.getVariableNames().contains(parentMessageProp)) {
+    previousRootMessageVar=event.getVariable(parentMessageProp);
+  }
+  InternalMessage message=event.getMessage();
+  final Builder requestBuilder=Event.builder(event);
+  boolean transformed=false;
+  if (xpathCollection) {
+    InternalMessage transformedMessage=transformPayloadIfNeeded(message);
+    if (transformedMessage != message) {
+      transformed=true;
+      message=transformedMessage;
+      requestBuilder.message(transformedMessage);
+    }
+  }
+  requestBuilder.addVariable(parentMessageProp,message);
+  final Builder responseBuilder=Event.builder(doProcess(requestBuilder.build()));
+  if (transformed) {
+    responseBuilder.message(transformBack(message));
+  }
+ else {
+    responseBuilder.message(message);
+  }
+  if (previousCounterVar != null) {
+    responseBuilder.addVariable(counterVariableName,previousCounterVar);
+  }
+ else {
+    responseBuilder.removeVariable(counterVariableName);
+  }
+  if (previousRootMessageVar != null) {
+    responseBuilder.addVariable(parentMessageProp,previousRootMessageVar);
+  }
+ else {
+    responseBuilder.removeVariable(parentMessageProp);
+  }
+  return responseBuilder.build();
+}

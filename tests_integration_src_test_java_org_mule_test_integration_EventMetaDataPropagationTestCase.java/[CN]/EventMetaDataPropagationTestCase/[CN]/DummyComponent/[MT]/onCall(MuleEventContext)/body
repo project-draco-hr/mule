@@ -7,10 +7,10 @@
     props.put("integerParam",12345);
     props.put("longParam",(long)123456789);
     props.put("booleanParam",Boolean.TRUE);
-    return MuleMessage.builder().payload(new DefaultMultiPartPayload(MuleMessage.builder().payload(context.getMessageAsString(muleContext)).attributes(BODY_ATTRIBUTES).build(),MuleMessage.builder().nullPayload().mediaType(MediaType.TEXT).attributes(new PartAttributes("test1")).build())).outboundProperties(props).build();
+    return InternalMessage.builder().payload(new DefaultMultiPartContent(InternalMessage.builder().payload(context.getMessageAsString(muleContext)).attributes(BODY_ATTRIBUTES).build(),InternalMessage.builder().nullPayload().mediaType(MediaType.TEXT).attributes(new PartAttributes("test1")).build())).outboundProperties(props).build();
   }
  else {
-    MuleMessage msg=context.getMessage();
+    InternalMessage msg=context.getMessage();
     assertEquals("param1",msg.getInboundProperty("stringParam"));
     final Object o=msg.getInboundProperty("objectParam");
     assertTrue(o instanceof Apple);
@@ -18,8 +18,8 @@
     assertEquals(12345,msg.<Integer>getInboundProperty("integerParam",0).intValue());
     assertEquals(123456789,msg.<Long>getInboundProperty("longParam",0L).longValue());
     assertEquals(Boolean.TRUE,msg.getInboundProperty("booleanParam",Boolean.FALSE));
-    assertThat(msg.getPayload(),instanceOf(DefaultMultiPartPayload.class));
-    assertThat(((MultiPartPayload)msg.getPayload()).getPart("test1"),not(nullValue()));
+    assertThat(msg.getPayload().getValue(),instanceOf(DefaultMultiPartContent.class));
+    assertThat(((MultiPartContent)msg.getPayload().getValue()).getPart("test1"),not(nullValue()));
   }
   return null;
 }

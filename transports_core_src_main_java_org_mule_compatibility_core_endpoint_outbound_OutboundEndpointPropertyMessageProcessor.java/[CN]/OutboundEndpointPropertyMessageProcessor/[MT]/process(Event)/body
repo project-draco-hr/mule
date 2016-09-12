@@ -1,0 +1,19 @@
+{
+  InternalMessage.Builder messageBuilder=InternalMessage.builder(event.getMessage()).addOutboundProperty(MULE_ENDPOINT_PROPERTY,endpoint.getEndpointURI().toString());
+  if (endpoint.getProperties() != null) {
+    for (    String prop : endpoint.getProperties().keySet()) {
+      Serializable value=endpoint.getProperties().get(prop);
+      if ("Content-Type".equalsIgnoreCase(prop)) {
+        messageBuilder.mediaType(MediaType.parse(value.toString()));
+      }
+ else {
+        if (!ignoreProperty(event.getMessage(),prop)) {
+          messageBuilder.addOutboundProperty(prop,value);
+        }
+      }
+    }
+  }
+  event=Event.builder(event).message(messageBuilder.build()).build();
+  setCurrentEvent(event);
+  return event;
+}

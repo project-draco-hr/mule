@@ -1,9 +1,9 @@
 {
-  ExecutionTemplate<MuleEvent> executionTemplate=createExecutionTemplate();
+  ExecutionTemplate<Event> executionTemplate=createExecutionTemplate();
   final Charset encoding=endpoint.getEncoding();
   if (receiveMessagesInTransaction) {
-    ExecutionCallback<MuleEvent> processingCallback=new MessageProcessingCallback<MuleEvent>(message){
-      @Override public MuleEvent process() throws Exception {
+    ExecutionCallback<Event> processingCallback=new MessageProcessingCallback<Event>(message){
+      @Override public Event process() throws Exception {
         Transaction tx=TransactionCoordination.getInstance().getTransaction();
         if (tx != null) {
           tx.bindResource(connector.getConnection(),ReusableSessionWrapperFactory.createWrapper(session));
@@ -28,7 +28,7 @@
           }
           redeliveryHandler.handleRedelivery(message,receiver.getEndpoint(),receiver.getFlowConstruct());
         }
-        MuleCompatibilityMessage messageToRoute=createMuleMessage(message,encoding);
+        CompatibilityMessage messageToRoute=createMuleMessage(message,encoding);
         return routeMessage(messageToRoute);
       }
     }
@@ -36,7 +36,7 @@
     executionTemplate.execute(processingCallback);
   }
  else {
-    MuleCompatibilityMessage messageToRoute=createMuleMessage(message,encoding);
+    CompatibilityMessage messageToRoute=createMuleMessage(message,encoding);
     routeMessage(messageToRoute);
   }
 }

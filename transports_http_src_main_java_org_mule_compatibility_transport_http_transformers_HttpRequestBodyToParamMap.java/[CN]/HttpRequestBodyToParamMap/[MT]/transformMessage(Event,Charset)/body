@@ -1,0 +1,27 @@
+{
+  Map<String,Object> paramMap=new HashMap<>();
+  try {
+    String httpMethod=event.getMessage().getInboundProperty("http.method");
+    MediaType contentType=event.getMessage().getPayload().getDataType().getMediaType();
+    boolean isGet=METHOD_GET.equalsIgnoreCase(httpMethod);
+    boolean isFormUrlEncoded=MediaType.parse(FORM_URLENCODED_CONTENT_TYPE).matches(contentType);
+    if (!(isGet || isFormUrlEncoded)) {
+      throw new Exception("The HTTP method or content type is unsupported!");
+    }
+    String queryString;
+    if (isGet) {
+      URI uri=new URI(event.getMessageAsString(outputEncoding,muleContext));
+      queryString=uri.getRawQuery();
+    }
+ else {
+      queryString=new String(event.getMessageAsString(muleContext));
+    }
+    if (StringUtils.isNotBlank(queryString)) {
+      addQueryStringToParameterMap(queryString,paramMap,outputEncoding);
+    }
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+  return paramMap;
+}

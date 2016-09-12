@@ -1,0 +1,17 @@
+{
+  Object result=((Callable)objectFactory.getInstance(muleContext)).onCall(new DefaultMuleEventContext(flowConstruct,event));
+  if (result instanceof VoidResult) {
+    return event.getMessage();
+  }
+ else   if (result != null) {
+    if (result instanceof InternalMessage) {
+      return result;
+    }
+ else {
+      return muleContext.getTransformationService().applyTransformers(event.getMessage(),event,singletonList(new TransformerTemplate(new TransformerTemplate.OverwitePayloadCallback(result))));
+    }
+  }
+ else {
+    return null;
+  }
+}

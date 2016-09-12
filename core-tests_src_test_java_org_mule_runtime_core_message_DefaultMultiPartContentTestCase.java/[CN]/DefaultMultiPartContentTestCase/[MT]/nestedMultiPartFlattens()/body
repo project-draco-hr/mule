@@ -1,0 +1,10 @@
+{
+  final InternalMessage attachmentPart1=InternalMessage.builder().payload("this is the attachment1").mediaType(MediaType.TEXT).attributes(new PartAttributes("attachment1")).build();
+  final InternalMessage attachmentPart2=InternalMessage.builder().payload("this is the attachment2").mediaType(MediaType.TEXT).attributes(new PartAttributes("attachment2")).build();
+  InternalMessage messageInner=InternalMessage.builder().payload(new DefaultMultiPartContent(InternalMessage.builder().payload(TEST_PAYLOAD).attributes(BODY_ATTRIBUTES).build(),attachmentPart1)).attributes(BODY_ATTRIBUTES).build();
+  InternalMessage message=InternalMessage.builder().payload(new DefaultMultiPartContent(attachmentPart2,messageInner)).build();
+  assertThat(((MultiPartContent)message.getPayload().getValue()).getParts(),hasSize(3));
+  assertThat(((MultiPartContent)message.getPayload().getValue()).getPart("attachment1"),not(nullValue()));
+  assertThat(((MultiPartContent)message.getPayload().getValue()).getPart("attachment2"),not(nullValue()));
+  assertThat(((DefaultMultiPartContent)message.getPayload().getValue()).getBodyPart(),not(nullValue()));
+}

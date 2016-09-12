@@ -1,0 +1,16 @@
+{
+  Object result;
+  if (transformer instanceof MessageTransformer) {
+    result=((MessageTransformer)transformer).transform(message,event);
+  }
+ else {
+    result=transformer.transform(message);
+  }
+  if (result instanceof InternalMessage) {
+    return (InternalMessage)result;
+  }
+ else {
+    InternalMessage messagePostTransform=(event != null && event.getMessage() != null) ? event.getMessage() : message;
+    return InternalMessage.builder(messagePostTransform).payload(result).mediaType(mergeMediaType(messagePostTransform,transformer.getReturnDataType())).build();
+  }
+}

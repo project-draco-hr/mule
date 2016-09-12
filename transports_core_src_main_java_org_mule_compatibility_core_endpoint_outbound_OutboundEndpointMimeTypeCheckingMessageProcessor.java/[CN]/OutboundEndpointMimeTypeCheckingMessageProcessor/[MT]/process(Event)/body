@@ -1,0 +1,16 @@
+{
+  org.mule.runtime.api.metadata.MediaType endpointMimeType=endpoint.getMimeType();
+  if (endpointMimeType != null) {
+    InternalMessage message=event.getMessage();
+    final DataType dataType=message.getPayload().getDataType();
+    if (DataType.OBJECT.getMediaType().matches(dataType.getMediaType())) {
+      event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).mediaType(dataType.getMediaType()).build()).build();
+    }
+ else {
+      if (!dataType.getMediaType().matches(endpointMimeType)) {
+        throw new MessagingException(CoreMessages.unexpectedMIMEType(dataType.getMediaType().toRfcString(),endpointMimeType.toRfcString()),event,this);
+      }
+    }
+  }
+  return event;
+}

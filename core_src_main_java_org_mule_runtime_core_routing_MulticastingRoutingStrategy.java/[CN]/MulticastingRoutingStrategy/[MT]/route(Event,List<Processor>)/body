@@ -1,0 +1,21 @@
+{
+  InternalMessage message=event.getMessage();
+  if (messageProcessors == null || messageProcessors.size() == 0) {
+    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),null);
+  }
+  List<Event> results=new ArrayList<>(messageProcessors.size());
+  validateMessageIsNotConsumable(event,message);
+  try {
+    for (int i=0; i < messageProcessors.size(); i++) {
+      Processor mp=messageProcessors.get(i);
+      Event result=sendRequest(event,message,mp,true);
+      if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
+        results.add(result);
+      }
+    }
+  }
+ catch (  MuleException e) {
+    throw new CouldNotRouteOutboundMessageException(messageProcessors.get(0),e);
+  }
+  return resultsHandler.aggregateResults(results,event);
+}

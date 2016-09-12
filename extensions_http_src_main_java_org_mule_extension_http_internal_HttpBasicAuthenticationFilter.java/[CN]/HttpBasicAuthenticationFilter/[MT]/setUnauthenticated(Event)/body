@@ -1,0 +1,15 @@
+{
+  String realmHeader="Basic realm=";
+  if (realm != null) {
+    realmHeader+="\"" + realm + "\"";
+  }
+  Map<String,String> headers=getFlowVariableOrNull(headersFlowVar,event);
+  Builder builder=Event.builder(event);
+  if (headers == null) {
+    headers=new HashMap<>();
+    builder.addVariable(headersFlowVar,headers);
+  }
+  headers.put(WWW_AUTHENTICATE,realmHeader);
+  builder.addVariable(statusCodeFlowVar,UNAUTHORIZED.getStatusCode());
+  return builder.build();
+}

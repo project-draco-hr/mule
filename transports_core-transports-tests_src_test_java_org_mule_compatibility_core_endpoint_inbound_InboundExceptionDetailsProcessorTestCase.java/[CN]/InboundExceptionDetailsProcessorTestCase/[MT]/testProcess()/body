@@ -2,10 +2,10 @@
   InboundEndpoint endpoint=createTestInboundEndpoint(null,null);
   InboundExceptionDetailsMessageProcessor mp=new InboundExceptionDetailsMessageProcessor(endpoint.getConnector());
   mp.setMuleContext(muleContext);
-  MuleEvent event=createTestInboundEvent(endpoint);
+  Event event=createTestInboundEvent(endpoint);
   RuntimeException exception=new RuntimeException();
-  event=MuleEvent.builder(event).message(MuleMessage.builder(event.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build()).error(createErrorMock(exception)).build();
-  MuleEvent result=mp.process(event);
+  event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build()).error(createErrorMock(exception)).build();
+  Event result=mp.process(event);
   assertNotNull(result);
   final int status=result.getMessage().getOutboundProperty("status",0);
   assertEquals(500,status);

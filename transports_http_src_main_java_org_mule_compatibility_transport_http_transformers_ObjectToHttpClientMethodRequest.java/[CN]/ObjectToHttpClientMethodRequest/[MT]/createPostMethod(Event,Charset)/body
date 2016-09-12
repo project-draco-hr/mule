@@ -1,0 +1,20 @@
+{
+  final InternalMessage msg=event.getMessage();
+  URI uri=getURI(msg);
+  PostMethod postMethod=new PostMethod(uri.toString());
+  String bodyParameterName=getBodyParameterName(msg);
+  Object src=msg.getPayload().getValue();
+  if (src instanceof Map) {
+    for (    Map.Entry<?,?> entry : ((Map<?,?>)src).entrySet()) {
+      postMethod.addParameter(entry.getKey().toString(),entry.getValue().toString());
+    }
+  }
+ else   if (bodyParameterName != null) {
+    postMethod.addParameter(bodyParameterName,src.toString());
+  }
+ else {
+    setupEntityMethod(src,outputEncoding,event,postMethod);
+  }
+  checkForContentType(msg,postMethod);
+  return postMethod;
+}

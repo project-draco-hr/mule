@@ -7,7 +7,7 @@
         CompletionHandler<org.mule.runtime.api.message.MuleEvent,Exception,org.mule.runtime.api.message.MuleEvent> completionHandler=new CompletionHandler<org.mule.runtime.api.message.MuleEvent,Exception,org.mule.runtime.api.message.MuleEvent>(){
           @Override public void onCompletion(          org.mule.runtime.api.message.MuleEvent result,          ExceptionCallback<org.mule.runtime.api.message.MuleEvent,Exception> exceptionCallback){
             final HttpResponseBuilder responseBuilder=new HttpResponseBuilder();
-            final HttpResponse httpResponse=buildResponse((MuleEvent)result,responseBuilder,supportStreaming,exceptionCallback);
+            final HttpResponse httpResponse=buildResponse((Event)result,responseBuilder,supportStreaming,exceptionCallback);
             responseCallback.responseReady(httpResponse,getResponseFailureCallback(responseCallback));
           }
           @Override public void onFailure(          Exception exception){
@@ -17,8 +17,8 @@
             Integer statusCodeFromException=exceptionStatusCode != null ? Integer.valueOf(exceptionStatusCode) : 500;
             final HttpResponseBuilder failureResponseBuilder=new HttpResponseBuilder().setStatusCode(statusCodeFromException).setReasonPhrase(actualException.getMessage());
             addThrottlingHeaders(failureResponseBuilder);
-            MuleEvent event=messagingException.getEvent();
-            MuleEvent exceptionEvent=MuleEvent.builder(event).message(org.mule.runtime.core.api.MuleMessage.builder(event.getMessage()).payload(actualException.getMessage()).build()).build();
+            Event event=messagingException.getEvent();
+            Event exceptionEvent=Event.builder(event).message(org.mule.runtime.core.api.InternalMessage.builder(event.getMessage()).payload(actualException.getMessage()).build()).build();
             HttpResponse response;
             try {
               response=muleEventToHttpResponse.create(exceptionEvent,failureResponseBuilder,errorResponseBuilder,supportStreaming);

@@ -1,0 +1,33 @@
+{
+  HttpRequesterRequestBuilder requestBuilder=requester.getRequestBuilder();
+  HttpRequestBuilder builder=new HttpRequestBuilder();
+  builder.setUri(resolvedUri);
+  builder.setMethod(resolvedMethod);
+  builder.setHeaders(requestBuilder.getHeaders(event,muleContext));
+  builder.setQueryParams(requestBuilder.getQueryParams(event,muleContext));
+  for (  String outboundProperty : event.getMessage().getOutboundPropertyNames()) {
+    if (isNotIgnoredProperty(outboundProperty)) {
+      builder.addHeader(outboundProperty,event.getMessage().getOutboundProperty(outboundProperty).toString());
+    }
+  }
+  DataType dataType=event.getMessage().getPayload().getDataType();
+  if (!MediaType.ANY.matches(dataType.getMediaType())) {
+    builder.addHeader(CONTENT_TYPE,dataType.getMediaType().toRfcString());
+  }
+  if (requester.getConfig().isEnableCookies()) {
+    try {
+      Map<String,List<String>> headers=requester.getConfig().getCookieManager().get(URI.create(resolvedUri),Collections.<String,List<String>>emptyMap());
+      List<String> cookies=headers.get(COOKIE);
+      if (cookies != null) {
+        for (        String cookie : cookies) {
+          builder.addHeader(COOKIE,cookie);
+        }
+      }
+    }
+ catch (    IOException e) {
+      logger.warn("Error reading cookies for URI " + resolvedUri,e);
+    }
+  }
+  builder.setEntity(createRequestEntity(builder,event,resolvedMethod));
+  return builder;
+}

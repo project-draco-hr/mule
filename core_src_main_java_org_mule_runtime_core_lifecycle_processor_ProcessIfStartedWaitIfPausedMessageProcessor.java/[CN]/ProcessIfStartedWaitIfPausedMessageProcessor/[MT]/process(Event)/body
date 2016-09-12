@@ -1,0 +1,22 @@
+{
+  Builder builder=Event.builder(event);
+  if (accept(event,builder)) {
+    if (isPaused()) {
+      try {
+        if (logger.isDebugEnabled()) {
+          logger.debug(startable.getClass().getName() + " " + getStartableName(startable)+ " is paused. Blocking call until resumed");
+        }
+        while (isPaused()) {
+          Thread.sleep(500);
+        }
+      }
+ catch (      InterruptedException e) {
+        throw new MessagingException(interruptedWaitingForPaused(getStartableName(startable)),event,e,this);
+      }
+    }
+    return processNext(builder.build());
+  }
+ else {
+    return handleUnaccepted(builder.build());
+  }
+}

@@ -1,12 +1,12 @@
 {
-  Map<String,String> map=new HashMap<String,String>();
+  Map<String,String> map=new HashMap<>();
   map.put("key1","value1");
   map.put("key2","value2");
   MuleClient client=muleContext.getClient();
   flowRunner("testService6").withPayload(getTestMuleMessage(map)).asynchronously().run();
-  MuleMessage message=client.request("test://out6",RECEIVE_TIMEOUT).getRight().get();
-  assertTrue(message.getPayload() instanceof ExceptionMessage);
-  Object payload=((ExceptionMessage)message.getPayload()).getPayload();
+  InternalMessage message=client.request("test://out6",RECEIVE_TIMEOUT).getRight().get();
+  assertTrue(message.getPayload().getValue() instanceof ExceptionMessage);
+  Object payload=((ExceptionMessage)message.getPayload().getValue()).getPayload();
   assertTrue("payload shoud be a Map, but is " + payload.getClass().getName(),payload instanceof Map<?,?>);
   Map<?,?> payloadMap=(Map<?,?>)payload;
   assertEquals("value1",payloadMap.get("key1"));

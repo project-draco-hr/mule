@@ -1,0 +1,20 @@
+{
+  final Builder builder=InternalMessage.builder(message);
+  List<Attachment> attachments=new ArrayList<>();
+  for (  String outboundAttachmentName : message.getOutboundAttachmentNames()) {
+    attachments.add(new AttachmentImpl(outboundAttachmentName,message.getOutboundAttachment(outboundAttachmentName)));
+  }
+  try {
+    if (message.getPayload().getValue() instanceof MultiPartContent) {
+      for (      org.mule.runtime.api.message.Message part : ((MultiPartContent)message.getPayload().getValue()).getParts()) {
+        final String partName=((PartAttributes)part.getAttributes()).getName();
+        attachments.add(new AttachmentImpl(partName,toDataHandler(partName,part.getPayload().getValue(),part.getPayload().getDataType().getMediaType())));
+      }
+      builder.nullPayload();
+    }
+  }
+ catch (  IOException e) {
+    throw new MessagingException(CoreMessages.createStaticMessage("Exception processing attachments."),eventBuilder.build(),e,this);
+  }
+  eventBuilder.addVariable(CxfConstants.ATTACHMENTS,attachments).message(builder.outboundAttachments(emptyMap()).build());
+}

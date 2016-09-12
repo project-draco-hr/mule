@@ -1,0 +1,66 @@
+{
+  final String groupId=event.getCorrelationId();
+  if (logger.isTraceEnabled()) {
+    try {
+      logger.trace(String.format("Received async reply message for correlationID: %s%n%s%n%s",groupId,StringMessageUtils.truncate(StringMessageUtils.toString(event.getMessage().getPayload().getValue()),200,false),StringMessageUtils.headersToString(event.getMessage())));
+    }
+ catch (    Exception e) {
+    }
+  }
+  while (true) {
+    try {
+      if (isGroupAlreadyProcessed(groupId)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("An event was received for an event group that has already been processed, " + "this is probably because the async-reply timed out. GroupCorrelation Id is: " + groupId + ". Dropping event");
+        }
+        muleContext.fireNotification(new RoutingNotification(event.getMessage(),event.getContext().getOriginatingConnectorName(),MISSED_AGGREGATION_GROUP_EVENT));
+        return null;
+      }
+    }
+ catch (    ObjectStoreException e) {
+      throw new RoutingException(timeoutMessageProcessor,e);
+    }
+    EventGroup group;
+    try {
+      group=this.getEventGroup(groupId);
+    }
+ catch (    ObjectStoreException e) {
+      throw new RoutingException(timeoutMessageProcessor,e);
+    }
+    if (group == null) {
+      try {
+        EventGroup eventGroup=callback.createEventGroup(event,groupId);
+        eventGroup.initEventsStore(correlatorStore);
+        group=this.addEventGroup(eventGroup);
+      }
+ catch (      ObjectStoreException e) {
+        throw new RoutingException(timeoutMessageProcessor,e);
+      }
+    }
+synchronized (groupsLock) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Adding event to aggregator group: " + groupId);
+      }
+      try {
+        group.addEvent(event);
+      }
+ catch (      ObjectStoreException e) {
+        throw new RoutingException(timeoutMessageProcessor,e);
+      }
+      if (callback.shouldAggregateEvents(group)) {
+        Event returnEvent=callback.aggregateEvents(group);
+        try {
+          this.removeEventGroup(group);
+          group.clear();
+        }
+ catch (        ObjectStoreException e) {
+          throw new RoutingException(timeoutMessageProcessor,e);
+        }
+        return returnEvent;
+      }
+ else {
+        return null;
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  String followRedirects=(String)endpoint.getProperty("followRedirects");
+  if (followRedirects == null || "false".equalsIgnoreCase(followRedirects)) {
+    if (logger.isInfoEnabled()) {
+      logger.info("Received a redirect, but followRedirects=false. Response code: " + method.getStatusCode() + " "+ method.getStatusText());
+    }
+    return getResponseFromMethod(method,null);
+  }
+  Header locationHeader=method.getResponseHeader(HttpConstants.HEADER_LOCATION);
+  if (locationHeader == null) {
+    throw new HttpResponseException(method.getStatusText(),method.getStatusCode());
+  }
+  OutboundEndpoint out=new EndpointURIEndpointBuilder(locationHeader.getValue(),getEndpoint().getMuleContext()).buildOutboundEndpoint();
+  Event result=out.process(event);
+  if (result != null && !VoidMuleEvent.getInstance().equals(result)) {
+    return result.getMessage();
+  }
+ else {
+    return null;
+  }
+}

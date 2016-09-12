@@ -1,0 +1,28 @@
+{
+  final Object src=msg.getPayload().getValue();
+  final URI uri=getURI(msg);
+  HttpMethod httpMethod;
+  String query=uri.getRawQuery();
+  httpMethod=new GetMethod(uri.toString());
+  String paramName=msg.getOutboundProperty(HttpConnector.HTTP_GET_BODY_PARAM_PROPERTY,null);
+  if (paramName != null) {
+    paramName=URLEncoder.encode(paramName,outputEncoding.name());
+    String paramValue;
+    if (msg.getOutboundProperty(HttpConnector.HTTP_ENCODE_PARAMVALUE,true)) {
+      paramValue=URLEncoder.encode(src.toString(),outputEncoding.name());
+    }
+ else {
+      paramValue=src.toString();
+    }
+    if (src != null && !StringUtils.EMPTY.equals(src)) {
+      if (query == null) {
+        query=paramName + "=" + paramValue;
+      }
+ else {
+        query+="&" + paramName + "="+ paramValue;
+      }
+    }
+  }
+  httpMethod.setQueryString(query);
+  return httpMethod;
+}

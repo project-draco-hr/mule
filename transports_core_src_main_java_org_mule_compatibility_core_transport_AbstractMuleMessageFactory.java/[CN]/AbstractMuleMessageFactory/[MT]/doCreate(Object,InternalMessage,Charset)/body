@@ -1,0 +1,32 @@
+{
+  if (transportMessage == null) {
+    return (CompatibilityMessage)new MuleCompatibilityMessageBuilder().nullPayload().build();
+  }
+  if (!isTransportMessageTypeSupported(transportMessage)) {
+    throw new MessageTypeNotSupportedException(transportMessage,getClass());
+  }
+  Object payload=extractPayload(transportMessage,encoding);
+  DataTypeParamsBuilder dataTypeBuilder=DataType.builder().type(payload == null ? Object.class : payload.getClass()).charset(encoding);
+  String mimeType=getMimeType(transportMessage);
+  if (StringUtils.isNotEmpty(mimeType)) {
+    dataTypeBuilder=dataTypeBuilder.mediaType(mimeType);
+  }
+  final DataType dataType=dataTypeBuilder.build();
+  MuleCompatibilityMessageBuilder messageBuilder;
+  if (previousMessage != null) {
+    messageBuilder=(MuleCompatibilityMessageBuilder)new MuleCompatibilityMessageBuilder(previousMessage).payload(payload);
+  }
+ else   if (payload instanceof InternalMessage) {
+    messageBuilder=new MuleCompatibilityMessageBuilder((InternalMessage)payload);
+  }
+ else   if (payload == null) {
+    messageBuilder=(MuleCompatibilityMessageBuilder)new MuleCompatibilityMessageBuilder().nullPayload();
+  }
+ else {
+    messageBuilder=(MuleCompatibilityMessageBuilder)new MuleCompatibilityMessageBuilder().payload(payload);
+  }
+  messageBuilder.mediaType(dataType.getMediaType());
+  addProperties(messageBuilder,transportMessage);
+  addAttachments(messageBuilder,transportMessage);
+  return messageBuilder.build();
+}

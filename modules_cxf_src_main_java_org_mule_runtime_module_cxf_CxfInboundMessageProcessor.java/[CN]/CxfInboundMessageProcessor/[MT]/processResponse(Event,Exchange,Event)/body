@@ -1,0 +1,39 @@
+{
+  if (responseEvent == null || VoidMuleEvent.getInstance().equals(responseEvent) || !event.getExchangePattern().hasResponse()) {
+    return null;
+  }
+  final InternalMessage message=responseEvent.getMessage();
+  InternalMessage.Builder builder=InternalMessage.builder(message);
+  BindingOperationInfo binding=exchange.get(BindingOperationInfo.class);
+  if (null != binding && null != binding.getOperationInfo() && binding.getOperationInfo().isOneWay()) {
+    builder.addOutboundProperty(HTTP_STATUS_PROPERTY,ACCEPTED.getStatusCode());
+    builder.nullPayload();
+  }
+ else {
+    final Optional<Charset> charset=message.getPayload().getDataType().getMediaType().getCharset();
+    if (charset.isPresent()) {
+      builder.payload(getResponseOutputHandler(exchange)).mediaType(XML.withCharset(charset.get()));
+    }
+ else {
+      builder.payload(getResponseOutputHandler(exchange)).mediaType(XML);
+    }
+  }
+  Message faultMsg=exchange.getOutFaultMessage();
+  if (faultMsg != null) {
+    if (null != binding && null != binding.getOperationInfo() && binding.getOperationInfo().isOneWay()) {
+      final Optional<Charset> charset=message.getPayload().getDataType().getMediaType().getCharset();
+      if (charset.isPresent()) {
+        builder.payload(getResponseOutputHandler(exchange)).mediaType(XML.withCharset(charset.get()));
+      }
+ else {
+        builder.payload(getResponseOutputHandler(exchange)).mediaType(XML);
+      }
+    }
+    Exception ex=faultMsg.getContent(Exception.class);
+    if (ex != null) {
+      builder.exceptionPayload(new DefaultExceptionPayload(ex));
+      builder.addOutboundProperty(HTTP_STATUS_PROPERTY,500);
+    }
+  }
+  return Event.builder(responseEvent).message(builder.build()).build();
+}

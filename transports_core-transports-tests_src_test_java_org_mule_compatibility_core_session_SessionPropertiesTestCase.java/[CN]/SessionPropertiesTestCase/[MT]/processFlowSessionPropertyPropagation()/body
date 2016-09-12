@@ -1,9 +1,9 @@
 {
-  MuleMessage message=MuleMessage.builder().payload("data").build();
-  MuleEvent event=MuleEvent.builder(context).message(message).exchangePattern(REQUEST_RESPONSE).flow(flow).build();
+  InternalMessage message=InternalMessage.builder().payload("data").build();
+  Event event=Event.builder(context).message(message).exchangePattern(REQUEST_RESPONSE).flow(flow).build();
   SensingNullMessageProcessor flowListener=new SensingNullMessageProcessor();
   Flow flow=new Flow("flow",muleContext);
-  flow.setMessageProcessors(Collections.<MessageProcessor>singletonList(flowListener));
+  flow.setMessageProcessors(Collections.<Processor>singletonList(flowListener));
   flow.initialise();
   flow.start();
   Object nonSerializable=new Object();
@@ -11,7 +11,7 @@
   event.getSession().setProperty("key2",nonSerializable);
   flow.process(event);
   flowListener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS);
-  MuleEvent processedEvent=flowListener.event;
+  Event processedEvent=flowListener.event;
   assertNotSame(processedEvent,event);
   assertEquals(processedEvent.getMessage(),event.getMessage());
   assertSame(processedEvent.getSession(),event.getSession());

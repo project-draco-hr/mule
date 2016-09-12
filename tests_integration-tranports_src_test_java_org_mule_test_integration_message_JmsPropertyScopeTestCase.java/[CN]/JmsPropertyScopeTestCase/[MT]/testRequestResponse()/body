@@ -1,9 +1,9 @@
 {
   MuleClient client=muleContext.getClient();
-  final MuleMessage message=MuleMessage.builder().payload(TEST_PAYLOAD).addOutboundProperty("foo","fooValue").addOutboundProperty(MULE_REPLY_TO_PROPERTY,"jms://reply").build();
+  final InternalMessage message=InternalMessage.builder().payload(TEST_PAYLOAD).addOutboundProperty("foo","fooValue").addOutboundProperty(MULE_REPLY_TO_PROPERTY,"jms://reply").build();
   client.dispatch("inbound",message);
-  MuleMessage result=client.request("jms://reply",10000).getRight().get();
+  InternalMessage result=client.request("jms://reply",10000).getRight().get();
   assertNotNull(result);
-  assertEquals("test bar",result.getPayload());
+  assertEquals("test bar",result.getPayload().getValue());
   assertEquals("fooValue",result.getInboundProperty("foo"));
 }

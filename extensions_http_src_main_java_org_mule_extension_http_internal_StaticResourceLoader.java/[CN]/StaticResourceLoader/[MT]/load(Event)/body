@@ -1,0 +1,42 @@
+{
+  checkArgument(event.getMessage().getAttributes() instanceof HttpRequestAttributes,"Message attributes must be HttpRequestAttributes.");
+  HttpRequestAttributes attributes=(HttpRequestAttributes)event.getMessage().getAttributes();
+  String path=attributes.getRequestPath();
+  String contextPath=attributes.getListenerPath();
+  if (contextPath.equals(ANY_PATH)) {
+    contextPath=ROOT_PATH;
+  }
+  if (contextPath.endsWith(ANY_PATH)) {
+    contextPath=StringUtils.removeEnd(contextPath,ANY_PATH);
+  }
+  if (!ROOT_PATH.equals(contextPath)) {
+    path=path.substring(contextPath.length());
+  }
+  File file=new File(resourceBasePath + path);
+  InternalMessage result;
+  if (file.isDirectory()) {
+    if (!path.endsWith("/")) {
+      path=path + "/";
+    }
+    file=new File(resourceBasePath + path + defaultFile);
+  }
+  InputStream in=null;
+  try {
+    in=new FileInputStream(file);
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    IOUtils.copyLarge(in,baos);
+    byte[] buffer=baos.toByteArray();
+    String mimeType=mimeTypes.getContentType(file);
+    if (mimeType == null) {
+      mimeType=DEFAULT_MIME_TYPE;
+    }
+    result=InternalMessage.builder().payload(buffer).mediaType(MediaType.parse(mimeType)).build();
+    return result;
+  }
+ catch (  IOException e) {
+    throw new ResourceNotFoundException(createStaticMessage(format("The file: %s was not found.",resourceBasePath + path)),e);
+  }
+ finally {
+    IOUtils.closeQuietly(in);
+  }
+}

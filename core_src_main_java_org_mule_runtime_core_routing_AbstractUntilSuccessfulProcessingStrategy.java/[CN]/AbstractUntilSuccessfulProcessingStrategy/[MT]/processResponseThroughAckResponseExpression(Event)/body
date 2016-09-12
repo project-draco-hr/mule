@@ -1,0 +1,10 @@
+{
+  if (event == null || VoidMuleEvent.getInstance().equals(event)) {
+    return VoidMuleEvent.getInstance();
+  }
+  final String ackExpression=getUntilSuccessfulConfiguration().getAckExpression();
+  if (ackExpression == null) {
+    return event;
+  }
+  return Event.builder(event).message(InternalMessage.builder(event.getMessage()).payload(getUntilSuccessfulConfiguration().getMuleContext().getExpressionLanguage().evaluate(ackExpression,event,null)).build()).build();
+}

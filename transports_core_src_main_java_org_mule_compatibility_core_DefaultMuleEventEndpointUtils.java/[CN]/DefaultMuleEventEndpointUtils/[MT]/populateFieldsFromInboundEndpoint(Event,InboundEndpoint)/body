@@ -1,0 +1,17 @@
+{
+  Builder builder=Event.builder(event);
+  if (!event.getMessage().getPayload().getDataType().getMediaType().getCharset().isPresent() && endpoint.getEncoding() != null) {
+    builder.message(InternalMessage.builder(event.getMessage()).mediaType(DataType.builder(event.getMessage().getPayload().getDataType()).charset(endpoint.getEncoding()).build().getMediaType()).build());
+  }
+  if (endpoint != null && endpoint.getProperties() != null) {
+    for (    Object name : endpoint.getProperties().keySet()) {
+      String prop=(String)name;
+      if (!ignoreProperty(prop,event.getMessage())) {
+        Object value=endpoint.getProperties().get(prop);
+        builder.addVariable(prop,value);
+      }
+    }
+  }
+  builder.exchangePattern(endpoint.getExchangePattern()).transacted(endpoint.getTransactionConfig().isTransacted()).refreshSync().build();
+  return builder.build();
+}

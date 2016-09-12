@@ -1,11 +1,11 @@
 {
   DefaultMuleConfiguration.verboseExceptions=true;
-  MuleEvent testEvent=mock(MuleEvent.class);
+  Event testEvent=mock(Event.class);
   Object payload=mock(Object.class);
   when(payload.toString()).then(new FailAnswer("toString() expected not to be called."));
-  MuleMessage muleMessage=MuleMessage.builder().payload(payload).build();
-  when(transformationService.transform(muleMessage,DataType.STRING)).thenReturn(MuleMessage.builder().payload(value).build());
+  InternalMessage muleMessage=InternalMessage.builder().payload(payload).build();
+  when(transformationService.transform(muleMessage,DataType.STRING)).thenReturn(InternalMessage.builder().payload(value).build());
   when(testEvent.getMessage()).thenReturn(muleMessage);
-  MessagingException e=new MessagingException(MessageFactory.createStaticMessage(message),testEvent);
+  MessagingException e=new MessagingException(I18nMessageFactory.createStaticMessage(message),testEvent);
   assertThat((String)e.getInfo().get(PAYLOAD_INFO_KEY),is(value));
 }

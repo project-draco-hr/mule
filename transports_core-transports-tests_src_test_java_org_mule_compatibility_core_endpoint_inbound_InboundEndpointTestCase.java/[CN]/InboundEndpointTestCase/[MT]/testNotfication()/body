@@ -6,11 +6,11 @@
   endpoint.setFlowConstruct(getTestFlow());
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
-  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
+  Processor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
   result=mpChain.process(requestEvent);
   assertTrue(listener.latch.await(RECEIVE_TIMEOUT,TimeUnit.MILLISECONDS));
   assertEquals(EndpointMessageNotification.MESSAGE_RECEIVED,listener.messageNotification.getAction());
   assertEquals(endpoint.getEndpointURI().getUri().toString(),listener.messageNotification.getEndpoint());
-  assertTrue(listener.messageNotification.getSource() instanceof MuleMessage);
-  assertThat(listener.messageNotification.getSource().getPayload(),equalTo(inMessage.getPayload()));
+  assertTrue(listener.messageNotification.getSource() instanceof InternalMessage);
+  assertThat(listener.messageNotification.getSource().getPayload().getValue(),equalTo(inMessage.getPayload().getValue()));
 }

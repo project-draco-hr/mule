@@ -1,10 +1,10 @@
 {
   return new CollectionCorrelatorCallback(muleContext,storePrefix){
-    @Override public MuleEvent aggregateEvents(    EventGroup events) throws AggregationException {
+    @Override public Event aggregateEvents(    EventGroup events) throws AggregationException {
       StringBuilder buffer=new StringBuilder(128);
       try {
-        for (Iterator<MuleEvent> iterator=events.iterator(); iterator.hasNext(); ) {
-          MuleEvent event=iterator.next();
+        for (Iterator<Event> iterator=events.iterator(); iterator.hasNext(); ) {
+          Event event=iterator.next();
           try {
             buffer.append(event.transformMessageToString(muleContext));
           }
@@ -17,7 +17,7 @@
         throw new AggregationException(events,null,e);
       }
       logger.debug("event payload is: " + buffer.toString());
-      return MuleEvent.builder(events.getMessageCollectionEvent()).message(MuleMessage.builder().payload(buffer.toString()).build()).build();
+      return Event.builder(events.getMessageCollectionEvent()).message(InternalMessage.builder().payload(buffer.toString()).build()).build();
     }
   }
 ;

@@ -1,0 +1,24 @@
+{
+  InternalMessage message=event.getMessage();
+  List<Object> recipients=getRecipients(event);
+  List<Event> results=new ArrayList<>();
+  event=Event.builder(event).groupCorrelation(new GroupCorrelation(recipients.size(),null)).build();
+  OutboundEndpoint endpoint=null;
+  for (  Object recipient : recipients) {
+    InternalMessage request=InternalMessage.builder(message).payload(message.getPayload().getValue()).build();
+    try {
+      endpoint=getRecipientEndpoint(request,recipient);
+      boolean sync=(this.synchronous == null ? endpoint.getExchangePattern().hasResponse() : this.synchronous.booleanValue());
+      if (sync) {
+        results.add(sendRequest(event,createEventToRoute(event,request),endpoint,true));
+      }
+ else {
+        sendRequest(event,createEventToRoute(event,request),endpoint,false);
+      }
+    }
+ catch (    MuleException e) {
+      throw new CouldNotRouteOutboundMessageException(endpoint,e);
+    }
+  }
+  return resultsHandler.aggregateResults(results,event);
+}

@@ -1,22 +1,22 @@
 {
   final Builder messageBuilder;
-  if (payload instanceof MuleMessage) {
-    messageBuilder=MuleMessage.builder((MuleMessage)payload);
+  if (payload instanceof InternalMessage) {
+    messageBuilder=InternalMessage.builder((InternalMessage)payload);
   }
  else {
-    messageBuilder=MuleMessage.builder().payload(payload);
+    messageBuilder=InternalMessage.builder().payload(payload);
   }
   messageBuilder.mediaType(mediaType).inboundProperties(inboundProperties).outboundProperties(outboundProperties).inboundAttachments(inboundAttachments);
   if (attributes != null) {
     messageBuilder.attributes(attributes);
   }
-  final MuleMessage muleMessage=messageBuilder.build();
-  MuleEvent event=MuleEvent.builder(DefaultMessageContext.create(flow,TEST_CONNECTOR,sourceCorrelationId)).message((MuleMessage)spyTransformer.transform(muleMessage)).flowVariables(flowVariables).exchangePattern(exchangePattern).flow(flow).replyToHandler(replyToHandler).transacted(transacted).build();
+  final InternalMessage muleMessage=messageBuilder.build();
+  Event event=Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR,sourceCorrelationId)).message((InternalMessage)spyTransformer.transform(muleMessage)).variables(flowVariables).exchangePattern(exchangePattern).flow(flow).replyToHandler(replyToHandler).transacted(transacted).build();
   for (  Entry<String,Attachment> outboundAttachmentEntry : outboundAttachments.entrySet()) {
     event=outboundAttachmentEntry.getValue().addOutboundTo(event,outboundAttachmentEntry.getKey());
   }
   for (  Entry<String,Object> sessionPropertyEntry : sessionProperties.entrySet()) {
     event.getSession().setProperty(sessionPropertyEntry.getKey(),sessionPropertyEntry.getValue());
   }
-  return (MuleEvent)spyTransformer.transform(event);
+  return (Event)spyTransformer.transform(event);
 }

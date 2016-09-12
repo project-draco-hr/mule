@@ -1,19 +1,19 @@
 {
   return new AbstractRequestResponseMessageProcessor(){
-    @Override protected MuleEvent processRequest(    MuleEvent event) throws MuleException {
+    @Override protected Event processRequest(    Event event) throws MuleException {
       List<String> outboundProperties=new ArrayList<>(event.getMessage().getOutboundPropertyNames());
-      MuleMessage.Builder builder=MuleMessage.builder(event.getMessage());
+      InternalMessage.Builder builder=InternalMessage.builder(event.getMessage());
       for (      String outboundProperty : outboundProperties) {
         if (outboundProperty.startsWith(SOAP_HEADERS_PROPERTY_PREFIX)) {
           builder.removeOutboundProperty(outboundProperty);
         }
       }
-      return super.processRequest(MuleEvent.builder(event).message(builder.build()).build());
+      return super.processRequest(Event.builder(event).message(builder.build()).build());
     }
-    @Override protected MuleEvent processResponse(    MuleEvent response,    final MuleEvent request) throws MuleException {
+    @Override protected Event processResponse(    Event response,    final Event request) throws MuleException {
       Object statusCode=response.getMessage().getInboundProperty(HTTP_STATUS_PROPERTY,null);
       if (statusCode != null && !(statusCode instanceof String)) {
-        response=MuleEvent.builder(request).message(MuleMessage.builder(response.getMessage()).addInboundProperty(HTTP_STATUS_PROPERTY,statusCode.toString()).build()).build();
+        response=Event.builder(request).message(InternalMessage.builder(response.getMessage()).addInboundProperty(HTTP_STATUS_PROPERTY,statusCode.toString()).build()).build();
       }
       return super.processResponse(response,request);
     }

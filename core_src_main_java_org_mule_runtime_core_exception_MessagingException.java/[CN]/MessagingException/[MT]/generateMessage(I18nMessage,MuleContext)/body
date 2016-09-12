@@ -1,0 +1,37 @@
+{
+  StringBuilder buf=new StringBuilder(80);
+  if (message != null) {
+    buf.append(message.getMessage()).append(".");
+  }
+  if (muleMessage != null) {
+    if (DefaultMuleConfiguration.isVerboseExceptions()) {
+      Object payload=muleMessage.getPayload().getValue();
+      if (muleMessage.getPayload().getDataType().isStreamType()) {
+        addInfo(PAYLOAD_INFO_KEY,abbreviate(payload.toString(),1000));
+      }
+ else {
+        if (payload != null) {
+          addInfo(PAYLOAD_TYPE_INFO_KEY,muleMessage.getPayload().getDataType().getType().getName());
+          if (muleContext != null) {
+            try {
+              addInfo(PAYLOAD_INFO_KEY,muleContext.getTransformationService().transform(muleMessage,DataType.STRING).getPayload().getValue());
+            }
+ catch (            Exception e) {
+              addInfo(PAYLOAD_INFO_KEY,format("%s while getting payload: %s",e.getClass().getName(),e.getMessage()));
+            }
+            addInfo(PAYLOAD_INFO_KEY,muleMessage.toString());
+          }
+        }
+ else {
+          addInfo(PAYLOAD_TYPE_INFO_KEY,Objects.toString(null));
+          addInfo(PAYLOAD_INFO_KEY,Objects.toString(null));
+        }
+      }
+    }
+  }
+ else {
+    buf.append("The current Message is null!");
+    addInfo(PAYLOAD_INFO_KEY,Objects.toString(null));
+  }
+  return buf.toString();
+}

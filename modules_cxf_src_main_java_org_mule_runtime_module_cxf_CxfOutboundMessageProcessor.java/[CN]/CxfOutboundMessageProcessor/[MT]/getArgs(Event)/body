@@ -1,0 +1,30 @@
+{
+  Object payload=event.getMessage().getPayload().getValue();
+  if (proxy) {
+    return new Object[]{event.getMessage()};
+  }
+  Object[] args=payloadToArguments.payloadToArrayOfArguments(payload);
+  List<DataHandler> attachments=new ArrayList<>();
+  for (  String inboundAttachmentName : event.getMessage().getInboundAttachmentNames()) {
+    attachments.add(event.getMessage().getInboundAttachment(inboundAttachmentName));
+  }
+  try {
+    if (event.getMessage().getPayload().getValue() instanceof MultiPartContent) {
+      for (      org.mule.runtime.api.message.Message part : ((MultiPartContent)event.getMessage().getPayload().getValue()).getParts()) {
+        attachments.add(toDataHandler(((PartAttributes)part.getAttributes()).getName(),part.getPayload().getValue(),part.getPayload().getDataType().getMediaType()));
+      }
+    }
+  }
+ catch (  IOException e) {
+    throw new TransformerException(createStaticMessage("Exception processing attachments."),e);
+  }
+  if (!attachments.isEmpty()) {
+    List<Object> temp=new ArrayList<>(asList(args));
+    temp.add(attachments.toArray(new DataHandler[attachments.size()]));
+    args=temp.toArray();
+  }
+  if (args.length == 0) {
+    return null;
+  }
+  return args;
+}

@@ -1,0 +1,36 @@
+{
+  String responseContentType=response.getHeaderValueIgnoreCase(CONTENT_TYPE);
+  DataType dataType=muleEvent.getMessage().getPayload().getDataType();
+  if (StringUtils.isEmpty(responseContentType) && !MediaType.ANY.matches(dataType.getMediaType())) {
+    responseContentType=dataType.getMediaType().toRfcString();
+  }
+  InputStream responseInputStream=((InputStreamHttpEntity)response.getEntity()).getInputStream();
+  Charset encoding=getMediaType(responseContentType,getDefaultEncoding(muleContext)).getCharset().get();
+  Object payload=responseInputStream;
+  if (responseContentType != null && parseResponse) {
+    if (responseContentType.startsWith(MULTI_PART_PREFIX)) {
+      try {
+        payload=multiPartPayloadForAttachments(responseContentType,responseInputStream);
+      }
+ catch (      IOException e) {
+        throw new MessagingException(muleEvent,e);
+      }
+    }
+ else     if (responseContentType.startsWith(APPLICATION_X_WWW_FORM_URLENCODED.toRfcString())) {
+      payload=HttpParser.decodeString(IOUtils.toString(responseInputStream),encoding);
+    }
+  }
+  if (config.isEnableCookies()) {
+    processCookies(response,uri);
+  }
+  HttpResponseAttributes responseAttributes=createAttributes(response);
+  dataType=DataType.builder(dataType).charset(encoding).build();
+  final Builder builder=Message.builder(muleEvent.getMessage()).payload(payload);
+  if (StringUtils.isEmpty(responseContentType)) {
+    builder.mediaType(dataType.getMediaType());
+  }
+ else {
+    builder.mediaType(MediaType.parse(responseContentType));
+  }
+  return builder.attributes(responseAttributes).build();
+}

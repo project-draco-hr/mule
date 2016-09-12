@@ -1,0 +1,17 @@
+{
+  InternalMessage msg=InternalMessage.builder().payload(message).build();
+  try {
+    Flow flow=getTestFlow();
+    Event event=mp.process(Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(msg).exchangePattern(REQUEST_RESPONSE).flow(flow).session(session).build());
+    InternalMessage returnedMessage=event.getMessage();
+    if (event.getError().isPresent()) {
+      return EXCEPTION_SEEN;
+    }
+ else {
+      return getPayloadAsString(returnedMessage);
+    }
+  }
+ catch (  Exception ex) {
+    return EXCEPTION_SEEN;
+  }
+}

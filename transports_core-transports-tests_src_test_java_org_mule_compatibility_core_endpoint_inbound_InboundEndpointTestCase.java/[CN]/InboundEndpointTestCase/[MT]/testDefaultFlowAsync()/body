@@ -1,17 +1,17 @@
 {
   Transformer reqTransformer=mock(Transformer.class);
-  when(reqTransformer.process(any(MuleEvent.class))).then(echoEventAnswer);
+  when(reqTransformer.process(any(Event.class))).then(echoEventAnswer);
   Transformer resTransformer=mock(Transformer.class);
-  when(resTransformer.process(any(MuleEvent.class))).then(echoEventAnswer);
+  when(resTransformer.process(any(Event.class))).then(echoEventAnswer);
   endpoint=createTestInboundEndpoint(null,null,reqTransformer,resTransformer,ONE_WAY,null);
   endpoint.setListener(inboundListener);
   endpoint.setFlowConstruct(getTestFlow());
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
-  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
+  Processor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
   result=mpChain.process(requestEvent);
-  verify(reqTransformer,times(1)).process(any(MuleEvent.class));
-  verify(resTransformer,never()).process(any(MuleEvent.class));
+  verify(reqTransformer,times(1)).process(any(Event.class));
+  verify(resTransformer,never()).process(any(Event.class));
   assertMessageSentSame(false);
   assertEquals(responseEvent.getMessage(),result.getMessage());
 }

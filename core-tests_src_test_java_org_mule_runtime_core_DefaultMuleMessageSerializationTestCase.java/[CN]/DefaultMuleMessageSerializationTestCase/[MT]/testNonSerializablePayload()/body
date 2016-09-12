@@ -1,9 +1,9 @@
 {
   muleContext.getRegistry().registerTransformer(new NonSerializableToByteArray());
-  final MuleMessage message=MuleMessage.builder().payload(new NonSerializable()).addOutboundProperty("foo","bar").build();
+  final InternalMessage message=InternalMessage.builder().payload(new NonSerializable()).addOutboundProperty("foo","bar").build();
   Flow flow=getTestFlow();
-  setCurrentEvent(MuleEvent.builder(DefaultMessageContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).build());
-  MuleMessage deserializedMessage=serializationRoundtrip(message);
-  assertTrue(deserializedMessage.getPayload() instanceof byte[]);
+  setCurrentEvent(Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).build());
+  InternalMessage deserializedMessage=serializationRoundtrip(message);
+  assertTrue(deserializedMessage.getPayload().getValue() instanceof byte[]);
   assertEquals(INNER_TEST_MESSAGE,getPayloadAsString(deserializedMessage));
 }

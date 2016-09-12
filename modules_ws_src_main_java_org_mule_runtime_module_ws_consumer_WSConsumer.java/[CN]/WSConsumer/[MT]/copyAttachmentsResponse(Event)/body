@@ -1,0 +1,29 @@
+{
+  InternalMessage message=event.getMessage();
+  if (event.getVariable(CxfConstants.ATTACHMENTS) != null) {
+    Collection<Attachment> attachments=event.getVariable(CxfConstants.ATTACHMENTS);
+    InternalMessage.Builder builder=InternalMessage.builder(message);
+    if (!attachments.isEmpty()) {
+      List<org.mule.runtime.api.message.Message> parts=new ArrayList<>();
+      parts.add(InternalMessage.builder().payload(message.getPayload().getValue()).mediaType(message.getPayload().getDataType().getMediaType()).attributes(BODY_ATTRIBUTES).build());
+      for (      Attachment attachment : attachments) {
+        Map<String,LinkedList<String>> headers=new HashMap<>();
+        for (Iterator<String> iterator=attachment.getHeaderNames(); iterator.hasNext(); ) {
+          String headerName=iterator.next();
+          headers.put(headerName,new LinkedList<>(singletonList(attachment.getHeader(headerName))));
+        }
+        try {
+          parts.add(InternalMessage.builder().payload(attachment.getDataHandler().getInputStream()).mediaType(MediaType.parse(attachment.getDataHandler().getContentType())).attributes(new PartAttributes(attachment.getId())).build());
+        }
+ catch (        Exception e) {
+          throw new MessagingException(CoreMessages.createStaticMessage("Could not set inbound attachment %s",attachment.getId()),event,e,this);
+        }
+      }
+      builder.payload(new DefaultMultiPartContent(parts));
+    }
+    return Event.builder(event).message(builder.build()).build();
+  }
+ else {
+    return event;
+  }
+}

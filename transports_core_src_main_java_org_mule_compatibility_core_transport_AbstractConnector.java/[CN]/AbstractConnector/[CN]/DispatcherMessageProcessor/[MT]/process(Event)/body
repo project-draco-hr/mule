@@ -1,0 +1,27 @@
+{
+  MessageDispatcher dispatcher=null;
+  try {
+    dispatcher=borrowDispatcher(endpoint);
+    boolean fireNotification=event.isNotificationsEnabled();
+    if (fireNotification) {
+      if (notificationMessageProcessor == null) {
+        notificationMessageProcessor=new OutboundNotificationMessageProcessor(endpoint);
+      }
+      notificationMessageProcessor.dispatchNotification(notificationMessageProcessor.createBeginNotification(event));
+    }
+    Event result=dispatcher.process(event);
+    if (fireNotification) {
+      notificationMessageProcessor.process((result != null && !(result instanceof VoidMuleEvent)) ? result : event);
+    }
+    return result;
+  }
+ catch (  DispatchException dex) {
+    throw dex;
+  }
+catch (  MuleException ex) {
+    throw new DispatchException(endpoint,ex);
+  }
+ finally {
+    returnDispatcher(endpoint,dispatcher);
+  }
+}

@@ -1,0 +1,24 @@
+{
+  Event resultEvent=event;
+  if (isRedeliveryExhausted(t)) {
+    if (redeliveryExceeded != null) {
+      markExceptionAsHandled(t);
+      try {
+        resultEvent=redeliveryExceeded.process(event);
+      }
+ catch (      MuleException e) {
+        if (e instanceof MessagingException) {
+          throw (MessagingException)e;
+        }
+        throw new MessagingException(event,e);
+      }
+    }
+ else {
+      logger.info("Message redelivery exhausted. No redelivery exhausted actions configured. Message consumed.");
+    }
+  }
+ else {
+    resultEvent=super.route(event,t);
+  }
+  return resultEvent;
+}

@@ -1,0 +1,11 @@
+{
+  Socket clientSocket=new Socket(host,port);
+  DataOutputStream outToServer=new DataOutputStream(clientSocket.getOutputStream());
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  WireFormat wireFormat=new SerializedMuleMessageWireFormat();
+  wireFormat.setMuleContext(muleContext);
+  wireFormat.write(baos,msg,msg.getPayload().getDataType().getMediaType().getCharset().orElse(getDefaultEncoding(muleContext)));
+  TcpProtocol delegate=createMuleMessageProtocol();
+  delegate.write(outToServer,baos.toByteArray());
+  clientSocket.close();
+}

@@ -1,12 +1,12 @@
 {
   MuleClient muleClient=muleContext.getClient();
-  MuleMessage response=muleClient.send("vm://in4",ORIGINAL_MESSAGE,null).getRight();
+  InternalMessage response=muleClient.send("vm://in4",ORIGINAL_MESSAGE,null).getRight();
   if (!deadLetterQueueLatch.await(TIMEOUT,TimeUnit.MILLISECONDS)) {
     fail("dead letter queue must be reached");
   }
   assertThat(outboundComponentReached,Is.is(false));
   assertThat(response,IsNull.<Object>notNullValue());
-  assertThat(response.getPayload(),is(nullValue()));
+  assertThat(response.getPayload().getValue(),is(nullValue()));
   assertThat(response.getExceptionPayload(),IsNull.<Object>notNullValue());
   assertThat(response.getExceptionPayload(),IsInstanceOf.instanceOf(DefaultExceptionPayload.class));
   assertThat(muleClient.request("vm://out4",TINY_TIMEOUT).getRight().isPresent(),is(false));

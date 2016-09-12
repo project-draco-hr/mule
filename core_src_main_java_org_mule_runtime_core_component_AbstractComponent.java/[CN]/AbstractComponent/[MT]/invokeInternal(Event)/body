@@ -1,0 +1,30 @@
+{
+  setCurrentEvent(event);
+  if (logger.isTraceEnabled()) {
+    logger.trace(String.format("Invoking %s component for service %s",this.getClass().getName(),flowConstruct.getName()));
+  }
+  if (!lifecycleManager.getState().isStarted() || lifecycleManager.getState().isStopping()) {
+    throw new LifecycleException(CoreMessages.isStopped(flowConstruct.getName()),this);
+  }
+  try {
+    fireComponentNotification(event.getMessage(),ComponentMessageNotification.COMPONENT_PRE_INVOKE);
+    long startTime=0;
+    if (statistics.isEnabled()) {
+      startTime=System.currentTimeMillis();
+    }
+    Event.Builder resultEventBuilder=Event.builder(event);
+    Object result=doInvoke(event,resultEventBuilder);
+    if (statistics.isEnabled()) {
+      statistics.addExecutionTime(System.currentTimeMillis() - startTime);
+    }
+    Event resultEvent=createResultEvent(event,resultEventBuilder,result);
+    fireComponentNotification(resultEvent.getMessage(),ComponentMessageNotification.COMPONENT_POST_INVOKE);
+    return resultEvent;
+  }
+ catch (  MuleException me) {
+    throw me;
+  }
+catch (  Exception e) {
+    throw new ComponentException(CoreMessages.failedToInvoke(this.toString()),this,e);
+  }
+}

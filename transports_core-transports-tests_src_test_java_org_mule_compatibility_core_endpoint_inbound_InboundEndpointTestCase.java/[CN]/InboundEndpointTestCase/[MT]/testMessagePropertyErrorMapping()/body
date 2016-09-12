@@ -5,11 +5,11 @@
   requestEvent=createTestRequestEvent(endpoint);
   responseEvent=createTestResponseEvent(endpoint);
   RuntimeException exception=new RuntimeException();
-  responseEvent=MuleEvent.builder(responseEvent).message(MuleMessage.builder(responseEvent.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build()).error(createErrorMock(exception)).build();
-  MessageProcessor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
+  responseEvent=Event.builder(responseEvent).message(InternalMessage.builder(responseEvent.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build()).error(createErrorMock(exception)).build();
+  Processor mpChain=((AbstractEndpoint)endpoint).getMessageProcessorChain(endpoint.getFlowConstruct());
   result=mpChain.process(requestEvent);
   assertMessageSentSame(true);
-  assertThat(result.getMessage().getPayload(),equalTo(responseEvent.getMessage().getPayload()));
+  assertThat(result.getMessage().getPayload().getValue(),equalTo(responseEvent.getMessage().getPayload().getValue()));
   final int status=result.getMessage().getOutboundProperty("status",0);
   assertEquals(500,status);
 }

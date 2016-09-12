@@ -1,15 +1,15 @@
 {
   ByteArrayInputStream bis=new ByteArrayInputStream(TEST_DATA.getBytes());
   MuleClient client=muleContext.getClient();
-  MuleEvent muleEvent=flowRunner("compressInput").withPayload(bis).run();
-  MuleMessage compressedResponse=muleEvent.getMessage();
+  Event muleEvent=flowRunner("compressInput").withPayload(bis).run();
+  InternalMessage compressedResponse=muleEvent.getMessage();
   assertNotNull(compressedResponse);
-  assertTrue(compressedResponse.getPayload() instanceof InputStream);
-  muleEvent=flowRunner("decompressInput").withPayload(compressedResponse.getPayload()).run();
-  MuleMessage uncompressedResponse=muleEvent.getMessage();
+  assertTrue(compressedResponse.getPayload().getValue() instanceof InputStream);
+  muleEvent=flowRunner("decompressInput").withPayload(compressedResponse.getPayload().getValue()).run();
+  InternalMessage uncompressedResponse=muleEvent.getMessage();
   assertNotNull(uncompressedResponse);
-  assertTrue(uncompressedResponse.getPayload() instanceof InputStream);
-  byte[] uncompressedByteArray=IOUtils.toByteArray((InputStream)uncompressedResponse.getPayload());
+  assertTrue(uncompressedResponse.getPayload().getValue() instanceof InputStream);
+  byte[] uncompressedByteArray=IOUtils.toByteArray((InputStream)uncompressedResponse.getPayload().getValue());
   String uncompressedStr=new String(uncompressedByteArray);
   assertEquals(TEST_DATA,uncompressedStr);
 }

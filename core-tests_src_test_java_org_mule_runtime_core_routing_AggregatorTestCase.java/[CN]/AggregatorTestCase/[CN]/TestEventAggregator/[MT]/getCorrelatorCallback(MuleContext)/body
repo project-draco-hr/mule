@@ -8,17 +8,17 @@
       }
       return false;
     }
-    @Override public EventGroup createEventGroup(    MuleEvent event,    Object groupId){
+    @Override public EventGroup createEventGroup(    Event event,    Object groupId){
       return new EventGroup(groupId,muleContext,of(eventThreshold),storePrefix);
     }
-    @Override public MuleEvent aggregateEvents(    EventGroup events) throws AggregationException {
+    @Override public Event aggregateEvents(    EventGroup events) throws AggregationException {
       if (events.size() != eventThreshold) {
         throw new IllegalStateException("eventThreshold not yet reached?");
       }
       StringBuilder newPayload=new StringBuilder(80);
       try {
         for (Iterator iterator=events.iterator(false); iterator.hasNext(); ) {
-          MuleEvent event=(MuleEvent)iterator.next();
+          Event event=(Event)iterator.next();
           try {
             newPayload.append(event.getMessageAsString(muleContext)).append(" ");
           }
@@ -30,7 +30,7 @@
  catch (      ObjectStoreException e) {
         throw new AggregationException(events,next,e);
       }
-      return MuleEvent.builder(events.getMessageCollectionEvent()).message(MuleMessage.builder().payload(newPayload.toString()).build()).build();
+      return Event.builder(events.getMessageCollectionEvent()).message(InternalMessage.builder().payload(newPayload.toString()).build()).build();
     }
   }
 ;

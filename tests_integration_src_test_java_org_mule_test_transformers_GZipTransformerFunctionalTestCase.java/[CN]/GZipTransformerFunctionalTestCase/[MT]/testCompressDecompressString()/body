@@ -1,15 +1,15 @@
 {
   MuleClient client=muleContext.getClient();
-  MuleEvent muleEvent=flowRunner("compressInput").withPayload(TEST_DATA).run();
-  MuleMessage compressedResponse=muleEvent.getMessage();
+  Event muleEvent=flowRunner("compressInput").withPayload(TEST_DATA).run();
+  InternalMessage compressedResponse=muleEvent.getMessage();
   assertNotNull(compressedResponse);
-  assertTrue(compressedResponse.getPayload() instanceof byte[]);
-  byte[] bytes=new GZipCompression().uncompressByteArray((byte[])compressedResponse.getPayload());
+  assertTrue(compressedResponse.getPayload().getValue() instanceof byte[]);
+  byte[] bytes=new GZipCompression().uncompressByteArray((byte[])compressedResponse.getPayload().getValue());
   String clientUncompressed=new String(bytes,"UTF8");
   assertEquals(TEST_DATA,clientUncompressed);
-  muleEvent=flowRunner("decompressInputString").withPayload(compressedResponse.getPayload()).run();
-  MuleMessage uncompressedResponse=muleEvent.getMessage();
+  muleEvent=flowRunner("decompressInputString").withPayload(compressedResponse.getPayload().getValue()).run();
+  InternalMessage uncompressedResponse=muleEvent.getMessage();
   assertNotNull(uncompressedResponse);
-  assertTrue(uncompressedResponse.getPayload() instanceof String);
-  assertEquals(TEST_DATA,uncompressedResponse.getPayload());
+  assertTrue(uncompressedResponse.getPayload().getValue() instanceof String);
+  assertEquals(TEST_DATA,uncompressedResponse.getPayload().getValue());
 }

@@ -1,0 +1,32 @@
+{
+  String jsonString=null;
+  InternalMessage msg=event.getMessage();
+  try {
+    if (isReturnResult()) {
+      TransformerInputs transformerInputs=new TransformerInputs(null,msg.getPayload().getValue());
+      Writer jsonWriter=new StringWriter();
+      if (transformerInputs.getInputStream() != null) {
+        jsonWriter=new StringWriter();
+        IOUtils.copy(transformerInputs.getInputStream(),jsonWriter,msg.getPayload().getDataType().getMediaType().getCharset().orElse(getDefaultEncoding(muleContext)));
+      }
+ else {
+        IOUtils.copy(transformerInputs.getReader(),jsonWriter);
+      }
+      jsonString=jsonWriter.toString();
+      msg=InternalMessage.builder(msg).payload(jsonString).build();
+      builder.message(msg);
+    }
+    String xmlString=(String)jToX.transform(msg.getPayload().getValue(),msg.getPayload().getDataType().getMediaType().getCharset().orElse(getDefaultEncoding(muleContext)));
+    InternalMessage xmlMessage=InternalMessage.builder().payload(xmlString).build();
+    boolean accepted=super.accept(Event.builder(event.getContext()).message(xmlMessage).flow(flowConstruct).build(),builder);
+    if (jsonString != null) {
+      msg=InternalMessage.builder(msg).payload(jsonString).build();
+      builder.message(msg);
+    }
+    return accepted;
+  }
+ catch (  Exception ex) {
+    logger.warn("Exception validating json.",ex);
+    return false;
+  }
+}

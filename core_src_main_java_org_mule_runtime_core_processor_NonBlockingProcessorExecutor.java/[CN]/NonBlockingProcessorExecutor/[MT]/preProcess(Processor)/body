@@ -1,0 +1,15 @@
+{
+  if (event.isAllowNonBlocking()) {
+    if (!processorSupportsNonBlocking(processor)) {
+      fallbackWarning.warn(processor.getClass());
+      event=Event.builder(event).flow(flowConstruct).synchronous(true).build();
+      setCurrentEvent(event);
+    }
+    if (processor instanceof NonBlockingMessageProcessor) {
+      if (!(messageExchangePattern.hasResponse() && replyToHandler == null)) {
+        event=Event.builder(event).replyToHandler(new NonBlockingProcessorExecutorReplyToHandler()).build();
+        setCurrentEvent(event);
+      }
+    }
+  }
+}

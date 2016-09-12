@@ -1,0 +1,18 @@
+{
+  Event result;
+  InternalMessage message=event.getMessage();
+  if (routes == null || routes.size() == 0) {
+    throw new RoutePathNotFoundException(CoreMessages.noEndpointsForRouter(),null);
+  }
+  Processor ep=getRoute(0,event);
+  try {
+    result=sendRequest(event,createEventToRoute(event,message),ep,true);
+  }
+ catch (  RoutingException e) {
+    throw e;
+  }
+catch (  MuleException e) {
+    throw new CouldNotRouteOutboundMessageException(ep,e);
+  }
+  return result;
+}

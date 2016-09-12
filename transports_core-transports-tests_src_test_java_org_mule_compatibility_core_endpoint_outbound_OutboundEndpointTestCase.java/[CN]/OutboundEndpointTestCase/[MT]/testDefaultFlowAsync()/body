@@ -1,13 +1,13 @@
 {
   Transformer reqTransformer=mock(Transformer.class);
-  when(reqTransformer.process(any(MuleEvent.class))).then(echoEventAnswer);
+  when(reqTransformer.process(any(Event.class))).then(echoEventAnswer);
   Transformer resTransformer=mock(Transformer.class);
-  when(resTransformer.process(any(MuleEvent.class))).then(echoEventAnswer);
+  when(resTransformer.process(any(Event.class))).then(echoEventAnswer);
   OutboundEndpoint endpoint=createOutboundEndpoint(null,null,reqTransformer,resTransformer,ONE_WAY,null);
   testOutboundEvent=createTestOutboundEvent();
-  MuleEvent result=endpoint.process(testOutboundEvent);
-  verify(reqTransformer,times(1)).process(any(MuleEvent.class));
-  verify(resTransformer,never()).process(any(MuleEvent.class));
+  Event result=endpoint.process(testOutboundEvent);
+  verify(reqTransformer,times(1)).process(any(Event.class));
+  verify(resTransformer,never()).process(any(Event.class));
   dispacher.latch.await(RECEIVE_TIMEOUT,MILLISECONDS);
   assertMessageSentSame(false);
   assertSame(VoidMuleEvent.getInstance(),result);

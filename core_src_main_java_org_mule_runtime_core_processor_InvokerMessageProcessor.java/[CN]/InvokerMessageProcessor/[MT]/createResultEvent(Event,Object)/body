@@ -1,0 +1,15 @@
+{
+  Builder eventBuilder=Event.builder(event);
+  if (result instanceof InternalMessage) {
+    eventBuilder.message((InternalMessage)result);
+  }
+ else   if (result != null) {
+    final TransformerTemplate template=new TransformerTemplate(new TransformerTemplate.OverwitePayloadCallback(result));
+    template.setReturnDataType(DataType.builder(DataType.OBJECT).charset(getDefaultEncoding(muleContext)).build());
+    eventBuilder.message(muleContext.getTransformationService().applyTransformers(event.getMessage(),event,singletonList(template)));
+  }
+ else {
+    eventBuilder.message(InternalMessage.builder().nullPayload().build());
+  }
+  return eventBuilder.build();
+}

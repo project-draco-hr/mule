@@ -1,7 +1,7 @@
 {
   final String MESSAGE_CONTENT_2=MESSAGE_CONTENT + "2";
-  MuleEvent testEvent=getTestEvent(MESSAGE_CONTENT);
-  MuleEvent testEvent2=getTestEvent(MESSAGE_CONTENT_2);
+  Event testEvent=getTestEvent(MESSAGE_CONTENT);
+  Event testEvent2=getTestEvent(MESSAGE_CONTENT_2);
   inQueue.offer(testEvent,0,TIMEOUT);
   inQueue.offer(testEvent2,0,TIMEOUT);
   Serializable value=persistentTransactionContext.poll(inQueue,100000);
@@ -10,10 +10,10 @@
   txLog.close();
   txLog=new LocalTxQueueTransactionJournal(temporaryFolder.getRoot().getAbsolutePath(),muleContext);
   queueTransactionRecoverer.recover();
-  MuleEvent muleEvent=(MuleEvent)inQueue.poll(TIMEOUT);
+  Event muleEvent=(Event)inQueue.poll(TIMEOUT);
   assertThat(muleEvent,notNullValue());
-  assertThat(muleEvent.getMessage().getPayload().toString(),is(MESSAGE_CONTENT_2));
-  muleEvent=(MuleEvent)inQueue.poll(TIMEOUT);
+  assertThat(muleEvent.getMessage().getPayload().getValue().toString(),is(MESSAGE_CONTENT_2));
+  muleEvent=(Event)inQueue.poll(TIMEOUT);
   assertThat(muleEvent,notNullValue());
-  assertThat(muleEvent.getMessage().getPayload().toString(),is(MESSAGE_CONTENT));
+  assertThat(muleEvent.getMessage().getPayload().getValue().toString(),is(MESSAGE_CONTENT));
 }

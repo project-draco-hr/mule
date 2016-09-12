@@ -1,0 +1,34 @@
+{
+  final ReplyToHandler originalReplyToHandler=request.getReplyToHandler();
+  return new NonBlockingReplyToHandler(){
+    @Override public Event processReplyTo(    Event event,    InternalMessage returnMessage,    Object replyTo) throws MuleException {
+      try {
+        Event response=processResponse(recreateEventWithOriginalReplyToHandler(event,originalReplyToHandler),request);
+        if (!NonBlockingVoidMuleEvent.getInstance().equals(response)) {
+          response=originalReplyToHandler.processReplyTo(response,null,null);
+        }
+        return response;
+      }
+ catch (      Exception e) {
+        processExceptionReplyTo(new MessagingException(event,e),null);
+        return event;
+      }
+ finally {
+        processFinally(event,null);
+      }
+    }
+    @Override public void processExceptionReplyTo(    MessagingException exception,    Object replyTo){
+      try {
+        Event handledEvent=processCatch(exception.getEvent(),exception);
+        originalReplyToHandler.processReplyTo(handledEvent,null,null);
+      }
+ catch (      Exception e) {
+        originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
+      }
+ finally {
+        processFinally(exception.getEvent(),exception);
+      }
+    }
+  }
+;
+}

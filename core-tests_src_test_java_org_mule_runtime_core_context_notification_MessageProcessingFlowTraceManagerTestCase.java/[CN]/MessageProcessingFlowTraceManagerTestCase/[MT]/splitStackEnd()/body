@@ -1,13 +1,13 @@
 {
-  MuleEvent event=buildEvent("newAnnotatedComponentCall");
+  Event event=buildEvent("newAnnotatedComponentCall");
   PipelineMessageNotification pipelineNotification=buildPipelineNotification(event,rootFlowConstruct.getName());
   manager.onPipelineNotificationStart(pipelineNotification);
-  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(event,mock(MessageProcessor.class),"/comp"));
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(event,mock(Processor.class),"/comp"));
   FlowCallStack flowCallStack=event.getFlowCallStack();
-  MuleEvent eventCopy=buildEvent("newAnnotatedComponentCall",flowCallStack.clone());
+  Event eventCopy=buildEvent("newAnnotatedComponentCall",flowCallStack.clone());
   manager.onPipelineNotificationComplete(pipelineNotification);
   String asyncFlowName="asyncFlow";
   manager.onPipelineNotificationStart(buildPipelineNotification(eventCopy,asyncFlowName));
-  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy,mock(MessageProcessor.class),"/asyncComp"));
-  assertThat(((CoreMessageContext)event.getContext()).getProcessorsTrace(),hasExecutedProcessors("/comp @ " + APP_ID,"/asyncComp @ " + APP_ID));
+  manager.onMessageProcessorNotificationPreInvoke(buildProcessorNotification(eventCopy,mock(Processor.class),"/asyncComp"));
+  assertThat(((CoreEventContext)event.getContext()).getProcessorsTrace(),hasExecutedProcessors("/comp @ " + APP_ID,"/asyncComp @ " + APP_ID));
 }

@@ -1,0 +1,15 @@
+{
+  boolean response=result != null && result.getMessage().getPayload().getValue() != null && !isOneway(m.getExchange());
+  if (response) {
+    InputStream is=(InputStream)configuration.getMuleContext().getTransformationService().transform(result.getMessage(),DataType.INPUT_STREAM).getPayload().getValue();
+    PushbackInputStream pb=new PushbackInputStream(is);
+    result=Event.builder(result).message(InternalMessage.builder(result.getMessage()).payload(pb).mediaType(XML).build()).build();
+    int b=pb.read();
+    if (b != -1) {
+      pb.unread(b);
+      return pb;
+    }
+  }
+  m.getExchange().put(CxfConstants.MULE_EVENT,result);
+  return null;
+}

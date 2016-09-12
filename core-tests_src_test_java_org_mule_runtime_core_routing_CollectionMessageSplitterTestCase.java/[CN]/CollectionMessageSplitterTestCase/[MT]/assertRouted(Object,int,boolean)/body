@@ -17,18 +17,18 @@
   for (int i=1; i <= count; i++) {
     expectedSequences.add(i);
   }
-  MuleMessage toSplit=MuleMessage.builder().payload(payload).inboundProperties(inboundProps).outboundProperties(outboundProps).build();
+  InternalMessage toSplit=InternalMessage.builder().payload(payload).inboundProperties(inboundProps).outboundProperties(outboundProps).build();
   CollectionSplitter splitter=new CollectionSplitter();
   splitter.setMuleContext(muleContext);
   Grabber grabber=new Grabber();
   splitter.setListener(grabber);
-  final Builder eventBuilder=MuleEvent.builder(DefaultMessageContext.create(fc,TEST_CONNECTOR)).message(toSplit).flow(fc).session(session);
+  final Builder eventBuilder=Event.builder(DefaultEventContext.create(fc,TEST_CONNECTOR)).message(toSplit).flow(fc).session(session);
   for (  Map.Entry<String,Object> entry : invocationProps.entrySet()) {
-    eventBuilder.addFlowVariable(entry.getKey(),entry.getValue());
+    eventBuilder.addVariable(entry.getKey(),entry.getValue());
   }
-  MuleEvent event=eventBuilder.build();
+  Event event=eventBuilder.build();
   splitter.process(event);
-  List<MuleEvent> splits=grabber.getEvents();
+  List<Event> splits=grabber.getEvents();
   assertEquals(count,splits.size());
   Set<Object> actualSequences=new HashSet<>();
   assertSplitParts(count,counted,inboundProps,outboundProps,invocationProps,splits,actualSequences);

@@ -1,0 +1,30 @@
+{
+  List<Event> messageParts=new ArrayList<>();
+  byte[] data;
+  try {
+    data=event.getMessageAsBytes(muleContext);
+  }
+ catch (  Exception e) {
+    throw new RoutingException(CoreMessages.failedToReadPayload(),next,e);
+  }
+  InternalMessage message=event.getMessage();
+  int parts=data.length / messageSize;
+  if ((parts * messageSize) < data.length) {
+    parts++;
+  }
+  int len=messageSize;
+  int count=0;
+  int pos=0;
+  byte[] buffer;
+  for (; count < parts; count++) {
+    if ((pos + len) > data.length) {
+      len=data.length - pos;
+    }
+    buffer=new byte[len];
+    System.arraycopy(data,pos,buffer,0,buffer.length);
+    pos+=len;
+    final Event childEvent=Event.builder(event).message(InternalMessage.builder(message).payload(buffer).build()).groupCorrelation(new GroupCorrelation(parts,count)).build();
+    messageParts.add(childEvent);
+  }
+  return messageParts;
+}

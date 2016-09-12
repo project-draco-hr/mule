@@ -1,0 +1,25 @@
+{
+  InternalMessage msg=event.getMessage();
+  Object payload=msg.getPayload().getValue();
+  if (payload instanceof MessageSequence<?>) {
+    return ((MessageSequence<?>)payload);
+  }
+  if (payload instanceof Iterator<?>) {
+    return new IteratorMessageSequence(((Iterator<Object>)payload));
+  }
+  if (payload instanceof Collection) {
+    return new CollectionMessageSequence(copyCollection((Collection)payload));
+  }
+  if (payload instanceof Iterable<?>) {
+    return new IteratorMessageSequence(((Iterable<Object>)payload).iterator());
+  }
+  if (payload instanceof Object[]) {
+    return new ArrayMessageSequence((Object[])payload);
+  }
+ else   if (payload instanceof NodeList) {
+    return new NodeListMessageSequence((NodeList)payload);
+  }
+ else {
+    throw new IllegalArgumentException(CoreMessages.objectNotOfCorrectType(payload != null ? payload.getClass() : null,new Class[]{Iterable.class,Iterator.class,MessageSequence.class,Collection.class}).getMessage());
+  }
+}

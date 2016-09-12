@@ -1,0 +1,20 @@
+{
+  if (getUntilSuccessfulConfiguration().getDlqMP() == null) {
+    logger.info("Retry attempts exhausted and no DLQ defined");
+    messagingExceptionHandler.handleException(new MessagingException(mutableEvent,buildRetryPolicyExhaustedException(lastException)),mutableEvent);
+    return;
+  }
+  Event eventCopy=event;
+  logger.info("Retry attempts exhausted, routing message to DLQ: " + getUntilSuccessfulConfiguration().getDlqMP());
+  try {
+    RetryPolicyExhaustedException exception=buildRetryPolicyExhaustedException(lastException);
+    Event mutatedEvent=Event.builder(mutableEvent).message(InternalMessage.builder(mutableEvent.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build()).error(ErrorBuilder.builder(exception).errorType(muleContext.getErrorTypeLocator().lookupErrorType(exception)).build()).build();
+    getUntilSuccessfulConfiguration().getDlqMP().process(mutatedEvent);
+  }
+ catch (  MessagingException e) {
+    messagingExceptionHandler.handleException(e,eventCopy);
+  }
+catch (  Exception e) {
+    messagingExceptionHandler.handleException(new MessagingException(event,e),eventCopy);
+  }
+}

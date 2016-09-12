@@ -7,9 +7,9 @@
     if ((e.getAction() == ConnectionNotification.CONNECTION_FAILED || e.getAction() == ConnectionNotification.CONNECTION_DISCONNECTED) && (e.getSource()).equals(endpoint.getConnector())) {
       return;
     }
-    MuleMessage msg=MuleMessage.builder().payload(e).build();
+    InternalMessage msg=InternalMessage.builder().payload(e).build();
     try {
-      if (endpoint.getFilter() != null && !endpoint.getFilter().accept(msg,MuleEvent.builder(DefaultMessageContext.create(endpoint.getFlowConstruct(),"EndpointNotificationLoggerAgent")))) {
+      if (endpoint.getFilter() != null && !endpoint.getFilter().accept(msg,Event.builder(DefaultEventContext.create(endpoint.getFlowConstruct(),"EndpointNotificationLoggerAgent")))) {
         if (logger.isInfoEnabled()) {
           logger.info("Message not accepted with filter: " + endpoint.getFilter());
         }
@@ -33,7 +33,7 @@
         }
       }
 ;
-      endpoint.process(MuleEvent.builder(create(flowConstruct,"EndpointNotificationLoggerAgent")).message(msg).exchangePattern(endpoint.getExchangePattern()).flow(flowConstruct).disableNotifications().build());
+      endpoint.process(Event.builder(create(flowConstruct,"EndpointNotificationLoggerAgent")).message(msg).exchangePattern(endpoint.getExchangePattern()).flow(flowConstruct).disableNotifications().build());
     }
  catch (    Exception e1) {
       logger.error("Failed to dispatch event: " + e.toString() + " over endpoint: "+ endpoint+ ". Error is: "+ e1.getMessage(),e1);

@@ -1,0 +1,30 @@
+{
+  List<Event> resultEvents=new ArrayList<>();
+  int correlationSequence=0;
+  MessageSequence<?> messageSequence=seq;
+  if (batchSize > 1) {
+    messageSequence=new PartitionedMessageSequence(seq,batchSize);
+  }
+  Integer count=messageSequence.size();
+  Event lastResult=null;
+  for (; messageSequence.hasNext(); ) {
+    correlationSequence++;
+    final Builder builder=Event.builder(originalEvent);
+    propagateFlowVars(lastResult,builder);
+    if (counterVariableName != null) {
+      builder.addVariable(counterVariableName,correlationSequence);
+    }
+    builder.groupCorrelation(new GroupCorrelation(count,correlationSequence));
+    initEventBuilder(messageSequence.next(),originalEvent,builder,resolvePropagatedFlowVars(lastResult));
+    final Event event=builder.build();
+    Event resultEvent=processNext(event);
+    if (resultEvent != null && !VoidMuleEvent.getInstance().equals(resultEvent)) {
+      resultEvents.add(resultEvent);
+      lastResult=resultEvent;
+    }
+  }
+  if (correlationSequence == 1) {
+    logger.debug("Splitter only returned a single result. If this is not expected, please check your split expression");
+  }
+  return resultEvents;
+}

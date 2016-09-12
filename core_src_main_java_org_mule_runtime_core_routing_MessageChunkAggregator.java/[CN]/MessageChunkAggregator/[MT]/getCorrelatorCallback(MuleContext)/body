@@ -8,29 +8,29 @@
  * @throws org.mule.runtime.core.routing.AggregationException if the aggregation fails. in this scenario the whole event
  * group is removed and passed to the exception handler for this componenet
  */
-    @Override public MuleEvent aggregateEvents(    EventGroup events) throws AggregationException {
-      MuleEvent[] collectedEvents;
+    @Override public Event aggregateEvents(    EventGroup events) throws AggregationException {
+      Event[] collectedEvents;
       try {
         collectedEvents=events.toArray(false);
       }
  catch (      ObjectStoreException e) {
         throw new AggregationException(events,MessageChunkAggregator.this,e);
       }
-      MuleEvent firstEvent=collectedEvents[0];
+      Event firstEvent=collectedEvents[0];
       Arrays.sort(collectedEvents,eventComparator);
       ByteArrayOutputStream baos=new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
       try {
-        for (        MuleEvent event : collectedEvents) {
+        for (        Event event : collectedEvents) {
           baos.write(event.getMessageAsBytes(muleContext));
         }
-        final Builder builder=MuleMessage.builder(firstEvent.getMessage());
+        final Builder builder=InternalMessage.builder(firstEvent.getMessage());
         try {
           builder.payload(muleContext.getObjectSerializer().deserialize(baos.toByteArray()));
         }
  catch (        SerializationException e) {
           builder.payload(baos.toByteArray());
         }
-        return MuleEvent.builder(firstEvent).message(builder.build()).session(getMergedSession(events.toArray())).build();
+        return Event.builder(firstEvent).message(builder.build()).session(getMergedSession(events.toArray())).build();
       }
  catch (      Exception e) {
         throw new AggregationException(events,MessageChunkAggregator.this,e);

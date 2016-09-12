@@ -1,0 +1,12 @@
+{
+  final AtomicReference<Serializable> outbound=new AtomicReference<>();
+  outbound.set(event.getMessage().getOutboundProperty(MULE_SESSION_PROPERTY));
+  builder.message(InternalMessage.builder(event.getMessage()).removeOutboundProperty(MULE_SESSION_PROPERTY).build()).build();
+  Object invocation=null;
+  try {
+    invocation=event.getVariable(MULE_SESSION_PROPERTY);
+  }
+ catch (  NoSuchElementException nsse) {
+  }
+  return outbound.get() != null ? outbound.get() : (Serializable)invocation;
+}

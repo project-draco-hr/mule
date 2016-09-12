@@ -1,0 +1,35 @@
+{
+  try {
+    if (reqEvent.isAllowNonBlocking()) {
+      final ReplyToHandler originalReplyToHandler=reqEvent.getReplyToHandler();
+      reqEvent=Event.builder(reqEvent).replyToHandler(new NonBlockingReplyToHandler(){
+        @Override public Event processReplyTo(        Event event,        InternalMessage returnMessage,        Object replyTo) throws MuleException {
+          try {
+            Holder<Event> holder=(Holder<Event>)m.getExchange().get("holder");
+            holder.value=event;
+            sendResultBackToCxf(m,event);
+          }
+ catch (          IOException e) {
+            processExceptionReplyTo(new MessagingException(event,e),replyTo);
+          }
+          return event;
+        }
+        @Override public void processExceptionReplyTo(        MessagingException exception,        Object replyTo){
+          originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
+        }
+      }
+).build();
+    }
+    setCurrentEvent(reqEvent);
+    Event resEvent=processNext(reqEvent,m.getExchange());
+    if (!resEvent.equals(NonBlockingVoidMuleEvent.getInstance())) {
+      sendResultBackToCxf(m,resEvent);
+    }
+  }
+ catch (  MuleException me) {
+    throw me;
+  }
+catch (  Exception e) {
+    throw new DefaultMuleException(I18nMessageFactory.createStaticMessage("Could not send message to Mule."),e);
+  }
+}

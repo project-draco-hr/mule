@@ -1,0 +1,15 @@
+{
+  if (useSecureHash) {
+    Object payload=event.getMessage().getPayload().getValue();
+    byte[] bytes=(byte[])objectToByteArray.transform(payload);
+    if (payload instanceof InputStream) {
+      event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).payload(bytes).build()).build();
+    }
+    MessageDigest md=MessageDigest.getInstance(messageDigestAlgorithm);
+    byte[] digestedBytes=md.digest(bytes);
+    return (String)byteArrayToHexString.transform(digestedBytes);
+  }
+ else {
+    return muleContext.getExpressionLanguage().parse(idExpression,event,flowConstruct);
+  }
+}

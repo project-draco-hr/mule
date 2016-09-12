@@ -1,0 +1,33 @@
+{
+  try {
+    Method method=getMethod(event);
+    Map<String,Object> props=getInovcationProperties(event);
+    Holder<Event> responseHolder=new Holder<>();
+    props.put("holder",responseHolder);
+    String soapAction=event.getMessage().getOutboundProperty(SoapConstants.SOAP_ACTION_PROPERTY);
+    if (soapAction != null) {
+      props.put(org.apache.cxf.binding.soap.SoapBindingConstants.SOAP_ACTION,soapAction);
+    }
+    clientProxy.getRequestContext().putAll(props);
+    Object response;
+    Object[] args=getArgs(event);
+    try {
+      response=method.invoke(clientProxy,args);
+    }
+ catch (    InvocationTargetException e) {
+      Throwable ex=e.getTargetException();
+      if (ex != null && ex.getMessage().contains("Security")) {
+        throw new WebServiceSecurityException(event,e,this,muleContext.getSecurityManager());
+      }
+ else {
+        throw e;
+      }
+    }
+    Object[] objResponse=addHoldersToResponse(response,args);
+    Event muleRes=responseHolder.value;
+    return buildResponseMessage(event,muleRes,objResponse);
+  }
+ catch (  Exception e) {
+    throw wrapException(event,e,false);
+  }
+}

@@ -1,11 +1,11 @@
 {
-  List<MuleMessage> list=new ArrayList<>();
+  List<InternalMessage> list=new ArrayList<>();
   for (int i=0; i < 10; i++) {
-    list.add(MuleMessage.builder().payload("message-" + i).addOutboundProperty("out","out" + (i + 1)).build());
+    list.add(InternalMessage.builder().payload("message-" + i).addOutboundProperty("out","out" + (i + 1)).build());
   }
-  MuleMessage msgCollection=MuleMessage.builder().payload(list).build();
-  MuleMessage result=flowRunner("message-collection-config").withPayload(list).run().getMessage();
+  InternalMessage msgCollection=InternalMessage.builder().payload(list).build();
+  InternalMessage result=flowRunner("message-collection-config").withPayload(list).run().getMessage();
   assertThat(result.getOutboundProperty("totalMessages"),is(10));
-  assertThat(result.getPayload(),equalTo(msgCollection.getPayload()));
+  assertThat(result.getPayload().getValue(),equalTo(msgCollection.getPayload().getValue()));
   FlowAssert.verify("message-collection-config");
 }

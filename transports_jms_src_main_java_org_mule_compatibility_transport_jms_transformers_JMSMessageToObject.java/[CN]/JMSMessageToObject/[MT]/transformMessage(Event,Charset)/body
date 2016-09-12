@@ -1,0 +1,22 @@
+{
+  final InternalMessage message=event.getMessage();
+  try {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Source object is " + ClassUtils.getSimpleName(message.getPayload().getDataType().getType()));
+    }
+    Object result=transformFromMessage((Message)message.getPayload().getValue(),outputEncoding);
+    if (byte[].class.isAssignableFrom(getReturnDataType().getType()) && result instanceof String) {
+      result=result.toString().getBytes(outputEncoding);
+    }
+ else     if (String.class.isAssignableFrom(getReturnDataType().getType()) && result instanceof byte[]) {
+      result=new String((byte[])result,outputEncoding);
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Resulting object is " + ClassUtils.getSimpleName(result.getClass()));
+    }
+    return result;
+  }
+ catch (  Exception e) {
+    throw new TransformerException(this,e);
+  }
+}

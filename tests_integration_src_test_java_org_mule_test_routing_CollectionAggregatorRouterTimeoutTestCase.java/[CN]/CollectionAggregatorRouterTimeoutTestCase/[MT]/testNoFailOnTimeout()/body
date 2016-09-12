@@ -14,11 +14,11 @@
   List<String> list=Arrays.asList("first","second");
   flowRunner("splitter").withPayload(list).asynchronously().run();
   Thread.sleep(RECEIVE_TIMEOUT);
-  assertThat("Correlation timeout should not have happened.",correlationTimeoutCount.intValue(),is(0));
+  assertThat("GroupCorrelation timeout should not have happened.",correlationTimeoutCount.intValue(),is(0));
   assertThat("Vortex received wrong number of messages.",vortex.getReceivedMessagesCount(),is(1));
   assertThat("Wrong message received",vortex.getLastReceivedMessage(),is("second"));
   assertThat("Aggregator received wrong number of messages.",aggregator.getReceivedMessagesCount(),is(1));
-  assertThat("Wrong message received",((List<MuleMessage>)aggregator.getLastReceivedMessage()).get(0).getPayload(),is("first"));
+  assertThat("Wrong message received",((List<InternalMessage>)aggregator.getLastReceivedMessage()).get(0).getPayload().getValue(),is("first"));
   new PollingProber(2 * RECEIVE_TIMEOUT,200).check(new Probe(){
     @Override public boolean isSatisfied(){
       return aggregator.getReceivedMessagesCount() == 1;

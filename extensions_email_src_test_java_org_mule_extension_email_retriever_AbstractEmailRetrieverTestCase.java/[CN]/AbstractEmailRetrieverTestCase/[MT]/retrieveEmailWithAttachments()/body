@@ -1,13 +1,13 @@
 {
   server.purgeEmailFromAllMailboxes();
   user.deliver(getMultipartTestMessage());
-  List<MuleMessage> messages=runFlowAndGetMessages(RETRIEVE_WITH_ATTACHMENTS);
+  List<Message> messages=runFlowAndGetMessages(RETRIEVE_WITH_ATTACHMENTS);
   assertThat(messages,hasSize(1));
-  assertThat(messages.get(0).getPayload(),instanceOf(MultiPartPayload.class));
-  List<MuleMessage> emailAttachments=((MultiPartPayload)messages.get(0).getPayload()).getParts();
+  assertThat(messages.get(0).getPayload().getValue(),instanceOf(MultiPartContent.class));
+  List<Message> emailAttachments=((MultiPartContent)messages.get(0).getPayload().getValue()).getParts();
   assertThat(emailAttachments,hasSize(3));
-  assertThat(((DefaultMultiPartPayload)messages.get(0).getPayload()).hasBodyPart(),is(true));
-  assertThat(((MultiPartPayload)messages.get(0).getPayload()).getPartNames(),hasItems(EMAIL_JSON_ATTACHMENT_NAME,EMAIL_TEXT_PLAIN_ATTACHMENT_NAME));
+  assertThat(((DefaultMultiPartContent)messages.get(0).getPayload().getValue()).hasBodyPart(),is(true));
+  assertThat(((MultiPartContent)messages.get(0).getPayload().getValue()).getPartNames(),hasItems(EMAIL_JSON_ATTACHMENT_NAME,EMAIL_TEXT_PLAIN_ATTACHMENT_NAME));
   assertAttachmentContent(emailAttachments,EMAIL_JSON_ATTACHMENT_NAME,EMAIL_JSON_ATTACHMENT_CONTENT);
   assertAttachmentContent(emailAttachments,EMAIL_TEXT_PLAIN_ATTACHMENT_NAME,EMAIL_TEXT_PLAIN_ATTACHMENT_CONTENT);
 }

@@ -1,0 +1,14 @@
+{
+  Builder builder=Event.builder(event);
+  Collection<Processor> selectedProcessors=selectProcessors(event,builder);
+  if (!selectedProcessors.isEmpty()) {
+    return routeWithProcessors(selectedProcessors,builder.build());
+  }
+  if (defaultProcessor != null) {
+    return routeWithProcessor(defaultProcessor,builder.build());
+  }
+  if (getRouterStatistics() != null && getRouterStatistics().isEnabled()) {
+    getRouterStatistics().incrementNoRoutedMessage();
+  }
+  throw new RoutePathNotFoundException(I18nMessageFactory.createStaticMessage("Can't process message because no route has been found matching any filter and no default route is defined"),this);
+}

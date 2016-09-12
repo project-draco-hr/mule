@@ -30,8 +30,8 @@
       message.put(child_el.getLocalName(),collectTextFrom(child_el));
     }
   }
-  MuleEvent reqEvent=((MuleEvent)message.getExchange().get(CxfConstants.MULE_EVENT));
-  MuleMessage.Builder builder=MuleMessage.builder(reqEvent.getMessage());
+  Event reqEvent=((Event)message.getExchange().get(CxfConstants.MULE_EVENT));
+  InternalMessage.Builder builder=InternalMessage.builder(reqEvent.getMessage());
   String replyTo=(String)message.get(MULE_REPLY_TO_PROPERTY);
   if (replyTo != null) {
     builder.addOutboundProperty(MULE_REPLY_TO_PROPERTY,replyTo);
@@ -39,6 +39,6 @@
   String corId=(String)message.get(MULE_CORRELATION_ID_PROPERTY);
   String corGroupSize=(String)message.get(MULE_CORRELATION_GROUP_SIZE_PROPERTY);
   String corSeq=(String)message.get(MULE_CORRELATION_SEQUENCE_PROPERTY);
-  reqEvent=MuleEvent.builder(reqEvent).message(builder.build()).correlation(new Correlation(!corGroupSize.isEmpty() ? parseInt(corGroupSize) : null,!corSeq.isEmpty() ? parseInt(corSeq) : null)).correlationId(corId).build();
+  reqEvent=Event.builder(reqEvent).message(builder.build()).groupCorrelation(new GroupCorrelation(!corGroupSize.isEmpty() ? parseInt(corGroupSize) : null,!corSeq.isEmpty() ? parseInt(corSeq) : null)).correlationId(corId).build();
   message.getExchange().put(CxfConstants.MULE_EVENT,reqEvent);
 }

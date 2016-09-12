@@ -1,12 +1,12 @@
 {
   ((FileConnector)connector).setAutoDelete(true);
-  MuleEvent event=getTestEvent("TestData");
+  Event event=getTestEvent("TestData");
   setCurrentEvent(event);
-  MuleMessage message=muleContext.getClient().request(getTestEndpointURI() + "/" + tempDirName,50000).getRight().get();
-  assertNotNull(message.getPayload());
-  assertTrue(message.getPayload() instanceof InputStream);
+  InternalMessage message=muleContext.getClient().request(getTestEndpointURI() + "/" + tempDirName,50000).getRight().get();
+  assertNotNull(message.getPayload().getValue());
+  assertTrue(message.getPayload().getValue() instanceof InputStream);
   assertTrue(tempDir.listFiles().length > 0);
-  ((InputStream)message.getPayload()).close();
+  ((InputStream)message.getPayload().getValue()).close();
   Prober prober=new PollingProber(1000,100);
   prober.check(new Probe(){
     @Override public boolean isSatisfied(){

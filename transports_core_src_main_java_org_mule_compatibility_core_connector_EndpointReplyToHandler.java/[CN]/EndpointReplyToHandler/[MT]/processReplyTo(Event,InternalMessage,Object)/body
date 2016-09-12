@@ -1,0 +1,16 @@
+{
+  event=super.processReplyTo(event,returnMessage,replyTo);
+  String replyToEndpoint=replyTo.toString();
+  returnMessage=InternalMessage.builder(returnMessage).payload(returnMessage.getPayload().getValue()).build();
+  Event replyToEvent=Event.builder(event).message(returnMessage).build();
+  OutboundEndpoint endpoint=getEndpoint(event,replyToEndpoint);
+  try {
+    if (logger.isInfoEnabled()) {
+      logger.info("reply to sent: " + endpoint);
+    }
+    return endpoint.process(replyToEvent);
+  }
+ catch (  Exception e) {
+    throw new DispatchException(TransportCoreMessages.failedToDispatchToReplyto(endpoint),endpoint,e);
+  }
+}

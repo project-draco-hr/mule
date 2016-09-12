@@ -1,0 +1,16 @@
+{
+  if (!getMessageProcessors().isEmpty()) {
+    try {
+      event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).exceptionPayload(new DefaultExceptionPayload(t)).build()).build();
+      Event result=configuredMessageProcessors.process(event);
+      return result;
+    }
+ catch (    MessagingException e) {
+      throw e;
+    }
+catch (    Exception e) {
+      throw new MessagingException(event,e);
+    }
+  }
+  return event;
+}

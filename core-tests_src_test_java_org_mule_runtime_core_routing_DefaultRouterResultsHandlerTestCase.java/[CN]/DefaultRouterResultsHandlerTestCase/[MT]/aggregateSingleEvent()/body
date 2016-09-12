@@ -1,15 +1,15 @@
 {
-  MuleMessage message1=MuleMessage.builder().payload("test event A").build();
-  MuleEvent event1=MuleEvent.builder(context).message(message1).flow(flow).addFlowVariable("key1","value1").build();
+  InternalMessage message1=InternalMessage.builder().payload("test event A").build();
+  Event event1=Event.builder(context).message(message1).flow(flow).addVariable("key1","value1").build();
   event1.getSession().setProperty("key","value");
-  MuleMessage message2=MuleMessage.builder().payload("test event B").build();
-  MuleEvent event2=MuleEvent.builder(context).message(message2).flow(flow).addFlowVariable("key2","value2").build();
+  InternalMessage message2=InternalMessage.builder().payload("test event B").build();
+  Event event2=Event.builder(context).message(message2).flow(flow).addVariable("key2","value2").build();
   event2.getSession().setProperty("key","valueNEW");
   event2.getSession().setProperty("key1","value1");
-  MuleEvent result=resultsHandler.aggregateResults(Collections.<MuleEvent>singletonList(event2),event1);
+  Event result=resultsHandler.aggregateResults(Collections.<Event>singletonList(event2),event1);
   assertSame(event2,result);
-  assertThat(result.getFlowVariableNames(),not(contains("key1")));
-  assertThat(result.getFlowVariable("key2"),equalTo("value2"));
+  assertThat(result.getVariableNames(),not(contains("key1")));
+  assertThat(result.getVariable("key2"),equalTo("value2"));
   assertThat(result.getSession().getProperty("key"),equalTo("valueNEW"));
   assertThat(result.getSession().getProperty("key1"),equalTo("value1"));
 }

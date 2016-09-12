@@ -1,9 +1,9 @@
 {
-  MuleMessage message=MuleMessage.builder().payload("data").build();
-  MuleEvent event=MuleEvent.builder(context).message(message).exchangePattern(ONE_WAY).flow(flow).build();
+  InternalMessage message=InternalMessage.builder().payload("data").build();
+  Event event=Event.builder(context).message(message).exchangePattern(ONE_WAY).flow(flow).build();
   event.getSession().setProperty("key","value");
   message=new SerializeAndEncodeSessionHandler().storeSessionInfoToMessage(event.getSession(),message,muleContext);
-  message=MuleMessage.builder(message).addInboundProperty(MULE_SESSION_PROPERTY,message.getOutboundProperty(MULE_SESSION_PROPERTY)).build();
+  message=InternalMessage.builder(message).addInboundProperty(MULE_SESSION_PROPERTY,message.getOutboundProperty(MULE_SESSION_PROPERTY)).build();
   MuleSession newSession=new SerializeAndEncodeSessionHandler().retrieveSessionInfoFromMessage(message,muleContext);
   assertNotSame(newSession,event.getSession());
   assertFalse(newSession.equals(event.getSession()));

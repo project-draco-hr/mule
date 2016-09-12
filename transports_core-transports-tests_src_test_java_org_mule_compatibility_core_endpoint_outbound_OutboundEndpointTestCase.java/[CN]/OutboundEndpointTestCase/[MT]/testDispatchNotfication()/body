@@ -2,7 +2,7 @@
   TestEndpointMessageNotificationListener listener=new TestEndpointMessageNotificationListener(2);
   muleContext.registerListener(listener);
   OutboundEndpoint endpoint=createOutboundEndpoint(null,null,null,null,ONE_WAY,null);
-  MuleEvent outboundEvent=createTestOutboundEvent();
+  Event outboundEvent=createTestOutboundEvent();
   endpoint.process(outboundEvent);
   assertTrue(listener.latch.await(RECEIVE_TIMEOUT,MILLISECONDS));
   assertEquals(2,listener.messageNotificationList.size());
@@ -10,8 +10,8 @@
   assertEquals(EndpointMessageNotification.MESSAGE_DISPATCH_END,listener.messageNotificationList.get(1).getAction());
   assertEquals(endpoint.getEndpointURI().getUri().toString(),listener.messageNotificationList.get(0).getEndpoint());
   assertEquals(endpoint.getEndpointURI().getUri().toString(),listener.messageNotificationList.get(1).getEndpoint());
-  assertTrue(listener.messageNotificationList.get(0).getSource() instanceof MuleMessage);
-  assertTrue(listener.messageNotificationList.get(1).getSource() instanceof MuleMessage);
-  assertThat(listener.messageNotificationList.get(0).getSource().getPayload(),equalTo(outboundEvent.getMessage().getPayload()));
-  assertThat(listener.messageNotificationList.get(1).getSource().getPayload(),equalTo(outboundEvent.getMessage().getPayload()));
+  assertTrue(listener.messageNotificationList.get(0).getSource() instanceof InternalMessage);
+  assertTrue(listener.messageNotificationList.get(1).getSource() instanceof InternalMessage);
+  assertThat(listener.messageNotificationList.get(0).getSource().getPayload().getValue(),equalTo(outboundEvent.getMessage().getPayload().getValue()));
+  assertThat(listener.messageNotificationList.get(1).getSource().getPayload().getValue(),equalTo(outboundEvent.getMessage().getPayload().getValue()));
 }

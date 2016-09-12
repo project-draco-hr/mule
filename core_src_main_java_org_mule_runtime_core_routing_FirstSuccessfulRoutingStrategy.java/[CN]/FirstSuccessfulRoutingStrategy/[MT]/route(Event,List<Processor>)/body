@@ -1,0 +1,38 @@
+{
+  Event returnEvent=null;
+  boolean failed=true;
+  Exception failExceptionCause=null;
+  for (  Processor mp : messageProcessors) {
+    try {
+      Event toProcess=cloneEventForRouting(event,mp);
+      returnEvent=processor.processRoute(mp,toProcess);
+      if (returnEvent == null || VoidMuleEvent.getInstance().equals(returnEvent)) {
+        failed=false;
+      }
+ else       if (returnEvent.getMessage() == null) {
+        failed=true;
+      }
+ else {
+        Builder builder=Event.builder(returnEvent);
+        failed=returnEvent == null || failureExpressionFilter.accept(returnEvent,builder);
+        returnEvent=builder.build();
+      }
+    }
+ catch (    Exception ex) {
+      failed=true;
+      failExceptionCause=ex;
+    }
+    if (!failed) {
+      break;
+    }
+  }
+  if (failed) {
+    if (failExceptionCause != null) {
+      throw new RoutingFailedException(createStaticMessage("all message processor failed during first successful routing strategy"),failExceptionCause);
+    }
+ else {
+      throw new RoutingFailedException(createStaticMessage("all message processor failed during first successful routing strategy"));
+    }
+  }
+  return returnEvent;
+}

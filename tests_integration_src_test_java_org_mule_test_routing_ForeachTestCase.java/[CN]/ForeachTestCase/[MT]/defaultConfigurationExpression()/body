@@ -2,14 +2,14 @@
   final ArrayList<String> names=new ArrayList<>();
   names.add("residente");
   names.add("visitante");
-  MuleMessage message=MuleMessage.builder().payload("message payload").addOutboundProperty("names",names).build();
-  MuleMessage result=flowRunner("minimal-config-expression").withPayload("message payload").withInboundProperty("names",names).run().getMessage();
-  assertThat(result.getPayload(),instanceOf(String.class));
+  InternalMessage message=InternalMessage.builder().payload("message payload").addOutboundProperty("names",names).build();
+  InternalMessage result=flowRunner("minimal-config-expression").withPayload("message payload").withInboundProperty("names",names).run().getMessage();
+  assertThat(result.getPayload().getValue(),instanceOf(String.class));
   assertThat((message.getOutboundProperty("names")),hasSize(names.size()));
-  MuleMessage out=client.request("test://out",getTestTimeoutSecs()).getRight().get();
-  assertThat(out.getPayload(),instanceOf(String.class));
-  assertThat(out.getPayload(),is("residente"));
+  InternalMessage out=client.request("test://out",getTestTimeoutSecs()).getRight().get();
+  assertThat(out.getPayload().getValue(),instanceOf(String.class));
+  assertThat(out.getPayload().getValue(),is("residente"));
   out=client.request("test://out",getTestTimeoutSecs()).getRight().get();
-  assertThat(out.getPayload(),instanceOf(String.class));
-  assertThat(out.getPayload(),is("visitante"));
+  assertThat(out.getPayload().getValue(),instanceOf(String.class));
+  assertThat(out.getPayload().getValue(),is("visitante"));
 }

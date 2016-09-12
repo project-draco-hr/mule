@@ -1,0 +1,26 @@
+{
+  try {
+    workManager.scheduleWork(new Work(){
+      @Override public void run(){
+        try {
+          Event responseEvent=createResponseEvent(result,event);
+          setCurrentEvent(responseEvent);
+          event.getReplyToHandler().processReplyTo(responseEvent,null,null);
+        }
+ catch (        MessagingException messagingException) {
+          event.getReplyToHandler().processExceptionReplyTo(messagingException,null);
+        }
+catch (        MuleException exception) {
+          event.getReplyToHandler().processExceptionReplyTo(new MessagingException(event,exception),null);
+        }
+      }
+      @Override public void release(){
+      }
+    }
+,WorkManager.INDEFINITE,null,workListener);
+  }
+ catch (  Exception exception) {
+    onFailure(exception);
+    exceptionCallback.onException(exception);
+  }
+}

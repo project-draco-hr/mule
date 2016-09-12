@@ -1,12 +1,12 @@
 {
   final String payload="payload";
   flowRunner("dispatch").withPayload(payload).run();
-  MuleMessage response=muleContext.getClient().request("vm://in",5000).getRight().get();
+  InternalMessage response=muleContext.getClient().request("vm://in",5000).getRight().get();
   assertThat(response,is(notNullValue()));
   assertThat(getPayloadAsString(response),is(payload));
-  ArgumentCaptor<MuleMessage> messageArgumentCaptor=ArgumentCaptor.forClass(MuleMessage.class);
+  ArgumentCaptor<InternalMessage> messageArgumentCaptor=ArgumentCaptor.forClass(InternalMessage.class);
   verify(objectSerializer,atLeastOnce()).serialize(messageArgumentCaptor.capture());
-  MuleMessage capturedMessage=messageArgumentCaptor.getValue();
+  InternalMessage capturedMessage=messageArgumentCaptor.getValue();
   assertThat(capturedMessage,is(notNullValue()));
   assertThat(getPayloadAsString(capturedMessage),is(payload));
   verify(objectSerializer,atLeastOnce()).deserialize(any(byte[].class));

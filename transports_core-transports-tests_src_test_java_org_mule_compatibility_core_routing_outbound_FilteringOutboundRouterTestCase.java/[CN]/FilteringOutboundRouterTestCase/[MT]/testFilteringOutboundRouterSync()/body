@@ -8,16 +8,16 @@
   router.setFilter(filter);
   List<OutboundEndpoint> endpoints=new ArrayList<>();
   endpoints.add(mockEndpoint);
-  router.setRoutes(new ArrayList<MessageProcessor>(endpoints));
+  router.setRoutes(new ArrayList<Processor>(endpoints));
   assertTrue(router.isUseTemplates());
   assertEquals(filter,router.getFilter());
-  MuleMessage message=MuleMessage.builder().payload("test event").build();
+  InternalMessage message=InternalMessage.builder().payload("test event").build();
   Flow flow=getTestFlow();
-  final MessageContext context=DefaultMessageContext.create(flow,TEST_CONNECTOR);
-  MuleEvent event=MuleEvent.builder(context).message(message).flow(flow).build();
-  when(mockEndpoint.process(any(MuleEvent.class))).thenAnswer(new MuleEventCheckAnswer(event));
+  final EventContext context=DefaultEventContext.create(flow,TEST_CONNECTOR);
+  Event event=Event.builder(context).message(message).flow(flow).build();
+  when(mockEndpoint.process(any(Event.class))).thenAnswer(new MuleEventCheckAnswer(event));
   MuleSession session=mock(MuleSession.class);
-  MuleEvent result=router.route(MuleEvent.builder(context).message(message).flow(flow).build());
+  Event result=router.route(Event.builder(context).message(message).flow(flow).build());
   assertNotNull(result);
   assertEquals(message,result.getMessage());
 }

@@ -11,10 +11,10 @@
   when(textMessage.getJMSTimestamp()).thenReturn(Long.valueOf(0));
   when(textMessage.getJMSType()).thenReturn(null);
   when(textMessage.getObjectProperty("JMS_CUSTOM_PROPERTY")).thenReturn("customValue");
-  MuleMessage msg=MuleMessage.builder().payload(textMessage).addOutboundProperty("JMS_CUSTOM_PROPERTY","customValue").build();
+  InternalMessage msg=InternalMessage.builder().payload(textMessage).addOutboundProperty("JMS_CUSTOM_PROPERTY","customValue").build();
   assertNotNull("The test hasn't been configured properly, no muleContext available",muleContext);
-  setCurrentEvent(MuleEvent.builder(MuleTestUtils.getTestEvent("previous",muleContext)).message(msg).build());
+  setCurrentEvent(Event.builder(MuleTestUtils.getTestEvent("previous",muleContext)).message(msg).build());
   ObjectToJMSMessage transformer=createObject(ObjectToJMSMessage.class);
-  Message transformed=(Message)transformer.transform(msg.getPayload());
+  Message transformed=(Message)transformer.transform(msg.getPayload().getValue());
   assertEquals("customValue",transformed.getObjectProperty("JMS_CUSTOM_PROPERTY"));
 }

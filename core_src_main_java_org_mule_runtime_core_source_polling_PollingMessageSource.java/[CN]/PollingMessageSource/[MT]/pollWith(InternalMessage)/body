@@ -1,0 +1,35 @@
+{
+  ExecutionTemplate<Event> executionTemplate=createMainExecutionTemplate(muleContext,flowConstruct,flowConstruct.getExceptionListener());
+  try {
+    final MessageProcessorPollingInterceptor interceptor=override.interceptor();
+    if (interceptor instanceof MuleContextAware) {
+      ((MuleContextAware)interceptor).setMuleContext(muleContext);
+    }
+    Event muleEvent=executionTemplate.execute(new ExecutionCallback<Event>(){
+      @Override public Event process() throws Exception {
+        Event event=Event.builder(create(flowConstruct,getPollingUniqueName())).message(request).exchangePattern(ONE_WAY).flow(flowConstruct).build();
+        event=interceptor.prepareSourceEvent(event);
+        setCurrentEvent(event);
+        Event sourceEvent=sourceMessageProcessor.process(event);
+        if (isNewMessage(sourceEvent)) {
+          muleContext.getNotificationManager().fireNotification(new ConnectorMessageNotification(this,sourceEvent.getMessage(),getPollingUniqueName(),flowConstruct,MESSAGE_RECEIVED));
+          event=interceptor.prepareRouting(sourceEvent,sourceEvent);
+          interceptor.postProcessRouting(listener.process(event));
+        }
+ else {
+          logger.info(pollSourceReturnedNull(flowConstruct.getName()).getMessage());
+        }
+        return null;
+      }
+    }
+);
+    if (muleEvent != null) {
+      interceptor.postProcessRouting(muleEvent);
+    }
+  }
+ catch (  MessagingException e) {
+  }
+catch (  Exception e) {
+    muleContext.getExceptionListener().handleException(e);
+  }
+}

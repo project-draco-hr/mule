@@ -1,6 +1,6 @@
 {
   final Document document=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-  MuleEvent event=getTestEvent(null,muleContext);
+  Event event=getTestEvent(null,muleContext);
   XPathFilter filter=new XPathFilter(){
     @Override public Node toDOMNode(    Object src) throws Exception {
       return document;
@@ -10,20 +10,20 @@
     }
   }
 ;
-  Builder builder=MuleEvent.builder(event);
+  Builder builder=Event.builder(event);
   assertFalse("shouldn't accept a message if no payload is set.",filter.accept(event,builder));
   event=getTestEvent(new Object(),muleContext);
   filter.setPattern("/some/pattern = null");
-  builder=MuleEvent.builder(event);
+  builder=Event.builder(event);
   assertTrue(filter.accept(event,builder));
   assertEquals("null",filter.getExpectedValue());
   assertEquals("/some/pattern",filter.getPattern().trim());
-  assertSame(document,builder.build().getMessage().getPayload());
+  assertSame(document,builder.build().getMessage().getPayload().getValue());
   event=getTestEvent(new Object(),muleContext);
-  builder=MuleEvent.builder(event);
+  builder=Event.builder(event);
   filter.setExpectedValue(null);
   assertTrue(filter.accept(event,builder));
   assertEquals("true",filter.getExpectedValue());
   assertEquals("/some/pattern",filter.getPattern().trim());
-  assertSame(document,builder.build().getMessage().getPayload());
+  assertSame(document,builder.build().getMessage().getPayload().getValue());
 }
