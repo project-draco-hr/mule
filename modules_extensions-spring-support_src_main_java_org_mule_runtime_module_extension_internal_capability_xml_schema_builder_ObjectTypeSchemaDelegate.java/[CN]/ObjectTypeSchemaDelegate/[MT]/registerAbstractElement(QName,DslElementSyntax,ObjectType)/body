@@ -3,15 +3,20 @@
   if (element != null) {
     return element;
   }
+  DslElementSyntax baseDsl=baseType != null ? builder.getDslResolver().resolve(baseType) : null;
+  if (typeDsl.isWrapped()) {
+    createGlobalMuleExtensionAbstractElement(typeQName,typeDsl,baseDsl);
+  }
   TopLevelElement abstractElement=new TopLevelElement();
   abstractElement.setName(typeDsl.getAbstractElementName());
-  QName substitutionGroup=MULE_ABSTRACT_EXTENSION;
-  if (baseType != null) {
-    DslElementSyntax baseDsl=builder.getDslResolver().resolve(baseType);
-    substitutionGroup=new QName(baseDsl.getNamespaceUri(),baseDsl.getAbstractElementName(),baseDsl.getNamespace());
-  }
-  abstractElement.setSubstitutionGroup(substitutionGroup);
   abstractElement.setAbstract(true);
+  if (!typeDsl.supportsTopLevelDeclaration()) {
+    abstractElement.setType(typeQName);
+  }
+  if (baseDsl != null || typeDsl.supportsTopLevelDeclaration()) {
+    QName substitutionGroup=getAbstractElementSubstitutionGroup(typeDsl,baseDsl);
+    abstractElement.setSubstitutionGroup(substitutionGroup);
+  }
   builder.getSchema().getSimpleTypeOrComplexTypeOrGroup().add(abstractElement);
   registeredGlobalElementTypes.put(typeDsl.getNamespace() + typeDsl.getAbstractElementName(),abstractElement);
   return abstractElement;

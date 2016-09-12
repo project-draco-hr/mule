@@ -1,9 +1,15 @@
 {
-  ExplicitGroup sequence=new ExplicitGroup();
-  sequence.setMinOccurs(ONE);
-  sequence.setMaxOccurs("1");
-  sequence.getParticle().add(objectFactory.createElement(createRefToLocalElement(metadataType)));
+  DslElementSyntax typeDsl=builder.getDslResolver().resolve(metadataType);
   LocalComplexType complexType=new LocalComplexType();
-  complexType.setSequence(sequence);
+  if (typeDsl.isWrapped()) {
+    complexType.setChoice(builder.createTypeRefChoiceLocalOrGlobal(metadataType,ONE,"1"));
+  }
+ else {
+    ExplicitGroup sequence=new ExplicitGroup();
+    sequence.setMinOccurs(ONE);
+    sequence.setMaxOccurs("1");
+    sequence.getParticle().add(objectFactory.createElement(createRefToLocalElement(typeDsl,metadataType)));
+    complexType.setSequence(sequence);
+  }
   return complexType;
 }
