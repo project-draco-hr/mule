@@ -1,0 +1,22 @@
+{
+  Path source=resolveExistingPath(filePath);
+  Path target=source.getParent().resolve(newName);
+  if (exists(target)) {
+    if (!overwrite) {
+      throw new IllegalArgumentException(format("'%s' cannot be renamed because '%s' already exists",source,target));
+    }
+    try {
+      fileSystem.delete(target.toString());
+    }
+ catch (    Exception e) {
+      throw exception(format("Exception was found deleting '%s' as part of renaming '%s'",target,source),e);
+    }
+  }
+  try {
+    doRename(source.toString(),target.toString());
+    LOGGER.debug("{} renamed to {}",filePath,newName);
+  }
+ catch (  Exception e) {
+    throw exception(format("Exception was found renaming '%s' to '%s'",source,newName),e);
+  }
+}

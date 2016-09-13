@@ -1,0 +1,19 @@
+{
+  Path path=resolvePath(filePath);
+  FileAttributes file=getFile(filePath);
+  if (file == null) {
+    assureParentFolderExists(path,createParentDirectory);
+  }
+ else {
+    if (mode == FileWriteMode.CREATE_NEW) {
+      throw new IllegalArgumentException(String.format("Cannot write to path '%s' because it already exists and write mode '%s' was selected. " + "Use a different write mode or point to a path which doesn't exists",path,mode));
+    }
+  }
+  try (OutputStream outputStream=getOutputStream(path,mode)){
+    new FileContentWrapper(content,event,muleContext).accept(new FileWriterVisitor(outputStream,event,encoding));
+    LOGGER.debug("Successfully wrote to path {}",path.toString());
+  }
+ catch (  Exception e) {
+    throw exception(format("Exception was found writing to file '%s'",path),e);
+  }
+}
