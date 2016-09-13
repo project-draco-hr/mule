@@ -1,14 +1,14 @@
 {
   InternalMessage response=muleContext.getClient().send(getUrl(filePath.getValue()),getTestMuleMessage()).getRight();
-  assertThat(response.getPayload().getValue(),instanceOf(MultiPartContent.class));
-  assertThat(((MultiPartContent)response.getPayload().getValue()).getParts(),hasSize(2));
-  org.mule.runtime.api.message.Message attachment1=((MultiPartContent)response.getPayload().getValue()).getPart(FILE_BODY_FIELD_NAME);
+  assertThat(response.getPayload().getValue(),instanceOf(MultiPartPayload.class));
+  assertThat(((MultiPartPayload)response.getPayload().getValue()).getParts(),hasSize(2));
+  org.mule.runtime.api.message.Message attachment1=((MultiPartPayload)response.getPayload().getValue()).getPart(FILE_BODY_FIELD_NAME);
   assertThat(attachment1.getAttributes(),instanceOf(PartAttributes.class));
   assertThat(((PartAttributes)attachment1.getAttributes()).getName(),is(FILE_BODY_FIELD_NAME));
   assertThat(((PartAttributes)attachment1.getAttributes()).getFileName(),is(FILE_BODY_FIELD_FILENAME));
   assertThat(attachment1.getPayload().getDataType().getMediaType(),is(MediaType.BINARY));
   assertThat(IOUtils.toString((InputStream)attachment1.getPayload().getValue()),is(FILE_BODY_FIELD_VALUE));
-  org.mule.runtime.api.message.Message attachment2=((MultiPartContent)response.getPayload().getValue()).getPart(TEXT_BODY_FIELD_NAME);
+  org.mule.runtime.api.message.Message attachment2=((MultiPartPayload)response.getPayload().getValue()).getPart(TEXT_BODY_FIELD_NAME);
   assertThat(IOUtils.toString((InputStream)attachment2.getPayload().getValue()),is(TEXT_BODY_FIELD_VALUE));
   assertThat(attachment2.getPayload().getDataType().getMediaType().toRfcString(),is(TEXT_PLAIN.toString()));
 }

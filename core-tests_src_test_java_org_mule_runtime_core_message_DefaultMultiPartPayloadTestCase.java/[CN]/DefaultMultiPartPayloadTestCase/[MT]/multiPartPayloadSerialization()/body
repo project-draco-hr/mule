@@ -1,0 +1,15 @@
+{
+  final InternalMessage attachmentPart=InternalMessage.builder().payload("this is the attachment").mediaType(MediaType.TEXT).attributes(new PartAttributes("attachment")).build();
+  InternalMessage message=InternalMessage.builder().payload(new DefaultMultiPartPayload(InternalMessage.builder().payload(TEST_PAYLOAD).attributes(BODY_ATTRIBUTES).build(),attachmentPart)).build();
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  ObjectOutputStream oos=new ObjectOutputStream(baos);
+  Flow flow=getTestFlow();
+  setCurrentEvent(Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).build());
+  oos.writeObject(message);
+  oos.flush();
+  ObjectInputStream ois=new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+  message=(InternalMessage)ois.readObject();
+  assertThat(((MultiPartPayload)message.getPayload().getValue()).getPartNames(),hasItem("attachment"));
+  assertThat(((MultiPartPayload)message.getPayload().getValue()).getPart("attachment").getPayload().getValue(),is("this is the attachment"));
+  assertThat(((MultiPartPayload)message.getPayload().getValue()).getPart("attachment").getAttributes(),equalTo(attachmentPart.getAttributes()));
+}
