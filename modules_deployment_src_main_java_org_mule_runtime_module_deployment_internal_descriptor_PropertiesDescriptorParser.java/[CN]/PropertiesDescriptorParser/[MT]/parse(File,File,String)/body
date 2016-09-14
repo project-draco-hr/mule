@@ -1,0 +1,25 @@
+{
+  final Properties properties=PropertiesUtils.loadProperties(new FileInputStream(descriptor));
+  ApplicationDescriptor appDescriptor=new ApplicationDescriptor(artifactName);
+  appDescriptor.setEncoding(properties.getProperty(PROPERTY_ENCODING));
+  appDescriptor.setDomain(properties.getProperty(PROPERTY_DOMAIN));
+  appDescriptor.setArtifactLocation(location);
+  appDescriptor.setRootFolder(location.getParentFile());
+  final String resProps=properties.getProperty(PROPERTY_CONFIG_RESOURCES);
+  String[] urls;
+  if (StringUtils.isBlank(resProps)) {
+    urls=new String[]{DEFAULT_CONFIGURATION_RESOURCE};
+  }
+ else {
+    urls=resProps.split(",");
+  }
+  appDescriptor.setConfigResources(urls);
+  String[] absoluteResourcePaths=convertConfigResourcesToAbsolutePatch(urls,artifactName);
+  appDescriptor.setAbsoluteResourcePaths(absoluteResourcePaths);
+  appDescriptor.setConfigResourcesFile(convertConfigResourcesToFile(absoluteResourcePaths));
+  appDescriptor.setRedeploymentEnabled(BooleanUtils.toBoolean(properties.getProperty(PROPERTY_REDEPLOYMENT_ENABLED,Boolean.TRUE.toString())));
+  if (properties.containsKey(PROPERTY_LOG_CONFIG_FILE)) {
+    appDescriptor.setLogConfigFile(new File(properties.getProperty(PROPERTY_LOG_CONFIG_FILE)));
+  }
+  return appDescriptor;
+}

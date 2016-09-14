@@ -1,0 +1,22 @@
+{
+  if (logger.isInfoEnabled()) {
+    logger.info(miniSplash(format("Initializing app '%s'",descriptor.getName())));
+  }
+  try {
+    ArtifactContextBuilder artifactBuilder=new ArtifactContextBuilder().setArtifactProperties(descriptor.getAppProperties()).setArtifactType(APP).setArtifactInstallationDirectory(descriptor.getArtifactLocation()).setConfigurationFiles(descriptor.getAbsoluteResourcePaths()).setDefaultEncoding(descriptor.getEncoding()).setArtifactPlugins(artifactPlugins).setExecutionClassloader(deploymentClassLoader.getClassLoader()).setEnableLazyInit(lazy).setServiceRepository(serviceRepository);
+    Domain domain=domainRepository.getDomain(descriptor.getDomain());
+    if (domain.getMuleContext() != null) {
+      artifactBuilder.setParentContext(domain.getMuleContext());
+    }
+    if (deploymentListener != null) {
+      artifactBuilder.setMuleContextListener(new MuleContextDeploymentListener(getArtifactName(),deploymentListener));
+    }
+    artifactContext=artifactBuilder.build();
+    setMuleContext(artifactContext.getMuleContext());
+  }
+ catch (  Exception e) {
+    setStatusToFailed();
+    logger.error(null,ExceptionUtils.getRootCause(e));
+    throw new DeploymentInitException(createStaticMessage(ExceptionUtils.getRootCauseMessage(e)),e);
+  }
+}
