@@ -1,11 +1,12 @@
 {
-  Throwable cause=messagingException instanceof SecurityException ? messagingException : messagingException.getCause();
+  Throwable cause=messagingException.getCause();
   String exceptionStatusCode=getTransportErrorMapping(HTTP.getScheme(),cause.getClass(),responseBuilder.getMuleContext());
   Integer statusCodeFromException=exceptionStatusCode != null ? Integer.valueOf(exceptionStatusCode) : INTERNAL_SERVER_ERROR_STATUS_CODE;
   final org.mule.runtime.module.http.internal.domain.response.HttpResponseBuilder failureResponseBuilder=new org.mule.runtime.module.http.internal.domain.response.HttpResponseBuilder().setStatusCode(statusCodeFromException).setReasonPhrase(messagingException.getMessage());
   addThrottlingHeaders(failureResponseBuilder);
   Event event=messagingException.getEvent();
-  event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).payload(messagingException.getMessage()).build()).build();
+  Message errorMessage=resolveErrorMessage(event);
+  event=Event.builder(event).message(InternalMessage.builder(errorMessage).payload(messagingException.getMessage()).build()).build();
   final HttpResponse response=errorResponseBuilder.build(failureResponseBuilder,event);
   responseReadyCallback.responseReady(response,getResponseFailureCallback(responseCompletationCallback,event));
 }

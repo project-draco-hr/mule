@@ -1,5 +1,6 @@
 {
-  SoapFaultException e=(SoapFaultException)flowRunner("clientInvalidCredentials").withPayload(ECHO_REQUEST).runExpectingException();
-  Event event=e.getEvent();
-  assertThat(event.getMessage().<String>getInboundProperty(HTTP_STATUS_PROPERTY),equalTo(String.valueOf(UNAUTHORIZED.getStatusCode())));
+  MessagingException e=flowRunner("clientInvalidCredentials").withPayload(ECHO_REQUEST).runExpectingException();
+  assertThat(e,hasCause(instanceOf(SoapFaultException.class)));
+  InternalMessage errorMessage=(InternalMessage)e.getEvent().getError().get().getErrorMessage();
+  assertThat(errorMessage.<String>getInboundProperty(HTTP_STATUS_PROPERTY),equalTo(String.valueOf(UNAUTHORIZED.getStatusCode())));
 }

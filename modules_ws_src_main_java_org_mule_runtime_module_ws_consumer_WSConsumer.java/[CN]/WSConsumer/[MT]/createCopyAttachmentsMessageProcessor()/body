@@ -17,8 +17,12 @@
  catch (      MessagingException e) {
         if (e.getCause() instanceof DispatchException && e.getCause().getCause() instanceof SoapFault) {
           SoapFault soapFault=(SoapFault)e.getCause().getCause();
-          event=Event.builder(e.getEvent()).message(InternalMessage.builder(e.getEvent().getMessage()).payload(soapFault.getDetail() != null ? soapFault.getDetail() : null).build()).build();
-          throw new SoapFaultException(event,soapFault,this);
+          org.mule.runtime.api.message.Message errorMessage=e.getEvent().getMessage();
+          if (e.getEvent().getError().isPresent() && e.getEvent().getError().get().getErrorMessage() != null) {
+            errorMessage=e.getEvent().getError().get().getErrorMessage();
+          }
+          SoapFaultException soapFaultException=new SoapFaultException(soapFault);
+          throw new WrapperErrorMessageAwareException(InternalMessage.builder(errorMessage).payload(soapFault.getDetail() != null ? soapFault.getDetail() : null).build(),soapFaultException);
         }
  else {
           throw e;

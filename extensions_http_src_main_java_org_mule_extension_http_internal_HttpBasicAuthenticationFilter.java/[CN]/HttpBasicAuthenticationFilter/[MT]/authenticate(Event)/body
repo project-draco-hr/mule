@@ -23,8 +23,7 @@
       if (logger.isDebugEnabled()) {
         logger.debug("Authentication request for user: " + username + " failed: "+ e.toString());
       }
-      event=setUnauthenticated(event);
-      throw new UnauthorisedException(authFailedForUser(username),event,e);
+      throw new BasicUnauthorisedException(authFailedForUser(username),e,createUnauthenticatedMessage(event.getMessage()));
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Authentication success: " + authResult.toString());
@@ -35,11 +34,10 @@
     return event;
   }
  else   if (header == null) {
-    event=setUnauthenticated(event);
-    throw new UnauthorisedException(event,event.getSession().getSecurityContext(),this);
+    event=setUnauthenticated(event,(InternalMessage)createUnauthenticatedMessage(event.getMessage()));
+    throw new BasicUnauthorisedException(event,event.getSession().getSecurityContext(),this);
   }
  else {
-    event=setUnauthenticated(event);
-    throw new UnsupportedAuthenticationSchemeException(createStaticMessage("Http Basic filter doesn't know how to handle header " + header),event);
+    throw new UnsupportedAuthenticationSchemeException(createStaticMessage("Http Basic filter doesn't know how to handle header " + header),createUnauthenticatedMessage(event.getMessage()));
   }
 }
