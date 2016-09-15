@@ -1,0 +1,15 @@
+{
+  List<URL> urls=buildUrl(MULE_EXTENSION_PLUGIN_RESOURCES_BASE_FOLDER);
+  PluginUrlClassification extensionPluginClassification=newPluginUrlClassification(urls);
+  PluginResourcesResolver resolver=new PluginResourcesResolver(extensionManager);
+  ExtensionManifest extensionManifest=mock(ExtensionManifest.class);
+  when(extensionManifest.getExportedPackages()).thenReturn(newArrayList(ORG_MULE_TEST_RUNNER,ORG_MULE_TEST_RUNNER_API));
+  when(extensionManifest.getExportedResources()).thenReturn(newArrayList(META_INF_RESOURCE_PROPERTIES,META_INF_ANOTHER_RESOURCE_PROPERTIES));
+  final URL manifestUrl=new File(urls.get(0).getFile(),"META-INF/" + ExtensionProperties.EXTENSION_MANIFEST_FILE_NAME).toURI().toURL();
+  when(extensionManager.parseExtensionManifestXml(manifestUrl)).thenReturn(extensionManifest);
+  PluginUrlClassification result=resolver.resolvePluginResourcesFor(extensionPluginClassification);
+  verify(extensionManager).parseExtensionManifestXml(manifestUrl);
+  verify(extensionManifest).getExportedResources();
+  verify(extensionManifest).getExportedPackages();
+  assertResolvedResources(extensionPluginClassification,result);
+}
