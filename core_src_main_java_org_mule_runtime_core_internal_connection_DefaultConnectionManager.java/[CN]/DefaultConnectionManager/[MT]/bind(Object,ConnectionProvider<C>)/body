@@ -1,0 +1,16 @@
+{
+  assertNotStopping(muleContext,"Mule is shutting down... cannot bind new connections");
+  connectionProvider=new LifecycleAwareConnectionProviderWrapper<>(connectionProvider,muleContext);
+  ConnectionManagementStrategy<C> managementStrategy=managementStrategyFactory.getStrategy(connectionProvider);
+  ConnectionManagementStrategy<C> previous=null;
+  writeLock.lock();
+  try {
+    previous=connections.put(new Reference<>(owner),managementStrategy);
+  }
+  finally {
+    writeLock.unlock();
+  }
+  if (previous != null) {
+    close(previous);
+  }
+}

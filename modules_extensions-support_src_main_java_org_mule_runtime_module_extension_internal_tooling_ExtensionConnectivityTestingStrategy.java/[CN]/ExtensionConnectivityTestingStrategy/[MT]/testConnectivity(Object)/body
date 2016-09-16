@@ -2,24 +2,18 @@
   try {
     if (connectivityTestingObject instanceof ConnectionProviderResolver) {
       ConnectionProvider connectionProvider=((ConnectionProviderResolver)connectivityTestingObject).resolve(getInitialiserEvent(muleContext));
-      return validateConnectionOverConnectionProvider(connectionProvider);
+      return connectionManager.testConnectivity(connectionProvider);
     }
  else     if (connectivityTestingObject instanceof ConfigurationProvider) {
       ConfigurationProvider configurationProvider=(ConfigurationProvider)connectivityTestingObject;
       ConfigurationInstance configurationInstance=configurationProvider.get(getInitialiserEvent(muleContext));
-      configurationInstance.getConnectionProvider();
-      if (configurationInstance.getConnectionProvider().isPresent()) {
-        return validateConnectionOverConnectionProvider(configurationInstance.getConnectionProvider().get());
-      }
- else {
-        throw new MuleRuntimeException(createStaticMessage("The component does not support connectivity testing"));
-      }
+      return connectionManager.testConnectivity(configurationInstance);
     }
  else {
       throw new MuleRuntimeException(createStaticMessage(format("testConnectivity was invoked with an object type %s not supported.",connectivityTestingObject.getClass().getName())));
     }
   }
  catch (  Exception e) {
-    return failure(e.getMessage(),ConnectionExceptionCode.UNKNOWN,e);
+    return failure("Failed to obtain connectivity testing object",UNKNOWN,e);
   }
 }

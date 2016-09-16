@@ -1,8 +1,11 @@
 {
   connectivityTestingStrategies=serviceRegistry.lookupProviders(ConnectivityTestingStrategy.class);
   for (  ConnectivityTestingStrategy connectivityTestingStrategy : connectivityTestingStrategies) {
-    if (connectivityTestingStrategy instanceof MuleContextAware) {
-      ((MuleContextAware)connectivityTestingStrategy).setMuleContext(muleContext);
+    try {
+      muleContext.getInjector().inject(connectivityTestingStrategy);
+    }
+ catch (    MuleException e) {
+      throw new InitialisationException(createStaticMessage("Could not initialise connectivity testing strategy of type " + connectivityTestingStrategy.getClass().getName()),e,this);
     }
   }
 }

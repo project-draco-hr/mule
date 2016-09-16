@@ -1,0 +1,29 @@
+{
+  ConnectionProvider provider=connectionProvider.get();
+  RetryPolicyTemplate retryTemplate=connectionManager.getRetryTemplateFor(provider);
+  RetryCallback retryCallback=new RetryCallback(){
+    @Override public void doWork(    RetryContext context) throws Exception {
+      ConnectionValidationResult result=connectionManager.testConnectivity(provider);
+      if (result.isValid()) {
+        context.setOk();
+      }
+ else {
+        context.setFailed(result.getException());
+        throw new ConnectionException(format("Connectivity test failed for config '%s'",getName()),result.getException());
+      }
+    }
+    @Override public String getWorkDescription(){
+      return format("Testing connectivity for config '%s'",getName());
+    }
+    @Override public Object getWorkOwner(){
+      return value;
+    }
+  }
+;
+  try {
+    retryTemplate.execute(retryCallback,muleContext.getWorkManager());
+  }
+ catch (  Exception e) {
+    throw new DefaultMuleException(createStaticMessage(format("Could not perform connectivity testing for config '%s'",getName())),e);
+  }
+}

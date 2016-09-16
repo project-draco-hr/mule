@@ -1,0 +1,14 @@
+{
+  if (connectionProvider.isPresent()) {
+    Exception connectionException=new ConnectionException("Oops!");
+    when(connectionManager.testConnectivity(connectionProvider.get())).thenReturn(failure(connectionException.getMessage(),UNKNOWN,connectionException));
+    try {
+      interceptable.start();
+      fail("Was expecting connectivity testing to fail");
+    }
+ catch (    Exception e) {
+      verify(connectionManager,times(RECONNECTION_MAX_ATTEMPTS + 1)).testConnectivity(connectionProvider.get());
+      assertThat(e.getCause(),is(instanceOf(RetryPolicyExhaustedException.class)));
+    }
+  }
+}
