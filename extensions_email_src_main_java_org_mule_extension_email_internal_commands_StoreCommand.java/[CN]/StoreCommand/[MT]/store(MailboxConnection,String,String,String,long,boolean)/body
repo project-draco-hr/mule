@@ -1,0 +1,20 @@
+{
+  IMAPFolder folder=(IMAPFolder)connection.getFolder(folderName,READ_ONLY);
+  try {
+    javax.mail.Message message=folder.getMessageByUID(uid);
+    Path emailFilePath=get(localDirectory,formatEmailFileName(message,fileName));
+    File emailFile=emailFilePath.toFile();
+    if (emailFile.exists()) {
+      if (overwrite) {
+        Files.delete(emailFilePath);
+        writeContent(message,emailFile);
+      }
+    }
+ else {
+      writeContent(message,emailFile);
+    }
+  }
+ catch (  MessagingException|IOException me) {
+    throw new EmailException(format("Error storing message uid:[%s]",uid),me);
+  }
+}

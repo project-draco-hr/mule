@@ -1,0 +1,18 @@
+{
+  String html="<h1>Mulesoft</h1>";
+  InputStream is=Thread.currentThread().getContextClassLoader().getResourceAsStream("attachment.json");
+  EmailAttachment attachment=new EmailAttachment(EMAIL_JSON_ATTACHMENT_NAME,is,MediaType.BINARY);
+  Message m=newMessage(testSession).withBody(html,MediaType.HTML,"UTF-8").withSubject(EMAIL_SUBJECT).to(asList(ESTEBAN_EMAIL,ALE_EMAIL)).withAttachments(singletonList(attachment)).bcc(singletonList(JUANI_EMAIL)).build();
+  assertThat(m.getSubject(),is(EMAIL_SUBJECT));
+  assertRecipients(m,TO,ESTEBAN_EMAIL,ALE_EMAIL);
+  assertRecipients(m,BCC,JUANI_EMAIL);
+  Multipart multipart=(Multipart)m.getDataHandler().getContent();
+  Part body=multipart.getBodyPart(0);
+  assertThat(body.getDataHandler().getContent(),is(html));
+  assertThat(body.getContentType(),is("text/html; charset=UTF-8"));
+  assertThat(body.getDataHandler().getContentType(),is("text/html; charset=UTF-8"));
+  Part attachmentPart=multipart.getBodyPart(1);
+  assertThat(IOUtils.toString((InputStream)attachmentPart.getContent()),is(EMAIL_JSON_ATTACHMENT_CONTENT));
+  assertThat(attachmentPart.getContentType(),is(MediaType.BINARY.toString()));
+  assertThat(attachmentPart.getDataHandler().getContentType(),is(MediaType.BINARY.toString()));
+}
