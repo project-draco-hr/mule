@@ -1,5 +1,5 @@
 {
-  FileAttributes sourceFile=getExistingFile(sourcePath);
+  FileAttributes sourceFile=getExistingFile(source);
   Path targetPath=resolvePath(target);
   FileAttributes targetFile=getFile(targetPath.toString());
   if (targetFile != null) {
@@ -8,7 +8,13 @@
         throw alreadyExistsException(targetPath);
       }
  else {
-        targetPath=targetPath.resolve(sourceFile.getName());
+        Path sourcePath=resolvePath(sourceFile.getName());
+        if (sourcePath.isAbsolute()) {
+          targetPath=targetPath.resolve(sourcePath.getName(sourcePath.getNameCount() - 1));
+        }
+ else {
+          targetPath=targetPath.resolve(sourceFile.getName());
+        }
       }
     }
  else     if (!overwrite) {
