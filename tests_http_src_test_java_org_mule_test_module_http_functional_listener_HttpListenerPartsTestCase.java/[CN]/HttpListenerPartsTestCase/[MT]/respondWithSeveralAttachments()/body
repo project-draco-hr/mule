@@ -1,0 +1,13 @@
+{
+  InternalMessage response=muleContext.getClient().send(getUrl(filePath.getValue()),getTestMuleMessage()).getRight();
+  assertThat(response.getPayload().getValue(),instanceOf(MultiPartPayload.class));
+  assertThat((MultiPartPayload)response.getPayload().getValue(),hasSize(2));
+  Message attachment1=((MultiPartPayload)response.getPayload().getValue()).getPart(FILE_BODY_FIELD_NAME);
+  assertThat(attachment1,hasAttributes(that(hasName(FILE_BODY_FIELD_NAME))));
+  assertThat(attachment1,hasAttributes(that(hasFilename(FILE_BODY_FIELD_FILENAME))));
+  assertThat(attachment1,hasMediaType(BINARY));
+  assertThat(attachment1,hasPayload(equalTo(FILE_BODY_FIELD_VALUE)));
+  Message attachment2=((MultiPartPayload)response.getPayload().getValue()).getPart(TEXT_BODY_FIELD_NAME);
+  assertThat(attachment2,hasPayload(equalTo(TEXT_BODY_FIELD_VALUE)));
+  assertThat(attachment2,hasMediaType(TEXT_PLAIN_LATIN));
+}

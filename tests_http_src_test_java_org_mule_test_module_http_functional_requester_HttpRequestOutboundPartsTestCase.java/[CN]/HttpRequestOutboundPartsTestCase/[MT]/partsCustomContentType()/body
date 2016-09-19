@@ -1,9 +1,13 @@
 {
-  addPartToSend("part1","Contents 1",TEXT);
-  addPartToSend("part2","Contents 2",HTML);
-  flowRunner("requestFlow").withPayload(TEST_MESSAGE).withFlowVariable(PARTS,partsToSend).withMediaType(MediaType.parse("multipart/form-data2")).run();
+  String content1="Contents 1";
+  PartAttributes part1Attributes=new PartAttributes("part1",null,content1.length(),emptyMap());
+  addPartToSend(content1,TEXT,part1Attributes);
+  String content2="Contents 2";
+  PartAttributes part2Attributes=new PartAttributes("part2",null,content2.length(),emptyMap());
+  addPartToSend(content2,HTML,part2Attributes);
+  flowRunner("requestFlow").withPayload(getPayload()).withMediaType(MediaType.parse("multipart/form-data2")).run();
   assertThat(requestContentType,startsWith("multipart/form-data2; boundary="));
   assertThat(parts.size(),equalTo(2));
-  assertPart("part1",TEXT,"Contents 1");
-  assertPart("part2",HTML,"Contents 2");
+  assertPart("part1",TEXT,content1);
+  assertPart("part2",HTML,content2);
 }

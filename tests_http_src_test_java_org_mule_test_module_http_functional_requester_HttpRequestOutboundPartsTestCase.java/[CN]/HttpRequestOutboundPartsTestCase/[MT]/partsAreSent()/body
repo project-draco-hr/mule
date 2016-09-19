@@ -1,8 +1,14 @@
 {
-  flowRunner("requestPartFlow").withPayload(TEST_MESSAGE).run();
+  String content1="content 1";
+  PartAttributes part1Attributes=new PartAttributes("part1",null,content1.length(),emptyMap());
+  addPartToSend(content1,TEXT,part1Attributes);
+  String content2="content 2";
+  PartAttributes part2Attributes=new PartAttributes("part2","myPart.txt",content2.length(),emptyMap());
+  addPartToSend(content2.getBytes(),TEXT,part2Attributes);
+  flowRunner("requestPartFlow").withPayload(getPayload()).run();
   assertThat(requestContentType,startsWith("multipart/form-data; boundary="));
   assertThat(parts.size(),equalTo(2));
-  assertPart("part1",TEXT,"content 1");
-  assertPart("part2",TEXT,"content 2");
+  assertPart("part1",TEXT,content1);
+  assertPart("part2",TEXT,content2);
   assertFormDataContentDisposition(getPart("part2"),"part2","myPart.txt");
 }
