@@ -1,0 +1,19 @@
+{
+  try {
+    if (!deploymentLock.tryLock(0,SECONDS)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Another deployment operation in progress, will skip this cycle. Owner thread: " + (deploymentLock instanceof DebuggableReentrantLock ? ((DebuggableReentrantLock)deploymentLock).getOwner() : "Unknown"));
+      }
+      return;
+    }
+    deploymentAction.execute();
+  }
+ catch (  InterruptedException e) {
+    e.printStackTrace();
+  }
+ finally {
+    if (deploymentLock.isHeldByCurrentThread()) {
+      deploymentLock.unlock();
+    }
+  }
+}

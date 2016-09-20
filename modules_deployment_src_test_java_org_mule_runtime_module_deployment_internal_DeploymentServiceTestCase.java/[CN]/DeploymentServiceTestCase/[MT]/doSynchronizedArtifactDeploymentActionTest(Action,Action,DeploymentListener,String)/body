@@ -1,0 +1,41 @@
+{
+  Thread deploymentServiceThread=new Thread(new Runnable(){
+    @Override public void run(){
+      try {
+        startDeployment();
+      }
+ catch (      MuleException e) {
+        throw new RuntimeException("Unable to start deployment service");
+      }
+    }
+  }
+);
+  final boolean[] deployedFromClient=new boolean[1];
+  doAnswer(new Answer(){
+    @Override public Object answer(    InvocationOnMock invocation) throws Throwable {
+      Thread deploymentClientThread=new Thread(new Runnable(){
+        @Override public void run(){
+          try {
+            deploymentAction.perform();
+          }
+ catch (          Exception e) {
+          }
+        }
+      }
+);
+      deploymentClientThread.start();
+      deploymentClientThread.join();
+      try {
+        assertAction.perform();
+      }
+ catch (      AssertionError e) {
+        deployedFromClient[0]=true;
+      }
+      return null;
+    }
+  }
+).when(domainDeploymentListener).onDeploymentStart(artifactId);
+  deploymentServiceThread.start();
+  assertDeploymentSuccess(domainDeploymentListener,artifactId);
+  assertFalse("Able to perform a deployment action while another deployment operation was in progress",deployedFromClient[0]);
+}
