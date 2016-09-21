@@ -1,7 +1,9 @@
 {
   LinkedList<Processor> tempList=new LinkedList<>();
+  final LinkedList<Processor> builtProcessors=new LinkedList<>();
   for (int i=processors.size() - 1; i >= 0; i--) {
     Processor processor=initializeMessageProcessor(processors.get(i));
+    builtProcessors.addFirst(processor);
     if (processor instanceof InterceptingMessageProcessor) {
       InterceptingMessageProcessor interceptingProcessor=(InterceptingMessageProcessor)processor;
       if (i + 1 < processors.size()) {
@@ -10,7 +12,7 @@
         }
  else {
           final DefaultMessageProcessorChain innerChain=createInnerChain(tempList);
-          innerChain.setTemplateMuleContext(muleContext);
+          innerChain.setMuleContext(muleContext);
           interceptingProcessor.setListener(innerChain);
         }
       }
@@ -20,7 +22,8 @@
       tempList.addFirst(initializeMessageProcessor(processor));
     }
   }
-  final InterceptingChainLifecycleWrapper chain=buildMessageProcessorChain(createOuterChain(tempList));
-  chain.setTemplateMuleContext(muleContext);
+  final InterceptingChainLifecycleWrapper chain=buildMessageProcessorChain(createOuterChain(tempList),builtProcessors);
+  chain.setMuleContext(muleContext);
+  chain.setFlowConstruct(flowConstruct);
   return chain;
 }
