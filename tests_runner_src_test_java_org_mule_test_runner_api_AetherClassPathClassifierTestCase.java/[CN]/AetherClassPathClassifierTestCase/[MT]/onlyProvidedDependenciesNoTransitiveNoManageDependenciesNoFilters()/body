@@ -1,0 +1,17 @@
+{
+  Dependency compileMuleCoreDep=fooCoreDep.setScope(COMPILE);
+  Dependency compileMuleArtifactDep=fooToolsArtifactDep.setScope(COMPILE);
+  ArtifactDescriptorResult defaultArtifactDescriptorResult=noManagedDependencies();
+  File fooCoreArtifactFile=temporaryFolder.newFile();
+  File fooToolsArtifactFile=temporaryFolder.newFile();
+  when(dependencyResolver.resolveDependencies(argThat(nullValue(Dependency.class)),(List<Dependency>)argThat(hasItems(equalTo(compileMuleCoreDep),equalTo(compileMuleArtifactDep))),(List<Dependency>)argThat(empty()),argThat(instanceOf(DependencyFilter.class)))).thenReturn(newArrayList(fooCoreArtifactFile,fooToolsArtifactFile));
+  ArtifactUrlClassification classification=classifier.classify(context);
+  assertThat(classification.getApplicationUrls(),is(empty()));
+  assertThat(classification.getPluginClassificationUrls(),is(empty()));
+  assertThat(classification.getPluginSharedLibUrls(),is(empty()));
+  assertThat(classification.getContainerUrls(),hasSize(2));
+  assertThat(classification.getContainerUrls(),hasItems(fooCoreArtifactFile.toURI().toURL(),fooToolsArtifactFile.toURI().toURL()));
+  verify(defaultArtifactDescriptorResult,atLeastOnce()).getManagedDependencies();
+  verify(dependencyResolver,atLeastOnce()).readArtifactDescriptor(any(Artifact.class));
+  verify(dependencyResolver).resolveDependencies(argThat(nullValue(Dependency.class)),(List<Dependency>)argThat(hasItems(equalTo(compileMuleCoreDep),equalTo(compileMuleArtifactDep))),(List<Dependency>)argThat(empty()),argThat(instanceOf(DependencyFilter.class)));
+}

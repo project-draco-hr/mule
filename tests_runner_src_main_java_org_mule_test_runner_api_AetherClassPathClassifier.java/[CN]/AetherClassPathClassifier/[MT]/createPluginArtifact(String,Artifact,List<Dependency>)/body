@@ -1,22 +1,7 @@
 {
-  final String[] pluginSplitCoords=pluginCoords.split(MAVEN_COORDINATES_SEPARATOR);
-  String pluginGroupId=pluginSplitCoords[0];
-  String pluginArtifactId=pluginSplitCoords[1];
-  String pluginVersion;
-  if (rootArtifact.getGroupId().equals(pluginGroupId) && rootArtifact.getArtifactId().equals(pluginArtifactId)) {
-    logger.debug("'{}' declared as plugin, resolving version from pom file",rootArtifact);
-    pluginVersion=rootArtifact.getVersion();
+  Optional<Dependency> pluginDependency=discoverDependency(pluginCoords,rootArtifact,directDependencies);
+  if (!pluginDependency.isPresent() || !pluginDependency.get().getScope().equals(PROVIDED)) {
+    throw new IllegalStateException("Plugin '" + pluginCoords + "' in order to be resolved has to be declared as "+ PROVIDED+ " dependency of your Maven project");
   }
- else {
-    logger.debug("Resolving version for '{}' from direct dependencies",pluginCoords);
-    Optional<Dependency> pluginDependencyOp=findDirectDependency(pluginGroupId,pluginArtifactId,directDependencies);
-    if (!pluginDependencyOp.isPresent() || !pluginDependencyOp.get().getScope().equals(PROVIDED)) {
-      throw new IllegalStateException("Plugin '" + pluginGroupId + ":"+ pluginArtifactId+ "' in order to be resolved has to be declared as "+ PROVIDED+ " dependency of your Maven project");
-    }
-    Dependency pluginDependency=pluginDependencyOp.get();
-    pluginVersion=pluginDependency.getArtifact().getVersion();
-  }
-  final DefaultArtifact artifact=new DefaultArtifact(pluginGroupId,pluginArtifactId,JAR_EXTENSION,pluginVersion);
-  logger.debug("'{}' plugin coordinates resolved to: '{}'",pluginCoords,artifact);
-  return artifact;
+  return pluginDependency.get().getArtifact();
 }

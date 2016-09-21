@@ -1,0 +1,18 @@
+{
+  final String[] artifactCoordsSplit=artifactCoords.split(MAVEN_COORDINATES_SEPARATOR);
+  if (artifactCoordsSplit.length != 2) {
+    throw new IllegalArgumentException("Artifact coordinates should be in format of groupId:artifactId, '" + artifactCoords + "' is not a valid format");
+  }
+  String groupId=artifactCoordsSplit[0];
+  String artifactId=artifactCoordsSplit[1];
+  if (rootArtifact.getGroupId().equals(groupId) && rootArtifact.getArtifactId().equals(artifactId)) {
+    logger.debug("'{}' artifact coordinates matched with rootArtifact '{}', resolving version from rootArtifact",artifactCoords,rootArtifact);
+    final DefaultArtifact artifact=new DefaultArtifact(groupId,artifactId,JAR_EXTENSION,rootArtifact.getVersion());
+    logger.debug("'{}' artifact coordinates resolved to: '{}'",artifactCoords,artifact);
+    return Optional.of(new Dependency(artifact,COMPILE));
+  }
+ else {
+    logger.debug("Resolving version for '{}' from direct dependencies",artifactCoords);
+    return findDirectDependency(groupId,artifactId,directDependencies);
+  }
+}
