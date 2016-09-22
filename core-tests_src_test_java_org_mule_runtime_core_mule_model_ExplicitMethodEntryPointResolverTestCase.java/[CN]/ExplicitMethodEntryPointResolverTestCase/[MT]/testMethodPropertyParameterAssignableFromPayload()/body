@@ -1,7 +1,8 @@
 {
   ExplicitMethodEntryPointResolver resolver=new ExplicitMethodEntryPointResolver();
   resolver.addMethod("wash");
-  MuleEventContext ctx=getTestEventContext(new Apple(),REQUEST_RESPONSE,muleContext);
+  final Event event=Event.builder(DefaultEventContext.create(flowConstruct,TEST_CONNECTOR)).message(InternalMessage.of(new Apple())).exchangePattern(REQUEST_RESPONSE).build();
+  MuleEventContext ctx=new DefaultMuleEventContext(flowConstruct,event);
   InvocationResult result=resolver.invoke(new TestFruitCleaner(),ctx,Event.builder(ctx.getEvent()));
   assertEquals(result.getState(),InvocationResult.State.SUCCESSFUL);
 }

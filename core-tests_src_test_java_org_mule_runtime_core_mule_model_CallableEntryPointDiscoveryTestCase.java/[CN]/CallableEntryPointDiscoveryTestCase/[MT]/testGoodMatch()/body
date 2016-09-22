@@ -2,7 +2,8 @@
   CallableEntryPointResolver resolver=new CallableEntryPointResolver();
   final Apple apple=new Apple();
   apple.setMuleContext(muleContext);
-  MuleEventContext eventContext=getTestEventContext(new StringBuilder("blah"),REQUEST_RESPONSE,muleContext);
+  final Event event=Event.builder(DefaultEventContext.create(flowConstruct,TEST_CONNECTOR)).message(InternalMessage.of(new StringBuilder("blah"))).exchangePattern(REQUEST_RESPONSE).build();
+  MuleEventContext eventContext=new DefaultMuleEventContext(flowConstruct,event);
   InvocationResult result=resolver.invoke(apple,eventContext,Event.builder(eventContext.getEvent()));
   assertEquals(result.getState(),InvocationResult.State.SUCCESSFUL);
 }

@@ -15,9 +15,9 @@
   router.setRoutes(endpoints);
   assertEquals(filter,router.getFilter());
   InternalMessage message=InternalMessage.builder().payload(TEST_MESSAGE).build();
-  assertTrue(router.isMatch(getTestEvent(message),mock(Event.Builder.class)));
-  Flow flow=getTestFlow();
+  Flow flow=getTestFlow(muleContext);
   final EventContext context=DefaultEventContext.create(flow,TEST_CONNECTOR);
+  assertTrue(router.isMatch(Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(message).build(),mock(Event.Builder.class)));
   Event event=Event.builder(context).message(message).flow(flow).build();
   when(mockendpoint1.process(any(Event.class))).thenAnswer(new MuleEventCheckAnswer(event));
   when(mockendpoint2.process(any(Event.class))).thenAnswer(new MuleEventCheckAnswer(event));

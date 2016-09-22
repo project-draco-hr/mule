@@ -1,8 +1,9 @@
 {
   EntryPointResolverSet resolverSet=new LegacyEntryPointResolverSet();
   try {
-    setCurrentEvent(getTestEvent("Hello"));
-    MuleEventContext eventContext=new DefaultMuleEventContext(getTestFlow(),getCurrentEvent());
+    FlowConstruct flowConstruct=MuleTestUtils.getTestFlow(muleContext);
+    setCurrentEvent(Event.builder(DefaultEventContext.create(flowConstruct,TEST_CONNECTOR)).message(InternalMessage.of("Hello")).build());
+    MuleEventContext eventContext=new DefaultMuleEventContext(getTestFlow(muleContext),getCurrentEvent());
     resolverSet.invoke(new MultiplePayloadsTestObject(),eventContext,Event.builder(getCurrentEvent()));
     fail("Should have failed to find entrypoint.");
   }

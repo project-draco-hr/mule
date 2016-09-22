@@ -1,6 +1,5 @@
 {
   final Document document=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-  Event event=getTestEvent(null,muleContext);
   XPathFilter filter=new XPathFilter(){
     @Override public Node toDOMNode(    Object src) throws Exception {
       return document;
@@ -10,16 +9,16 @@
     }
   }
 ;
-  Builder builder=Event.builder(event);
-  assertFalse("shouldn't accept a message if no payload is set.",filter.accept(event,builder));
-  event=getTestEvent(new Object(),muleContext);
+  Builder builder=Event.builder(nullPayloadEvent);
+  assertFalse("shouldn't accept a message if no payload is set.",filter.accept(nullPayloadEvent,builder));
+  Event event=eventBuilder().message(InternalMessage.of(new Object())).build();
   filter.setPattern("/some/pattern = null");
   builder=Event.builder(event);
   assertTrue(filter.accept(event,builder));
   assertEquals("null",filter.getExpectedValue());
   assertEquals("/some/pattern",filter.getPattern().trim());
   assertSame(document,builder.build().getMessage().getPayload().getValue());
-  event=getTestEvent(new Object(),muleContext);
+  event=eventBuilder().message(InternalMessage.of(new Object())).build();
   builder=Event.builder(event);
   filter.setExpectedValue(null);
   assertTrue(filter.accept(event,builder));

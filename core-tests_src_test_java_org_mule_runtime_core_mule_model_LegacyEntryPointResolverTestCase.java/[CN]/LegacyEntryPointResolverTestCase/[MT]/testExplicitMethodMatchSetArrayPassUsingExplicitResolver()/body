@@ -2,7 +2,9 @@
   try {
     LegacyEntryPointResolverSet resolver=new LegacyEntryPointResolverSet();
     resolver.addEntryPointResolver(new ArrayEntryPointResolver());
-    MuleEventContext eventContext=getTestEventContext(new Fruit[]{new Apple(),new Orange()},REQUEST_RESPONSE,muleContext);
+    FlowConstruct flowConstruct=getTestFlow(muleContext);
+    final Event event=Event.builder(DefaultEventContext.create(flowConstruct,TEST_CONNECTOR)).message(InternalMessage.of(new Fruit[]{new Apple(),new Orange()})).build();
+    MuleEventContext eventContext=new DefaultMuleEventContext(flowConstruct,event);
     resolver.invoke(new FruitBowl(),eventContext,Event.builder(eventContext.getEvent()));
   }
  catch (  MuleException e) {

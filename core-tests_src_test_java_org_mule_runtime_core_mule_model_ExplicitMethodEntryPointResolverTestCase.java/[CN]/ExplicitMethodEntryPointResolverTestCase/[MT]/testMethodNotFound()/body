@@ -2,7 +2,8 @@
   ExplicitMethodEntryPointResolver resolver=new ExplicitMethodEntryPointResolver();
   resolver.addMethod("noMethod");
   resolver.addMethod("noMethod2");
-  MuleEventContext eventContext=getTestEventContext("blah",REQUEST_RESPONSE,muleContext);
+  final Event event=Event.builder(DefaultEventContext.create(flowConstruct,TEST_CONNECTOR)).message(InternalMessage.of("blah")).exchangePattern(REQUEST_RESPONSE).build();
+  MuleEventContext eventContext=new DefaultMuleEventContext(flowConstruct,event);
   InvocationResult result=resolver.invoke(new MultiplePayloadsTestObject(),eventContext,Event.builder(eventContext.getEvent()));
   assertEquals(result.getState(),InvocationResult.State.FAILED);
 }

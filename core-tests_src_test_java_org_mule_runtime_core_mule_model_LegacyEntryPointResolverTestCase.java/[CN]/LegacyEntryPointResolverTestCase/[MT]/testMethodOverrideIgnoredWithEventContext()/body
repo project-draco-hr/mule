@@ -1,12 +1,13 @@
 {
   EntryPointResolverSet resolverSet=new LegacyEntryPointResolverSet();
-  setCurrentEvent(getTestEvent(new FruitLover("Yummy!")));
+  FlowConstruct flowConstruct=MuleTestUtils.getTestFlow(muleContext);
+  setCurrentEvent(Event.builder(DefaultEventContext.create(flowConstruct,TEST_CONNECTOR)).message(InternalMessage.of(new FruitLover("Yummy!"))).build());
   final String methodName="nosuchmethod";
   final String propertyName=MuleProperties.MULE_METHOD_PROPERTY;
   Event event=getCurrentEvent();
   event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).addOutboundProperty(propertyName,methodName).build()).build();
   try {
-    MuleEventContext eventContext=new DefaultMuleEventContext(getTestFlow(),event);
+    MuleEventContext eventContext=new DefaultMuleEventContext(getTestFlow(muleContext),event);
     resolverSet.invoke(new Kiwi(),eventContext,Event.builder(event));
     fail("no such method on service");
   }

@@ -1,6 +1,6 @@
 {
   Flow flow=(Flow)getFlowConstruct("transactionalFailInTheMiddleWithCatchExceptionStrategy");
-  Event event=getTestEvent("message",flow);
+  Event event=Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(InternalMessage.of("message")).build();
   flow.process(event);
   InternalMessage message1=muleContext.getClient().request("vm://out1?connector=vmConnector1",1000).getRight().get();
   assertThat(muleContext.getClient().request("vm://out2?connector=vmConnector1",1000).getRight().isPresent(),is(false));

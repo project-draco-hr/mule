@@ -1,12 +1,9 @@
 {
-  InternalMessage message=InternalMessage.builder().payload("Test Message").build();
-  Flow flow=MuleTestUtils.getTestFlow(muleContext);
-  Event event=Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(message).flow(flow).build();
   SessionHandler handler=new SerializeAndEncodeSessionHandler();
   NotSerializableClass clazz=new NotSerializableClass();
-  event.getSession().setProperty("foo",clazz);
-  message=handler.storeSessionInfoToMessage(event.getSession(),event.getMessage(),muleContext);
-  event=Event.builder(event).message(message).build();
+  testEvent.getSession().setProperty("foo",clazz);
+  InternalMessage message=handler.storeSessionInfoToMessage(testEvent.getSession(),testEvent.getMessage(),muleContext);
+  Event event=Event.builder(testEvent).message(message).build();
   final Builder builder=Event.builder(event);
   Serializable s=removeProperty(event,builder);
   event=builder.build();

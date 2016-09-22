@@ -1,6 +1,6 @@
 {
-  MuleSession session=getTestSession(null,muleContext);
-  Flow flow=getTestFlow("test",Apple.class);
+  MuleSession session=new DefaultMuleSession();
+  Flow flow=getTestFlowWithComponent("test",Apple.class);
   assertNotNull(flow);
   TestEventResequencer router=new TestEventResequencer(3);
   router.setMuleContext(muleContext);
@@ -10,9 +10,9 @@
   InternalMessage message1=InternalMessage.builder().payload("test event A").build();
   InternalMessage message2=InternalMessage.builder().payload("test event B").build();
   InternalMessage message3=InternalMessage.builder().payload("test event C").build();
-  Event event1=Event.builder(context).message(message1).flow(getTestFlow()).session(session).build();
-  Event event2=Event.builder(context).message(message2).flow(getTestFlow()).session(session).build();
-  Event event3=Event.builder(context).message(message3).flow(getTestFlow()).session(session).build();
+  Event event1=Event.builder(context).message(message1).flow(getTestFlow(muleContext)).session(session).build();
+  Event event2=Event.builder(context).message(message2).flow(getTestFlow(muleContext)).session(session).build();
+  Event event3=Event.builder(context).message(message3).flow(getTestFlow(muleContext)).session(session).build();
   assertNull(router.process(event2));
   assertNull(router.process(event3));
   Event resultEvent=router.process(event1);

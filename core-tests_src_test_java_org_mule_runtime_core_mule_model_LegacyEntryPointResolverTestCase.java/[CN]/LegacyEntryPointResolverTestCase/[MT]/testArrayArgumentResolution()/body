@@ -1,12 +1,13 @@
 {
   EntryPointResolverSet resolverSet=new LegacyEntryPointResolverSet();
   Object payload=new Object[]{new Fruit[]{new Apple(),new Banana()}};
-  Event event=getTestEvent(payload);
+  FlowConstruct flowConstruct=MuleTestUtils.getTestFlow(muleContext);
+  Event event=Event.builder(DefaultEventContext.create(flowConstruct,TEST_CONNECTOR)).message(InternalMessage.of(payload)).build();
   setCurrentEvent(event);
   FruitBowl bowl=new FruitBowl();
   assertFalse(bowl.hasApple());
   assertFalse(bowl.hasBanana());
-  MuleEventContext eventContext=new DefaultMuleEventContext(getTestFlow(),event);
+  MuleEventContext eventContext=new DefaultMuleEventContext(getTestFlow(muleContext),event);
   resolverSet.invoke(bowl,eventContext,Event.builder(event));
   assertTrue(bowl.hasApple());
   assertTrue(bowl.hasBanana());

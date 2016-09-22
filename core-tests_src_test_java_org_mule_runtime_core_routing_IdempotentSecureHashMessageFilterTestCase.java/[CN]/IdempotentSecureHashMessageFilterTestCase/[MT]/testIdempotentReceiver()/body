@@ -1,5 +1,5 @@
 {
-  Flow flow=getTestFlow();
+  Flow flow=getTestFlow(muleContext);
   MuleSession session=mock(MuleSession.class);
   IdempotentSecureHashMessageFilter ir=new IdempotentSecureHashMessageFilter();
   ir.setFlowConstruct(flow);
@@ -9,15 +9,15 @@
   ir.setMuleContext(muleContext);
   final EventContext context=DefaultEventContext.create(flow,TEST_CONNECTOR);
   InternalMessage okMessage=InternalMessage.builder().payload("OK").build();
-  Event event=Event.builder(context).message(okMessage).flow(getTestFlow()).session(session).build();
+  Event event=Event.builder(context).message(okMessage).flow(getTestFlow(muleContext)).session(session).build();
   Event processedEvent=ir.process(event);
   assertNotNull(processedEvent);
   okMessage=InternalMessage.builder().payload("OK").build();
-  event=Event.builder(context).message(okMessage).flow(getTestFlow()).session(session).build();
+  event=Event.builder(context).message(okMessage).flow(getTestFlow(muleContext)).session(session).build();
   processedEvent=ir.process(event);
   assertNull(processedEvent);
   okMessage=InternalMessage.builder().payload("Not OK").build();
-  event=Event.builder(context).message(okMessage).flow(getTestFlow()).session(session).build();
+  event=Event.builder(context).message(okMessage).flow(getTestFlow(muleContext)).session(session).build();
   processedEvent=ir.process(event);
   assertNotNull(processedEvent);
 }
