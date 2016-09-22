@@ -6,8 +6,16 @@
     File[] files=listValuesFiles();
     for (int i=0; i < files.length; i++) {
       File file=files[i];
-      StoreValue<T> storeValue=deserialize(file);
-      realKeyToUUIDIndex.put(storeValue.getKey(),file.getName());
+      try {
+        StoreValue<T> storeValue=deserialize(file);
+        realKeyToUUIDIndex.put(storeValue.getKey(),file.getName());
+      }
+ catch (      ObjectStoreException e) {
+        if (logger.isWarnEnabled()) {
+          logger.warn(String.format("Could not deserialize the ObjectStore file: %s. The file will be skipped " + "and moved " + "to the Garbage folder",file.getName()));
+        }
+        moveToCorruptedFilesFolder(file);
+      }
     }
     loaded=true;
   }
