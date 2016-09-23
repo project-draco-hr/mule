@@ -1,0 +1,24 @@
+{
+  Extensible extensible=type.getAnnotation(Extensible.class);
+  checkArgument(extensible != null,format("Type %s is not extensible",type.getName()));
+  String name=extensible.alias();
+  if (StringUtils.isBlank(name)) {
+    name=type.getName() + OPERATION_SUBSTITUTION_GROUP_SUFFIX;
+  }
+  NamedGroup group=substitutionGroups.get(name);
+  if (group == null) {
+    TopLevelElement element=new TopLevelElement();
+    element.setName(name);
+    element.setAbstract(true);
+    element.setSubstitutionGroup(MULE_ABSTRACT_MESSAGE_PROCESSOR);
+    builder.getSchema().getSimpleTypeOrComplexTypeOrGroup().add(element);
+    group=new NamedGroup();
+    group.setName(getGroupName(name));
+    builder.getSchema().getSimpleTypeOrComplexTypeOrGroup().add(group);
+    substitutionGroups.put(name,group);
+    element=new TopLevelElement();
+    element.setRef(new QName(builder.getSchema().getTargetNamespace(),name));
+    group.getChoice().getParticle().add(objectFactory.createElement(element));
+  }
+  return name;
+}

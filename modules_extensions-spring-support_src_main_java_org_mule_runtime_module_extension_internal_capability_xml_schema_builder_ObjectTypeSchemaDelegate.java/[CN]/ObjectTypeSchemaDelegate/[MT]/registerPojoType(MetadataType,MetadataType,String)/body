@@ -1,9 +1,9 @@
 {
   if (!isImported(type)) {
-    DslElementSyntax typeDsl=builder.getDslResolver().resolve(type);
     registerPojoComplexType((ObjectType)type,(ObjectType)baseType,description);
-    if (typeDsl.supportsTopLevelDeclaration() || typeDsl.isWrapped() || !builder.getSubTypesMapping().getSuperTypes(type).isEmpty()) {
-      registerPojoGlobalElements(typeDsl,(ObjectType)type,(ObjectType)baseType,description);
+    Optional<DslElementSyntax> typeDsl=builder.getDslResolver().resolve(type);
+    if (typeDsl.isPresent() && shouldRegisterTypeAsElement(type,typeDsl.get())) {
+      registerPojoGlobalElements(typeDsl.get(),(ObjectType)type,(ObjectType)baseType,description);
     }
   }
   return getBaseTypeName(type);
