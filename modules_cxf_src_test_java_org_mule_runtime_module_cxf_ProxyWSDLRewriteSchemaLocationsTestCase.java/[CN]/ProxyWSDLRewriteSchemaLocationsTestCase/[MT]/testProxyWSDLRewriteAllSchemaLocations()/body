@@ -1,14 +1,14 @@
 {
   String proxyAddress="http://localhost:" + httpPortProxy.getNumber() + "/localServicePath";
   InternalMessage response=muleContext.getClient().send(proxyAddress + "?wsdl",InternalMessage.builder().nullPayload().build(),HTTP_REQUEST_OPTIONS).getRight();
-  Set<String> expectedParametersValues=new HashSet<String>();
+  Set<String> expectedParametersValues=new HashSet<>();
   expectedParametersValues.addAll(Arrays.asList("xsd=xsd0"));
   List<Element> schemaImports=getSchemaImports(getWsdl(response));
   for (  Element schemaImport : schemaImports) {
     String schemaLocation=getLocation(schemaImport);
     int parametersStart=schemaLocation.indexOf("?");
     String locationPath=schemaLocation.substring(0,parametersStart);
-    assertEquals(proxyAddress,locationPath);
+    assertThat(locationPath,is(proxyAddress));
     String queryString=schemaLocation.substring(parametersStart + 1);
     expectedParametersValues.remove(queryString);
   }

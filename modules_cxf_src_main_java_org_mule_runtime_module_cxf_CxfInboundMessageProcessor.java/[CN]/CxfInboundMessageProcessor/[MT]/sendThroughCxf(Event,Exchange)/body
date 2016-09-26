@@ -3,6 +3,9 @@
   m.setExchange(exchange);
   final InternalMessage muleReqMsg=event.getMessage();
   String method=muleReqMsg.getInboundProperty(HTTP_METHOD_PROPERTY);
+  if (method == null && muleReqMsg.getAttributes() instanceof HttpRequestAttributes) {
+    method=((HttpRequestAttributes)muleReqMsg.getAttributes()).getMethod();
+  }
   MediaType ct=muleReqMsg.getPayload().getDataType().getMediaType();
   if (!ct.matches(ANY)) {
     m.put(Message.CONTENT_TYPE,ct.toRfcString());
@@ -23,7 +26,7 @@
     setPayload(event,m,payload);
   }
   String soapAction=getSoapAction(event.getMessage());
-  m.put(SoapConstants.SOAP_ACTION_PROPERTY_CAPS,soapAction);
+  m.put(SOAP_ACTION_PROPERTY_CAPS,soapAction);
   org.apache.cxf.transport.Destination d;
   if (server != null) {
     d=server.getDestination();
@@ -41,12 +44,12 @@
     if (soapAction != null && !soapAction.isEmpty()) {
       List<String> soapActions=new ArrayList<>();
       soapActions.add(soapAction);
-      protocolHeaders.put(SoapBindingConstants.SOAP_ACTION,soapActions);
+      protocolHeaders.put(SOAP_ACTION_PROPERTY_CAPS,soapActions);
     }
     if (SoapJMSConstants.SOAP_JMS_NAMESPACE.equals(((MuleUniversalDestination)d).getEndpointInfo().getTransportId())) {
       String contentType=muleReqMsg.getInboundProperty(SoapJMSConstants.CONTENTTYPE_FIELD);
       if (contentType == null) {
-        contentType="text/xml";
+        contentType=XML.toRfcString();
       }
       protocolHeaders.put(SoapJMSConstants.CONTENTTYPE_FIELD,Collections.singletonList(contentType));
       String requestUri=muleReqMsg.getInboundProperty(SoapJMSConstants.REQUESTURI_FIELD);

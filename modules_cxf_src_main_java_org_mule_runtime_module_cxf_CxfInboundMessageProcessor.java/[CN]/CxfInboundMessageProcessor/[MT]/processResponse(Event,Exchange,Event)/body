@@ -5,8 +5,15 @@
   final InternalMessage message=responseEvent.getMessage();
   InternalMessage.Builder builder=InternalMessage.builder(message);
   BindingOperationInfo binding=exchange.get(BindingOperationInfo.class);
+  HttpStatus responseCode=OK;
+  final ParameterMap responseParams=new ParameterMap();
+  if (message.getAttributes() instanceof HttpResponseAttributes) {
+    responseCode=HttpStatus.getStatusByCode(((HttpResponseAttributes)message.getAttributes()).getStatusCode());
+    responseParams.putAll(((HttpResponseAttributes)message.getAttributes()).getHeaders());
+  }
   if (null != binding && null != binding.getOperationInfo() && binding.getOperationInfo().isOneWay()) {
     builder.addOutboundProperty(HTTP_STATUS_PROPERTY,ACCEPTED.getStatusCode());
+    responseCode=ACCEPTED;
     builder.nullPayload();
   }
  else {
@@ -32,8 +39,10 @@
     Exception ex=faultMsg.getContent(Exception.class);
     if (ex != null) {
       builder.exceptionPayload(new DefaultExceptionPayload(ex));
-      builder.addOutboundProperty(HTTP_STATUS_PROPERTY,500);
+      builder.addOutboundProperty(HTTP_STATUS_PROPERTY,INTERNAL_SERVER_ERROR.getStatusCode());
+      responseCode=INTERNAL_SERVER_ERROR;
     }
   }
-  return Event.builder(responseEvent).message(builder.build()).build();
+  final InternalMessage responseMessage=builder.attributes(new HttpResponseAttributes(responseCode.getStatusCode(),responseCode.getReasonPhrase(),responseParams)).build();
+  return Event.builder(responseEvent).message(responseMessage).build();
 }

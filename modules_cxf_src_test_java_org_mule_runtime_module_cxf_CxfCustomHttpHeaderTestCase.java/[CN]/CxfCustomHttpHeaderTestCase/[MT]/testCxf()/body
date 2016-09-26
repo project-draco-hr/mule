@@ -11,7 +11,8 @@
   assertEquals(SOAP_RESPONSE,getPayloadAsString(reply));
   latch.await(3000,SECONDS);
   assertEquals(1,notificationMsgList.size());
-  assertEquals("alan",notificationMsgList.get(0).getInboundProperty(MULE_USER_PROPERTY));
-  assertNull(notificationMsgList.get(0).getInboundProperty(MULE_IGNORE_METHOD_PROPERTY));
-  assertEquals(myProperty,notificationMsgList.get(0).getInboundProperty(myProperty));
+  final HttpRequestAttributes attributes=(HttpRequestAttributes)notificationMsgList.get(0).getAttributes();
+  assertThat(attributes.getHeaders().get(MULE_USER_PROPERTY.toLowerCase()),is("alan"));
+  assertThat(attributes.getHeaders().get(MULE_IGNORE_METHOD_PROPERTY.toLowerCase()),nullValue());
+  assertThat(attributes.getHeaders().get(myProperty.toLowerCase()),is(myProperty));
 }
