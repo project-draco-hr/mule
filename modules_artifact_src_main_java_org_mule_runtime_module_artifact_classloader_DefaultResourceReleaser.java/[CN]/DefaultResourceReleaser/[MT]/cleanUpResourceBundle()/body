@@ -1,0 +1,19 @@
+{
+  try {
+    ResourceBundle.clearCache(this.getClass().getClassLoader());
+  }
+ catch (  Exception e) {
+    logger.warn("Couldn't clean up ResourceBundle. This can cause a memory leak.",e);
+  }
+  try {
+    Field nonExistentBundleField=ResourceBundle.class.getDeclaredField("NONEXISTENT_BUNDLE");
+    nonExistentBundleField.setAccessible(true);
+    ResourceBundle resourceBundle=(ResourceBundle)nonExistentBundleField.get(null);
+    Field cacheKeyField=ResourceBundle.class.getDeclaredField("cacheKey");
+    cacheKeyField.setAccessible(true);
+    cacheKeyField.set(resourceBundle,null);
+  }
+ catch (  Exception e) {
+    logger.warn("Couldn't clean up ResourceBundle references. This can cause a memory leak.",e);
+  }
+}
