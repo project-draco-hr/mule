@@ -1,4 +1,5 @@
 {
+  checkNotNull(context,"context cannot be null");
   logger.debug("Building class loaders for rootArtifact: {}",context.getRootArtifact());
   List<Dependency> directDependencies;
   try {
@@ -7,9 +8,14 @@
  catch (  Exception e) {
     throw new IllegalStateException("Couldn't get direct dependencies for rootArtifact: '" + context.getRootArtifact() + "'",e);
   }
+  ArtifactClassificationType rootArtifactType=artifactClassificationTypeResolver.resolveArtifactClassificationType(context.getRootArtifact());
+  if (rootArtifactType == null) {
+    throw new IllegalStateException("Couldn't be identified the rootArtifact type");
+  }
+  logger.debug("rootArtifact identified as {} type",rootArtifactType);
   List<URL> pluginSharedLibUrls=buildPluginSharedLibClassification(context,directDependencies);
-  List<PluginUrlClassification> pluginUrlClassifications=buildPluginUrlClassifications(context,directDependencies);
-  List<URL> containerUrls=buildContainerUrlClassification(context,directDependencies,pluginUrlClassifications);
-  List<URL> applicationUrls=buildApplicationUrlClassification(context,directDependencies,pluginUrlClassifications);
+  List<PluginUrlClassification> pluginUrlClassifications=buildPluginUrlClassifications(context,directDependencies,rootArtifactType);
+  List<URL> containerUrls=buildContainerUrlClassification(context,directDependencies,pluginUrlClassifications,rootArtifactType);
+  List<URL> applicationUrls=buildApplicationUrlClassification(context,directDependencies,rootArtifactType);
   return new ArtifactUrlClassification(containerUrls,pluginSharedLibUrls,pluginUrlClassifications,applicationUrls);
 }

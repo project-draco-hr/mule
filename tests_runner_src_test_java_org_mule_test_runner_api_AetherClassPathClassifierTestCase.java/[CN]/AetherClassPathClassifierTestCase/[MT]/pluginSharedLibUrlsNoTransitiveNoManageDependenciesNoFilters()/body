@@ -1,5 +1,11 @@
 {
+  when(artifactClassificationTypeResolver.resolveArtifactClassificationType(rootArtifact)).thenReturn(APPLICATION);
   when(context.getSharedPluginLibCoordinates()).thenReturn(newArrayList(derbyDriverDep.getArtifact().getGroupId() + ":" + derbyDriverDep.getArtifact().getArtifactId()));
+  File rootArtifactFile=temporaryFolder.newFile();
+  Artifact jarRootArtifact=rootArtifact.setFile(rootArtifactFile);
+  ArtifactResult rootArtifactResult=mock(ArtifactResult.class);
+  when(rootArtifactResult.getArtifact()).thenReturn(jarRootArtifact);
+  when(dependencyResolver.resolveArtifact(argThat(new ArtifactMatcher(rootArtifact.getGroupId(),rootArtifact.getArtifactId())))).thenReturn(rootArtifactResult);
   File derbyDriverFile=temporaryFolder.newFile();
   ArtifactResult artifactResult=mock(ArtifactResult.class);
   Artifact derbyDriverFatArtifact=derbyDriverDep.getArtifact().setFile(derbyDriverFile);
@@ -7,7 +13,8 @@
   when(dependencyResolver.resolveArtifact(argThat(equalTo(derbyDriverDep.getArtifact())))).thenReturn(artifactResult);
   ArtifactDescriptorResult defaultArtifactDescriptorResult=noManagedDependencies();
   ArtifactUrlClassification classification=classifier.classify(context);
-  assertThat(classification.getApplicationUrls(),is(empty()));
+  assertThat(classification.getApplicationUrls(),hasSize(1));
+  assertThat(classification.getApplicationUrls(),hasItem(rootArtifactFile.toURI().toURL()));
   assertThat(classification.getPluginClassificationUrls(),is(empty()));
   assertThat(classification.getPluginSharedLibUrls(),hasSize(1));
   assertThat(classification.getPluginSharedLibUrls(),hasItem(derbyDriverFile.toURI().toURL()));
@@ -15,4 +22,5 @@
   verify(defaultArtifactDescriptorResult,atLeastOnce()).getManagedDependencies();
   verify(dependencyResolver,atLeastOnce()).readArtifactDescriptor(any(Artifact.class));
   verify(dependencyResolver).resolveArtifact(argThat(equalTo(derbyDriverDep.getArtifact())));
+  verify(artifactClassificationTypeResolver).resolveArtifactClassificationType(rootArtifact);
 }
