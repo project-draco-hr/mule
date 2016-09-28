@@ -1,19 +1,19 @@
 {
-  addExplodedDomainFromBuilder(sharedHttpBundleDomainFileBuilder);
-  File domainConfigFile=new File(domainsDir + "/" + sharedHttpBundleDomainFileBuilder.getDeployedPath(),DOMAIN_CONFIG_FILE_LOCATION);
+  addExplodedDomainFromBuilder(sharedBundleDomainFileBuilder);
+  File domainConfigFile=new File(domainsDir + "/" + sharedBundleDomainFileBuilder.getDeployedPath(),DOMAIN_CONFIG_FILE_LOCATION);
   String correctDomainConfigContent=IOUtils.toString(new FileInputStream(domainConfigFile));
-  String wrongDomainFileContext=correctDomainConfigContent.replace("http-listener-config","http-listener-config-wrong");
+  String wrongDomainFileContext=correctDomainConfigContent.replace("test-shared-config","test-shared-config-wrong");
   FileUtils.copyInputStreamToFile(new ByteArrayInputStream(wrongDomainFileContext.getBytes()),domainConfigFile);
   long firstFileTimestamp=domainConfigFile.lastModified();
   startDeployment();
-  assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainFileBuilder.getId());
-  assertDeploymentFailure(applicationDeploymentListener,httpAAppFileBuilder.getId());
-  assertDeploymentFailure(applicationDeploymentListener,httpBAppFileBuilder.getId());
+  assertDeploymentSuccess(domainDeploymentListener,sharedDomainFileBuilder.getId());
+  assertDeploymentFailure(applicationDeploymentListener,sharedAAppFileBuilder.getId());
+  assertDeploymentFailure(applicationDeploymentListener,sharedBAppFileBuilder.getId());
   reset(applicationDeploymentListener);
   reset(domainDeploymentListener);
   FileUtils.copyInputStreamToFile(new ByteArrayInputStream(correctDomainConfigContent.getBytes()),domainConfigFile);
   alterTimestampIfNeeded(domainConfigFile,firstFileTimestamp);
-  assertDeploymentSuccess(domainDeploymentListener,sharedHttpDomainFileBuilder.getId());
-  assertDeploymentSuccess(applicationDeploymentListener,httpAAppFileBuilder.getId());
-  assertDeploymentSuccess(applicationDeploymentListener,httpBAppFileBuilder.getId());
+  assertDeploymentSuccess(domainDeploymentListener,sharedDomainFileBuilder.getId());
+  assertDeploymentSuccess(applicationDeploymentListener,sharedAAppFileBuilder.getId());
+  assertDeploymentSuccess(applicationDeploymentListener,sharedBAppFileBuilder.getId());
 }

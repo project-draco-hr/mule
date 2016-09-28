@@ -2,6 +2,7 @@
   Flow flow=(Flow)getFlowConstruct("requestFlow");
   Event event=Event.builder(DefaultEventContext.create(flow,TEST_CONNECTOR)).message(InternalMessage.of(payload)).addVariable("method",method).build();
   event=flow.process(event);
-  assertThat(event.getMessage().<Integer>getInboundProperty(HTTP_STATUS_PROPERTY),is(OK.getStatusCode()));
+  assertThat(event.getMessage().getAttributes(),instanceOf(HttpResponseAttributes.class));
+  assertThat(((HttpResponseAttributes)event.getMessage().getAttributes()).getStatusCode(),is(OK.getStatusCode()));
   assertThat(event.getMessageAsString(muleContext),is(expectedContent));
 }
