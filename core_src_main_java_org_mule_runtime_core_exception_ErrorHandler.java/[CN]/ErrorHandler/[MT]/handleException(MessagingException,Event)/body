@@ -1,5 +1,8 @@
 {
   event=Event.builder(event).message(InternalMessage.builder(event.getMessage()).exceptionPayload(new DefaultExceptionPayload(exception)).build()).build();
+  if (criticalMatcher.match(exception.getEvent().getError().get().getErrorType())) {
+    return event;
+  }
   for (  MessagingExceptionHandlerAcceptor exceptionListener : exceptionListeners) {
     if (exceptionListener.accept(event)) {
       return exceptionListener.handleException(exception,event);

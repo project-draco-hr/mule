@@ -1,0 +1,12 @@
+{
+  when(mockErrorType.getParentErrorType()).thenReturn(CRITICAL_ERROR_TYPE);
+  ErrorHandler errorHandler=new ErrorHandler();
+  errorHandler.setMuleContext(mockMuleContext);
+  when(mockMuleContext.getDefaultErrorHandler()).thenReturn(mockDefaultTestExceptionStrategy2);
+  errorHandler.setExceptionListeners(new ArrayList<>(asList(mockTestExceptionStrategy1)));
+  errorHandler.initialise();
+  when(mockTestExceptionStrategy1.accept(any(Event.class))).thenReturn(true);
+  errorHandler.handleException(mockException,mockMuleEvent);
+  verify(mockTestExceptionStrategy1,VerificationModeFactory.times(0)).handleException(any(MessagingException.class),any(Event.class));
+  verify(mockDefaultTestExceptionStrategy2,VerificationModeFactory.times(0)).handleException(any(MessagingException.class),any(Event.class));
+}
