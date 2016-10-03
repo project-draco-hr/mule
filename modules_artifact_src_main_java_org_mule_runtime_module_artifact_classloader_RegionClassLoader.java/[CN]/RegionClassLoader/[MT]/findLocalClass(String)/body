@@ -3,10 +3,15 @@ synchronized (getClassLoadingLock(name)) {
     final String packageName=ClassUtils.getPackageName(name);
     final ArtifactClassLoader artifactClassLoader=packageMapping.get(packageName);
     if (artifactClassLoader != null) {
-      return artifactClassLoader.findLocalClass(name);
+      try {
+        return artifactClassLoader.findLocalClass(name);
+      }
+ catch (      ClassNotFoundException e) {
+        throw new ClassNotFoundInRegionException(name,getArtifactName(),artifactClassLoader.getArtifactName(),e);
+      }
     }
  else {
-      throw new ClassNotFoundException(name);
+      throw new ClassNotFoundInRegionException(name,getArtifactName());
     }
   }
 }
