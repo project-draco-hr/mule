@@ -35,27 +35,31 @@
       jmsMessage.setJMSReplyTo(replyTo);
     }
     jmsMessage.setStringProperty(MULE_CORRELATION_ID_PROPERTY,resolveMuleCorrelationId(event));
-    jmsMessage.setJMSCorrelationID(resolveJmsCorrelationId(event));
+    if (!endpoint.getExchangePattern().hasResponse()) {
+      jmsMessage.setJMSCorrelationID(resolveJmsCorrelationId(event));
+    }
+ else {
+      jmsMessage.setJMSCorrelationID(event.getLegacyCorrelationId());
+    }
     processMessage(jmsMessage,event);
     if (useReplyToDestination && replyTo != null) {
-      final MessageConsumer consumer=createReplyToConsumer(jmsMessage,event,session,replyTo,topic);
       final int timeout=endpoint.getResponseTimeout();
       if (completionHandler != null) {
-        internalNonBlockingSendAndReceive(session,producer,consumer,replyTo,jmsMessage,topic,ttl,priority,persistent,transacted,timeout,completionHandler);
+        internalNonBlockingSendAndReceive(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,transacted,timeout,completionHandler,event);
         delayedCleanup=true;
         return null;
       }
  else {
         try {
           if (topic) {
-            return internalBlockingSendAndAwait(consumer,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout);
+            return internalBlockingSendAndAwait(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout,event);
           }
  else {
-            return internalBlockingSendAndReceive(producer,consumer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout);
+            return internalBlockingSendAndReceive(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout,event);
           }
         }
   finally {
-          closeConsumer(session,consumer,replyTo);
+          closeReplyQueue(session,replyTo);
         }
       }
     }
