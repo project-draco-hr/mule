@@ -1,4 +1,13 @@
 {
   SchedulerFactory factory=new StdSchedulerFactory(withFactoryProperties());
-  return factory.getScheduler();
+  final Scheduler scheduler;
+  final ClassLoader contextClassLoader=currentThread().getContextClassLoader();
+  try {
+    currentThread().setContextClassLoader(getClass().getClassLoader());
+    scheduler=factory.getScheduler();
+  }
+  finally {
+    currentThread().setContextClassLoader(contextClassLoader);
+  }
+  return scheduler;
 }
