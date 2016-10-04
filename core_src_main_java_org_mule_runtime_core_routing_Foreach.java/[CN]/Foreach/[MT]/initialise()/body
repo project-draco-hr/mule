@@ -22,14 +22,9 @@
   splitter.setBatchSize(batchSize);
   splitter.setCounterVariableName(counterVariableName);
   splitter.setMuleContext(muleContext);
-  try {
-    List<Processor> chainProcessors=new ArrayList<>();
-    chainProcessors.add(splitter);
-    chainProcessors.add(DefaultMessageProcessorChain.from(muleContext,messageProcessors));
-    ownedMessageProcessor=new DefaultMessageProcessorChainBuilder(muleContext).chain(chainProcessors).build();
-  }
- catch (  MuleException e) {
-    throw new InitialisationException(e,this);
-  }
+  List<Processor> chainProcessors=new ArrayList<>();
+  chainProcessors.add(splitter);
+  chainProcessors.add(newChain(messageProcessors));
+  ownedMessageProcessor=new DefaultMessageProcessorChainBuilder().chain(chainProcessors).build();
   super.initialise();
 }

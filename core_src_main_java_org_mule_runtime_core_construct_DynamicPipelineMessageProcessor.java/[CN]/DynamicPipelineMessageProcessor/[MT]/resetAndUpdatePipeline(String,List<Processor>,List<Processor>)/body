@@ -1,16 +1,16 @@
 {
   checkPipelineId(id);
-  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder(flow);
+  DefaultMessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
   builder.chain(preMessageProcessors);
   builder.chain(staticChain);
   builder.chain(postMessageProcessors);
   MessageProcessorChain newChain=builder.build();
+  newChain.setFlowConstruct(flowConstruct);
+  newChain.setMuleContext(muleContext);
   Lifecycle preChainOld=preChain;
   Lifecycle postChainOld=postChain;
-  preChain=new SimpleMessageProcessorChain(preMessageProcessors);
-  preChain.setMuleContext(muleContext);
-  postChain=new SimpleMessageProcessorChain(postMessageProcessors);
-  postChain.setMuleContext(muleContext);
+  preChain=newChain(preMessageProcessors);
+  postChain=newChain(postMessageProcessors);
   initDynamicChains();
   super.setListener(newChain);
   disposeDynamicChains(preChainOld,postChainOld);

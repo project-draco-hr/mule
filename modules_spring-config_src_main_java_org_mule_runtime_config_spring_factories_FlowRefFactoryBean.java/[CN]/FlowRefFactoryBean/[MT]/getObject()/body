@@ -1,8 +1,9 @@
 {
-  if (referencedMessageProcessor != null) {
-    return referencedMessageProcessor;
+  Processor processor=referencedMessageProcessor != null ? referencedMessageProcessor : createDynamicReferenceMessageProcessor(refName);
+  return new AbstractMessageProcessorChain(singletonList(processor)){
+    @Override public void addMessageProcessorPathElements(    MessageProcessorPathElement pathElement){
+      NotificationUtils.addMessageProcessorPathElements(processor,pathElement.addChild(processor));
+    }
   }
- else {
-    return createDynamicReferenceMessageProcessor(refName);
-  }
+;
 }

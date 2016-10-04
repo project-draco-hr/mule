@@ -1,9 +1,12 @@
 {
   Foreach foreachMp=new Foreach();
   foreachMp.setMuleContext(muleContext);
+  foreachMp.setFlowConstruct(mock(Flow.class));
   List<Processor> processors=getSimpleMessageProcessors();
   foreachMp.setMessageProcessors(processors);
-  MessageProcessorPathElement mpPathElement=mock(MessageProcessorPathElement.class);
-  foreachMp.addMessageProcessorPathElements(mpPathElement);
-  assertAddedPathElements(processors,mpPathElement);
+  MessageProcessorPathElement parentElement=mock(MessageProcessorPathElement.class);
+  MessageProcessorPathElement foreachElement=mock(MessageProcessorPathElement.class);
+  when(parentElement.addChild(any(Processor.class))).thenReturn(foreachElement);
+  foreachMp.addMessageProcessorPathElements(parentElement);
+  assertAddedPathElements(processors,foreachElement);
 }

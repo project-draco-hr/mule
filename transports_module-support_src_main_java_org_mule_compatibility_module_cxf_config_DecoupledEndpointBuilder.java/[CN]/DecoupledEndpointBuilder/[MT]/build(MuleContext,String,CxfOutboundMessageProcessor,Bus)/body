@@ -6,10 +6,15 @@
     cxfInboundMP.setBus(bus);
     List<Processor> mps=new ArrayList<Processor>();
     mps.add(cxfInboundMP);
-    EndpointBuilder ep=getEndpointFactory(muleContext).getEndpointBuilder(decoupledEndpoint);
-    Flow flow=new Flow("decoupled-" + ep.toString(),muleContext);
-    flow.setMessageProcessors(mps);
-    flow.setMessageSource(ep.buildInboundEndpoint());
-    muleContext.getRegistry().registerObject(flow.getName(),flow);
+    try {
+      EndpointBuilder ep=getEndpointFactory(muleContext).getEndpointBuilder(decoupledEndpoint);
+      Flow flow=new Flow("decoupled-" + ep.toString(),muleContext);
+      flow.setMessageProcessors(mps);
+      flow.setMessageSource(ep.buildInboundEndpoint());
+      muleContext.getRegistry().registerObject(flow.getName(),flow);
+    }
+ catch (    Exception e) {
+      throw new MuleRuntimeException(e);
+    }
   }
 }

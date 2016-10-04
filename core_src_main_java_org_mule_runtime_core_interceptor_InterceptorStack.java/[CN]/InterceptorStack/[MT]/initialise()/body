@@ -1,5 +1,5 @@
 {
-  DefaultMessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder(muleContext);
+  DefaultMessageProcessorChainBuilder chainBuilder=new DefaultMessageProcessorChainBuilder();
   chainBuilder.setName("interceptor stack");
   for (  Interceptor interceptor : interceptors) {
     if (interceptor instanceof Initialisable) {
@@ -10,10 +10,8 @@
   if (next != null) {
     chainBuilder.chain(next);
   }
-  try {
-    chain=chainBuilder.build();
-  }
- catch (  MuleException e) {
-    throw new InitialisationException(e,this);
-  }
+  chain=chainBuilder.build();
+  chain.setMuleContext(muleContext);
+  chain.setFlowConstruct(flowConstruct);
+  chain.initialise();
 }
