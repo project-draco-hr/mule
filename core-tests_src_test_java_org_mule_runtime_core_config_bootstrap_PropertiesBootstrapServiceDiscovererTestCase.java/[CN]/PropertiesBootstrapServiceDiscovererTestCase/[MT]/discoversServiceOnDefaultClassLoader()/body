@@ -1,6 +1,13 @@
 {
   final ClassLoader classLoader=mock(ClassLoader.class);
+  final Enumeration enumeration=mock(Enumeration.class);
+  when(enumeration.hasMoreElements()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+  final URL resource=getClass().getClassLoader().getResource(BOOTSTRAP_PROPERTIES);
+  when(enumeration.nextElement()).thenReturn(resource);
+  when(enumeration.nextElement()).thenReturn(resource);
+  when(enumeration.nextElement()).thenReturn(resource);
+  when(classLoader.getResources(BOOTSTRAP_PROPERTIES)).thenReturn(enumeration);
   final PropertiesBootstrapServiceDiscoverer propertiesBootstrapServiceDiscoverer=new PropertiesBootstrapServiceDiscoverer(classLoader);
   final List<BootstrapService> services=propertiesBootstrapServiceDiscoverer.discover();
-  assertThat(services.size(),is(1));
+  assertThat(services.size(),is(3));
 }

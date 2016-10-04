@@ -1,0 +1,11 @@
+{
+  final ArtifactPluginFileBuilder pluginFileBuilder=new ArtifactPluginFileBuilder("bootstrapPlugin").containingResource("plugin-bootstrap.properties",BOOTSTRAP_PROPERTIES).containingClass("org/foo/EchoTest.clazz");
+  ApplicationFileBuilder applicationFileBuilder=new ApplicationFileBuilder("app-with-plugin-bootstrap").definedBy("app-with-plugin-bootstrap.xml").containingPlugin(pluginFileBuilder);
+  addPackedAppFromBuilder(applicationFileBuilder);
+  startDeployment();
+  assertApplicationDeploymentSuccess(applicationDeploymentListener,applicationFileBuilder.getId());
+  final Application application=findApp(applicationFileBuilder.getId(),1);
+  final Object lookupObject=application.getMuleContext().getRegistry().lookupObject("plugin.echotest");
+  assertThat(lookupObject,is(not(nullValue())));
+  assertThat(lookupObject.getClass().getName(),equalTo("org.foo.EchoTest"));
+}
