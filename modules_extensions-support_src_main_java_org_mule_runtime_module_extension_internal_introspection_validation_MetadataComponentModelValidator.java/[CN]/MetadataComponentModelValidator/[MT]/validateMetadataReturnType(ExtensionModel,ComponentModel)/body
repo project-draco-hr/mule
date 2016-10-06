@@ -1,11 +1,19 @@
 {
-  RuntimeComponentModel component=(RuntimeComponentModel)componentModel;
-  MetadataType returnMetadataType=component.getOutput().getType();
-  validateCategories(componentModel,component.getMetadataResolverFactory());
-  if (returnMetadataType instanceof ObjectType) {
-    validateReturnType(extensionModel,component,getType(returnMetadataType));
+  MetadataResolverFactory resolverFactory=((RuntimeComponentModel)component).getMetadataResolverFactory();
+  if (!(resolverFactory.getOutputResolver() instanceof NullMetadataResolver)) {
+    return;
   }
- else   if (returnMetadataType instanceof DictionaryType) {
-    validateReturnType(extensionModel,component,getType(((DictionaryType)returnMetadataType).getValueType()));
+  component.getOutput().getType().accept(new MetadataTypeVisitor(){
+    @Override public void visitObject(    ObjectType objectType){
+      if (Object.class.equals(getType(objectType))) {
+        throw new IllegalModelDefinitionException(format("%s '%s' specifies '%s' as a return type. Operations and Sources with " + "return type such as Object or Map must have defined a not null OutputTypeResolver",component.getName(),extensionModel.getName(),getId(objectType)));
+      }
+    }
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      if (Object.class.equals(getType(dictionaryType.getValueType()))) {
+        throw new IllegalModelDefinitionException(format("%s '%s' specifies '%s' as a return type. Operations and Sources with " + "return type such as Object or Map must have defined a not null OutputTypeResolver",component.getName(),extensionModel.getName(),getId(dictionaryType)));
+      }
+    }
   }
+);
 }

@@ -1,0 +1,11 @@
+{
+  ParameterMetadataDescriptorBuilder descriptorBuilder=parameterDescriptor(parameter.getName());
+  if (!parameter.hasDynamicType()) {
+    return success(descriptorBuilder.withType(parameter.getType()).build());
+  }
+  descriptorBuilder.dynamic(true);
+  MetadataResult<MetadataType> inputMetadataResult=getParameterMetadata(parameter,context,key);
+  MetadataType type=inputMetadataResult.get() == null ? parameter.getType() : inputMetadataResult.get();
+  ParameterMetadataDescriptor descriptor=descriptorBuilder.withType(type).build();
+  return inputMetadataResult.isSuccess() ? success(descriptor) : failure(descriptor,inputMetadataResult);
+}
