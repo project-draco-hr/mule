@@ -1,0 +1,14 @@
+{
+  ClassLoader classLoader=(ClassLoader)artifactClassLoader.getClass().getMethod("getClassLoader").invoke(artifactClassLoader);
+  final Enumeration<URL> resources=(Enumeration<URL>)classLoader.getClass().getMethod("findResources",String.class).invoke(classLoader,BOOTSTRAP_PROPERTIES);
+  final List<BootstrapService> bootstrapServices=new ArrayList<>();
+  if (resources.hasMoreElements()) {
+    while (resources.hasMoreElements()) {
+      final URL localResource=resources.nextElement();
+      final Properties properties=PropertiesUtils.loadProperties(localResource);
+      final PropertiesBootstrapService propertiesBootstrapService=new PropertiesBootstrapService(classLoader,properties);
+      bootstrapServices.add(propertiesBootstrapService);
+    }
+  }
+  return bootstrapServices;
+}

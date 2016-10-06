@@ -1,0 +1,22 @@
+{
+  try {
+    final ClassLoaderFilter filter=mock(ClassLoaderFilter.class);
+    when(filter.exportsClass(anyString())).thenReturn(true);
+    final ArtifactClassLoader pluginClassLoader1=mock(ArtifactClassLoader.class);
+    when(pluginClassLoader1.getClassLoader()).thenReturn(this.getClass().getClassLoader());
+    final List<ArtifactClassLoader> artifactClassLoaders=new ArrayList<>();
+    artifactClassLoaders.add(new FilteringArtifactClassLoader(pluginClassLoader1,filter));
+    final List<URL> urls=new ArrayList<>();
+    urls.add(this.getClass().getResource("/plugin1-bootstrap.properties"));
+    urls.add(this.getClass().getResource("/plugin2-bootstrap.properties"));
+    when(pluginClassLoader1.findResources(BOOTSTRAP_PROPERTIES)).thenReturn(new EnumerationAdapter<URL>(urls));
+    final ArtifactClassLoader appClassLoader=mock(ArtifactClassLoader.class);
+    when(appClassLoader.getClassLoader()).thenReturn(this.getClass().getClassLoader());
+    when(appClassLoader.findResources(BOOTSTRAP_PROPERTIES)).thenReturn(new EnumerationAdapter<URL>(emptyList()));
+    final ClassLoader executionClassLoader=new FilteringArtifactClassLoader(appClassLoader,filter);
+    return new TestBootstrapServiceDiscovererConfigurationBuilder(getClass().getClassLoader(),executionClassLoader,artifactClassLoaders);
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+}
