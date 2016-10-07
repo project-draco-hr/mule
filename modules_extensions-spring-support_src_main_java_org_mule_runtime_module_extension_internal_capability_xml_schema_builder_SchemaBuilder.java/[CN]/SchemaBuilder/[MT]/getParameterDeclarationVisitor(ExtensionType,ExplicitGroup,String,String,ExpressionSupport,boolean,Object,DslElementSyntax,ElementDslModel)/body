@@ -1,0 +1,45 @@
+{
+  return new MetadataTypeVisitor(){
+    private boolean forceOptional=paramDsl.supportsChildDeclaration() || !required;
+    @Override public void visitArrayType(    ArrayType arrayType){
+      defaultVisit(arrayType);
+      if (paramDsl.supportsChildDeclaration()) {
+        collectionDelegate.generateCollectionElement(arrayType,paramDsl,description,false,all);
+      }
+    }
+    @Override public void visitDictionary(    DictionaryType dictionaryType){
+      defaultVisit(dictionaryType);
+      if (paramDsl.supportsChildDeclaration()) {
+        mapDelegate.generateMapElement(dictionaryType,paramDsl,description,false,all);
+      }
+    }
+    @Override public void visitObject(    ObjectType objectType){
+      final String id=getId(objectType);
+      if (id.equals(TlsContextFactory.class.getName())) {
+        addTlsSupport(extensionType,all);
+        return;
+      }
+      if (id.equals(ThreadingProfile.class.getName())) {
+        addAttributeAndElement(extensionType,all,THREADING_PROFILE_ATTRIBUTE_NAME,MULE_ABSTRACT_THREADING_PROFILE);
+        return;
+      }
+      defaultVisit(objectType);
+      objectTypeDelegate.generatePojoElement(objectType,paramDsl,dslModel,description,all);
+    }
+    @Override public void visitString(    StringType stringType){
+      if (paramDsl.supportsChildDeclaration()) {
+        generateTextElement(paramDsl,description,isRequired(forceOptional,required),all);
+      }
+ else {
+        defaultVisit(stringType);
+      }
+    }
+    @Override protected void defaultVisit(    MetadataType metadataType){
+      extensionType.getAttributeOrAttributeGroup().add(createAttribute(name,description,metadataType,defaultValue,isRequired(forceOptional,required),expressionSupport));
+    }
+    private boolean isRequired(    boolean forceOptional,    boolean required){
+      return !forceOptional && required;
+    }
+  }
+;
+}
