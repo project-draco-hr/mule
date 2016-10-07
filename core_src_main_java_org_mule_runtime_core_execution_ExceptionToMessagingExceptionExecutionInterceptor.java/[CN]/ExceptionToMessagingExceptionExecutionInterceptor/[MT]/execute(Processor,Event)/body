@@ -8,14 +8,14 @@
       messagingException=(MessagingException)exception;
       Throwable causeException=exception.getCause() != null ? exception.getCause() : exception;
       Optional<Error> error=messagingException.getEvent().getError();
-      if (!error.isPresent() || !error.get().getException().equals(causeException) || !messagingException.causedExactlyBy(error.get().getException().getClass())) {
+      if (!error.isPresent() || !error.get().getCause().equals(causeException) || !messagingException.causedExactlyBy(error.get().getCause().getClass())) {
         ErrorType errorType=getErrorTypeFromFailingProcessor(messageProcessor,causeException);
         event=Event.builder(messagingException.getEvent()).error(ErrorBuilder.builder(causeException).errorType(errorType).build()).build();
         messagingException.setProcessedEvent(event);
       }
     }
  else {
-      Exception causeException=exception instanceof ErrorMessageAwareException ? ((ErrorMessageAwareException)exception).getException() : exception;
+      Throwable causeException=exception instanceof ErrorMessageAwareException ? ((ErrorMessageAwareException)exception).getRootCause() : exception;
       messagingException=new MessagingException(event,causeException,messageProcessor);
       ErrorType errorType=getErrorTypeFromFailingProcessor(messageProcessor,causeException);
       Event exceptionEvent=messagingException.getEvent();
