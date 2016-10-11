@@ -4,8 +4,8 @@
   }
   Object o=null;
   if (src instanceof InputStream) {
-    try {
-      o=new ObjectInputStream((InputStream)src).readObject();
+    try (ObjectInputStream ois=new ClassLoaderObjectInputStream(currentThread().getContextClassLoader(),(InputStream)src)){
+      o=ois.readObject();
     }
  catch (    Exception e) {
       throw new TransformerException(this,e);
@@ -14,8 +14,7 @@
  else {
     byte[] data=(byte[])src;
     ByteArrayInputStream bais=new ByteArrayInputStream(data);
-    try {
-      ObjectInputStream ois=new ObjectInputStream(bais);
+    try (ObjectInputStream ois=new ClassLoaderObjectInputStream(currentThread().getContextClassLoader(),bais)){
       o=ois.readObject();
     }
  catch (    Exception e) {

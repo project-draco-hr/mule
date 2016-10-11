@@ -1,27 +1,2 @@
 {
-  try {
-    isProcessingMessage=true;
-    JmsWorker worker=new JmsWorker(message,MultiConsumerJmsMessageReceiver.this,this);
-    worker.processMessages();
-  }
- catch (  Exception e) {
-    RollbackSourceCallback rollbackMethod=new RollbackSourceCallback(){
-      @Override public void rollback(){
-        recoverSession();
-      }
-    }
-;
-    if (e instanceof MessagingException) {
-      MessagingException messagingException=(MessagingException)e;
-      if (!messagingException.getEvent().isTransacted() && messagingException.causedRollback()) {
-        rollbackMethod.rollback();
-      }
-    }
- else {
-      getEndpoint().getMuleContext().getExceptionListener().handleException(e,rollbackMethod);
-    }
-  }
- finally {
-    isProcessingMessage=false;
-  }
 }
