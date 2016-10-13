@@ -1,0 +1,30 @@
+{
+  String[] parts=componentPath.split("/");
+  if (parts.length == 0) {
+    throw new IllegalArgumentException("Incomplete component path " + componentPath);
+  }
+  String type=parts[0];
+  if (!"flow".equals(type)) {
+    throw new IllegalArgumentException("Unsupported component type " + type);
+  }
+  if (parts.length == 1) {
+    throw new IllegalArgumentException("Missing component path type element name in " + componentPath);
+  }
+  String typeElementName=parts[1];
+  Flow flow=(Flow)muleContext.getRegistry().lookupFlowConstruct(typeElementName);
+  validateObjectIsPresent(typeElementName,flow);
+  if (parts.length == 2) {
+    return flow;
+  }
+  String flowPartType=parts[2];
+  if ("source".equals(flowPartType)) {
+    return flow.getMessageSource();
+  }
+  if ("processors".equals(flowPartType)) {
+    return resolveMessageProcessor(flow.getMessageProcessors(),ArrayUtils.subarray(parts,4,parts.length - 1));
+  }
+  if ("errorHandler".equals(flowPartType)) {
+    throw new IllegalArgumentException("Cannot resolve processors inside error-handler yet");
+  }
+  throw new IllegalArgumentException(format("Flow part %s is invalid",flowPartType));
+}
