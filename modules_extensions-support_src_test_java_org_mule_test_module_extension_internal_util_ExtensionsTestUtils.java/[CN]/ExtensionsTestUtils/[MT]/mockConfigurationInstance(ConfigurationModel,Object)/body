@@ -1,0 +1,15 @@
+{
+  ConfigurationFactory configurationFactory=mock(ConfigurationFactory.class);
+  when(configurationFactory.newInstance()).thenReturn(config);
+  when(configurationFactory.getObjectType()).thenReturn((Class)config.getClass());
+  when(configurationModel.getModelProperty(any())).thenAnswer(new Answer<Optional<ModelProperty>>(){
+    @Override public Optional<ModelProperty> answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      Class<? extends ModelProperty> propertyType=(Class<? extends ModelProperty>)invocationOnMock.getArguments()[0];
+      if (ConfigurationFactoryModelProperty.class.equals(propertyType)) {
+        return of(new ConfigurationFactoryModelProperty(configurationFactory));
+      }
+      return empty();
+    }
+  }
+);
+}

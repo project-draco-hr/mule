@@ -1,18 +1,18 @@
 {
-  RuntimeConfigurationModel implicitConfigurationModel=(RuntimeConfigurationModel)getFirstImplicit(extensionModel.getConfigurationModels());
+  ConfigurationModel implicitConfigurationModel=getFirstImplicit(extensionModel.getConfigurationModels());
   if (implicitConfigurationModel == null) {
     throw new IllegalStateException(String.format("Could not find a config for extension '%s' and none can be created automatically. Please define one",extensionModel.getName()));
   }
   final String providerName=String.format("%s-%s",extensionModel.getName(),implicitConfigurationModel.getName());
   final ResolverSet resolverSet=buildImplicitResolverSet(implicitConfigurationModel,muleContext);
   try {
-    ConfigurationInstance configurationInstance=new ConfigurationInstanceFactory(implicitConfigurationModel,resolverSet).createConfiguration(providerName,event,muleContext);
+    ConfigurationInstance configurationInstance=new ConfigurationInstanceFactory(extensionModel,implicitConfigurationModel,resolverSet).createConfiguration(providerName,event,muleContext);
     String configName=configurationInstance.getName();
-    RuntimeConfigurationModel configurationModel=configurationInstance.getModel();
+    ConfigurationModel configurationModel=configurationInstance.getModel();
     if (resolverSet.isDynamic()) {
-      return new DynamicConfigurationProvider(configName,configurationModel,resolverSet,new ImplicitConnectionProviderValueResolver(configName,configurationModel,muleContext),ImmutableExpirationPolicy.getDefault(new TimeSupplier()));
+      return new DynamicConfigurationProvider(configName,extensionModel,configurationModel,resolverSet,new ImplicitConnectionProviderValueResolver(configName,extensionModel,configurationModel,muleContext),ImmutableExpirationPolicy.getDefault(new TimeSupplier()));
     }
-    return new ConfigurationProviderMetadataAdapter(configName,configurationModel,configurationInstance);
+    return new ConfigurationProviderMetadataAdapter(configName,extensionModel,configurationModel,configurationInstance);
   }
  catch (  MuleException e) {
     throw new MuleRuntimeException(e);

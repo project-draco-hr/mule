@@ -1,7 +1,13 @@
 {
   enricher.enrich(describingContext);
   OperationDeclaration operationDeclaration=getDeclaration(describingContext.getExtensionDeclarer().getDeclaration().getOperations(),CONNECTED_OPERATION);
-  ArgumentCaptor<ConnectivityModelProperty> captor=ArgumentCaptor.forClass(ConnectivityModelProperty.class);
-  verify(operationDeclaration,times(1)).addModelProperty(captor.capture());
-  assertThat(captor.getValue().getConnectionType(),is(typeLoader.load(TransactionalConnection.class)));
+  doAnswer(new Answer<BaseDeclaration>(){
+    @Override public BaseDeclaration answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      ConnectivityModelProperty property=(ConnectivityModelProperty)invocationOnMock.getArguments()[0];
+      assertThat(property.getConnectionType(),is(typeLoader.load(TransactionalConnection.class)));
+      return (BaseDeclaration)invocationOnMock.callRealMethod();
+    }
+  }
+).when(operationDeclaration).addModelProperty(isA(ConnectivityModelProperty.class));
+  verify(operationDeclaration,times(1)).addModelProperty(isA(ConnectivityModelProperty.class));
 }

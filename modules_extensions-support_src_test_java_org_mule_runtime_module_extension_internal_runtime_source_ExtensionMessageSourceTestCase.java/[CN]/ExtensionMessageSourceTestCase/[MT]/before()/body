@@ -2,10 +2,11 @@
   spyInjector(muleContext);
   when(threadingProfile.createWorkManager(anyString(),eq(muleContext.getConfiguration().getShutdownTimeout()))).thenReturn(workManager);
   when(sourceFactory.createSource()).thenReturn(source);
-  when(sourceModel.getExceptionEnricherFactory()).thenReturn(Optional.empty());
+  mockExceptionEnricher(sourceModel,null);
   when(sourceModel.getName()).thenReturn(SOURCE_NAME);
+  when(sourceModel.getModelProperty(MetadataResolverFactoryModelProperty.class)).thenReturn(empty());
   setRequires(sourceModel,true,true);
-  when(extensionModel.getExceptionEnricherFactory()).thenReturn(Optional.empty());
+  mockExceptionEnricher(extensionModel,null);
   mockClassLoaderModelProperty(extensionModel,getClass().getClassLoader());
   initialiseIfNeeded(retryPolicyTemplate,muleContext);
   muleContext.getRegistry().registerObject(OBJECT_EXTENSION_MANAGER,extensionManager);
@@ -14,6 +15,6 @@
   when(configurationModel.getSourceModel(SOURCE_NAME)).thenReturn(Optional.of(sourceModel));
   when(extensionManager.getConfigurationProvider(CONFIG_NAME)).thenReturn(Optional.of(configurationProvider));
   when(configurationProvider.get(any())).thenReturn(configurationInstance);
-  when(configurationProvider.getModel()).thenReturn(configurationModel);
+  when(configurationProvider.getConfigurationModel()).thenReturn(configurationModel);
   messageSource=getNewExtensionMessageSourceInstance();
 }

@@ -1,8 +1,15 @@
 {
   enricher.enrich(describingContext);
-  ArgumentCaptor<InterceptorFactory> captor=ArgumentCaptor.forClass(InterceptorFactory.class);
-  verify(connectedOperation).addInterceptorFactory(captor.capture());
-  InterceptorFactory factory=captor.getValue();
-  assertThat(factory,is(notNullValue()));
-  assertThat(factory.createInterceptor(),is(instanceOf(ConnectionInterceptor.class)));
+  doAnswer(new Answer<BaseDeclaration>(){
+    @Override public BaseDeclaration answer(    InvocationOnMock invocationOnMock) throws Throwable {
+      InterceptorsModelProperty property=(InterceptorsModelProperty)invocationOnMock.getArguments()[0];
+      assertThat(property.getInterceptorFactories(),hasSize(1));
+      InterceptorFactory factory=property.getInterceptorFactories().get(0);
+      assertThat(factory,is(notNullValue()));
+      assertThat(factory.createInterceptor(),is(instanceOf(ConnectionInterceptor.class)));
+      return (BaseDeclaration)invocationOnMock.callRealMethod();
+    }
+  }
+).when(connectedOperation).addModelProperty(isA(InterceptorsModelProperty.class));
+  verify(connectedOperation).addModelProperty(isA(InterceptorsModelProperty.class));
 }
