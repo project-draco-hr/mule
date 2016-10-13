@@ -7,27 +7,6 @@
   Event eventToProcess=event;
   Event result=null;
   MessagingException exceptionThrown=null;
-  boolean nonBlocking=event.isAllowNonBlocking() && event.getReplyToHandler() != null;
-  boolean responseProcessing=messageProcessor instanceof InterceptingMessageProcessor || messageProcessor instanceof NonBlockingMessageProcessor;
-  if (nonBlocking && responseProcessing) {
-    final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
-    eventToProcess=Event.builder(event).replyToHandler(new NonBlockingReplyToHandler(){
-      @Override public Event processReplyTo(      Event result,      InternalMessage returnMessage,      Object replyTo) throws MuleException {
-        if (fireNotification) {
-          fireNotification(notificationManager,flowConstruct,result != null ? result : event,messageProcessor,null,MESSAGE_PROCESSOR_POST_INVOKE);
-        }
-        return originalReplyToHandler.processReplyTo(result,returnMessage,replyTo);
-      }
-      @Override public void processExceptionReplyTo(      MessagingException exception,      Object replyTo){
-        if (fireNotification) {
-          Event result=exception.getEvent();
-          fireNotification(notificationManager,flowConstruct,result != null ? result : event,messageProcessor,null,MESSAGE_PROCESSOR_POST_INVOKE);
-        }
-        originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
-      }
-    }
-).build();
-  }
   setCurrentEvent(eventToProcess);
   try {
     if (next == null) {
@@ -46,7 +25,7 @@ catch (  MuleException e) {
     throw exceptionThrown;
   }
  finally {
-    if (!NonBlockingVoidMuleEvent.getInstance().equals(result) && fireNotification) {
+    if (fireNotification) {
       fireNotification(notificationManager,flowConstruct,result != null ? result : event,messageProcessor,exceptionThrown,MESSAGE_PROCESSOR_POST_INVOKE);
     }
   }

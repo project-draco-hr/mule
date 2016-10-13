@@ -1,8 +1,20 @@
 {
-  if (isNonBlocking(event)) {
-    return processNonBlocking(event);
+  MessagingException exception=null;
+  Event response=null;
+  try {
+    response=processResponse(processNext(processRequest(event)),event);
+    return response;
   }
+ catch (  MessagingException e) {
+    exception=e;
+    return processCatch(event,e);
+  }
+ finally {
+    if (response == null) {
+      processFinally(event,exception);
+    }
  else {
-    return processBlocking(event);
+      processFinally(response,exception);
+    }
   }
 }

@@ -1,18 +1,18 @@
 {
-  TriggerableMessageSource source=new TriggerableMessageSource();
-  pipeline.setMessageSource(source);
   pipeline.setExceptionListener(new DefaultMessagingExceptionStrategy());
   List<Processor> processors=new ArrayList<>();
   processors.add(new ExceptionThrowingMessageProcessor());
   pipeline.setMessageProcessors(processors);
   pipeline.initialise();
   event=Event.builder(context).message(InternalMessage.builder().payload("request").build()).exchangePattern(ONE_WAY).flow(pipeline).build();
+  thrown.expect(instanceOf(MessagingException.class));
+  thrown.expectCause(is(instanceOf(IllegalStateException.class)));
   try {
-    source.trigger(event);
+    process(pipeline,event);
   }
- catch (  Exception e) {
+  finally {
+    verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PROCESS_START,false,event)));
+    verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PROCESS_COMPLETE,true,null)));
+    verify(notificationManager,times(2)).fireNotification(any(PipelineMessageNotification.class));
   }
-  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PROCESS_START,false,event)));
-  verify(notificationManager,times(1)).fireNotification(argThat(new PipelineMessageNotificiationArgumentMatcher(PROCESS_COMPLETE,true,null)));
-  verify(notificationManager,times(2)).fireNotification(any(PipelineMessageNotification.class));
 }

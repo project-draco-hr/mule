@@ -1,12 +1,12 @@
 {
-  Event result=messageProcessor.process(testEvent());
+  Event result=process(messageProcessor,testEvent());
   assertThat(latch.await(10000,TimeUnit.MILLISECONDS),is(true));
   assertThat(target.sensedEvent,notNullValue());
-  assertNotSame(testEvent(),target.sensedEvent);
-  assertEquals(testEvent().getMessageAsString(muleContext),target.sensedEvent.getMessageAsString(muleContext));
-  assertSame(VoidMuleEvent.getInstance(),result);
-  assertNull(exceptionThrown);
-  assertNotSame(Thread.currentThread(),target.thread);
+  assertThat(testEvent(),not(sameInstance(target.sensedEvent)));
+  assertThat(testEvent().getMessageAsString(muleContext),equalTo(target.sensedEvent.getMessageAsString(muleContext)));
+  assertThat(VoidMuleEvent.getInstance(),sameInstance(result));
+  assertThat(exceptionThrown,nullValue());
+  assertThat(target.thread,not(sameInstance(Thread.currentThread())));
   messageProcessor.stop();
   messageProcessor.dispose();
 }

@@ -1,0 +1,15 @@
+{
+  Collection<Processor> selectedProcessors=selectProcessors(event,Event.builder(event));
+  if (!selectedProcessors.isEmpty()) {
+    return selectedProcessors;
+  }
+ else   if (defaultProcessor != null) {
+    return Collections.singleton(defaultProcessor);
+  }
+ else {
+    if (getRouterStatistics() != null && getRouterStatistics().isEnabled()) {
+      getRouterStatistics().incrementNoRoutedMessage();
+    }
+    throw new RoutePathNotFoundException(CoreMessages.createStaticMessage("Can't process message because no route has been found " + "matching any filter and no default route is defined"),this);
+  }
+}

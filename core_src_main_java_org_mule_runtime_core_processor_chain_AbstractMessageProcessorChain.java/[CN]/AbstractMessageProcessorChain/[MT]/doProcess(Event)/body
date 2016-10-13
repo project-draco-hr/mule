@@ -1,3 +1,16 @@
 {
-  return new ProcessorExecutorFactory().createProcessorExecutor(event,getProcessorsToExecute(),messageProcessorExecutionTemplate,true,flowConstruct).execute();
+  Event copy;
+  for (  Processor processor : getProcessorsToExecute()) {
+    setCurrentEvent(event);
+    copy=event;
+    event=messageProcessorExecutionTemplate.execute(processor,event);
+    if (VoidMuleEvent.getInstance().equals(event)) {
+      setCurrentEvent(copy);
+      event=copy;
+    }
+ else     if (event == null) {
+      return null;
+    }
+  }
+  return event;
 }

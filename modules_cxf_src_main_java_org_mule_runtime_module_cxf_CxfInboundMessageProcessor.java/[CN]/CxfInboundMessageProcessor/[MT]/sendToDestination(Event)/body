@@ -1,38 +1,7 @@
 {
   try {
     final Exchange exchange=new ExchangeImpl();
-    final Event originalEvent=event;
-    if (event.isAllowNonBlocking()) {
-      final ReplyToHandler originalReplyToHandler=event.getReplyToHandler();
-      event=Event.builder(event).replyToHandler(new NonBlockingReplyToHandler(){
-        @Override public Event processReplyTo(        Event responseEvent,        InternalMessage returnMessage,        Object replyTo) throws MuleException {
-          try {
-            exchange.put(CxfConstants.MULE_EVENT,responseEvent);
-            exchange.put(CxfConstants.NON_BLOCKING_RESPONSE,true);
-            exchange.getInMessage().getInterceptorChain().resume();
-            responseEvent=(Event)exchange.get(CxfConstants.MULE_EVENT);
-            responseEvent=processResponse(originalEvent,exchange,responseEvent);
-            originalReplyToHandler.processReplyTo(responseEvent,responseEvent.getMessage(),replyTo);
-          }
- catch (          Exception e) {
-            ExceptionPayload exceptionPayload=new DefaultExceptionPayload(e);
-            responseEvent=Event.builder(responseEvent).message(InternalMessage.builder(responseEvent.getMessage()).exceptionPayload(exceptionPayload).addOutboundProperty(HTTP_STATUS_PROPERTY,500).build()).build();
-            processExceptionReplyTo(new MessagingException(responseEvent,e,CxfInboundMessageProcessor.this),replyTo);
-          }
-          return responseEvent;
-        }
-        @Override public void processExceptionReplyTo(        MessagingException exception,        Object replyTo){
-          originalReplyToHandler.processExceptionReplyTo(exception,replyTo);
-        }
-      }
-).build();
-      setCurrentEvent(event);
-    }
-    Event responseEvent=sendThroughCxf(event,exchange);
-    if (responseEvent == null || !responseEvent.equals(NonBlockingVoidMuleEvent.getInstance())) {
-      return processResponse(event,exchange,responseEvent);
-    }
-    return responseEvent;
+    return processResponse(event,exchange,sendThroughCxf(event,exchange));
   }
  catch (  MuleException e) {
     logger.warn("Could not dispatch message to CXF!",e);

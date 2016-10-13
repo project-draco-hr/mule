@@ -44,23 +44,16 @@
     processMessage(jmsMessage,event);
     if (useReplyToDestination && replyTo != null) {
       final int timeout=endpoint.getResponseTimeout();
-      if (completionHandler != null) {
-        internalNonBlockingSendAndReceive(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,transacted,timeout,completionHandler,event);
-        delayedCleanup=true;
-        return null;
+      try {
+        if (topic) {
+          return internalBlockingSendAndAwait(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout,event);
+        }
+ else {
+          return internalBlockingSendAndReceive(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout,event);
+        }
       }
- else {
-        try {
-          if (topic) {
-            return internalBlockingSendAndAwait(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout,event);
-          }
- else {
-            return internalBlockingSendAndReceive(session,producer,replyTo,jmsMessage,topic,ttl,priority,persistent,timeout,event);
-          }
-        }
   finally {
-          closeReplyQueue(session,replyTo);
-        }
+        closeReplyQueue(session,replyTo);
       }
     }
  else {

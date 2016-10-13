@@ -1,0 +1,19 @@
+{
+  if (messageProcessor instanceof MuleContextAware) {
+    ((MuleContextAware)messageProcessor).setMuleContext(muleContext);
+  }
+  if (messageProcessor instanceof FlowConstructAware) {
+    ((FlowConstructAware)messageProcessor).setFlowConstruct(mockFlow);
+  }
+  try {
+    if (nonBlocking) {
+      return processAsStreamAndBlock(event,messageProcessor);
+    }
+ else {
+      return messageProcessor.process(event);
+    }
+  }
+  finally {
+    assertThat(scheduledTasks,greaterThanOrEqualTo(nonBlockingProcessorsExecuted));
+  }
+}
