@@ -5,17 +5,15 @@
     for (int i=0; i <= getUntilSuccessfulConfiguration().getMaxRetries(); i++) {
       try {
         Event successEvent=processResponseThroughAckResponseExpression(processEvent(retryEvent));
+        if (successEvent == null) {
+          return null;
+        }
         Event finalEvent;
-        if (successEvent instanceof VoidMuleEvent) {
-          finalEvent=event;
+        Builder builder=Event.builder(event).message(successEvent.getMessage());
+        for (        String flowVar : successEvent.getVariableNames()) {
+          builder.addVariable(flowVar,successEvent.getVariable(flowVar).getValue());
         }
- else {
-          Builder builder=Event.builder(event).message(successEvent.getMessage());
-          for (          String flowVar : successEvent.getVariableNames()) {
-            builder.addVariable(flowVar,successEvent.getVariable(flowVar).getValue());
-          }
-          finalEvent=builder.build();
-        }
+        finalEvent=builder.build();
         setCurrentEvent(finalEvent);
         return finalEvent;
       }
