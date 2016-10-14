@@ -1,0 +1,14 @@
+{
+  ExpressionLanguage expressionLanguage=spy(MuleExpressionLanguage.class);
+  MuleEvent event=getEventWithError(empty());
+  String var1="var1";
+  String var2="var2";
+  when(event.getVariableNames()).thenReturn(Sets.newHashSet(var1,var2));
+  TypedValue varValue=mock(TypedValue.class);
+  when(event.getVariable(var1)).thenReturn(varValue);
+  when(event.getVariable(var2)).thenReturn(varValue);
+  BindingContext context=getBindingContextFromEvaluation(expressionLanguage,event);
+  Map<String,TypedValue> vars=(Map<String,TypedValue>)context.lookup(VARIABLES).get().getValue();
+  assertThat(vars.get(var1),is(sameInstance(varValue)));
+  assertThat(vars.get(var2),is(sameInstance(varValue)));
+}
