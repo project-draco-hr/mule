@@ -1,0 +1,24 @@
+{
+  msg.getInterceptorChain().doIntercept(msg);
+  OutputStream content=msg.getContent(OutputStream.class);
+  String dispatched=new HttpDispatcher().dispatch(address,content);
+  Exchange exchange=msg.getExchange();
+  if (isNotBlank(dispatched)) {
+    exchange.put(StaxInEndingInterceptor.STAX_IN_NOCLOSE,Boolean.TRUE);
+    InputStream is=new ByteArrayInputStream(dispatched.getBytes());
+    Message inMessage=new MessageImpl();
+    String encoding="UTF-8";
+    inMessage.put(Message.ENCODING,encoding);
+    String contentType="text/xml";
+    if (!contentType.contains("charset")) {
+      contentType+="; charset=" + encoding;
+    }
+    inMessage.put(Message.CONTENT_TYPE,contentType);
+    inMessage.setContent(InputStream.class,is);
+    inMessage.setExchange(exchange);
+    messageObserver.onMessage(inMessage);
+  }
+ else {
+    exchange.put(ClientImpl.FINISHED,Boolean.TRUE);
+  }
+}
