@@ -1,0 +1,23 @@
+{
+  logger.info("Stopping " + this.toString() + "...");
+  cpuLightExecutor.shutdown();
+  ioExecutor.shutdown();
+  computationExecutor.shutdown();
+  scheduledExecutor.shutdown();
+  try {
+    final long startMillis=currentTimeMillis();
+    waitForExecutorTermination(startMillis,scheduledExecutor,SCHEDULER_THREADS_NAME);
+    waitForExecutorTermination(startMillis,cpuLightExecutor,CPU_LIGHT_THREADS_NAME);
+    waitForExecutorTermination(startMillis,ioExecutor,IO_THREADS_NAME);
+    waitForExecutorTermination(startMillis,computationExecutor,COMPUTATION_THREADS_NAME);
+    logger.info("Stopped " + this.toString());
+  }
+ catch (  InterruptedException e) {
+    currentThread().interrupt();
+    logger.info("Stop of " + this.toString() + " interrupted",e);
+  }
+  cpuLightExecutor=null;
+  ioExecutor=null;
+  computationExecutor=null;
+  scheduledExecutor=null;
+}

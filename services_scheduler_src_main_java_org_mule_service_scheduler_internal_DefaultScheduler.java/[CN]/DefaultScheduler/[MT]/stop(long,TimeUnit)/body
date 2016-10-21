@@ -1,0 +1,20 @@
+{
+  shutdown();
+  try {
+    if (!awaitTermination(gracefulShutdownTimeout,unit)) {
+      List<Runnable> cancelledJobs=shutdownNow();
+      if (!awaitTermination(FORCEFUL_SHUTDOWN_TIMEOUT_SECS,SECONDS)) {
+        logger.warn("Scheduler " + this.toString() + " did not shutdown gracefully after "+ gracefulShutdownTimeout+ " "+ unit.toString()+ ". "+ cancelledJobs.size()+ " jobs were cancelled.");
+      }
+ else {
+        if (!cancelledJobs.isEmpty()) {
+          logger.warn("Scheduler " + this.toString() + " terminated. "+ cancelledJobs.size()+ " jobs were cancelled.");
+        }
+      }
+    }
+  }
+ catch (  InterruptedException ie) {
+    shutdownNow();
+    currentThread().interrupt();
+  }
+}

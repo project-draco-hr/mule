@@ -1,0 +1,13 @@
+{
+  int cores=getRuntime().availableProcessors();
+  logger.info("Starting " + this.toString() + "...");
+  cpuLightExecutor=new ThreadPoolExecutor(2 * cores,2 * cores,0,SECONDS,new ArrayBlockingQueue<>(2 * cores),new NamedThreadFactory(CPU_LIGHT_THREADS_NAME));
+  ioExecutor=new ThreadPoolExecutor(cores,cores * cores,0,SECONDS,new ArrayBlockingQueue<>(cores * cores),new NamedThreadFactory(IO_THREADS_NAME));
+  computationExecutor=new ThreadPoolExecutor(2 * cores,2 * cores,0,SECONDS,new ArrayBlockingQueue<>(2 * cores),new NamedThreadFactory(COMPUTATION_THREADS_NAME));
+  scheduledExecutor=newScheduledThreadPool(1,new NamedThreadFactory(SCHEDULER_THREADS_NAME));
+  ((ThreadPoolExecutor)cpuLightExecutor).prestartAllCoreThreads();
+  ((ThreadPoolExecutor)ioExecutor).prestartAllCoreThreads();
+  ((ThreadPoolExecutor)computationExecutor).prestartAllCoreThreads();
+  ((ThreadPoolExecutor)scheduledExecutor).prestartAllCoreThreads();
+  logger.info("Started " + this.toString());
+}

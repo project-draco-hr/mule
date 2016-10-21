@@ -1,0 +1,19 @@
+{
+  shutdown();
+  List<Runnable> tasks;
+  try {
+    tasks=new ArrayList<>(scheduledTasks.size());
+    for (    Entry<RunnableFuture<?>,ScheduledFuture<?>> taskEntry : scheduledTasks.entrySet()) {
+      taskEntry.getValue().cancel(true);
+      taskEntry.getKey().cancel(true);
+      if (taskEntry.getKey() instanceof RunnableFutureDecorator && !((RunnableFutureDecorator<?>)taskEntry.getKey()).isStarted()) {
+        tasks.add(taskEntry.getKey());
+      }
+    }
+    scheduledTasks.clear();
+    return tasks;
+  }
+  finally {
+    tryTerminate();
+  }
+}
