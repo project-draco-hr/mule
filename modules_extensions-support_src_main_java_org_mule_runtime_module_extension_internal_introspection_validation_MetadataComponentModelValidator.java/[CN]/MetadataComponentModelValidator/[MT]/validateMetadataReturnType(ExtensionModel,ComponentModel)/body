@@ -1,19 +1,16 @@
 {
-  MetadataResolverFactory resolverFactory=getMetadataResolverFactory(component);
-  if (!(resolverFactory.getOutputResolver() instanceof NullMetadataResolver)) {
-    return;
-  }
-  component.getOutput().getType().accept(new MetadataTypeVisitor(){
-    @Override public void visitObject(    ObjectType objectType){
-      if (Object.class.equals(getType(objectType))) {
-        throw new IllegalModelDefinitionException(format("%s '%s' specifies '%s' as a return type. Operations and Sources with " + "return type such as Object or Map must have defined a not null OutputTypeResolver",component.getName(),extensionModel.getName(),getId(objectType)));
+  if (getMetadataResolverFactory(component).getOutputResolver() instanceof NullMetadataResolver) {
+    component.getOutput().getType().accept(new MetadataTypeVisitor(){
+      @Override public void visitObject(      ObjectType objectType){
+        failIfTypeIsObject(component,extensionModel,objectType);
+      }
+      @Override public void visitDictionary(      DictionaryType dictionaryType){
+        failIfTypeIsObject(component,extensionModel,dictionaryType.getValueType());
+      }
+      @Override public void visitArrayType(      ArrayType arrayType){
+        arrayType.getType().accept(this);
       }
     }
-    @Override public void visitDictionary(    DictionaryType dictionaryType){
-      if (Object.class.equals(getType(dictionaryType.getValueType()))) {
-        throw new IllegalModelDefinitionException(format("%s '%s' specifies '%s' as a return type. Operations and Sources with " + "return type such as Object or Map must have defined a not null OutputTypeResolver",component.getName(),extensionModel.getName(),getId(dictionaryType)));
-      }
-    }
-  }
 );
+  }
 }
