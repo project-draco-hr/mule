@@ -1,0 +1,22 @@
+{
+  String domainId=getDomainId(descriptor.getName());
+  ArtifactClassLoader domainClassLoader=domainArtifactClassLoaders.get(domainId);
+  if (domainClassLoader != null) {
+    return domainClassLoader;
+  }
+ else {
+synchronized (this) {
+      domainClassLoader=domainArtifactClassLoaders.get(domainId);
+      if (domainClassLoader == null) {
+        if (descriptor.getName().equals(DEFAULT_DOMAIN_NAME)) {
+          domainClassLoader=getDefaultDomainClassLoader(parent.getClassLoaderLookupPolicy());
+        }
+ else {
+          domainClassLoader=getCustomDomainClassLoader(parent.getClassLoaderLookupPolicy(),descriptor);
+        }
+        domainArtifactClassLoaders.put(domainId,domainClassLoader);
+      }
+    }
+  }
+  return domainClassLoader;
+}
