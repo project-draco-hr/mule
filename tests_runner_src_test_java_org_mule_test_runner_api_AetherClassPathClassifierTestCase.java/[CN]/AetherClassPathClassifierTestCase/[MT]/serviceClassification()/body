@@ -1,0 +1,31 @@
+{
+  this.directDependencies=newArrayList(fooCoreDep,fooToolsArtifactDep,fooTestsSupportDep,derbyDriverDep,guavaDep,fooServiceDep);
+  when(dependencyResolver.getDirectDependencies(rootArtifact)).thenReturn(directDependencies);
+  when(artifactClassificationTypeResolver.resolveArtifactClassificationType(rootArtifact)).thenReturn(APPLICATION);
+  File fooServiceArtifactFile=temporaryFolder.newFile();
+  File metaInfFolder=temporaryFolder.newFolder("META-INF");
+  File fooServicePropertyFile=new File(metaInfFolder,SERVICE_PROPERTIES);
+  Properties fooServiceProperties=new Properties();
+  fooServiceProperties.put(SERVICE_PROVIDER_CLASS_NAME,"org.foo.ServiceProvider");
+  fooServiceProperties.store(new FileWriter(fooServicePropertyFile),"Writing " + SERVICE_PROPERTIES);
+  List<File> fooServiceUrls=newArrayList(fooServiceArtifactFile,metaInfFolder);
+  when(dependencyResolver.resolveDependencies(argThat(equalTo(new Dependency(fooServiceDep.getArtifact(),COMPILE))),argThat(equalTo(Collections.<Dependency>emptyList())),argThat(equalTo(Collections.<Dependency>emptyList())),argThat(instanceOf(DependencyFilter.class)))).thenReturn(fooServiceUrls);
+  File rootArtifactFile=temporaryFolder.newFile();
+  Artifact jarRootArtifact=rootArtifact.setFile(rootArtifactFile);
+  ArtifactResult rootArtifactResult=mock(ArtifactResult.class);
+  when(rootArtifactResult.getArtifact()).thenReturn(jarRootArtifact);
+  when(dependencyResolver.resolveArtifact(argThat(new ArtifactMatcher(rootArtifact.getGroupId(),rootArtifact.getArtifactId())))).thenReturn(rootArtifactResult);
+  ArtifactDescriptorResult defaultArtifactDescriptorResult=noManagedDependencies();
+  ArtifactsUrlClassification classification=classifier.classify(context);
+  assertThat(classification.getApplicationUrls(),hasSize(1));
+  assertThat(classification.getApplicationUrls(),hasItem(rootArtifactFile.toURI().toURL()));
+  assertThat(classification.getPluginUrlClassifications(),is(empty()));
+  assertThat(classification.getPluginSharedLibUrls(),is(empty()));
+  assertThat(classification.getContainerUrls(),is(empty()));
+  assertThat(classification.getServiceUrlClassifications(),hasSize(1));
+  assertThat(classification.getServiceUrlClassifications().get(0).getUrls(),hasItem(fooServiceArtifactFile.toURI().toURL()));
+  verify(defaultArtifactDescriptorResult,atLeastOnce()).getManagedDependencies();
+  verify(dependencyResolver,atLeastOnce()).readArtifactDescriptor(any(Artifact.class));
+  verify(dependencyResolver,atLeastOnce()).resolveDependencies(argThat(equalTo(new Dependency(fooServiceDep.getArtifact(),COMPILE))),argThat(equalTo(Collections.<Dependency>emptyList())),argThat(equalTo(Collections.<Dependency>emptyList())),argThat(instanceOf(DependencyFilter.class)));
+  verify(artifactClassificationTypeResolver).resolveArtifactClassificationType(rootArtifact);
+}

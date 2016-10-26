@@ -1,0 +1,16 @@
+{
+  List<ServiceProvider> serviceProviders=new LinkedList<>();
+  for (  Object serviceArtifactClassLoader : serviceArtifactClassLoaders) {
+    try {
+      final ServiceProvider serviceProvider;
+      String artifactName=(String)serviceArtifactClassLoader.getClass().getMethod("getArtifactId").invoke(serviceArtifactClassLoader);
+      ClassLoader classLoader=(ClassLoader)serviceArtifactClassLoader.getClass().getMethod("getClassLoader").invoke(serviceArtifactClassLoader);
+      serviceProvider=instantiateServiceProvider(classLoader,artifactName);
+      serviceProviders.add(serviceProvider);
+    }
+ catch (    Exception e) {
+      throw new IllegalStateException("Couldn't discover service from class loader: " + serviceArtifactClassLoader,e);
+    }
+  }
+  return serviceProviders;
+}
