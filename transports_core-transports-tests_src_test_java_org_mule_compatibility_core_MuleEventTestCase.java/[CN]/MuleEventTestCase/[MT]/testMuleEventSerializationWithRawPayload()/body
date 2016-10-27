@@ -5,7 +5,8 @@
   }
   Event testEvent=eventBuilder().message(InternalMessage.of(new ByteArrayInputStream(payload.toString().getBytes()))).build();
   setCurrentEvent(testEvent);
-  byte[] serializedEvent=muleContext.getObjectSerializer().serialize(testEvent);
-  testEvent=muleContext.getObjectSerializer().deserialize(serializedEvent);
+  SerializationProtocol serializationProtocol=muleContext.getObjectSerializer().getExternalProtocol();
+  byte[] serializedEvent=serializationProtocol.serialize(testEvent);
+  testEvent=serializationProtocol.deserialize(serializedEvent);
   assertArrayEquals((byte[])testEvent.getMessage().getPayload().getValue(),payload.toString().getBytes());
 }
