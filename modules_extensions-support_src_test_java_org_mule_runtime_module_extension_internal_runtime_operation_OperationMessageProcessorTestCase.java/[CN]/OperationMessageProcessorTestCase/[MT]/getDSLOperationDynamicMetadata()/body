@@ -1,0 +1,13 @@
+{
+  final ObjectType objectType=BaseTypeBuilder.create(JAVA).objectType().with(new DescriptionAnnotation(empty(),"Some Description")).build();
+  setUpValueResolvers();
+  final OutputTypeResolver outputTypeResolver=mock(OutputTypeResolver.class);
+  when(outputTypeResolver.getOutputType(any(),eq("person"))).thenReturn(objectType);
+  when(metadataResolverFactory.getOutputResolver()).thenReturn(outputTypeResolver);
+  final MetadataResult<ComponentMetadataDescriptor> metadata=messageProcessor.getMetadata();
+  assertThat(metadata.isSuccess(),is(true));
+  final MetadataResult<OutputMetadataDescriptor> outputMetadata=metadata.get().getOutputMetadata();
+  assertThat(outputMetadata.isSuccess(),is(true));
+  assertThat(outputMetadata.get().getPayloadMetadata().get().getType(),is(objectType));
+  verify(resolverSet.getResolvers(),times(1));
+}
