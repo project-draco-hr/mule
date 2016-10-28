@@ -1,16 +1,15 @@
 {
-  Map<String,Object> ctx=getContext(headers,attachments,operation);
-  Exchange exchange=new ExchangeImpl();
+  Map<String,Object> ctx=getInvocationContext(headers,attachments,operation);
   XMLStreamReader request=stringToXmlStreamReader(body,connection,operation);
-  Object[] response;
   try {
-    response=connection.invoke(request,ctx,exchange);
-    return asResult(processOutput(response),processAttributes(exchange));
+    Exchange exchange=new ExchangeImpl();
+    Object[] response=connection.invoke(request,ctx,exchange);
+    return buildResult(response,exchange);
   }
  catch (  SoapFault sf) {
     throw new SoapFaultException(sf.getFaultCode(),sf.getSubCode(),sf.getMessage(),sf.getDetail());
   }
 catch (  Exception e) {
-    throw new WscException(e);
+    throw new WscException(format("An unexpected error occur while consuming the [%s] web service operation",operation),e);
   }
 }

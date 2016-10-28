@@ -1,25 +1,28 @@
 {
-  msg.getInterceptorChain().doIntercept(msg);
-  OutputStream content=msg.getContent(OutputStream.class);
-  String dispatched=new HttpDispatcher().dispatch(address,content);
-  Exchange exchange=msg.getExchange();
-  if (isNotBlank(dispatched)) {
-    exchange.put(StaxInEndingInterceptor.STAX_IN_NOCLOSE,Boolean.TRUE);
-    InputStream is=new ByteArrayInputStream(dispatched.getBytes());
+  message.getInterceptorChain().doIntercept(message);
+  Response response=new HttpDispatcher().dispatch(address,message);
+  message.setAttachments(emptyList());
+  String body;
+  try {
+    body=IOUtils.toString(response.body().byteStream());
+  }
+ catch (  IOException e) {
+    throw new WscException("Error while getting body response content");
+  }
+  Exchange exchange=message.getExchange();
+  if (isNotBlank(body)) {
+    exchange.put(StaxInEndingInterceptor.STAX_IN_NOCLOSE,TRUE);
+    InputStream is=new ByteArrayInputStream(body.getBytes());
     Message inMessage=new MessageImpl();
-    String encoding="UTF-8";
-    inMessage.put(Message.ENCODING,encoding);
-    String contentType="text/xml";
-    if (!contentType.contains("charset")) {
-      contentType+="; charset=" + encoding;
-    }
-    inMessage.put(Message.CONTENT_TYPE,contentType);
+    inMessage.put(ENCODING,"UTF-8");
+    String contentType=response.header(CONTENT_TYPE);
+    inMessage.put(CONTENT_TYPE,contentType);
     inMessage.setContent(InputStream.class,is);
     inMessage.setExchange(exchange);
     messageObserver.onMessage(inMessage);
   }
  else {
-    exchange.put(ClientImpl.FINISHED,Boolean.TRUE);
-    throw new WscException("Web Service Response is blank, cannot consume web service");
+    exchange.put(ClientImpl.FINISHED,TRUE);
+    throw new WscException("Web Service Response is blank");
   }
 }
