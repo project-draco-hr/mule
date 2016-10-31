@@ -1,0 +1,11 @@
+{
+  XmlConfigurationCallback callback=getXmlConfigurationCallbackMock();
+  Element[] propertyPlaceholders=new Element[1];
+  propertyPlaceholders[0]=createSecurePropertyPlaceholder("test1.properties","secretKey");
+  when(callback.getPropertyPlaceholders()).thenReturn(propertyPlaceholders);
+  Element element=createElement("logger","http://www.mulesoft.org/schema/mule/core");
+  String muleConfigTxt=factoryTest.getArtifactMuleConfig("test-flow",element,callback,false);
+  Document muleConfig=parseText(muleConfigTxt);
+  List result=selectNodes("/mule/*[local-name()='config' and @location='test1.properties' and @key='secretKey']",muleConfig);
+  assertThat("Property placeholder for test2.properties is present",result.size(),is(1));
+}

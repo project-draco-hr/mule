@@ -2,18 +2,19 @@
   String flowName="flow-" + Integer.toString(element.hashCode());
   InputStream xmlConfig=IOUtils.toInputStream(getArtifactMuleConfig(flowName,element,callback,embedInFlow));
   MuleContext muleContext=null;
-  SpringXmlConfigurationBuilder builder=null;
+  List<ConfigurationBuilder> builders=new ArrayList<>();
   Map<String,String> environmentProperties=callback.getEnvironmentProperties();
   Properties systemProperties=System.getProperties();
-  Map<Object,Object> originalSystemProperties=new HashMap<Object,Object>(systemProperties);
+  Map<Object,Object> originalSystemProperties=new HashMap<>(systemProperties);
   try {
     ConfigResource config=new ConfigResource("embedded-datasense.xml",xmlConfig);
     if (environmentProperties != null) {
       systemProperties.putAll(environmentProperties);
     }
     MuleContextFactory factory=new DefaultMuleContextFactory();
-    builder=new SpringXmlConfigurationBuilder(new ConfigResource[]{config},environmentProperties,APP);
-    muleContext=factory.createMuleContext(builder);
+    builders.add(new SpringXmlConfigurationBuilder(new ConfigResource[]{config},environmentProperties,APP));
+    addBuilders(builders);
+    muleContext=factory.createMuleContext(builders.toArray(new ConfigurationBuilder[builders.size()]));
     muleContext.start();
     MuleArtifact artifact=null;
     if (embedInFlow) {
@@ -33,16 +34,15 @@
  else {
       artifact=new DefaultMuleArtifact(muleContext.getRegistry().lookupObject(element.getAttribute("name")));
     }
-    builders.put(artifact,builder);
     contexts.put(artifact,muleContext);
     return artifact;
   }
  catch (  ConfigurationException ce) {
-    dispose(builder,muleContext);
+    dispose(muleContext);
     throw new MuleArtifactFactoryException("There seems to be a problem in your XML configuration. Please fix and retry.",ce);
   }
 catch (  Throwable t) {
-    dispose(builder,muleContext);
+    dispose(muleContext);
     throw new MuleArtifactFactoryException("Error starting minimal XML configuration.",t);
   }
  finally {

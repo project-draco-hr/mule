@@ -1,9 +1,9 @@
 {
   if (parallelDeployment) {
-    System.setProperty(PARALLEL_DEPLOYMENT_PROPERTY,"");
+    setProperty(PARALLEL_DEPLOYMENT_PROPERTY,"");
   }
-  final String tmpDir=System.getProperty("java.io.tmpdir");
-  muleHome=new File(new File(tmpDir,"mule home"),getClass().getSimpleName() + System.currentTimeMillis());
+  final String tmpDir=getProperty("java.io.tmpdir");
+  muleHome=new File(new File(tmpDir,"mule home"),getClass().getSimpleName() + currentTimeMillis());
   appsDir=new File(muleHome,"apps");
   appsDir.mkdirs();
   containerAppPluginsDir=new File(muleHome,CONTAINER_APP_PLUGINS);
@@ -12,11 +12,13 @@
   tmpAppsDir.mkdirs();
   domainsDir=new File(muleHome,"domains");
   domainsDir.mkdirs();
-  System.setProperty(MuleProperties.MULE_HOME_DIRECTORY_PROPERTY,muleHome.getCanonicalPath());
+  setProperty(MULE_HOME_DIRECTORY_PROPERTY,muleHome.getCanonicalPath());
   final File domainFolder=getDomainFolder(DEFAULT_DOMAIN_NAME);
   assertThat(domainFolder.mkdirs(),is(true));
   services=getServicesFolder();
   services.mkdirs();
+  final ServiceFileBuilder schedulerService=new ServiceFileBuilder("schedulerService").configuredWith(SERVICE_PROVIDER_CLASS_NAME,"org.mule.service.scheduler.MockSchedulerServiceProvider").usingLibrary(defaulServiceSchedulerJarFile.getAbsolutePath());
+  copyFileToDirectory(schedulerService.getArtifactFile(),services);
   applicationDeploymentListener=mock(DeploymentListener.class);
   domainDeploymentListener=mock(DeploymentListener.class);
   MuleArtifactResourcesRegistry muleArtifactResourcesRegistry=new MuleArtifactResourcesRegistry();

@@ -1,17 +1,15 @@
 {
-  Flow flow=new Flow("flow",mock(MuleContext.class,RETURNS_DEEP_STUBS));
+  MuleContext muleContext=mockContextWithServices();
+  Flow flow=new Flow("flow",muleContext);
   DefaultMuleSession before=new DefaultMuleSession();
   before.setSecurityContext(createTestAuthentication());
   before.setProperty("foo","bar");
-  MuleContext muleContext=mock(MuleContext.class);
-  MuleRegistry registry=mock(MuleRegistry.class);
-  Mockito.when(muleContext.getRegistry()).thenReturn(registry);
-  Mockito.when(muleContext.getExecutionClassLoader()).thenReturn(getClass().getClassLoader());
-  Mockito.when(registry.lookupFlowConstruct("flow")).thenReturn(flow);
+  when(muleContext.getExecutionClassLoader()).thenReturn(getClass().getClassLoader());
+  when(muleContext.getRegistry().lookupFlowConstruct("flow")).thenReturn(flow);
   ((MuleContextAware)serializer).setMuleContext(muleContext);
   SerializationProtocol serializationProtocol=serializer.getExternalProtocol();
   DefaultMuleSession after=serializationProtocol.deserialize(serializationProtocol.serialize(before));
-  assertEquals((Object)before.getProperty("foo"),after.getProperty("foo"));
+  assertEquals(before.getProperty("foo"),after.getProperty("foo"));
   assertEquals(before.getSecurityContext().getAuthentication().getPrincipal(),after.getSecurityContext().getAuthentication().getPrincipal());
   assertEquals(before.getSecurityContext().getAuthentication().getProperties().get("key1"),after.getSecurityContext().getAuthentication().getProperties().get("key1"));
   assertEquals(before.getSecurityContext().getAuthentication().getCredentials(),after.getSecurityContext().getAuthentication().getCredentials());

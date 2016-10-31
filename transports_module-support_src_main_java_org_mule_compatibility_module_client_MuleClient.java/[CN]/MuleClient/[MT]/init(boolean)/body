@@ -5,7 +5,14 @@
     DefaultMuleConfiguration config=new DefaultMuleConfiguration();
     config.setClientMode(true);
     contextBuilder.setMuleConfiguration(config);
-    muleContext=muleContextFactory.createMuleContext(new TransportsConfigurationBuilder(),contextBuilder);
+    muleContext=muleContextFactory.createMuleContext(asList(new TransportsConfigurationBuilder(),new AbstractConfigurationBuilder(){
+      @Override public void doConfigure(      MuleContext muleContext) throws Exception {
+        MuleRegistry registry=muleContext.getRegistry();
+        final StandaloneClientSchedulerService schedulerService=new StandaloneClientSchedulerService();
+        registry.registerObject(schedulerService.getName(),schedulerService);
+      }
+    }
+),contextBuilder);
   }
  else {
     logger.info("Using existing MuleContext: " + muleContext);
