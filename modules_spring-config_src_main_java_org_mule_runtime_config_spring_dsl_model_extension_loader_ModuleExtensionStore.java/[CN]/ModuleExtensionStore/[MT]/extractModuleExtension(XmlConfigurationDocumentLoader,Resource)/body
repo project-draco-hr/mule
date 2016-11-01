@@ -1,0 +1,17 @@
+{
+  Optional<ModuleExtension> result=empty();
+  Document moduleDocument=getModuleDocument(xmlConfigurationDocumentLoader,resource);
+  XmlApplicationParser xmlApplicationParser=new XmlApplicationParser(new SpiServiceRegistry());
+  Optional<ConfigLine> parseModule=xmlApplicationParser.parse(moduleDocument.getDocumentElement());
+  if (parseModule.isPresent()) {
+    Properties properties=new Properties();
+    ComponentModelReader componentModelReader=new ComponentModelReader(properties);
+    ComponentModel componentModel=componentModelReader.extractComponentDefinitionModel(parseModule.get(),resource.getFilename());
+    if (componentModel.getIdentifier().equals(ModuleExtensionLoader.MODULE_IDENTIFIER)) {
+      ModuleExtension moduleExtension=new ModuleExtensionLoader().loadModule(componentModel);
+      validate(moduleExtension);
+      result=of(moduleExtension);
+    }
+  }
+  return result;
+}

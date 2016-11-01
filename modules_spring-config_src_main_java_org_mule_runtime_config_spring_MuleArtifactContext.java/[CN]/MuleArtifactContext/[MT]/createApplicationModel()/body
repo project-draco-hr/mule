@@ -2,13 +2,14 @@
   try {
     ArtifactConfig.Builder applicationConfigBuilder=new ArtifactConfig.Builder();
     applicationConfigBuilder.setApplicationProperties(this.artifactProperties);
+    ModuleExtensionStore moduleExtensionStore=new ModuleExtensionStore();
     for (    Resource springResource : artifactConfigResources) {
-      Document document=xmlConfigurationDocumentLoader.loadDocument(springResource.getInputStream());
+      Document document=xmlConfigurationDocumentLoader.loadDocument(Optional.of(moduleExtensionStore),springResource.getInputStream());
       ConfigLine mainConfigLine=xmlApplicationParser.parse(document.getDocumentElement()).get();
       applicationConfigBuilder.addConfigFile(new ConfigFile(getFilename(springResource),asList(mainConfigLine)));
     }
     applicationConfigBuilder.setApplicationName(muleContext.getConfiguration().getId());
-    applicationModel=new ApplicationModel(applicationConfigBuilder.build(),artifactConfiguration,Optional.of(componentBuildingDefinitionRegistry));
+    applicationModel=new ApplicationModel(applicationConfigBuilder.build(),artifactConfiguration,Optional.of(moduleExtensionStore),Optional.of(componentBuildingDefinitionRegistry));
   }
  catch (  Exception e) {
     throw new MuleRuntimeException(e);

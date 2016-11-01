@@ -1,0 +1,19 @@
+{
+  ComponentModel.Builder operationReplacementModel=new ComponentModel.Builder();
+  operationReplacementModel.setIdentifier(modelToCopy.getIdentifier()).setTextContent(modelToCopy.getTextContent());
+  for (  Map.Entry<String,Object> entry : modelToCopy.getCustomAttributes().entrySet()) {
+    operationReplacementModel.addCustomAttribute(entry.getKey(),entry.getValue());
+  }
+  for (  Map.Entry<String,String> entry : modelToCopy.getParameters().entrySet()) {
+    String value=entry.getKey().endsWith(REFERENCE_ATTRIBUTE) ? entry.getValue().concat("-").concat(configRefName) : entry.getValue();
+    operationReplacementModel.addParameter(entry.getKey(),value,false);
+  }
+  for (  ComponentModel operationChildModel : modelToCopy.getInnerComponents()) {
+    operationReplacementModel.addChildComponentModel(copyComponentModel(operationChildModel,configRefName));
+  }
+  ComponentModel componentModel=operationReplacementModel.build();
+  for (  ComponentModel child : componentModel.getInnerComponents()) {
+    child.setParent(componentModel);
+  }
+  return componentModel;
+}

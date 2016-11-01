@@ -1,0 +1,40 @@
+{
+  ArrayList<XmlSchemaAttributeOrGroupRef> attributes=new ArrayList<>();
+  for (  ParameterExtension parameterExtension : parameters) {
+    XmlSchemaAttribute attribute=new XmlSchemaAttribute(schema,false);
+    attribute.setName(parameterExtension.getName());
+    parameterExtension.getType().accept(new MetadataTypeVisitor(){
+      @Override protected void defaultVisit(      MetadataType metadataType){
+        attribute.setSchemaTypeName(EXPRESSION_OBJECT);
+      }
+      @Override public void visitBoolean(      BooleanType booleanType){
+        attribute.setSchemaTypeName(EXPRESSION_BOOLEAN);
+      }
+      @Override public void visitNumber(      NumberType numberType){
+        attribute.setSchemaTypeName(EXPRESSION_INTEGER);
+      }
+      @Override public void visitString(      StringType stringType){
+        attribute.setSchemaTypeName(EXPRESSION_STRING);
+      }
+      @Override public void visitTime(      TimeType timeType){
+        attribute.setSchemaTypeName(EXPRESSION_DATE_TIME);
+      }
+      @Override public void visitDateTime(      DateTimeType dateTimeType){
+        attribute.setSchemaTypeName(EXPRESSION_DATE_TIME);
+      }
+      @Override public void visitDate(      DateType dateType){
+        attribute.setSchemaTypeName(EXPRESSION_DATE_TIME);
+      }
+    }
+);
+    if (parameterExtension.getDefaultValue().isPresent()) {
+      attribute.setUse(XmlSchemaUse.OPTIONAL);
+      attribute.setDefaultValue(parameterExtension.getDefaultValue().get());
+    }
+ else {
+      attribute.setUse(XmlSchemaUse.REQUIRED);
+    }
+    attributes.add(attribute);
+  }
+  return attributes;
+}
