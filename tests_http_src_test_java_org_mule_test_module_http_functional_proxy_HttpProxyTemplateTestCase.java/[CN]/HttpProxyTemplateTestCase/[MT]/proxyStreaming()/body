@@ -1,27 +1,2 @@
 {
-  final Latch latch=new Latch();
-  consumeAllRequest=false;
-  handlerExtender=new RequestHandlerExtender(){
-    @Override public void handleRequest(    org.eclipse.jetty.server.Request baseRequest,    HttpServletRequest request,    HttpServletResponse response) throws IOException {
-      extractHeadersFromBaseRequest(baseRequest);
-      latch.release();
-      IOUtils.toString(baseRequest.getInputStream());
-      response.setContentType(request.getContentType());
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.getWriter().print("OK");
-    }
-  }
-;
-  AsyncHttpClientConfig.Builder configBuilder=new AsyncHttpClientConfig.Builder();
-  AsyncHttpClientConfig config=configBuilder.build();
-  AsyncHttpClient asyncHttpClient=new AsyncHttpClient(new GrizzlyAsyncHttpProvider(config),config);
-  AsyncHttpClient.BoundRequestBuilder boundRequestBuilder=asyncHttpClient.preparePost(getProxyUrl("test?parameterName=parameterValue"));
-  boundRequestBuilder.setBody(new InputStreamBodyGenerator(new TestInputStream(latch)));
-  ListenableFuture<com.ning.http.client.Response> future=boundRequestBuilder.execute();
-  com.ning.http.client.Response response=future.get();
-  assertThat(response.getStatusCode(),is(200));
-  response.getHeaders();
-  assertThat(getFirstReceivedHeader(HttpHeaders.Names.TRANSFER_ENCODING),is(HttpHeaders.Values.CHUNKED));
-  assertThat(response.getResponseBody(),is("OK"));
-  asyncHttpClient.close();
 }

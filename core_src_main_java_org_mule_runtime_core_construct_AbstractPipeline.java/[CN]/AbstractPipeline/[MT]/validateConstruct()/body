@@ -1,17 +1,17 @@
 {
   super.validateConstruct();
-  boolean userConfiguredProcessingStrategy=!(processingStrategy instanceof DefaultFlowProcessingStrategy);
-  boolean userConfiguredAsyncProcessingStrategy=processingStrategy instanceof AsynchronousProcessingStrategy && userConfiguredProcessingStrategy;
+  boolean userConfiguredProcessingStrategy=!(getProcessingStrategyFactory() instanceof DefaultFlowProcessingStrategyFactory);
+  boolean userConfiguredAsyncProcessingStrategy=getProcessingStrategyFactory() instanceof AsynchronousProcessingStrategyFactory && userConfiguredProcessingStrategy;
   boolean redeliveryHandlerConfigured=isRedeliveryPolicyConfigured();
   boolean isCompatibleWithAsync=sourceCompatibleWithAsync.evaluate(messageSource);
   if (userConfiguredAsyncProcessingStrategy && (!(messageSource == null || isCompatibleWithAsync) || redeliveryHandlerConfigured)) {
     throw new FlowConstructInvalidException(CoreMessages.createStaticMessage("One of the message sources configured on this Flow is not " + "compatible with an asynchronous processing strategy.  Either " + "because it is request-response, has a transaction defined, or "+ "messaging redelivered is configured."),this);
   }
-  if (processingStrategy instanceof NonBlockingProcessingStrategy && messageSource != null && !(messageSource instanceof NonBlockingMessageSource)) {
-    throw new FlowConstructInvalidException(CoreMessages.createStaticMessage(String.format("The non-blocking processing strategy (%s) currently only supports non-blocking messages sources (source is %s).",processingStrategy.toString(),messageSource.toString())),this);
+  if (getProcessingStrategyFactory() instanceof NonBlockingProcessingStrategyFactory && messageSource != null && !(messageSource instanceof NonBlockingMessageSource)) {
+    throw new FlowConstructInvalidException(CoreMessages.createStaticMessage(format("The non-blocking processing strategy (%s) currently only supports non-blocking messages sources (source is %s).",getProcessingStrategyFactory().toString(),messageSource.toString())),this);
   }
   if (!userConfiguredProcessingStrategy && redeliveryHandlerConfigured) {
-    setProcessingStrategy(new SynchronousProcessingStrategy());
+    processingStrategy=new SynchronousProcessingStrategyFactory().create();
     if (LOGGER.isWarnEnabled()) {
       LOGGER.warn("Using message redelivery and on-error-propagate requires synchronous processing strategy. Processing strategy re-configured to synchronous");
     }
