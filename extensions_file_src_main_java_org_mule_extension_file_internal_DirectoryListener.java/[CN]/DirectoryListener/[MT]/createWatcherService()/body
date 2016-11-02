@@ -6,16 +6,21 @@
     throw new MuleRuntimeException(createStaticMessage("Could not create watcher service"),e);
   }
   final Path rootPath=resolveRootPath();
-  registerPath(rootPath);
-  if (recursive) {
-    walkFileTree(rootPath,new SimpleFileVisitor<Path>(){
-      @Override public FileVisitResult preVisitDirectory(      Path dir,      BasicFileAttributes attrs) throws IOException {
-        if (!dir.equals(rootPath)) {
-          registerPath(dir);
+  try {
+    registerPath(rootPath);
+    if (recursive) {
+      walkFileTree(rootPath,new SimpleFileVisitor<Path>(){
+        @Override public FileVisitResult preVisitDirectory(        Path dir,        BasicFileAttributes attrs) throws IOException {
+          if (!dir.equals(rootPath)) {
+            registerPath(dir);
+          }
+          return CONTINUE;
         }
-        return CONTINUE;
       }
-    }
 );
+    }
+  }
+ catch (  IOException e) {
+    throw new DefaultMuleException(e);
   }
 }

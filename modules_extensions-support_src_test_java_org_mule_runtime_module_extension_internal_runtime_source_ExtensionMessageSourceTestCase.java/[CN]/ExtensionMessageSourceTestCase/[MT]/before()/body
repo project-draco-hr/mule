@@ -1,10 +1,16 @@
 {
   spyInjector(muleContext);
   when(threadingProfile.createWorkManager(anyString(),eq(muleContext.getConfiguration().getShutdownTimeout()))).thenReturn(workManager);
-  when(sourceFactory.createSource()).thenReturn(source);
+  when(result.getMediaType()).thenReturn(of(ANY));
+  when(result.getAttributes()).thenReturn(of(mock(Attributes.class)));
+  sourceCallback=spy(DefaultSourceCallback.builder().setConfigName(CONFIG_NAME).setFlowConstruct(flowConstruct).setProcessingManager(messageProcessingManager).setListener(messageProcessor).setProcessContextSupplier(processContextSupplier).setCompletionHandlerFactory(completionHandlerFactory).setExceptionCallback(exceptionCallback).build());
+  when(sourceCallbackFactory.createSourceCallback(any())).thenReturn(sourceCallback);
+  sourceAdapter=createSourceAdapter();
+  when(sourceAdapterFactory.createAdapter(any(),any())).thenReturn(sourceAdapter);
   mockExceptionEnricher(sourceModel,null);
   when(sourceModel.getName()).thenReturn(SOURCE_NAME);
   when(sourceModel.getModelProperty(MetadataResolverFactoryModelProperty.class)).thenReturn(empty());
+  when(sourceModel.getModelProperty(SourceCallbackModelProperty.class)).thenReturn(empty());
   setRequires(sourceModel,true,true);
   mockExceptionEnricher(extensionModel,null);
   mockClassLoaderModelProperty(extensionModel,getClass().getClassLoader());
@@ -12,8 +18,8 @@
   muleContext.getRegistry().registerObject(OBJECT_EXTENSION_MANAGER,extensionManager);
   when(flowConstruct.getMuleContext()).thenReturn(muleContext);
   mockSubTypes(extensionModel);
-  when(configurationModel.getSourceModel(SOURCE_NAME)).thenReturn(Optional.of(sourceModel));
-  when(extensionManager.getConfigurationProvider(CONFIG_NAME)).thenReturn(Optional.of(configurationProvider));
+  when(configurationModel.getSourceModel(SOURCE_NAME)).thenReturn(of(sourceModel));
+  when(extensionManager.getConfigurationProvider(CONFIG_NAME)).thenReturn(of(configurationProvider));
   when(configurationProvider.get(any())).thenReturn(configurationInstance);
   when(configurationProvider.getConfigurationModel()).thenReturn(configurationModel);
   when(configurationProvider.getName()).thenReturn(CONFIG_NAME);
@@ -25,6 +31,6 @@
   when(metadataResolverFactory.getOutputAttributesResolver()).thenReturn(new TestNoConfigMetadataResolver());
   when(sourceModel.getOutput()).thenReturn(new ImmutableOutputModel("Output",BaseTypeBuilder.create(JAVA).stringType().build(),true,emptySet()));
   when(sourceModel.getOutputAttributes()).thenReturn(new ImmutableOutputModel("Output",BaseTypeBuilder.create(JAVA).stringType().build(),false,emptySet()));
-  when(sourceModel.getModelProperty(MetadataKeyIdModelProperty.class)).thenReturn(Optional.of(new MetadataKeyIdModelProperty(typeLoader.load(String.class),METADATA_KEY)));
+  when(sourceModel.getModelProperty(MetadataKeyIdModelProperty.class)).thenReturn(of(new MetadataKeyIdModelProperty(typeLoader.load(String.class),METADATA_KEY)));
   messageSource=getNewExtensionMessageSourceInstance();
 }

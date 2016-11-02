@@ -1,0 +1,12 @@
+{
+  InputStream payload=null;
+  MediaType mediaType=MediaType.ANY;
+  if (attributes.getEventType().equals(DELETE.name())) {
+    attributes=new DeletedFileAttributes(path);
+  }
+ else   if (!attributes.isDirectory()) {
+    mediaType=fileSystem.getFileMessageMediaType(mediaType,attributes);
+    payload=new FileInputStream(path,new NullPathLock());
+  }
+  return Result.<InputStream,ListenerFileAttributes>builder().output(payload).mediaType(mediaType).attributes(attributes).build();
+}

@@ -1,0 +1,17 @@
+{
+  final HttpResponseBuilder failureResponseBuilder=createFailureResponseBuilder(error);
+  if (errorResponseBuilder.getBody() == null) {
+    errorResponseBuilder.setBody(error.getCause().getMessage());
+  }
+  addThrottlingHeaders(failureResponseBuilder);
+  HttpResponseContext context=callbackContext.getVariable("responseContext");
+  HttpResponse response;
+  try {
+    response=responseFactory.create(failureResponseBuilder,errorResponseBuilder,context.isSupportStreaming());
+  }
+ catch (  Exception e) {
+    response=buildErrorResponse();
+  }
+  final HttpResponseReadyCallback responseCallback=context.getResponseCallback();
+  responseCallback.responseReady(response,getResponseFailureCallback(responseCallback));
+}

@@ -15,22 +15,6 @@
       moreMessages.set(false);
       break;
     }
-    SocketAttributes attributes=new ImmutableSocketAttributes(socket);
-    messageHandler.handle(createMuleMessage(content,attributes),new CompletionHandler<MuleEvent,Exception,MuleEvent>(){
-      @Override public void onCompletion(      MuleEvent muleEvent,      ExceptionCallback<MuleEvent,Exception> exceptionCallback){
-        try {
-          protocol.write(dataOut,muleEvent.getMessage().getPayload().getValue(),encoding);
-          dataOut.flush();
-        }
- catch (        IOException e) {
-          exceptionCallback.onException(new IOException(format("An error occurred while sending TCP response to address '%s'",socket.getRemoteSocketAddress().toString(),e)));
-        }
-      }
-      @Override public void onFailure(      Exception e){
-        LOGGER.error("TCP worker will not answer back due an exception was received",e);
-        moreMessages.set(false);
-      }
-    }
-);
+    handle(content,new ImmutableSocketAttributes(socket));
   }
 }

@@ -1,21 +1,4 @@
 {
-  SocketAttributes attributes=new ImmutableSocketAttributes(packet);
   InputStream content=new ByteArrayInputStream(copyOf(packet.getData(),packet.getLength()));
-  messageHandler.handle(createMuleMessage(content,attributes),new CompletionHandler<MuleEvent,Exception,MuleEvent>(){
-    @Override public void onCompletion(    MuleEvent muleEvent,    ExceptionCallback<MuleEvent,Exception> exceptionCallback){
-      try {
-        byte[] byteArray=getUdpAllowedByteArray(muleEvent.getMessage().getPayload().getValue(),encoding,objectSerializer);
-        DatagramPacket sendPacket=createPacket(byteArray);
-        sendPacket.setSocketAddress(packet.getSocketAddress());
-        socket.send(sendPacket);
-      }
- catch (      IOException e) {
-        exceptionCallback.onException(new IOException(format("An error occurred while sending UDP packet to address '%s'",packet.getSocketAddress().toString(),e)));
-      }
-    }
-    @Override public void onFailure(    Exception e){
-      LOGGER.error("UDP worker will not answer back due an exception was received",e);
-    }
-  }
-);
+  handle(content,new ImmutableSocketAttributes(packet));
 }

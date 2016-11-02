@@ -1,9 +1,12 @@
 {
-  ResolverSet resolverSet=getParametersAsResolverSet(sourceModel);
-  if (resolverSet.isDynamic()) {
-    throw dynamicParameterException(resolverSet,sourceModel);
+  checkParameterGroupExclusivenessForModel(sourceModel,getParameters().keySet());
+  ResolverSet nonCallbackParameters=getNonCallbackParameters();
+  if (nonCallbackParameters.isDynamic()) {
+    throw dynamicParameterException(nonCallbackParameters,sourceModel);
   }
-  ExtensionMessageSource messageSource=new ExtensionMessageSource(extensionModel,sourceModel,getSourceFactory(resolverSet),configurationProvider,getThreadingProfile(),getRetryPolicyTemplate(),(ExtensionManagerAdapter)muleContext.getExtensionManager());
+  ResolverSet responseCallbackParameters=getCallbackParameters(ON_SUCCESS);
+  ResolverSet errorCallbackParameters=getCallbackParameters(ON_ERROR);
+  ExtensionMessageSource messageSource=new ExtensionMessageSource(extensionModel,sourceModel,getSourceFactory(nonCallbackParameters,responseCallbackParameters,errorCallbackParameters),configurationProvider,getThreadingProfile(),getRetryPolicyTemplate(),(ExtensionManagerAdapter)muleContext.getExtensionManager());
   try {
     muleContext.getInjector().inject(messageSource);
   }

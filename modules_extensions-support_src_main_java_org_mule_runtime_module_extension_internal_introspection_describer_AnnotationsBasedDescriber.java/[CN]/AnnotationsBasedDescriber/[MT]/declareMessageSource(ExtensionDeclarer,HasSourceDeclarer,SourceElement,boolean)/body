@@ -15,9 +15,10 @@
   if (sourceGenerics.size() != 2) {
     throw new IllegalModelDefinitionException(format("Message source class '%s' was expected to have 2 generic types " + "(one for the Payload type and another for the Attributes type) but %d were found",sourceType.getName(),sourceGenerics.size()));
   }
-  source.withModelProperty(new SourceFactoryModelProperty(new DefaultSourceFactory(sourceType.getDeclaringClass()))).withModelProperty(new ImplementingTypeModelProperty(sourceType.getDeclaringClass())).withOutput().ofType(typeLoader.load(sourceGenerics.get(0)));
+  source.hasResponse(sourceType.isAnnotatedWith(EmitsResponse.class)).withModelProperty(new SourceFactoryModelProperty(new DefaultSourceFactory(sourceType.getDeclaringClass()))).withModelProperty(new ImplementingTypeModelProperty(sourceType.getDeclaringClass())).withOutput().ofType(typeLoader.load(sourceGenerics.get(0)));
   source.withOutputAttributes().ofType(typeLoader.load(sourceGenerics.get(1)));
   addExceptionEnricher(sourceType,source);
-  declareFieldBasedParameters(source,sourceType.getParameters(),new ParameterDeclarationContext(SOURCE,source.getDeclaration()));
+  declareSourceParameters(sourceType,source);
+  declareSourceCallback(sourceType,source);
   sourceDeclarers.put(sourceType.getDeclaringClass(),source);
 }

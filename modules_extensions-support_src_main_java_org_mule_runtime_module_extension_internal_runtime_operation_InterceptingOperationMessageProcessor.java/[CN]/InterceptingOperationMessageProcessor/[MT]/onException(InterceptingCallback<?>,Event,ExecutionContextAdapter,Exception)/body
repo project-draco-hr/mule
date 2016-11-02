@@ -1,0 +1,17 @@
+{
+  if (LOGGER.isDebugEnabled()) {
+    LOGGER.debug(format("Intercepting operation '%s' got an exception while processing intercepted chain",operationContext.getComponentModel().getName()),exception);
+  }
+  try {
+    interceptingCallback.onException(exception);
+  }
+ catch (  Exception e) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Intercepting operation '%s' got an error while processing exception on callback. Original exception will be thrown back to the flow",operationContext.getComponentModel().getName()),e);
+    }
+  }
+  if (exception instanceof MuleException) {
+    return (MuleException)exception;
+  }
+  return new MessagingException(event,exception,this);
+}

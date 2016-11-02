@@ -1,0 +1,26 @@
+{
+  SocketWorkListener socketWorkListener=new SocketWorkListener(sourceCallback);
+  for (; ; ) {
+    if (isRequestedToStop()) {
+      return;
+    }
+    try {
+      SocketWorker worker=connection.listen(sourceCallback);
+      worker.setEncoding(config.getDefaultEncoding());
+      workManager.scheduleWork(worker,WorkManager.INDEFINITE,null,socketWorkListener);
+    }
+ catch (    ConnectionException e) {
+      if (!isRequestedToStop()) {
+        sourceCallback.onSourceException(e);
+      }
+    }
+catch (    Exception e) {
+      if (isRequestedToStop()) {
+        return;
+      }
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An exception occurred while listening for new connections",e);
+      }
+    }
+  }
+}

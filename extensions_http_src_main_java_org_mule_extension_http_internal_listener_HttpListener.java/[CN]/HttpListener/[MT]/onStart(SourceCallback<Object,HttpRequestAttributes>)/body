@@ -1,0 +1,22 @@
+{
+  if (allowedMethods != null) {
+    parsedAllowedMethods=extractAllowedMethods();
+    methodRequestMatcher=new MethodRequestMatcher(parsedAllowedMethods);
+  }
+  path=HttpParser.sanitizePathWithStartSlash(path);
+  listenerPath=config.getFullListenerPath(path);
+  path=listenerPath.getResolvedPath();
+  responseFactory=new HttpResponseFactory(responseStreamingMode,muleContext);
+  startIfNeeded(responseFactory);
+  validatePath();
+  parseRequest=config.resolveParseRequest(parseRequest);
+  try {
+    requestHandlerManager=server.addRequestHandler(new ListenerRequestMatcher(methodRequestMatcher,path),getRequestHandler(sourceCallback));
+  }
+ catch (  Exception e) {
+    throw new MuleRuntimeException(e);
+  }
+  ErrorTypeRepository errorTypeRepository=muleContext.getErrorTypeRepository();
+  knownErrors=Lists.newArrayList(errorTypeRepository.lookupErrorType(SECURITY));
+  requestHandlerManager.start();
+}
