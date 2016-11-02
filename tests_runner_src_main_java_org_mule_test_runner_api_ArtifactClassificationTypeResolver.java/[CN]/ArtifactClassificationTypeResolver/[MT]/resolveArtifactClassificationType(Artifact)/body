@@ -1,10 +1,14 @@
 {
-  URLClassLoader artifactClassLoader=createArtifactClassLoader(artifact);
-  if (isMulePlugin(artifact,artifactClassLoader)) {
-    return PLUGIN;
+  try (URLClassLoader artifactClassLoader=createArtifactClassLoader(artifact)){
+    if (isMulePlugin(artifact,artifactClassLoader)) {
+      return PLUGIN;
+    }
+    if (isMuleModule(artifact,artifactClassLoader)) {
+      return MODULE;
+    }
+    return APPLICATION;
   }
-  if (isMuleModule(artifact,artifactClassLoader)) {
-    return MODULE;
+ catch (  IOException e) {
+    throw new UncheckedIOException(e);
   }
-  return APPLICATION;
 }
