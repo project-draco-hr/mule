@@ -1,15 +1,19 @@
 {
-  muleContext=mock(MuleContext.class);
+  nonBlockingProcessorsExecuted.set(0);
+  muleContext=mockContextWithServices();
   ErrorTypeLocator errorTypeLocator=mock(ErrorTypeLocator.class);
   ErrorType errorType=mock(ErrorType.class);
   ExceptionContextProvider exceptionContextProvider=mock(ExceptionContextProvider.class);
   MuleConfiguration muleConfiguration=mock(MuleConfiguration.class);
   when(muleConfiguration.isContainerMode()).thenReturn(false);
-  when(muleConfiguration.getId()).thenReturn(RandomStringUtils.randomNumeric(3));
+  when(muleConfiguration.getId()).thenReturn(randomNumeric(3));
   when(muleConfiguration.getShutdownTimeout()).thenReturn(1000);
   when(muleContext.getConfiguration()).thenReturn(muleConfiguration);
   when(muleContext.getErrorTypeLocator()).thenReturn(errorTypeLocator);
   when(muleContext.getExceptionContextProviders()).thenReturn(singletonList(exceptionContextProvider));
   when(errorTypeLocator.lookupErrorType(any())).thenReturn(errorType);
-  when(mockFlow.getMuleContext()).thenReturn(muleContext);
+  mockFlow=new Flow("flow",muleContext);
+  mockFlow.setProcessingStrategyFactory(nonBlocking ? new NonBlockingProcessingStrategyFactory() : new DefaultFlowProcessingStrategyFactory());
+  mockFlow.initialise();
+  mockFlow.start();
 }

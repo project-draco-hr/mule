@@ -1,2 +1,21 @@
 {
+  asyncReplyMP=new TestAsyncRequestReplyRequester(muleContext);
+  asyncReplyMP.setTimeout(1);
+  SensingNullMessageProcessor target=getSensingNullMessageProcessor();
+  target.setWaitTime(3000);
+  LaxAsyncInterceptingMessageProcessor asyncMP=new LaxAsyncInterceptingMessageProcessor();
+  asyncMP.setScheduler(scheduler);
+  asyncMP.setListener(target);
+  asyncMP.setFlowConstruct(new Flow("flowName",muleContext));
+  asyncReplyMP.setListener(asyncMP);
+  asyncReplyMP.setReplySource(target.getMessageSource());
+  asyncReplyMP.setMuleContext(muleContext);
+  Event event=eventBuilder().message(InternalMessage.of(TEST_MESSAGE)).exchangePattern(ONE_WAY).build();
+  try {
+    asyncReplyMP.process(event);
+    fail("ResponseTimeoutException expected");
+  }
+ catch (  Exception e) {
+    assertEquals(ResponseTimeoutException.class,e.getClass());
+  }
 }

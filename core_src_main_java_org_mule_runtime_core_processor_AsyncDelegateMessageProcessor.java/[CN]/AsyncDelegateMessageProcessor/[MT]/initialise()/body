@@ -7,15 +7,13 @@
   }
   processingStrategy=processingStrategyFactory.create();
   validateFlowConstruct();
-  StageNameSource nameSource=null;
-  if (name != null) {
-    nameSource=((StageNameSourceProvider)flowConstruct).getAsyncStageNameSource(name);
-  }
- else {
-    nameSource=((StageNameSourceProvider)flowConstruct).getAsyncStageNameSource();
-  }
   MessageProcessorChainBuilder builder=new DefaultMessageProcessorChainBuilder();
-  processingStrategy.configureProcessors(Collections.singletonList(delegate),nameSource,builder,muleContext);
+  try {
+    processingStrategy.configureProcessors(singletonList(delegate),muleContext.getRegistry().lookupObject(SchedulerService.class),builder,muleContext);
+  }
+ catch (  RegistrationException e) {
+    throw new InitialisationException(e,this);
+  }
   target=builder.build();
   super.initialise();
 }

@@ -1,2 +1,32 @@
 {
+  asyncReplyMP=new TestAsyncRequestReplyRequester(muleContext);
+  SensingNullMessageProcessor target=getSensingNullMessageProcessor();
+  target.setWaitTime(50);
+  LaxAsyncInterceptingMessageProcessor asyncMP=new LaxAsyncInterceptingMessageProcessor();
+  asyncMP.setScheduler(scheduler);
+  asyncMP.setListener(target);
+  asyncReplyMP.setListener(asyncMP);
+  asyncReplyMP.setReplySource(target.getMessageSource());
+  final AtomicInteger count=new AtomicInteger();
+  for (int i=0; i < 500; i++) {
+    muleContext.getWorkManager().scheduleWork(new Work(){
+      @Override public void run(){
+        try {
+          Event resultEvent=asyncReplyMP.process(testEvent());
+          assertEquals(testEvent().getMessageAsString(muleContext),resultEvent.getMessageAsString(muleContext));
+          count.incrementAndGet();
+          logger.debug("Finished " + count.get());
+        }
+ catch (        Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+      @Override public void release(){
+      }
+    }
+);
+  }
+  while (count.get() < 500) {
+    Thread.sleep(10);
+  }
 }
