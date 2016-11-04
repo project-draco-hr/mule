@@ -1,0 +1,24 @@
+{
+  final File compiledClasses=new File(temporaryFolder.getRoot(),"compiledClasses");
+  compiledClasses.mkdirs();
+  final File sourceFile=new File(getClass().getResource("/org/foo/SerializableClass.java").getFile());
+  CompilerUtils.SingleClassCompiler compiler=new CompilerUtils.SingleClassCompiler();
+  compiler.compile(sourceFile);
+  final URL[] urls=new URL[]{compiler.getTargetFolder().toURL()};
+  final ClassLoaderLookupPolicy lookupPolicy=mock(ClassLoaderLookupPolicy.class);
+  when(lookupPolicy.getLookupStrategy(any())).thenReturn(ClassLoaderLookupStrategy.PARENT_FIRST);
+  final MuleArtifactClassLoader artifactClassLoader=new MuleArtifactClassLoader(ARTIFACT_ID,new ArtifactDescriptor(ARTIFACT_NAME),urls,getClass().getClassLoader(),lookupPolicy);
+  when(classLoaderRepository.getId(artifactClassLoader)).thenReturn(of(ARTIFACT_ID));
+  when(classLoaderRepository.find(ARTIFACT_ID)).thenReturn(of(artifactClassLoader));
+  final Class<?> echoTestClass=artifactClassLoader.loadClass(SERIALIZABLE_CLASS);
+  final Object payload=echoTestClass.newInstance();
+  setObjectName(payload);
+  Event event=eventBuilder().message(InternalMessage.of(payload)).build();
+  byte[] bytes=serializationProtocol.serialize(event.getMessage());
+  InternalMessage message=serializationProtocol.deserialize(bytes);
+  Object deserialized=message.getPayload().getValue();
+  assertThat(deserialized.getClass().getName(),equalTo(SERIALIZABLE_CLASS));
+  assertThat(deserialized.getClass().getClassLoader(),equalTo(artifactClassLoader));
+  assertThat(deserialized,equalTo(payload));
+  assertThat(getObjectName(deserialized),equalTo(INSTANCE_NAME));
+}
