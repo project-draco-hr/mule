@@ -9,6 +9,14 @@
         processingStrategyFactory=defaultProcessingStrategyFactory;
       }
     }
-    processingStrategy=processingStrategyFactory.create();
+    processingStrategy=processingStrategyFactory.create(muleContext);
+  }
+  boolean userConfiguredProcessingStrategy=!(getProcessingStrategyFactory() instanceof DefaultFlowProcessingStrategyFactory);
+  boolean redeliveryHandlerConfigured=isRedeliveryPolicyConfigured();
+  if (!userConfiguredProcessingStrategy && redeliveryHandlerConfigured) {
+    processingStrategy=new SynchronousProcessingStrategyFactory().create(muleContext);
+    if (LOGGER.isWarnEnabled()) {
+      LOGGER.warn("Using message redelivery and on-error-propagate requires synchronous processing strategy. Processing strategy re-configured to synchronous");
+    }
   }
 }
