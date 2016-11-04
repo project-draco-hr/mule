@@ -1,0 +1,14 @@
+{
+  final String url=String.format("http://localhost:%s/",httpPort.getNumber());
+  CloseableHttpAsyncClient httpclient=HttpAsyncClients.createDefault();
+  try {
+    httpclient.start();
+    Future<HttpResponse> future=httpclient.execute(HttpAsyncMethods.createGet(url),new BasicAsyncResponseConsumer(),null);
+    stop.set(true);
+    HttpResponse response=future.get();
+    assertThat(response.getFirstHeader(TRANSFER_ENCODING).getValue(),containsString(CHUNKED));
+  }
+  finally {
+    httpclient.close();
+  }
+}

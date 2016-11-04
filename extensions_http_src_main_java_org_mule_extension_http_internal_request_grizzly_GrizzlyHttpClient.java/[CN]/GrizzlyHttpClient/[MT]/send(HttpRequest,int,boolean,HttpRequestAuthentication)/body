@@ -1,20 +1,14 @@
 {
   Request grizzlyRequest=createGrizzlyRequest(request,responseTimeout,followRedirects,authentication);
-  ListenableFuture<Response> future=asyncHttpClient.executeRequest(grizzlyRequest);
+  PipedOutputStream outPipe=new PipedOutputStream();
+  PipedInputStream inPipe=new PipedInputStream(outPipe);
+  BodyDeferringAsyncHandler asyncHandler=new BodyDeferringAsyncHandler(outPipe);
+  asyncHttpClient.executeRequest(grizzlyRequest,asyncHandler);
   try {
-    Response response=future.get();
-    if (response == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Null response returned by async client");
-      }
-      response=future.get();
-    }
-    return createMuleResponse(response);
+    Response response=asyncHandler.getResponse();
+    return createMuleResponse(response,inPipe);
   }
- catch (  InterruptedException e) {
-    throw new IOException(e);
-  }
-catch (  ExecutionException e) {
+ catch (  IOException e) {
     if (e.getCause() instanceof TimeoutException) {
       throw (TimeoutException)e.getCause();
     }
@@ -24,5 +18,8 @@ catch (  ExecutionException e) {
  else {
       throw new IOException(e);
     }
+  }
+catch (  InterruptedException e) {
+    throw new IOException(e);
   }
 }
