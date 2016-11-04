@@ -1,0 +1,15 @@
+{
+  String spec=url.getFile();
+  int separator=seekFirstSeparator(spec);
+  URL muleArtifactLocation=new URL(spec.substring(0,separator++));
+  if (!SUPPORTED_PROTOCOLS.contains((muleArtifactLocation.getProtocol()))) {
+    throw new MalformedURLException(format("Supported protocols for '%s' are '%s', but received '%s' (full URL received '%s')",MuleArtifactUrlStreamHandler.PROTOCOL,join(",",SUPPORTED_PROTOCOLS),muleArtifactLocation.getProtocol(),url.toString()));
+  }
+  try {
+    artifactZip=new ZipFile(URLDecoder.decode(muleArtifactLocation.getFile(),StandardCharsets.UTF_8.name()));
+  }
+ catch (  IOException e) {
+    throw new MalformedURLException(format("There was a problem opening a zip for '%s'",muleArtifactLocation));
+  }
+  files=getFiles(spec.substring(++separator));
+}

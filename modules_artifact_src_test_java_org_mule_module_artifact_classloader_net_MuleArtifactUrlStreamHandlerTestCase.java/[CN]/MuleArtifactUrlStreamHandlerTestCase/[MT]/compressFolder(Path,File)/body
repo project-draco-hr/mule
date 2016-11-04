@@ -1,0 +1,18 @@
+{
+  try (FileOutputStream fos=new FileOutputStream(compressedFile);ZipOutputStream zos=new ZipOutputStream(fos)){
+    Files.walkFileTree(folderToCompress,new SimpleFileVisitor<Path>(){
+      public FileVisitResult visitFile(      Path file,      BasicFileAttributes attrs) throws IOException {
+        zos.putNextEntry(new ZipEntry(folderToCompress.relativize(file).toString()));
+        Files.copy(file,zos);
+        zos.closeEntry();
+        return FileVisitResult.CONTINUE;
+      }
+      public FileVisitResult preVisitDirectory(      Path dir,      BasicFileAttributes attrs) throws IOException {
+        zos.putNextEntry(new ZipEntry(folderToCompress.relativize(dir).toString() + "/"));
+        zos.closeEntry();
+        return FileVisitResult.CONTINUE;
+      }
+    }
+);
+  }
+ }
