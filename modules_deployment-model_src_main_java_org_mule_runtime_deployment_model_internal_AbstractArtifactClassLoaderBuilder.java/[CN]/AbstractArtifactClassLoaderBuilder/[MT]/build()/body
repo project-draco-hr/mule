@@ -9,9 +9,10 @@
   effectiveArtifactPluginDescriptors=new NamePluginDependenciesResolver().resolve(effectiveArtifactPluginDescriptors);
   final List<ArtifactClassLoader> pluginClassLoaders=createPluginClassLoaders(artifactId,regionClassLoader,effectiveArtifactPluginDescriptors);
   final ArtifactClassLoader artifactClassLoader=artifactClassLoaderFactory.create(artifactId,regionClassLoader,artifactDescriptor,artifactPluginClassLoaders);
-  regionClassLoader.addClassLoader(artifactClassLoader,artifactDescriptor.getClassLoaderFilter());
+  ArtifactClassLoaderFilter artifactClassLoaderFilter=createClassLoaderFilter(artifactDescriptor.getClassLoaderModel());
+  regionClassLoader.addClassLoader(artifactClassLoader,artifactClassLoaderFilter);
   for (int i=0; i < effectiveArtifactPluginDescriptors.size(); i++) {
-    final ArtifactClassLoaderFilter classLoaderFilter=effectiveArtifactPluginDescriptors.get(i).getClassLoaderFilter();
+    final ArtifactClassLoaderFilter classLoaderFilter=createClassLoaderFilter(effectiveArtifactPluginDescriptors.get(i).getClassLoaderModel());
     regionClassLoader.addClassLoader(pluginClassLoaders.get(i),classLoaderFilter);
   }
   return artifactClassLoader;

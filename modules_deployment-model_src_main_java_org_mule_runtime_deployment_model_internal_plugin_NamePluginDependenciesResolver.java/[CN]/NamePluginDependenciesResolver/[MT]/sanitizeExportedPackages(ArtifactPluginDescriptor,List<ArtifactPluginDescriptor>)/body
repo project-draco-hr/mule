@@ -1,7 +1,7 @@
 {
-  final Set<String> packagesExportedByDependencies=findDependencyPackageClosure(pluginDescriptor.getPluginDependencies(),resolvedPlugins);
-  final ArtifactClassLoaderFilter originalClassLoaderFilter=pluginDescriptor.getClassLoaderFilter();
-  final Set<String> exportedClassPackages=new HashSet<>(originalClassLoaderFilter.getExportedClassPackages());
+  final Set<String> packagesExportedByDependencies=findDependencyPackageClosure(pluginDescriptor.getClassLoaderModel().getDependencies(),resolvedPlugins);
+  ClassLoaderModel originalClassLoaderModel=pluginDescriptor.getClassLoaderModel();
+  final Set<String> exportedClassPackages=new HashSet<>(originalClassLoaderModel.getExportedPackages());
   exportedClassPackages.removeAll(packagesExportedByDependencies);
-  pluginDescriptor.setClassLoaderFilter(new DefaultArtifactClassLoaderFilter(exportedClassPackages,originalClassLoaderFilter.getExportedResources()));
+  pluginDescriptor.setClassLoaderModel(new ClassLoaderModelBuilder(originalClassLoaderModel).exportingPackages(exportedClassPackages).build());
 }

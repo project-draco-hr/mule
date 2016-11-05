@@ -1,0 +1,19 @@
+{
+  final JarInfo librariesInfo=findExportedResources(sharedLibraries);
+  final JarInfo classesInfo;
+  try {
+    final File appClassesFolder=getAppClassesFolder(descriptor);
+    if (appClassesFolder.exists()) {
+      classesInfo=findExportedResources(appClassesFolder.toURI().toURL());
+    }
+ else {
+      classesInfo=new JarInfo(emptySet(),emptySet());
+    }
+  }
+ catch (  MalformedURLException e) {
+    throw new RuntimeException("Cannot read application classes folder",e);
+  }
+  librariesInfo.getPackages().addAll(classesInfo.getPackages());
+  librariesInfo.getResources().addAll(classesInfo.getResources());
+  return librariesInfo;
+}

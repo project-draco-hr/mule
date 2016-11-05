@@ -18,10 +18,20 @@
     final Set<ArtifactPluginDescriptor> plugins=parsePluginDescriptors(artifactFolder,desc);
     verifyPluginExportedPackages(getAllApplicationPlugins(plugins));
     desc.setPlugins(plugins);
-    desc.setClassesFolder(getAppClassesFolder(desc));
-    desc.setRuntimeLibs(findLibraries(desc));
-    desc.setSharedRuntimeLibs(findSharedLibraries(desc));
-    desc.setClassLoaderFilter(createApplicationClassLoaderFilter(desc));
+    File appClassesFolder=getAppClassesFolder(desc);
+    URL[] libraries=findLibraries(desc);
+    URL[] sharedLibraries=findSharedLibraries(desc);
+    List<URL> urls=getApplicationResourceUrls(appClassesFolder.toURI().toURL(),libraries,sharedLibraries);
+    if (!urls.isEmpty() && logger.isInfoEnabled()) {
+      logArtifactRuntimeUrls(appName,urls);
+    }
+    ClassLoaderModel.ClassLoaderModelBuilder classLoaderModelBuilder=new ClassLoaderModel.ClassLoaderModelBuilder();
+    for (    URL url : urls) {
+      classLoaderModelBuilder.containing(url);
+    }
+    JarInfo jarInfo=findApplicationResources(desc,sharedLibraries);
+    classLoaderModelBuilder.exportingPackages(jarInfo.getPackages()).exportingResources(jarInfo.getResources());
+    desc.setClassLoaderModel(classLoaderModelBuilder.build());
   }
  catch (  IOException e) {
     throw new ArtifactDescriptorCreateException("Unable to create application descriptor",e);
