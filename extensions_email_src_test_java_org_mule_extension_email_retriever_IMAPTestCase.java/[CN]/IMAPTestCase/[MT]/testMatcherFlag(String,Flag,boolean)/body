@@ -3,7 +3,12 @@
     MimeMessage message=server.getReceivedMessages()[i];
     message.setFlag(flag,flagState);
   }
-  List<Result> messages=runFlowAndGetMessages(flowName);
-  assertThat(server.getReceivedMessages(),arrayWithSize(10));
-  assertThat(messages,hasSize(7));
+  ConsumerIterator<Result> messages=runFlowAndGetMessages(flowName);
+  assertThat(server.getReceivedMessages(),arrayWithSize(pageSize));
+  int count=0;
+  while (messages.hasNext()) {
+    messages.next();
+    count++;
+  }
+  assertThat(count,is(7));
 }

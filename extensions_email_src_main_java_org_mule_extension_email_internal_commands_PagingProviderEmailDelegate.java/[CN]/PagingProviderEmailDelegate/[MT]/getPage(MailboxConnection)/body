@@ -1,0 +1,31 @@
+{
+  boolean shouldExpunge=false;
+  try {
+    folder=connection.getFolder(folderName,deleteAfterRetrieve ? READ_WRITE : READ_ONLY);
+    if (folder.getMessageCount() == 0) {
+      return emptyList();
+    }
+    endIndex=min(endIndex,folder.getMessageCount());
+    while (startIndex <= endIndex) {
+      List<Result<Object,T>> emails=list(startIndex,endIndex);
+      startIndex+=pageSize;
+      endIndex=min(endIndex + pageSize,folder.getMessageCount());
+      if (!emails.isEmpty()) {
+        shouldExpunge=true;
+        return emails;
+      }
+    }
+  }
+ catch (  MessagingException e) {
+    throw new EmailException("Error while retrieving emails: ",e);
+  }
+ finally {
+    if (deleteAfterRetrieve && shouldExpunge) {
+      expungeCommand.expunge(connection,folderName);
+    }
+ else {
+      connection.closeFolder(false);
+    }
+  }
+  return emptyList();
+}
