@@ -2,11 +2,14 @@
   try {
     lazyComponentInitializer.initializeComponent(identifier);
   }
- catch (  NoSuchComponentModelException e) {
-    throw new ObjectNotFoundException(identifier);
+ catch (  MuleRuntimeException e) {
+    if (e.getCause() instanceof NoSuchComponentModelException) {
+      throw new ObjectNotFoundException(identifier);
+    }
+    return unknownFailureResponse(e);
   }
 catch (  Exception e) {
-    return failure(e.getMessage(),UNKNOWN,e);
+    return unknownFailureResponse(e);
   }
   return connectivityTestingService.testConnection(identifier);
 }
