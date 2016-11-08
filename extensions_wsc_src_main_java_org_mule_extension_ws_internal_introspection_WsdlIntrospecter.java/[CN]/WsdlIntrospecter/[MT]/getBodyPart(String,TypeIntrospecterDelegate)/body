@@ -1,0 +1,16 @@
+{
+  BindingOperation bindingOperation=getBindingOperation(operation);
+  Message message=delegate.getMessage(bindingOperation.getOperation());
+  Map parts=message.getParts();
+  if (parts == null || parts.isEmpty()) {
+    return empty();
+  }
+  if (parts.size() == 1) {
+    return ofNullable((Part)parts.get(parts.keySet().toArray()[0]));
+  }
+  Optional<String> bodyPartName=getBodyPartName(bindingOperation,delegate);
+  if (bodyPartName.isPresent()) {
+    return ofNullable((Part)parts.get(bodyPartName.get()));
+  }
+  return empty();
+}

@@ -1,0 +1,16 @@
+{
+  MetadataResult<ComponentMetadataDescriptor> result=getMetadata(DOWNLOAD_ATTACHMENT,DOWNLOAD_ATTACHMENT);
+  MetadataType type=result.get().getOutputMetadata().get().getPayloadMetadata().get().getType();
+  Collection<ObjectFieldType> attributesFields=toObjectType(type).getFields();
+  assertThat(attributesFields,hasSize(2));
+  Iterator<ObjectFieldType> iterator=attributesFields.iterator();
+  ObjectFieldType body=iterator.next();
+  assertThat(body.getKey().getName().getLocalPart(),is(BODY_FIELD));
+  Collection<ObjectFieldType> fields=toObjectType(body.getValue()).getFields();
+  assertThat(fields,hasSize(1));
+  MetadataType value=fields.iterator().next().getValue();
+  assertThat(toObjectType(value).getFields(),hasSize(0));
+  ObjectFieldType attachments=iterator.next();
+  assertThat(attachments.getKey().getName().getLocalPart(),is(ATTACHMENTS_FIELD));
+  assertThat(attachments.getValue(),is(instanceOf(ArrayType.class)));
+}

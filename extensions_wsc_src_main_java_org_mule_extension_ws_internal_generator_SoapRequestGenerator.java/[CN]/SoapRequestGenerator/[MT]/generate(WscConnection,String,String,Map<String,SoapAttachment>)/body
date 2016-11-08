@@ -1,0 +1,16 @@
+{
+  WsdlIntrospecter introspecter=connection.getWsdlIntrospecter();
+  TypeLoader typeLoader=connection.getTypeLoader();
+  if (isBlank(body)) {
+    body=emptyRequestGenerator.generateRequest(introspecter,typeLoader,operation);
+  }
+  if (!attachments.isEmpty()) {
+    body=connection.getRequestEnricher().enrichRequest(body,attachments);
+  }
+  try {
+    return stringToXmlStreamReader(body);
+  }
+ catch (  WscTransformationException e) {
+    throw new WscException("Error generating SOAP request",e);
+  }
+}
