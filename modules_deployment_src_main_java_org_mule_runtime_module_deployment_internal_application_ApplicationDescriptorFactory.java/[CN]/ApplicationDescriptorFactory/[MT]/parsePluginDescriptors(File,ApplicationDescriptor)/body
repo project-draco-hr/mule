@@ -1,0 +1,15 @@
+{
+  final File pluginsDir=new File(appDir,PLUGINS_FOLDER);
+  String[] pluginZips=pluginsDir.list(new SuffixFileFilter(".zip"));
+  if (pluginZips == null || pluginZips.length == 0) {
+    return emptySet();
+  }
+  Arrays.sort(pluginZips);
+  Set<ArtifactPluginDescriptor> pds=new HashSet<>(pluginZips.length);
+  for (  String pluginZip : pluginZips) {
+    String unpackDestinationFolder=appDescriptor.getName() + separator + PLUGINS_FOLDER+ separator;
+    File pluginZipFile=new File(pluginsDir,pluginZip);
+    pds.add(artifactPluginDescriptorLoader.load(pluginZipFile,new File(MuleContainerBootstrapUtils.getMuleTmpDir(),unpackDestinationFolder)));
+  }
+  return pds;
+}

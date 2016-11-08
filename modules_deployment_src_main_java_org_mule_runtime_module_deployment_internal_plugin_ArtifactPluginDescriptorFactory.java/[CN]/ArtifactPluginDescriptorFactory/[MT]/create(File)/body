@@ -1,9 +1,36 @@
 {
-  if (pluginLocation.isDirectory()) {
-    return new FolderArtifactPluginDescriptorLoader(pluginLocation).load();
+  final String pluginName=pluginFolder.getName();
+  final ArtifactPluginDescriptor descriptor=new ArtifactPluginDescriptor(pluginName);
+  descriptor.setRootFolder(pluginFolder);
+  ClassLoaderModelBuilder classLoaderModelBuilder=new ClassLoaderModelBuilder();
+  final File pluginPropsFile=new File(pluginFolder,PLUGIN_PROPERTIES);
+  if (pluginPropsFile.exists()) {
+    Properties props;
+    try {
+      props=loadProperties(pluginPropsFile.toURI().toURL());
+    }
+ catch (    IOException e) {
+      throw new ArtifactDescriptorCreateException("Cannot read plugin.properties file",e);
+    }
+    String pluginDependencies=props.getProperty(PLUGIN_DEPENDENCIES);
+    if (!isEmpty(pluginDependencies)) {
+      classLoaderModelBuilder.dependingOn(getPluginDependencies(pluginDependencies));
+    }
+    classLoaderModelBuilder.exportingPackages(parseExportedResource(props.getProperty(EXPORTED_CLASS_PACKAGES_PROPERTY))).exportingResources(parseExportedResource(props.getProperty(EXPORTED_RESOURCE_PROPERTY)));
   }
- else   if (endsWithIgnoreCase(pluginLocation.getName(),EXTENSION_ZIP)) {
-    return new ZipArtifactPluginDescriptorLoader(pluginLocation).load();
+  try {
+    classLoaderModelBuilder.containing(new File(pluginFolder,"classes").toURI().toURL());
+    final File libDir=new File(pluginFolder,"lib");
+    if (libDir.exists()) {
+      final File[] jars=libDir.listFiles((FilenameFilter)new SuffixFileFilter(".jar"));
+      for (int i=0; i < jars.length; i++) {
+        classLoaderModelBuilder.containing(jars[i].toURI().toURL());
+      }
+    }
   }
-  throw new ArtifactDescriptorCreateException(format("Plugins are only supported in ZIP or folders, check '%s'",pluginLocation.getAbsolutePath()));
+ catch (  MalformedURLException e) {
+    throw new ArtifactDescriptorCreateException("Failed to create plugin descriptor " + pluginFolder);
+  }
+  descriptor.setClassLoaderModel(classLoaderModelBuilder.build());
+  return descriptor;
 }
