@@ -1,0 +1,18 @@
+{
+  MetadataType metadataType=parameter.getMetadataType(typeLoader);
+  if (java.util.function.Function.class.isAssignableFrom(parameter.getType().getDeclaringClass())) {
+    final Optional<MetadataType> eventType=getGenericTypeAt(metadataType,0,typeLoader);
+    if (eventType.isPresent() && isEventType(eventType.get())) {
+      final Optional<MetadataType> expressionType=getGenericTypeAt(metadataType,1,typeLoader);
+      if (expressionType.isPresent()) {
+        metadataType=expressionType.get();
+      }
+ else {
+        throw new IllegalParameterModelDefinitionException(format("The parameter [%s] from the %s [%s] doesn't specify the %s parameterized types: Function<Event,{Type}>",parameter.getName(),declarationContext.getComponentType(),declarationContext.getName(),Function.class.getSimpleName()));
+      }
+      declarer.ofType(metadataType);
+      declarer.withModelProperty(new FunctionParameterTypeModelProperty());
+      declarer.withDsl(ElementDslModel.builder().allowsInlineDefinition(false).allowsReferences(true).allowTopLevelDefinition(false).build());
+    }
+  }
+}
