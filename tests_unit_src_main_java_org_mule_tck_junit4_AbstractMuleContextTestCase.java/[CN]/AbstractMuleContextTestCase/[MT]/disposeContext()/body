@@ -1,17 +1,21 @@
 {
   try {
     if (muleContext != null && !(muleContext.isDisposed() || muleContext.isDisposing())) {
+      final SchedulerService serviceImpl=muleContext.getRegistry().lookupObject(SchedulerService.class);
+      if (serviceImpl instanceof SimpleUnitTestSupportSchedulerService) {
+        stopIfNeeded(serviceImpl);
+      }
       muleContext.dispose();
       MuleConfiguration configuration=muleContext.getConfiguration();
       if (configuration != null) {
         final String workingDir=configuration.getWorkingDirectory();
-        FileUtils.deleteTree(FileUtils.newFile(workingDir),IGNORED_DOT_MULE_DIRS);
+        deleteTree(newFile(workingDir),IGNORED_DOT_MULE_DIRS);
       }
     }
-    FileUtils.deleteTree(FileUtils.newFile("./ActiveMQ"));
+    deleteTree(newFile("./ActiveMQ"));
   }
   finally {
     muleContext=null;
-    TestsLogConfigurationHelper.clearLoggingConfig();
+    clearLoggingConfig();
   }
 }

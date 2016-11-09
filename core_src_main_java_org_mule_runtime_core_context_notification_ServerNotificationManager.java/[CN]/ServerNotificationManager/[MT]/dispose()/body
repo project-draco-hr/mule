@@ -1,7 +1,19 @@
 {
-  disposed.set(true);
-  configuration=null;
-  if (runningThread != null) {
-    runningThread.interrupt();
+  disposeLock.writeLock().lock();
+  try {
+    final int shutdownTimeout=muleContext.getConfiguration().getShutdownTimeout();
+    if (notificationsLiteScheduler != null) {
+      notificationsLiteScheduler.stop(shutdownTimeout,MILLISECONDS);
+      notificationsLiteScheduler=null;
+    }
+    if (notificationsIoScheduler != null) {
+      notificationsIoScheduler.stop(shutdownTimeout,MILLISECONDS);
+      notificationsIoScheduler=null;
+    }
+    disposed.set(true);
+    configuration=null;
+  }
+  finally {
+    disposeLock.writeLock().unlock();
   }
 }

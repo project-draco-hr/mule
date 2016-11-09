@@ -1,2 +1,21 @@
 {
+  final Latch latch=new Latch();
+  muleContext.registerListener(new SecurityNotificationListener<SecurityNotification>(){
+    @Override public boolean isBlocking(){
+      return false;
+    }
+    @Override public void onNotification(    SecurityNotification notification){
+      latch.countDown();
+    }
+  }
+);
+  MuleClient client=muleContext.getClient();
+  InternalMessage result=client.request("test://toclient",5000).getRight().get();
+  assertThat(result,not(nullValue()));
+  assertThat(getPayloadAsString(result),is("foo"));
+  result=client.request("test://toclient2",1000).getRight().get();
+  assertThat(result,not(nullValue()));
+  assertThat(result.getAttributes(),instanceOf(HttpResponseAttributes.class));
+  assertThat(((HttpResponseAttributes)result.getAttributes()).getStatusCode(),is(401));
+  assertThat(latch.await(1000,MILLISECONDS),is(true));
 }

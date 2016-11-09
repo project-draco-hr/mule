@@ -1,2 +1,16 @@
 {
+  final AtomicReference<Latch> contextStartedLatch=new AtomicReference<>();
+  contextStartedLatch.set(new Latch());
+  final MuleContextNotificationListener<MuleContextNotification> listener=new MuleContextNotificationListener<MuleContextNotification>(){
+    @Override public boolean isBlocking(){
+      return false;
+    }
+    @Override public void onNotification(    MuleContextNotification notification){
+      contextStartedLatch.get().countDown();
+    }
+  }
+;
+  muleContext.registerListener(listener);
+  muleContext.start();
+  contextStartedLatch.get().await(20,TimeUnit.SECONDS);
 }
