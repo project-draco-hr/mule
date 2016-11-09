@@ -14,9 +14,12 @@
     String name=(String)entry.getKey();
     String exp=(String)entry.getValue();
     Object value=null;
-    if (muleContext.getExpressionLanguage().isExpression(exp)) {
-      muleContext.getExpressionLanguage().validate(exp);
-      value=muleContext.getExpressionLanguage().evaluate(exp,event,flowConstruct);
+    if (muleContext.getExpressionManager().isExpression(exp)) {
+      ValidationResult validation=muleContext.getExpressionManager().validate(exp);
+      if (!validation.isSuccess()) {
+        throw new InvalidExpressionException(exp,validation.errorMessage().orElse(""));
+      }
+      value=muleContext.getExpressionManager().evaluate(exp,event,flowConstruct).getValue();
     }
  else {
       value=exp;
